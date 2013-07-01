@@ -1,0 +1,107 @@
+# node-cassandra-cql
+
+node-cassandra-cql is a [Node.js](http://nodejs.org) CQL driver for [Apache Cassandra CQL3 binary protocol](https://git-wip-us.apache.org/repos/asf?p=cassandra.git;a=blob_plain;f=doc/native_protocol.spec;hb=refs/heads/cassandra-1.2).
+
+CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
+
+
+## Installation
+
+    $ git clone https://github.com/jorgebay/node-cassandra-cql.git
+    $ npm install node-cassandra-cql
+
+## Using it
+
+    // Creating a new connection pool to multiple hosts.
+    var Client = require('node-cassandra-cql').Client;
+    var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
+    var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
+
+Client() accepts an objects with these slots:
+
+         hosts : String list in host:port format. Port is optional (defaults to 9042).
+      keyspace : Name of keyspace to use.
+      username : User for authentication (optional).
+      password : Password for authentication (optional).
+       version : Currently only '3.0.0' is supported (optional).
+     staleTime : Time in milliseconds before trying to reconnect(optional).
+
+Queries are performed using the `execute()`. For example:
+
+    // Reading
+    cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
+      function(err, result) {
+        if (err) console.log('execute failed');
+        else console.log('got user profile with email ' + result.rows[0].get('email'));
+      }
+    );
+
+    // Writing
+    cqlClient.execute('UPDATE user_profiles SET email=? WHERE key=?', ['my@email.com', 'jbay'], 
+      types.consistencies.quorum,
+      function(err) {
+        if (err) console.log("failure");
+        else console.log("success");
+      }
+    );
+
+`execute()` accepts the following arguments
+
+        cqlQuery : The cql query to execute, with ? as parameters
+        arguments: Array of arguments that will replace the ? placeholders, can be null.
+     consistency : The level of consistency.
+        callback : The callback function with 2 arguments: err and result
+
+When you are finished with a `Client` instance, call `shutdown(callback)`.
+Shutting down the pool prevents further work from being enqueued, and closes all
+open connections after pending requests are complete.
+
+    // Shutting down a pool
+    cqlClient.shutdown(function() { console.log("connection pool shutdown"); });
+
+### Connections
+The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involed with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
+If you want to get lower level fine-grained control you could use the `Connection` class.
+
+    var Connection = require('node-cassandra-cql').Connection;
+    var con = new Connection({host:'host1', port:9042, username:'cassandra', password:'cassandra'});
+    con.open(function(err) {
+    if(err) {
+      console.error(err);
+    }
+    else {
+      var query = 'SELECT key, email, last_name FROM user_profiles WHERE key=?';
+      con.execute(query, ['jbay'], function(err, result){
+        if (err) console.log('execute failed');
+        else console.log('got user profile with email ' + result.rows[0].get('email'));
+        con.close();
+      });
+    }
+});
+
+### Logging
+
+Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
+
+    var Connection = require('node-cassandra-cql').Connection;
+    var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', user:'user', pass:'password'});
+    con.on('log', function(level, message) {
+      console.log('log event: %s -- %j', level, message);
+    });
+
+The `level` being passed to the listener can be `info` or `error`.
+
+### Data types
+
+Cassandra's bigint data types are parsed as [int64](https://github.com/broofa/node-int64).
+
+List / Set datatypes are encoded from / decoded to Javascript Arrays.
+
+Map datatype are encoded from / decoded to Javascript objects with keys as props.
+
+Decimal and timeuuid are not parsed yet, they are yielded as byte Buffers.
+
+
+## License
+
+node-cassandra-cql is distributed under the [MIT license](http://opensource.org/licenses/MIT).

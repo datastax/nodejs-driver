@@ -7,12 +7,17 @@ CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
 
 ## Installation
 
-    $ git clone https://github.com/jorgebay/node-cassandra-cql.git
     $ npm install node-cassandra-cql
+
+## Features
+- Connection pooling to multiple hosts
+- Parameters in queries (even for sets/lists/maps collections).
+- Get cell by column name: `row.get('first_name')`
+- Bigints (using [node-int64](https://github.com/broofa/node-int64))
 
 ## Using it
 ```javascript
-    // Creating a new connection pool to multiple hosts.
+// Creating a new connection pool to multiple hosts.
 var Client = require('node-cassandra-cql').Client;
 var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
 var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});

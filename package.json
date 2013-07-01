@@ -1,7 +1,7 @@
 {
   "author": "Jorge Bay <jorgebaygondra@gmail.com>",
   "name": "node-cassandra-cql",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Node.js driver for Cassandra CQL3 binary protocol",
   "keywords": [
     "cassandra",
@@ -17,5 +17,12 @@
   "dependencies": {
     "async": ">= 0.1.12",
     "node-int64": ">= 0.3.0"
+  },
+  "repository": { 
+    "type" : "git", 
+    "url" : "https://github.com/jorgebay/node-cassandra-cql.git"
+  },
+  "bugs": { 
+    "url" : "https://github.com/jorgebay/node-cassandra-cql/issues"
   }
 }

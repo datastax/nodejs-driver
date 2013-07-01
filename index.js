@@ -25,7 +25,6 @@ function Client (options) {
   var self = this;
   options.hosts.forEach(function (hostPort, index){
     var host = hostPort.split(':');
-    console.log('host:', hostPort);
     var connOptions = utils.extend(
       {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
     );
@@ -59,7 +58,6 @@ Client.prototype.connect = function (connectCallback) {
       });
     },
     function () {
-      console.log('::::connect each done');
       self.connecting = false;
       if (errors.length === self.connections.length) {
         var error = new Error('Errors connecting to every connection');
@@ -79,7 +77,6 @@ Client.prototype.connect = function (connectCallback) {
  */
 Client.prototype.ensurePoolConnection = function (callback) {
   var self = this;
-  console.log(':::::::: entered ensure');
   if (!this.connected) {
     if (this.connecting && !self.connectionError) {
       async.whilst(
@@ -122,9 +119,7 @@ Client.prototype.getAConnection = function (callback) {
   var self = this;
   self.ensurePoolConnection(function (err) {
     if (err) {
-      console.log('trying to  callback');
       callback(err);
-      console.log('callbacked')
     }
     else {
       //go through the connections
@@ -229,7 +224,6 @@ Client.prototype.setHealthy = function (connection) {
 
 Client.prototype.canReconnect = function (connection) {
   var timePassed = new Date().getTime() - connection.unhealthyAt;
-  console.log('timepassed', timePassed,  this.options.staleTime);
   return timePassed > this.options.staleTime;
 }
 

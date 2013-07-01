@@ -11,12 +11,12 @@ CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
     $ npm install node-cassandra-cql
 
 ## Using it
-
+```javascript
     // Creating a new connection pool to multiple hosts.
-    var Client = require('node-cassandra-cql').Client;
-    var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
-    var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
-
+var Client = require('node-cassandra-cql').Client;
+var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
+var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
+```
 Client() accepts an objects with these slots:
 
          hosts : String list in host:port format. Port is optional (defaults to 9042).
@@ -27,24 +27,24 @@ Client() accepts an objects with these slots:
      staleTime : Time in milliseconds before trying to reconnect(optional).
 
 Queries are performed using the `execute()`. For example:
+```javascript
+// Reading
+cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
+  function(err, result) {
+    if (err) console.log('execute failed');
+    else console.log('got user profile with email ' + result.rows[0].get('email'));
+  }
+);
 
-    // Reading
-    cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
-      function(err, result) {
-        if (err) console.log('execute failed');
-        else console.log('got user profile with email ' + result.rows[0].get('email'));
-      }
-    );
-
-    // Writing
-    cqlClient.execute('UPDATE user_profiles SET email=? WHERE key=?', ['my@email.com', 'jbay'], 
-      types.consistencies.quorum,
-      function(err) {
-        if (err) console.log("failure");
-        else console.log("success");
-      }
-    );
-
+// Writing
+cqlClient.execute('UPDATE user_profiles SET email=? WHERE key=?', ['my@email.com', 'jbay'], 
+  types.consistencies.quorum,
+  function(err) {
+    if (err) console.log("failure");
+    else console.log("success");
+  }
+);
+```
 `execute()` accepts the following arguments
 
         cqlQuery : The cql query to execute, with ? as parameters
@@ -56,39 +56,43 @@ When you are finished with a `Client` instance, call `shutdown(callback)`.
 Shutting down the pool prevents further work from being enqueued, and closes all
 open connections after pending requests are complete.
 
-    // Shutting down a pool
-    cqlClient.shutdown(function() { console.log("connection pool shutdown"); });
+```javascript
+// Shutting down a pool
+cqlClient.shutdown(function() { console.log("connection pool shutdown"); });
+```
 
 ### Connections
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involed with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
-If you want to get lower level fine-grained control you could use the `Connection` class.
 
-    var Connection = require('node-cassandra-cql').Connection;
-    var con = new Connection({host:'host1', port:9042, username:'cassandra', password:'cassandra'});
-    con.open(function(err) {
-    if(err) {
-      console.error(err);
-    }
-    else {
-      var query = 'SELECT key, email, last_name FROM user_profiles WHERE key=?';
-      con.execute(query, ['jbay'], function(err, result){
-        if (err) console.log('execute failed');
-        else console.log('got user profile with email ' + result.rows[0].get('email'));
-        con.close();
-      });
-    }
+If you want to get lower level fine-grained control you could use the `Connection` class.
+```javascript
+var Connection = require('node-cassandra-cql').Connection;
+var con = new Connection({host:'host1', port:9042, username:'cassandra', password:'cassandra'});
+con.open(function(err) {
+  if(err) {
+    console.error(err);
+  }
+  else {
+    var query = 'SELECT key, email, last_name FROM user_profiles WHERE key=?';
+    con.execute(query, ['jbay'], function(err, result){
+      if (err) console.log('execute failed');
+      else console.log('got user profile with email ' + result.rows[0].get('email'));
+      con.close();
+    });
+  }
 });
+```
 
 ### Logging
 
 Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
-
-    var Connection = require('node-cassandra-cql').Connection;
-    var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', user:'user', pass:'password'});
-    con.on('log', function(level, message) {
-      console.log('log event: %s -- %j', level, message);
-    });
-
+```javascript
+var Connection = require('node-cassandra-cql').Connection;
+var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', user:'user', pass:'password'});
+con.on('log', function(level, message) {
+  console.log('log event: %s -- %j', level, message);
+});
+```
 The `level` being passed to the listener can be `info` or `error`.
 
 ### Data types

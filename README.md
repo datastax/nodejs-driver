@@ -115,6 +115,10 @@ Decimal and timeuuid are not parsed yet, they are yielded as byte Buffers.
 
 node-cassandra-cql is distributed under the [MIT license](http://opensource.org/licenses/MIT).
 
+## Contributions
+
+Feel free to join in if you feel like helping this project progress!
+
 ## Acknowledgements
 
 FrameReader and FrameWriter are based on [node-cql3](https://github.com/isaacbwagner/node-cql3)'s FrameBuilder and FrameParser.

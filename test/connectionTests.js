@@ -4,7 +4,7 @@ var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var keySpace = new types.QueryLiteral('unittestkp1_1');
 
-var con = new Connection({host:'localhost', port: 9042});
+var con = new Connection({host:'localhost', port: 9042, maxRequests: 1});
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {
@@ -46,8 +46,8 @@ module.exports = {
         "big_sample bigint,             "+
         "decimal_sample decimal,        "+
         "list_sample list<int>,         "+
-        "map_sample map<text, text>,    "+
         "set_sample set<int>,           "+
+        "map_sample map<text, text>,    "+
         "text_sample text);"
     , null, function(err) {
       if (err) test.fail(err, 'Error creating types table');
@@ -107,6 +107,28 @@ module.exports = {
           test.done();
           return;
         });
+    });
+  },
+  insertLiterals: function(test) {
+    var queries = [
+      ["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (200, 1, 1, [1, 2, 3], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, 'text sample');"],
+      /*["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (201, NULL, NULL, NULL, NULL, NULL, NULL);"],*/
+      ["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (202, ?, ?, ?, ?, ?, ?);", [1, 1, [1, 2, 3], {hint:'set', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, 'text sample']]
+    ];
+    //TODO: Check that returns correctly if there is an error
+    async.each(queries, function(query, callback) {
+      con.execute(query[0], query[1], function(err, result) {
+        console.log('returned');
+        if (err) {
+          test.fail(err);
+        }
+        callback();
+      });
+    }, function () {
+      test.done();
     });
   },
   /**

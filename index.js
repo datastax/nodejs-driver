@@ -237,10 +237,14 @@ Client.prototype.isHealthy = function (connection) {
 /**
  * Closes all connections
  */
-Client.prototype.shutdown = function () {
-  this.connections.forEach(function(c) {
-    c.close();
-  });
+Client.prototype.shutdown = function (callback) {
+  async.each(this.connections, function(c, eachCallback) {
+    c.close(eachCallback);
+  },
+    function() {
+      callback();
+    }
+  );
 }
 
 exports.Client = Client;

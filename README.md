@@ -93,7 +93,7 @@ con.open(function(err) {
 Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
 ```javascript
 var Connection = require('node-cassandra-cql').Connection;
-var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', user:'user', pass:'password'});
+var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', username:'user', password:'password'});
 con.on('log', function(level, message) {
   console.log('log event: %s -- %j', level, message);
 });
@@ -114,3 +114,7 @@ Decimal and timeuuid are not parsed yet, they are yielded as byte Buffers.
 ## License
 
 node-cassandra-cql is distributed under the [MIT license](http://opensource.org/licenses/MIT).
+
+## Acknowledgements
+
+FrameReader and FrameWriter are based on [node-cql3](https://github.com/isaacbwagner/node-cql3)'s FrameBuilder and FrameParser.

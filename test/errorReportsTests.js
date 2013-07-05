@@ -25,7 +25,7 @@ module.exports = {
     });
   },
   createTable1: function(test) {
-    var buffer = new Buffer(1024);
+    var buffer = new Buffer(102400);
     buffer.write('Hello world', 'utf-8');
     con.execute("CREATE TABLE ?.filters (id text PRIMARY KEY,created timestamp,domain text,json text,protobuf blob,search_spec text,type text,updated timestamp);", 
       [keyspace], function (err) {
@@ -43,9 +43,12 @@ module.exports = {
     });
   },
   selectTable1: function (test) {
+    con.on('log', function(type, message) {
+      //console.log(type, message);
+    });
     con.execute("select * from ?.filters LIMIT 300;", [keyspace], types.consistencies.one, function (err, result) {
       if (err) {
-        test.fail(err);
+        test.fail(err, 'Error selecting');
       }
       else {
         test.equal(result.rows[0].get('protobuf').toString('utf-8').substring(0, 11), 'Hello world');

@@ -44,6 +44,7 @@ module.exports = {
       "CREATE TABLE sampletable1 (" +
         "id int PRIMARY KEY,            "+
         "big_sample bigint,             "+
+        "blob_sample blob,             "+
         "decimal_sample decimal,        "+
         "list_sample list<int>,         "+
         "set_sample set<int>,           "+
@@ -67,6 +68,7 @@ module.exports = {
           else {
             test.ok(result.rows.length === 1);
             test.ok(result.rows[0].get('big_sample') === null &&
+              result.rows[0].get('blob_sample') === null &&
               result.rows[0].get('decimal_sample') === null &&
               result.rows[0].get('list_sample') === null &&
               result.rows[0].get('map_sample') === null &&
@@ -110,25 +112,69 @@ module.exports = {
     });
   },
   insertLiterals: function(test) {
-    var queries = [
-      ["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (200, 1, 1, [1, 2, 3], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, 'text sample');"],
-      /*["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (201, NULL, NULL, NULL, NULL, NULL, NULL);"],*/
-      ["INSERT INTO sampletable1 (id, big_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (202, ?, ?, ?, ?, ?, ?);", [1, 1, [1, 2, 3], {hint:'set', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, 'text sample']]
+    var insertQueries = [
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (200, 1, 0x48656c6c6f, 1, [1, 2, 3], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, '202');"],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (201, ?, ?, ?, ?, ?, ?, ?);", [1, new Buffer('Hello', 'utf-8'), 1, [1, 2, 3], {hint:'set', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, '201']],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (202, NULL, NULL, NULL, NULL, NULL, NULL, '202');"],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
+      " values (203, ?, ?, ?, ?, ?, ?, ?);", [null, null, null, null, null, null, '203']]
     ];
     //TODO: Check that returns correctly if there is an error
-    async.each(queries, function(query, callback) {
+    async.each(insertQueries, function(query, callback) {
       con.execute(query[0], query[1], function(err, result) {
-        console.log('returned');
         if (err) {
           test.fail(err);
         }
         callback();
       });
     }, function () {
-      test.done();
+      con.execute("select * from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
+        setRowsByKey(result.rows, 'id');
+        var row0 = result.rows.get(200);
+        var row1 = result.rows.get(201);
+        var row2 = result.rows.get(202);
+        var row3 = result.rows.get(203);
+        //test that coming from parameters or hardcoded query, it stores and yields the same values
+        test.ok(row0.get('big_sample') == 1 &&
+          row0.get('blob_sample').toString('utf-8') === 'Hello' &&
+          row0.get('list_sample').length === 3 &&
+          row0.get('list_sample').indexOf(2) >= 0 &&
+          row0.get('set_sample').length === 3 &&
+          row0.get('set_sample').indexOf(2) >= 0 &&
+          row0.get('map_sample').a === 'value a'
+          , 'First row results does not match.');
+        test.ok(row1.get('big_sample') == 1 &&
+          row1.get('blob_sample').toString('utf-8') === 'Hello' &&
+          row1.get('list_sample').length === 3 &&
+          row1.get('list_sample').indexOf(2) >= 0 &&
+          row1.get('set_sample').length === 3 &&
+          row1.get('set_sample').indexOf(2) >= 0 &&
+          row1.get('map_sample').a === 'value a' &&
+          row1.get('text_sample') === '201'
+          , 'Second row results does not match.');
+        test.ok(row2.get('big_sample') == null &&
+          row2.get('blob_sample') === null &&
+          row2.get('list_sample') === null &&
+          row2.get('list_sample') === null &&
+          row2.get('set_sample') === null &&
+          row2.get('set_sample') === null &&
+          row2.get('map_sample') === null &&
+          row2.get('text_sample') === '202'
+          , 'Third row results does not match.');
+        test.ok(row3.get('big_sample') == null &&
+          row3.get('blob_sample') === null &&
+          row3.get('list_sample') === null &&
+          row3.get('list_sample') === null &&
+          row3.get('set_sample') === null &&
+          row3.get('set_sample') === null &&
+          row3.get('map_sample') === null &&
+          row3.get('text_sample') === '203'
+          , 'Fourth row results does not match.');
+        test.done();
+      });
     });
   },
   /**
@@ -141,3 +187,12 @@ module.exports = {
     });
   }
 };
+function setRowsByKey(arr, key) {
+  for (var i=0;i<arr.length;i++) {
+    var row = arr[i];
+    arr['key-' + row.get(key)] = row;
+  }
+  arr.get = function(key1) {
+    return arr['key-' + key1];
+  }
+}

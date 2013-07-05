@@ -190,7 +190,7 @@ Client.prototype.execute = function (query, args, consistency, callback) {
           //if its a fatal error, set the connection to unhealthy
           self.setUnhealthy(c);
           //retry, it will get another connection
-          self.emit('log', 'info', 'Retrying execute');
+          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
           self.execute.call(self, query, args, consistency, callback);
         }
         else {

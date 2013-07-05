@@ -14,9 +14,14 @@ module.exports = {
   },
   selectAllColumns: function (test) {
     con.execute('select * from system.schema_keyspaces;', [], function(err, result) {
-      test.ok(!err, 'Execute error');
-      if (!err) {
-        test.ok(result.rows.length > 0, 'No keyspaces')
+      if (err) {
+        test.fail(err);
+      }
+      else {
+        test.ok(result.rows.length > 0, 'No keyspaces');
+        if (result.rows.length > 1) {
+          test.ok(result.rows[0].get('keyspace_name') != result.rows[1].get('keyspace_name'), 'The yielded keyspaces name should be different');
+        }
       }
       test.done();
     });

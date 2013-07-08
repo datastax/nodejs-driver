@@ -4,7 +4,7 @@ var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var keySpace = new types.QueryLiteral('unittestkp1_1');
 
-var con = new Connection({host:'localhost', port: 9042, maxRequests: 1});
+var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {
@@ -174,6 +174,19 @@ module.exports = {
           row3.get('text_sample') === '203'
           , 'Fourth row results does not match.');
         test.done();
+      });
+    });
+  },
+  batchQueries : function (test) {
+    var callbackCounter = 0;
+    var totalTimes = 15;
+    async.times(totalTimes, function() {
+      con.execute('SELECT * FROM sampletable1', [], function (err, result) {
+        if (err) test.fail(err);
+        callbackCounter++;
+        if (callbackCounter === totalTimes) {
+          test.done();
+        }
       });
     });
   },

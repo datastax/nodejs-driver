@@ -11,9 +11,10 @@ CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
 
 ## Features
 - Connection pooling to multiple hosts
-- Parameters in queries (even for sets/lists/maps collections).
+- Parameters in queries (even for sets/lists/maps collections)
+- Plain Old Javascript: no need to generate thrift files
 - Get cell by column name: `row.get('first_name')`
-- Bigints (using [node-int64](https://github.com/broofa/node-int64))
+- Bigints support (using [node-int64](https://github.com/broofa/node-int64))
 
 ## Using it
 ```javascript
@@ -22,7 +23,7 @@ var Client = require('node-cassandra-cql').Client;
 var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
 var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
 ```
-Client() accepts an objects with these slots:
+Client() accepts an object with these slots:
 
          hosts : String list in host:port format. Port is optional (defaults to 9042).
       keyspace : Name of keyspace to use.

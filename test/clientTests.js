@@ -31,22 +31,22 @@ module.exports = {
         client.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, function(err){
           callback(err);
         });
-      }/*,
+      },
       function (callback) {
         //no consistency specified
-        con.execute('SELECT * FROM system.schema_keyspaces', [], function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces', [], function(err){
           callback(err);
         });
       },
       function (callback) {
         //change the meaning of the second parameter to consistency
-        con.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, function(err){
           callback(err);
         });
       },
       function (callback) {
         //query params but no params args, consistency specified, must fail
-        con.execute('SELECT * FROM system.schema_keyspaces keyspace_name = ?', types.consistencies.one, function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces keyspace_name = ?', types.consistencies.one, function(err){
           if (!err) {
             callback(new Error('Consistency should not be treated as query parameters'));
           }
@@ -54,10 +54,10 @@ module.exports = {
             callback(null);
           }
         });
-      },
+      }/*,
       function (callback) {
         //no query params
-        con.execute('SELECT * FROM system.schema_keyspaces', function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces', function(err){
           callback(err);
         });
       }*/

@@ -12,7 +12,9 @@ var optionsDefault = {
   //When the simultaneous requests has been reached, it determines the amount of milliseconds before retrying to get an available streamId
   maxRequestsRetry: 100,
   //Time that has to pass before trying to reconnect
-  staleTime: 1000
+  staleTime: 1000,
+  //maximum amount of times an execute can be retried (using another connection) because of an unhealthy server
+  maxExecuteRetries: 3
 }
 //Represents a pool of connection to multiple hosts
 function Client (options) {
@@ -175,14 +177,17 @@ Client.prototype.getAConnection = function (callback) {
 Client.prototype.execute = function (query, args, consistency, callback) {
   if(typeof callback === 'undefined') {
     if (typeof consistency === 'undefined') {
-      //only query and callback
+      //only the query and the callback was specified
       callback = args;
       args = null;
     }
     else {
-      //query, args and callback
       callback = consistency;
       consistency = null;
+      if (typeof args === 'number') {
+        consistency = args;
+        args = null;
+      }
     }
   }
   var self = this;
@@ -197,9 +202,9 @@ Client.prototype.execute = function (query, args, consistency, callback) {
       if (self.isServerUnhealthy(err)) {
         //if its a fatal error, set the connection to unhealthy
         self.setUnhealthy(c);
-        //retry, it will get another connection
         self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-        self.execute.call(self, query, args, consistency, callback);
+        //retry, it will get another connection
+        self.execute.call(self, query, args, consistency, callback, retryCount);
       }
       else {
         //If the result is OK or there is error (syntax error or an unauthorized for example), callback

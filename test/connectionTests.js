@@ -2,7 +2,7 @@ var async = require('async');
 var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
-var keySpace = new types.QueryLiteral('unittestkp1_1');
+var keyspace = new types.QueryLiteral('unittestkp1_1');
 
 var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 //declaration order is execution order in nodeunit
@@ -23,19 +23,63 @@ module.exports = {
     });
   },
   'drop keyspace': function(test) {
-    con.execute("DROP KEYSPACE ?;", [keySpace], function(err) {
+    con.execute("DROP KEYSPACE ?;", [keyspace], function(err) {
       test.done();
     });
   },
   'create keyspace': function(test) {
-    con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keySpace], function(err) {
+    con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function(err) {
       if (err) test.fail(err, 'Error creating keyspace');
       test.done();
     });
   },
   'use keyspace': function(test) {
-    con.execute("USE ?;", [keySpace], function(err) {
+    con.execute("USE ?;", [keyspace], function(err) {
       if (err) test.fail(err);
+      test.done();
+    });
+  },
+  'execute params': function (test) {
+    async.series([
+      function (callback) {
+        //all params
+        con.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, function(err){
+          callback(err);
+        });
+      },
+      function (callback) {
+        //no consistency specified
+        con.execute('SELECT * FROM system.schema_keyspaces', [], function(err){
+          callback(err);
+        });
+      },
+      function (callback) {
+        //change the meaning of the second parameter to consistency
+        con.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, function(err){
+          callback(err);
+        });
+      },
+      function (callback) {
+        //query params but no params args, consistency specified, must fail
+        con.execute('SELECT * FROM system.schema_keyspaces keyspace_name = ?', types.consistencies.one, function(err){
+          if (!err) {
+            callback(new Error('Consistency should not be treated as query parameters'));
+          }
+          else {
+            callback(null);
+          }
+        });
+      },
+      function (callback) {
+        //no query params
+        con.execute('SELECT * FROM system.schema_keyspaces', function(err){
+          callback(err);
+        });
+      }
+    ],
+    //all finished
+    function(err){
+      test.ok(err === null, err);
       test.done();
     });
   },

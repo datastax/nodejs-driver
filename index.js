@@ -173,9 +173,17 @@ Client.prototype.getAConnection = function (callback) {
  @param {function} callback, executes callback(err, result) when finished
  */
 Client.prototype.execute = function (query, args, consistency, callback) {
-  if(typeof callback == 'undefined') {
-    callback = consistency;
-    consistency = null;
+  if(typeof callback === 'undefined') {
+    if (typeof consistency === 'undefined') {
+      //only query and callback
+      callback = args;
+      args = null;
+    }
+    else {
+      //query, args and callback
+      callback = consistency;
+      consistency = null;
+    }
   }
   var self = this;
   this.getAConnection(function(err, c) {

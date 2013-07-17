@@ -214,7 +214,6 @@ Client.prototype.isServerUnhealthy = function (err) {
     return true;
   }
   else {
-    //return Math.random() > 0.5;
     return false;
   }
 }

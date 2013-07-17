@@ -18,6 +18,9 @@
     "async": ">= 0.1.12",
     "node-int64": ">= 0.3.0"
   },
+  "devDependencies": {
+    "nodeunit": ">= 0.8.0"
+  },
   "repository": { 
     "type" : "git", 
     "url" : "https://github.com/jorgebay/node-cassandra-cql.git"

@@ -22,24 +22,24 @@ module.exports = {
       });
     });
   },
-  dropKeySpace: function(test) {
+  'drop keyspace': function(test) {
     con.execute("DROP KEYSPACE ?;", [keySpace], function(err) {
       test.done();
     });
   },
-  createKeySpace: function(test) {
+  'create keyspace': function(test) {
     con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keySpace], function(err) {
       if (err) test.fail(err, 'Error creating keyspace');
       test.done();
     });
   },
-  useKeySpace: function(test) {
+  'use keyspace': function(test) {
     con.execute("USE ?;", [keySpace], function(err) {
       if (err) test.fail(err);
       test.done();
     });
   },
-  createTypesTable: function(test) {
+  'create types table': function(test) {
     con.execute(
       "CREATE TABLE sampletable1 (" +
         "id int PRIMARY KEY,            "+
@@ -55,7 +55,7 @@ module.exports = {
       test.done();
     });
   },
-  selectNullValues: function(test) {
+  'select null values': function(test) {
     con.execute('INSERT INTO sampletable1 (id) VALUES(1)', null, 
       function(err) {
         if (err) {
@@ -80,7 +80,7 @@ module.exports = {
         });
     });
   },
-  malformedQueryExecute: function(test) {
+  'execute malformed query': function(test) {
     con.execute("Malformed SLEECT SELECT * FROM sampletable1;", null, function(err) {
       if (err) {
         test.ok(!err.isServerUnhealthy, 'The connection should be reusable and the server should be healthy even if a query fails.');
@@ -91,7 +91,7 @@ module.exports = {
       test.done();
     });
   },
-  bigInts: function(test) {
+  'bigInts': function(test) {
     var big = new Int64('123456789abcdef0');
     con.execute('INSERT INTO sampletable1 (id, big_sample) VALUES(100, ?)', 
       [big], 
@@ -111,7 +111,7 @@ module.exports = {
         });
     });
   },
-  insertLiterals: function(test) {
+  'insert literals': function(test) {
     var insertQueries = [
       ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
       " values (200, 1, 0x48656c6c6f, 1, [1, 2, 3], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, '202');"],
@@ -177,7 +177,7 @@ module.exports = {
       });
     });
   },
-  batchQueries : function (test) {
+  'execute multiple queries': function (test) {
     var callbackCounter = 0;
     var totalTimes = 15;
     async.times(totalTimes, function() {
@@ -193,10 +193,14 @@ module.exports = {
   /**
    * Executes last, closes the connection
    */
-  disconnect : function (test) {
+  'disconnect': function (test) {
     test.ok(con.connected, 'Connection not connected to host.');
     con.close(function () {
-      test.done();
+      test.ok(!con.connected, 'The connected flag of the connection must be false.');
+      //it should be allowed to be call close multiple times.
+      con.close(function () {
+        test.done();
+      });
     });
   }
 };

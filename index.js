@@ -181,24 +181,23 @@ Client.prototype.execute = function (query, args, consistency, callback) {
   this.getAConnection(function(err, c) {
     if (err) {
       callback(err);
+      return;
     }
-    else {
-      self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ');
-      c.execute(query, args, consistency, function(err, result){
-        //Determine if its a fatal error
-        if (self.isServerUnhealthy(err)) {
-          //if its a fatal error, set the connection to unhealthy
-          self.setUnhealthy(c);
-          //retry, it will get another connection
-          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-          self.execute.call(self, query, args, consistency, callback);
-        }
-        else {
-          //if not, just keep swimming. Could be a syntax error or an unauthorized for example
-          callback(err, result);
-        }
-      });
-    }
+    self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ');
+    c.execute(query, args, consistency, function(err, result) {
+      //Determine if its a fatal error
+      if (self.isServerUnhealthy(err)) {
+        //if its a fatal error, set the connection to unhealthy
+        self.setUnhealthy(c);
+        //retry, it will get another connection
+        self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
+        self.execute.call(self, query, args, consistency, callback);
+      }
+      else {
+        //If the result is OK or there is error (syntax error or an unauthorized for example), callback
+        callback(err, result);
+      }
+    });
   });
 }
 

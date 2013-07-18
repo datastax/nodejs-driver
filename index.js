@@ -174,7 +174,7 @@ Client.prototype.getAConnection = function (callback) {
  Executes a query in an available connection.
  @param {function} callback, executes callback(err, result) when finished
  */
-Client.prototype.execute = function (query, args, consistency, callback) {
+Client.prototype.execute = function (query, args, consistency, callback, retryCount) {
   if(typeof callback === 'undefined') {
     if (typeof consistency === 'undefined') {
       //only the query and the callback was specified
@@ -202,9 +202,16 @@ Client.prototype.execute = function (query, args, consistency, callback) {
       if (self.isServerUnhealthy(err)) {
         //if its a fatal error, set the connection to unhealthy
         self.setUnhealthy(c);
-        self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-        //retry, it will get another connection
-        self.execute.call(self, query, args, consistency, callback, retryCount);
+        retryCount = (!retryCount) ? 0 : retryCount;
+        if (retryCount === self.options.maxExecuteRetries) {
+          callback(err, result, retryCount);
+        }
+        else {
+          //retry, it will get another connection
+          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
+          retryCount++;
+          self.execute.call(self, query, args, consistency, callback, retryCount);
+        }
       }
       else {
         //If the result is OK or there is error (syntax error or an unauthorized for example), callback

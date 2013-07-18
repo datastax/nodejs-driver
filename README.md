@@ -24,15 +24,18 @@ var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
 var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
 ```
 Client() accepts an object with these slots:
-
-         hosts : String list in host:port format. Port is optional (defaults to 9042).
-      keyspace : Name of keyspace to use.
-      username : User for authentication (optional).
-      password : Password for authentication (optional).
-       version : Currently only '3.0.0' is supported (optional).
-     staleTime : Time in milliseconds before trying to reconnect(optional).
-
-Queries are performed using the `execute()`. For example:
+```
+            hosts : String list in host:port format. 
+                    Port is optional (defaults to 9042).
+         keyspace : Name of keyspace to use (optional).
+         username : User for authentication (optional).
+         password : Password for authentication (optional).
+          version : Currently only '3.0.0' is supported (optional).
+        staleTime : Time in milliseconds before trying to reconnect(optional).
+maxExecuteRetries : Maximum amount of times an execute can be retried
+                    using another connection, in case the server is unhealthy (optional).
+```
+Queries are performed using the `execute()` method. For example:
 ```javascript
 // Reading
 cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
@@ -94,7 +97,7 @@ con.open(function(err) {
 Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
 ```javascript
 var Connection = require('node-cassandra-cql').Connection;
-var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1', username:'user', password:'password'});
+var con = new Connection({host:'host1', port:9042, keyspace:'Keyspace1'});
 con.on('log', function(level, message) {
   console.log('log event: %s -- %j', level, message);
 });

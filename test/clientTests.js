@@ -54,17 +54,34 @@ module.exports = {
             callback(null);
           }
         });
-      }/*,
+      },
       function (callback) {
         //no query params
-        client.execute('SELECT * FROM system.schema_keyspaces', function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces', function(err) {
           callback(err);
         });
-      }*/
+      }
     ],
     //all finished
     function(err){
       test.ok(err === null, err);
+      test.done();
+    });
+  },
+  'max execute retries': function (test) {
+    //Only 1 retry
+    client.options.maxExecuteRetries = 1;
+    var isServerUnhealthyOriginal = client.isServerUnhealthy;
+
+    //Change the behaviour so every err is a "server error"
+    client.isServerUnhealthy = function (err) {
+      return true;
+    };
+
+    client.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
+      test.ok(err, 'The execution must fail');
+      test.equal(retryCount, client.options.maxExecuteRetries, 'It must retry executing the times specified');
+      client.isServerUnhealthy = isServerUnhealthyOriginal;
       test.done();
     });
   },

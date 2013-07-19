@@ -234,6 +234,31 @@ module.exports = {
       });
     });
   },
+  'prepare query': function (test) {
+    async.series([
+      function (callback) {
+        con.prepare("select id, big_sample from sampletable1 where id = ?", function (err, result) {
+          callback(err, result.id);
+        });
+      }, 
+      function (callback) {
+        con.prepare("select id, big_sample from sampletable1 where id = ?", function (err, result) {
+          callback(err, result.id);
+        });
+      }, 
+      function (callback) {
+        con.prepare("select id, big_sample, map_sample from sampletable1 where id = ?", function (err, result) {
+          callback(err, result.id);
+        });
+      },
+    ], function (err, ids) {
+      if (err) test.fail(err);
+      test.ok(ids[0].toString('hex').length > 0);
+      test.ok(ids[0].toString('hex') === ids[1].toString('hex'), 'Ids to same queries should be the same');
+      test.ok(ids[1].toString('hex') !== ids[2].toString('hex'), 'Ids to different queries should be different');
+      test.done();
+    });
+  },
   /**
    * Executes last, closes the connection
    */

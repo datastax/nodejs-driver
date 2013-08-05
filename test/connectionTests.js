@@ -175,7 +175,12 @@ module.exports = {
         callback();
       });
     }, function () {
-      con.execute("select * from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
+      con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
+        if (err) {
+          test.fail(err, 'Error selecting');
+          test.done();
+          return;
+        }
         setRowsByKey(result.rows, 'id');
         var row0 = result.rows.get(200);
         var row1 = result.rows.get(201);
@@ -258,6 +263,11 @@ module.exports = {
       test.ok(ids[1].toString('hex') !== ids[2].toString('hex'), 'Ids to different queries should be different');
       test.done();
     });
+  },
+  'execute prepared query': function (test) {
+    //TODO: prepare a bunch of queries involving different data types
+    //to check type conversion
+    test.done();
   },
   /**
    * Executes last, closes the connection

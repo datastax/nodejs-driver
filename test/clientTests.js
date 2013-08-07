@@ -85,7 +85,38 @@ module.exports = {
       test.done();
     });
   },
-  'shutdown': function(test) {
+  'no initial connection callback': function (test) {
+    var localClient = new Client({hosts: ['localhost:8080', 'localhost:8080']});
+    localClient.on('log', function (type, message) {
+      //console.log(type, message);
+    });
+    localClient.connections[0].on('log', function (type, message) {
+      //console.log('con0', type, message);
+    });
+    var errors = [];
+    async.series([function (callback){
+      localClient.execute('badabing', function (err) {
+        if (err) {
+          errors.push(err);
+          callback();
+        }
+      });
+    }, function (callback){
+      localClient.execute('badabang', function (err) {
+        if (err) {
+          errors.push(err);
+        }
+        callback();
+      });
+    }], function () {
+      test.ok(errors.length === 2, 'There wasnt any good connection, it must callback with an err each time trying to execute');
+      if (errors.length == 2) {
+        test.ok(errors[0].name == 'PoolConnectionError', 'Errors should be of type PoolConnectionError');
+      }
+      test.done();
+    });
+  },
+  'shutdown': function (test) {
     client.shutdown(function(){
       test.done();
     });

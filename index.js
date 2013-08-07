@@ -62,8 +62,7 @@ Client.prototype.connect = function (connectCallback) {
     function () {
       self.connecting = false;
       if (errors.length === self.connections.length) {
-        var error = new Error('Errors connecting to every connection');
-        error._individualErrors = errors;
+        var error = new PoolConnectionError(errors);
         connectCallback(error);
       }
       else {
@@ -93,6 +92,10 @@ Client.prototype.ensurePoolConnection = function (callback) {
           }, 100);
         },
         function(err) {
+          if (!err && self.connectionError) {
+            //When there was a previous error connecting the pool, the method should always return an error
+            err = new PoolConnectionError();
+          }
           callback(err);
         }
       );
@@ -126,12 +129,9 @@ Client.prototype.getAConnection = function (callback) {
     else {
       //go through the connections
       //watch out for infite loops
+      var startTime = Date.now();
       function checkNextConnection (callback) {
         self.emit('log', 'info', 'Checking next connection');
-        if (self.connectionError) {
-          callback(new Error('No available connection, all connections failed.'));
-          return;
-        }
         self.connectionIndex++;
         if (self.connectionIndex > self.connections.length-1) {
           self.connectionIndex = 0;
@@ -264,6 +264,16 @@ Client.prototype.shutdown = function (callback) {
     }
   );
 }
+
+/**
+ * Represents a error while trying to connect the pool, all the connections failed.
+ */
+function PoolConnectionError(individualErrors) {
+  this.name = 'PoolConnectionError';
+  this.info = 'Represents a error while trying to connect the pool, all the connections failed.';
+  this.individualErrors = individualErrors;
+}
+util.inherits(PoolConnectionError, Error);
 
 exports.Client = Client;
 exports.Connection = Connection;

@@ -265,8 +265,13 @@ module.exports = {
   },
   'execute prepared query': function (test) {
     //TODO: prepare a bunch of queries involving different data types
-    //to check type conversion
-    test.done();
+      //to check type conversion
+    con.prepare("select id, big_sample, map_sample from sampletable1 LIMIT 1", function (err, result) {
+      con.executePrepared(result.id, [], types.consistencies.quorum, function (err, result) {
+        test.ok(result.rows.length === 1, 'There must be a record');
+        test.done();
+      });
+    });
   },
   /**
    * Executes last, closes the connection

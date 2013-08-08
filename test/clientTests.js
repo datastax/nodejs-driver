@@ -17,7 +17,6 @@ module.exports = {
           return;
         }
         client.execute("USE ?;", [keyspace], function (err) {
-          console.log('using keyspace');
           if (err) test.fail(err);
           test.done();
         });
@@ -113,7 +112,30 @@ module.exports = {
       if (errors.length == 2) {
         test.ok(errors[0].name == 'PoolConnectionError', 'Errors should be of type PoolConnectionError');
       }
-      test.done();
+      localClient.shutdown(function () {
+        test.done();
+      });
+    });
+  },
+  'get a connection timeout': function (test) {
+    var localClient = new Client({hosts: ['localhost']});
+    localClient.on('log', function (type, message) {
+      //console.log(type, message);
+    });
+    //wait for short amount of time
+    localClient.options.getAConnectionTimeout = 200;
+    //mark all connections as unhealthy
+    localClient.isHealthy = function() {
+      return false;
+    };
+    //disallow reconnections
+    localClient.canReconnect = localClient.isHealthy;
+    localClient.execute('badabing', function (err) {
+      test.ok(err, 'Callback must return an error');
+      test.ok(err.name === 'TimeoutError', 'The error must be a TimeoutError');
+      localClient.shutdown(function() {
+        test.done();
+      });
     });
   },
   'shutdown': function (test) {

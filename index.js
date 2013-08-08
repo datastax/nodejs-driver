@@ -13,8 +13,10 @@ var optionsDefault = {
   maxRequestsRetry: 100,
   //Time that has to pass before trying to reconnect
   staleTime: 1000,
-  //maximum amount of times an execute can be retried (using another connection) because of an unhealthy server
-  maxExecuteRetries: 3
+  //maximum amount of times an execute can be retried (using another connection) because of an unhealthy server response
+  maxExecuteRetries: 3,
+  //maximum time (in milliseconds) to get a healthy connection from the pool. It should be connection Timeout * n.
+  getAConnectionTimeout: 3500
 }
 //Represents a pool of connection to multiple hosts
 function Client (options) {
@@ -118,7 +120,7 @@ Client.prototype.ensurePoolConnection = function (callback) {
 
 /**
  * Gets a live connection
- * If there isn't an active connection available, it calls the callback with the error
+ * If there isn't an active connection available, it calls the callback with the error.
  */
 Client.prototype.getAConnection = function (callback) {
   var self = this;
@@ -140,6 +142,9 @@ Client.prototype.getAConnection = function (callback) {
         if (self.isHealthy(c)) {
           callback(null, c);
         }
+        else if (Date.now() - startTime > self.options.getAConnectionTimeout) {
+          callback(new types.TimeoutError('Get a connection timed out'));
+        }
         else if (self.canReconnect(c) && !c.connecting) {
           self.emit('log', 'info', 'Retrying to open #' + c.indexInPool);
           //try to reconnect
@@ -147,9 +152,9 @@ Client.prototype.getAConnection = function (callback) {
             if (err) {
               //This connection is still not good, go for the next one
               self.setUnhealthy(c);
-              setTimeout(function () {
+              setImmediate(function () {
                 checkNextConnection(callback);
-              }, 50);
+              });
             }
             else {
               //this connection is now good
@@ -160,9 +165,9 @@ Client.prototype.getAConnection = function (callback) {
         }
         else {
           //this connection is not good, try the next one
-          setTimeout(function () {
+          setImmediate(function () {
             checkNextConnection(callback);
-          }, 50);
+          });
         }
       }
       checkNextConnection(callback);

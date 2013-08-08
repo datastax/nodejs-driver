@@ -126,11 +126,10 @@ module.exports = {
   },
   'execute malformed query': function(test) {
     con.execute("Malformed SLEECT SELECT * FROM sampletable1;", null, function(err) {
+      test.ok(err, 'This query must yield an error.');
       if (err) {
         test.ok(!err.isServerUnhealthy, 'The connection should be reusable and the server should be healthy even if a query fails.');
-      }
-      else {
-        test.fail('This query must yield an error.');
+        test.ok(err.name === 'ResponseError', 'The error should be of type ResponseError');
       }
       test.done();
     });

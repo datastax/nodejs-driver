@@ -23,18 +23,17 @@ var Client = require('node-cassandra-cql').Client;
 var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
 var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
 ```
-Client() accepts an object with these slots:
+Client() accepts an object with these slots, only `hosts` is required:
 ```
-                hosts : String list in host:port format. 
-                        Port is optional (defaults to 9042).
-             keyspace : Name of keyspace to use (optional).
-             username : User for authentication (optional).
-             password : Password for authentication (optional).
-              version : Currently only '3.0.0' is supported (optional).
-            staleTime : Time in milliseconds before trying to reconnect(optional).
-    maxExecuteRetries : Maximum amount of times an execute can be retried
-                        using another connection, in case the server is unhealthy (optional).
-getAConnectionTimeout : maximum time in milliseconds to wait for get a healthy connection from the pool.
+                hosts: String list in host:port format. Port is optional (defaults to 9042).
+             keyspace: Name of keyspace to use.
+             username: User for authentication.
+             password: Password for authentication.
+              version: Currently only '3.0.0' is supported.
+            staleTime: Time in milliseconds before trying to reconnect.
+    maxExecuteRetries: Maximum amount of times an execute can be retried
+                       using another connection, in case the server is unhealthy.
+getAConnectionTimeout: Maximum time in milliseconds to wait for a connection from the pool.
 ```
 Queries are performed using the `execute()` method. For example:
 ```javascript

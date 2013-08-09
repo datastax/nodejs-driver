@@ -263,14 +263,43 @@ module.exports = {
       test.done();
     });
   },
-  'execute prepared query': function (test) {
+  'execute prepared queries': function (test) {
     //TODO: prepare a bunch of queries involving different data types
       //to check type conversion
-    con.prepare("select id, big_sample, map_sample from sampletable1 LIMIT 1", function (err, result) {
-      con.executePrepared(result.id, [], types.consistencies.quorum, function (err, result) {
-        test.ok(result.rows.length === 1, 'There must be a record');
-        test.done();
-      });
+    function prepareInsertTest(idValue, columnName, columnValue, getValue) {
+      if (!getValue) {
+        getValue = function (value) {return value};
+      }
+      return function (callback) {
+        con.prepare("INSERT INTO sampletable1 (id, " + columnName + ") VALUES (" + idValue + ", ?)", function (err, result) {
+          if (err) {callback(err); return}
+          con.executePrepared(result.id, [columnValue], types.consistencies.quorum, function (err, result) {
+            con.execute("SELECT id, " + columnName + " FROM sampletable1 WHERE ID=" + idValue, function (err, result) {
+              if (err) {callback(err); return}
+              test.ok(result.rows.length === 1, 'There must be a row');
+              test.ok(getValue(result.rows[0].get(columnName)) === getValue(columnValue), 'The value does not match');
+              callback(err);
+            });
+          });
+        });
+      }
+    };
+    async.series([
+      function integerTest(callback) {
+        con.prepare("select id, big_sample, map_sample from sampletable1 WHERE id=? LIMIT 1", function (err, result) {
+          if (err) {callback(err); return}
+          con.executePrepared(result.id, [200], types.consistencies.quorum, function (err, result) {
+            test.ok(result.rows.length === 1, 'There must be a record');
+            callback(err);
+          });
+        });
+      },
+      prepareInsertTest(300, 'text_sample', 'Dexter'),
+      prepareInsertTest(301, 'text_sample', null),
+      prepareInsertTest(302, 'blob_sample', new Buffer('Hello!!', 'utf8'), function (value) { value.toString('utf8')})
+    ], function (err) {
+      if (err) test.fail(err);
+      test.done();
     });
   },
   /**

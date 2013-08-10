@@ -114,6 +114,22 @@ Map datatype are encoded from / decoded to Javascript objects with keys as props
 
 Decimal and timeuuid are not parsed yet, they are yielded as byte Buffers.
 
+### Collections and UUIDs
+
+This library makes some assumptions about your data structures and their relationships to C*.
+```javascript
+// Sets are Objects with 0-indexed, numeric, sequential keys
+var iAmASet = {0: "roomba", 1: "cats", 2:"dogs", 3:"snakes", 4:"rats"};
+// Lists are just arrays
+var iAmAList = ["cats", "dogs", "snakes", "rats"];
+// Maps are simple key/value pairs as you would expect
+var iAmAMap = {"pet": "cat", "food": "yep", "water": "that too"};
+```
+
+UUIDs are detected and not quoted so 
+`INSERT INTO sections (section_uuid, section_settings) VALUES (?, ?)` with values of `["43d2891f-6041-4572-bcdd-0bb14b96aa5f", {name: "Sports Section", status: "open", updateCount: 4}]`
+generates valid CQL that looks like:
+`INSERT INTO sections (section_uuid, section_settings) VALUES (43d2891f-6041-4572-bcdd-0bb14b96aa5f, {'name': 'Sports Section', 'status': 'open', 'updateCount': '4'})`
 
 ## License
 

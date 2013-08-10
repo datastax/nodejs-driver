@@ -5,7 +5,7 @@ var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
 
 var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
-var keyspace = new types.QueryLiteral('unittestkp1_conversionTests');
+var keyspace = 'unittestkp1_conversionTests';
 
 module.exports = {
   connect: function (test) {
@@ -24,7 +24,15 @@ module.exports = {
     test.ok(queryParser.encodeParam({value:['one', 'two'],hint:'set'}) === '{\'one\',\'two\'}', 'Encodeparam for set failed');
     test.ok(queryParser.encodeParam({value:{key1:'value1', key2:'value2'},hint:'map'}) === '{\'key1\':\'value1\',\'key2\':\'value2\'}', 'Encodeparam for map failed');
     test.ok(queryParser.encodeParam(new Int64('56789abcdef0123')).indexOf('056789abcdef0123') >= 0, 'Encodeparam for Int64 failed');
-    test.ok(queryParser.encodeParam(new Date(2013,6,2, 04, 30, 05)) === '1372753805000', 'Encodeparam for Date failed: ' + queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)));
+    test.ok(queryParser.encodeParam(new Date(2013,6,2, 04, 30, 05)) === '1372753805000', 'Encodeparam for Date failed: ' + queryParser.encodeParam(new Date(2013,6,2, 04, 30, 05)));
+    test.done();
+  },
+  UUIDQueryTest: function (test){
+    var sampleUUIDQuery = 'SELECT * FROM somekeyspace WHERE some_uuid = ?';
+    var sampleUUID = 'd216de0b-dd70-4148-9a30-aaad53518fb2';
+    var expected = sampleUUIDQuery.replace("?", sampleUUID); // Make sure we get an unquoted string here
+    var actual = queryParser.parse('SELECT * FROM somekeyspace WHERE some_uuid = ?', [sampleUUID]);
+    test.equal(actual, expected, 'Query with UUID failed:' + actual);
     test.done();
   },
   /**
@@ -41,10 +49,10 @@ var helper = {
   connectInit: function (callback) {
     con.open(function (err) {
       if (err) throw err;
-      con.execute("DROP KEYSPACE ?;", [keyspace], function(err) {
-        con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function(err) {
+      con.execute("DROP KEYSPACE "+keyspace+";", [], function(err) {
+        con.execute("CREATE KEYSPACE "+keyspace+" WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [], function(err) {
           if (err) throw err;
-          con.execute("USE ?;", [keyspace], function(err) {
+          con.execute("USE "+keyspace+";", [], function(err) {
             if (err) throw err;
             callback();
           });

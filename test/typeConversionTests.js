@@ -3,9 +3,11 @@ var types = require('../lib/types.js');
 var util = require('util');
 var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
+var uuid = require('node-uuid');
 
 var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 var keyspace = 'unittestkp1_conversionTests';
+var testTable = "CREATE TABLE collectionTests (test_uuid uuid, textTextMapField map<text, text>, UUIDTextMapField map<uuid, text>, textListField list<text>, textSetField set<text>, PRIMARY KEY (test_uuid));";
 
 module.exports = {
   connect: function (test) {
@@ -35,6 +37,27 @@ module.exports = {
     test.equal(actual, expected, 'Query with UUID failed:' + actual);
     test.done();
   },
+  collectionTests: function(test){
+    // Setup some test data
+    var iAmASet = {0: "roomba", 1: "cats", 2:"dogs", 3:"snakes", 4:"rats"};
+    var iAmAList = ["cats", "dogs", "snakes", "rats"];
+    var iAmAMap = {"pet": "cat", "food": "yep", "water": "that too"};
+    var iAmAUUIDKeyedMap = {};
+    var key1 = uuid.v4();
+    var key2 = uuid.v4();
+    var key3 = uuid.v4();
+    iAmAUUIDKeyedMap[key1] = "cat";
+    iAmAUUIDKeyedMap[key2] = "dog";
+    iAmAUUIDKeyedMap[key3] = "snake";
+    var testUUID = uuid.v4();
+    var testQuery = "INSERT INTO collectionTests (test_uuid, textTextMapField, UUIDTextMapField, textListField, textSetField) VALUES (?, ?, ?, ?, ?)";
+    var testVals = [testUUID, iAmAMap, iAmAUUIDKeyedMap, iAmAList, iAmASet];
+    var expected = "INSERT INTO collectionTests (test_uuid, textTextMapField, UUIDTextMapField, textListField, textSetField) VALUES ("+testUUID+", {'pet':'cat','food':'yep','water':'that too'}, {"+key1+":'cat',"+key2+":'dog',"+key3+":'snake'}, ['cats','dogs','snakes','rats'], {'roomba','cats','dogs','snakes','rats'})";
+    var actual = queryParser.parse(testQuery, testVals);
+    test.equal(actual, expected, 'Collection tests failed to generate valid CQL:' + actual);
+    // TODO actual create the table, run the CQL-INSERT, SELECT it back, and verify
+    test.done();
+  },
   /**
    * Executes last, closes the connection
    */
@@ -48,16 +71,17 @@ var helper = {
   //connects and sets up a keyspace
   connectInit: function (callback) {
     con.open(function (err) {
-      if (err) throw err;
+      if (err) console.log( err );
       con.execute("DROP KEYSPACE "+keyspace+";", [], function(err) {
+        if (err) console.log( err );
         con.execute("CREATE KEYSPACE "+keyspace+" WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [], function(err) {
-          if (err) throw err;
+          if (err) console.log( err );
           con.execute("USE "+keyspace+";", [], function(err) {
-            if (err) throw err;
+            if (err) console.log( err );
             callback();
           });
         });
       });
     });
   }
-}
+};

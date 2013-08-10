@@ -19,7 +19,8 @@
   ],
   "dependencies": {
     "async": ">= 0.1.12",
-    "node-int64": ">= 0.3.0"
+    "node-int64": ">= 0.3.0",
+    "node-uuid": "1.4.0"
   },
   "devDependencies": {
     "nodeunit": ">= 0.8.0"

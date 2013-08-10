@@ -129,7 +129,8 @@ var iAmAMap = {"pet": "cat", "food": "yep", "water": "that too"};
 UUIDs are detected and not quoted so 
 `INSERT INTO sections (section_uuid, section_settings) VALUES (?, ?)` with values of `["43d2891f-6041-4572-bcdd-0bb14b96aa5f", {name: "Sports Section", status: "open", updateCount: 4}]`
 generates valid CQL that looks like:
-`INSERT INTO sections (section_uuid, section_settings) VALUES (43d2891f-6041-4572-bcdd-0bb14b96aa5f, {'name': 'Sports Section', 'status': 'open', 'updateCount': '4'})`
+`INSERT INTO sections (section_uuid, section_settings) VALUES 
+(43d2891f-6041-4572-bcdd-0bb14b96aa5f, {'name': 'Sports Section', 'status': 'open', 'updateCount': '4'})`
 
 ## License
 

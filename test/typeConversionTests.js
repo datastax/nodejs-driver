@@ -24,7 +24,7 @@ module.exports = {
     test.ok(queryParser.encodeParam({value:['one', 'two'],hint:'set'}) === '{\'one\',\'two\'}', 'Encodeparam for set failed');
     test.ok(queryParser.encodeParam({value:{key1:'value1', key2:'value2'},hint:'map'}) === '{\'key1\':\'value1\',\'key2\':\'value2\'}', 'Encodeparam for map failed');
     test.ok(queryParser.encodeParam(new Int64('56789abcdef0123')).indexOf('056789abcdef0123') >= 0, 'Encodeparam for Int64 failed');
-    test.ok(queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)) === '1372753805000', 'Encodeparam for Date failed: ' + queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)));
+    test.ok(queryParser.encodeParam(new Date(2013,6,2, 04, 30, 05)) === '1372753805000', 'Encodeparam for Date failed: ' + queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)));
     test.done();
   },
   /**

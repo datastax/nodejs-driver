@@ -19,6 +19,7 @@ module.exports = {
     test.ok(queryParser.encodeParam(1) === '1', 'Encodeparam for number failed');
     test.ok(queryParser.encodeParam(1.1) === '1.1', 'Encodeparam for number failed');
     test.ok(queryParser.encodeParam('text') === '\'text\'', 'Encodeparam for string failed');
+    test.ok(queryParser.encodeParam("needs escapin' text") === "'needs escapin'' text'", 'Encodeparam for escaped string failed');
     test.ok(queryParser.encodeParam(null) === 'null', 'Encodeparam for null failed:' + queryParser.encodeParam(null));
     test.ok(queryParser.encodeParam([1,2,3]) === '[1,2,3]', 'Encodeparam for array failed');
     test.ok(queryParser.encodeParam([]) === '[]', 'Encodeparam for array failed: ' + queryParser.encodeParam([]));

@@ -95,7 +95,7 @@ module.exports = {
         "set_sample set<int>,           "+
         "map_sample map<text, text>,    "+
         "int_sample int,    "+
-        "ip_sample inet,    "+
+        "inet_sample inet,    "+
         "text_sample text);"
     , null, function(err) {
       if (err) test.fail(err, 'Error creating types table');
@@ -269,14 +269,19 @@ module.exports = {
   'execute prepared queries': function (test) {
     //TODO: prepare a bunch of queries involving different data types
       //to check type conversion
-    function prepareInsertTest(idValue, columnName, columnValue, compareFunc) {
+    function prepareInsertTest(idValue, columnName, columnValue, hint, compareFunc) {
       if (!compareFunc) {
         compareFunc = function (value) {return value};
       }
+      var paramValue = columnValue;
+      if (hint) {
+        paramValue = {value: paramValue, hint: hint};
+      }
       return function (callback) {
         con.prepare("INSERT INTO sampletable1 (id, " + columnName + ") VALUES (" + idValue + ", ?)", function (err, result) {
-          if (err) {callback(err); return}
-          con.executePrepared(result.id, [columnValue], types.consistencies.quorum, function (err, result) {
+          if (err) {console.error(err);callback(err); return;}
+          con.executePrepared(result.id, [paramValue], types.consistencies.quorum, function (err, result) {
+            if (err) {console.error(err);callback(err); return;}
             con.execute("SELECT id, " + columnName + " FROM sampletable1 WHERE ID=" + idValue, function (err, result) {
               if (err) {callback(err); return}
               test.ok(result.rows.length === 1, 'There must be a row');
@@ -291,16 +296,18 @@ module.exports = {
     async.series([
       prepareInsertTest(300, 'text_sample', 'Dexter'),
       prepareInsertTest(301, 'text_sample', null),
-      prepareInsertTest(302, 'blob_sample', new Buffer('Hello!!', 'utf8'), toStringCompare),
-      prepareInsertTest(303, 'list_sample', [1,2,80], toStringCompare),
-      prepareInsertTest(304, 'set_sample', [1,2,80,81], toStringCompare),
-      prepareInsertTest(305, 'list_sample', [], function (value) {
+      prepareInsertTest(302, 'blob_sample', new Buffer('Hello!!', 'utf8'), null, toStringCompare),
+      prepareInsertTest(303, 'list_sample', [1,2,80], null, toStringCompare),
+      prepareInsertTest(304, 'set_sample', [1,2,80,81], null, toStringCompare),
+      prepareInsertTest(305, 'list_sample', [], null, function (value) {
         if (value != null && value.length === 0) 
           //empty sets and lists are stored as null values
           return null; 
         return value;
       }),
-      prepareInsertTest(306, 'int_sample', 1500)
+      prepareInsertTest(306, 'int_sample', 1500),
+      //ip addresses
+      prepareInsertTest(307, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare)
     ], function (err) {
       if (err) test.fail(err);
       test.done();

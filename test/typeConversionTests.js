@@ -3,6 +3,7 @@ var types = require('../lib/types.js');
 var util = require('util');
 var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
+var dataTypes = types.dataTypes;
 
 var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 var keyspace = new types.QueryLiteral('unittestkp1_conversionTests');
@@ -25,6 +26,16 @@ module.exports = {
     test.ok(queryParser.encodeParam({value:{key1:'value1', key2:'value2'},hint:'map'}) === '{\'key1\':\'value1\',\'key2\':\'value2\'}', 'Encodeparam for map failed');
     test.ok(queryParser.encodeParam(new Int64('56789abcdef0123')).indexOf('056789abcdef0123') >= 0, 'Encodeparam for Int64 failed');
     test.ok(queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)) === '1372753805000', 'Encodeparam for Date failed: ' + queryParser.encodeParam(new Date(2013,6,2, 10, 30, 05)));
+    test.done();
+  },
+  'guess data type': function (test) {
+    var guessDataType = types.typeEncoder.guessDataType;
+    test.ok(guessDataType(1) === dataTypes.int, 'Guess type for an integer number failed');
+    test.ok(guessDataType(1.01) === dataTypes.double, 'Guess type for a double number failed');
+    test.ok(guessDataType(true) === dataTypes.boolean, 'Guess type for a boolean value failed');
+    test.ok(guessDataType([1,2,3]) === dataTypes.list, 'Guess type for an Array value failed');
+    test.ok(guessDataType('a string') === dataTypes.text, 'Guess type for an string value failed');
+    test.ok(guessDataType(new Buffer(1)) === dataTypes.blob, 'Guess type for a buffer value failed');
     test.done();
   },
   /**

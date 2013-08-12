@@ -87,18 +87,19 @@ module.exports = {
   'create types table': function(test) {
     con.execute(
       "CREATE TABLE sampletable1 (" +
-        "id int PRIMARY KEY,            "+
-        "big_sample bigint,             "+
-        "blob_sample blob,             "+
-        "decimal_sample decimal,        "+
-        "float_sample float,        "+
-        "boolean_sample boolean,        "+
-        "double_sample double,        "+
-        "list_sample list<int>,         "+
-        "set_sample set<int>,           "+
-        "map_sample map<text, text>,    "+
-        "int_sample int,    "+
-        "inet_sample inet,    "+
+        "id int PRIMARY KEY," +
+        "big_sample bigint," +
+        "timestamp_sample timestamp," +
+        "blob_sample blob," +
+        "decimal_sample decimal," +
+        "float_sample float," +
+        "boolean_sample boolean," +
+        "double_sample double," +
+        "list_sample list<int>," +
+        "set_sample set<int>," +
+        "map_sample map<text, text>," +
+        "int_sample int," +
+        "inet_sample inet," +
         "text_sample text);"
     , null, function(err) {
       if (err) test.fail(err, 'Error creating types table');
@@ -286,9 +287,10 @@ module.exports = {
           con.executePrepared(result.id, [paramValue], types.consistencies.quorum, function (err, result) {
             if (err) {console.error(err);callback(err); return;}
             con.execute("SELECT id, " + columnName + " FROM sampletable1 WHERE ID=" + idValue, function (err, result) {
-              if (err) {callback(err); return}
+              if (err) {console.error(err);callback(err); return}
               test.ok(result.rows.length === 1, 'There must be a row');
               var newValue = compareFunc(result.rows[0].get(columnName));
+              //console.log(columnValue, newValue + ':' + compareFunc(columnValue));
               test.ok(newValue === compareFunc(columnValue), 'The value does not match: ' + newValue + ':' + compareFunc(columnValue));
               callback(err);
             });
@@ -296,8 +298,24 @@ module.exports = {
         });
       }
     };
-    var toStringCompare = function (value) { value.toString('utf8')};
-    var roundNumberCompare = function (digits) {return function toNumber(value) {value.toFixed(digits)}}
+    var toStringCompare = function (value) { 
+      return value.toString();
+    };
+    var toTimeCompare = function (value) {
+      if (value instanceof Date) {
+        return value.getTime();
+      }
+      if (value instanceof Int64) {
+        return value.valueOf();
+      }
+      return value;
+    };
+    var roundNumberCompare = function (digits) {
+      return function toNumber(value) 
+      {
+        return value.toFixed(digits);
+      };
+    };
     async.series([
       prepareInsertTest(300, 'text_sample', 'Señor Dexter', dataTypes.varchar),
       prepareInsertTest(301, 'text_sample', 'Morgan', dataTypes.ascii),
@@ -319,7 +337,11 @@ module.exports = {
       //ip addresses
       prepareInsertTest(320, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare),
       //ip 6
-      prepareInsertTest(321, 'inet_sample', new Buffer([1,0,0,0,1,0,0,0,1,0,0,0,192,168,0,50]), null, toStringCompare)
+      prepareInsertTest(321, 'inet_sample', new Buffer([1,0,0,0,1,0,0,0,1,0,0,0,192,168,0,50]), dataTypes.inet, toStringCompare),
+      prepareInsertTest(330, 'big_sample', new Int64(1010, 10), dataTypes.bigint, toStringCompare),
+      prepareInsertTest(331, 'big_sample', 10, dataTypes.bigint, toStringCompare),
+      prepareInsertTest(332, 'timestamp_sample', 1372753805600, dataTypes.timestamp, toTimeCompare),
+      prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,01,01,550), dataTypes.timestamp, toTimeCompare)
     ], function (err) {
       if (err) test.fail(err);
       test.done();

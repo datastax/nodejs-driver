@@ -4,6 +4,7 @@ var util = require('util');
 var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
 var uuid = require('node-uuid');
+var dataTypes = types.dataTypes;
 
 var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 var keyspace = 'unittestkp1_conversionTests';
@@ -57,6 +58,16 @@ module.exports = {
     var actual = queryParser.parse(testQuery, testVals);
     test.equal(actual, expected, 'Collection tests failed to generate valid CQL:' + actual);
     // TODO actual create the table, run the CQL-INSERT, SELECT it back, and verify
+    test.done();
+  },
+  'guess data type': function (test) {
+    var guessDataType = types.typeEncoder.guessDataType;
+    test.ok(guessDataType(1) === dataTypes.int, 'Guess type for an integer number failed');
+    test.ok(guessDataType(1.01) === dataTypes.double, 'Guess type for a double number failed');
+    test.ok(guessDataType(true) === dataTypes.boolean, 'Guess type for a boolean value failed');
+    test.ok(guessDataType([1,2,3]) === dataTypes.list, 'Guess type for an Array value failed');
+    test.ok(guessDataType('a string') === dataTypes.text, 'Guess type for an string value failed');
+    test.ok(guessDataType(new Buffer(1)) === dataTypes.blob, 'Guess type for a buffer value failed');
     test.done();
   },
   /**

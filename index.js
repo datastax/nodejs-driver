@@ -201,7 +201,8 @@ Client.prototype.execute = function (query, args, consistency, callback, retryCo
       callback(err);
       return;
     }
-    self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ');
+    self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ' + query);
+    self.emit('log', 'info', 'with args: ' + args);
     c.execute(query, args, consistency, function(err, result) {
       //Determine if its a fatal error
       if (self.isServerUnhealthy(err)) {

@@ -315,6 +315,7 @@ module.exports = {
           return null;
         return value;
       }),
+      prepareInsertTest(313, 'map_sample', {key1: "value1", key2: "value2",}, dataTypes.map, toStringCompare),
       //ip addresses
       prepareInsertTest(320, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare),
       //ip 6

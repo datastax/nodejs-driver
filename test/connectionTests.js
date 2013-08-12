@@ -91,6 +91,9 @@ module.exports = {
         "big_sample bigint,             "+
         "blob_sample blob,             "+
         "decimal_sample decimal,        "+
+        "float_sample float,        "+
+        "boolean_sample boolean,        "+
+        "double_sample double,        "+
         "list_sample list<int>,         "+
         "set_sample set<int>,           "+
         "map_sample map<text, text>,    "+
@@ -285,7 +288,8 @@ module.exports = {
             con.execute("SELECT id, " + columnName + " FROM sampletable1 WHERE ID=" + idValue, function (err, result) {
               if (err) {callback(err); return}
               test.ok(result.rows.length === 1, 'There must be a row');
-              test.ok(compareFunc(result.rows[0].get(columnName)) === compareFunc(columnValue), 'The value does not match');
+              var newValue = compareFunc(result.rows[0].get(columnName));
+              test.ok(newValue === compareFunc(columnValue), 'The value does not match: ' + newValue + ':' + compareFunc(columnValue));
               callback(err);
             });
           });
@@ -293,21 +297,28 @@ module.exports = {
       }
     };
     var toStringCompare = function (value) { value.toString('utf8')};
+    var roundNumberCompare = function (digits) {return function toNumber(value) {value.toFixed(digits)}}
     async.series([
-      prepareInsertTest(300, 'text_sample', 'Dexter'),
-      prepareInsertTest(301, 'text_sample', null),
-      prepareInsertTest(302, 'blob_sample', new Buffer('Hello!!', 'utf8'), null, toStringCompare),
-      prepareInsertTest(303, 'list_sample', [1,2,80], null, toStringCompare),
-      prepareInsertTest(304, 'set_sample', [1,2,80,81], null, toStringCompare),
-      prepareInsertTest(305, 'list_sample', [], null, function (value) {
+      prepareInsertTest(300, 'text_sample', 'Señor Dexter', dataTypes.varchar),
+      prepareInsertTest(301, 'text_sample', 'Morgan', dataTypes.ascii),
+      prepareInsertTest(302, 'text_sample', null, dataTypes.varchar),
+      prepareInsertTest(303, 'int_sample', 1500, dataTypes.int),
+      prepareInsertTest(304, 'float_sample', 123.6, dataTypes.float, roundNumberCompare(1)),
+      prepareInsertTest(305, 'float_sample', 123.001, dataTypes.float, roundNumberCompare(3)),
+      prepareInsertTest(306, 'double_sample', 123.00123, dataTypes.double, roundNumberCompare(5)),
+      prepareInsertTest(307, 'boolean_sample', true, dataTypes.boolean),
+      prepareInsertTest(310, 'list_sample', [1,2,80], dataTypes.list, toStringCompare),
+      prepareInsertTest(311, 'set_sample', [1,2,80,81], dataTypes.set, toStringCompare),
+      prepareInsertTest(312, 'list_sample', [], dataTypes.list, function (value) {
         if (value != null && value.length === 0) 
           //empty sets and lists are stored as null values
-          return null; 
+          return null;
         return value;
       }),
-      prepareInsertTest(306, 'int_sample', 1500),
       //ip addresses
-      prepareInsertTest(307, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare)
+      prepareInsertTest(320, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare),
+      //ip 6
+      prepareInsertTest(321, 'inet_sample', new Buffer([1,0,0,0,1,0,0,0,1,0,0,0,192,168,0,50]), null, toStringCompare)
     ], function (err) {
       if (err) test.fail(err);
       test.done();

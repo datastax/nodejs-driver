@@ -32,7 +32,7 @@ module.exports = {
   },
   UUIDQueryTest: function (test){
     var sampleUUIDQuery = 'SELECT * FROM somekeyspace WHERE some_uuid = ?';
-    var sampleUUID = 'd216de0b-dd70-4148-9a30-aaad53518fb2';
+    var sampleUUID = String(uuid.v4());
     var expected = sampleUUIDQuery.replace("?", sampleUUID); // Make sure we get an unquoted string here
     var actual = queryParser.parse('SELECT * FROM somekeyspace WHERE some_uuid = ?', [sampleUUID]);
     test.equal(actual, expected, 'Query with UUID failed:' + actual);

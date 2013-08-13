@@ -93,6 +93,7 @@ module.exports = {
         "blob_sample blob," +
         "decimal_sample decimal," +
         "float_sample float," +
+        "uuid_sample uuid," +
         "boolean_sample boolean," +
         "double_sample double," +
         "list_sample list<int>," +
@@ -141,7 +142,7 @@ module.exports = {
       test.done();
     });
   },
-  'bigInts': function(test) {
+  'bigints': function(test) {
     var big = new Int64('123456789abcdef0');
     con.execute('INSERT INTO sampletable1 (id, big_sample) VALUES(100, ?)', 
       [big], 
@@ -159,6 +160,19 @@ module.exports = {
           test.done();
           return;
         });
+    });
+  },
+  'uuids': function (test) {
+    var uuid = require('node-uuid');
+    var uuidValue = uuid.v4();
+    con.execute('INSERT INTO sampletable1 (id, uuid_sample) VALUES(150, ?)', [uuidValue], function (err, result) {
+      test.ok(!err, 'There was an error inserting a uuid');
+      if (err) {test.done();return;}
+      con.execute('SELECT id, uuid_sample FROM sampletable1 WHERE ID=150', function (err, result) {
+        test.ok(!err, 'There was an error retrieving a uuid');
+        test.ok(result.rows[0].get('uuid_sample') === uuidValue, 'uuid values do not match');
+        test.done();
+      });
     });
   },
   'insert literals': function(test) {

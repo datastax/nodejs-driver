@@ -108,12 +108,38 @@ The `level` being passed to the listener can be `info` or `error`.
 
 Cassandra's bigint data types are parsed as [int64](https://github.com/broofa/node-int64).
 
-List / Set datatypes are encoded from / decoded to Javascript Arrays.
+Lists collections are encoded from / decoded to Javascript Arrays.
 
-Map datatype are encoded from / decoded to Javascript objects with keys as props.
+Set collections are encoded from / decoded to Objects with 0-indexed, numeric, sequential keys
+
+Map collections are encoded from / decoded to Javascript objects with keys as props.
+
+UUID Strings are detected and treated as UUID objects
 
 Decimal and timeuuid are not parsed yet, they are yielded as byte Buffers.
 
+### Collections and UUIDs
+
+This library makes some assumptions about your data structures and their relationships to C*.
+```javascript
+// Sets are Objects with 0-indexed, numeric, sequential keys
+var iAmASet = {0: "roomba", 1: "cats", 2:"dogs", 3:"snakes", 4:"rats"};
+// Lists are just arrays
+var iAmAList = ["cats", "dogs", "snakes", "rats"];
+// Maps are simple key/value pairs as you would expect
+var iAmAMap = {"pet": "cat", "food": "yep", "water": "that too"};
+```
+
+UUIDs are detected and not quoted so 
+`INSERT INTO sections (section_uuid, section_settings) VALUES (?, ?)` with values of `["43d2891f-6041-4572-bcdd-0bb14b96aa5f", {name: "Sports Section", status: "open", updateCount: 4}]`
+generates CQL that looks like:
+
+    INSERT INTO sections (section_uuid, section_settings) VALUES 
+    (  43d2891f-6041-4572-bcdd-0bb14b96aa5f,
+       {'name': 'Sports Section', 'status': 'open', 'updateCount': '4'}
+    )
+
+Notice: updateCount's 4 getting stringified and, the no quotes around the 43d2891f-6041-4572-bcdd-0bb14b96aa5f. This makes assumptions about datatypes in your C* column families.
 
 ## License
 

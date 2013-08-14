@@ -1,5 +1,8 @@
+var util = require('util');
 var async = require('async');
 var Int64 = require('node-int64');
+var uuid = require('node-uuid');
+
 var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var dataTypes = types.dataTypes;
@@ -163,7 +166,6 @@ module.exports = {
     });
   },
   'uuids': function (test) {
-    var uuid = require('node-uuid');
     var uuidValue = uuid.v4();
     con.execute('INSERT INTO sampletable1 (id, uuid_sample) VALUES(150, ?)', [uuidValue], function (err, result) {
       test.ok(!err, 'There was an error inserting a uuid');
@@ -355,7 +357,9 @@ module.exports = {
       prepareInsertTest(330, 'big_sample', new Int64(1010, 10), dataTypes.bigint, toStringCompare),
       prepareInsertTest(331, 'big_sample', 10, dataTypes.bigint, toStringCompare),
       prepareInsertTest(332, 'timestamp_sample', 1372753805600, dataTypes.timestamp, toTimeCompare),
-      prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,01,01,550), dataTypes.timestamp, toTimeCompare)
+      prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,01,01,550), dataTypes.timestamp, toTimeCompare),
+      prepareInsertTest(340, 'uuid_sample', uuid.v4(), dataTypes.uuid, toStringCompare),
+      prepareInsertTest(341, 'uuid_sample', uuid.v1(), dataTypes.timeuuid, toStringCompare)
     ], function (err) {
       if (err) test.fail(err);
       test.done();

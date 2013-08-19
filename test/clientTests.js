@@ -8,49 +8,66 @@ var client = null;
 
 module.exports = {
   'setup keyspace': function(test) {
-    client = new Client({hosts: ['localhost:9042', 'localhost:9042']});
+    client = new Client({hosts: ['localhost:9042', 'localhost:9042'], keyspace: keyspace});
     client.execute("DROP KEYSPACE ?;", [keyspace], function () {
+      createKeySpace();
+    });
+    function createKeySpace() {
       client.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
         if (err) {
           test.fail(err);
           test.done();
           return;
         }
-        client.execute("USE ?;", [keyspace], function (err) {
+        createTable();
+      });
+    }
+    
+    function createTable() {
+      client.execute(
+        "CREATE TABLE sampletable2 (" +
+        "id int PRIMARY KEY," +
+        "big_sample bigint," +
+        "timestamp_sample timestamp," +
+        "blob_sample blob," +
+        "decimal_sample decimal," +
+        "float_sample float," +
+        "uuid_sample uuid," +
+        "boolean_sample boolean," +
+        "double_sample double," +
+        "list_sample list<int>," +
+        "set_sample set<int>," +
+        "map_sample map<text, text>," +
+        "int_sample int," +
+        "inet_sample inet," +
+        "text_sample text);", [], function (err) {
           if (err) test.fail(err);
           test.done();
         });
-      });
-    });
+    }
   },
   'execute params': function (test) {
     async.series([
       function (callback) {
         //all params
-        client.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, function(err){
-          callback(err);
-        });
+        client.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
       },
       function (callback) {
         //no consistency specified
-        client.execute('SELECT * FROM system.schema_keyspaces', [], function(err){
-          callback(err);
-        });
+        client.execute('SELECT * FROM system.schema_keyspaces', [], callback);
       },
       function (callback) {
         //change the meaning of the second parameter to consistency
-        client.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, function(err){
-          callback(err);
-        });
+        client.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
       },
       function (callback) {
         //query params but no params args, consistency specified, must fail
-        client.execute('SELECT * FROM system.schema_keyspaces keyspace_name = ?', types.consistencies.one, function(err){
+        client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
           if (!err) {
             callback(new Error('Consistency should not be treated as query parameters'));
           }
           else {
-            callback(null);
+            callback(null, result);
           }
         });
       },
@@ -62,33 +79,34 @@ module.exports = {
       }
     ],
     //all finished
-    function(err){
+    function(err, results){
       test.ok(err === null, err);
+      test.ok(results[1], 'The result of a query must not be null nor undefined');
+      test.done();
+    });
+  },
+  'response error test': function (test) {
+    client.execute('SELECT WHERE Fail Miserable', function (err, result) {
+      test.ok(err, 'Error must be defined and not null');
       test.done();
     });
   },
   'max execute retries': function (test) {
-    client.on('log', function (type, message) {
-      //console.log(type, message);
-    });
-    //test.done();
-    //return;
+    var localClient = new Client({hosts: client.options.hosts});
     //Only 1 retry
-    client.options.maxExecuteRetries = 1;
-    client.options.getAConnectionTimeout = 300;
-    
-    var isServerUnhealthyOriginal = client.isServerUnhealthy;
-
+    localClient.options.maxExecuteRetries = 1;
+    localClient.options.getAConnectionTimeout = 300;
     //Change the behaviour so every err is a "server error"
-    client.isServerUnhealthy = function (err) {
+    localClient.isServerUnhealthy = function (err) {
       return true;
     };
 
-    client.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
+    localClient.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
       test.ok(err, 'The execution must fail');
-      test.equal(retryCount, client.options.maxExecuteRetries, 'It must retry executing the times specified');
-      client.isServerUnhealthy = isServerUnhealthyOriginal;
-      test.done();
+      test.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified');
+      localClient.shutdown(function () {
+        test.done();
+      });
     });
   },
   'no initial connection callback': function (test) {
@@ -158,12 +176,15 @@ module.exports = {
     testIndexes();
 
     function testIndexes() {
-      async.series([localClient.getConnectionToPrepare.bind(localClient), localClient.getConnectionToPrepare.bind(localClient)]
+      async.series([localClient.getConnectionToPrepare.bind(localClient), 
+        localClient.getConnectionToPrepare.bind(localClient),
+        localClient.getConnectionToPrepare.bind(localClient),
+        localClient.getConnectionToPrepare.bind(localClient)]
       , function (err, result) {
         test.ok(!err);
-        test.ok(result.length == 2, 'There must be 2 connections returned');
+        test.ok(result.length == 4, 'There must be 4 connections returned');
         test.ok(result[0].indexInPool !== result[1].indexInPool, 'There must be 2 connections with different indexes');
-        test.ok(result[0].indexInPool + result[1].indexInPool > 0, 'There should be one with the index 0 and the other with 1');
+        test.ok(result[0].indexInPool + result[1].indexInPool + result[2].indexInPool + result[3].indexInPool == 2, 'There should be one with the index 0 and the other with 1');
         testNotToGetAConnection();
       });
     }
@@ -188,6 +209,17 @@ module.exports = {
         test.done();
       });
     }
+  },
+  'execute prepared': function (test) {
+    client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], types.consistencies.one, function (err, result) {
+      if (err) {
+        test.fail(err);
+        test.done();
+        return;
+      }
+      test.ok(result.rows.length == 1, 'There should be a row');
+      test.done();
+    });
   },
   'shutdown': function (test) {
     client.shutdown(function(){

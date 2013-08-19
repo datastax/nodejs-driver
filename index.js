@@ -232,31 +232,26 @@ Client.prototype.execute = function (query, args, consistency, callback) {
     }
   }
   var self = this;
-  var retryCount = 0;
-  
-  function tryAndRetry() {
+  function tryAndRetry(retryCount) {
+    retryCount = retryCount ? retryCount : 0;
     self.getAConnection(function(err, c) {
       if (err) {
         callback(err);
         return;
       }
       self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ' + query);
-      self.emit('log', 'info', 'with args: ' + args);
       c.execute(query, args, consistency, function(err, result) {
         //Determine if its a fatal error
         if (self.isServerUnhealthy(err)) {
-          //if its a fatal error, set the connection to unhealthy
+          //if its a fatal error, the server died
           self.setUnhealthy(c);
-          
           if (retryCount === self.options.maxExecuteRetries) {
             callback(err, result, retryCount);
+            return;
           }
-          else {
-            //retry, it will get another connection
-            self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-            retryCount++;
-            tryAndRetry();
-          }
+          //retry: it will get another connection
+          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
+          tryAndRetry(retryCount+1);
         }
         else {
           //If the result is OK or there is error (syntax error or an unauthorized for example), callback
@@ -265,36 +260,110 @@ Client.prototype.execute = function (query, args, consistency, callback) {
       });
     });
   };
-  tryAndRetry();
+  tryAndRetry(0);
 }
 
 Client.prototype.executeAsPrepared = function (query, args, consistency, callback) {
   var queryId = null;
   //the connection to execute 
   var c = null;
+  var self = this;
   //check if prepared
-  if (typeof this.preparedQueries[query] === 'undefined') {
-    //TODO: get a connection that is not overly exploited
-    var c = this.connections[0];
-    //prepare it and execute it
-    c.prepare(query, function (err, result) {
-      if (err) {
-        //retry or fail (just like execute)
-      }
-      queryId = result.id;
-      //TODO: Store query as prepared
-    });
+  var preparedInfo = self.getPrepared(query);
+  if (!preparedInfo) {
+    function tryAndRetryPrepare(retryCount) {
+      self.getConnectionToPrepare(function (err, c) {
+        if (err) {
+          callback(err);
+          return;
+        }
+        c.prepare(query, function (err, result) {
+          if (self.isServerUnhealthy(err)) {
+            //if its a fatal error, the server died
+            self.setUnhealthy(c);
+            if (retryCount === self.options.maxExecuteRetries) {
+              callback(err, result, retryCount);
+              return;
+            }
+            //retry: it will get another connection
+            self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
+            tryAndRetryPrepare(retryCount+1);
+          }
+          else if (err) {
+            //its syntax or other normal error
+            callback(err);
+          }
+          else {
+            queryId = result.id;
+            self.setPrepared(c, query, queryId);
+            self.executeOnConnection(c, queryId, args, consistency, callback);
+          }
+        });
+      });
+    }
+    tryAndRetryPrepare(0);
   }
   else {
     //get the connection that executed the query
+    var c = preparedInfo.connection;
+    queryId = preparedInfo.queryId;
+    self.executeOnConnection(c, queryId, args, consistency, callback);
   }
-  c.executePrepared(queryId, args, consistency, function(err, result) {
-    if (err) {
-      //there was an error on the connection that had a prepared query
-      //clean the stored query
-      //retry the hole thing
-    }
-  });
+}
+
+/**
+ * Executes a prepared query on a given connection
+ */
+Client.prototype.executeOnConnection = function (c, queryId, args, consistency, callback) {
+  //TODO: Retry
+  //function tryAndRetryExecute (retryCount) {
+    c.executePrepared(queryId, args, consistency, function(err, result) {
+      if (err) {
+        //TODO: check
+        //there was an error on the connection that had a prepared query
+        //clean the stored query
+        //retry the hole thing
+      }
+      callback(err, result);
+    });
+  //}
+  
+  //tryAndRetryExecute(0);
+}
+
+/**
+ * Stored a queryId, query and connection of a prepared query
+ */
+Client.prototype.setPrepared = function (connection, query, queryId) {
+  var preparedInfo = {
+    connection: connection,
+    query: query,
+    queryId: queryId};
+  //index the object per connection and per query
+  var connectionKey = connection.indexInPool.toString();
+  if (!this.preparedQueries[connectionKey]) {
+    this.preparedQueries[connectionKey] = [];
+  }
+  this.preparedQueries[connectionKey].push(preparedInfo);
+  this.preparedQueries[query.toLowerCase()] = preparedInfo;
+}
+
+Client.prototype.getPrepared = function (query) {
+  return this.preparedQueries[query.toLowerCase()];
+}
+
+Client.prototype.removePrepared = function (connection) {
+  var connectionKey = connection.indexInPool.toString()
+  var preparedList = this.preparedQueries[connectionKey];
+  if (!preparedList) {
+    return;
+  }
+  preparedList.forEach(function (element){
+    //remove by query
+    delete this.preparedQueries[preparedInfo.query.toLowerCase()];
+  }, this);
+  //remove by connection
+  delete this.preparedQueries[connectionKey];
 }
 
 Client.prototype.isServerUnhealthy = function (err) {
@@ -309,6 +378,7 @@ Client.prototype.isServerUnhealthy = function (err) {
 Client.prototype.setUnhealthy = function (connection) {
   connection.unhealthyAt = new Date().getTime();
   this.unhealtyConnections.push(connection);
+  this.removePrepared(connection);
   this.emit('log', 'error', 'Connection #' + connection.indexInPool + ' was set to Unhealthy');
 }
 

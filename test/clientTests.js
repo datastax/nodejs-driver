@@ -68,8 +68,15 @@ module.exports = {
     });
   },
   'max execute retries': function (test) {
+    client.on('log', function (type, message) {
+      //console.log(type, message);
+    });
+    //test.done();
+    //return;
     //Only 1 retry
     client.options.maxExecuteRetries = 1;
+    client.options.getAConnectionTimeout = 300;
+    
     var isServerUnhealthyOriginal = client.isServerUnhealthy;
 
     //Change the behaviour so every err is a "server error"
@@ -128,7 +135,7 @@ module.exports = {
     localClient.isHealthy = function() {
       return false;
     };
-    //disallow reconnections
+    //disallow reconnection
     localClient.canReconnect = localClient.isHealthy;
     localClient.execute('badabing', function (err) {
       test.ok(err, 'Callback must return an error');
@@ -137,6 +144,50 @@ module.exports = {
         test.done();
       });
     });
+  },
+  'get a connection to prepared queries': function (test) {
+    var localClient = new Client({hosts: ['localhost', 'localhost']});
+    var getAConnectionOriginal = localClient.getAConnection;
+    var getAConnectionFlag = false;
+    localClient.getAConnection = function(callback) {
+      getAConnectionFlag = true;
+      callback(null, null);
+    };
+    
+    //start test flow
+    testIndexes();
+
+    function testIndexes() {
+      async.series([localClient.getConnectionToPrepare.bind(localClient), localClient.getConnectionToPrepare.bind(localClient)]
+      , function (err, result) {
+        test.ok(!err);
+        test.ok(result.length == 2, 'There must be 2 connections returned');
+        test.ok(result[0].indexInPool !== result[1].indexInPool, 'There must be 2 connections with different indexes');
+        test.ok(result[0].indexInPool + result[1].indexInPool > 0, 'There should be one with the index 0 and the other with 1');
+        testNotToGetAConnection();
+      });
+    }
+    
+    function testNotToGetAConnection() {
+      localClient.getConnectionToPrepare(function (err, c) {
+        test.ok(!getAConnectionFlag, 'Get a connection must not be called');
+        testGetAConnection();
+      });
+    }
+    
+    function testGetAConnection() {
+      localClient.unhealtyConnections.length = 100;
+      localClient.getConnectionToPrepare(function (err, c) {
+        test.ok(getAConnectionFlag, 'Get a connection must be called in this case');
+        testEnd();
+      });
+    }
+    
+    function testEnd() {
+      localClient.shutdown(function() {
+        test.done();
+      });
+    }
   },
   'shutdown': function (test) {
     client.shutdown(function(){

@@ -287,8 +287,6 @@ module.exports = {
     });
   },
   'execute prepared queries': function (test) {
-    //TODO: prepare a bunch of queries involving different data types
-      //to check type conversion
     function prepareInsertTest(idValue, columnName, columnValue, hint, compareFunc) {
       if (!compareFunc) {
         compareFunc = function (value) {return value};

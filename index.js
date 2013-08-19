@@ -26,6 +26,12 @@ function Client (options) {
   this.options = utils.extend(options, optionsDefault);
   //current connection index
   this.connectionIndex = 0;
+  //current connection index for prepared queries
+  this.prepareConnectionIndex = 0;
+  //an array containing the unhealthy connections
+  this.unhealtyConnections = [];
+  this.preparedQueries = {};
+  
   var self = this;
   options.hosts.forEach(function (hostPort, index){
     var host = hostPort.split(':');
@@ -127,50 +133,80 @@ Client.prototype.getAConnection = function (callback) {
   self.ensurePoolConnection(function (err) {
     if (err) {
       callback(err);
+      return;
+    }
+    //go through the connections
+    //watch out for infinite loops
+    var startTime = Date.now();
+    function checkNextConnection (callback) {
+      self.emit('log', 'info', 'Checking next connection');
+      self.connectionIndex++;
+      if (self.connectionIndex > self.connections.length-1) {
+        self.connectionIndex = 0;
+      }
+      var c = self.connections[self.connectionIndex];
+      if (self.isHealthy(c)) {
+        callback(null, c);
+      }
+      else if (Date.now() - startTime > self.options.getAConnectionTimeout) {
+        callback(new types.TimeoutError('Get a connection timed out'));
+      }
+      else if (self.canReconnect(c) && !c.connecting) {
+        self.emit('log', 'info', 'Retrying to open #' + c.indexInPool);
+        //try to reconnect
+        c.open(function(err){
+          if (err) {
+            //This connection is still not good, go for the next one
+            self.setUnhealthy(c);
+            setImmediate(function () {
+              checkNextConnection(callback);
+            });
+          }
+          else {
+            //this connection is now good
+            self.setHealthy.call(self, c);
+            callback(null, c);
+          }
+        });
+      }
+      else {
+        //this connection is not good, try the next one
+        setImmediate(function () {
+          checkNextConnection(callback);
+        });
+      }
+    }
+    checkNextConnection(callback);
+  });
+}
+
+/**
+ * Gets a connection to prepare a query
+ * If there is more than 1 healthy connection, 
+ * it balances the amount of prepared queries per connection
+ */
+Client.prototype.getConnectionToPrepare = function (callback) {
+  var self = this;
+  self.ensurePoolConnection(function (err) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    if (self.connections.length > self.unhealtyConnections.length) {
+      var c = null;
+      //closed loop
+      while (c == null || !self.isHealthy(c)) {
+        self.prepareConnectionIndex++;
+        if (self.prepareConnectionIndex > self.connections.length-1) {
+          self.prepareConnectionIndex = 0;
+        }
+        var c = self.connections[self.prepareConnectionIndex];
+      }
+      callback(null, c);
     }
     else {
-      //go through the connections
-      //watch out for infite loops
-      var startTime = Date.now();
-      function checkNextConnection (callback) {
-        self.emit('log', 'info', 'Checking next connection');
-        self.connectionIndex++;
-        if (self.connectionIndex > self.connections.length-1) {
-          self.connectionIndex = 0;
-        }
-        var c = self.connections[self.connectionIndex];
-        if (self.isHealthy(c)) {
-          callback(null, c);
-        }
-        else if (Date.now() - startTime > self.options.getAConnectionTimeout) {
-          callback(new types.TimeoutError('Get a connection timed out'));
-        }
-        else if (self.canReconnect(c) && !c.connecting) {
-          self.emit('log', 'info', 'Retrying to open #' + c.indexInPool);
-          //try to reconnect
-          c.open(function(err){
-            if (err) {
-              //This connection is still not good, go for the next one
-              self.setUnhealthy(c);
-              setImmediate(function () {
-                checkNextConnection(callback);
-              });
-            }
-            else {
-              //this connection is now good
-              self.setHealthy.call(self, c);
-              callback(null, c);
-            }
-          });
-        }
-        else {
-          //this connection is not good, try the next one
-          setImmediate(function () {
-            checkNextConnection(callback);
-          });
-        }
-      }
-      checkNextConnection(callback);
+      //the state of the pool is very bad, return the first healthy connection
+      self.getAConnection(callback);
     }
   });
 }
@@ -179,7 +215,7 @@ Client.prototype.getAConnection = function (callback) {
  Executes a query in an available connection.
  @param {function} callback, executes callback(err, result) when finished
  */
-Client.prototype.execute = function (query, args, consistency, callback, retryCount) {
+Client.prototype.execute = function (query, args, consistency, callback) {
   if(typeof callback === 'undefined') {
     if (typeof consistency === 'undefined') {
       //only the query and the callback was specified
@@ -196,34 +232,68 @@ Client.prototype.execute = function (query, args, consistency, callback, retryCo
     }
   }
   var self = this;
-  this.getAConnection(function(err, c) {
-    if (err) {
-      callback(err);
-      return;
-    }
-    self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ' + query);
-    self.emit('log', 'info', 'with args: ' + args);
-    c.execute(query, args, consistency, function(err, result) {
-      //Determine if its a fatal error
-      if (self.isServerUnhealthy(err)) {
-        //if its a fatal error, set the connection to unhealthy
-        self.setUnhealthy(c);
-        retryCount = (!retryCount) ? 0 : retryCount;
-        if (retryCount === self.options.maxExecuteRetries) {
-          callback(err, result, retryCount);
+  var retryCount = 0;
+  
+  function tryAndRetry() {
+    self.getAConnection(function(err, c) {
+      if (err) {
+        callback(err);
+        return;
+      }
+      self.emit('log', 'info', 'connection #' + c.indexInPool + ' aquired, executing: ' + query);
+      self.emit('log', 'info', 'with args: ' + args);
+      c.execute(query, args, consistency, function(err, result) {
+        //Determine if its a fatal error
+        if (self.isServerUnhealthy(err)) {
+          //if its a fatal error, set the connection to unhealthy
+          self.setUnhealthy(c);
+          
+          if (retryCount === self.options.maxExecuteRetries) {
+            callback(err, result, retryCount);
+          }
+          else {
+            //retry, it will get another connection
+            self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
+            retryCount++;
+            tryAndRetry();
+          }
         }
         else {
-          //retry, it will get another connection
-          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-          retryCount++;
-          self.execute.call(self, query, args, consistency, callback, retryCount);
+          //If the result is OK or there is error (syntax error or an unauthorized for example), callback
+          callback(err, result);
         }
-      }
-      else {
-        //If the result is OK or there is error (syntax error or an unauthorized for example), callback
-        callback(err, result);
-      }
+      });
     });
+  };
+  tryAndRetry();
+}
+
+Client.prototype.executeAsPrepared = function (query, args, consistency, callback) {
+  var queryId = null;
+  //the connection to execute 
+  var c = null;
+  //check if prepared
+  if (typeof this.preparedQueries[query] === 'undefined') {
+    //TODO: get a connection that is not overly exploited
+    var c = this.connections[0];
+    //prepare it and execute it
+    c.prepare(query, function (err, result) {
+      if (err) {
+        //retry or fail (just like execute)
+      }
+      queryId = result.id;
+      //TODO: Store query as prepared
+    });
+  }
+  else {
+    //get the connection that executed the query
+  }
+  c.executePrepared(queryId, args, consistency, function(err, result) {
+    if (err) {
+      //there was an error on the connection that had a prepared query
+      //clean the stored query
+      //retry the hole thing
+    }
   });
 }
 
@@ -238,11 +308,16 @@ Client.prototype.isServerUnhealthy = function (err) {
 
 Client.prototype.setUnhealthy = function (connection) {
   connection.unhealthyAt = new Date().getTime();
+  this.unhealtyConnections.push(connection);
   this.emit('log', 'error', 'Connection #' + connection.indexInPool + ' was set to Unhealthy');
 }
 
 Client.prototype.setHealthy = function (connection) {
   connection.unhealthyAt = 0;
+  var i = this.unhealtyConnections.indexOf(connection);
+  if (i >= 0) {
+    this.unhealtyConnections.splice(i, 1);
+  }
   this.emit('log', 'info', 'Connection #' + connection.indexInPool + ' was set to healthy');
 }
 

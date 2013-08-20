@@ -279,7 +279,7 @@ Client.prototype.executeAsPrepared = function (query, args, consistency, callbac
         }
         c.prepare(query, function (err, result) {
           if (self.isServerUnhealthy(err)) {
-            //if its a fatal error, the server died
+            //its a fatal error, the server died
             self.setUnhealthy(c);
             if (retryCount === self.options.maxExecuteRetries) {
               callback(err, result, retryCount);
@@ -296,7 +296,7 @@ Client.prototype.executeAsPrepared = function (query, args, consistency, callbac
           else {
             queryId = result.id;
             self.setPrepared(c, query, queryId);
-            self.executeOnConnection(c, queryId, args, consistency, callback);
+            self.executeOnConnection.call(self, c, query, queryId, args, consistency, callback);
           }
         });
       });
@@ -307,28 +307,30 @@ Client.prototype.executeAsPrepared = function (query, args, consistency, callbac
     //get the connection that executed the query
     var c = preparedInfo.connection;
     queryId = preparedInfo.queryId;
-    self.executeOnConnection(c, queryId, args, consistency, callback);
+    self.executeOnConnection.call(self, c, query, queryId, args, consistency, callback);
   }
 }
 
 /**
  * Executes a prepared query on a given connection
  */
-Client.prototype.executeOnConnection = function (c, queryId, args, consistency, callback) {
-  //TODO: Retry
-  //function tryAndRetryExecute (retryCount) {
-    c.executePrepared(queryId, args, consistency, function(err, result) {
-      if (err) {
-        //TODO: check
-        //there was an error on the connection that had a prepared query
-        //clean the stored query
-        //retry the hole thing
-      }
+Client.prototype.executeOnConnection = function (c, query, queryId, args, consistency, callback) {
+  var self = this;
+  c.executePrepared(queryId, args, consistency, function(err, result) {
+    if (self.isServerUnhealthy(err)) {
+      //There is a problem with the connection/server that had a prepared query
+      //forget about this connection for now
+      self.setUnhealthy(c);
+      //retry the hole thing, it will get another connect
+      self.executeAsPrepared(query, args, consistency, callback);
+    }
+    else if (err) {
+      callback(err);
+    }
+    else {
       callback(err, result);
-    });
-  //}
-  
-  //tryAndRetryExecute(0);
+    }
+  });
 }
 
 /**
@@ -351,7 +353,9 @@ Client.prototype.setPrepared = function (connection, query, queryId) {
 Client.prototype.getPrepared = function (query) {
   return this.preparedQueries[query.toLowerCase()];
 }
-
+/**
+ * Removes a previously stored query
+ */
 Client.prototype.removePrepared = function (connection) {
   var connectionKey = connection.indexInPool.toString()
   var preparedList = this.preparedQueries[connectionKey];

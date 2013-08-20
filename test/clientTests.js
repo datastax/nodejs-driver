@@ -5,7 +5,6 @@ var types = require('../lib/types.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
 
 var client = null;
-
 module.exports = {
   'setup keyspace': function(test) {
     client = new Client({hosts: ['localhost:9042', 'localhost:9042'], keyspace: keyspace});
@@ -164,8 +163,7 @@ module.exports = {
     });
   },
   'get a connection to prepared queries': function (test) {
-    var localClient = new Client({hosts: ['localhost', 'localhost']});
-    var getAConnectionOriginal = localClient.getAConnection;
+    var localClient = new Client({hosts: client.options.hosts});
     var getAConnectionFlag = false;
     localClient.getAConnection = function(callback) {
       getAConnectionFlag = true;
@@ -211,17 +209,48 @@ module.exports = {
     }
   },
   'execute prepared': function (test) {
-    client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], types.consistencies.one, function (err, result) {
-      if (err) {
-        test.fail(err);
+    client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      types.consistencies.one, 
+      function (err, result) {
+        if (err) {
+          test.fail(err);
+          test.done();
+          return;
+        }
+        test.ok(result.rows.length == 1, 'There should be a row');
         test.done();
-        return;
-      }
-      test.ok(result.rows.length == 1, 'There should be a row');
-      test.done();
     });
   },
-  'shutdown': function (test) {
+  'execute prepared will retry': function (test) {
+    var localClient = new Client({hosts: client.options.hosts});
+    var counter = 0;
+    localClient.isServerUnhealthy = function() {
+      //change the behaviour set it to unhealthy the first time
+      if (counter == 0) {
+        counter++;
+        return true
+      }
+      return false;
+    };
+    
+    localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      types.consistencies.one, 
+      function (err, result) {
+        if (err) {
+          test.fail(err);
+          testEnd();
+          return;
+        }
+        test.ok(result.rows.length == 1, 'There should be one row');
+        testEnd();
+    });
+    function testEnd() {
+      localClient.shutdown(function() {
+        test.done();
+      });
+    }
+  },
+  'shutdown': function (test, localClient) {
     client.shutdown(function(){
       test.done();
     });

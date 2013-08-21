@@ -103,9 +103,7 @@ module.exports = {
     localClient.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
       test.ok(err, 'The execution must fail');
       test.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified');
-      localClient.shutdown(function () {
-        test.done();
-      });
+      shutDownEnd(test, localClient);
     });
   },
   'no initial connection callback': function (test) {
@@ -136,9 +134,7 @@ module.exports = {
       if (errors.length == 2) {
         test.ok(errors[0].name == 'PoolConnectionError', 'Errors should be of type PoolConnectionError');
       }
-      localClient.shutdown(function () {
-        test.done();
-      });
+      shutDownEnd(test, localClient);
     });
   },
   'get a connection timeout': function (test) {
@@ -157,9 +153,7 @@ module.exports = {
     localClient.execute('badabing', function (err) {
       test.ok(err, 'Callback must return an error');
       test.ok(err.name === 'TimeoutError', 'The error must be a TimeoutError');
-      localClient.shutdown(function() {
-        test.done();
-      });
+      shutDownEnd(test, localClient);
     });
   },
   'get a connection to prepared queries': function (test) {
@@ -198,13 +192,7 @@ module.exports = {
       localClient.unhealtyConnections.length = 100;
       localClient.getConnectionToPrepare(function (err, c) {
         test.ok(getAConnectionFlag, 'Get a connection must be called in this case');
-        testEnd();
-      });
-    }
-    
-    function testEnd() {
-      localClient.shutdown(function() {
-        test.done();
+        shutDownEnd(test, localClient);
       });
     }
   },
@@ -238,21 +226,20 @@ module.exports = {
       function (err, result) {
         if (err) {
           test.fail(err);
-          testEnd();
+          shutDownEnd(test, localClient);
           return;
         }
         test.ok(result.rows.length == 1, 'There should be one row');
-        testEnd();
+        shutDownEnd(test, localClient);
     });
-    function testEnd() {
-      localClient.shutdown(function() {
-        test.done();
-      });
-    }
   },
-  'shutdown': function (test, localClient) {
-    client.shutdown(function(){
-      test.done();
-    });
+  'shutdown': function (test) {
+    shutDownEnd(test, client);
   }
+}
+
+function shutDownEnd(test, client) {
+  client.shutdown(function(){
+    test.done();
+  });
 }

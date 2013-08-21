@@ -233,6 +233,51 @@ module.exports = {
         shutDownEnd(test, localClient);
     });
   },
+  'executeAsPrepared parameters': function (test) {
+    async.series([
+      function (callback) {
+        //all params
+        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
+      },
+      function (callback) {
+        //no consistency specified
+        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], callback);
+      },
+      function (callback) {
+        //change the meaning of the second parameter to consistency
+        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
+      },
+      function (callback) {
+        //query params but no params args, consistency specified, must fail
+        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
+          if (!err) {
+            callback(new Error('Consistency should not be treated as query parameters'));
+          }
+          else {
+            callback(null, result);
+          }
+        });
+      },
+      function (callback) {
+        //no query params
+        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', function(err, result) {
+          if (!result || !result.rows) {
+            test.fail(result, 'Expected rows');
+          }
+          else {
+            test.ok(result.rows.length > 0, 'There should at least a row returned');
+          }
+          callback(err, result);
+        });
+      }
+    ],
+    //all finished
+    function(err, results){
+      test.ok(err === null, err);
+      test.ok(results[1], 'The result of a query must not be null nor undefined');
+      test.done();
+    });
+  },
   'shutdown': function (test) {
     shutDownEnd(test, client);
   }

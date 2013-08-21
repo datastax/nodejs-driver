@@ -264,6 +264,21 @@ Client.prototype.execute = function (query, args, consistency, callback) {
 }
 
 Client.prototype.executeAsPrepared = function (query, args, consistency, callback) {
+  if(typeof callback === 'undefined') {
+    if (typeof consistency === 'undefined') {
+      //only the query and the callback was specified
+      callback = args;
+      args = null;
+    }
+    else {
+      callback = consistency;
+      consistency = null;
+      if (typeof args === 'number') {
+        consistency = args;
+        args = null;
+      }
+    }
+  }
   var queryId = null;
   //the connection to execute 
   var c = null;

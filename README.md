@@ -1,5 +1,4 @@
-
-# Node.js CQL Driver for Apache Cassandra
+## Node.js CQL Driver for Apache Cassandra
 
 node-cassandra-cql is a Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/)'s native protocol with a small dependency tree written in pure javascript.
 

@@ -1,9 +1,7 @@
 
-# node-cassandra-cql
+# Node.js CQL Driver for Apache Cassandra
 
-node-cassandra-cql is a [Node.js](http://nodejs.org) CQL driver for [Apache Cassandra CQL3 binary protocol](https://git-wip-us.apache.org/repos/asf?p=cassandra.git;a=blob_plain;f=doc/native_protocol.spec;hb=refs/heads/cassandra-1.2).
-
-CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
+node-cassandra-cql is a Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/)'s native protocol with a small dependency tree written in pure javascript.
 
 
 ## Installation
@@ -15,14 +13,15 @@ CQL is a query language for [Apache Cassandra](http://cassandra.apache.org).
 - Parameters in queries (even for sets/lists/maps collections)
 - Plain Old Javascript: no need to generate thrift files
 - Get cell by column name: `row.get('first_name')`
-- Bigints support (using [node-int64](https://github.com/broofa/node-int64))
+- Bigints (using [node-int64](https://github.com/broofa/node-int64)) and uuid support
+- Prepared statements
 
 ## Using it
 ```javascript
 // Creating a new connection pool to multiple hosts.
 var Client = require('node-cassandra-cql').Client;
 var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
-var cqlClient = new Client({hosts: hosts, keyspace: 'Keyspace1'});
+var client = new Client({hosts: hosts, keyspace: 'Keyspace1'});
 ```
 Client() accepts an object with these slots, only `hosts` is required:
 ```
@@ -39,7 +38,7 @@ getAConnectionTimeout: Maximum time in milliseconds to wait for a connection fro
 Queries are performed using the `execute()` method. For example:
 ```javascript
 // Reading
-cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
+client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
   function(err, result) {
     if (err) console.log('execute failed');
     else console.log('got user profile with email ' + result.rows[0].get('email'));
@@ -47,7 +46,7 @@ cqlClient.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?',
 );
 
 // Writing
-cqlClient.execute('UPDATE user_profiles SET email=? WHERE key=?', ['my@email.com', 'jbay'], 
+client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'], 
   types.consistencies.quorum,
   function(err) {
     if (err) console.log("failure");
@@ -55,21 +54,47 @@ cqlClient.execute('UPDATE user_profiles SET email=? WHERE key=?', ['my@email.com
   }
 );
 ```
-`execute()` accepts the following arguments
+`execute()` and `executeAsPrepared()` accept the following arguments
 
         cqlQuery : The cql query to execute, with ? as parameters
-        arguments: Array of arguments that will replace the ? placeholders, can be null.
-     consistency : The level of consistency.
+        arguments: Array of arguments that will replace the ? placeholders. Optional.
+     consistency : The level of consistency. Optional, defaults to quorum.
         callback : The callback function with 2 arguments: err and result
-
-When you are finished with a `Client` instance, call `shutdown(callback)`.
-Shutting down the pool prevents further work from being enqueued, and closes all
-open connections after pending requests are complete.
 
 ```javascript
 // Shutting down a pool
 cqlClient.shutdown(function() { console.log("connection pool shutdown"); });
 ```
+
+### API
+#### Client
+- `execute(query, args, consistency, callback)`   
+Executes a CQL query.
+- `executeAsPrepared(query, args, consistency, callback)`   
+Prepares (once) and executes the prepared query.
+- `shutdown(callback)`   
+Shutdowns the pool (normally it would be called once in your app lifetime).
+
+`execute()` and `executeAsPrepared()` accepts the following arguments
+```
+   query:       The cql query to execute, with ? as parameters
+   arguments:   Array of arguments that will replace the ? placeholders. Optional.
+   consistency: The level of consistency. Optional, defaults to quorum.
+   callback:    The callback function with 2 arguments: err and result
+```
+
+#### Connection
+- `open(callback)`   
+Establishes a connection, authenticates and sets a keyspace.
+- `close(callback)`   
+Closes the connection.
+- `execute(query, args, consistency, callback)`   
+Executes a CQL query.
+- `prepare(query, callback)`   
+Prepares a CQL query.
+- `executePrepared(queryId, args, consistency, callback)`   
+Executes a previously prepared query (determined by the queryId).
+
 
 ### Connections
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involed with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).

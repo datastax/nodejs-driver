@@ -192,11 +192,17 @@ module.exports = {
     async.each(insertQueries, function(query, callback) {
       con.execute(query[0], query[1], function(err, result) {
         if (err) {
+          err.query = query[0];
           test.fail(err);
         }
-        callback();
+        callback(err);
       });
-    }, function () {
+    }, function (err) {
+      console.log('e', err);
+      if (err) {
+        test.done();
+        return;
+      }
       con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
         if (err) {
           test.fail(err, 'Error selecting');

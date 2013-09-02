@@ -110,6 +110,18 @@ module.exports = {
       test.done();
     });
   },
+  'select empty result set': function (test) {
+    con.execute('SELECT * FROM sampletable1 WHERE ID = -1', function (err, result) {
+      if (err) {
+        test.fail(err, 'Error inserting just the key');
+      }
+      else {
+        test.ok(result.rows, 'Rows must be defined');
+        if (result.rows) test.ok(result.rows.length === 0, 'The length of the rows array must be zero');
+      }
+      test.done();
+    });
+  },
   'select null values': function(test) {
     con.execute('INSERT INTO sampletable1 (id) VALUES(1)', null, 
       function(err) {

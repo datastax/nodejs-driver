@@ -1,21 +1,14 @@
-var queryParser = require('../lib/utils.js').queryParser;
+var utils = require('../lib/utils.js');
+var queryParser = utils.queryParser;
 var types = require('../lib/types.js');
 var util = require('util');
 var Int64 = require('node-int64');
 var Connection = require('../index.js').Connection;
 var uuid = require('node-uuid');
 var dataTypes = types.dataTypes;
-
-var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
-var keyspace = 'unittestkp1_conversionTests';
-var testTable = "CREATE TABLE collectionTests (test_uuid uuid, textTextMapField map<text, text>, UUIDTextMapField map<uuid, text>, textListField list<text>, textSetField set<text>, PRIMARY KEY (test_uuid));";
+var events = require('events');
 
 module.exports = {
-  connect: function (test) {
-    helper.connectInit(function () {
-      test.done();
-    });
-  },
   encodeParamsTest: function (test) {
     function testStringify(value, expected, dataType) {
       var stringValue = types.typeEncoder.stringifyValue({value: value, hint: dataType});
@@ -56,30 +49,21 @@ module.exports = {
     test.ok(guessDataType(uuid.v4()) === dataTypes.uuid, 'Guess type for a UUID value failed');
     test.done();
   },
-  /**
-   * Executes last, closes the connection
-   */
-  disconnect : function (test) {
-    con.close(function () {
-      test.done();
+  'event synchronization': function (test) {
+    var emitter1 = new events.EventEmitter();
+    var emitter2 = new events.EventEmitter(); 
+    var emitter3 = new events.EventEmitter(); 
+    var executedCallback = false;
+    utils.syncEvent([emitter1, emitter2, emitter3], 'dummy', this, function (text){
+      test.ok(text === 'bop');
+      executedCallback = true;
     });
-  }
-};
-var helper = {
-  //connects and sets up a keyspace
-  connectInit: function (callback) {
-    con.open(function (err) {
-      if (err) console.log( err );
-      con.execute("DROP KEYSPACE "+keyspace+";", [], function(err) {
-        if (err) console.log( err );
-        con.execute("CREATE KEYSPACE "+keyspace+" WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [], function(err) {
-          if (err) console.log( err );
-          con.execute("USE "+keyspace+";", [], function(err) {
-            if (err) console.log( err );
-            callback();
-          });
-        });
-      });
-    });
+    test.ok(emitter1.emit('dummy', 'bip'));
+    emitter1.emit('dummy', 'bop');
+    emitter2.emit('dummy', 'bip');
+    emitter2.emit('dummy', 'bop');
+    emitter3.emit('dummy', 'bop');
+    test.ok(executedCallback);
+    test.done();
   }
 };

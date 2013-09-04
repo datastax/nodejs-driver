@@ -5,6 +5,7 @@ var uuid = require('node-uuid');
 
 var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
+var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
 var keyspace = new types.QueryLiteral('unittestkp1_1');
 
@@ -12,9 +13,7 @@ var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {
-    con.on('log', function(type, message) {
-      //console.log(type, message);
-    });
+    //con.on('log', console.log);
     var originalHost = con.options.host;
     con.options.host = 'not-existent-host';
     con.open(function (err) {
@@ -125,23 +124,17 @@ module.exports = {
   'select null values': function(test) {
     con.execute('INSERT INTO sampletable1 (id) VALUES(1)', null, 
       function(err) {
-        if (err) {
-          test.fail(err, 'Error inserting just the key');
-          test.done();
-          return;
-        }
+        if (err) return fail(test, err);
         con.execute('select * from sampletable1 where id=?', [1], function (err, result) {
           if (err) test.fail(err, 'selecting null values failed');
-          else {
-            test.ok(result.rows.length === 1);
-            test.ok(result.rows[0].get('big_sample') === null &&
-              result.rows[0].get('blob_sample') === null &&
-              result.rows[0].get('decimal_sample') === null &&
-              result.rows[0].get('list_sample') === null &&
-              result.rows[0].get('map_sample') === null &&
-              result.rows[0].get('set_sample') === null &&
-              result.rows[0].get('text_sample') === null);
-          }
+          test.ok(result.rows.length === 1);
+          test.ok(result.rows[0].get('big_sample') === null &&
+            result.rows[0].get('blob_sample') === null &&
+            result.rows[0].get('decimal_sample') === null &&
+            result.rows[0].get('list_sample') === null &&
+            result.rows[0].get('map_sample') === null &&
+            result.rows[0].get('set_sample') === null &&
+            result.rows[0].get('text_sample') === null);
           test.done();
           return;
         });
@@ -381,6 +374,39 @@ module.exports = {
       test.done();
     });
   },
+  'consume all streamIds': function (test) {
+    //tests that max streamId is reached and the connection waits for a free id
+    var options = utils.extend({}, con.options);
+    options.maxRequests = 10;
+    //total amount of queries to issue
+    var totalQueries = 100;
+    var timeoutId;
+    var localCon = new Connection(options);
+    localCon.open(function (err) {
+      if (err) return fail(test, err);
+      timeoutId = setTimeout(timePassed, 5000);
+      for (var i=0; i<totalQueries; i++) {
+        localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], selectCallback);
+      }
+    });
+    var counter = 0;
+    function selectCallback(err, result) {
+      counter++;
+      if (err) return fail(test, err);
+      if (counter === totalQueries) {
+        try{
+        clearTimeout(timeoutId);
+        closeAndEnd(test, localCon);
+        }
+        catch (e) {console.error(e)}
+      }
+    }
+    
+    function timePassed() {
+      test.fail('Timeout: all callbacks havent been executed');
+      closeAndEnd(test, localCon);
+    }
+  },
   /**
    * Executes last, closes the connection
    */
@@ -389,12 +415,16 @@ module.exports = {
     con.close(function () {
       test.ok(!con.connected, 'The connected flag of the connection must be false.');
       //it should be allowed to be call close multiple times.
-      con.close(function () {
-        test.done();
-      });
+      closeAndEnd(test, con);
     });
   }
 };
+function closeAndEnd(test, con) {
+  con.close(function () {
+    test.done();
+  });
+}
+
 function setRowsByKey(arr, key) {
   for (var i=0;i<arr.length;i++) {
     var row = arr[i];
@@ -402,5 +432,15 @@ function setRowsByKey(arr, key) {
   }
   arr.get = function(key1) {
     return arr['key-' + key1];
+  }
+}
+
+function fail(test, err, con) {
+  test.fail(err);
+  if (con) {
+    closeAndEnd(test, con);
+  }
+  else {
+    test.done();
   }
 }

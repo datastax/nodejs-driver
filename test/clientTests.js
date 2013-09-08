@@ -90,6 +90,13 @@ module.exports = {
       test.done();
     });
   },
+  'keyspace does not exist error test': function (test) {
+    var localClient = new Client({hosts: client.options.hosts, keyspace: 'this__keyspace__does__not__exist'});
+    localClient.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+      test.ok(err, 'It should return an error as the keyspace does not exist');
+      shutDownEnd(test, localClient);
+    });
+  },
   'max execute retries': function (test) {
     var localClient = new Client({hosts: client.options.hosts});
     //Only 1 retry

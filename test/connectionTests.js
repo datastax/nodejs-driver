@@ -42,6 +42,13 @@ module.exports = {
       test.done();
     });
   },
+  'use keyspace error test': function (test) {
+    var localCon = new Connection(utils.extend({keyspace: 'this__keyspace__does__not__exist'}, con.options));
+    localCon.open(function (err) {
+      test.ok(err, 'An error must be returned as the keyspace does not exist');
+      closeAndEnd(test, localCon);
+    });
+  },
   'execute params': function (test) {
     async.series([
       function (callback) {
@@ -82,7 +89,7 @@ module.exports = {
     ],
     //all finished
     function(err){
-      test.ok(err === null, err);
+      if (err) fail(test, err);
       test.done();
     });
   },
@@ -203,11 +210,7 @@ module.exports = {
         callback(err);
       });
     }, function (err) {
-      console.log('e', err);
-      if (err) {
-        test.done();
-        return;
-      }
+      if (err) return fail(test, err);
       con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
         if (err) {
           test.fail(err, 'Error selecting');
@@ -379,12 +382,12 @@ module.exports = {
     var options = utils.extend({}, con.options);
     options.maxRequests = 10;
     //total amount of queries to issue
-    var totalQueries = 100;
+    var totalQueries = 50;
     var timeoutId;
     var localCon = new Connection(options);
     localCon.open(function (err) {
       if (err) return fail(test, err);
-      timeoutId = setTimeout(timePassed, 5000);
+      timeoutId = setTimeout(timePassed, 10000);
       for (var i=0; i<totalQueries; i++) {
         localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], selectCallback);
       }

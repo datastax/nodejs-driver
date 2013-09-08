@@ -65,5 +65,47 @@ module.exports = {
     emitter3.emit('dummy', 'bop');
     test.ok(executedCallback);
     test.done();
+  },
+  'field stream - can stream': function (test) {
+    var buf = [];
+    var stream = new types.FieldStream();
+    
+    stream.on('end', function streamEnd() {
+      test.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
+      test.done();
+    });
+    stream.on('readable', function streamReadable() {
+      var item = stream.read();
+      while (item) {
+        buf.push(item);
+        item = stream.read();
+      }
+    });
+    
+    stream.add(new Buffer('Jimmy'));
+    stream.add(new Buffer(' '));
+    stream.add(new Buffer('McNulty'));
+    stream.add(null);
+  },
+  'field stream - can buffer': function (test) {
+    var buf = [];
+    var stream = new types.FieldStream({highWaterMark: 1});
+    stream.add(new Buffer('Stringer'));
+    stream.add(new Buffer(' '));
+    stream.add(new Buffer('Bell'));
+    stream.add(null);
+    
+    stream.on('end', function streamEnd() {
+      test.equal(Buffer.concat(buf).toString(), 'Stringer Bell');
+      test.done();
+    });
+    test.ok(stream.buffer.length > 0, 'It must buffer when there is no listener for the "readable" event');
+    stream.on('readable', function streamReadable() {
+      var item = stream.read();
+      while (item) {
+        buf.push(item);
+        item = stream.read();
+      }
+    });
   }
 };

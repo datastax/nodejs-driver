@@ -1,0 +1,13 @@
+language: node_js
+node_js:
+  - "0.10"
+
+services:
+  - cassandra
+
+script:
+  - nodeunit test
+
+notifications:
+  email: false
+

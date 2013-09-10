@@ -1,24 +1,45 @@
 var async = require('async');
 var util = require('util');
 var Client = require('../index.js').Client;
+var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
 
 var client = null;
 module.exports = {
   'setup keyspace': function(test) {
-    client = new Client({hosts: ['localhost:9042', 'localhost:9042'], keyspace: keyspace});
-    client.execute("DROP KEYSPACE ?;", [keyspace], function () {
-      createKeySpace();
+    setup(function () {
+      client = new Client({hosts: ['localhost:9042', 'localhost:9042'], keyspace: keyspace});
+      createTable();
     });
-    function createKeySpace() {
-      client.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
+    
+    //recreates a keyspace, using a connection object
+    function setup(callback) {
+      var con = new Connection({host:'localhost'});
+      con.open(function (err) {
         if (err) {
-          test.fail(err);
-          test.done();
-          return;
+          con.close(function () {
+            fail(test, err);
+          });
         }
-        createTable();
+        else {
+          con.execute("DROP KEYSPACE ?;", [keyspace], function () {
+            createKeyspace(con, callback);
+          });
+        }
+      });
+    }
+    
+    function createKeyspace(con, callback) {
+      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
+        if (err) {
+          con.close(function () {
+            fail(test, err);
+          });
+        }
+        con.close(function () {
+          callback();
+        });
       });
     }
     
@@ -40,9 +61,9 @@ module.exports = {
         "int_sample int," +
         "inet_sample inet," +
         "text_sample text);", [], function (err) {
-          if (err) test.fail(err);
+          if (err) return fail(test, err);
           test.done();
-        });
+      });
     }
   },
   'execute params': function (test) {
@@ -294,4 +315,14 @@ function shutDownEnd(test, client) {
   client.shutdown(function(){
     test.done();
   });
+}
+
+function fail(test, err, client) {
+  test.fail(err);
+  if (client) {
+    shutDownEnd(test, client);
+  }
+  else {
+    test.done();
+  }
 }

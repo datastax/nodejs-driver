@@ -11,7 +11,3 @@ services:
 
 script:
   - nodeunit test
-
-notifications:
-  email: false
-

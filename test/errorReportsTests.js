@@ -3,7 +3,7 @@ var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var keyspace = new types.QueryLiteral('unittestkp1_error_reports');
 
-var con = new Connection({host:'localhost', port: 9042, maxRequests: 1});
+var con = new Connection({host:'localhost', port: 9042, username: 'cassandra', password: 'cassandra', maxRequests: 1});
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {

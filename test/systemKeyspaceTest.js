@@ -1,6 +1,6 @@
 var Client = require('../index.js').Client;
 var Connection = require('../index.js').Connection;
-var con = new Connection({host:'localhost', port: 9042});;
+var con = new Connection({host:'localhost', port: 9042, username: 'cassandra', password: 'cassandra'});;
 //declaration order is execution order in nodeunit
 module.exports = {
   connect : function (test) {

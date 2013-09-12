@@ -410,6 +410,17 @@ module.exports = {
       closeAndEnd(test, localCon);
     }
   },
+  'streaming column test': function (test) {
+    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [400, new Buffer(80*1)], function (err, result) {
+      if (err) return fail(test, err);
+      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [400], types.consistencies.one, function (err, row, stream) {
+        if (err) return fail(test, err);
+        test.equal(row.get('id'), 400);
+        //TODO: test that stream is readable
+        test.done();
+      });
+    });
+  },
   /**
    * Executes last, closes the connection
    */

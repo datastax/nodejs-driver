@@ -410,17 +410,35 @@ module.exports = {
       closeAndEnd(test, localCon);
     }
   },
-  'streaming column test': function (test) {
-    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [400, new Buffer(80*1)], function (err, result) {
+  'streaming column': function (test) {
+    var blob = new Buffer(1024*1024);
+    var id = 400;
+    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
       if (err) return fail(test, err);
-      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [400], types.consistencies.one, function (err, row, stream) {
+      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, function (err, row, stream) {
         if (err) return fail(test, err);
-        test.equal(row.get('id'), 400);
-        //TODO: test that stream is readable
-        test.done();
+        test.equal(row.get('id'), id);
+        //test that stream is readable
+        testStreamReadable(test, stream, blob);
       });
     });
   },
+  'streaming delayed read': function (test) {
+    var blob = new Buffer(2048);
+    blob[2047] = 0xFA;
+    var id = 401;
+    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+      if (err) return fail(test, err);
+      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, function (err, row, stream) {
+        if (err) return fail(test, err);
+        test.equal(row.get('id'), id);
+        setTimeout(function () {
+          testStreamReadable(test, stream, blob);
+        }, 700);
+      });
+    });
+  },
+  //TODO: streaming test field null
   /**
    * Executes last, closes the connection
    */
@@ -457,4 +475,31 @@ function fail(test, err, con) {
   else {
     test.done();
   }
+}
+
+function testStreamReadable(test, stream, originalBlob, callback) {
+  var length = 0;
+  var firstByte = null;
+  var lastByte = null;
+  stream.on('readable', function () {
+    var chunk = null;
+    while (chunk = stream.read()) {
+      length += chunk.length;
+      if (firstByte === null) {
+        firstByte = chunk[0];
+      }
+      if (length === originalBlob.length) {
+        lastByte = chunk[chunk.length-1];
+      }
+    }
+  });
+  stream.on('end', function () {
+    test.equal(length, originalBlob.length, 'The blob returned should be the same size');
+    test.equal(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
+    test.equal(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
+    if (!callback) {
+      callback = test.done;
+    }
+    callback();
+  });
 }

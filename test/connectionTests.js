@@ -413,29 +413,29 @@ module.exports = {
   'streaming column': function (test) {
     var blob = new Buffer(1024*1024);
     var id = 400;
-    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
-      if (err) return fail(test, err);
-      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, function (err, row, stream) {
-        if (err) return fail(test, err);
-        test.equal(row.get('id'), id);
-        //test that stream is readable
-        testStreamReadable(test, stream, blob);
-      });
+    insertAndStream(test, con, blob, id, function (err, row, stream) {
+      test.equal(row.get('id'), id);
+      //test that stream is readable
+      assertStreamReadable(test, stream, blob);
     });
   },
   'streaming delayed read': function (test) {
     var blob = new Buffer(2048);
     blob[2047] = 0xFA;
     var id = 401;
-    con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
-      if (err) return fail(test, err);
-      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, function (err, row, stream) {
-        if (err) return fail(test, err);
-        test.equal(row.get('id'), id);
-        setTimeout(function () {
-          testStreamReadable(test, stream, blob);
-        }, 700);
-      });
+    insertAndStream(test, con, blob, id, function (err, row, stream) {
+      //delay some milliseconds the read of the stream and hope it's buffering
+      setTimeout(function () {
+        assertStreamReadable(test, stream, blob);
+      }, 700);
+    });
+  },
+  'streaming null value': function (test) {
+    var id = 402;
+    insertAndStream(test, con, null, id, function (err, row, stream) {
+      //delay some milliseconds the read of the stream and hope it's buffering
+      test.equal(stream, null, 'The stream must be null');
+      test.done();
     });
   },
   //TODO: streaming test field null
@@ -477,7 +477,14 @@ function fail(test, err, con) {
   }
 }
 
-function testStreamReadable(test, stream, originalBlob, callback) {
+function insertAndStream(test, con, blob, id, callback) {
+  con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+    if (err) return fail(test, err);
+    con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, callback);
+  });
+}
+
+function assertStreamReadable(test, stream, originalBlob, callback) {
   var length = 0;
   var firstByte = null;
   var lastByte = null;

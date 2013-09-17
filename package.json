@@ -32,5 +32,8 @@
   "bugs": { 
     "url" : "https://github.com/jorgebay/node-cassandra-cql/issues"
   },
-  "engines": {"node" : ">=0.10.0"}
+  "engines": {"node" : ">=0.10.0"},
+  "scripts": {
+    "test": "nodeunit test/*"
+  }
 }

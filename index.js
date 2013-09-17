@@ -35,19 +35,23 @@ function Client (options) {
   this.preparedQueries = {};
   
   var self = this;
-  options.hosts.forEach(function (hostPort, index){
-    var host = hostPort.split(':');
-    var connOptions = utils.extend(
-      {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
-    );
+  var connCount = 0;
+  var poolSize = self.options.poolSize;
+  while (connCount++ < poolSize) {
 
-    var connCount = 0;
-    while (connCount++ < self.options.poolSize) {
+    options.hosts.forEach(function (hostPort, index){
+      var host = hostPort.split(':');
+      var connOptions = utils.extend(
+        {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
+      );
+
       var c = new Connection(connOptions);
-      c.indexInPool = index;
+      c.indexInPool = ( (connCount-1) * poolSize) + index;
       self.connections.push(c);
-    }
-  });
+      console.error('Connection: ' + c.indexInPool + ', length: ' + self.connections.length);
+    });
+
+  };
 
   this.emit('log', 'info', this.connections.length + ' connections created across ' + options.hosts.length + ' hosts.');
 }

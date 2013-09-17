@@ -48,7 +48,6 @@ function Client (options) {
       var c = new Connection(connOptions);
       c.indexInPool = ( (connCount-1) * poolSize) + index;
       self.connections.push(c);
-      console.error('Connection: ' + c.indexInPool + ', length: ' + self.connections.length);
     });
 
   };

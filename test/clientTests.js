@@ -1,24 +1,47 @@
 var async = require('async');
 var util = require('util');
 var Client = require('../index.js').Client;
+var Connection = require('../index.js').Connection;
+var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
 
 var client = null;
+var clientOptions = {hosts: ['localhost', 'localhost:9042'], username: 'cassandra', password: 'cassandra', keyspace: keyspace};
 module.exports = {
   'setup keyspace': function(test) {
-    client = new Client({hosts: ['localhost:9042', 'localhost:9042'], keyspace: keyspace});
-    client.execute("DROP KEYSPACE ?;", [keyspace], function () {
-      createKeySpace();
+    setup(function () {
+      client = new Client(clientOptions);
+      createTable();
     });
-    function createKeySpace() {
-      client.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
+    
+    //recreates a keyspace, using a connection object
+    function setup(callback) {
+      var con = new Connection(utils.extend({host: clientOptions.hosts[0], keyspace: null}, clientOptions));
+      con.open(function (err) {
         if (err) {
-          test.fail(err);
-          test.done();
-          return;
+          con.close(function () {
+            fail(test, err);
+          });
         }
-        createTable();
+        else {
+          con.execute("DROP KEYSPACE ?;", [keyspace], function () {
+            createKeyspace(con, callback);
+          });
+        }
+      });
+    }
+    
+    function createKeyspace(con, callback) {
+      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
+        if (err) {
+          con.close(function () {
+            fail(test, err);
+          });
+        }
+        con.close(function () {
+          callback();
+        });
       });
     }
     
@@ -40,9 +63,9 @@ module.exports = {
         "int_sample int," +
         "inet_sample inet," +
         "text_sample text);", [], function (err) {
-          if (err) test.fail(err);
+          if (err) return fail(test, err);
           test.done();
-        });
+      });
     }
   },
   'execute params': function (test) {
@@ -90,8 +113,15 @@ module.exports = {
       test.done();
     });
   },
+  'keyspace does not exist error test': function (test) {
+    var localClient = getANewClient({keyspace: 'this__keyspace__does__not__exist'});
+    localClient.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+      test.ok(err, 'It should return an error as the keyspace does not exist');
+      shutDownEnd(test, localClient);
+    });
+  },
   'max execute retries': function (test) {
-    var localClient = new Client({hosts: client.options.hosts});
+    var localClient = getANewClient();
     //Only 1 retry
     localClient.options.maxExecuteRetries = 1;
     localClient.options.getAConnectionTimeout = 300;
@@ -102,12 +132,12 @@ module.exports = {
 
     localClient.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
       test.ok(err, 'The execution must fail');
-      test.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified');
+      test.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified ' + retryCount);
       shutDownEnd(test, localClient);
     });
   },
   'no initial connection callback': function (test) {
-    var localClient = new Client({hosts: ['localhost:8080', 'localhost:8080']});
+    var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
     localClient.on('log', function (type, message) {
       //console.log(type, message);
     });
@@ -138,7 +168,7 @@ module.exports = {
     });
   },
   'get a connection timeout': function (test) {
-    var localClient = new Client({hosts: ['localhost']});
+    var localClient = getANewClient();
     localClient.on('log', function (type, message) {
       //console.log(type, message);
     });
@@ -157,7 +187,7 @@ module.exports = {
     });
   },
   'get a connection to prepared queries': function (test) {
-    var localClient = new Client({hosts: client.options.hosts});
+    var localClient = getANewClient();
     var getAConnectionFlag = false;
     localClient.getAConnection = function(callback) {
       getAConnectionFlag = true;
@@ -210,7 +240,7 @@ module.exports = {
     });
   },
   'execute prepared will retry': function (test) {
-    var localClient = new Client({hosts: client.options.hosts});
+    var localClient = getANewClient();
     var counter = 0;
     localClient.isServerUnhealthy = function() {
       //change the behaviour set it to unhealthy the first time
@@ -287,4 +317,21 @@ function shutDownEnd(test, client) {
   client.shutdown(function(){
     test.done();
   });
+}
+
+function fail (test, err, client) {
+  test.fail(err);
+  if (client) {
+    shutDownEnd(test, client);
+  }
+  else {
+    test.done();
+  }
+}
+
+function getANewClient (options) {
+  if (!options) {
+    options = {};
+  }
+  return new Client(utils.extend(options, clientOptions));
 }

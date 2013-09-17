@@ -5,16 +5,15 @@ var uuid = require('node-uuid');
 
 var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
+var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
 var keyspace = new types.QueryLiteral('unittestkp1_1');
 
-var con = new Connection({host:'localhost', port: 9042, maxRequests:32});
+var con = new Connection({host:'localhost', username: 'cassandra', password: 'cassandra', port: 9042, maxRequests:32});
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {
-    con.on('log', function(type, message) {
-      //console.log(type, message);
-    });
+    //con.on('log', console.log);
     var originalHost = con.options.host;
     con.options.host = 'not-existent-host';
     con.open(function (err) {
@@ -41,6 +40,13 @@ module.exports = {
     con.execute("USE ?;", [keyspace], function(err) {
       if (err) test.fail(err);
       test.done();
+    });
+  },
+  'use keyspace error test': function (test) {
+    var localCon = new Connection(utils.extend({keyspace: 'this__keyspace__does__not__exist'}, con.options));
+    localCon.open(function (err) {
+      test.ok(err, 'An error must be returned as the keyspace does not exist');
+      closeAndEnd(test, localCon);
     });
   },
   'execute params': function (test) {
@@ -83,7 +89,7 @@ module.exports = {
     ],
     //all finished
     function(err){
-      test.ok(err === null, err);
+      if (err) fail(test, err);
       test.done();
     });
   },
@@ -110,26 +116,32 @@ module.exports = {
       test.done();
     });
   },
+  'select empty result set': function (test) {
+    con.execute('SELECT * FROM sampletable1 WHERE ID = -1', function (err, result) {
+      if (err) {
+        test.fail(err, 'Error inserting just the key');
+      }
+      else {
+        test.ok(result.rows, 'Rows must be defined');
+        if (result.rows) test.ok(result.rows.length === 0, 'The length of the rows array must be zero');
+      }
+      test.done();
+    });
+  },
   'select null values': function(test) {
     con.execute('INSERT INTO sampletable1 (id) VALUES(1)', null, 
       function(err) {
-        if (err) {
-          test.fail(err, 'Error inserting just the key');
-          test.done();
-          return;
-        }
+        if (err) return fail(test, err);
         con.execute('select * from sampletable1 where id=?', [1], function (err, result) {
           if (err) test.fail(err, 'selecting null values failed');
-          else {
-            test.ok(result.rows.length === 1);
-            test.ok(result.rows[0].get('big_sample') === null &&
-              result.rows[0].get('blob_sample') === null &&
-              result.rows[0].get('decimal_sample') === null &&
-              result.rows[0].get('list_sample') === null &&
-              result.rows[0].get('map_sample') === null &&
-              result.rows[0].get('set_sample') === null &&
-              result.rows[0].get('text_sample') === null);
-          }
+          test.ok(result.rows.length === 1);
+          test.ok(result.rows[0].get('big_sample') === null &&
+            result.rows[0].get('blob_sample') === null &&
+            result.rows[0].get('decimal_sample') === null &&
+            result.rows[0].get('list_sample') === null &&
+            result.rows[0].get('map_sample') === null &&
+            result.rows[0].get('set_sample') === null &&
+            result.rows[0].get('text_sample') === null);
           test.done();
           return;
         });
@@ -198,11 +210,7 @@ module.exports = {
         callback(err);
       });
     }, function (err) {
-      console.log('e', err);
-      if (err) {
-        test.done();
-        return;
-      }
+      if (err) return fail(test, err);
       con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
         if (err) {
           test.fail(err, 'Error selecting');
@@ -369,6 +377,68 @@ module.exports = {
       test.done();
     });
   },
+  'consume all streamIds': function (test) {
+    //tests that max streamId is reached and the connection waits for a free id
+    var options = utils.extend({}, con.options);
+    options.maxRequests = 10;
+    //total amount of queries to issue
+    var totalQueries = 50;
+    var timeoutId;
+    var localCon = new Connection(options);
+    localCon.open(function (err) {
+      if (err) return fail(test, err);
+      timeoutId = setTimeout(timePassed, 10000);
+      for (var i=0; i<totalQueries; i++) {
+        localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], selectCallback);
+      }
+    });
+    var counter = 0;
+    function selectCallback(err, result) {
+      counter++;
+      if (err) return fail(test, err);
+      if (counter === totalQueries) {
+        try{
+        clearTimeout(timeoutId);
+        closeAndEnd(test, localCon);
+        }
+        catch (e) {console.error(e)}
+      }
+    }
+    
+    function timePassed() {
+      test.fail('Timeout: all callbacks havent been executed');
+      closeAndEnd(test, localCon);
+    }
+  },
+  'streaming column': function (test) {
+    var blob = new Buffer(1024*1024);
+    var id = 400;
+    insertAndStream(test, con, blob, id, function (err, row, stream) {
+      test.equal(row.get('id'), id);
+      //test that stream is readable
+      assertStreamReadable(test, stream, blob);
+    });
+  },
+  'streaming delayed read': function (test) {
+    var blob = new Buffer(2048);
+    blob[2047] = 0xFA;
+    var id = 401;
+    insertAndStream(test, con, blob, id, function (err, row, stream) {
+      //delay some milliseconds the read of the stream and hope it's buffering
+      setTimeout(function () {
+        assertStreamReadable(test, stream, blob);
+      }, 700);
+    });
+  },
+  'streaming null value': function (test) {
+    var id = 402;
+    insertAndStream(test, con, null, id, function (err, row, stream) {
+      //delay some milliseconds the read of the stream and hope it's buffering
+      test.equal(stream, null, 'The stream must be null');
+      test.done();
+    });
+  },
+  //TODO: streaming test field null
   /**
    * Executes last, closes the connection
    */
@@ -377,12 +447,16 @@ module.exports = {
     con.close(function () {
       test.ok(!con.connected, 'The connected flag of the connection must be false.');
       //it should be allowed to be call close multiple times.
-      con.close(function () {
-        test.done();
-      });
+      closeAndEnd(test, con);
     });
   }
 };
+function closeAndEnd(test, con) {
+  con.close(function () {
+    test.done();
+  });
+}
+
 function setRowsByKey(arr, key) {
   for (var i=0;i<arr.length;i++) {
     var row = arr[i];
@@ -391,4 +465,48 @@ function setRowsByKey(arr, key) {
   arr.get = function(key1) {
     return arr['key-' + key1];
   }
+}
+
+function fail(test, err, con) {
+  test.fail(err);
+  if (con) {
+    closeAndEnd(test, con);
+  }
+  else {
+    test.done();
+  }
+}
+
+function insertAndStream(test, con, blob, id, callback) {
+  con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+    if (err) return fail(test, err);
+    con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, callback);
+  });
+}
+
+function assertStreamReadable(test, stream, originalBlob, callback) {
+  var length = 0;
+  var firstByte = null;
+  var lastByte = null;
+  stream.on('readable', function () {
+    var chunk = null;
+    while (chunk = stream.read()) {
+      length += chunk.length;
+      if (firstByte === null) {
+        firstByte = chunk[0];
+      }
+      if (length === originalBlob.length) {
+        lastByte = chunk[chunk.length-1];
+      }
+    }
+  });
+  stream.on('end', function () {
+    test.equal(length, originalBlob.length, 'The blob returned should be the same size');
+    test.equal(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
+    test.equal(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
+    if (!callback) {
+      callback = test.done;
+    }
+    callback();
+  });
 }

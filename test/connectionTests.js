@@ -438,7 +438,58 @@ module.exports = {
       test.done();
     });
   },
-  //TODO: streaming test field null
+  'streaming error test': function (test) {
+    con.executeToStream('SELECT_ERROR id, blob_sample FROM sampletable1 WHERE ID = ?', [402], 
+        types.consistencies.one,
+        function (err, row, stream) {
+          test.ok(err, 'There must be an error returned, as the query is not valid.');
+          test.ok(!row && !stream, 'There must not be a row nor stream returned');
+          test.done();
+    });
+  },
+  'streaming empty result set': function (test) {
+    con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', [-1], 
+        types.consistencies.one,
+        function (err, row, stream) {
+          test.ok(!err && !row && !stream, 'There must be no error, row nor stream yielded by the query');
+          test.done();
+    });
+  },
+  'streaming multiple rows': function (test) {
+    var values = [[410, new Buffer(1021)],[411, new Buffer(2048*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
+    
+    function insert(item, callback) {
+      con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', item, callback);
+    }
+    
+    function testInsertedValues() {
+      var counter = 0;
+      var totalValues = values.length;
+      //index the values by id for easy access
+      for (var i = 0; i < totalValues; i++) {
+        values[values[i][0].toString()] = values[i][1];
+      }
+      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', 
+        [values[0][0], values[1][0], values[2][0], values[3][0]], 
+        types.consistencies.one,
+        function (err, row, stream) {
+          if (err) return fail(test, err);
+          var originalBlob = values[row.get('id').toString()];
+          assertStreamReadable(test, stream, originalBlob, function () {
+            counter++
+            if (counter == totalValues) {
+              test.done();
+            }
+          });
+        }
+      );
+    }
+    
+    async.map(values, insert, function (err, results) {
+      if (err) return fail(test, err);
+      testInsertedValues();
+    });
+  },
   /**
    * Executes last, closes the connection
    */

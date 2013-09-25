@@ -413,7 +413,7 @@ module.exports = {
   'streaming column': function (test) {
     var blob = new Buffer(1024*1024);
     var id = 400;
-    insertAndStream(test, con, blob, id, function (err, row, stream) {
+    insertAndStream(test, con, blob, id, true, function (err, row, stream) {
       test.equal(row.get('id'), id);
       //test that stream is readable
       assertStreamReadable(test, stream, blob);
@@ -423,7 +423,7 @@ module.exports = {
     var blob = new Buffer(2048);
     blob[2047] = 0xFA;
     var id = 401;
-    insertAndStream(test, con, blob, id, function (err, row, stream) {
+    insertAndStream(test, con, blob, id, true, function (err, row, stream) {
       //delay some milliseconds the read of the stream and hope it's buffering
       setTimeout(function () {
         assertStreamReadable(test, stream, blob);
@@ -432,8 +432,7 @@ module.exports = {
   },
   'streaming null value': function (test) {
     var id = 402;
-    insertAndStream(test, con, null, id, function (err, row, stream) {
-      //delay some milliseconds the read of the stream and hope it's buffering
+    insertAndStream(test, con, null, id, true, function (err, row, stream) {
       test.equal(stream, null, 'The stream must be null');
       test.done();
     });
@@ -441,7 +440,7 @@ module.exports = {
   'streaming error test': function (test) {
     con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
       if (err) return fail(test, err);
-      con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {streamRows: true}, 
+      con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {streamRows: true, streamField: true}, 
           function (err, row, stream) {
             test.ok(err, 'There must be an error returned, as the query is not valid.');
             test.ok(!row && !stream, 'There must not be a row nor stream returned');
@@ -452,11 +451,20 @@ module.exports = {
   'streaming empty result set': function (test) {
     con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
       if (err) return fail(test, err);
-      con.executePrepared(result.id, [-1], types.consistencies.one, {streamRows: true},
+      con.executePrepared(result.id, [-1], types.consistencies.one, {streamRows: true, streamField: true},
           function (err, row, stream) {
             test.ok(!err && !row && !stream, 'There must be no error, row nor stream yielded by the query');
             test.done();
       });
+    });
+  },
+  'streaming just rows': function (test) {
+    var id = 403;
+    var blob = new Buffer('Hello');
+    insertAndStream(test, con, blob, id, false, function (err, row, stream) {
+      test.equal(stream, null, 'The stream must be null');
+      test.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.')
+      test.done();
     });
   },
   'streaming multiple rows': function (test) {
@@ -534,12 +542,12 @@ function fail(test, err, con) {
   }
 }
 
-function insertAndStream(test, con, blob, id, callback) {
+function insertAndStream(test, con, blob, id, streamField, callback) {
   con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
     if (err) return fail(test, err);
     con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', function (err, result) {
       if (err) return fail(test, err);
-      con.executePrepared(result.id, [id], types.consistencies.one, {streamRows: true, streamField: true}, callback);
+      con.executePrepared(result.id, [id], types.consistencies.one, {streamRows: true, streamField: streamField}, callback);
     });
   });
 }

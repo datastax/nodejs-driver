@@ -439,20 +439,24 @@ module.exports = {
     });
   },
   'streaming error test': function (test) {
-    con.executeToStream('SELECT_ERROR id, blob_sample FROM sampletable1 WHERE ID = ?', [402], 
-        types.consistencies.one,
-        function (err, row, stream) {
-          test.ok(err, 'There must be an error returned, as the query is not valid.');
-          test.ok(!row && !stream, 'There must not be a row nor stream returned');
-          test.done();
+    con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
+      if (err) return fail(test, err);
+      con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {streamRows: true}, 
+          function (err, row, stream) {
+            test.ok(err, 'There must be an error returned, as the query is not valid.');
+            test.ok(!row && !stream, 'There must not be a row nor stream returned');
+            test.done();
+      });
     });
   },
   'streaming empty result set': function (test) {
-    con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', [-1], 
-        types.consistencies.one,
-        function (err, row, stream) {
-          test.ok(!err && !row && !stream, 'There must be no error, row nor stream yielded by the query');
-          test.done();
+    con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
+      if (err) return fail(test, err);
+      con.executePrepared(result.id, [-1], types.consistencies.one, {streamRows: true},
+          function (err, row, stream) {
+            test.ok(!err && !row && !stream, 'There must be no error, row nor stream yielded by the query');
+            test.done();
+      });
     });
   },
   'streaming multiple rows': function (test) {
@@ -469,20 +473,22 @@ module.exports = {
       for (var i = 0; i < totalValues; i++) {
         values[values[i][0].toString()] = values[i][1];
       }
-      con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', 
-        [values[0][0], values[1][0], values[2][0], values[3][0]], 
-        types.consistencies.one,
-        function (err, row, stream) {
-          if (err) return fail(test, err);
-          var originalBlob = values[row.get('id').toString()];
-          assertStreamReadable(test, stream, originalBlob, function () {
-            counter++
-            if (counter == totalValues) {
-              test.done();
-            }
-          });
-        }
-      );
+      con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', function (err, result) {
+        if (err) return fail(test, err);
+        con.executePrepared(result.id, 
+          [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one, {streamRows: true, streamField: true},
+          function (err, row, stream) {
+            if (err) return fail(test, err);
+            var originalBlob = values[row.get('id').toString()];
+            assertStreamReadable(test, stream, originalBlob, function () {
+              counter++
+              if (counter == totalValues) {
+                test.done();
+              }
+            });
+          }
+        );
+      });
     }
     
     async.map(values, insert, function (err, results) {
@@ -531,7 +537,10 @@ function fail(test, err, con) {
 function insertAndStream(test, con, blob, id, callback) {
   con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
     if (err) return fail(test, err);
-    con.executeToStream('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', [id], types.consistencies.one, callback);
+    con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', function (err, result) {
+      if (err) return fail(test, err);
+      con.executePrepared(result.id, [id], types.consistencies.one, {streamRows: true, streamField: true}, callback);
+    });
   });
 }
 

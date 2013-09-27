@@ -381,13 +381,14 @@ module.exports = {
     //tests that max streamId is reached and the connection waits for a free id
     var options = utils.extend({}, con.options);
     options.maxRequests = 10;
+    options.maxRequestsRetry = 0;
     //total amount of queries to issue
     var totalQueries = 50;
     var timeoutId;
     var localCon = new Connection(options);
     localCon.open(function (err) {
       if (err) return fail(test, err);
-      timeoutId = setTimeout(timePassed, 10000);
+      timeoutId = setTimeout(timePassed, 20000);
       for (var i=0; i<totalQueries; i++) {
         localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], selectCallback);
       }

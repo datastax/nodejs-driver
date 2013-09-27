@@ -2,7 +2,7 @@
   "author": "Jorge Bay <jorgebaygondra@gmail.com>",
   "contributors" :  [ "Andrew Kish", "Tommy Messbauer", "Adam Faulkner"],
   "name": "node-cassandra-cql",
-  "version": "0.2.2-1",
+  "version": "0.2.3",
   "description": "Node.js CQL driver for Apache Cassandra native protocol",
   "keywords": [
     "cassandra",

@@ -81,7 +81,7 @@ Shutdowns the pool (normally it would be called once in your app lifetime).
 ### Connections
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
 
-**The Client is the recommended driver class to interact with Cassandra nodes**. But if you need lower level fine-grained control you could use the `Connection` class.
+**The Client is the recommended driver class to interact with Cassandra nodes**. In the case that you need lower level fine-grained control you could use the `Connection` class.
 ```javascript
 var Connection = require('node-cassandra-cql').Connection;
 var con = new Connection({host:'host1', port:9042});

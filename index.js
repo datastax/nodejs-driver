@@ -60,10 +60,11 @@ util.inherits(Client, events.EventEmitter);
 /**
  * Connects to each host
  */
-Client.prototype.connect = function (connectCallback) {
+Client.prototype._connectAllHosts = function (connectCallback) {
+  this.emit('log', 'info', 'Connecting to all hosts');
   var errors = [];
+  this.connecting = true;
   var self = this;
-  self.emit('log', 'info', 'Connecting to all hosts');
   async.each(this.connections, 
     function (c, callback) {
       c.open(function (err) {
@@ -80,59 +81,39 @@ Client.prototype.connect = function (connectCallback) {
     },
     function () {
       self.connecting = false;
+      var error = null;
       if (errors.length === self.connections.length) {
-        var error = new PoolConnectionError(errors);
-        connectCallback(error);
+        error = new PoolConnectionError(errors);
       }
-      else {
-        self.connected = true;
-        connectCallback();
-      }
+      self.connected = !error;
+      connectCallback(error);
+      self.emit('connection', error);
     });
 }
 
 /** 
- * Ensure that the pool is connected.
- * @param {function} callback is called when all the connections in the pool are connected (or at least 1 connected and the rest failed to connect)
+ * Connects to all hosts, in case the pool is disconnected. Callbacks.
+ * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect 
  */
-Client.prototype.ensurePoolConnection = function (callback) {
+Client.prototype.connect = function (callback) {
+  if (this.connected || this.connectionError) {
+    callback(this.connectionError);
+    return;
+  }
+  if (this.connecting) {
+    //queue while is connecting
+    this.once('connection', callback);
+    return;
+  }
+  //it is the first time. Try to connect to all hosts
   var self = this;
-  if (!this.connected) {
-    if (this.connecting && !self.connectionError) {
-      async.whilst(
-        function() {
-          return self.connecting && !self.connectionError;
-        },
-        function(cb) {
-          //let it snow until are connections are set
-          setTimeout(function(){
-            self.emit('log', 'info', 'Waiting for pool to connect');
-            cb();
-          }, 100);
-        },
-        function(err) {
-          if (!err && self.connectionError) {
-            //When there was a previous error connecting the pool, the method should always return an error
-            err = new PoolConnectionError();
-          }
-          callback(err);
-        }
-      );
+  this.connecting = true;
+  this._connectAllHosts(function (err) {
+    if (err) {
+      self.connectionError = err;
     }
-    else {
-      //avoid retrying
-      self.connecting = true;
-      this.connect(function(err){
-        if (err) {
-          self.connectionError = true;
-        }
-        callback(err);
-      });
-    }
-  }
-  else {
-    callback();
-  }
+    callback(err);
+  });
 }
 
 /**
@@ -141,7 +122,7 @@ Client.prototype.ensurePoolConnection = function (callback) {
  */
 Client.prototype.getAConnection = function (callback) {
   var self = this;
-  self.ensurePoolConnection(function (err) {
+  self.connect(function (err) {
     if (err) {
       callback(err);
       return;
@@ -198,7 +179,7 @@ Client.prototype.getAConnection = function (callback) {
  */
 Client.prototype.getConnectionToPrepare = function (callback) {
   var self = this;
-  self.ensurePoolConnection(function (err) {
+  self.connect(function (err) {
     if (err) {
       callback(err);
       return;

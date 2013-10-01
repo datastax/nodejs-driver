@@ -120,6 +120,18 @@ module.exports = {
       shutDownEnd(test, localClient);
     });
   },
+  /**
+   * Test that it is possible to call connect multiple times in parallel.
+   */
+  'multiple connect calls': function (test) {
+    var localClient = getANewClient();
+    async.times(5, function (n, next) {
+      localClient.connect(next);
+    }, function (err) {
+      if (err) return fail(test, err, localClient);
+      shutDownEnd(test, localClient);
+    });
+  },
   'max execute retries': function (test) {
     var localClient = getANewClient();
     //Only 1 retry
@@ -138,12 +150,6 @@ module.exports = {
   },
   'no initial connection callback': function (test) {
     var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
-    localClient.on('log', function (type, message) {
-      //console.log(type, message);
-    });
-    localClient.connections[0].on('log', function (type, message) {
-      //console.log('con0', type, message);
-    });
     var errors = [];
     async.series([function (callback){
       localClient.execute('badabing', function (err) {
@@ -169,9 +175,6 @@ module.exports = {
   },
   'get a connection timeout': function (test) {
     var localClient = getANewClient();
-    localClient.on('log', function (type, message) {
-      //console.log(type, message);
-    });
     //wait for short amount of time
     localClient.options.getAConnectionTimeout = 200;
     //mark all connections as unhealthy
@@ -313,9 +316,12 @@ module.exports = {
   }
 }
 
-function shutDownEnd(test, client) {
+function shutDownEnd(test, client, callback) {
   client.shutdown(function(){
     test.done();
+    if (callback) {
+      callback();
+    }
   });
 }
 

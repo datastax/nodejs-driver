@@ -23,6 +23,8 @@ var optionsDefault = {
 //Represents a pool of connection to multiple hosts
 function Client (options) {
   Client.super_.call(this);
+  //Unlimited amount of listeners for internal event queues by default
+  this.setMaxListeners(0);
   //create a connection foreach each host
   this.connections = [];
   this.options = utils.extend(options, optionsDefault);
@@ -102,6 +104,7 @@ Client.prototype.connect = function (callback) {
   }
   if (this.connecting) {
     //queue while is connecting
+    this.emit('log', 'info', 'Waiting for the pool to connect');
     this.once('connection', callback);
     return;
   }

@@ -106,6 +106,7 @@ module.exports = {
         "boolean_sample boolean," +
         "double_sample double," +
         "list_sample list<int>," +
+        "list_float_sample list<float>," +
         "set_sample set<int>," +
         "map_sample map<text, text>," +
         "int_sample int," +
@@ -191,16 +192,16 @@ module.exports = {
   },
   'insert literals': function(test) {
     var insertQueries = [
-      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (200, 1, 0x48656c6c6f, 1, [1, 2, 3], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, '202');"],
-      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (201, ?, ?, ?, ?, ?, ?, ?);", [1, new Buffer('Hello', 'utf-8'), 1, [1, 2, 3], {hint:'set', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, '201']],
-      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (202, NULL, NULL, NULL, NULL, NULL, NULL, '202');"],
-      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample)" + 
-      " values (203, ?, ?, ?, ?, ?, ?, ?);", [null, null, null, null, null, null, '203']]
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
+      " values (200, 1, 0x48656c6c6f, 1, [1, 2, 3], [1.1, 1, 1.02], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, 'abc');"],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
+      " values (201, ?, ?, ?, ?, ?, ?, ?, ?);", [1, new Buffer('Hello', 'utf-8'), 1, 
+        [1, 2, 3], {hint: 'list<float>', value: [1.1, 1, 1.02]}, {hint: 'set<int>', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, 'abc']],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
+      " values (202, NULL, NULL, NULL, NULL, NULL, NULL, NULL, null);"],
+      ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
+      " values (203, ?, ?, ?, ?, ?, ?, ?, ?);", [null, null, null, null, null, null, null, null]]
     ];
-    //TODO: Check that returns correctly if there is an error
     async.each(insertQueries, function(query, callback) {
       con.execute(query[0], query[1], function(err, result) {
         if (err) {
@@ -211,7 +212,7 @@ module.exports = {
       });
     }, function (err) {
       if (err) return fail(test, err);
-      con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
+      con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
         if (err) {
           test.fail(err, 'Error selecting');
           test.done();
@@ -222,42 +223,18 @@ module.exports = {
         var row1 = result.rows.get(201);
         var row2 = result.rows.get(202);
         var row3 = result.rows.get(203);
+        
+        function compareFields(test, rowA, rowB, fieldList) {
+          for (var i = 0; i < fieldList.length; i++) {
+            try{
+            var field = fieldList[i];
+            test.equal(util.inspect(rowA.get(field)), util.inspect(rowB.get(field)), '#' + rowA.get('id') + ' field ' + field + ' does not match');
+            }catch (e) {console.error(e);}
+          }
+        }
         //test that coming from parameters or hardcoded query, it stores and yields the same values
-        test.ok(row0.get('big_sample') == 1 &&
-          row0.get('blob_sample').toString('utf-8') === 'Hello' &&
-          row0.get('list_sample').length === 3 &&
-          row0.get('list_sample').indexOf(2) >= 0 &&
-          row0.get('set_sample').length === 3 &&
-          row0.get('set_sample').indexOf(2) >= 0 &&
-          row0.get('map_sample').a === 'value a'
-          , 'First row results does not match.');
-        test.ok(row1.get('big_sample') == 1 &&
-          row1.get('blob_sample').toString('utf-8') === 'Hello' &&
-          row1.get('list_sample').length === 3 &&
-          row1.get('list_sample').indexOf(2) >= 0 &&
-          row1.get('set_sample').length === 3 &&
-          row1.get('set_sample').indexOf(2) >= 0 &&
-          row1.get('map_sample').a === 'value a' &&
-          row1.get('text_sample') === '201'
-          , 'Second row results does not match.');
-        test.ok(row2.get('big_sample') == null &&
-          row2.get('blob_sample') === null &&
-          row2.get('list_sample') === null &&
-          row2.get('list_sample') === null &&
-          row2.get('set_sample') === null &&
-          row2.get('set_sample') === null &&
-          row2.get('map_sample') === null &&
-          row2.get('text_sample') === '202'
-          , 'Third row results does not match.');
-        test.ok(row3.get('big_sample') == null &&
-          row3.get('blob_sample') === null &&
-          row3.get('list_sample') === null &&
-          row3.get('list_sample') === null &&
-          row3.get('set_sample') === null &&
-          row3.get('set_sample') === null &&
-          row3.get('map_sample') === null &&
-          row3.get('text_sample') === '203'
-          , 'Fourth row results does not match.');
+        compareFields(test, row0, row1, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
+        compareFields(test, row2, row3, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
         test.done();
       });
     });
@@ -353,6 +330,7 @@ module.exports = {
       prepareInsertTest(305, 'float_sample', 123.001, dataTypes.float, roundNumberCompare(3)),
       prepareInsertTest(306, 'double_sample', 123.00123, dataTypes.double, roundNumberCompare(5)),
       prepareInsertTest(307, 'boolean_sample', true, dataTypes.boolean),
+      //lists, sets and maps
       prepareInsertTest(310, 'list_sample', [1,2,80], dataTypes.list, toStringCompare),
       prepareInsertTest(311, 'set_sample', [1,2,80,81], dataTypes.set, toStringCompare),
       prepareInsertTest(312, 'list_sample', [], dataTypes.list, function (value) {
@@ -362,6 +340,9 @@ module.exports = {
         return value;
       }),
       prepareInsertTest(313, 'map_sample', {key1: "value1", key2: "value2",}, dataTypes.map, toStringCompare),
+      prepareInsertTest(314, 'list_sample', [50,30,80], 'list<int>', toStringCompare),
+      prepareInsertTest(315, 'set_sample', [1,5,80], 'set<int>', toStringCompare),
+      prepareInsertTest(316, 'list_float_sample', [1,5], 'list<float>', util.inspect),
       //ip addresses
       prepareInsertTest(320, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare),
       //ip 6

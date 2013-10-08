@@ -306,8 +306,8 @@ module.exports = {
     ],
     //all finished
     function(err, results){
-      test.ok(err === null, err);
-      test.ok(results[1], 'The result of a query must not be null nor undefined');
+      test.ok(!err, err);
+      test.ok(results, 'The result of the queries must not be null nor undefined');
       test.done();
     });
   },

@@ -138,7 +138,7 @@ module.exports = {
     localClient.options.maxExecuteRetries = 1;
     localClient.options.getAConnectionTimeout = 300;
     //Change the behaviour so every err is a "server error"
-    localClient.isServerUnhealthy = function (err) {
+    localClient._isServerUnhealthy = function (err) {
       return true;
     };
 
@@ -178,11 +178,11 @@ module.exports = {
     //wait for short amount of time
     localClient.options.getAConnectionTimeout = 200;
     //mark all connections as unhealthy
-    localClient.isHealthy = function() {
+    localClient._isHealthy = function() {
       return false;
     };
     //disallow reconnection
-    localClient.canReconnect = localClient.isHealthy;
+    localClient._canReconnect = localClient._isHealthy;
     localClient.execute('badabing', function (err) {
       test.ok(err, 'Callback must return an error');
       test.ok(err.name === 'TimeoutError', 'The error must be a TimeoutError');
@@ -245,7 +245,7 @@ module.exports = {
   'execute prepared will retry': function (test) {
     var localClient = getANewClient();
     var counter = 0;
-    localClient.isServerUnhealthy = function() {
+    localClient._isServerUnhealthy = function() {
       //change the behaviour set it to unhealthy the first time
       if (counter == 0) {
         counter++;

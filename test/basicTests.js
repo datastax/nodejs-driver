@@ -1,12 +1,14 @@
-var utils = require('../lib/utils.js');
-var queryParser = utils.queryParser;
-var types = require('../lib/types.js');
 var util = require('util');
 var Int64 = require('node-int64');
-var Connection = require('../index.js').Connection;
 var uuid = require('node-uuid');
-var dataTypes = types.dataTypes;
 var events = require('events');
+
+var utils = require('../lib/utils.js');
+var types = require('../lib/types.js');
+
+var dataTypes = types.dataTypes;
+var queryParser = utils.queryParser;
+var Connection = require('../index.js').Connection;
 
 module.exports = {
   encodeParamsTest: function (test) {
@@ -107,5 +109,31 @@ module.exports = {
         item = stream.read();
       }
     });
+  },
+  'parse common args test': function (test) {
+    function testArgs(args, expectedLength) {
+      test.ok(args && args.length === expectedLength, 'The arguments length do not match');
+      test.ok(args && args.length >= 2 && args.query && typeof args.callback === 'function');
+      if (args && args.length > 2) {
+        test.ok(util.isArray(args.params) || args.params === null, 'params must be an array or null');
+        test.ok(typeof args.consistency === 'number' || args.consistency === null, 'Consistency must be an int or null');
+      }
+    }
+    var args = utils.parseCommonArgs('A QUERY', function (){});
+    test.ok(args && args.length == 2 && args.query && args.callback);
+    test.throws(utils.parseCommonArgs, Error, 'It must contain at least 2 arguments.');
+    args = utils.parseCommonArgs('A QUERY', [1, 2, 3], function (){});
+    testArgs(args, 3);
+    test.ok(util.isArray(args.params) && args.params.length === 3);
+    args = utils.parseCommonArgs('A QUERY', types.consistencies.quorum, function (){});
+    testArgs(args, 3);
+    test.ok(args.params === null && args.consistency === types.consistencies.quorum, 'Consistency does not match');
+    args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, function (){});
+    testArgs(args, 4);
+    test.ok(args.params && args.consistency, 'Params and consistency must not be null');
+    args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, {}, function (){});
+    testArgs(args, 5);
+    test.ok(args.params && args.consistency && args.options, 'Params, consistency and options must not be null');
+    test.done();
   }
 };

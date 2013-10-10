@@ -356,9 +356,9 @@ Client.prototype._setPrepared = function (preparedInfo) {
  * Removes a prepared query
  */
 Client.prototype._removePrepared = function (preparedInfo) {
-  delete this.preparedQueries[query.toLowerCase()];
-  if (prepareInfo.connection) {
-    var connectionKey = prepareInfo.connection.indexInPool.toString();
+  delete this.preparedQueries[preparedInfo.query.toLowerCase()];
+  if (preparedInfo.connection) {
+    var connectionKey = preparedInfo.connection.indexInPool.toString();
     delete this.preparedQueries[connectionKey];
   }
 }

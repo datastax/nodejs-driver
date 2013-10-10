@@ -381,7 +381,7 @@ Client.prototype._removeAllPrepared = function (connection) {
 }
 
 Client.prototype._isServerUnhealthy = function (err) {
-  if (err && err._isServerUnhealthy) {
+  if (err && err.isServerUnhealthy) {
     return true;
   }
   else {

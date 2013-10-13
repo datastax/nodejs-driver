@@ -311,6 +311,36 @@ module.exports = {
       test.done();
     });
   },
+  'socket error test': function (test) {
+    //the client must reconnect and continue
+    var localClient = getANewClient();
+    if (localClient.connections.length < 2) {
+      test.fail('The test requires 2 or more connections.');
+      return test.done();
+    }
+    async.timesSeries(15, function (n, next) {
+      if (n == 2) {
+        //The next write attempt will fail for this connection.
+        localClient.connections[0].netClient.destroy();
+      }
+      else if (n == 6) {
+        //Force to no more IO on these socket.
+        localClient.connections[0].netClient.destroy();
+        localClient.connections[1].netClient.destroy();
+      }
+      else if (n == 9 && localClient.connections.length > 1) {
+        //Force to no more IO on this socket. The next write attempt will fail
+        localClient.connections[0].netClient.end();
+        localClient.connections[1].netClient.end();
+      }
+      localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+        next(err);
+      })
+    }, function (err) {
+      test.ok(!err, 'There must not be an error returned. It must retried.');
+      shutDownEnd(test, localClient);
+    });
+  },
   'shutdown': function (test) {
     shutDownEnd(test, client);
   }

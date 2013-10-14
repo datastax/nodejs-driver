@@ -43,7 +43,7 @@ module.exports = {
     });
   },
   'use keyspace error test': function (test) {
-    var localCon = new Connection(utils.extend({keyspace: 'this__keyspace__does__not__exist'}, con.options));
+    var localCon = new Connection(utils.extend({}, con.options, {keyspace: 'this__keyspace__does__not__exist'}));
     localCon.open(function (err) {
       test.ok(err, 'An error must be returned as the keyspace does not exist');
       closeAndEnd(test, localCon);
@@ -360,9 +360,7 @@ module.exports = {
   },
   'consume all streamIds': function (test) {
     //tests that max streamId is reached and the connection waits for a free id
-    var options = utils.extend({}, con.options);
-    options.maxRequests = 10;
-    options.maxRequestsRetry = 0;
+    var options = utils.extend({}, con.options, {maxRequests: 10, maxRequestsRetry: 0});
     //total amount of queries to issue
     var totalQueries = 50;
     var timeoutId;

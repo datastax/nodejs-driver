@@ -27,7 +27,7 @@ function Client (options) {
   this.setMaxListeners(0);
   //create a connection foreach each host
   this.connections = [];
-  this.options = utils.extend(options, optionsDefault);
+  this.options = utils.extend({}, optionsDefault, options);
   //current connection index
   this.connectionIndex = 0;
   //current connection index for prepared queries
@@ -43,9 +43,7 @@ function Client (options) {
 
     options.hosts.forEach(function (hostPort, index){
       var host = hostPort.split(':');
-      var connOptions = utils.extend(
-        {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]}, self.options
-      );
+      var connOptions = utils.extend({}, self.options, {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]});
 
       var c = new Connection(connOptions);
       c.indexInPool = ( (connCount-1) * poolSize) + index;

@@ -17,7 +17,7 @@ module.exports = {
     
     //recreates a keyspace, using a connection object
     function setup(callback) {
-      var con = new Connection(utils.extend({host: clientOptions.hosts[0], keyspace: null}, clientOptions));
+      var con = new Connection(utils.extend({}, clientOptions, {host: clientOptions.hosts[0], keyspace: null}));
       con.open(function (err) {
         if (err) {
           con.close(function () {
@@ -369,5 +369,5 @@ function getANewClient (options) {
   if (!options) {
     options = {};
   }
-  return new Client(utils.extend(options, clientOptions));
+  return new Client(utils.extend({}, clientOptions, options));
 }

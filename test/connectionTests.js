@@ -224,17 +224,9 @@ module.exports = {
         var row2 = result.rows.get(202);
         var row3 = result.rows.get(203);
         
-        function compareFields(test, rowA, rowB, fieldList) {
-          for (var i = 0; i < fieldList.length; i++) {
-            try{
-            var field = fieldList[i];
-            test.equal(util.inspect(rowA.get(field)), util.inspect(rowB.get(field)), '#' + rowA.get('id') + ' field ' + field + ' does not match');
-            }catch (e) {console.error(e);}
-          }
-        }
         //test that coming from parameters or hardcoded query, it stores and yields the same values
-        compareFields(test, row0, row1, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
-        compareFields(test, row2, row3, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
+        compareRows(test, row0, row1, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
+        compareRows(test, row2, row3, ['big_sample', 'blob_sample', 'decimal_sample', 'list_sample', 'list_float_sample', 'set_sample', 'map_sample', 'text_sample']);
         test.done();
       });
     });
@@ -358,6 +350,43 @@ module.exports = {
       test.done();
     });
   },
+  'update - query vs prepared queries': function (test) {
+    //tests that executing a query using execute vs preparing and executing will behave the same
+    var insertQuery = 'INSERT INTO sampletable1 (id, map_sample, list_sample, set_sample) VALUES (?, ?, ?, ?)';
+    var updateQuery = 'UPDATE sampletable1 SET map_sample = map_sample + ?, list_sample = list_sample + ?, set_sample = set_sample + ? WHERE id = ?';
+    var insertParams = [350, {value: {a: 'b'}, hint: 'map'}, {value: [0, 1, 2], hint: 'list'}, {value: [10, 11, 12], hint: 'set'}];
+    var updateParams = [{value: {c: 'd'}, hint: 'map'}, {value: [3, 4, 5], hint: 'list'}, {value: [13, 14, 15], hint: 'set'}, 350];
+    prepareAndExecute(con, insertQuery, insertParams, function (err) {
+      if (err) return fail(test, err);
+      prepareAndExecute(con, updateQuery, updateParams, function (err) {
+        if (err) return fail(test, err);
+        executeAsQuery();
+      });
+    });
+
+    function executeAsQuery() {
+      insertParams[0]++;
+      updateParams[3]++;
+      con.execute(insertQuery, insertParams, function (err) {
+        if (err) return fail(test, err);
+        con.execute(updateQuery, updateParams, function (err) {
+          if (err) return fail(test, err);
+          checkRows();
+        });
+      });
+    }
+
+    function checkRows() {
+      con.execute('SELECT * FROM sampletable1 WHERE id IN (350, 351);', function (err, result) {
+        if (err) return fail(test, err);
+        setRowsByKey(result.rows, 'id');
+        var row0 = result.rows.get(350);
+        var row1 = result.rows.get(351);
+        compareRows(test, row0, row1, ['map_sample', 'list_sample', 'set_sample']);
+        test.done();
+      });
+    }
+  },
   'consume all streamIds': function (test) {
     //tests that max streamId is reached and the connection waits for a free id
     var options = utils.extend({}, con.options, {maxRequests: 10, maxRequestsRetry: 0});
@@ -368,7 +397,7 @@ module.exports = {
     localCon.open(function (err) {
       if (err) return fail(test, err);
       timeoutId = setTimeout(timePassed, 20000);
-      for (var i=0; i<totalQueries; i++) {
+      for (var i = 0; i < totalQueries; i++) {
         localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], selectCallback);
       }
     });
@@ -557,4 +586,18 @@ function assertStreamReadable(test, stream, originalBlob, callback) {
     }
     callback();
   });
+}
+
+function prepareAndExecute(con, query, params, callback) {
+  con.prepare(query, function (err, result) {
+    if (err) return callback(err);
+    con.executePrepared(result.id, params, callback);
+  });
+}
+
+function compareRows(test, rowA, rowB, fieldList) {
+  for (var i = 0; i < fieldList.length; i++) {
+    var field = fieldList[i];
+    test.equal(util.inspect(rowA.get(field)), util.inspect(rowB.get(field)), '#' + rowA.get('id') + ' field ' + field + ' does not match');
+  }
 }

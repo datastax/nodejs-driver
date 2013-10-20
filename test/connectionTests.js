@@ -30,7 +30,7 @@ module.exports = {
       test.done();
     });
   },
-  'create keyspace': function(test) {
+  'create keyspace': function (test) {
     con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function(err) {
       if (err) test.fail(err, 'Error creating keyspace');
       test.done();
@@ -511,6 +511,17 @@ module.exports = {
     async.map(values, insert, function (err, results) {
       if (err) return fail(test, err);
       testInsertedValues();
+    });
+  },
+  'parameter not guessed callbacks': function (test) {
+    var query = 'SELECT * FROM sampletable1 WHERE ID=?';
+    var unspecifiedParam = {random: 'param'};
+    con.execute(query, [unspecifiedParam], function (err) {
+      test.ok(err, 'An error must be yielded in the callback');
+      prepareAndExecute(con, query, [unspecifiedParam], function (err) {
+        test.ok(err, 'An error must be yielded in the callback');
+        test.done();
+      });
     });
   },
   /**

@@ -11,33 +11,15 @@ node-cassandra-cql is a Node.js CQL driver for [Apache Cassandra](http://cassand
 ## Features
 - Connection pooling to multiple hosts
 - Plain Old Javascript: no need to generate thrift files
-- Parameters in queries (even for sets/lists/maps collections)
-- Get cell by column name: `row.get('first_name')`
 - [Bigints](https://github.com/broofa/node-int64) and [uuid](https://github.com/broofa/node-uuid) support
+- Load balancing and automatic failover
 - Prepared statements
 
 ## Using it
 ```javascript
 // Creating a new connection pool to multiple hosts.
-var Client = require('node-cassandra-cql').Client;
-var hosts = ['host1:9042', 'host2:9042', 'host3', 'host4'];
-var client = new Client({hosts: hosts, keyspace: 'Keyspace1'});
-```
-`Client` constructor accepts an object with these slots, only `hosts` is required:
-```
-                hosts: String list in host:port format. Port is optional (default 9042).
-             keyspace: Name of keyspace to use.
-             username: User for authentication.
-             password: Password for authentication.
-              version: Currently only '3.0.0' is supported.
-            staleTime: Time in milliseconds before trying to reconnect.
-    maxExecuteRetries: Maximum amount of times an execute can be retried
-                       using another connection, in case the server is unhealthy.
-getAConnectionTimeout: Maximum time in milliseconds to wait for a connection from the pool.
-             poolSize: Number of connections to open for each host (default 1)
-```
-Queries are performed using the `execute()` and `executeAsPrepared()` method. For example:
-```javascript
+var cql = require('node-cassandra-cql');
+var client = new cql.Client({hosts: ['host1:9042', 'host2:9042'], keyspace: 'keyspace1'});
 // Reading
 client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
   function(err, result) {
@@ -48,7 +30,7 @@ client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['
 
 // Writing
 client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'], 
-  types.consistencies.quorum,
+  cql.types.consistencies.quorum,
   function(err) {
     if (err) console.log("failure");
     else console.log("success");
@@ -56,63 +38,102 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
 );
 ```
 
-```javascript
-// Shutting down a pool
-cqlClient.shutdown(function() { console.log("connection pool shutdown"); });
-```
+## API
+### Client
 
-### API
-#### Client
-- `execute(query, [params], [consistency], callback)`   
-Executes a CQL query.
-- `executeAsPrepared(query, params, [consistency], callback)`   
-Prepares (once) and executes the prepared query.
-- `shutdown([callback])`   
-Shutdowns the pool (normally it would be called once in your app lifetime).
-
-`execute()` and `executeAsPrepared()` accepts the following arguments
-```
-       query: The cql query to execute, with ? as parameters
-      params: Array of parameters that will replace the ? placeholders. Optional.
- consistency: The level of consistency. Optional, defaults to quorum.
-    callback: The callback function with 2 arguments: err and result
-```
-
-### Connections
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
 
-**The Client is the recommended driver class to interact with Cassandra nodes**. In the case that you need lower level fine-grained control you could use the `Connection` class.
-```javascript
-var Connection = require('node-cassandra-cql').Connection;
-var con = new Connection({host:'host1', port:9042});
-con.open(function(err) {
-  if(err) {
-    console.error(err);
-  }
-  else {
-    var query = 'SELECT key, email, last_name FROM user_profiles WHERE key=?';
-    con.execute(query, ['jbay'], function(err, result){
-      if (err) console.log('execute failed');
-      else console.log('got user profile with email ' + result.rows[0].get('email'));
-      con.close();
-    });
-  }
-});
+*The Client is the recommended driver class to interact with Cassandra nodes*.
+
+#### new Client(options)
+
+Constructs a new client object.
+
+`options` is an object with these slots, only `hosts` is required:
+```
+                hosts: Array of string in host:port format. Port is optional (default 9042).
+             keyspace: Name of keyspace to use.
+             username: User for authentication.
+             password: Password for authentication.
+            staleTime: Time in milliseconds before trying to reconnect to a node.
+    maxExecuteRetries: Maximum amount of times an execute can be retried
+                       using another connection, in case the server is unhealthy.
+getAConnectionTimeout: Maximum time in milliseconds to wait for a connection from the pool.
+             poolSize: Number of connections to open for each host (default 1)
 ```
 
-#### Connection methods
-- `open(callback)`   
-Establishes a connection, authenticates and sets a keyspace.
-- `close(callback)`   
-Closes the connection.
-- `execute(query, args, consistency, callback)`   
+#### client.connect([callback])
+
+Connects / warms up the pool.
+
+It ensures the pool is connected. It is not required to call it, internally the driver will call to `connect` when executing a query.
+
+The optional `callback` parameter will be executed when the pool is connected. If the pool is already connected, it will be called instantly. 
+
+#### client.execute(query, [params], [consistency], callback)  
+
 Executes a CQL query.
-- `prepare(query, callback)`   
+
+The `query` is the cql query to execute, with `?` placeholders as parameters.
+
+Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+Callback should take two arguments err and count.
+
+*The driver will replace the placeholders with the `params`, strigified into the query*.
+
+#### client.executeAsPrepared(query, [params], [consistency], callback)
+
+Prepares (the first time) and executes the prepared query.
+
+To execute a prepared query, the `params` are binary serialized. Using **prepared statements increases performance**, especially for repeated queries.
+
+Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+Callback should take two arguments err and count.
+
+#### client.shutdown([callback])
+
+Disconnects the pool.
+
+Closes all connections in the pool. Normally, it should be called once in your application lifetime.
+
+The optional `callback` parameter will be executed when the pool is disconnected.
+
+----
+
+
+### Connection
+
+In the case that you need lower level fine-grained control you could use the `Connection` class.
+
+It represents a connection to a Cassandra node. The consumer has to take care of open and close it.
+
+#### new Connection(options)
+
+Constructs a new connection object.
+
+#### open(callback) 
+
+Establishes a connection, authenticates and sets a keyspace.
+
+#### close(callback)
+
+Closes the connection to a Cassandra node.
+
+#### execute(query, args, consistency, callback)
+
+Executes a CQL query.
+
+#### prepare(query, callback)
+
 Prepares a CQL query.
-- `executePrepared(queryId, args, consistency, callback)`   
+
+#### executePrepared(queryId, args, consistency, callback)
+
 Executes a previously prepared query (determined by the queryId).
 
-### Logging
+## Logging
 
 Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
 ```javascript
@@ -122,7 +143,7 @@ client.on('log', function(level, message) {
 ```
 The `level` being passed to the listener can be `info` or `error`.
 
-### Data types
+## Data types
 
 Cassandra's bigint data types are parsed as [int64](https://github.com/broofa/node-int64).
 
@@ -132,6 +153,17 @@ Map datatype are encoded from / decoded to Javascript objects with keys as props
 
 Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 
+[Check the documentation for data type support →](https://github.com/jorgebay/node-cassandra-cql/wiki/Data-types)
+
+## FAQ
+
+#### How can specify the target data type of a query parameter?
+The driver try to guess the target data type, if you want to set the target data type use a param object with the **hint** and **value** hint. For example: 
+````javascript
+client.executeAsPrepared('SELECT * from users where key=?', [{value: key, hint: 'int'}], callback);
+````
+#### Should I shutdown the pool after executing a query?
+No, you should only call `client.shutdown` once in your application lifetime.
 
 ## License
 

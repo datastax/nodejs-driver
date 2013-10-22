@@ -92,10 +92,13 @@ Client.prototype._connectAllHosts = function (connectCallback) {
 }
 
 /** 
- * Connects to all hosts, in case the pool is disconnected. Callbacks.
+ * Connects to all hosts, in case the pool is disconnected.
  * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect 
  */
 Client.prototype.connect = function (callback) {
+  if (!callback) {
+    callback = function () {};
+  }
   if (this.connected || this.connectionError) {
     callback(this.connectionError);
     return;

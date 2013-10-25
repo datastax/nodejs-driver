@@ -19,7 +19,7 @@ var optionsDefault = {
   getAConnectionTimeout: 3500,
   //number of connections to open for each host
   poolSize: 1
-}
+};
 //Represents a pool of connection to multiple hosts
 function Client (options) {
   Client.super_.call(this);
@@ -40,7 +40,6 @@ function Client (options) {
   var connCount = 0;
   var poolSize = self.options.poolSize;
   while (connCount++ < poolSize) {
-
     options.hosts.forEach(function (hostPort, index){
       var host = hostPort.split(':');
       var connOptions = utils.extend({}, self.options, {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]});
@@ -49,8 +48,7 @@ function Client (options) {
       c.indexInPool = ( (connCount-1) * poolSize) + index;
       self.connections.push(c);
     });
-
-  };
+  }
 
   this.emit('log', 'info', this.connections.length + ' connections created across ' + options.hosts.length + ' hosts.');
 }
@@ -89,7 +87,7 @@ Client.prototype._connectAllHosts = function (connectCallback) {
       connectCallback(error);
       self.emit('connection', error);
     });
-}
+};
 
 /** 
  * Connects to all hosts, in case the pool is disconnected.
@@ -118,7 +116,7 @@ Client.prototype.connect = function (callback) {
     }
     callback(err);
   });
-}
+};
 
 /**
  * Gets a live connection
@@ -174,7 +172,7 @@ Client.prototype.getAConnection = function (callback) {
     }
     checkNextConnection(callback);
   });
-}
+};
 
 /**
  * Gets a connection to prepare a query
@@ -191,12 +189,12 @@ Client.prototype.getConnectionToPrepare = function (callback) {
     if (self.connections.length > self.unhealtyConnections.length) {
       var c = null;
       //closed loop
-      while (c == null || !self._isHealthy(c)) {
+      while (c === null || !self._isHealthy(c)) {
         self.prepareConnectionIndex++;
         if (self.prepareConnectionIndex > self.connections.length-1) {
           self.prepareConnectionIndex = 0;
         }
-        var c = self.connections[self.prepareConnectionIndex];
+        c = self.connections[self.prepareConnectionIndex];
       }
       callback(null, c);
     }
@@ -205,7 +203,7 @@ Client.prototype.getConnectionToPrepare = function (callback) {
       self.getAConnection(callback);
     }
   });
-}
+};
 
 /**
  Executes a query in an available connection.
@@ -241,9 +239,9 @@ Client.prototype.execute = function () {
         }
       });
     });
-  };
+  }
   tryAndRetry(0);
-}
+};
 
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
@@ -262,7 +260,7 @@ Client.prototype.executeAsPrepared = function () {
       self.executeOnConnection.call(self, preparedInfo.connection, preparedInfo.query, preparedInfo.queryId, args.params, args.consistency, args.callback);
     });
   }
-}
+};
 
 Client.prototype._getPreparedInfo = function (query) {
   var preparedInfo = this.preparedQueries[query.toLowerCase()];
@@ -314,7 +312,7 @@ Client.prototype._getPreparedInfo = function (query) {
   }
   tryAndRetryPrepare(0);
   return preparedInfo;
-}
+};
 
 /**
  * Executes a prepared query on a given connection
@@ -334,7 +332,7 @@ Client.prototype.executeOnConnection = function (c, query, queryId, args, consis
       callback(err, result);
     }
   });
-}
+};
 
 /**
  * Stored a prepared query information (queryId and connection) into the Client context
@@ -351,7 +349,7 @@ Client.prototype._setPrepared = function (preparedInfo) {
     }
     this.preparedQueries[connectionKey].push(preparedInfo);
   }
-}
+};
 
 /**
  * Removes a prepared query
@@ -362,13 +360,13 @@ Client.prototype._removePrepared = function (preparedInfo) {
     var connectionKey = preparedInfo.connection.indexInPool.toString();
     delete this.preparedQueries[connectionKey];
   }
-}
+};
 
 /**
  * Removes all previously stored queries assigned to a connection
  */
 Client.prototype._removeAllPrepared = function (connection) {
-  var connectionKey = connection.indexInPool.toString()
+  var connectionKey = connection.indexInPool.toString();
   var preparedList = this.preparedQueries[connectionKey];
   if (!preparedList) {
     return;
@@ -379,7 +377,7 @@ Client.prototype._removeAllPrepared = function (connection) {
   }, this);
   //remove by connection
   delete this.preparedQueries[connectionKey];
-}
+};
 
 Client.prototype._isServerUnhealthy = function (err) {
   if (err && err.isServerUnhealthy) {
@@ -388,14 +386,14 @@ Client.prototype._isServerUnhealthy = function (err) {
   else {
     return false;
   }
-}
+};
 
 Client.prototype._setUnhealthy = function (connection) {
   connection.unhealthyAt = new Date().getTime();
   this.unhealtyConnections.push(connection);
   this._removeAllPrepared(connection);
   this.emit('log', 'error', 'Connection #' + connection.indexInPool + ' was set to Unhealthy');
-}
+};
 
 Client.prototype._setHealthy = function (connection) {
   connection.unhealthyAt = 0;
@@ -404,19 +402,19 @@ Client.prototype._setHealthy = function (connection) {
     this.unhealtyConnections.splice(i, 1);
   }
   this.emit('log', 'info', 'Connection #' + connection.indexInPool + ' was set to healthy');
-}
+};
 
 Client.prototype._canReconnect = function (connection) {
   var timePassed = new Date().getTime() - connection.unhealthyAt;
   return timePassed > this.options.staleTime;
-}
+};
 
 /**
  * Determines if a connection can be used
 */
 Client.prototype._isHealthy = function (connection) {
   return !connection.unhealthyAt;
-}
+};
 
 /**
  * Closes all connections
@@ -429,7 +427,7 @@ Client.prototype.shutdown = function (callback) {
       callback();
     }
   );
-}
+};
 
 /**
  * Represents a error while trying to connect the pool, all the connections failed.

@@ -20,7 +20,7 @@ module.exports = {
   },
   createKeyspace: function(test) {
     con.execute("DROP KEYSPACE ?;", [keyspace], function(err) {
-      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function(err) {
+      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], function(err) {
         if (err) test.fail(err, 'Error creating keyspace');
         test.done();
       });

@@ -10,6 +10,8 @@ var dataTypes = types.dataTypes;
 var keyspace = new types.QueryLiteral('unittestkp1_1');
 var config = require('./config.js');
 
+types.consistencies.getDefault = function () {return this.one};
+
 var con = new Connection(utils.extend({}, config, {maxRequests: 32}));
 //declaration order is execution order in nodeunit
 module.exports = {
@@ -32,7 +34,7 @@ module.exports = {
     });
   },
   'create keyspace': function (test) {
-    con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function(err) {
+    con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], function(err) {
       if (err) test.fail(err, 'Error creating keyspace');
       test.done();
     });
@@ -282,7 +284,7 @@ module.exports = {
       return function (callback) {
         con.prepare("INSERT INTO sampletable1 (id, " + columnName + ") VALUES (" + idValue + ", ?)", function (err, result) {
           if (err) {console.error(err);callback(err); return;}
-          con.executePrepared(result.id, [paramValue], types.consistencies.quorum, function (err, result) {
+          con.executePrepared(result.id, [paramValue], types.consistencies.one, function (err, result) {
             if (err) {console.error(err);callback(err); return;}
             con.execute("SELECT id, " + columnName + " FROM sampletable1 WHERE ID=" + idValue, function (err, result) {
               if (err) {console.error(err);callback(err); return}

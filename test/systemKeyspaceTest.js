@@ -4,8 +4,6 @@ var config = require('./config.js');
 var Client = require('../index.js').Client;
 var Connection = require('../index.js').Connection;
 
-console.log(config);
-
 var con = new Connection(utils.extend({}, config));
 //declaration order is execution order in nodeunit
 module.exports = {

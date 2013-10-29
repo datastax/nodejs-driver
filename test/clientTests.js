@@ -39,7 +39,7 @@ module.exports = {
     }
     
     function createKeyspace(con, callback) {
-      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};", [keyspace], function (err) {
+      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], function (err) {
         if (err) {
           con.close(function () {
             fail(test, err);

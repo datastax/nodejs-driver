@@ -8,8 +8,9 @@ var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
 var keyspace = new types.QueryLiteral('unittestkp1_1');
+var config = require('./config.js');
 
-var con = new Connection({host:'localhost', username: 'cassandra', password: 'cassandra', port: 9042, maxRequests:32});
+var con = new Connection(utils.extend({}, config, {maxRequests: 32}));
 //declaration order is execution order in nodeunit
 module.exports = {
   connect: function (test) {

@@ -1,6 +1,12 @@
+var utils = require('../lib/utils.js');
+var config = require('./config.js');
+
 var Client = require('../index.js').Client;
 var Connection = require('../index.js').Connection;
-var con = new Connection({host:'localhost', port: 9042, username: 'cassandra', password: 'cassandra'});;
+
+console.log(config);
+
+var con = new Connection(utils.extend({}, config));
 //declaration order is execution order in nodeunit
 module.exports = {
   connect : function (test) {

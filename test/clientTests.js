@@ -4,10 +4,16 @@ var Client = require('../index.js').Client;
 var Connection = require('../index.js').Connection;
 var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
+var config = require('./config.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
 
 var client = null;
-var clientOptions = {hosts: ['localhost', 'localhost:9042'], username: 'cassandra', password: 'cassandra', keyspace: keyspace};
+var clientOptions = {
+  hosts: [config.host + ':' + config.port.toString(), config.host2 + ':' + config.port.toString()], 
+  username: config.username, 
+  password: config.password, 
+  keyspace: keyspace
+};
 module.exports = {
   'setup keyspace': function(test) {
     setup(function () {
@@ -17,7 +23,7 @@ module.exports = {
     
     //recreates a keyspace, using a connection object
     function setup(callback) {
-      var con = new Connection(utils.extend({}, clientOptions, {host: clientOptions.hosts[0], keyspace: null}));
+      var con = new Connection(utils.extend({}, config));
       con.open(function (err) {
         if (err) {
           con.close(function () {

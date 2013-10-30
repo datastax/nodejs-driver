@@ -422,11 +422,11 @@ Client.prototype._isHealthy = function (connection) {
 Client.prototype.shutdown = function (callback) {
   async.each(this.connections, function(c, eachCallback) {
     c.close(eachCallback);
-  },
-    function() {
+  }, function() {
+    if (callback) {
       callback();
     }
-  );
+  });
 };
 
 /**

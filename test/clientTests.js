@@ -195,46 +195,6 @@ module.exports = {
       shutDownEnd(test, localClient);
     });
   },
-  'get a connection to prepared queries': function (test) {
-    var localClient = getANewClient();
-    var getAConnectionFlag = false;
-    localClient.getAConnection = function(callback) {
-      getAConnectionFlag = true;
-      callback(null, null);
-    };
-    
-    //start test flow
-    testIndexes();
-
-    function testIndexes() {
-      async.series([localClient.getConnectionToPrepare.bind(localClient), 
-        localClient.getConnectionToPrepare.bind(localClient),
-        localClient.getConnectionToPrepare.bind(localClient),
-        localClient.getConnectionToPrepare.bind(localClient)]
-      , function (err, result) {
-        test.ok(!err);
-        test.ok(result.length == 4, 'There must be 4 connections returned');
-        test.ok(result[0].indexInPool !== result[1].indexInPool, 'There must be 2 connections with different indexes');
-        test.ok(result[0].indexInPool + result[1].indexInPool + result[2].indexInPool + result[3].indexInPool == 2, 'There should be one with the index 0 and the other with 1');
-        testNotToGetAConnection();
-      });
-    }
-    
-    function testNotToGetAConnection() {
-      localClient.getConnectionToPrepare(function (err, c) {
-        test.ok(!getAConnectionFlag, 'Get a connection must not be called');
-        testGetAConnection();
-      });
-    }
-    
-    function testGetAConnection() {
-      localClient.unhealtyConnections.length = 100;
-      localClient.getConnectionToPrepare(function (err, c) {
-        test.ok(getAConnectionFlag, 'Get a connection must be called in this case');
-        shutDownEnd(test, localClient);
-      });
-    }
-  },
   'execute prepared': function (test) {
     client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
       types.consistencies.one, 

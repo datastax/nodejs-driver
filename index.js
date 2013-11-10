@@ -214,21 +214,21 @@ Client.prototype.execute = function () {
 
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
-  var retryCount = 0;
   var self = this;
   self._getPreparedInfo(args.query, function (err, con, queryId) {
     if (self._isServerUnhealthy(err)) {
       //its a fatal error, the server died
       self._setUnhealthy(con);
-      if (retryCount === self.options.maxExecuteRetries) {
+      args.options = utils.extend({retryCount: 0}, args.options);
+      if (args.options.retryCount === self.options.maxExecuteRetries) {
         args.callback(err);
         //It was already removed from context while it was set to unhealthy
         return;
       }
       //retry: it will get another connection
-      //TODO:increase retry count
       self.emit('log', 'info', 'Retrying to prepare "' + args.query + '"');
-      self.executeAsPrepared(args.query, args.params, args.consistency, args.callback);
+      args.options.retryCount = args.options.retryCount + 1;
+      self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
     }
     else if (err) {
       //its syntax or other normal error

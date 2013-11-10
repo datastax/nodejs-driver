@@ -200,8 +200,7 @@ module.exports = {
       types.consistencies.one, 
       function (err, result) {
         if (err) {
-          test.fail(err);
-          test.done();
+          fail(test, err);
           return;
         }
         test.ok(result.rows.length == 1, 'There should be a row');
@@ -209,11 +208,11 @@ module.exports = {
     });
   },
   'execute prepared will retry': function (test) {
-    var localClient = getANewClient();
-    var counter = 0;
+    var localClient = getANewClient({maxExecuteRetries: 3, staleTime: 150});
+    var counter = -1;
     localClient._isServerUnhealthy = function() {
       //change the behaviour set it to unhealthy the first time
-      if (counter == 0) {
+      if (counter < 2) {
         counter++;
         return true
       }
@@ -224,11 +223,27 @@ module.exports = {
       types.consistencies.one, 
       function (err, result) {
         if (err) {
-          test.fail(err);
-          shutDownEnd(test, localClient);
+          fail(test, err, localClient);
           return;
         }
         test.ok(result.rows.length == 1, 'There should be one row');
+        shutDownEnd(test, localClient);
+    });
+  },
+  'execute prepared stops retrying': function (test) {
+    var localClient = getANewClient({maxExecuteRetries: 4, staleTime: 150});
+    var counter = -1;
+    localClient._isServerUnhealthy = function() {
+      //change the behaviour set it to unhealthy the first time
+      counter++;
+      return true;
+    };
+    
+    localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      types.consistencies.one, 
+      function (err, result) {
+        test.ok(!result, 'It must stop retrying and callback without a result');
+        test.equal(counter, localClient.options.maxExecuteRetries, 'It must retry an specific amount of times');
         shutDownEnd(test, localClient);
     });
   },
@@ -277,7 +292,7 @@ module.exports = {
       test.done();
     });
   },
-  'socket error test': function (test) {
+  'socket error serial test': function (test) {
     //the client must reconnect and continue
     var localClient = getANewClient();
     if (localClient.connections.length < 2) {
@@ -307,6 +322,26 @@ module.exports = {
       shutDownEnd(test, localClient);
     });
   },
+  'socket error parallel test': function (test) {
+    //the client must reconnect and continue
+    var localClient = getANewClient();
+    if (localClient.connections.length < 2) {
+      test.fail('The test requires 2 or more connections.');
+      return test.done();
+    }
+    async.times(10, function (n, next) {
+      localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+        if (n === 3) {
+          localClient.connections[0].netClient.destroy();
+          localClient.connections[1].netClient.destroy();
+        }
+        next(err);
+      })
+    }, function (err) {
+      test.ok(!err, 'There must not be an error returned. It must retried.');
+      shutDownEnd(test, localClient);
+    });
+  },
   'shutdown': function (test) {
     shutDownEnd(test, client);
   }
@@ -321,10 +356,10 @@ function shutDownEnd(test, client, callback) {
   });
 }
 
-function fail (test, err, client) {
+function fail (test, err, localClient) {
   test.fail(err);
-  if (client) {
-    shutDownEnd(test, client);
+  if (localClient) {
+    shutDownEnd(test, localClient);
   }
   else {
     test.done();

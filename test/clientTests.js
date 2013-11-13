@@ -75,6 +75,20 @@ module.exports = {
       });
     }
   },
+  'pool size test': function (test) {
+    var poolSize = 3;
+    var localClient = getANewClient({hosts: ['host1', 'host2', 'host3'], poolSize: poolSize});
+    var connections = localClient.connections;
+    //The pool should created like [conHost1, conHost2, conHost3, conHost1, conHost2, conHost3, conHost1, ...]
+    test.ok(connections.length, 9, 'There must be 9 connections (amount hosts * pool size)');
+    for (var i = 0; i < poolSize; i++) {
+      test.ok(
+        connections[0 + (i * poolSize)].options.host === 'host1' &&
+        connections[1 + (i * poolSize)].options.host === 'host2' &&
+        connections[2 + (i * poolSize)].options.host === 'host3', 'The connections inside the pool are not correctly ordered');
+    }
+    test.done();
+  },
   'execute params': function (test) {
     async.series([
       function (callback) {

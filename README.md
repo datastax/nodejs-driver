@@ -41,7 +41,7 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
 );
 
 // Streaming query rows
-client.streamRows('SELECT event_time, temperature FROM temperature WHERE weatherstation_id=', ['abc'], 
+client.streamRows('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'], 
   function(err, row) {
     //the callback will be invoked per each row as soon as they are received
     if (err) console.log("Oh dear...");
@@ -52,7 +52,7 @@ client.streamRows('SELECT event_time, temperature FROM temperature WHERE weather
 );
 
 // Streaming field
-client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay], 
+client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'], 
   function(err, row, photoStream) {
     //the callback will be invoked per each row as soon as they are received.
     if (err) console.log("Shame...");

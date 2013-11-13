@@ -21,12 +21,10 @@ var optionsDefault = {
   poolSize: 1
 };
 //Represents a pool of connection to multiple hosts
-function Client (options) {
-  Client.super_.call(this);
+function Client(options) {
+  events.EventEmitter.call(this);
   //Unlimited amount of listeners for internal event queues by default
   this.setMaxListeners(0);
-  //create a connection for each each host
-  this.connections = [];
   this.options = utils.extend({}, optionsDefault, options);
   //current connection index
   this.connectionIndex = 0;
@@ -34,24 +32,28 @@ function Client (options) {
   this.prepareConnectionIndex = 0;
   this.preparedQueries = {};
   
-  var self = this;
-  var connCount = 0;
-  var poolSize = self.options.poolSize;
-  while (connCount++ < poolSize) {
-    options.hosts.forEach(function (hostPort, index){
-      var host = hostPort.split(':');
-      var connOptions = utils.extend({}, self.options, {host: host[0], port: isNaN(host[1]) ? 9042 : host[1]});
-
-      var c = new Connection(connOptions);
-      c.indexInPool = ( (connCount-1) * poolSize) + index;
-      self.connections.push(c);
-    });
-  }
-
-  this.emit('log', 'info', this.connections.length + ' connections created across ' + options.hosts.length + ' hosts.');
+  this._createPool();
 }
 
 util.inherits(Client, events.EventEmitter);
+
+/**
+ * Creates the pool of connections suitable for round robin
+ */
+Client.prototype._createPool = function () {
+  this.connections = [];
+  for (var poolIndex = 0; poolIndex < this.options.poolSize; poolIndex++) {
+    for (var i = 0; i < this.options.hosts.length; i++) {
+      var host = this.options.hosts[i].split(':');
+      var connOptions = utils.extend({}, this.options, {host: host[0], port: host[1] || 9042});
+      var c = new Connection(connOptions);
+      c.indexInPool = (this.options.poolSize * poolIndex) + i;
+      this.connections.push(c);
+    }
+  }
+
+  this.emit('log', 'info', this.connections.length + ' connections created across ' + this.options.hosts.length + ' hosts.');
+};
 
 /**
  * Connects to each host

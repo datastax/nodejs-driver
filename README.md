@@ -1,6 +1,9 @@
 ## Node.js CQL Driver for Apache Cassandra
 
-node-cassandra-cql is a Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/)'s native protocol with a small dependency tree written in pure javascript.
+Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/) with a small dependency tree written in pure javascript.
+
+The driver uses Cassandra's binary protocol which was introduced in Cassandra version 1.2.
+
 
   [![Build Status](https://secure.travis-ci.org/jorgebay/node-cassandra-cql.png)](http://travis-ci.org/jorgebay/node-cassandra-cql)
 
@@ -78,7 +81,7 @@ The `query` is the cql query to execute, with `?` placeholders as parameters.
 
 Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-Callback should take two arguments err and count.
+Callback should take two arguments err and result.
 
 *The driver will replace the placeholders with the `params`, strigified into the query*.
 
@@ -90,7 +93,7 @@ To execute a prepared query, the `params` are binary serialized. Using **prepare
 
 Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-Callback should take two arguments err and count.
+Callback should take two arguments err and result.
 
 #### client.shutdown([callback])
 

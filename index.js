@@ -25,15 +25,13 @@ function Client (options) {
   Client.super_.call(this);
   //Unlimited amount of listeners for internal event queues by default
   this.setMaxListeners(0);
-  //create a connection foreach each host
+  //create a connection for each each host
   this.connections = [];
   this.options = utils.extend({}, optionsDefault, options);
   //current connection index
   this.connectionIndex = 0;
   //current connection index for prepared queries
   this.prepareConnectionIndex = 0;
-  //an array containing the unhealthy connections
-  this.unhealtyConnections = [];
   this.preparedQueries = {};
   
   var self = this;
@@ -122,7 +120,7 @@ Client.prototype.connect = function (callback) {
  * Gets a live connection
  * If there isn't an active connection available, it calls the callback with the error.
  */
-Client.prototype.getAConnection = function (callback) {
+Client.prototype._getAConnection = function (callback) {
   var self = this;
   self.connect(function (err) {
     if (err) {
@@ -158,7 +156,7 @@ Client.prototype.getAConnection = function (callback) {
           }
           else {
             //this connection is now good
-            self._setHealthy.call(self, c);
+            self._setHealthy(c);
             callback(null, c);
           }
         });
@@ -182,8 +180,8 @@ Client.prototype.execute = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var self = this;
   function tryAndRetry(retryCount) {
-    retryCount = retryCount ? retryCount : 0;
-    self.getAConnection(function(err, c) {
+    retryCount = retryCount || 0;
+    self._getAConnection(function(err, c) {
       if (err) {
         args.callback(err);
         return;
@@ -212,10 +210,14 @@ Client.prototype.execute = function () {
   tryAndRetry(0);
 };
 
+/**
+ * Prepares (the first time) and executes the prepared query, retrying on multiple hosts if needed.
+ * @param {function} callback, executes callback(err, result) when finished
+ */
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var self = this;
-  self._getPreparedInfo(args.query, function (err, con, queryId) {
+  self._getPrepared(args.query, function (err, con, queryId) {
     if (self._isServerUnhealthy(err)) {
       //its a fatal error, the server died
       self._setUnhealthy(con);
@@ -235,67 +237,66 @@ Client.prototype.executeAsPrepared = function () {
       args.callback(err);
     }
     else {
-      self.executeOnConnection(con, args.query, queryId, args.params, args.consistency, args.callback);
+      self._executeOnConnection(con, args.query, queryId, args.params, args.consistency, args.options, args.callback);
     }
   });
+};
+
+/**
+ * Prepares (the first time on each host), executes the prepared query and streams the last field of each row.
+ * It executes the callback per each row as soon as the first chunk of the last field is received.
+ * Retries on multiple hosts if needed.
+ * @param {function} callback, executes callback(err, row, streamField) per each row received.
+ */
+Client.prototype.streamField = function () {
+  var args = utils.parseCommonArgs.apply(null, arguments);
+  args.options = utils.extend({}, args.options, {streamRows: true, streamField: true});
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
+};
+
+/**
+ * Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
+ * Retries on multiple hosts if needed.
+ * @param {function} callback, executes callback(err, row) per each row received.
+ */
+Client.prototype.streamRows = function () {
+  var args = utils.parseCommonArgs.apply(null, arguments);
+  args.options = utils.extend({}, args.options, {streamRows: true});
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
 
 /**
  * Executes a prepared query on a given connection
  */
-Client.prototype.executeOnConnection = function (c, query, queryId, params, consistency, callback) {
+Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, callback) {
   this.emit('log', 'info', 'Executing prepared query "' + query + '"');
   var self = this;
-  c.executePrepared(queryId, params, consistency, function(err, result) {
+  c.executePrepared(queryId, params, consistency, options, function(err, result1, result2) {
     if (self._isServerUnhealthy(err)) {
       //There is a problem with the connection/server that had a prepared query
       //forget about this connection for now
       self._setUnhealthy(c);
       //retry the whole thing, it will get another connection
-      self.executeAsPrepared(query, params, consistency, callback);
+      self.executeAsPrepared(query, params, consistency, options, callback);
     }
     else {
-      callback(err, result);
+      callback(err, result1, result2);
     }
   });
 };
 
-function PreparedInfo(query) {
-  this.query = query;
-  //stores information for the prepared statement on a connection
-  this._connectionData = {};
-}
-
-PreparedInfo.prototype.getConnectionInfo = function (conId) {
-  conId = conId.toString();
-  var info = this._connectionData[conId];
-  if (!info) {
-    info = new events.EventEmitter();
-    info.setMaxListeners(0);
-    info.preparing = false;
-    info.queryId = null;
-    info.id = conId;
-    this._connectionData[conId] = info;
-  }
-  return info;
-};
-
-PreparedInfo.prototype.removeConnectionInfo = function (conId) {
-  delete this._connectionData[conId];
-};
-
 /**
- * 
+ * It gets an active connection and prepares the query on it, queueing the callback in case its already prepared.
  * @param {function} callback Executes callback(err, con, queryId) when there is a prepared statement on a connection or there is an error.
  */
-Client.prototype._getPreparedInfo = function (query, callback) {
+Client.prototype._getPrepared = function (query, callback) {
   var preparedInfo = this.preparedQueries[query];
   if (!preparedInfo) {
     preparedInfo = new PreparedInfo(query);
     this.preparedQueries[query] = preparedInfo;
   }
   var self = this;
-  this.getAConnection(function(err, con) {
+  this._getAConnection(function(err, con) {
     if (err) {
       return callback(err);
     }
@@ -372,17 +373,12 @@ Client.prototype._setUnhealthy = function (connection) {
   if (!connection.unhealthyAt) {
     this.emit('log', 'error', 'Connection #' + connection.indexInPool + ' is being set to Unhealthy');
     connection.unhealthyAt = new Date().getTime();
-    this.unhealtyConnections.push(connection);
     this._removeAllPrepared(connection);
   }
 };
 
 Client.prototype._setHealthy = function (connection) {
   connection.unhealthyAt = 0;
-  var i = this.unhealtyConnections.indexOf(connection);
-  if (i >= 0) {
-    this.unhealtyConnections.splice(i, 1);
-  }
   this.emit('log', 'info', 'Connection #' + connection.indexInPool + ' was set to healthy');
 };
 
@@ -409,6 +405,33 @@ Client.prototype.shutdown = function (callback) {
       callback();
     }
   });
+};
+
+/**
+ * Holds the information of the connections in which a query is prepared 
+ */
+function PreparedInfo(query) {
+  this.query = query;
+  //stores information for the prepared statement on a connection
+  this._connectionData = {};
+}
+
+PreparedInfo.prototype.getConnectionInfo = function (conId) {
+  conId = conId.toString();
+  var info = this._connectionData[conId];
+  if (!info) {
+    info = new events.EventEmitter();
+    info.setMaxListeners(0);
+    info.preparing = false;
+    info.queryId = null;
+    info.id = conId;
+    this._connectionData[conId] = info;
+  }
+  return info;
+};
+
+PreparedInfo.prototype.removeConnectionInfo = function (conId) {
+  delete this._connectionData[conId];
 };
 
 /**

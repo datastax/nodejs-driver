@@ -6,6 +6,7 @@ var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
+types.consistencies.getDefault = function () {return this.one};
 
 var client = null;
 var clientOptions = {
@@ -342,6 +343,34 @@ module.exports = {
       shutDownEnd(test, localClient);
     });
   },
+  'streaming just rows': function (test) {
+    var id = 100;
+    var blob = new Buffer('Frank Gallagher');
+    insertAndStream(test, client, blob, id, false, function (err, row, stream) {
+      if (err) fail(test, err);
+      test.equal(stream, null, 'The stream must be null');
+      test.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.')
+      test.done();
+    });
+  },
+  'streaming field': function (test) {
+    var id = 110;
+    var blob = new Buffer('Freaks and geeks 1999');
+    insertAndStream(test, client, blob, id, true, function (err, row, blobStream) {
+      if (err) fail(test, err);
+      assertStreamReadable(test, blobStream, blob);
+    });
+  },
+  'streaming null field': function (test) {
+    var id = 120;
+    var blob = null;
+    insertAndStream(test, client, blob, id, true, function (err, row, blobStream) {
+      if (err) fail(test, err);
+      test.equal(row.get('id'), id, 'The row must be retrieved');
+      test.ok(blobStream === null, 'The file stream must be NULL');
+      test.done();
+    });
+  },
   'shutdown': function (test) {
     shutDownEnd(test, client);
   }
@@ -371,4 +400,42 @@ function getANewClient (options) {
     options = {};
   }
   return new Client(utils.extend({}, clientOptions, options));
+}
+
+function insertAndStream (test, client, blob, id, streamField, callback) {
+  var streamFunction = client.streamRows;
+  if (streamField) {
+    streamFunction = client.streamField;
+  }
+  client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+    if (err) return fail(test, err);
+    streamFunction.call(client, 'SELECT id, blob_sample FROM sampletable2 WHERE id = ?', [id], callback);
+  });
+}
+
+function assertStreamReadable(test, stream, originalBlob, callback) {
+  var length = 0;
+  var firstByte = null;
+  var lastByte = null;
+  stream.on('readable', function () {
+    var chunk = null;
+    while (chunk = stream.read()) {
+      length += chunk.length;
+      if (firstByte === null) {
+        firstByte = chunk[0];
+      }
+      if (length === originalBlob.length) {
+        lastByte = chunk[chunk.length-1];
+      }
+    }
+  });
+  stream.on('end', function () {
+    test.equal(length, originalBlob.length, 'The blob returned should be the same size');
+    test.equal(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
+    test.equal(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
+    if (!callback) {
+      callback = test.done;
+    }
+    callback();
+  });
 }

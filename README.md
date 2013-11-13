@@ -1,4 +1,4 @@
-## Node.js CQL Driver for Apache Cassandra
+﻿## Node.js CQL Driver for Apache Cassandra
 
 Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/) with a small dependency tree written in pure javascript.
 
@@ -13,10 +13,10 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 
 ## Features
 - Connection pooling to multiple hosts
+- Load balancing and automatic failover
 - Plain Old Javascript: no need to generate thrift files
 - [Bigints](https://github.com/broofa/node-int64) and [uuid](https://github.com/broofa/node-uuid) support
-- Load balancing and automatic failover
-- Prepared statements
+- Row and field streaming
 
 ## Using it
 ```javascript
@@ -39,12 +39,35 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
     else console.log("success");
   }
 );
+
+// Streaming query rows
+client.streamRows('SELECT event_time, temperature FROM temperature WHERE weatherstation_id=', ['abc'], 
+  function(err, row) {
+    //the callback will be invoked per each row as soon as they are received
+    if (err) console.log("Oh dear...");
+    else {
+      console.log('temperature value', row.get('temperature'));
+    }
+  }
+);
+
+// Streaming field
+client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay], 
+  function(err, row, photoStream) {
+    //the callback will be invoked per each row as soon as they are received.
+    if (err) console.log("Shame...");
+    else {
+      //The stream is a Readable Stream2 object
+      stdout.pipe(photoStream);
+    }
+  }
+);
 ```
 
 ## API
 ### Client
 
-The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the set up of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
+The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the setup of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
 
 *The Client is the recommended driver class to interact with Cassandra nodes*.
 
@@ -79,11 +102,11 @@ Executes a CQL query.
 
 The `query` is the cql query to execute, with `?` placeholders as parameters.
 
-Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
 Callback should take two arguments err and result.
 
-*The driver will replace the placeholders with the `params`, strigified into the query*.
+*The driver will replace the placeholders with the `params`, stringified into the query*.
 
 #### client.executeAsPrepared(query, [params], [consistency], callback)
 
@@ -91,9 +114,32 @@ Prepares (the first time) and executes the prepared query.
 
 To execute a prepared query, the `params` are binary serialized. Using **prepared statements increases performance**, especially for repeated queries.
 
-Use once of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+In the case the query is already being prepared on a host, it queues the executing of a prepared statement on that host until the preparing finished (the driver will not issue a request to prepare statement more than once).
+
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
 Callback should take two arguments err and result.
+
+#### client.streamRows(query, [params], [consistency], callback)
+
+Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
+
+It executes `callback(err, row)` per each row received.
+
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+#### client.streamField(query, [params], [consistency], callback)
+
+Prepares (the first time), executes the prepared query and streams the last field of each row.
+
+It executes `callback(err, row, streamField)` per each row as soon as the first chunk of the last field is received.
+
+The `stream` is a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object that contains the raw bytes of the field value.
+It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+
+The `row` object is similar to the one provided on `streamRows`, except that it does not contain the definition of the last column.
+
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
 #### client.shutdown([callback])
 
@@ -161,10 +207,12 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 ## FAQ
 
 #### How can specify the target data type of a query parameter?
-The driver try to guess the target data type, if you want to set the target data type use a param object with the **hint** and **value** hint. For example: 
-````javascript
+The driver tries to guess the target data type, if you want to set the target data type use a param object with the **hint** and **value** properties. For example: 
+
+```javascript
 client.executeAsPrepared('SELECT * from users where key=?', [{value: key, hint: 'int'}], callback);
-````
+```
+
 #### Should I shutdown the pool after executing a query?
 No, you should only call `client.shutdown` once in your application lifetime.
 
@@ -175,6 +223,8 @@ node-cassandra-cql is distributed under the [MIT license](http://opensource.org/
 ## Contributions
 
 Feel free to join in to help this project grow!
+
+Check the [Issue tracker](https://github.com/jorgebay/node-cassandra-cql/issues), there are issues even marked "New Contributors Welcome" :)
 
 ## Acknowledgements
 

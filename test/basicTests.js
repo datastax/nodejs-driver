@@ -110,7 +110,7 @@ module.exports = {
       }
     });
   },
-  'parse common args test': function (test) {
+  'parse common args test by name': function (test) {
     function testArgs(args, expectedLength) {
       test.ok(args && args.length === expectedLength, 'The arguments length do not match');
       test.ok(args && args.length >= 2 && args.query && typeof args.callback === 'function');
@@ -134,6 +134,13 @@ module.exports = {
     args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, {}, function (){});
     testArgs(args, 5);
     test.ok(args.params && args.consistency && args.options, 'Params, consistency and options must not be null');
+    test.done();
+  },
+  'parse common args test by index': function (test) {
+    var args = utils.parseCommonArgs('A QUERY', function (){});
+    test.ok(util.isArray(args), 'The returned object must be an Array');
+    test.ok(args[0] === 'A QUERY', 'The first element must be the query');
+    test.ok(args.length === 2, 'There must be 2 arguments in array');
     test.done();
   }
 };

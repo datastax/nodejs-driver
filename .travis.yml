@@ -8,6 +8,3 @@ before_install:
 
 services:
   - cassandra
-
-script:
-  - nodeunit test

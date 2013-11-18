@@ -1,3 +1,4 @@
+var assert = require('assert');
 var async = require('async');
 var util = require('util');
 var Client = require('../index.js').Client;
@@ -6,7 +7,7 @@ var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
-types.consistencies.getDefault = function () {return this.one};
+types.consistencies.getDefault = function () { return this.one; };
 
 var client = null;
 var clientOptions = {
@@ -15,8 +16,9 @@ var clientOptions = {
   password: config.password, 
   keyspace: keyspace
 };
-module.exports = {
-  'setup keyspace': function(test) {
+
+describe('Client', function () {
+  before(function (done) {
     setup(function () {
       client = new Client(clientOptions);
       createTable();
@@ -26,11 +28,7 @@ module.exports = {
     function setup(callback) {
       var con = new Connection(utils.extend({}, config));
       con.open(function (err) {
-        if (err) {
-          con.close(function () {
-            fail(test, err);
-          });
-        }
+        if (err) throw err;
         else {
           con.execute("DROP KEYSPACE ?;", [keyspace], function () {
             createKeyspace(con, callback);
@@ -41,11 +39,7 @@ module.exports = {
     
     function createKeyspace(con, callback) {
       con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], function (err) {
-        if (err) {
-          con.close(function () {
-            fail(test, err);
-          });
-        }
+        if (err) throw err;
         con.close(function () {
           callback();
         });
@@ -70,364 +64,374 @@ module.exports = {
         "int_sample int," +
         "inet_sample inet," +
         "text_sample text);", [], function (err) {
-          if (err) return fail(test, err);
-          test.done();
+          if (err) throw err;
+          done();
       });
     }
-  },
-  'pool size test': function (test) {
-    var poolSize = 3;
-    var localClient = getANewClient({hosts: ['host1', 'host2', 'host3'], poolSize: poolSize});
-    var connections = localClient.connections;
-    //The pool should created like [conHost1, conHost2, conHost3, conHost1, conHost2, conHost3, conHost1, ...]
-    test.ok(connections.length, 9, 'There must be 9 connections (amount hosts * pool size)');
-    for (var i = 0; i < poolSize; i++) {
-      test.ok(
-        connections[0 + (i * poolSize)].options.host === 'host1' &&
-        connections[1 + (i * poolSize)].options.host === 'host2' &&
-        connections[2 + (i * poolSize)].options.host === 'host3', 'The connections inside the pool are not correctly ordered');
-    }
-    test.done();
-  },
-  'execute params': function (test) {
-    async.series([
-      function (callback) {
-        //all params
-        client.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
-      },
-      function (callback) {
-        //no consistency specified
-        client.execute('SELECT * FROM system.schema_keyspaces', [], callback);
-      },
-      function (callback) {
-        //change the meaning of the second parameter to consistency
-        client.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
-      },
-      function (callback) {
-        //query params but no params args, consistency specified, must fail
-        client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
-          if (!err) {
-            callback(new Error('Consistency should not be treated as query parameters'));
-          }
-          else {
-            callback(null, result);
-          }
-        });
-      },
-      function (callback) {
-        //no query params
-        client.execute('SELECT * FROM system.schema_keyspaces', function(err) {
-          callback(err);
-        });
+  });
+  
+  describe('constructor', function () {
+    it('should create the connection pool', function () {
+      //The pool should be created like [conHost1, conHost2, conHost3, conHost1, conHost2, conHost3, conHost1, ...]
+      var poolSize = 3;
+      var localClient = getANewClient({hosts: ['host1', 'host2', 'host3'], poolSize: poolSize});
+      var connections = localClient.connections;
+      assert.ok(connections.length, 9, 'There must be 9 connections (amount hosts * pool size)');
+      for (var i = 0; i < poolSize; i++) {
+        assert.ok(
+          connections[0 + (i * poolSize)].options.host === 'host1' &&
+          connections[1 + (i * poolSize)].options.host === 'host2' &&
+          connections[2 + (i * poolSize)].options.host === 'host3', 'The connections inside the pool are not correctly ordered');
       }
-    ],
-    //all finished
-    function(err, results){
-      test.ok(err === null, err);
-      test.ok(results[1], 'The result of a query must not be null nor undefined');
-      test.done();
     });
-  },
-  'response error test': function (test) {
-    client.execute('SELECT WHERE Fail Miserable', function (err, result) {
-      test.ok(err, 'Error must be defined and not null');
-      test.done();
+  });
+  
+  describe('#connect()', function () {
+    it('possible to call connect multiple times in parallel', function (done) {
+      var localClient = getANewClient();
+      async.times(5, function (n, next) {
+        localClient.connect(next);
+      }, function (err) {
+        assert.ok(!err, err);
+        localClient.shutdown(done);
+      });
     });
-  },
-  'keyspace does not exist error test': function (test) {
-    var localClient = getANewClient({keyspace: 'this__keyspace__does__not__exist'});
-    localClient.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
-      test.ok(err, 'It should return an error as the keyspace does not exist');
-      shutDownEnd(test, localClient);
+  });
+  
+  describe('#execute()', function () {
+    it('should allow different argument lengths', function (done) {
+      async.series([
+        function (callback) {
+          //all params
+          client.execute('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
+        },
+        function (callback) {
+          //no consistency specified
+          client.execute('SELECT * FROM system.schema_keyspaces', [], callback);
+        },
+        function (callback) {
+          //change the meaning of the second parameter to consistency
+          client.execute('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
+        },
+        function (callback) {
+          //query params but no params args, consistency specified, must fail
+          client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
+            if (!err) {
+              callback(new Error('Consistency should not be treated as query parameters'));
+            }
+            else {
+              callback(null, result);
+            }
+          });
+        },
+        function (callback) {
+          //no query params
+          client.execute('SELECT * FROM system.schema_keyspaces', function(err) {
+            callback(err);
+          });
+        }
+      ],
+      //all finished
+      function(err, results){
+        assert.strictEqual(err, null, err);
+        assert.ok(results[1], 'The result of a query must not be null nor undefined');
+        done();
+      });
     });
-  },
-  /**
-   * Test that it is possible to call connect multiple times in parallel.
-   */
-  'multiple connect calls': function (test) {
-    var localClient = getANewClient();
-    async.times(5, function (n, next) {
-      localClient.connect(next);
-    }, function (err) {
-      if (err) return fail(test, err, localClient);
-      shutDownEnd(test, localClient);
+    
+    it('should callback with error for Syntax error in the query', function (done) {
+      client.execute('SELECT WHERE Fail Miserable', function (err, result) {
+        assert.ok(err, 'Error must be defined and not null');
+        done();
+      });
     });
-  },
-  'max execute retries': function (test) {
-    var localClient = getANewClient();
-    //Only 1 retry
-    localClient.options.maxExecuteRetries = 1;
-    localClient.options.getAConnectionTimeout = 300;
-    //Change the behaviour so every err is a "server error"
-    localClient._isServerUnhealthy = function (err) {
-      return true;
-    };
+    
+    it('should retry in case the node is down', function (done) {
+      var localClient = getANewClient();
+      //Only 1 retry
+      localClient.options.maxExecuteRetries = 1;
+      localClient.options.getAConnectionTimeout = 300;
+      //Change the behaviour so every err is a "server error"
+      localClient._isServerUnhealthy = function (err) {
+        return true;
+      };
 
-    localClient.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
-      test.ok(err, 'The execution must fail');
-      test.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified ' + retryCount);
-      shutDownEnd(test, localClient);
+      localClient.execute('WILL FAIL AND EXECUTE THE METHOD FROM ABOVE', function (err, result, retryCount){
+        assert.ok(err, 'The execution must fail');
+        assert.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified ' + retryCount);
+        localClient.shutdown(done);
+      });
     });
-  },
-  'no initial connection callback': function (test) {
-    var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
-    var errors = [];
-    async.series([function (callback){
+    
+    it('should callback after timeout passed', function (done) {
+      var localClient = getANewClient();
+      //wait for short amount of time
+      localClient.options.getAConnectionTimeout = 200;
+      //mark all connections as unhealthy
+      localClient._isHealthy = function() {
+        return false;
+      };
+      //disallow reconnection
+      localClient._canReconnect = localClient._isHealthy;
       localClient.execute('badabing', function (err) {
-        if (err) {
-          errors.push(err);
-          callback();
-        }
+        assert.ok(err, 'Callback must return an error');
+        assert.strictEqual(err.name, 'TimeoutError', 'The error must be a TimeoutError');
+        localClient.shutdown(done);
       });
-    }, function (callback){
-      localClient.execute('badabang', function (err) {
-        if (err) {
-          errors.push(err);
-        }
-        callback();
+    });
+    
+    it('should callback when the keyspace does not exist', function (done) {
+      var localClient = getANewClient({keyspace: 'this__keyspace__does__not__exist'});
+      localClient.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+        assert.ok(err, 'It should return an error as the keyspace does not exist');
+        localClient.shutdown(done);
       });
-    }], function () {
-      test.ok(errors.length === 2, 'There wasnt any good connection, it must callback with an err each time trying to execute');
-      if (errors.length == 2) {
-        test.ok(errors[0].name == 'PoolConnectionError', 'Errors should be of type PoolConnectionError');
-      }
-      shutDownEnd(test, localClient);
     });
-  },
-  'get a connection timeout': function (test) {
-    var localClient = getANewClient();
-    //wait for short amount of time
-    localClient.options.getAConnectionTimeout = 200;
-    //mark all connections as unhealthy
-    localClient._isHealthy = function() {
-      return false;
-    };
-    //disallow reconnection
-    localClient._canReconnect = localClient._isHealthy;
-    localClient.execute('badabing', function (err) {
-      test.ok(err, 'Callback must return an error');
-      test.ok(err.name === 'TimeoutError', 'The error must be a TimeoutError');
-      shutDownEnd(test, localClient);
-    });
-  },
-  'execute prepared': function (test) {
-    client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
-      types.consistencies.one, 
-      function (err, result) {
-        if (err) {
-          fail(test, err);
-          return;
+    
+    it('should callback when it was not possible to connect to any host', function (done) {
+      var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
+      var errors = [];
+      async.series([
+        function (callback){
+          localClient.execute('badabing', function (err) {
+            if (err) {
+              errors.push(err);
+              callback();
+            }
+          });
+        }, 
+        function (callback){
+          localClient.execute('badabang', function (err) {
+            if (err) {
+              errors.push(err);
+            }
+            callback();
+          });
         }
-        test.ok(result.rows.length == 1, 'There should be a row');
-        test.done();
+      ],
+      function () {
+        assert.strictEqual(errors.length, 2, 'It must callback with an err each time trying to execute');
+        if (errors.length === 2) {
+          assert.strictEqual(errors[0].name, 'PoolConnectionError', 'Errors should be of type PoolConnectionError');
+        }
+        localClient.shutdown(done);
+      });
     });
-  },
-  'execute prepared will retry': function (test) {
-    var localClient = getANewClient({maxExecuteRetries: 3, staleTime: 150});
-    var counter = -1;
-    localClient._isServerUnhealthy = function() {
-      //change the behaviour set it to unhealthy the first time
-      if (counter < 2) {
+  });
+  
+  describe('#executeAsPrepared()', function () {
+    it('should prepare and execute a query', function (done) {
+      client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+        types.consistencies.one, 
+        function (err, result) {
+          assert.ok(!err, err);
+          assert.strictEqual(result.rows.length, 1, 'There should be a row');
+          done();
+      });
+    });
+    
+    it('should retry in case the node goes down', function (done) {
+      var localClient = getANewClient({maxExecuteRetries: 3, staleTime: 150});
+      var counter = -1;
+      localClient._isServerUnhealthy = function() {
+        //change the behaviour set it to unhealthy the first time
+        if (counter < 2) {
+          counter++;
+          return true;
+        }
+        return false;
+      };
+      
+      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+        types.consistencies.one, 
+        function (err, result) {
+          assert.ok(!err, err);
+          assert.ok(result && result.rows.length === 1, 'There should be one row');
+          localClient.shutdown(done);
+      });
+    });
+    
+    it('should stop retrying when the limit has been reached', function (done) {
+      var localClient = getANewClient({maxExecuteRetries: 4, staleTime: 150});
+      var counter = -1;
+      localClient._isServerUnhealthy = function() {
+        //change the behaviour set it to unhealthy the first time
         counter++;
-        return true
-      }
-      return false;
-    };
+        return true;
+      };
+      
+      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+        types.consistencies.one, 
+        function (err, result) {
+          assert.ok(!result, 'It must stop retrying and callback without a result');
+          assert.strictEqual(counter, localClient.options.maxExecuteRetries, 'It must retry an specific amount of times');
+          localClient.shutdown(done);
+      });
+    });
     
-    localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
-      types.consistencies.one, 
-      function (err, result) {
-        if (err) {
-          fail(test, err, localClient);
-          return;
+    it('should allow from 2 to 4 arguments', function (done) {
+      async.series([
+        function (callback) {
+          //all params
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
+        },
+        function (callback) {
+          //no consistency specified
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], callback);
+        },
+        function (callback) {
+          //change the meaning of the second parameter to consistency
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
+        },
+        function (callback) {
+          //query params but no params args, consistency specified, must fail
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
+            if (!err) {
+              callback(new Error('Consistency should not be treated as query parameters'));
+            }
+            else {
+              callback(null, result);
+            }
+          });
+        },
+        function (callback) {
+          //no query params
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', function(err, result) {
+            assert.ok(result && result.rows && result.rows.length, 'There should at least a row returned');
+            callback(err, result);
+          });
         }
-        test.ok(result.rows.length == 1, 'There should be one row');
-        shutDownEnd(test, localClient);
+      ],
+      //all finished
+      function(err, results){
+        assert.ok(!err, err);
+        done();
+      });
     });
-  },
-  'execute prepared stops retrying': function (test) {
-    var localClient = getANewClient({maxExecuteRetries: 4, staleTime: 150});
-    var counter = -1;
-    localClient._isServerUnhealthy = function() {
-      //change the behaviour set it to unhealthy the first time
-      counter++;
-      return true;
-    };
     
-    localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
-      types.consistencies.one, 
-      function (err, result) {
-        test.ok(!result, 'It must stop retrying and callback without a result');
-        test.equal(counter, localClient.options.maxExecuteRetries, 'It must retry an specific amount of times');
-        shutDownEnd(test, localClient);
-    });
-  },
-  'executeAsPrepared parameters': function (test) {
-    async.series([
-      function (callback) {
-        //all params
-        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', [], types.consistencies.one, callback);
-      },
-      function (callback) {
-        //no consistency specified
-        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], callback);
-      },
-      function (callback) {
-        //change the meaning of the second parameter to consistency
-        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', types.consistencies.one, callback);
-      },
-      function (callback) {
-        //query params but no params args, consistency specified, must fail
-        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', types.consistencies.one, function(err, result){
-          if (!err) {
-            callback(new Error('Consistency should not be treated as query parameters'));
-          }
-          else {
-            callback(null, result);
-          }
-        });
-      },
-      function (callback) {
-        //no query params
-        client.executeAsPrepared('SELECT * FROM system.schema_keyspaces', function(err, result) {
-          if (!result || !result.rows) {
-            test.fail(result, 'Expected rows');
-          }
-          else {
-            test.ok(result.rows.length > 0, 'There should at least a row returned');
-          }
-          callback(err, result);
-        });
-      }
-    ],
-    //all finished
-    function(err, results){
-      test.ok(!err, err);
-      test.ok(results, 'The result of the queries must not be null nor undefined');
-      test.done();
-    });
-  },
-  'socket error serial test': function (test) {
-    //the client must reconnect and continue
-    var localClient = getANewClient();
-    if (localClient.connections.length < 2) {
-      test.fail('The test requires 2 or more connections.');
-      return test.done();
-    }
-    async.timesSeries(15, function (n, next) {
-      if (n == 2) {
-        //The next write attempt will fail for this connection.
-        localClient.connections[0].netClient.destroy();
-      }
-      else if (n == 6) {
-        //Force to no more IO on these socket.
-        localClient.connections[0].netClient.destroy();
-        localClient.connections[1].netClient.destroy();
-      }
-      else if (n == 9 && localClient.connections.length > 1) {
-        //Force to no more IO on this socket. The next write attempt will fail
-        localClient.connections[0].netClient.end();
-        localClient.connections[1].netClient.end();
-      }
-      localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
-        next(err);
-      })
-    }, function (err) {
-      test.ok(!err, 'There must not be an error returned. It must retried.');
-      shutDownEnd(test, localClient);
-    });
-  },
-  'socket error parallel test': function (test) {
-    //the client must reconnect and continue
-    var localClient = getANewClient();
-    if (localClient.connections.length < 2) {
-      test.fail('The test requires 2 or more connections.');
-      return test.done();
-    }
-    async.times(10, function (n, next) {
-      localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
-        if (n === 3) {
+    it('should failover to other nodes and reconnect', function (done) {
+      this.timeout(4000);
+      //the client must reconnect and continue
+      var localClient = getANewClient();
+      assert.ok(localClient.connections.length > 1, 'There should be more than 1 connection to test failover');
+      async.timesSeries(12, function (n, next) {
+        if (n == 2) {
+          //The next write attempt will fail for this connection.
+          localClient.connections[0].netClient.destroy();
+        }
+        else if (n == 6) {
+          //Force to no more IO on these socket.
           localClient.connections[0].netClient.destroy();
           localClient.connections[1].netClient.destroy();
         }
-        next(err);
-      })
-    }, function (err) {
-      test.ok(!err, 'There must not be an error returned. It must retried.');
-      shutDownEnd(test, localClient);
+        else if (n == 9 && localClient.connections.length > 1) {
+          //Force to no more IO on this socket. The next write attempt will fail
+          localClient.connections[0].netClient.end();
+          localClient.connections[1].netClient.end();
+        }
+        localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+          next(err);
+        });
+      }, function (err) {
+        assert.ok(!err, 'There must not be an error returned. It must retried.');
+        localClient.shutdown(done);
+      });
     });
-  },
-  'streaming just rows': function (test) {
-    var id = 100;
-    var blob = new Buffer('Frank Gallagher');
-    insertAndStream(test, client, blob, id, false, function (err, row, stream) {
-      if (err) fail(test, err);
-      test.equal(stream, null, 'The stream must be null');
-      test.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.')
-      test.done();
+    
+    it('should failover to other nodes and reconnect, in parallel executes', function (done) {
+      //the client must reconnect and continue
+      var localClient = getANewClient();
+      assert.ok(localClient.connections.length > 1, 'There should be more than 1 connection to test failover');
+      async.times(10, function (n, next) {
+        localClient.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+          if (n === 3) {
+            localClient.connections[0].netClient.destroy();
+            localClient.connections[1].netClient.destroy();
+          }
+          next(err);
+        })
+      }, function (err) {
+        assert.ok(!err, 'There must not be an error returned. All parallel queries should be retried.');
+        localClient.shutdown(done);
+      });
     });
-  },
-  'streaming field': function (test) {
-    var id = 110;
-    var blob = new Buffer('Freaks and geeks 1999');
-    insertAndStream(test, client, blob, id, true, function (err, row, blobStream) {
-      if (err) fail(test, err);
-      assertStreamReadable(test, blobStream, blob);
-    });
-  },
-  'streaming null field': function (test) {
-    var id = 120;
-    var blob = null;
-    insertAndStream(test, client, blob, id, true, function (err, row, blobStream) {
-      if (err) fail(test, err);
-      test.equal(row.get('id'), id, 'The row must be retrieved');
-      test.ok(blobStream === null, 'The file stream must be NULL');
-      test.done();
-    });
-  },
-  'shutdown': function (test) {
-    shutDownEnd(test, client);
-  }
-}
-
-function shutDownEnd(test, client, callback) {
-  client.shutdown(function(){
-    test.done();
-    if (callback) {
-      callback();
-    }
   });
-}
+  
+  describe('#streamField()', function (done) {
+    it('should yield a readable stream', function (done) {
+      var id = 100;
+      var blob = new Buffer('Freaks and geeks 1999');
+      insertAndStream(client, blob, id, true, function (err, row, blobStream) {
+        assert.ok(!err, err);
+        assertStreamReadable(blobStream, blob, done);
+      });
+    });
+    
+    it('should yield a null stream when the field is null', function (done) {
+      var id = 110;
+      var blob = null;
+      insertAndStream(client, blob, id, true, function (err, row, blobStream) {
+        assert.ok(!err, err);
+        assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
+        assert.strictEqual(blobStream, null, 'The file stream must be NULL');
+        done();
+      });
+    });
+  });
+  
+  describe('#streamRows()', function (done) {
+    it('should callback and return all fields', function (done) {
+      var id = 150;
+      var blob = new Buffer('Frank Gallagher');
+      insertAndStream(client, blob, id, false, function (err, row, stream) {
+        assert.ok(!err, err);
+        assert.equal(stream, null, 'The stream must be null');
+        assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.')
+        done();
+      });
+    });
+    
+    it('should callback once per row', function (done) {
+      var id = 160;
+      var blob = new Buffer('Jack Bauer');
+      async.timesSeries(4, function (n, next) {
+        client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id+n, blob], next);
+      }, function (err) {
+        var counter = 0;
+        client.streamRows('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3], function (err, row) {
+          assert.ok(!err, err);
+          counter++;
+          //should callback 4 times
+          if (counter === 4) {
+            done();
+          }
+        });
+      });
+    });
+  });
+  
+  after(function (done) {
+    client.shutdown(done);
+  });
+});
 
-function fail (test, err, localClient) {
-  test.fail(err);
-  if (localClient) {
-    shutDownEnd(test, localClient);
-  }
-  else {
-    test.done();
-  }
-}
 
 function getANewClient (options) {
-  if (!options) {
-    options = {};
-  }
-  return new Client(utils.extend({}, clientOptions, options));
+  return new Client(utils.extend({}, clientOptions, options || {}));
 }
 
-function insertAndStream (test, client, blob, id, streamField, callback) {
+function insertAndStream (client, blob, id, streamField, callback) {
   var streamFunction = client.streamRows;
   if (streamField) {
     streamFunction = client.streamField;
   }
   client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
-    if (err) return fail(test, err);
+    assert.ok(!err, err);
     streamFunction.call(client, 'SELECT id, blob_sample FROM sampletable2 WHERE id = ?', [id], callback);
   });
 }
 
-function assertStreamReadable(test, stream, originalBlob, callback) {
+function assertStreamReadable(stream, originalBlob, callback) {
   var length = 0;
   var firstByte = null;
   var lastByte = null;
@@ -444,12 +448,9 @@ function assertStreamReadable(test, stream, originalBlob, callback) {
     }
   });
   stream.on('end', function () {
-    test.equal(length, originalBlob.length, 'The blob returned should be the same size');
-    test.equal(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
-    test.equal(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
-    if (!callback) {
-      callback = test.done;
-    }
+    assert.equal(length, originalBlob.length, 'The blob returned should be the same size');
+    assert.equal(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
+    assert.equal(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
     callback();
   });
 }

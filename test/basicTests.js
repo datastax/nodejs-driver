@@ -1,17 +1,35 @@
 var assert = require('assert');
 var util = require('util');
+var events = require('events');
 var Int64 = require('node-int64');
 var uuid = require('node-uuid');
-var events = require('events');
-
+var async = require('async');
 var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
-
+var config = require('./config.js');
 var dataTypes = types.dataTypes;
 var queryParser = utils.queryParser;
 var Connection = require('../index.js').Connection;
 
+before(function (done) {
+  var con = new Connection(utils.extend({}, config));
+  this.timeout(4000);
+  async.series([
+    con.open.bind(con), 
+    function (next) {
+      con.execute('select cql_version, native_protocol_version, release_version from system.local', function (err, result) {
+        if (!err && result && result.rows) {
+          console.log('Cassandra version', result.rows[0].get('release_version'));
+          console.log('Cassandra higher protocol version', result.rows[0].get('native_protocol_version'), '\n');
+        }
+        next();
+      });
+    }, 
+    con.close.bind(con)], done);
+});
+
 describe('types', function () {
+  
   describe('typeEncoder', function () {
     describe('#stringifyValue()', function () {
       it('should be valid for query', function () {

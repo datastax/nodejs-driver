@@ -19,7 +19,9 @@ var clientOptions = {
 
 describe('Client', function () {
   before(function (done) {
+    this.timeout(5000);
     setup(function () {
+      console.log('setup finished');
       client = new Client(clientOptions);
       createTable();
     });

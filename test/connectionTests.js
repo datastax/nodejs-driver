@@ -17,12 +17,19 @@ var con = new Connection(utils.extend({}, config, {maxRequests: 32}));
 
 describe('Connection', function () {
   before(function (done) {
+    this.timeout(5000);
     async.series([
       function open (callback) {
         con.open(callback);
       },
       function dropKeyspace(callback) {
-        con.execute("DROP KEYSPACE ?;", [keyspace], callback);
+        con.execute("DROP KEYSPACE ?;", [keyspace], function (err) {
+          if (err && err.name === 'ResponseError') {
+            //don't mind if there is an response error
+            err = null;
+          }
+          callback(err);
+        });
       },
       function createKeyspace(callback) {
         con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], callback);

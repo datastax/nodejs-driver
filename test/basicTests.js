@@ -13,7 +13,7 @@ var Connection = require('../index.js').Connection;
 
 before(function (done) {
   var con = new Connection(utils.extend({}, config));
-  this.timeout(4000);
+  this.timeout(5000);
   async.series([
     con.open.bind(con), 
     function (next) {
@@ -24,7 +24,7 @@ before(function (done) {
         }
         next();
       });
-    }, 
+    },
     con.close.bind(con)], done);
 });
 

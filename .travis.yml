@@ -13,3 +13,6 @@ branches:
   only:
     - master
     - stable
+
+before_script:
+  - sleep 3

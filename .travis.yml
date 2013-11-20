@@ -8,3 +8,8 @@ before_install:
 
 services:
   - cassandra
+
+branches:
+  only:
+    - master
+    - stable

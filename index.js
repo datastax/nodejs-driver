@@ -288,7 +288,7 @@ Client.prototype._executeOnConnection = function (c, query, queryId, params, con
       self.emit('log', 'info', 'Unprepared query "' + query + '"');
       var preparedInfo = self.preparedQueries[query];
       preparedInfo.removeConnectionInfo(c.indexInPool);
-      self.executeAsPrepared(query, params, consistency, callback);
+      self.executeAsPrepared(query, params, consistency, options, callback);
     }
     else {
       callback(err, result1, result2);

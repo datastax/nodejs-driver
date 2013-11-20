@@ -356,6 +356,28 @@ describe('Client', function () {
         localClient.shutdown(done);
       });
     });
+    
+    it('Prepare query again when expired from the server', function (done) {
+      var query = 'SELECT * FROM system.schema_keyspaces';
+      var localClient = getANewClient({hosts: [config.host + ':' + config.port]});
+      var con = localClient.connections[0];
+      async.series([
+        localClient.connect.bind(localClient),
+        function (next) {
+          localClient.executeAsPrepared(query, next);
+        },
+        function (next) {
+          var queryId = localClient.preparedQueries[query].getConnectionInfo(con.indexInPool).queryId;
+          //Change the queryId
+          queryId[0] = 0;
+          queryId[1] = 0;
+          next();
+        },
+        function (next) {
+          localClient.executeAsPrepared(query, next);
+        }
+      ], done);
+    });
   });
   
   describe('#streamField()', function (done) {

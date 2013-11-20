@@ -281,6 +281,15 @@ Client.prototype._executeOnConnection = function (c, query, queryId, params, con
       //retry the whole thing, it will get another connection
       self.executeAsPrepared(query, params, consistency, options, callback);
     }
+    else if (err && err.code === types.responseErrorCodes.unprepared) {
+      //Query expired at the server
+      //Clear the connection from prepared info and
+      //trying to re-prepare query
+      self.emit('log', 'info', 'Unprepared query "' + query + '"');
+      var preparedInfo = self.preparedQueries[query];
+      preparedInfo.removeConnectionInfo(c.indexInPool);
+      self.executeAsPrepared(query, params, consistency, callback);
+    }
     else {
       callback(err, result1, result2);
     }

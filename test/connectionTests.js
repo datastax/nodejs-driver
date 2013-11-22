@@ -344,7 +344,7 @@ describe('Connection', function () {
           }
           return value;
         }),
-        prepareInsertTest(313, 'map_sample', {key1: "value1", key2: "value2",}, dataTypes.map, toStringCompare),
+        prepareInsertTest(313, 'map_sample', {key1: "value1", key2: "value2"}, dataTypes.map, toStringCompare),
         prepareInsertTest(314, 'list_sample', [50,30,80], 'list<int>', toStringCompare),
         prepareInsertTest(315, 'set_sample', [1,5,80], 'set<int>', toStringCompare),
         prepareInsertTest(316, 'list_float_sample', [1,5], 'list<float>', util.inspect),

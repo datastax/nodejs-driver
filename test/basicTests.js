@@ -8,12 +8,11 @@ var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
 var dataTypes = types.dataTypes;
-var queryParser = utils.queryParser;
 var Connection = require('../index.js').Connection;
 
 before(function (done) {
-  var con = new Connection(utils.extend({}, config));
   this.timeout(5000);
+  var con = new Connection(utils.extend({}, config));
   async.series([
     con.open.bind(con), 
     function (next) {
@@ -29,7 +28,6 @@ before(function (done) {
 });
 
 describe('types', function () {
-  
   describe('typeEncoder', function () {
     describe('#stringifyValue()', function () {
       it('should be valid for query', function () {
@@ -59,6 +57,7 @@ describe('types', function () {
         testStringify(uuidValue, uuidValue.toString(), dataTypes.uuid);
       });
     });
+
     describe('#guessDataType()', function () {
       it('should guess the native types', function () {
         var guessDataType = types.typeEncoder.guessDataType;
@@ -73,7 +72,32 @@ describe('types', function () {
         assert.strictEqual(guessDataType(uuid.v4()), dataTypes.uuid, 'Guess type for a UUID value failed');
       });
     });
+
+    describe('#encode() and #decode', function () {
+      var typeEncoder = types.typeEncoder;
+      it('should encode and decode maps', function () {
+        var value = {value1: 'Surprise', value2: 'Mothafucka'};
+        var encoded = typeEncoder.encode({hint: dataTypes.map, value: value});
+        var decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
+      });
+
+      it('should encode and decode list<int>', function () {
+        var value = [1, 2, 3, 4];
+        var encoded = typeEncoder.encode({hint: 'list<int>', value: value});
+        var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.int]]);
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
+      });
+
+      it('should encode and decode set<text>', function () {
+        var value = ['1', '2', '3', '4'];
+        var encoded = typeEncoder.encode({hint: 'set<text>', value: value});
+        var decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
+      });
+    })
   });
+
   describe('FieldStream', function() {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
@@ -96,6 +120,7 @@ describe('types', function () {
       stream.add(new Buffer('McNulty'));
       stream.add(null);
     });
+
     it('should buffer until is read', function (done) {
       var buf = [];
       var stream = new types.FieldStream({highWaterMark: 1});
@@ -119,6 +144,7 @@ describe('types', function () {
     });
   });
 });
+
 describe('utils', function () {
   describe('#syncEvent()', function () {
     it('should execute callback once for all emitters', function () {
@@ -138,6 +164,7 @@ describe('utils', function () {
       assert.strictEqual(callbackCounter, 1);
     });
   });
+
   describe('#parseCommonArgs()', function () {
     it('parses args and can be retrieved by name', function () {
       function testArgs(args, expectedLength) {
@@ -164,6 +191,7 @@ describe('utils', function () {
       testArgs(args, 5);
       assert.ok(args.params && args.consistency && args.options, 'Params, consistency and options must not be null');
     });
+
     it('parses args and can be retrieved as an array', function () {
       var args = utils.parseCommonArgs('A QUERY', function (){});
       assert.ok(util.isArray(args), 'The returned object must be an Array');

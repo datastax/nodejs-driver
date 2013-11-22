@@ -4,9 +4,6 @@ Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/) with a s
 
 The driver uses Cassandra's binary protocol which was introduced in Cassandra version 1.2.
 
-
-  [![Build Status](https://secure.travis-ci.org/jorgebay/node-cassandra-cql.png)](http://travis-ci.org/jorgebay/node-cassandra-cql)
-
 ## Installation
 
     $ npm install node-cassandra-cql

@@ -267,6 +267,21 @@ Client.prototype.streamRows = function () {
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
 
+Client.prototype.eachRow = function () {
+  var args = utils.parseCommonArgs.apply(null, arguments);
+  var index = 0;
+  args.options = utils.extend({}, args.options, {streamRows: true});
+
+  function callbackWrapper(err, res, stream) {
+    if( err || (!err && !res && !stream) ) {
+      args.endCallback(err, index);
+    } else {
+      args.callback(++index, res, stream);
+    }
+  }
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
+};
+
 /**
  * Executes a prepared query on a given connection
  */

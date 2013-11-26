@@ -433,6 +433,51 @@ describe('Client', function () {
       });
     });
   });
+
+  describe('#eachRow()', function (done) {
+    it('should callback for each row and then call end callback', function (done) {
+      var id = 150;
+      var blob = new Buffer('Frank Gallagher');
+
+      client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id, blob], function (err, result) {
+        assert.ok(!err, err);
+        client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id = ?', [id],
+          function (n, row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
+            assert.equal(n, 1, 'the index should be 1');
+          },
+          function (err, total){
+            assert.ok(!err, err);
+            assert.equal(total, 1, 'the total should be 1');
+            done();
+          }
+        );
+      });
+    });
+    
+    it('should callback once per row and then call end callback', function (done) {
+      var counter = 0;
+      var id = 160;
+      var blob = new Buffer('Jack Bauer');
+      async.timesSeries(4, function (n, next) {
+        client.execute('INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)', [id+n, blob], next);
+      }, function (err) {
+        var counter = 0;
+        client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3],
+          function (n, row, stream) {
+            assert.equal(stream, null, 'The stream must be null');
+            assert.equal(n, ++counter, 'the index should be ' + counter);
+          },
+          function (err, total){
+            assert.ok(!err, err);
+            assert.equal(total, 4, 'the total should be 4');
+            done();
+          }
+        );
+      });
+    });
+  });
   
   after(function (done) {
     client.shutdown(done);

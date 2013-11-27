@@ -257,37 +257,28 @@ Client.prototype.streamField = function () {
 };
 
 /**
- * Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
- * Retries on multiple hosts if needed.
- * @param {function} callback, executes callback(err, row) per each row received.
- */
-Client.prototype.streamRows = function () {
-  var args = utils.parseCommonArgs.apply(null, arguments);
-  args.options = utils.extend({}, args.options, {streamRows: true});
-  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
-};
-
-/**
- * Prepares (the first time), executes the prepared query and calls async callback for each row as soon as they are received.
- * Calls endCallback after all rows have been sent
+ * Prepares (the first time), executes the prepared query and calls callback for each row as soon as they are received.
+ * Calls endCallback after all rows have been sent, or when there is an error.
  * Retries on multiple hosts if needed.
  * @param {function} callback, executes callback(n, row) per each row received. (n = index)
- * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been reveiced.
+ * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been received.
  */
 Client.prototype.eachRow = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var index = 0;
   args.options = utils.extend({}, args.options, {streamRows: true});
 
-  function callbackWrapper(err, res, stream) {
-    if( err || (!err && !res && !stream) ) {
+  function callbackWrapper(err, row) {
+    if( err || (!err && !row) ) {
       args.endCallback(err, index);
     } else {
-      args.callback(++index, res, stream);
+      args.callback(index++, row);
     }
   }
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
 };
+
+Client.prototype.streamRows = Client.prototype.eachRow;
 
 /**
  * Executes a prepared query on a given connection

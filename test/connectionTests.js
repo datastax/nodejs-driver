@@ -369,7 +369,6 @@ describe('Connection', function () {
         var blob = new Buffer(1024*1024);
         var id = 400;
         insertAndStream(con, blob, id, true, function (err, row, stream) {
-          if(!err && !row && !stream ) return;
           assert.equal(row.get('id'), id);
           //test that stream is readable
           assertStreamReadable(stream, blob, done);
@@ -381,7 +380,6 @@ describe('Connection', function () {
         blob[2047] = 0xFA;
         var id = 401;
         insertAndStream(con, blob, id, true, function (err, row, stream) {
-          if(!err && !row && !stream ) return;
           //delay some milliseconds the read of the stream and hope it's buffering
           setTimeout(function () {
             assertStreamReadable(stream, blob, done);
@@ -392,7 +390,6 @@ describe('Connection', function () {
       it('should return a null value when streaming a null field', function (done) {
         var id = 402;
         insertAndStream(con, null, id, true, function (err, row, stream) {
-          if(!err && !row && !stream ) return;
           assert.equal(stream, null, 'The stream must be null');
           done();
         });
@@ -425,20 +422,19 @@ describe('Connection', function () {
         var id = 403;
         var blob = new Buffer('Hello');
         insertAndStream(con, blob, id, false, function (err, row, stream) {
-          if(!err && !row && !stream ) return;
+          if(!err && !row && !stream ) return done();
           assert.equal(stream, null, 'The stream must be null');
           assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
-          done();
         });
       });
-        
-      it('should callback one time per row and finish with (null, null)', function (done) {
+
+      it('should callback one time per row', function (done) {
         var values = [[410, new Buffer(1021)],[411, new Buffer(2048*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
-        
+
         function insert(item, callback) {
           con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', item, callback);
         }
-        
+
         function testInsertedValues() {
           var counter = 0;
           var totalValues = values.length;
@@ -448,41 +444,27 @@ describe('Connection', function () {
           }
           con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', function (err, result) {
             assert.ok(!err, err);
-            var isDone = false;
             con.executePrepared(result.id,
               [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one, {streamRows: true, streamField: true},
               function (err, row, stream) {
-                if(!err && !row && !stream ) {
-                  if(isDone) {
-                    assert.equal(counter, totalValues, "count of responded rows differs " + counter);
-                    return done();
-                  } else {
-                    isDone = true;
-                    return;
-                  }
-                }
                 assert.ok(!err, err);
                 var originalBlob = values[row.get('id').toString()];
                 assertStreamReadable(stream, originalBlob, function () {
-                  counter++;
-                  if(counter == totalValues) {
-                    if(isDone) {
-                      assert.equal(counter, totalValues, "count of responded rows differs " + counter);
-                      return done();
-                    } else {
-                      isDone = true;
-                    }
+                  counter++
+                  if (counter == totalValues) {
+                    done();
                   }
                 });
             });
           });
         }
-        
+
         async.map(values, insert, function (err, results) {
           assert.ok(!err, err);
           testInsertedValues();
         });
       });
+
     });
   });
   

@@ -39,12 +39,12 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
 
 // Streaming query rows
 client.streamRows('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'], 
-  function(err, row) {
+  function(n, row) {
     //the callback will be invoked per each row as soon as they are received
+    console.log('temperature value', n, row.get('temperature'));
+  }, function (err, rowsCount) {
     if (err) console.log("Oh dear...");
-    else {
-      console.log('temperature value', row.get('temperature'));
-    }
+    console.log(rowsCount, 'rows where returned');
   }
 );
 
@@ -117,11 +117,13 @@ Use one of the values defined in `types.consistencies` for  `consistency`, defau
 
 Callback should take two arguments err and result.
 
-#### client.streamRows(query, [params], [consistency], callback)
+#### client.streamRows(query, [params], [consistency], rowCallback, endCallback)
 
 Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
 
-It executes `callback(err, row)` per each row received.
+It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
+
+It executes `endCallback(err, rowsCount)` when there are no more rows or there is an error retrieving the row.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 

@@ -181,6 +181,11 @@ Client.prototype._getAConnection = function (callback) {
 Client.prototype.execute = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var self = this;
+  //Get stack trace before sending query so the user knows where errored
+  //queries come from
+  var stackContainer = {};
+  Error.captureStackTrace(stackContainer);
+
   function tryAndRetry(retryCount) {
     retryCount = retryCount || 0;
     self._getAConnection(function(err, c) {
@@ -203,6 +208,10 @@ Client.prototype.execute = function () {
           tryAndRetry(retryCount+1);
         }
         else {
+          if (err) {
+            utils.fixStack(stackContainer.stack, err);
+            err.query = args.query;
+          }
           //If the result is OK or there is error (syntax error or an unauthorized for example), callback
           args.callback(err, result);
         }
@@ -219,6 +228,11 @@ Client.prototype.execute = function () {
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var self = this;
+  //Get stack trace before sending query so the user knows where errored
+  //queries come from
+  var stackContainer = {};
+  Error.captureStackTrace(stackContainer);
+
   self._getPrepared(args.query, function (err, con, queryId) {
     if (self._isServerUnhealthy(err)) {
       //its a fatal error, the server died
@@ -235,6 +249,8 @@ Client.prototype.executeAsPrepared = function () {
       self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
     }
     else if (err) {
+      utils.fixStack(stackContainer.stack, err);
+      err.query = args.query;
       //its syntax or other normal error
       args.callback(err);
     }

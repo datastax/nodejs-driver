@@ -357,7 +357,7 @@ describe('Client', function () {
       });
     });
     
-    it('Prepare query again when expired from the server', function (done) {
+    it('should prepare query again when expired from the server', function (done) {
       var query = 'SELECT * FROM system.schema_keyspaces';
       var localClient = getANewClient({hosts: [config.host + ':' + config.port]});
       var con = localClient.connections[0];
@@ -377,6 +377,15 @@ describe('Client', function () {
           localClient.executeAsPrepared(query, next);
         }
       ], done);
+    });
+
+    it('should add the query to the error object', function (done) {
+      var query = 'SELECT WILL FAIL MISERABLY';
+      client.executeAsPrepared(query, function (err) {
+        assert.ok(err, 'There should be an error.');
+        assert.ok(err.query, query);
+        done();
+      });
     });
   });
 

@@ -249,9 +249,9 @@ Client.prototype.executeAsPrepared = function () {
       self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
     }
     else if (err) {
+      //its syntax or other normal error
       utils.fixStack(stackContainer.stack, err);
       err.query = args.query;
-      //its syntax or other normal error
       args.callback(err);
     }
     else {

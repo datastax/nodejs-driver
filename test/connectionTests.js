@@ -386,7 +386,8 @@ describe('Connection', function () {
   
     describe('Field streaming', function () {
       it('should stream the last column and be readable', function (done) {
-        var blob = new Buffer(1024*1024);
+        var blob = new Buffer(2*1024*1024);
+        blob[0] = 245;
         var id = 400;
         insertAndStream(con, blob, id, true, function (err, row, stream) {
           assert.equal(row.get('id'), id);
@@ -442,15 +443,16 @@ describe('Connection', function () {
       });
 
       it('should callback one time per row', function (done) {
-        var values = [[410, new Buffer(1021)],[411, new Buffer(2048*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
+        var values = [[410, new Buffer(1021)],[411, new Buffer(1024*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
 
         function insert(item, callback) {
           con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', item, callback);
         }
 
         function testInsertedValues() {
-          var counter = 0;
+          var rowCounter = 0;
           var totalValues = values.length;
+          var blobStreamArray = [];
           //index the values by id for easy access
           for (var i = 0; i < totalValues; i++) {
             values[values[i][0].toString()] = values[i][1];
@@ -458,17 +460,22 @@ describe('Connection', function () {
           con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', function (err, result) {
             assert.ok(!err, err);
             con.executePrepared(result.id,
-              [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one, {streamRows: true, streamField: true},
-              function (err, row, stream) {
-                assert.ok(!err, err);
+              [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one,
+              {streamRows: true, streamField: true},
+              function (n, row, stream) {
                 var originalBlob = values[row.get('id').toString()];
-                assertStreamReadable(stream, originalBlob, function () {
-                  counter++;
-                  if (counter == totalValues) {
-                    done();
-                  }
-                });
-            });
+                rowCounter++;
+                blobStreamArray.push([stream, originalBlob]);
+              },
+              function (err, rowLength) {
+                assert.ok(!err, err);
+                assert.strictEqual(rowCounter, rowLength);
+                assert.strictEqual(rowCounter, totalValues);
+                async.mapSeries(blobStreamArray, function (item, next) {
+                  assertStreamReadable(item[0], item[1], next);
+                }, done);
+              }
+            );
           });
         }
 
@@ -535,7 +542,7 @@ function assertStreamReadable(stream, originalBlob, callback) {
     }
   });
   stream.on('end', function () {
-    assert.strictEqual(length, originalBlob.length, 'The blob returned should be the same size');
+    assert.strictEqual(length, originalBlob.length, 'The blob returned should be the same size ' + length + '<>' + originalBlob.length);
     assert.strictEqual(firstByte, originalBlob[0], 'The first byte of the stream and the blob dont match');
     assert.strictEqual(lastByte, originalBlob[originalBlob.length-1], 'The last byte of the stream and the blob dont match');
     callback();

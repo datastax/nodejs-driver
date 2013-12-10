@@ -219,27 +219,27 @@ Client.prototype.execute = function () {
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
   var self = this;
-  self._getPrepared(args.query, function (err, con, queryId) {
+  this._getPrepared(args.query, function (err, con, queryId) {
     if (self._isServerUnhealthy(err)) {
       //its a fatal error, the server died
       self._setUnhealthy(con);
       args.options = utils.extend({retryCount: 0}, args.options);
       if (args.options.retryCount === self.options.maxExecuteRetries) {
-        args.callback(err);
-        //It was already removed from context while it was set to unhealthy
-        return;
+        return args.callback(err);
       }
       //retry: it will get another connection
       self.emit('log', 'info', 'Retrying to prepare "' + args.query + '"');
       args.options.retryCount = args.options.retryCount + 1;
-      self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
+      self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.rowCallback, args.callback);
     }
     else if (err) {
       //its syntax or other normal error
       args.callback(err);
     }
     else {
-      self._executeOnConnection(con, args.query, queryId, args.params, args.consistency, args.options, args.callback);
+      //it is prepared on the connection
+      self._executeOnConnection(con, args.query, queryId, args.params,args.consistency, args.options,
+        args.rowCallback, args.callback);
     }
   });
 };
@@ -265,34 +265,25 @@ Client.prototype.streamField = function () {
  * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been received.
  */
 Client.prototype.eachRow = function () {
-  //TODO: Change JsDoc to rowCallback + callback
   var args = utils.parseCommonArgs.apply(null, arguments);
   var index = 0;
   args.options = utils.extend({}, args.options, {streamRows: true});
-
-  function callbackWrapper(err, row) {
-    if( err || (!err && !row) ) {
-      args.endCallback(err, index);
-    } else {
-      args.callback(index++, row);
-    }
-  }
-  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.rowCallback, args.callback);
 };
 
 /**
  * Executes a prepared query on a given connection
  */
-Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, callback) {
+Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, rowCallback, callback) {
   this.emit('log', 'info', 'Executing prepared query "' + query + '"');
   var self = this;
-  c.executePrepared(queryId, params, consistency, options, function(err, result1, result2) {
+  c.executePrepared(queryId, params, consistency, options, rowCallback, function(err, result1, result2) {
     if (self._isServerUnhealthy(err)) {
       //There is a problem with the connection/server that had a prepared query
       //forget about this connection for now
       self._setUnhealthy(c);
       //retry the whole thing, it will get another connection
-      self.executeAsPrepared(query, params, consistency, options, callback);
+      self.executeAsPrepared(query, params, consistency, options, rowCallback, callback);
     }
     else if (err && err.code === types.responseErrorCodes.unprepared) {
       //Query expired at the server
@@ -301,7 +292,7 @@ Client.prototype._executeOnConnection = function (c, query, queryId, params, con
       self.emit('log', 'info', 'Unprepared query "' + query + '"');
       var preparedInfo = self.preparedQueries[query];
       preparedInfo.removeConnectionInfo(c.indexInPool);
-      self.executeAsPrepared(query, params, consistency, options, callback);
+      self.executeAsPrepared(query, params, consistency, options, rowCallback, callback);
     }
     else {
       callback(err, result1, result2);

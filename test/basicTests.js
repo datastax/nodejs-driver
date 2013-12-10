@@ -209,6 +209,9 @@ describe('utils', function () {
       assert.strictEqual(typeof args.callback, 'function');
       assert.strictEqual(typeof args.rowCallback, 'function');
       assert.notStrictEqual(args.callback, args.rowCallback, 'Callback must be defined');
+      args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, {}, null, function cb(){});
+      assert.strictEqual(typeof args.callback, 'function');
+      assert.ok(!args.rowCallback);
     });
   });
 

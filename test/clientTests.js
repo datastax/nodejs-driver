@@ -222,7 +222,7 @@ describe('Client', function () {
   
   describe('#executeAsPrepared()', function () {
     it('should prepare and execute a query', function (done) {
-      client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()],
         types.consistencies.one, 
         function (err, result) {
           assert.ok(!err, err);
@@ -407,17 +407,17 @@ describe('Client', function () {
           client.execute(queryStreamInsert, [id, blob], next);
         },
         function (next) {
-          client.streamField(queryStreamSelect, [id], function (err, row, blobStream) {
+          client.streamField(queryStreamSelect, [id], function (n, row, blobStream) {
             assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
-            assert.strictEqual(blobStream, null, 'The file stream must be NULL');
-            next(err);
+            assert.equal(blobStream, null, 'The file stream must be NULL');
+            next();
           });
         }
       ], done);
     });
   });
 
-  describe('#streamRows()', function (done) {
+  describe('#eachRow()', function (done) {
     it('should callback and return all fields', function (done) {
       var id = 150;
       var blob = new Buffer('Frank Gallagher');
@@ -427,7 +427,7 @@ describe('Client', function () {
           client.execute(queryStreamInsert, [id, blob], next);
         },
         function (next) {
-          client.streamRows(queryStreamSelect, [id], function (n, row) {
+          client.eachRow(queryStreamSelect, [id], function (n, row) {
             assert.ok(row && row.get('id') && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString());
           }, function (err, totalRows) {
             assert.strictEqual(totalRows, 1);
@@ -445,7 +445,7 @@ describe('Client', function () {
         client.execute(queryStreamInsert, [id+n, blob], next);
       }, function (err) {
         if (err) return done(err);
-        client.streamRows('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3], function (n, row) {
+        client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3], function (n, row) {
           assert.strictEqual(n, counter);
           assert.ok(row && row.get('id') && row.get('blob_sample'));
           counter++;
@@ -460,7 +460,7 @@ describe('Client', function () {
       async.series([
         function prepareQueryFail(next) {
           //it should fail when preparing
-          client.streamRows('SELECT TO FAIL MISERABLY', [], function () {
+          client.eachRow('SELECT TO FAIL MISERABLY', [], function () {
             assert.ok(false, 'This callback should not be called');
           }, function (err) {
             assert.ok(err, 'There should be an error yielded');
@@ -469,7 +469,7 @@ describe('Client', function () {
         },
         function executeQueryFail(next) {
           //it should fail when executing the query: There are more parameters than expected
-          client.streamRows('SELECT * FROM system.schema_keyspaces', [1, 2, 3], function () {
+          client.eachRow('SELECT * FROM system.schema_keyspaces', [1, 2, 3], function () {
             assert.ok(false, 'This callback should not be called');
           }, function (err) {
             assert.ok(err, 'There should be an error yielded');

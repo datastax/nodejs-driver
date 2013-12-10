@@ -304,7 +304,7 @@ describe('Connection', function () {
             });
           });
         }
-      };
+      }
       var toStringCompare = function (value) {  return value.toString(); };
       var toTimeCompare = function (value) {
         if (value instanceof Date) {
@@ -370,8 +370,21 @@ describe('Connection', function () {
         });
       });
     });
+
+    it('should callback per each row and at the end when rowCb is specified', function (done) {
+      con.prepare('select * from system.schema_keyspaces', function (err, result) {
+        assert.ok(!err, err);
+        var rows = 0;
+        con.executePrepared(result.id, [], types.consistencies.one, {streamRows: true}, function (n, row) {
+          rows++;
+        }, function (err, rowCount) {
+          assert.ok(rows > 0, 'it should callback per each row');
+          done(err);
+        });
+      });
+    });
   
-    describe('Row and field streaming', function () {
+    describe('Field streaming', function () {
       it('should stream the last column and be readable', function (done) {
         var blob = new Buffer(1024*1024);
         var id = 400;
@@ -406,9 +419,11 @@ describe('Connection', function () {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
           con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {streamRows: true, streamField: true},
-            function (err, row, stream) {
+            function rowCallback (){
+              assert.ok(false, 'row callback should not be called');
+            },
+            function (err) {
               assert.ok(err, 'There must be an error returned, as the query is not valid.');
-              assert.ok(!row && !stream, 'There must not be a row nor stream returned');
               done();
           });
         });
@@ -417,21 +432,12 @@ describe('Connection', function () {
       it('should callback when there is no match', function (done) {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
-          con.executePrepared(result.id, [-1], types.consistencies.one, {streamRows: true, streamField: true},
-            function (err, row, stream) {
-            assert.ok(!err && !row && !stream, 'There must be no error, row nor stream yielded by the query');
-            done();
-          });
-        });
-      });
-        
-      it('should stream just rows when needed', function (done) {
-        var id = 403;
-        var blob = new Buffer('Hello');
-        insertAndStream(con, blob, id, false, function (err, row, stream) {
-          if(!err && !row && !stream ) return done();
-          assert.equal(stream, null, 'The stream must be null');
-          assert.ok(row && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString(), 'The blob should be returned in the row.');
+          con.executePrepared(result.id, [-1], types.consistencies.one,
+            {streamRows: true, streamField: true},
+            function rowCallback() {
+              assert.ok(false, 'row callback should not be called');
+            },
+            done);
         });
       });
 
@@ -457,7 +463,7 @@ describe('Connection', function () {
                 assert.ok(!err, err);
                 var originalBlob = values[row.get('id').toString()];
                 assertStreamReadable(stream, originalBlob, function () {
-                  counter++
+                  counter++;
                   if (counter == totalValues) {
                     done();
                   }

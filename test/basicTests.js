@@ -168,20 +168,21 @@ describe('utils', function () {
   describe('#parseCommonArgs()', function () {
     it('parses args and can be retrieved by name', function () {
       function testArgs(args, expectedLength) {
-        assert.ok(args && args.length === expectedLength, 'The arguments length do not match');
-        assert.ok(args && args.length >= 2 && args.query && typeof args.callback === 'function');
+        assert.strictEqual(args.length, expectedLength, 'The arguments length do not match');
+        assert.ok(args.query, 'Query must be defined');
+        assert.strictEqual(typeof args.callback, 'function', 'Callback must be a function ');
         if (args && args.length > 2) {
           assert.ok(util.isArray(args.params) || args.params === null, 'params must be an array or null');
           assert.ok(typeof args.consistency === 'number' || args.consistency === null, 'Consistency must be an int or null');
         }
       }
-      var args = utils.parseCommonArgs('A QUERY', function (){});
+      var args = utils.parseCommonArgs('A QUERY 1', function (){});
       assert.ok(args && args.length == 2 && args.query && args.callback);
       assert.throws(utils.parseCommonArgs, Error, 'It must contain at least 2 arguments.');
-      args = utils.parseCommonArgs('A QUERY', [1, 2, 3], function (){});
+      args = utils.parseCommonArgs('A QUERY 2', [1, 2, 3], function (){});
       testArgs(args, 3);
       assert.ok(util.isArray(args.params) && args.params.length === 3);
-      args = utils.parseCommonArgs('A QUERY', types.consistencies.quorum, function (){});
+      args = utils.parseCommonArgs('A QUERY 3', types.consistencies.quorum, function (){});
       testArgs(args, 3);
       assert.ok(args.params === null && args.consistency === types.consistencies.quorum, 'Consistency does not match');
       args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, function (){});
@@ -197,6 +198,25 @@ describe('utils', function () {
       assert.ok(util.isArray(args), 'The returned object must be an Array');
       assert.strictEqual(args[0], 'A QUERY', 'The first element must be the query');
       assert.strictEqual(args.length, 2, 'There must be 2 arguments in array');
+    });
+
+    it('should parse rowCallback and callback', function () {
+      var args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, {}, function rowCb(){}, function cb(){});
+      assert.strictEqual(typeof args.callback, 'function');
+      assert.strictEqual(typeof args.rowCallback, 'function');
+      assert.notStrictEqual(args.callback, args.rowCallback, 'Callback and row callback must be different');
+      args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, function rowCb(){}, function cb(){});
+      assert.strictEqual(typeof args.callback, 'function');
+      assert.strictEqual(typeof args.rowCallback, 'function');
+      assert.notStrictEqual(args.callback, args.rowCallback, 'Callback must be defined');
+    });
+  });
+
+  describe('#extend()', function () {
+    it('should allow null sources', function () {
+      var originalObject = {};
+      var extended = utils.extend(originalObject, null);
+      assert.strictEqual(originalObject, extended);
     });
   });
 });

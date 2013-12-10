@@ -251,6 +251,7 @@ Client.prototype.executeAsPrepared = function () {
  * @param {function} callback, executes callback(err, row, streamField) per each row received.
  */
 Client.prototype.streamField = function () {
+  //TODO: Change signature to rowCallback + callback for error handling
   var args = utils.parseCommonArgs.apply(null, arguments);
   args.options = utils.extend({}, args.options, {streamRows: true, streamField: true});
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
@@ -264,6 +265,7 @@ Client.prototype.streamField = function () {
  * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been received.
  */
 Client.prototype.eachRow = function () {
+  //TODO: Change JsDoc to rowCallback + callback
   var args = utils.parseCommonArgs.apply(null, arguments);
   var index = 0;
   args.options = utils.extend({}, args.options, {streamRows: true});
@@ -277,8 +279,6 @@ Client.prototype.eachRow = function () {
   }
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, callbackWrapper);
 };
-
-Client.prototype.streamRows = Client.prototype.eachRow;
 
 /**
  * Executes a prepared query on a given connection

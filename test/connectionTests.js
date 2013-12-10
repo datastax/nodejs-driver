@@ -248,26 +248,21 @@ describe('Connection', function () {
         }, done);
       });
     });
-    
-    it('should callback with err when param cannot be guessed', function (done) {
-      var query = 'SELECT * FROM sampletable1 WHERE ID=?';
-      var unspecifiedParam = {random: 'param'};
-      con.execute(query, [unspecifiedParam], function (err) {
-        assert.ok(err, 'An error must be yielded in the callback');
-        prepareAndExecute(con, query, [unspecifiedParam], function (err) {
-          assert.ok(err, 'An error must be yielded in the callback');
-          done();
-        });
-      });
-    });
   });
 
   describe('#prepare()', function () {
+    it('should prepare a query and yield the id', function (done) {
+      con.prepare('select id, big_sample from sampletable1 where id = ?', function (err, result) {
+        assert.ok(result.id, 'The query id must be defined');
+        done(err);
+      });
+    });
+
     it('should prepare the queries and yield the ids', function (done) {
       async.series([
         function (callback) {
           con.prepare("select id, big_sample from sampletable1 where id = ?", callback);
-        }, 
+        },
         function (callback) {
           con.prepare("select id, big_sample from sampletable1 where id = ?", callback);
         }, 
@@ -361,6 +356,18 @@ describe('Connection', function () {
       ], function (err) {
         assert.ok(!err, err);
         done();
+      });
+    });
+
+    it('should callback with err when param cannot be guessed', function (done) {
+      var query = 'SELECT * FROM sampletable1 WHERE ID=?';
+      var unspecifiedParam = {random: 'param'};
+      con.execute(query, [unspecifiedParam], function (err) {
+        assert.ok(err, 'An error must be yielded in the callback');
+        prepareAndExecute(con, query, [unspecifiedParam], function (err) {
+          assert.ok(err, 'An error must be yielded in the callback');
+          done();
+        });
       });
     });
   

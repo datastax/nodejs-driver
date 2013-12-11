@@ -268,7 +268,7 @@ describe('Connection', function () {
         }, 
         function (callback) {
           con.prepare("select id, big_sample, map_sample from sampletable1 where id = ?", callback);
-        },
+        }
       ], function (err, results) {
         assert.ok(!err, err);
         assert.ok(results[0].id.toString('hex').length > 0);
@@ -375,11 +375,14 @@ describe('Connection', function () {
       con.prepare('select * from system.schema_keyspaces', function (err, result) {
         assert.ok(!err, err);
         var rows = 0;
-        con.executePrepared(result.id, [], types.consistencies.one, {streamRows: true}, function (n, row) {
-          rows++;
-        }, function (err, rowCount) {
-          assert.ok(rows > 0, 'it should callback per each row');
-          done(err);
+        con.executePrepared(result.id, [], types.consistencies.one, {
+            streamRows: true,
+            rowCallback: function (n, row) {
+              rows++;
+            }
+          }, function (err, rowCount) {
+            assert.ok(rows > 0, 'it should callback per each row');
+            done(err);
         });
       });
     });
@@ -419,9 +422,12 @@ describe('Connection', function () {
       it('should callback with an error when there is a bad input', function (done) {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
-          con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {streamRows: true, streamField: true},
-            function rowCallback (){
-              assert.ok(false, 'row callback should not be called');
+          con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {
+              streamRows: true,
+              streamField: true,
+              rowCallback: function (){
+                assert.ok(false, 'row callback should not be called');
+              }
             },
             function (err) {
               assert.ok(err, 'There must be an error returned, as the query is not valid.');
@@ -433,18 +439,19 @@ describe('Connection', function () {
       it('should callback when there is no match', function (done) {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
-          con.executePrepared(result.id, [-1], types.consistencies.one,
-            {streamRows: true, streamField: true},
-            function rowCallback() {
-              assert.ok(false, 'row callback should not be called');
-            },
-            done);
+          con.executePrepared(result.id, [-1], types.consistencies.one, {
+              streamRows: true,
+              streamField: true,
+              rowCallback: function () {
+                assert.ok(false, 'row callback should not be called');
+              }
+            }, done);
         });
       });
 
       it('should callback one time per row', function (done) {
-        var values = [[410, new Buffer(1021)],[411, new Buffer(1024*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
-
+        var values = [[410, new Buffer(1021)],[411, new Buffer(10*1024)],[412, new Buffer(4)],[413, new Buffer(256)]];
+        values[1][1][0] = 100;
         function insert(item, callback) {
           con.execute('INSERT INTO sampletable1 (id, blob_sample) VALUES (?, ?)', item, callback);
         }
@@ -460,12 +467,14 @@ describe('Connection', function () {
           con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID IN (?, ?, ?, ?)', function (err, result) {
             assert.ok(!err, err);
             con.executePrepared(result.id,
-              [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one,
-              {streamRows: true, streamField: true},
-              function (n, row, stream) {
-                var originalBlob = values[row.get('id').toString()];
-                rowCounter++;
-                blobStreamArray.push([stream, originalBlob]);
+              [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one, {
+                streamRows: true,
+                streamField: true,
+                rowCallback: function (n, row, stream) {
+                  var originalBlob = values[row.get('id').toString()];
+                  rowCounter++;
+                  blobStreamArray.push([stream, originalBlob]);
+                }
               },
               function (err, rowLength) {
                 assert.ok(!err, err);

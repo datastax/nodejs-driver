@@ -68,7 +68,7 @@ describe('Parser', function () {
     parser.on('readable', function () {
       var item = parser.read();
       assert.strictEqual(item.header.opcode, types.opcodes.result);
-      assert.ok(item.result && item.result.length === 0);
+      assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
       done();
     });
     //kind

@@ -230,7 +230,7 @@ Client.prototype.executeAsPrepared = function () {
       //retry: it will get another connection
       self.emit('log', 'info', 'Retrying to prepare "' + args.query + '"');
       args.options.retryCount = args.options.retryCount + 1;
-      self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.rowCallback, args.callback);
+      self.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
     }
     else if (err) {
       //its syntax or other normal error
@@ -238,8 +238,7 @@ Client.prototype.executeAsPrepared = function () {
     }
     else {
       //it is prepared on the connection
-      self._executeOnConnection(con, args.query, queryId, args.params,args.consistency, args.options,
-        args.rowCallback, args.callback);
+      self._executeOnConnection(con, args.query, queryId, args.params,args.consistency, args.options, args.callback);
     }
   });
 };
@@ -251,9 +250,24 @@ Client.prototype.executeAsPrepared = function () {
  * @param {function} callback, executes callback(err, row, streamField) per each row received.
  */
 Client.prototype.streamField = function () {
-  //TODO: Change signature to rowCallback + callback for error handling
-  var args = utils.parseCommonArgs.apply(null, arguments);
-  args.options = utils.extend({}, args.options, {streamRows: true, streamField: true});
+  var args = Array.prototype.slice.call(arguments);
+  var rowCallback;
+  //accepts an extra callback
+  if(typeof args[args.length-1] === 'function' && typeof args[args.length-2] === 'function') {
+    //pass it through the options parameter
+    rowCallback = args.splice(args.length-2, 1)[0];
+  }
+  args = utils.parseCommonArgs.apply(null, args);
+  if (!rowCallback) {
+    //only one callback has been defined
+    rowCallback = args.callback;
+    args.callback = function () {};
+  }
+  args.options = utils.extend({}, args.options, {
+    streamRows: true,
+    streamField: true,
+    rowCallback: rowCallback
+  });
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
 
@@ -261,29 +275,43 @@ Client.prototype.streamField = function () {
  * Prepares (the first time), executes the prepared query and calls callback for each row as soon as they are received.
  * Calls endCallback after all rows have been sent, or when there is an error.
  * Retries on multiple hosts if needed.
- * @param {function} callback, executes callback(n, row) per each row received. (n = index)
- * @param {function} endCallback, executes endCallback(err, totalCount) after all rows have been received.
+ * @param {function} rowCallback, executes callback(n, row) per each row received. (n = index)
+ * @param {function} [callback], executes endCallback(err, totalCount) after all rows have been received.
  */
 Client.prototype.eachRow = function () {
-  var args = utils.parseCommonArgs.apply(null, arguments);
-  var index = 0;
-  args.options = utils.extend({}, args.options, {streamRows: true});
-  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.rowCallback, args.callback);
+  var args = Array.prototype.slice.call(arguments);
+  var rowCallback;
+  //accepts an extra callback
+  if(typeof args[args.length-1] === 'function' && typeof args[args.length-2] === 'function') {
+    //pass it through the options parameter
+    rowCallback = args.splice(args.length-2, 1)[0];
+  }
+  args = utils.parseCommonArgs.apply(null, args);
+  if (!rowCallback) {
+    //only one callback has been defined
+    rowCallback = args.callback;
+    args.callback = function () {};
+  }
+  args.options = utils.extend({}, args.options, {
+    streamRows: true,
+    rowCallback: rowCallback
+  });
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
 
 /**
  * Executes a prepared query on a given connection
  */
-Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, rowCallback, callback) {
+Client.prototype._executeOnConnection = function (c, query, queryId, params, consistency, options, callback) {
   this.emit('log', 'info', 'Executing prepared query "' + query + '"');
   var self = this;
-  c.executePrepared(queryId, params, consistency, options, rowCallback, function(err, result1, result2) {
+  c.executePrepared(queryId, params, consistency, options, function(err, result1, result2) {
     if (self._isServerUnhealthy(err)) {
       //There is a problem with the connection/server that had a prepared query
       //forget about this connection for now
       self._setUnhealthy(c);
       //retry the whole thing, it will get another connection
-      self.executeAsPrepared(query, params, consistency, options, rowCallback, callback);
+      self.executeAsPrepared(query, params, consistency, options, callback);
     }
     else if (err && err.code === types.responseErrorCodes.unprepared) {
       //Query expired at the server
@@ -292,7 +320,7 @@ Client.prototype._executeOnConnection = function (c, query, queryId, params, con
       self.emit('log', 'info', 'Unprepared query "' + query + '"');
       var preparedInfo = self.preparedQueries[query];
       preparedInfo.removeConnectionInfo(c.indexInPool);
-      self.executeAsPrepared(query, params, consistency, options, rowCallback, callback);
+      self.executeAsPrepared(query, params, consistency, options, callback);
     }
     else {
       callback(err, result1, result2);

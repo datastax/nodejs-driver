@@ -199,20 +199,6 @@ describe('utils', function () {
       assert.strictEqual(args[0], 'A QUERY', 'The first element must be the query');
       assert.strictEqual(args.length, 2, 'There must be 2 arguments in array');
     });
-
-    it('should parse rowCallback and callback', function () {
-      var args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, {}, function rowCb(){}, function cb(){});
-      assert.strictEqual(typeof args.callback, 'function');
-      assert.strictEqual(typeof args.rowCallback, 'function');
-      assert.notStrictEqual(args.callback, args.rowCallback, 'Callback and row callback must be different');
-      args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, function rowCb(){}, function cb(){});
-      assert.strictEqual(typeof args.callback, 'function');
-      assert.strictEqual(typeof args.rowCallback, 'function');
-      assert.notStrictEqual(args.callback, args.rowCallback, 'Callback must be defined');
-      args = utils.parseCommonArgs('A QUERY', [], types.consistencies.one, {}, null, function cb(){});
-      assert.strictEqual(typeof args.callback, 'function');
-      assert.ok(!args.rowCallback);
-    });
   });
 
   describe('#extend()', function () {

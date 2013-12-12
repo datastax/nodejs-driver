@@ -6,7 +6,8 @@
     "Adam Faulkner",
     "Adrian Pike",
     "Suguru Namura",
-    "Jan Schmidle"
+    "Jan Schmidle",
+    "Sam Grönblom"
   ],
   "name": "node-cassandra-cql",
   "version": "0.3.2",

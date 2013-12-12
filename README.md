@@ -8,6 +8,8 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 
     $ npm install node-cassandra-cql
 
+[![Build Status](https://secure.travis-ci.org/jorgebay/node-cassandra-cql.png)](http://travis-ci.org/jorgebay/node-cassandra-cql)
+
 ## Features
 - Connection pooling to multiple hosts
 - Load balancing and automatic failover
@@ -32,8 +34,8 @@ client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['
 client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'], 
   cql.types.consistencies.quorum,
   function(err) {
-    if (err) console.log("failure");
-    else console.log("success");
+    if (err) console.log('failure');
+    else console.log('success');
   }
 );
 
@@ -43,7 +45,7 @@ client.streamRows('SELECT event_time, temperature FROM temperature WHERE station
     //the callback will be invoked per each row as soon as they are received
     console.log('temperature value', n, row.get('temperature'));
   }, function (err, rowsCount) {
-    if (err) console.log("Oh dear...");
+    if (err) console.log('Oh dear...');
     console.log(rowsCount, 'rows where returned');
   }
 );
@@ -52,7 +54,7 @@ client.streamRows('SELECT event_time, temperature FROM temperature WHERE station
 client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'], 
   function(err, row, photoStream) {
     //the callback will be invoked per each row as soon as they are received.
-    if (err) console.log("Shame...");
+    if (err) console.log('Shame...');
     else {
       //The stream is a Readable Stream2 object
       stdout.pipe(photoStream);

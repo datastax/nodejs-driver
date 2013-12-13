@@ -63,7 +63,7 @@ describe('Parser', function () {
     }, null, doneIfError(done));
   });
 
-  it('should emit empty result when no rows (a)', function (done) {
+  it('should emit empty result one column no rows', function (done) {
     var parser = new streams.Parser({objectMode:true});
     parser.on('readable', function () {
       var item = parser.read();
@@ -79,7 +79,7 @@ describe('Parser', function () {
     parser._transform(getBodyChunks(1, 0, 12, null), null, doneIfError(done));
   });
 
-  it('should emit empty result when no rows (b)', function (done) {
+  it('should emit empty result two columns no rows', function (done) {
     var parser = new streams.Parser({objectMode:true});
     parser.on('readable', function () {
       var item = parser.read();
@@ -88,7 +88,26 @@ describe('Parser', function () {
       done();
     });
     //2 columns, no rows, in one chunk
-    parser._transform(getBodyChunks(1, 0, 0), null, doneIfError(done));
+    parser._transform(getBodyChunks(2, 0, 0, null), null, doneIfError(done));
+  });
+
+  it('should emit row when rows present', function (done) {
+    var parser = new streams.Parser({objectMode:true});
+    var rowLength = 2;
+    var rowCounter = 0;
+    parser.on('readable', function () {
+      var item = parser.read();
+      assert.strictEqual(item.header.opcode, types.opcodes.result);
+      assert.ok(item.row);
+      if ((++rowCounter) === rowLength) {
+        done();
+      }
+    });
+    //2 columns, 1 rows
+    parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
+    parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
+    parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
+    parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
   });
 });
 
@@ -109,23 +128,37 @@ function getFrameHeader(bodyLength, opcode) {
 }
 
 function getBodyChunks(columnLength, rowLength, fromIndex, toIndex) {
+  var i;
   var fullChunk = [
     //kind
     0, 0, 0, types.resultKind.rows,
     //flags and column count
-    0, 0, 0, 0, 0, 0, 0, columnLength,
+    0, 0, 0, 1, 0, 0, 0, columnLength,
     //column names
     0, 1, 97, //string 'a' as ksname
     0, 1, 98 //string 'b' as tablename
   ];
-  for (var i = 0; i < columnLength; i++) {
+  for (i = 0; i < columnLength; i++) {
     fullChunk = fullChunk.concat([
       0, 1, 99 + i, //string name, starting by 'c' as column name
       0, types.dataTypes.text //short datatype
     ]);
   }
-    //rows length
+  //rows length
   fullChunk = fullChunk.concat([0, 0, 0, rowLength || 0]);
+  for (i = 0; i < rowLength; i++) {
+    var rowChunk = [];
+    for (var j = 0; j < columnLength; j++) {
+      //4 bytes length + bytes of each column value
+      rowChunk.push(0);
+      rowChunk.push(0);
+      rowChunk.push(0);
+      rowChunk.push(1);
+      //value
+      rowChunk.push(j);
+    }
+    fullChunk = fullChunk.concat(rowChunk);
+  }
 
   return {
     header: getFrameHeader(fullChunk.length, types.opcodes.result),

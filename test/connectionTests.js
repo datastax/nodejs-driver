@@ -167,15 +167,13 @@ describe('Connection', function () {
     
     it('should store and retrieve the same bigint value', function (done) {
       var big = new Int64('123456789abcdef0');
-      con.execute('INSERT INTO sampletable1 (id, big_sample) VALUES(100, ?)', 
-        [big], 
-        function(err) {
+      con.execute('INSERT INTO sampletable1 (id, big_sample) VALUES(100, ?)', [big], function(err) {
+        assert.ok(!err, err);
+        con.execute('select id, big_sample from sampletable1 where id=100;', null, function (err, result) {
           assert.ok(!err, err);
-          con.execute('select id, big_sample from sampletable1 where id=100;', null, function (err, result) {
-            assert.ok(!err, err);
-            assert.equal(big.toOctetString(), result.rows[0].get('big_sample').toOctetString(), 'Retrieved bigint does not match.');
-            done();
-          });
+          assert.equal(big.toOctetString(), result.rows[0].get('big_sample').toOctetString(), 'Retrieved bigint does not match.');
+          done();
+        });
       });
     });
     

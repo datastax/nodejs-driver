@@ -9,105 +9,107 @@ var types = require('../lib/types.js');
  * Tests for the transform streams that are involved in the reading of a response
  */
 describe('Parser', function () {
-  it('should read a READY opcode', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.bodyLength, 0);
-      assert.strictEqual(item.header.opcode, types.opcodes.ready);
-      done();
-    });
-    parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: new Buffer([])}, null, doneIfError(done));
-  });
-
-  it('should read a AUTHENTICATE opcode', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
-      assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
-      done();
-    });
-    parser._transform({header: getFrameHeader(0, types.opcodes.authenticate), chunk: new Buffer([])}, null, doneIfError(done));
-  });
-
-  it('should read a VOID result', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.bodyLength, 4);
-      assert.strictEqual(item.header.opcode, types.opcodes.result);
-      done();
-    });
-    parser._transform({
-      header: getFrameHeader(4, types.opcodes.result),
-      chunk: new Buffer([0, 0, 0, types.resultKind.voidResult])
-    }, null, doneIfError(done));
-  });
-
-  it('should read a buffer until there is enough data', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.bodyLength, 4);
-      assert.strictEqual(item.header.opcode, types.opcodes.result);
-      done();
-    });
-    parser._transform({
-      header: getFrameHeader(4, types.opcodes.result),
-      chunk: new Buffer([0])
-    }, null, doneIfError(done));
-    parser._transform({
-      header: getFrameHeader(4, types.opcodes.result),
-      chunk: new Buffer([0, 0, types.resultKind.voidResult])
-    }, null, doneIfError(done));
-  });
-
-  it('should emit empty result one column no rows', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.opcode, types.opcodes.result);
-      assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
-      done();
-    });
-    //kind
-    parser._transform(getBodyChunks(1, 0, 0, 4), null, doneIfError(done));
-    //metadata
-    parser._transform(getBodyChunks(1, 0, 4, 12), null, doneIfError(done));
-    //column names and rows
-    parser._transform(getBodyChunks(1, 0, 12, null), null, doneIfError(done));
-  });
-
-  it('should emit empty result two columns no rows', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.opcode, types.opcodes.result);
-      assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
-      done();
-    });
-    //2 columns, no rows, in one chunk
-    parser._transform(getBodyChunks(2, 0, 0, null), null, doneIfError(done));
-  });
-
-  it('should emit row when rows present', function (done) {
-    var parser = new streams.Parser({objectMode:true});
-    var rowLength = 2;
-    var rowCounter = 0;
-    parser.on('readable', function () {
-      var item = parser.read();
-      assert.strictEqual(item.header.opcode, types.opcodes.result);
-      assert.ok(item.row);
-      if ((++rowCounter) === rowLength) {
+  describe('#_transform()', function () {
+    it('should read a READY opcode', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.bodyLength, 0);
+        assert.strictEqual(item.header.opcode, types.opcodes.ready);
         done();
-      }
+      });
+      parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: new Buffer([])}, null, doneIfError(done));
     });
-    //2 columns, 1 rows
-    parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
-    parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
-    parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
-    parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
+
+    it('should read a AUTHENTICATE opcode', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
+        assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
+        done();
+      });
+      parser._transform({header: getFrameHeader(0, types.opcodes.authenticate), chunk: new Buffer([])}, null, doneIfError(done));
+    });
+
+    it('should read a VOID result', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.bodyLength, 4);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        done();
+      });
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result),
+        chunk: new Buffer([0, 0, 0, types.resultKind.voidResult])
+      }, null, doneIfError(done));
+    });
+
+    it('should read a buffer until there is enough data', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.bodyLength, 4);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        done();
+      });
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result),
+        chunk: new Buffer([0])
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result),
+        chunk: new Buffer([0, 0, types.resultKind.voidResult])
+      }, null, doneIfError(done));
+    });
+
+    it('should emit empty result one column no rows', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
+        done();
+      });
+      //kind
+      parser._transform(getBodyChunks(1, 0, 0, 4), null, doneIfError(done));
+      //metadata
+      parser._transform(getBodyChunks(1, 0, 4, 12), null, doneIfError(done));
+      //column names and rows
+      parser._transform(getBodyChunks(1, 0, 12, null), null, doneIfError(done));
+    });
+
+    it('should emit empty result two columns no rows', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
+        done();
+      });
+      //2 columns, no rows, in one chunk
+      parser._transform(getBodyChunks(2, 0, 0, null), null, doneIfError(done));
+    });
+
+    it('should emit row when rows present', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      var rowLength = 2;
+      var rowCounter = 0;
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.ok(item.row);
+        if ((++rowCounter) === rowLength) {
+          done();
+        }
+      });
+      //2 columns, 1 rows
+      parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
+      parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
+      parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
+      parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
+    });
   });
 });
 

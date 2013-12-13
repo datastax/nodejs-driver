@@ -190,6 +190,7 @@ describe('Client', function () {
     });
     
     it('should callback when it was not possible to connect to any host', function (done) {
+      this.timeout(4000);
       var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
       var errors = [];
       async.series([
@@ -340,6 +341,7 @@ describe('Client', function () {
     });
     
     it('should failover to other nodes and reconnect, in parallel executes', function (done) {
+      this.timeout(4000);
       //the client must reconnect and continue
       var localClient = getANewClient();
       assert.ok(localClient.connections.length > 1, 'There should be more than 1 connection to test failover');

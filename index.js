@@ -176,7 +176,11 @@ Client.prototype._getAConnection = function (callback) {
 
 /**
  * Executes a query in an available connection.
- * @param {function} callback, executes callback(err, result) when finished
+ * @param {String} query The query to execute
+ * @param {Array} [param] Array of params to replace
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
+ * @param {function} callback Executes callback(err, result) when finished
  */
 Client.prototype.execute = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
@@ -223,7 +227,11 @@ Client.prototype.execute = function () {
 
 /**
  * Prepares (the first time) and executes the prepared query, retrying on multiple hosts if needed.
- * @param {function} callback, executes callback(err, result) when finished
+ * @param {String} query The query to prepare and execute
+ * @param {Array} [param] Array of params
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
+ * @param {function} callback Executes callback(err, result) when finished
  */
 Client.prototype.executeAsPrepared = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
@@ -263,7 +271,12 @@ Client.prototype.executeAsPrepared = function () {
  * Prepares (the first time on each host), executes the prepared query and streams the last field of each row.
  * It executes the callback per each row as soon as the first chunk of the last field is received.
  * Retries on multiple hosts if needed.
- * @param {function} callback, executes callback(err, row, streamField) per each row received.
+ * @param {String} query The query to prepare and execute
+ * @param {Array} [param] Array of params
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
+ * @param {function} rowCallback Executes rowCallback(n, row, fieldStream) per each row
+ * @param {function} [callback] Executes callback(err) when finished or there is an error
  */
 Client.prototype.streamField = function () {
   var args = Array.prototype.slice.call(arguments);
@@ -288,9 +301,13 @@ Client.prototype.streamField = function () {
 };
 
 /**
- * Prepares (the first time), executes the prepared query and calls callback for each row as soon as they are received.
+ * Prepares (the first time), executes the prepared query and calls rowCallback for each row as soon as they are received.
  * Calls endCallback after all rows have been sent, or when there is an error.
  * Retries on multiple hosts if needed.
+ * @param {String} query The query to prepare and execute
+ * @param {Array} [param] Array of params
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
  * @param {function} rowCallback, executes callback(n, row) per each row received. (n = index)
  * @param {function} [callback], executes endCallback(err, totalCount) after all rows have been received.
  */
@@ -314,6 +331,8 @@ Client.prototype.eachRow = function () {
   });
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
 };
+
+Client.prototype.streamRows = Client.prototype.eachRow;
 
 /**
  * Executes a prepared query on a given connection
@@ -346,6 +365,7 @@ Client.prototype._executeOnConnection = function (c, query, queryId, params, con
 
 /**
  * It gets an active connection and prepares the query on it, queueing the callback in case its already prepared.
+ * @param {String} query Query to prepare with ? as placeholders
  * @param {function} callback Executes callback(err, con, queryId) when there is a prepared statement on a connection or there is an error.
  */
 Client.prototype._getPrepared = function (query, callback) {
@@ -362,18 +382,16 @@ Client.prototype._getPrepared = function (query, callback) {
     var conInfo = preparedInfo.getConnectionInfo(con.indexInPool);
     if (conInfo.queryId !== null) {
       //is already prepared on this connection
-      callback(null, con, conInfo.queryId);
+      return callback(null, con, conInfo.queryId);
     }
     else if (conInfo.preparing) {
       //Its being prepared, queue until finish
-      conInfo.once('prepared', callback);
+      return conInfo.once('prepared', callback);
     }
-    else {
-      //start preparing
-      conInfo.preparing = true;
-      conInfo.once('prepared', callback);
-      self._prepare(conInfo, con, query);
-    }
+    //start preparing
+    conInfo.preparing = true;
+    conInfo.once('prepared', callback);
+    return self._prepare(conInfo, con, query);
   });
 };
 

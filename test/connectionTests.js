@@ -77,6 +77,18 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    it('should fail when the username and password are incorrect', function (done) {
+      var localCon = new Connection(utils.extend({}, con.options, {password: 'invalidpassword789'}));
+      localCon.open(function (err) {
+        //it could be that authentication is off on the node
+        //in that case, do not assert anything
+        if (err) {
+          assert.strictEqual(err.name, 'ResponseError');
+          assert.strictEqual(err.code, types.responseErrorCodes.badCredentials);
+        }
+        localCon.close(done);
+      });
+    });
   });
   
   describe('#execute()', function () {

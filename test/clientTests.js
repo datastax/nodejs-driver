@@ -254,6 +254,7 @@ describe('Client', function () {
     });
     
     it('should stop retrying when the limit has been reached', function (done) {
+      this.timeout(5000);
       var localClient = getANewClient({maxExecuteRetries: 4, staleTime: 150});
       var counter = -1;
       localClient._isServerUnhealthy = function() {
@@ -312,7 +313,7 @@ describe('Client', function () {
     });
     
     it('should failover to other nodes and reconnect', function (done) {
-      this.timeout(4000);
+      this.timeout(10000);
       //the client must reconnect and continue
       var localClient = getANewClient();
       assert.ok(localClient.connections.length > 1, 'There should be more than 1 connection to test failover');

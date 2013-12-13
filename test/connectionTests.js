@@ -66,6 +66,7 @@ describe('Connection', function () {
       var localCon = new Connection(utils.extend({}, config, {host: 'not-existent-host'}));
       localCon.open(function (err) {
         assert.ok(err, 'Must return a connection error');
+        assert.ok(!localCon.connected && !localCon.connecting);
         localCon.close(done);
       });
     });

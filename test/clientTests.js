@@ -402,12 +402,22 @@ describe('Client', function () {
           client.execute(queryStreamInsert, [id, blob], next);
         },
         function (next) {
-          client.streamField(queryStreamSelect, [id], function (err, row, blobStream) {
+          client.streamField(queryStreamSelect, [id], function (n, row, blobStream) {
             assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
+            assert.strictEqual(n, 0);
             assertStreamReadable(blobStream, blob, next);
           });
         }
       ], done);
+    });
+
+    it('should callback with error', function (done) {
+      client.streamField('SELECT TO FAIL MISSERABLY', function (n, row, stream) {
+        assert.ok(fail, 'It should never execute the row callback');
+      }, function (err) {
+        assert.ok(err, 'It should yield an error');
+        done();
+      });
     });
     
     it('should yield a null stream when the field is null', function (done) {

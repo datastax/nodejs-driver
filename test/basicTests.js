@@ -38,7 +38,6 @@ describe('types', function () {
           }
           assert.strictEqual(stringValue, expected);
         }
-        var stringifyValue = types.typeEncoder.stringifyValue;
         testStringify(1, '1', dataTypes.int);
         testStringify(1.1, '1.1', dataTypes.double);
         testStringify("text", "'text'", dataTypes.text);

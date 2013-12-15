@@ -19,10 +19,10 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 
 ## Using it
 ```javascript
-// Creating a new connection pool to multiple hosts.
+//Creating a new connection pool to multiple hosts.
 var cql = require('node-cassandra-cql');
 var client = new cql.Client({hosts: ['host1:9042', 'host2:9042'], keyspace: 'keyspace1'});
-// Reading
+//Reading
 client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
   function(err, result) {
     if (err) console.log('execute failed');
@@ -30,7 +30,7 @@ client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['
   }
 );
 
-// Writing
+//Writing
 client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'], 
   cql.types.consistencies.quorum,
   function(err) {
@@ -39,8 +39,8 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
   }
 );
 
-// Streaming query rows
-client.streamRows('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'], 
+//Streaming query rows
+client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
     console.log('temperature value', n, row.get('temperature'));
@@ -50,7 +50,7 @@ client.streamRows('SELECT event_time, temperature FROM temperature WHERE station
   }
 );
 
-// Streaming field
+//Streaming field
 client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'], 
   function(err, row, photoStream) {
     //the callback will be invoked per each row as soon as they are received.
@@ -119,7 +119,7 @@ Use one of the values defined in `types.consistencies` for  `consistency`, defau
 
 Callback should take two arguments err and result.
 
-#### client.streamRows(query, [params], [consistency], rowCallback, endCallback)
+#### client.eachRow(query, [params], [consistency], rowCallback, endCallback)
 
 Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
 
@@ -129,18 +129,20 @@ It executes `endCallback(err, rowsCount)` when there are no more rows or there i
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-#### client.streamField(query, [params], [consistency], callback)
+#### client.streamField(query, [params], [consistency], rowCallback, [endCallback])
 
 Prepares (the first time), executes the prepared query and streams the last field of each row.
 
-It executes `callback(err, row, streamField)` per each row as soon as the first chunk of the last field is received.
+It executes `rowCallback(n, row, streamField)` per each row as soon as the first chunk of the last field is received, where `n` is the index of the row.
 
 The `stream` is a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object that contains the raw bytes of the field value.
 It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
 
-The `row` object is similar to the one provided on `streamRows`, except that it does not contain the definition of the last column.
+The `row` object is similar to the one provided on `eachRow`, except that it does not contain the definition of the last column.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+It executes `endCallback(err, rowsCount)` when there are no more rows or there is an error retrieving the row.
 
 #### client.shutdown([callback])
 

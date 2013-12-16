@@ -97,10 +97,10 @@ describe('types', function () {
     })
   });
 
-  describe('FieldStream', function() {
+  describe('ResultStream', function() {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
-      var stream = new types.FieldStream();
+      var stream = new types.ResultStream();
       
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
@@ -122,7 +122,7 @@ describe('types', function () {
 
     it('should buffer until is read', function (done) {
       var buf = [];
-      var stream = new types.FieldStream({highWaterMark: 1});
+      var stream = new types.ResultStream({highWaterMark: 1});
       stream.add(new Buffer('Stringer'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('Bell'));

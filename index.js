@@ -293,7 +293,7 @@ Client.prototype.streamField = function () {
     args.callback = function () {};
   }
   args.options = utils.extend({}, args.options, {
-    streamRows: true,
+    byRow: true,
     streamField: true,
     rowCallback: rowCallback
   });
@@ -326,7 +326,7 @@ Client.prototype.eachRow = function () {
     args.callback = function () {};
   }
   args.options = utils.extend({}, args.options, {
-    streamRows: true,
+    byRow: true,
     rowCallback: rowCallback
   });
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);

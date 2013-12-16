@@ -387,7 +387,7 @@ describe('Connection', function () {
         assert.ok(!err, err);
         var rows = 0;
         con.executePrepared(result.id, [], types.consistencies.one, {
-            streamRows: true,
+            byRow: true,
             rowCallback: function (n, row) {
               rows++;
             }
@@ -434,7 +434,7 @@ describe('Connection', function () {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
           con.executePrepared(result.id, ['BAD INPUT'], types.consistencies.one, {
-              streamRows: true,
+              byRow: true,
               streamField: true,
               rowCallback: function (){
                 assert.ok(false, 'row callback should not be called');
@@ -451,7 +451,7 @@ describe('Connection', function () {
         con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE ID = ?', function (err, result) {
           assert.ok(!err, err);
           con.executePrepared(result.id, [-1], types.consistencies.one, {
-              streamRows: true,
+              byRow: true,
               streamField: true,
               rowCallback: function () {
                 assert.ok(false, 'row callback should not be called');
@@ -479,7 +479,7 @@ describe('Connection', function () {
             assert.ok(!err, err);
             con.executePrepared(result.id,
               [values[0][0], values[1][0], values[2][0], values[3][0]], types.consistencies.one, {
-                streamRows: true,
+                byRow: true,
                 streamField: true,
                 rowCallback: function (n, row, stream) {
                   var originalBlob = values[row.get('id').toString()];
@@ -540,7 +540,7 @@ function insertAndStream(con, blob, id, streamField, callback) {
     assert.ok(!err, err);
     con.prepare('SELECT id, blob_sample FROM sampletable1 WHERE id = ?', function (err, result) {
       assert.ok(!err, err);
-      con.executePrepared(result.id, [id], types.consistencies.one, {streamRows: true, streamField: streamField}, callback);
+      con.executePrepared(result.id, [id], types.consistencies.one, {byRow: true, streamField: streamField}, callback);
     });
   });
 }

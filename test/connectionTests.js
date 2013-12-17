@@ -507,6 +507,42 @@ describe('Connection', function () {
 
     });
   });
+
+  describe('#stream()', function () {
+    var queryId;
+    before(function (done) {
+      var insertQuery = 'INSERT INTO sampletable1 (id, text_sample) values (?, ?)';
+      var selectQuery = 'SELECT * FROM sampletable1 where id IN (?, ?, ?, ?)';
+      batchInsert(
+        con, insertQuery, [[500, '500-Z'], [501, '501-Z'], [502, '502-Z']], function (err) {
+          if (err) done(err);
+          con.prepare(selectQuery, function (err, result) {
+            assert.ok(!err, err);
+            queryId = result.id;
+            done();
+          });
+        });
+    });
+
+    it('should stream rows', function (done) {
+      var rows = [];
+      var stream = con.stream(queryId, [500, 501, -1, -1], throwop);
+      stream.on('end', function () {
+        assert.strictEqual(rows.length, 2);
+        done();
+      });
+      stream.on('readable', function () {
+        var row;
+        while (row = this.read()) {
+          assert.ok(row.get('id'), 'It should yield the id value');
+          assert.strictEqual(row.get('id').toString()+'-Z', row.get('text_sample'),
+            'The id and the text value should be related');
+          rows.push(row);
+        }
+      });
+      stream.on('error', done);
+    });
+  });
   
   describe('#close()', function () {
     it('should callback even if its already closed', function (done) {
@@ -545,6 +581,18 @@ function insertAndStream(con, blob, id, streamField, callback) {
   });
 }
 
+/**
+ * Execute the query per each parameter array into paramsArray
+ * @param {Connection} con
+ * @param {String} query
+ * @param {Array} paramsArray Array of arrays of params
+ */
+function batchInsert(con, query, paramsArray, callback) {
+  async.mapSeries(paramsArray, function (params, next) {
+    con.execute(query, params, types.consistencies.one, next);
+  }, callback);
+}
+
 function assertStreamReadable(stream, originalBlob, callback) {
   var length = 0;
   var firstByte = null;
@@ -581,4 +629,8 @@ function compareRows(rowA, rowB, fieldList) {
     var field = fieldList[i];
     assert.equal(util.inspect(rowA.get(field)), util.inspect(rowB.get(field)), '#' + rowA.get('id') + ' field ' + field + ' does not match');
   }
+}
+
+function throwop(err) {
+  if (err) throw err;
 }

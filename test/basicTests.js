@@ -107,10 +107,9 @@ describe('types', function () {
         done();
       });
       stream.on('readable', function streamReadable() {
-        var item = stream.read();
-        while (item) {
+        var item;
+        while (item = stream.read()) {
           buf.push(item);
-          item = stream.read();
         }
       });
       
@@ -122,22 +121,60 @@ describe('types', function () {
 
     it('should buffer until is read', function (done) {
       var buf = [];
-      var stream = new types.ResultStream({highWaterMark: 1});
+      var stream = new types.ResultStream();
       stream.add(new Buffer('Stringer'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('Bell'));
       stream.add(null);
-      
+
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Stringer Bell');
         done();
       });
-      assert.ok(stream.buffer.length > 0, 'It must buffer when there is no listener for the "readable" event');
       stream.on('readable', function streamReadable() {
-        var item = stream.read();
-        while (item) {
+        var item;
+        while (item = stream.read()) {
           buf.push(item);
-          item = stream.read();
+        }
+      });
+    });
+
+    it('should be readable until the end', function (done) {
+      var buf = [];
+      var stream = new types.ResultStream();
+      stream.add(new Buffer('Omar'));
+      stream.add(new Buffer(' '));
+
+      stream.on('end', function streamEnd() {
+        assert.equal(Buffer.concat(buf).toString(), 'Omar Little');
+        done();
+      });
+      stream.on('readable', function streamReadable() {
+        var item;
+        while (item = stream.read()) {
+          buf.push(item);
+        }
+      });
+
+      stream.add(new Buffer('Little'));
+      stream.add(null);
+    });
+
+    it('should be readable on objectMode', function (done) {
+      var buf = [];
+      var stream = new types.ResultStream({objectMode: true});
+      //Using QueryLiteral class but any would do it
+      stream.add(new types.QueryLiteral('One'));
+      stream.add(new types.QueryLiteral('Two'));
+      stream.add(null);
+      stream.on('end', function streamEnd() {
+        assert.equal(buf.join(' '), 'One Two');
+        done();
+      });
+      stream.on('readable', function streamReadable() {
+        var item;
+        while (item = stream.read()) {
+          buf.push(item.toString());
         }
       });
     });

@@ -44,7 +44,8 @@ client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
     console.log('temperature value', n, row.get('temperature'));
-  }, function (err, rowsCount) {
+  },
+  function (err, rowsCount) {
     if (err) console.log('Oh dear...');
     console.log(rowsCount, 'rows where returned');
   }

@@ -309,7 +309,7 @@ Client.prototype.streamField = function () {
  * @param {Number} [consistency] Consistency level
  * @param [options]
  * @param {function} rowCallback, executes callback(n, row) per each row received. (n = index)
- * @param {function} [callback], executes endCallback(err, totalCount) after all rows have been received.
+ * @param {function} [endcallback], executes endCallback(err, totalCount) after all rows have been received.
  */
 Client.prototype.eachRow = function () {
   var args = Array.prototype.slice.call(arguments);
@@ -330,6 +330,32 @@ Client.prototype.eachRow = function () {
     rowCallback: rowCallback
   });
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
+};
+
+
+/**
+ * Prepares (the first time), executes the prepared query and pushes the rows to the result stream
+ *  as soon as they received.
+ * Calls callback after all rows have been sent, or when there is an error.
+ * Retries on multiple hosts if needed.
+ * @param {String} query The query to prepare and execute
+ * @param {Array} [param] Array of params
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
+ * @param {function} [callback], executes callback(err) after all rows have been received or if there is an error
+ * @returns {ResultStream}
+ */
+Client.prototype.stream = function () {
+  var args = Array.prototype.slice.call(arguments);
+  if (typeof args[args.length-1] !== 'function') {
+    //the callback is not required
+    args.push(function noop() {});
+  }
+  args = utils.parseCommonArgs.apply(null, args);
+  var resultStream = new types.ResultStream({objectMode: 1})
+  args.options = utils.extend({}, args.options, {streamResult: resultStream});
+  this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
+  return resultStream;
 };
 
 Client.prototype.streamRows = Client.prototype.eachRow;
@@ -438,12 +464,7 @@ Client.prototype._removeAllPrepared = function (con) {
 };
 
 Client.prototype._isServerUnhealthy = function (err) {
-  if (err && err.isServerUnhealthy) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return err && err.isServerUnhealthy;
 };
 
 Client.prototype._setUnhealthy = function (connection) {

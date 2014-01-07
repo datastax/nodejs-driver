@@ -527,20 +527,19 @@ describe('Connection', function () {
     it('should stream rows', function (done) {
       var rows = [];
       var stream = con.stream(queryId, [500, 501, -1, -1], throwop);
-      stream.on('end', function () {
-        assert.strictEqual(rows.length, 2);
-        done();
-      });
-      stream.on('readable', function () {
-        var row;
-        while (row = this.read()) {
-          assert.ok(row.get('id'), 'It should yield the id value');
-          assert.strictEqual(row.get('id').toString()+'-Z', row.get('text_sample'),
-            'The id and the text value should be related');
-          rows.push(row);
-        }
-      });
-      stream.on('error', done);
+      stream
+        .on('end', function () {
+          assert.strictEqual(rows.length, 2);
+          done();
+        }).on('readable', function () {
+          var row;
+          while (row = this.read()) {
+            assert.ok(row.get('id'), 'It should yield the id value');
+            assert.strictEqual(row.get('id').toString()+'-Z', row.get('text_sample'),
+              'The id and the text value should be related');
+            rows.push(row);
+          }
+        }).on('error', done);
     });
   });
   

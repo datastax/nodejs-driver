@@ -241,7 +241,7 @@ Client.prototype.executeAsPrepared = function () {
   var stackContainer = {};
   Error.captureStackTrace(stackContainer);
 
-  self._getPrepared(args.query, function (err, con, queryId) {
+  self._getPrepared(args.query, function preparedCallback(err, con, queryId) {
     if (self._isServerUnhealthy(err)) {
       //its a fatal error, the server died
       self._setUnhealthy(con);
@@ -353,7 +353,7 @@ Client.prototype.stream = function () {
   }
   args = utils.parseCommonArgs.apply(null, args);
   var resultStream = new types.ResultStream({objectMode: 1})
-  args.options = utils.extend({}, args.options, {streamResult: resultStream});
+  args.options = utils.extend({}, args.options, {resultStream: resultStream});
   this.executeAsPrepared(args.query, args.params, args.consistency, args.options, args.callback);
   return resultStream;
 };

@@ -8,6 +8,7 @@ var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
+var helper = require('./testHelper.js');
 var keyspace = new types.QueryLiteral('unittestkp1_1');
 var config = require('./config.js');
 
@@ -78,6 +79,7 @@ describe('Connection', function () {
       });
     });
     it('should fail when the username and password are incorrect', function (done) {
+      this.timeout(5000);
       var localCon = new Connection(utils.extend({}, con.options, {password: 'invalidpassword789'}));
       localCon.open(function (err) {
         //it could be that authentication is off on the node
@@ -513,7 +515,7 @@ describe('Connection', function () {
     before(function (done) {
       var insertQuery = 'INSERT INTO sampletable1 (id, text_sample) values (?, ?)';
       var selectQuery = 'SELECT * FROM sampletable1 where id IN (?, ?, ?, ?)';
-      batchInsert(
+      helper.batchInsert(
         con, insertQuery, [[500, '500-Z'], [501, '501-Z'], [502, '502-Z']], function (err) {
           if (err) done(err);
           con.prepare(selectQuery, function (err, result) {
@@ -526,7 +528,7 @@ describe('Connection', function () {
 
     it('should stream rows', function (done) {
       var rows = [];
-      var stream = con.stream(queryId, [500, 501, -1, -1], throwop);
+      var stream = con.stream(queryId, [500, 501, -1, -1], helper.throwop);
       stream
         .on('end', function () {
           assert.strictEqual(rows.length, 2);
@@ -580,18 +582,6 @@ function insertAndStream(con, blob, id, streamField, callback) {
   });
 }
 
-/**
- * Execute the query per each parameter array into paramsArray
- * @param {Connection} con
- * @param {String} query
- * @param {Array} paramsArray Array of arrays of params
- */
-function batchInsert(con, query, paramsArray, callback) {
-  async.mapSeries(paramsArray, function (params, next) {
-    con.execute(query, params, types.consistencies.one, next);
-  }, callback);
-}
-
 function assertStreamReadable(stream, originalBlob, callback) {
   var length = 0;
   var firstByte = null;
@@ -628,8 +618,4 @@ function compareRows(rowA, rowB, fieldList) {
     var field = fieldList[i];
     assert.equal(util.inspect(rowA.get(field)), util.inspect(rowB.get(field)), '#' + rowA.get('id') + ' field ' + field + ' does not match');
   }
-}
-
-function throwop(err) {
-  if (err) throw err;
 }

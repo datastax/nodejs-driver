@@ -6,6 +6,7 @@ var Connection = require('../index.js').Connection;
 var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
+var helper = require('./testHelper.js');
 var keyspace = new types.QueryLiteral('unittestkp1_2');
 types.consistencies.getDefault = function () { return this.one; };
 
@@ -393,7 +394,7 @@ describe('Client', function () {
   });
 
 
-  describe('#streamField()', function (done) {
+  describe('#streamField()', function () {
     it('should yield a readable stream', function (done) {
       var id = 100;
       var blob = new Buffer('Freaks and geeks 1999');
@@ -439,7 +440,7 @@ describe('Client', function () {
     });
   });
 
-  describe('#eachRow()', function (done) {
+  describe('#eachRow()', function () {
     it('should callback and return all fields', function (done) {
       var id = 150;
       var blob = new Buffer('Frank Gallagher');
@@ -500,6 +501,32 @@ describe('Client', function () {
         }
       ], done);
 
+    });
+  });
+
+  describe('#stream()', function () {
+    before(function (done) {
+      var insertQuery = 'INSERT INTO sampletable2 (id, text_sample) values (?, ?)';
+      helper.batchInsert(client, insertQuery, [[200, '200-Z'], [201, '201-Z'], [202, '202-Z']], done);
+    });
+
+    it('should stream rows', function (done) {
+      var query = 'SELECT * FROM sampletable2 where id IN (?, ?, ?, ?)';
+      var rows = [];
+      var stream = client.stream(query, [200, 201, -1, -1], helper.throwop);
+      stream
+        .on('end', function () {
+          assert.strictEqual(rows.length, 2);
+          done();
+        }).on('readable', function () {
+          var row;
+          while (row = this.read()) {
+            assert.ok(row.get('id'), 'It should yield the id value');
+            assert.strictEqual(row.get('id').toString()+'-Z', row.get('text_sample'),
+              'The id and the text value should be related');
+            rows.push(row);
+          }
+        }).on('error', done);
     });
   });
 

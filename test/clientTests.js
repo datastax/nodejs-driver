@@ -413,7 +413,7 @@ describe('Client', function () {
     });
 
     it('should callback with error', function (done) {
-      client.streamField('SELECT TO FAIL MISSERABLY', function (n, row, stream) {
+      client.streamField('SELECT TO FAIL MISERABLY', function (n, row, stream) {
         assert.ok(fail, 'It should never execute the row callback');
       }, function (err) {
         assert.ok(err, 'It should yield an error');
@@ -505,15 +505,16 @@ describe('Client', function () {
   });
 
   describe('#stream()', function () {
+    var selectInQuery = 'SELECT * FROM sampletable2 where id IN (?, ?, ?, ?)';
+
     before(function (done) {
       var insertQuery = 'INSERT INTO sampletable2 (id, text_sample) values (?, ?)';
       helper.batchInsert(client, insertQuery, [[200, '200-Z'], [201, '201-Z'], [202, '202-Z']], done);
     });
 
     it('should stream rows', function (done) {
-      var query = 'SELECT * FROM sampletable2 where id IN (?, ?, ?, ?)';
       var rows = [];
-      var stream = client.stream(query, [200, 201, -1, -1], helper.throwop);
+      var stream = client.stream(selectInQuery, [200, 201, -1, -1], helper.throwop);
       stream
         .on('end', function () {
           assert.strictEqual(rows.length, 2);
@@ -524,6 +525,42 @@ describe('Client', function () {
             assert.ok(row.get('id'), 'It should yield the id value');
             assert.strictEqual(row.get('id').toString()+'-Z', row.get('text_sample'),
               'The id and the text value should be related');
+            rows.push(row);
+          }
+        }).on('error', done);
+    });
+
+    it('should end when no rows', function (done) {
+      var stream = client.stream(selectInQuery, [-1, -1, -1, -1], helper.throwop);
+      stream
+        .on('end', done)
+        .on('readable', function () {
+          assert.ok(false, 'Readable event should not be fired');
+        }).on('error', done);
+    });
+
+    it('should emit a ResponseError', function (done) {
+      var counter = 0;
+      var stream = client.stream(selectInQuery, [0], function (err) {
+        assert.ok(err, 'It should callback with error');
+        if (++counter === 2) done();
+      });
+      stream.on('error', function (err) {
+        assert.strictEqual(err.name, 'ResponseError');
+        if (++counter === 2) done();
+      });
+    });
+
+    it('should be optional to provide a callback', function (done) {
+      var rows = [];
+      client.stream(selectInQuery, [200, 201, 202, -1])
+        .on('end', function () {
+          assert.strictEqual(rows.length, 3);
+          done();
+        })
+        .on('readable', function () {
+          var row;
+          while (row = this.read()) {
             rows.push(row);
           }
         }).on('error', done);

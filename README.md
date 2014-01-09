@@ -31,7 +31,7 @@ client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['
 );
 
 //Writing
-client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'], 
+client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'],
   cql.types.consistencies.quorum,
   function(err) {
     if (err) console.log('failure');
@@ -39,7 +39,7 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
   }
 );
 
-//Streaming query rows
+//Streaming query rows, it callbacks as soon as it
 client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
@@ -62,6 +62,22 @@ client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'],
     }
   }
 );
+
+//The whole result set as a stream
+client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key1'])
+  .on('readable', function () {
+    //readable is emitted as soon a row is received and parsed
+    var row;
+    while (row = this.read()) {
+      //a row object
+    }
+  })
+  .on('end', function () {
+    //stream end, there aren't any more rows
+  })
+  .on('error', function (err) {
+    //Something went wrong: err is a response error from Cassandra
+  });
 ```
 
 ## API
@@ -126,7 +142,7 @@ Prepares (the first time), executes the prepared query and streams the rows as s
 
 It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
 
-It executes `endCallback(err, rowsCount)` when there are no more rows or there is an error retrieving the row.
+It executes `endCallback(err, rowsCount)` when all rows have been received or there is an error retrieving the row.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
@@ -143,7 +159,19 @@ The `row` object is similar to the one provided on `eachRow`, except that it doe
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-It executes `endCallback(err, rowsCount)` when there are no more rows or there is an error retrieving the row.
+It executes `endCallback(err, rowsCount)` when all rows have been received or there is an error retrieving the row.
+
+#### client.stream(query, [params], [consistency], [callback])
+
+Returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
+When a row can be read from the stream, it will emit a `readable` event.
+It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+
+Prepares (the first time), executes the prepared query.
+
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+It executes `callback(err)` when all rows have been received or there is an error retrieving the row.
 
 #### client.shutdown([callback])
 

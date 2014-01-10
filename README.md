@@ -39,15 +39,15 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
   }
 );
 
-//Streaming query rows, it callbacks as soon as it
+//Streaming query rows
 client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
     console.log('temperature value', n, row.get('temperature'));
   },
-  function (err, rowsCount) {
+  function (err, rowLength) {
     if (err) console.log('Oh dear...');
-    console.log(rowsCount, 'rows where returned');
+    console.log('%d rows where returned', rowLength);
   }
 );
 
@@ -64,16 +64,16 @@ client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'],
 );
 
 //The whole result set as a stream
-client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key1'])
+client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
   .on('readable', function () {
     //readable is emitted as soon a row is received and parsed
     var row;
     while (row = this.read()) {
-      //a row object
+      console.log('time %s and value %s', row.get('time1'), row.get('time1'));
     }
   })
   .on('end', function () {
-    //stream end, there aren't any more rows
+    //stream ended, there aren't any more rows
   })
   .on('error', function (err) {
     //Something went wrong: err is a response error from Cassandra
@@ -142,7 +142,7 @@ Prepares (the first time), executes the prepared query and streams the rows as s
 
 It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
 
-It executes `endCallback(err, rowsCount)` when all rows have been received or there is an error retrieving the row.
+It executes `endCallback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
@@ -159,7 +159,7 @@ The `row` object is similar to the one provided on `eachRow`, except that it doe
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-It executes `endCallback(err, rowsCount)` when all rows have been received or there is an error retrieving the row.
+It executes `endCallback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
 
 #### client.stream(query, [params], [consistency], [callback])
 

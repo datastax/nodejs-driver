@@ -1,7 +1,6 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var Int64 = require('node-int64');
 var uuid = require('node-uuid');
 var async = require('async');
 var utils = require('../lib/utils.js');
@@ -49,7 +48,10 @@ describe('types', function () {
         testStringify(['one', 'two'], '[\'one\',\'two\']', dataTypes.list);
         testStringify(['one', 'two'], '{\'one\',\'two\'}', 'set');
         testStringify({key1:'value1', key2:'value2'}, '{\'key1\':\'value1\',\'key2\':\'value2\'}', 'map');
-        testStringify(new Int64('56789abcdef0123'), 'blobasbigint(0x056789abcdef0123)', dataTypes.bigint);
+        testStringify(
+          types.Long.fromBuffer(new Buffer([0x5, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23])),
+          'blobasbigint(0x056789abcdef0123)',
+          dataTypes.bigint);
         var date = new Date('Tue, 13 Aug 2013 09:10:32 GMT');
         testStringify(date, date.getTime().toString(), dataTypes.timestamp);
         var uuidValue = uuid.v4();
@@ -67,7 +69,7 @@ describe('types', function () {
         assert.strictEqual(guessDataType('a string'), dataTypes.text, 'Guess type for an string value failed');
         assert.strictEqual(guessDataType(new Buffer('bip bop')), dataTypes.blob, 'Guess type for a buffer value failed');
         assert.strictEqual(guessDataType(new Date()), dataTypes.timestamp, 'Guess type for a Date value failed');
-        assert.strictEqual(guessDataType(new Int64(10, 10)), dataTypes.bigint, 'Guess type for a Int64 value failed');
+        assert.strictEqual(guessDataType(new types.Long(10)), dataTypes.bigint, 'Guess type for a Int64 value failed');
         assert.strictEqual(guessDataType(uuid.v4()), dataTypes.uuid, 'Guess type for a UUID value failed');
       });
     });

@@ -97,7 +97,7 @@ describe('types', function () {
     })
   });
 
-  describe('ResultStream', function() {
+  describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
       var stream = new types.ResultStream();
@@ -179,6 +179,21 @@ describe('types', function () {
       });
     });
   });
+
+  describe ('Row', function () {
+    it('should get the value by column name or index', function () {
+      var columnList = [{name: 'first'}, {name: 'second'}];
+      var row = new types.Row(columnList);
+      row['first'] = 'value1';
+      row['second'] = 'value2';
+
+      assert.ok(row.get, 'It should contain a get method');
+      assert.strictEqual(row.get('first'), row['first']);
+      assert.strictEqual(row.get(0), row['first']);
+      assert.strictEqual(row.get('second'), row['second']);
+      assert.strictEqual(row.get(1), row['second']);
+    })
+  })
 });
 
 describe('utils', function () {

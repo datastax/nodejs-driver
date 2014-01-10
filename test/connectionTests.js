@@ -142,12 +142,15 @@ describe('Connection', function () {
       });
     });
     
-    it('should retrieve all the columns in the select statement', function (done) {
-      con.execute('select keyspace_name, strategy_class from system.schema_keyspaces;', [], function(err, result) {
+    it('should retrieve all the columns in the select statement in order', function (done) {
+      con.execute('select keyspace_name, strategy_class, strategy_options from system.schema_keyspaces;', [], function(err, result) {
         assert.ok(!err, err);
         assert.ok(result.rows.length > 0, 'No keyspaces');
-        assert.strictEqual(result.meta.columns.length, 2, 'There must be 2 columns');
-        assert.ok(result.rows[0].get('keyspace_name'), 'Get cell by column name failed');
+        assert.strictEqual(result.meta.columns.length, 3, 'There must be 2 columns');
+        var row = result.rows[0];
+        assert.ok(row.get('keyspace_name'), 'Get cell by column name failed');
+        assert.strictEqual(row.get(0), row['keyspace_name']);
+        assert.strictEqual(row.get(1), row['strategy_class']);
         done();
       });
     });

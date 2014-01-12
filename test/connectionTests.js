@@ -1,7 +1,6 @@
 ﻿var assert = require('assert');
 var util = require('util');
 var async = require('async');
-var Int64 = require('node-int64');
 var uuid = require('node-uuid');
 
 var Connection = require('../index.js').Connection;
@@ -64,6 +63,7 @@ describe('Connection', function () {
   
   describe('#open()', function () {
     it('should fail when the host does not exits', function (done) {
+      this.timeout(5000);
       var localCon = new Connection(utils.extend({}, config, {host: 'not-existent-host'}));
       localCon.open(function (err) {
         assert.ok(err, 'Must return a connection error');
@@ -184,12 +184,15 @@ describe('Connection', function () {
     });
     
     it('should store and retrieve the same bigint value', function (done) {
-      var big = new Int64('123456789abcdef0');
+      var big = new types.Long('0x0123456789abcdef0');
       con.execute('INSERT INTO sampletable1 (id, big_sample) VALUES(100, ?)', [big], function(err) {
         assert.ok(!err, err);
         con.execute('select id, big_sample from sampletable1 where id=100;', null, function (err, result) {
           assert.ok(!err, err);
-          assert.equal(big.toOctetString(), result.rows[0].get('big_sample').toOctetString(), 'Retrieved bigint does not match.');
+          assert.strictEqual(
+            types.Long.toBuffer(big).toString('hex'),
+            types.Long.toBuffer(result.rows[0].big_sample).toString('hex'),
+            'Retrieved bigint does not match.');
           done();
         });
       });
@@ -326,8 +329,8 @@ describe('Connection', function () {
         if (value instanceof Date) {
           return value.getTime();
         }
-        if (value instanceof Int64) {
-          return value.valueOf();
+        if (value instanceof types.Long) {
+          return Long.toBuffer(value).toString('hex');
         }
         return value;
       };
@@ -363,10 +366,10 @@ describe('Connection', function () {
         prepareInsertTest(320, 'inet_sample', new Buffer([192,168,0,50]), dataTypes.inet, toStringCompare),
         //ip 6
         prepareInsertTest(321, 'inet_sample', new Buffer([1,0,0,0,1,0,0,0,1,0,0,0,192,168,0,50]), dataTypes.inet, toStringCompare),
-        prepareInsertTest(330, 'big_sample', new Int64(1010, 10), dataTypes.bigint, toStringCompare),
+        prepareInsertTest(330, 'big_sample', new types.Long(1010, 10), dataTypes.bigint, toStringCompare),
         prepareInsertTest(331, 'big_sample', 10, dataTypes.bigint, toStringCompare),
         prepareInsertTest(332, 'timestamp_sample', 1372753805600, dataTypes.timestamp, toTimeCompare),
-        prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,01,01,550), dataTypes.timestamp, toTimeCompare),
+        prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,1,1,550), dataTypes.timestamp, toTimeCompare),
         prepareInsertTest(340, 'uuid_sample', uuid.v4(), dataTypes.uuid, toStringCompare),
         prepareInsertTest(341, 'uuid_sample', uuid.v1(), dataTypes.timeuuid, toStringCompare)
       ], function (err) {

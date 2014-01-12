@@ -1,6 +1,6 @@
 {
   "name": "node-cassandra-cql",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Node.js driver for Apache Cassandra",
   "author": "Jorge Bay <jorgebaygondra@gmail.com>",
   "contributors" :[
@@ -10,7 +10,8 @@
     "Adrian Pike",
     "Suguru Namura",
     "Jan Schmidle",
-    "Sam Grönblom"
+    "Sam Grönblom",
+    "Daniel Smedegaard Buus"
   ],
   "keywords": [
     "cassandra",
@@ -27,7 +28,7 @@
   ],
   "dependencies": {
     "async": ">= 0.2.5",
-    "node-int64": ">= 0.3.0",
+    "long": ">= 1.2.0",
     "node-uuid": "1.4.0"
   },
   "devDependencies": {

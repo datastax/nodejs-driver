@@ -77,7 +77,7 @@ describe('types', function () {
     describe('#encode() and #decode', function () {
       var typeEncoder = types.typeEncoder;
       it('should encode and decode maps', function () {
-        var value = {value1: 'Surprise', value2: 'Mothafucka'};
+        var value = {value1: 'Surprise', value2: 'Madafaka'};
         var encoded = typeEncoder.encode({hint: dataTypes.map, value: value});
         var decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
@@ -97,6 +97,32 @@ describe('types', function () {
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
     })
+  });
+
+  describe('Long', function () {
+    var Long = types.Long;
+    it('should convert from and to Buffer', function () {
+      [
+       //int64 decimal value    //hex value
+        ['-123456789012345678', 'fe4964b459cf0cb2'],
+        ['-800000000000000000', 'f4e5d43d13b00000'],
+        ['-888888888888888888', 'f3aa0843dcfc71c8'],
+        ['-555555555555555555', 'f84a452a6a1dc71d'],
+        ['-789456',             'fffffffffff3f430'],
+        ['-911111111111111144', 'f35b15458f4f8e18'],
+        ['-9007199254740993',   'ffdfffffffffffff'],
+        ['-1125899906842624',   'fffc000000000000'],
+        ['555555555555555555',  '07b5bad595e238e3'],
+        ['789456'            ,  '00000000000c0bd0'],
+        ['888888888888888888',  '0c55f7bc23038e38']
+      ].forEach(function (item) {
+        var buffer = new Buffer(item[1], 'hex');
+        var value = Long.fromBuffer(buffer);
+        assert.strictEqual(value.toString(), item[0]);
+        assert.strictEqual(Long.toBuffer(value).toString('hex'), buffer.toString('hex'),
+          'Hexadecimal values should match for ' + item[1]);
+      });
+    });
   });
 
   describe('ResultStream', function () {
@@ -182,7 +208,7 @@ describe('types', function () {
     });
   });
 
-  describe ('Row', function () {
+  describe('Row', function () {
     it('should get the value by column name or index', function () {
       var columnList = [{name: 'first'}, {name: 'second'}];
       var row = new types.Row(columnList);

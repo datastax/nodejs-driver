@@ -27,6 +27,21 @@ before(function (done) {
 });
 
 describe('types', function () {
+  describe('queryParser', function () {
+    it('should replace placeholders', function () {
+      var parse = types.queryParser.parse;
+      assert.strictEqual(parse("SELECT ?", ['123']), "SELECT 123");
+      assert.strictEqual(parse("A = 'SCIENCE?' AND KEY = ?", ['2']), "A = 'SCIENCE?' AND KEY = 2");
+      assert.strictEqual(parse("key0=? key1 = 'SCIENCE?' AND KEY=?", ['1', '2']), "key0=1 key1 = 'SCIENCE?' AND KEY=2");
+      assert.strictEqual(parse("keyA=? AND keyB=? AND keyC=?", ['1', '2', '3']), "keyA=1 AND keyB=2 AND keyC=3");
+      //replace in the middle
+      assert.strictEqual(parse("key=? AND key2='value'", null), "key=? AND key2='value'");
+      //Nothing to replace here
+      assert.strictEqual(parse("SELECT", []), "SELECT");
+      assert.strictEqual(parse("SELECT", null), "SELECT");
+    });
+  });
+
   describe('typeEncoder', function () {
     describe('#stringifyValue()', function () {
       it('should be valid for query', function () {

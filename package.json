@@ -43,6 +43,6 @@
   },
   "engines": {"node" : ">=0.10.0"},
   "scripts": {
-    "test": "mocha test -R spec"
+    "test": "mocha test -R spec -t 5000"
   }
 }

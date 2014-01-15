@@ -6,13 +6,10 @@ before_install:
   - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /usr/local/cassandra/conf/cassandra-env.sh"
   - sudo service cassandra start
 
-services:
-  - cassandra
-
 branches:
   only:
     - master
     - stable
 
 before_script:
-  - sleep 10
+  - sleep 5

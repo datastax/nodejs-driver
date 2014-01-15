@@ -20,7 +20,6 @@ var clientOptions = {
 
 describe('Client', function () {
   before(function (done) {
-    this.timeout(5000);
     setup(function () {
       client = new Client(clientOptions);
       createTable();
@@ -191,7 +190,6 @@ describe('Client', function () {
     });
     
     it('should callback when it was not possible to connect to any host', function (done) {
-      this.timeout(4000);
       var localClient = getANewClient({hosts: ['localhost:8080', 'localhost:8080']});
       var errors = [];
       async.series([
@@ -255,7 +253,6 @@ describe('Client', function () {
     });
     
     it('should stop retrying when the limit has been reached', function (done) {
-      this.timeout(5000);
       var localClient = getANewClient({maxExecuteRetries: 4, staleTime: 150});
       var counter = -1;
       localClient._isServerUnhealthy = function() {
@@ -312,6 +309,17 @@ describe('Client', function () {
         done();
       });
     });
+
+    it('should callback with error when the parameter can not be guessed', function (done) {
+      client.executeAsPrepared(
+        'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?',
+        //pass an object: should not be guessed
+        [{whatever: 1}],
+        function (err, result){
+          assert(err, 'It should callback with error');
+          done()
+      });
+    });
     
     it('should failover to other nodes and reconnect', function (done) {
       this.timeout(10000);
@@ -343,7 +351,6 @@ describe('Client', function () {
     });
     
     it('should failover to other nodes and reconnect, in parallel executes', function (done) {
-      this.timeout(4000);
       //the client must reconnect and continue
       var localClient = getANewClient();
       assert.ok(localClient.connections.length > 1, 'There should be more than 1 connection to test failover');

@@ -258,7 +258,7 @@ The `level` being passed to the listener can be `info` or `error`.
 
 ## Data types
 
-Cassandra's bigint data types are parsed as [int64](https://github.com/broofa/node-int64).
+Cassandra's bigint data types are parsed as [Long][1].
 
 List / Set datatypes are encoded from / decoded to Javascript Arrays.
 

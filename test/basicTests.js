@@ -71,6 +71,8 @@ describe('encoder', function () {
       assert.strictEqual(guessDataType(new Date()), dataTypes.timestamp, 'Guess type for a Date value failed');
       assert.strictEqual(guessDataType(new types.Long(10)), dataTypes.bigint, 'Guess type for a Int 64 value failed');
       assert.strictEqual(guessDataType(uuid.v4()), dataTypes.uuid, 'Guess type for a UUID value failed');
+      assert.strictEqual(guessDataType(types.uuid()), dataTypes.uuid, 'Guess type for a UUID value failed');
+      assert.strictEqual(guessDataType(types.timeuuid()), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
     });
   });
 

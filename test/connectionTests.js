@@ -1,7 +1,6 @@
 ﻿var assert = require('assert');
 var util = require('util');
 var async = require('async');
-var uuid = require('node-uuid');
 
 var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
@@ -47,6 +46,7 @@ describe('Connection', function () {
             "decimal_sample decimal," +
             "float_sample float," +
             "uuid_sample uuid," +
+            "timeuuid_sample timeuuid," +
             "boolean_sample boolean," +
             "double_sample double," +
             "list_sample list<int>," +
@@ -199,12 +199,25 @@ describe('Connection', function () {
     });
     
     it('should store and retrieve the same uuid value', function (done) {
-      var uuidValue = uuid.v4();
+      var uuidValue = types.uuid();
       con.execute('INSERT INTO sampletable1 (id, uuid_sample) VALUES(150, ?)', [uuidValue], function (err, result) {
         assert.ok(!err, err);
         con.execute('SELECT id, uuid_sample FROM sampletable1 WHERE ID=150', function (err, result) {
           assert.ok(!err, err);
-          assert.strictEqual(result.rows[0].get('uuid_sample'), uuidValue);
+          assert.strictEqual(result.rows[0].uuid_sample, uuidValue);
+          done();
+        });
+      });
+    });
+
+    it('should store and retrieve the same timeuuid value', function (done) {
+      var timeUuidValue = types.timeuuid();
+      con.execute('INSERT INTO sampletable1 (id, timeuuid_sample) VALUES(151, ?)', [timeUuidValue], function (err, result) {
+        assert.ok(!err, err);
+        con.execute('SELECT id, timeuuid_sample, dateOf(timeuuid_sample) as date1 FROM sampletable1 WHERE ID=151', function (err, result) {
+          assert.ok(!err, err);
+          assert.ok(result.rows[0].date1 instanceof Date, 'The dateOf function should yield an instance of date');
+          assert.strictEqual(result.rows[0].timeuuid_sample, timeUuidValue);
           done();
         });
       });
@@ -370,8 +383,8 @@ describe('Connection', function () {
         prepareInsertTest(331, 'big_sample', 10, dataTypes.bigint, toStringCompare),
         prepareInsertTest(332, 'timestamp_sample', 1372753805600, dataTypes.timestamp, toTimeCompare),
         prepareInsertTest(333, 'timestamp_sample', new Date(2013,5,20,19,1,1,550), dataTypes.timestamp, toTimeCompare),
-        prepareInsertTest(340, 'uuid_sample', uuid.v4(), dataTypes.uuid, toStringCompare),
-        prepareInsertTest(341, 'uuid_sample', uuid.v1(), dataTypes.timeuuid, toStringCompare)
+        prepareInsertTest(340, 'uuid_sample', types.uuid(), dataTypes.uuid, toStringCompare),
+        prepareInsertTest(341, 'uuid_sample', types.timeuuid(), dataTypes.timeuuid, toStringCompare)
       ], function (err) {
         assert.ok(!err, err);
         done();

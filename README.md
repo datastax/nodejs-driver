@@ -14,7 +14,7 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 - Connection pooling to multiple hosts
 - Load balancing and automatic failover
 - Plain Old Javascript: no need to generate thrift files
-- [Bigints](https://github.com/broofa/node-int64) and [uuid](https://github.com/broofa/node-uuid) support
+- [Long][1] and [uuid][0] support
 - Row and field streaming
 
 ## Using it
@@ -26,7 +26,7 @@ var client = new cql.Client({hosts: ['host1:9042', 'host2:9042'], keyspace: 'key
 client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
   function(err, result) {
     if (err) console.log('execute failed');
-    else console.log('got user profile with email ' + result.rows[0].get('email'));
+    else console.log('got user profile with email ' + result.rows[0].email);
   }
 );
 
@@ -43,7 +43,7 @@ client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5
 client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
-    console.log('temperature value', n, row.get('temperature'));
+    console.log('temperature value', n, row.temperature);
   },
   function (err, rowLength) {
     if (err) console.log('Oh dear...');
@@ -69,7 +69,7 @@ client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
     //readable is emitted as soon a row is received and parsed
     var row;
     while (row = this.read()) {
-      console.log('time %s and value %s', row.get('time1'), row.get('time1'));
+      console.log('time %s and value %s', row.time1, row.value1);
     }
   })
   .on('end', function () {
@@ -214,6 +214,38 @@ Prepares a CQL query.
 
 Executes a previously prepared query (determined by the queryId).
 
+----
+
+### types
+
+The `types` module contains field definitions that are useful to interact with Cassandra nodes.
+
+#### consistencies
+
+Object that contains the CQL consistencies defined as properties. For example: `consistencies.one`, `consistencies.quorum`, ...
+
+#### dataTypes
+
+Object that contains all the [CQL data types](http://cassandra.apache.org/doc/cql3/CQL.html#types) defined as properties.
+
+#### responseErrorCodes
+
+Object containing all the possible response error codes returned by Cassandra defined as properties.
+
+#### Long()
+
+Constructs a 64-bit two's-complement integer. See [Long API Documentation](http://docs.closure-library.googlecode.com/git/class_goog_math_Long.html).
+
+#### timeuuid()
+
+Function to generate a uuid __v1__. It uses [node-uuid][0] module to generate and accepts the same arguments.
+
+#### uuid()
+
+Function to generate a uuid __v4__. It uses [node-uuid][0] module to generate and accepts the same arguments.
+
+----
+
 ## Logging
 
 Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
@@ -239,10 +271,21 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 ## FAQ
 
 #### How can specify the target data type of a query parameter?
-The driver tries to guess the target data type, if you want to set the target data type use a param object with the **hint** and **value** properties. For example: 
+The driver tries to guess the target data type, if you want to set the target data type use a param object with
+the **hint** and **value** properties.
+
+All the cassandra data types are defined in the object `types.dataTypes`.
+
+For example:
 
 ```javascript
-client.executeAsPrepared('SELECT * from users where key=?', [{value: key, hint: 'int'}], callback);
+//hint as string
+var keyParam = {value: key, hint: 'int'};
+client.executeAsPrepared('SELECT * from users where k=?', [keyParam], callback);
+
+//hint using dataTypes
+var keyParam = {value: key, hint: types.dataTypes.int};
+client.executeAsPrepared('SELECT * from users where k=?', [keyParam], callback);
 ```
 
 #### Should I shutdown the pool after executing a query?
@@ -261,3 +304,6 @@ Check the [Issue tracker](https://github.com/jorgebay/node-cassandra-cql/issues)
 ## Acknowledgements
 
 FrameReader and FrameWriter are based on [node-cql3](https://github.com/isaacbwagner/node-cql3)'s FrameBuilder and FrameParser.
+
+[0]: https://github.com/broofa/node-uuid
+[1]: https://github.com/dcodeIO/Long.js

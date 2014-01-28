@@ -14,7 +14,9 @@ before(function (done) {
   this.timeout(5000);
   var con = new Connection(utils.extend({}, config));
   async.series([
-    con.open.bind(con), 
+    function (next) {
+      con.open(next);
+    },
     function (next) {
       con.execute('select cql_version, native_protocol_version, release_version from system.local', function (err, result) {
         if (!err && result && result.rows) {

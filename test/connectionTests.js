@@ -312,6 +312,30 @@ describe('Connection', function () {
   });
   
   describe('#executePrepared()', function () {
+    it('should execute a prepared query without parameters', function (done) {
+      con.prepare('select id, big_sample from sampletable1 where id = 200', function (err, result) {
+        assert.ok(!err, err);
+        con.executePrepared(result.id, function (err, result) {
+          assert.ok(!err, err);
+          assert.ok(result, 'it should return a result');
+          assert.ok(result.rows, 'it should return a row Array');
+          done();
+        });
+      })
+    });
+
+    it('should execute a prepared query with one parameter', function (done) {
+      con.prepare('select id, big_sample from sampletable1 where id = ?', function (err, result) {
+        assert.ok(!err, err);
+        con.executePrepared(result.id, [200], types.consistencies.one, function (err, result) {
+          assert.ok(!err, err);
+          assert.ok(result, 'it should return a result');
+          assert.ok(result.rows, 'it should return a row Array');
+          done();
+        });
+      })
+    });
+
     it('should serialize all types correctly', function (done) {
       function prepareInsertTest(idValue, columnName, columnValue, hint, compareFunc) {
         if (!compareFunc) {

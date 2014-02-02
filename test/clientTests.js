@@ -7,7 +7,7 @@ var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
 var helper = require('./testHelper.js');
-var keyspace = new types.QueryLiteral('unittestkp1_2');
+var keyspace = 'unittestkp1_2';
 types.consistencies.getDefault = function () { return this.one; };
 
 var client = null;
@@ -31,7 +31,8 @@ describe('Client', function () {
       con.open(function (err) {
         if (err) throw err;
         else {
-          con.execute("DROP KEYSPACE ?;", [keyspace], function () {
+          var query = util.format("DROP KEYSPACE %s;", keyspace)
+          con.execute(query, function () {
             createKeyspace(con, callback);
           });
         }
@@ -39,7 +40,8 @@ describe('Client', function () {
     }
     
     function createKeyspace(con, callback) {
-      con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], function (err) {
+      var query = util.format("CREATE KEYSPACE %s WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", keyspace);
+      con.execute(query, function (err) {
         if (err) throw err;
         con.close(function () {
           callback();
@@ -222,7 +224,7 @@ describe('Client', function () {
   
   describe('#executeAsPrepared()', function () {
     it('should prepare and execute a query', function (done) {
-      client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()],
+      client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
         types.consistencies.one, 
         function (err, result) {
           assert.ok(!err, err);
@@ -243,7 +245,7 @@ describe('Client', function () {
         return false;
       };
       
-      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
         types.consistencies.one, 
         function (err, result) {
           assert.ok(!err, err);
@@ -261,7 +263,7 @@ describe('Client', function () {
         return true;
       };
       
-      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], 
+      localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
         types.consistencies.one, 
         function (err, result) {
           assert.ok(!result, 'It must stop retrying and callback without a result');
@@ -278,7 +280,7 @@ describe('Client', function () {
         },
         function (callback) {
           //no consistency specified
-          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace.toString()], callback);
+          client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace], callback);
         },
         function (callback) {
           //change the meaning of the second parameter to consistency

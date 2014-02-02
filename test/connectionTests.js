@@ -7,7 +7,7 @@ var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
 var helper = require('./testHelper.js');
-var keyspace = new types.QueryLiteral('unittestkp1_1');
+var keyspace = 'unittestkp1_1';
 var config = require('./config.js');
 
 types.consistencies.getDefault = function () {return this.one};
@@ -22,7 +22,8 @@ describe('Connection', function () {
         con.open(callback);
       },
       function dropKeyspace(callback) {
-        con.execute("DROP KEYSPACE ?;", [keyspace], function (err) {
+        var query = util.format("DROP KEYSPACE %s;", keyspace);
+        con.execute(query, [], function (err) {
           if (err && err.name === 'ResponseError') {
             //don't mind if there is an response error
             err = null;
@@ -31,10 +32,13 @@ describe('Connection', function () {
         });
       },
       function createKeyspace(callback) {
-        con.execute("CREATE KEYSPACE ? WITH replication = {'class': 'SimpleStrategy','replication_factor': '3'};", [keyspace], callback);
+        var query = util.format("CREATE KEYSPACE %s WITH replication = " +
+          "{'class': 'SimpleStrategy','replication_factor': '3'};", keyspace);
+        con.execute(query, callback);
       },
       function useKeyspace(callback) {
-        con.execute("USE ?;", [keyspace], callback);
+        var query = util.format("USE %s;", keyspace);
+        con.execute(query, callback);
       },
       function createTestTable(callback) {
         con.execute(
@@ -224,21 +228,19 @@ describe('Connection', function () {
     });
     
     it('should insert the same value as param or as query literal', function (done) {
+      var queryFields = "INSERT INTO sampletable1 (id, big_sample, blob_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)";
       var insertQueries = [
-        ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
-        " values (200, 1, 0x48656c6c6f, 1, [1, 2, 3], [1.1, 1, 1.02], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, 'abc');"],
-        ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
-        " values (201, ?, ?, ?, ?, ?, ?, ?, ?);", [1, new Buffer('Hello', 'utf-8'), 1, 
-        [1, 2, 3], {hint: 'list<float>', value: [1.1, 1, 1.02]}, {hint: 'set<int>', value: [1, 2, 3]}, {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, 'abc']],
-        ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
-        " values (202, NULL, NULL, NULL, NULL, NULL, NULL, NULL, null);"],
-        ["INSERT INTO sampletable1 (id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample)" + 
-        " values (203, ?, ?, ?, ?, ?, ?, ?, ?);", [null, null, null, null, null, null, null, null]]
+        [queryFields + " values (200, 1, 0x48656c6c6f, [1, 2, 3], [1.1, 1, 1.02], {1, 2, 3}, {'a': 'value a', 'b': 'value b'}, 'abc');"],
+        [queryFields + " values (201, ?, ?, ?, ?, ?, ?, ?);",
+          [types.Long.fromNumber(1), new Buffer('Hello', 'utf-8'), [1, 2, 3],
+            {hint: 'list<float>', value: [1.1, 1, 1.02]}, {hint: 'set<int>', value: [1, 2, 3]},
+            {hint: 'map', value: {'a': 'value a', 'b': 'value b'}}, 'abc']
+        ],
+        [queryFields + " values (202, NULL, NULL, NULL, NULL, NULL, NULL, null);"],
+        [queryFields + " values (203, ?, ?, ?, ?, ?, ?, ?);", [null, null, null, null, null, null, null]]
       ];
-      async.each(insertQueries, function(query, callback) {
-        con.execute(query[0], query[1], function(err, result) {
-        callback(err);
-        });
+      async.eachSeries(insertQueries, function(query, next) {
+        con.execute(query[0], query[1], next);
       }, function (err) {
         assert.ok(!err, err);
         con.execute("select id, big_sample, blob_sample, decimal_sample, list_sample, list_float_sample, set_sample, map_sample, text_sample from sampletable1 where id IN (200, 201, 202, 203);", null, function(err, result) {
@@ -276,7 +278,8 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ok(!err, err);
         async.times(totalQueries, function (n, callback) {
-          localCon.execute('SELECT * FROM ?.sampletable1 WHERE ID IN (?, ?, ?);', [keyspace, 1, 100, 200], callback);
+          var query = util.format('SELECT * FROM %s.sampletable1 WHERE ID IN (?, ?, ?);', keyspace);
+          localCon.execute(query, [1, 100, 200], callback);
         }, done);
       });
     });

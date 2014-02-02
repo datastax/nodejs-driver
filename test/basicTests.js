@@ -20,6 +20,7 @@ before(function (done) {
     function (next) {
       con.execute('select cql_version, native_protocol_version, release_version from system.local', function (err, result) {
         if (!err && result && result.rows) {
+          console.log();
           console.log('Cassandra version', result.rows[0].get('release_version'));
           console.log('Cassandra higher protocol version', result.rows[0].get('native_protocol_version'), '\n');
         }
@@ -30,37 +31,6 @@ before(function (done) {
 });
 
 describe('encoder', function () {
-  describe('#stringifyValue()', function () {
-    it('should be valid for query', function () {
-      function testStringify(value, expected, dataType) {
-        var stringValue = encoder.stringifyValue({value: value, hint: dataType});
-        if (typeof stringValue === 'string') {
-          stringValue = stringValue.toLowerCase();
-        }
-        assert.strictEqual(stringValue, expected);
-      }
-      testStringify(1, '1', dataTypes.int);
-      testStringify(1.1, '1.1', dataTypes.double);
-      testStringify("text", "'text'", dataTypes.text);
-      testStringify("It's a quote", "'it''s a quote'", 'text');
-      testStringify("some 'quoted text'", "'some ''quoted text'''", dataTypes.text);
-      testStringify(null, 'null', dataTypes.text);
-      testStringify([1,2,3], '[1,2,3]', dataTypes.list);
-      testStringify([], '[]', dataTypes.list);
-      testStringify(['one', 'two'], '[\'one\',\'two\']', dataTypes.list);
-      testStringify(['one', 'two'], '{\'one\',\'two\'}', 'set');
-      testStringify({key1:'value1', key2:'value2'}, '{\'key1\':\'value1\',\'key2\':\'value2\'}', 'map');
-      testStringify(
-        types.Long.fromBuffer(new Buffer([0x5, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23])),
-        'blobasbigint(0x056789abcdef0123)',
-        dataTypes.bigint);
-      var date = new Date('Tue, 13 Aug 2013 09:10:32 GMT');
-      testStringify(date, date.getTime().toString(), dataTypes.timestamp);
-      var uuidValue = uuid.v4();
-      testStringify(uuidValue, uuidValue.toString(), dataTypes.uuid);
-    });
-  });
-
   describe('#guessDataType()', function () {
     it('should guess the native types', function () {
       var guessDataType = encoder.guessDataType;
@@ -211,9 +181,9 @@ describe('types', function () {
     it('should be readable on objectMode', function (done) {
       var buf = [];
       var stream = new types.ResultStream({objectMode: true});
-      //Using QueryLiteral class but any would do it
-      stream.add(new types.QueryLiteral('One'));
-      stream.add(new types.QueryLiteral('Two'));
+      //passing objects
+      stream.add({toString: function (){return 'One'}});
+      stream.add({toString: function (){return 'Two'}});
       stream.add(null);
       stream.on('end', function streamEnd() {
         assert.equal(buf.join(' '), 'One Two');

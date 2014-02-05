@@ -557,7 +557,7 @@ describe('Connection', function () {
   });
 
   describe('#executeBatch()', function () {
-    it('execute a queries without params as an array of strings', function (done) {
+    it('should execute queries without params as an array of strings', function (done) {
       var queries = [
         "INSERT INTO sampletable1 (id, big_sample, float_sample, text_sample) VALUES " +
           "(451, 1, 1, 'one')",
@@ -573,6 +573,37 @@ describe('Connection', function () {
           assert.strictEqual(result.rows[0].big_sample.toString(), '2');
           done();
         })
+      });
+    });
+
+    it('should execute queries with bound params', function (done) {
+      var queries = [
+        {
+          query: "INSERT INTO sampletable1 (id, big_sample, float_sample, text_sample) VALUES (?, ?, ?, ?)",
+          params: [453, types.Long.fromNumber(3), {value: 3.3, hint: types.dataTypes.float}, 'three']
+        },
+        {
+          query: "INSERT INTO sampletable1 (id) VALUES (454)"
+          //no params
+        }
+      ];
+      con.executeBatch(queries, null, types.consistencies.one, function (err) {
+        assert.ok(!err, err);
+        con.execute('SELECT * FROM sampletable1 WHERE ID=453', function (err, result) {
+          assert.ok(!err, err);
+          assert.strictEqual(result.rows[0].text_sample, 'three');
+          assert.strictEqual(result.rows[0].float_sample.toFixed(1), '3.3');
+          assert.strictEqual(result.rows[0].big_sample.toString(), '3');
+          done();
+        })
+      });
+    });
+
+    it('should fail when no queries provided', function (done) {
+      con.executeBatch(null, null, types.consistencies.one, function (err) {
+        assert.ok(err, 'it should callback with err');
+        assert.ok(!err.isServerUnhealthy, 'It should not contain the unhealthy flag');
+        done();
       });
     });
   });

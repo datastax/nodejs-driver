@@ -560,6 +560,18 @@ describe('Client', function () {
       });
     });
 
+    it('bad query should emit a ResponseError', function (done) {
+      var counter = 0;
+      var stream = client.stream('SELECT SHOULD FAIL', function (err) {
+        assert.ok(err, 'It should callback with error');
+        if (++counter === 2) done();
+      });
+      stream.on('error', function (err) {
+        assert.strictEqual(err.name, 'ResponseError');
+        if (++counter === 2) done();
+      });
+    });
+
     it('should be optional to provide a callback', function (done) {
       var rows = [];
       client.stream(selectInQuery, [200, 201, 202, -1])

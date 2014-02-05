@@ -258,6 +258,9 @@ Client.prototype.executeAsPrepared = function () {
       //its syntax or other normal error
       utils.fixStack(stackContainer.stack, err);
       err.query = args.query;
+      if (args.options && args.options.resultStream) {
+        args.options.resultStream.emit('error', err);
+      }
       args.callback(err);
     }
     else {

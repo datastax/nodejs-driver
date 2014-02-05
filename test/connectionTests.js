@@ -556,6 +556,27 @@ describe('Connection', function () {
     });
   });
 
+  describe('#executeBatch()', function () {
+    it('execute a queries without params as an array of strings', function (done) {
+      var queries = [
+        "INSERT INTO sampletable1 (id, big_sample, float_sample, text_sample) VALUES " +
+          "(451, 1, 1, 'one')",
+        "INSERT INTO sampletable1 (id, big_sample, float_sample, text_sample) VALUES " +
+          "(452, 2, 2, 'two')"
+      ];
+      con.executeBatch(queries, null, types.consistencies.one, function (err) {
+        assert.ok(!err, err);
+        con.execute('SELECT * FROM sampletable1 WHERE ID=452', function (err, result) {
+          assert.ok(!err, err);
+          assert.strictEqual(result.rows[0].text_sample, 'two');
+          assert.strictEqual(result.rows[0].float_sample, 2);
+          assert.strictEqual(result.rows[0].big_sample.toString(), '2');
+          done();
+        })
+      });
+    });
+  });
+
   describe('#stream()', function () {
     var queryId;
     before(function (done) {

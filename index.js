@@ -175,7 +175,7 @@ Client.prototype._getAConnection = function (callback) {
 };
 
 /**
- * Executes a query in an available connection.
+ * Executes a query on an available connection.
  * @param {String} query The query to execute
  * @param {Array} [param] Array of params to replace
  * @param {Number} [consistency] Consistency level
@@ -362,6 +362,44 @@ Client.prototype.stream = function () {
 };
 
 Client.prototype.streamRows = Client.prototype.eachRow;
+
+/**
+ * Executes batch of queries on an available connection.
+ * If the Cassandra node does down before responding, it retries the batch.
+ * @param {Array} queries The query to execute
+ * @param {Number} [consistency] Consistency level
+ * @param [options]
+ * @param {function} callback Executes callback(err, result) when the batch was executed
+ */
+Client.prototype.executeBatch = function (queries, consistency, options, callback) {
+  var executeError;
+  var self = this;
+  var retryCount = 0;
+  async.doWhilst(
+    function iterator(next) {
+      self._getAConnection(function(err, c) {
+        executeError = err;
+        if (err) {
+          //exit the loop
+          return next(err);
+        }
+        self.emit('log', 'info', util.format('connection #%d acquired, executing batch', c.indexInPool));
+        c.executeBatch(queries, consistency, options, function (err) {
+          executeError = err;
+          next();
+        });
+      });
+    },
+    function condition() {
+      retryCount++;
+      //retry in case the node went down
+      return self._isServerUnhealthy(executeError) && retryCount < self.options.maxExecuteRetries;
+    },
+    function loopFinished() {
+      callback(executeError);
+    }
+  );
+};
 
 /**
  * Executes a prepared query on a given connection

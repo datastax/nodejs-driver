@@ -402,6 +402,30 @@ describe('Client', function () {
     });
   });
 
+  describe('#executeBatch()', function () {
+    it('should execute multiple DML queries', function (done) {
+      var queries = [
+        {query: queryBlobInsert, params: [50, new Buffer('Walter')]},
+        {query: queryBlobInsert, params: [51, new Buffer('White')]}
+      ];
+      client.executeBatch(queries, types.consistencies.one, null, function (err) {
+        assert.ok(!err, err);
+        client.execute(queryBlobSelect, [51], function (err, result) {
+          assert.ok(!err, err);
+          assert.strictEqual(result.rows[0].blob_sample.toString(), 'White');
+          done();
+        });
+      });
+    });
+
+    it('should fail on CQL syntax error', function (done) {
+      var queries = [{query: 'SELECT TO FAIL MISERABLY', params: [1]}];
+      client.executeBatch(queries, types.consistencies.one, null, function (err) {
+        assert.ok(err, 'It should fail when there is a CQL syntax error');
+        done();
+      });
+    });
+  });
 
   describe('#streamField()', function () {
     it('should yield a readable stream', function (done) {
@@ -409,10 +433,10 @@ describe('Client', function () {
       var blob = new Buffer('Freaks and geeks 1999');
       async.series([
         function (next) {
-          client.execute(queryStreamInsert, [id, blob], next);
+          client.execute(queryBlobInsert, [id, blob], next);
         },
         function (next) {
-          client.streamField(queryStreamSelect, [id], function (n, row, blobStream) {
+          client.streamField(queryBlobSelect, [id], function (n, row, blobStream) {
             assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
             assert.strictEqual(n, 0);
             assertStreamReadable(blobStream, blob, next);
@@ -436,10 +460,10 @@ describe('Client', function () {
 
       async.series([
         function (next) {
-          client.execute(queryStreamInsert, [id, blob], next);
+          client.execute(queryBlobInsert, [id, blob], next);
         },
         function (next) {
-          client.streamField(queryStreamSelect, [id], function (n, row, blobStream) {
+          client.streamField(queryBlobSelect, [id], function (n, row, blobStream) {
             assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
             assert.equal(blobStream, null, 'The file stream must be NULL');
             next();
@@ -456,10 +480,10 @@ describe('Client', function () {
 
       async.series([
         function (next) {
-          client.execute(queryStreamInsert, [id, blob], next);
+          client.execute(queryBlobInsert, [id, blob], next);
         },
         function (next) {
-          client.eachRow(queryStreamSelect, [id], function (n, row) {
+          client.eachRow(queryBlobSelect, [id], function (n, row) {
             assert.ok(row && row.get('id') && row.get('blob_sample') && row.get('blob_sample').toString() === blob.toString());
           }, function (err, totalRows) {
             assert.strictEqual(totalRows, 1);
@@ -474,7 +498,7 @@ describe('Client', function () {
       var blob = new Buffer('Jack Bauer');
       var counter = 0;
       async.timesSeries(4, function (n, next) {
-        client.execute(queryStreamInsert, [id+n, blob], next);
+        client.execute(queryBlobInsert, [id+n, blob], next);
       }, function (err) {
         if (err) return done(err);
         client.eachRow('SELECT id, blob_sample FROM sampletable2 WHERE id IN (?, ?, ?, ?);', [id, id+1, id+2, id+3], function (n, row) {
@@ -621,5 +645,5 @@ function assertStreamReadable(stream, originalBlob, callback) {
   });
 }
 
-var queryStreamInsert = 'INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)';
-var queryStreamSelect = 'SELECT id, blob_sample FROM sampletable2 WHERE id = ?';
+var queryBlobInsert = 'INSERT INTO sampletable2 (id, blob_sample) VALUES (?, ?)';
+var queryBlobSelect = 'SELECT id, blob_sample FROM sampletable2 WHERE id = ?';

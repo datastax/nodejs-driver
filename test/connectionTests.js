@@ -564,7 +564,7 @@ describe('Connection', function () {
         "INSERT INTO sampletable1 (id, big_sample, float_sample, text_sample) VALUES " +
           "(452, 2, 2, 'two')"
       ];
-      con.executeBatch(queries, null, types.consistencies.one, function (err) {
+      con.executeBatch(queries, types.consistencies.one, null, function (err) {
         assert.ok(!err, err);
         con.execute('SELECT * FROM sampletable1 WHERE ID=452', function (err, result) {
           assert.ok(!err, err);
@@ -587,7 +587,7 @@ describe('Connection', function () {
           //no params
         }
       ];
-      con.executeBatch(queries, null, types.consistencies.one, function (err) {
+      con.executeBatch(queries, types.consistencies.one, null, function (err) {
         assert.ok(!err, err);
         con.execute('SELECT * FROM sampletable1 WHERE ID=453', function (err, result) {
           assert.ok(!err, err);
@@ -600,7 +600,7 @@ describe('Connection', function () {
     });
 
     it('should fail when no queries provided', function (done) {
-      con.executeBatch(null, null, types.consistencies.one, function (err) {
+      con.executeBatch(null, types.consistencies.one, null, function (err) {
         assert.ok(err, 'it should callback with err');
         assert.ok(!err.isServerUnhealthy, 'It should not contain the unhealthy flag');
         done();

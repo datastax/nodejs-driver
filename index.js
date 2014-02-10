@@ -372,6 +372,7 @@ Client.prototype.streamRows = Client.prototype.eachRow;
  * @param {function} callback Executes callback(err, result) when the batch was executed
  */
 Client.prototype.executeBatch = function (queries, consistency, options, callback) {
+  var args = this._parseBatchArgs.apply(null, arguments);
   //Get stack trace before sending request
   var stackContainer = {};
   Error.captureStackTrace(stackContainer);
@@ -387,7 +388,7 @@ Client.prototype.executeBatch = function (queries, consistency, options, callbac
           return next(err);
         }
         self.emit('log', 'info', util.format('connection #%d acquired, executing batch', c.indexInPool));
-        c.executeBatch(queries, consistency, options, function (err) {
+        c.executeBatch(args.queries, args.consistency, args.options, function (err) {
           if (self._isServerUnhealthy(err)) {
             self._setUnhealthy(c);
           }
@@ -405,9 +406,34 @@ Client.prototype.executeBatch = function (queries, consistency, options, callbac
       if (executeError) {
         utils.fixStack(stackContainer.stack, executeError);
       }
-      callback(executeError);
+      args.callback(executeError, retryCount);
     }
   );
+};
+
+/**
+ * Parses and validates the arguments received by executeBatch
+ */
+Client.prototype._parseBatchArgs = function (queries, consistency, options, callback) {
+  var args = Array.prototype.slice.call(arguments);
+  if (args.length < 2 || typeof args[args.length-1] !== 'function') {
+    throw new Error('It should contain at least 2 arguments, with the callback as the last argument.');
+  }
+  if (!util.isArray(queries)) {
+    throw new Error('The first argument must be an Array of queries.');
+  }
+  if (args.length < 4) {
+    callback = args[args.length-1];
+    options = null;
+    if (args.length < 3) {
+      consistency = null;
+    }
+  }
+  args.queries = queries;
+  args.consistency = consistency;
+  args.options = options;
+  args.callback = callback;
+  return args;
 };
 
 /**

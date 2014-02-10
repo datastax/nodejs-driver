@@ -425,6 +425,54 @@ describe('Client', function () {
         done();
       });
     });
+
+    it('should throw error if arguments are not valid', function (done) {
+      assert.throws(function () {
+          client.executeBatch();
+        },
+        null,
+        'It should throw an Error when executeBatch is called with less than 2 arguments'
+      );
+      assert.throws(function () {
+          client.executeBatch(['SELECT'], types.consistencies.one, {});
+        },
+        null,
+        'It should throw an Error when the callback is not specified'
+      );
+      assert.throws(function () {
+          client.executeBatch({}, types.consistencies.one, {}, function () {});
+        },
+        null,
+        'It should throw an Error when queries argument is not an Array'
+      );
+
+      //it should not throw an error with the following arguments
+      async.series([
+        function (next) {
+          client.executeBatch([{query: queryBlobInsert, params: [60, null]}], next);
+        },
+        function (next) {
+          client.executeBatch([{query: queryBlobInsert, params: [60, null]}], types.consistencies.one, next);
+        }
+      ], done);
+    });
+
+    it('should retry in case the node is down', function (done) {
+      var localClient = getANewClient();
+      //Only 1 retry
+      localClient.options.maxExecuteRetries = 1;
+      localClient.options.getAConnectionTimeout = 300;
+      //Change the behaviour so every err is a "server error"
+      localClient._isServerUnhealthy = function (err) {
+        return true;
+      };
+
+      localClient.executeBatch(['WILL FAIL AND EXECUTE THE METHOD FROM ABOVE'], types.consistencies.one, null, function (err, retryCount) {
+        assert.ok(err, 'The execution must fail');
+        assert.equal(retryCount, localClient.options.maxExecuteRetries, 'It must retry executing the times specified ' + retryCount);
+        localClient.shutdown(done);
+      });
+    });
   });
 
   describe('#streamField()', function () {

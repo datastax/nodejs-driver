@@ -138,7 +138,7 @@ Client.prototype._getAConnection = function (callback) {
       if (self.connectionIndex > self.connections.length-1) {
         self.connectionIndex = 0;
       }
-      var c = self.connections[self.connectionIndex];      
+      var c = self.connections[self.connectionIndex];
       if (self._isHealthy(c)) {
         callback(null, c);
       }
@@ -152,9 +152,9 @@ Client.prototype._getAConnection = function (callback) {
           if (err) {
             //This connection is still not good, go for the next one
             self._setUnhealthy(c);
-            setImmediate(function () {
+            setTimeout(function () {
               checkNextConnection(callback);
-            });
+            }, 10);
           }
           else {
             //this connection is now good
@@ -165,9 +165,9 @@ Client.prototype._getAConnection = function (callback) {
       }
       else {
         //this connection is not good, try the next one
-        setImmediate(function () {
+        setTimeout(function () {
           checkNextConnection(callback);
-        });
+        }, 10);
       }
     }
     checkNextConnection(callback);
@@ -184,45 +184,45 @@ Client.prototype._getAConnection = function (callback) {
  */
 Client.prototype.execute = function () {
   var args = utils.parseCommonArgs.apply(null, arguments);
-  var self = this;
-  //Get stack trace before sending query so the user knows where errored
-  //queries come from
+  //Get stack trace before sending request
   var stackContainer = {};
   Error.captureStackTrace(stackContainer);
-
-  function tryAndRetry(retryCount) {
-    retryCount = retryCount || 0;
-    self._getAConnection(function(err, c) {
-      if (err) {
-        args.callback(err);
-        return;
-      }
-      self.emit('log', 'info', 'connection #' + c.indexInPool + ' acquired, executing: ' + args.query);
-      c.execute(args.query, args.params, args.consistency, function(err, result) {
-        //Determine if its a fatal error
-        if (self._isServerUnhealthy(err)) {
-          //if its a fatal error, the server died
-          self._setUnhealthy(c);
-          if (retryCount === self.options.maxExecuteRetries) {
-            args.callback(err, result, retryCount);
-            return;
-          }
-          //retry: it will get another connection
-          self.emit('log', 'error', 'There was an error executing a query, retrying execute (will get another connection)', err);
-          tryAndRetry(retryCount+1);
+  var executeError;
+  var retryCount = 0;
+  var self = this;
+  var executionResult;
+  async.doWhilst(
+    function iterator(next) {
+      self._getAConnection(function(err, c) {
+        executeError = err;
+        if (err) {
+          //exit the loop
+          return next(err);
         }
-        else {
-          if (err) {
-            utils.fixStack(stackContainer.stack, err);
-            err.query = args.query;
+        self.emit('log', 'info', util.format('connection #%d acquired, executing query: %s', c.indexInPool, args.query));
+        c.execute(args.query, args.params, args.consistency, function(err, result) {
+          if (self._isServerUnhealthy(err)) {
+            self._setUnhealthy(c);
           }
-          //If the result is OK or there is error (syntax error or an unauthorized for example), callback
-          args.callback(err, result);
-        }
+          executeError = err;
+          executionResult = result;
+          next();
+        });
       });
-    });
-  }
-  tryAndRetry(0);
+    },
+    function condition() {
+      retryCount++;
+      //retry in case the node went down
+      return self._isServerUnhealthy(executeError) && retryCount < self.options.maxExecuteRetries;
+    },
+    function loopFinished() {
+      if (executeError) {
+        utils.fixStack(stackContainer.stack, executeError);
+        executeError.query = args.query;
+      }
+      args.callback(executeError, executionResult, retryCount);
+    }
+  );
 };
 
 /**
@@ -372,9 +372,12 @@ Client.prototype.streamRows = Client.prototype.eachRow;
  * @param {function} callback Executes callback(err, result) when the batch was executed
  */
 Client.prototype.executeBatch = function (queries, consistency, options, callback) {
+  //Get stack trace before sending request
+  var stackContainer = {};
+  Error.captureStackTrace(stackContainer);
   var executeError;
-  var self = this;
   var retryCount = 0;
+  var self = this;
   async.doWhilst(
     function iterator(next) {
       self._getAConnection(function(err, c) {
@@ -385,6 +388,9 @@ Client.prototype.executeBatch = function (queries, consistency, options, callbac
         }
         self.emit('log', 'info', util.format('connection #%d acquired, executing batch', c.indexInPool));
         c.executeBatch(queries, consistency, options, function (err) {
+          if (self._isServerUnhealthy(err)) {
+            self._setUnhealthy(c);
+          }
           executeError = err;
           next();
         });
@@ -396,6 +402,9 @@ Client.prototype.executeBatch = function (queries, consistency, options, callbac
       return self._isServerUnhealthy(executeError) && retryCount < self.options.maxExecuteRetries;
     },
     function loopFinished() {
+      if (executeError) {
+        utils.fixStack(stackContainer.stack, executeError);
+      }
       callback(executeError);
     }
   );

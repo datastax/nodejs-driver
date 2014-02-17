@@ -270,6 +270,9 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 
 ## FAQ
 
+#### Which CQL version does this driver support?
+It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).
+
 #### How can specify the target data type of a query parameter?
 The driver tries to guess the target data type, if you want to set the target data type use a param object with
 the **hint** and **value** properties.

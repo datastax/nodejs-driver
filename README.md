@@ -21,63 +21,13 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 ```javascript
 //Creating a new connection pool to multiple hosts.
 var cql = require('node-cassandra-cql');
-var client = new cql.Client({hosts: ['host1:9042', 'host2:9042'], keyspace: 'keyspace1'});
-//Reading
+var client = new cql.Client({hosts: ['host1', 'host2'], keyspace: 'keyspace1'});
 client.execute('SELECT key, email, last_name FROM user_profiles WHERE key=?', ['jbay'],
   function(err, result) {
     if (err) console.log('execute failed');
     else console.log('got user profile with email ' + result.rows[0].email);
   }
 );
-
-//Writing
-client.execute('UPDATE user_profiles SET birth=? WHERE key=?', [new Date(1950, 5, 1), 'jbay'],
-  cql.types.consistencies.quorum,
-  function(err) {
-    if (err) console.log('failure');
-    else console.log('success');
-  }
-);
-
-//Streaming query rows
-client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
-  function(n, row) {
-    //the callback will be invoked per each row as soon as they are received
-    console.log('temperature value', n, row.temperature);
-  },
-  function (err, rowLength) {
-    if (err) console.log('Oh dear...');
-    console.log('%d rows where returned', rowLength);
-  }
-);
-
-//Streaming field
-client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'], 
-  function(err, row, photoStream) {
-    //the callback will be invoked per each row as soon as they are received.
-    if (err) console.log('Shame...');
-    else {
-      //The stream is a Readable Stream2 object
-      stdout.pipe(photoStream);
-    }
-  }
-);
-
-//The whole result set as a stream
-client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
-  .on('readable', function () {
-    //readable is emitted as soon a row is received and parsed
-    var row;
-    while (row = this.read()) {
-      console.log('time %s and value %s', row.time1, row.value1);
-    }
-  })
-  .on('end', function () {
-    //stream ended, there aren't any more rows
-  })
-  .on('error', function (err) {
-    //Something went wrong: err is a response error from Cassandra
-  });
 ```
 
 ## API
@@ -120,21 +70,71 @@ The `query` is the cql query to execute, with `?` placeholders as parameters.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
-Callback should take two arguments err and result.
+The driver will execute the query in a connection to a node. In case the Cassandra node becomes unreachable,
+it will automatically retry it on another connection until `maxExecuteRetries` is reached.
 
-*The driver will replace the placeholders with the `params`, stringified into the query*.
+Callback should take two arguments err and result.
 
 #### client.executeAsPrepared(query, [params], [consistency], callback)
 
 Prepares (the first time) and executes the prepared query.
 
-To execute a prepared query, the `params` are binary serialized. Using **prepared statements increases performance**, especially for repeated queries.
+Using **prepared statements increases performance** compared to plain executes, especially for repeated queries.
 
-In the case the query is already being prepared on a host, it queues the executing of a prepared statement on that host until the preparing finished (the driver will not issue a request to prepare statement more than once).
+In the case the query is already being prepared on a host, it queues the executing of a prepared statement on that
+host until the preparing finished (the driver will not issue a request to prepare statement more than once).
+In case the Cassandra node becomes unreachable, it will automatically retry it on another connection until `maxExecuteRetries` is reached.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
 Callback should take two arguments err and result.
+
+##### Example: Updating a row
+```javascript
+var query = 'UPDATE user_profiles SET birth=? WHERE key=?';
+var params = [new Date(1950, 5, 1), 'jbay'];
+var consistency = cql.types.consistencies.quorum;
+client.executeAsPrepared(query, params, consistency, function(err) {
+  if (err) console.log('Something when wrong and the row was not updated');
+  else {
+    console.log('Updated on the cluster');
+  }
+});
+```
+
+#### client.executeBatch(queries, [consistency], [options], callback)
+
+Executes batch of queries on an available connection.
+
+Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+In case the Cassandra node becomes unreachable before a response,
+it will automatically retry it on another connection until `maxExecuteRetries` is reached.
+
+Callback should take two arguments err and result.
+
+##### Example: Update multiple column families
+```javascript
+var userId = cql.types.uuid();
+var messageId = cql.types.uuid();
+var queries = [
+  {
+    query: 'INSERT INTO users (id, name) values (?, ?)',
+    params: [userId, 'jbay']
+  },
+  {
+    query: 'INSERT INTO messages (id, user_id, body) values (?, ?, ?)',
+    params: [messageId, userId, 'Message from user jbay']
+  }
+];
+var consistency = cql.types.consistencies.quorum;
+client.executeBatch(queries, consistency, function(err) {
+  if (err) console.log('The rows were not inserted on the cluster');
+  else {
+    console.log('Data updated on cluster');
+  }
+});
+```
 
 #### client.eachRow(query, [params], [consistency], rowCallback, endCallback)
 
@@ -145,6 +145,21 @@ It executes `rowCallback(n, row)` per each row received, where `n` is the index 
 It executes `endCallback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
 
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
+
+
+##### Example: Streaming query rows
+```javascript
+client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
+  function(n, row) {
+    //the callback will be invoked per each row as soon as they are received
+    console.log('temperature value', n, row.temperature);
+  },
+  function (err, rowLength) {
+    if (err) console.log('Oh dear...');
+    console.log('%d rows where returned', rowLength);
+  }
+);
+```
 
 #### client.streamField(query, [params], [consistency], rowCallback, [endCallback])
 
@@ -161,6 +176,20 @@ Use one of the values defined in `types.consistencies` for  `consistency`, defau
 
 It executes `endCallback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
 
+##### Example: Streaming the contents of a field
+```javascript
+client.streamField('SELECT key, photo FROM user_profiles WHERE key=', ['jbay'],
+  function(err, row, photoStream) {
+    //the callback will be invoked per each row as soon as they are received.
+    if (err) console.log('Shame...');
+    else {
+      //The stream is a Readable Stream2 object
+      stdout.pipe(photoStream);
+    }
+  }
+);
+```
+
 #### client.stream(query, [params], [consistency], [callback])
 
 Returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
@@ -172,6 +201,24 @@ Prepares (the first time), executes the prepared query.
 Use one of the values defined in `types.consistencies` for  `consistency`, defaults to quorum.
 
 It executes `callback(err)` when all rows have been received or there is an error retrieving the row.
+
+##### Example: Reading the whole resultset as stream
+```javascript
+client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
+  .on('readable', function () {
+    //readable is emitted as soon a row is received and parsed
+    var row;
+    while (row = this.read()) {
+      console.log('time %s and value %s', row.time1, row.value1);
+    }
+  })
+  .on('end', function () {
+    //stream ended, there aren't any more rows
+  })
+  .on('error', function (err) {
+    //Something went wrong: err is a response error from Cassandra
+  });
+```
 
 #### client.shutdown([callback])
 

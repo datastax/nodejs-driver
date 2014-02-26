@@ -6,7 +6,9 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 
 ## Installation
 
-    $ npm install node-cassandra-cql
+```bash
+$ npm install node-cassandra-cql
+```
 
 [![Build Status](https://secure.travis-ci.org/jorgebay/node-cassandra-cql.png)](http://travis-ci.org/jorgebay/node-cassandra-cql)
 
@@ -323,7 +325,7 @@ It supports any Cassandra version greater than 1.2.0.
 If you are using Cassandra 2.x and you want to enable all the latest features in the Cassandra binary protocol v2 (ie: batches), you should reference version **0.5.x**:
 
 ```bash
-$ npm install node-cassandra-cql@protocol2
+$ npm install node-cassandra-cql@protocol2 --save
 ```
 
 #### Which CQL version does this driver support?

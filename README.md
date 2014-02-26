@@ -16,6 +16,7 @@ The driver uses Cassandra's binary protocol which was introduced in Cassandra ve
 - Plain Old Javascript: no need to generate thrift files
 - [Long][1] and [uuid][0] support
 - Row and field streaming
+- Prepared statements and query batches
 
 ## Using it
 ```javascript
@@ -316,6 +317,14 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 [Check the documentation for data type support →](https://github.com/jorgebay/node-cassandra-cql/wiki/Data-types)
 
 ## FAQ
+#### Which Cassandra versions does this driver support?
+It supports any Cassandra version greater than 1.2.0.
+
+If you are using Cassandra 2.x and you want to enable all the latest features in the Cassandra binary protocol v2 (ie: batches), you should reference version **0.5.x**:
+
+```bash
+$ npm install node-cassandra-cql@protocol2
+```
 
 #### Which CQL version does this driver support?
 It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).

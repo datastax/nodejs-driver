@@ -141,7 +141,7 @@ describe('Connection', function () {
     it ('should return a zero-length Array of rows when no matches', function (done) {
       con.execute('SELECT * FROM sampletable1 WHERE ID = -1', function (err, result) {
         assert.ok(!err, err);
-        assert.ok(result.rows && result.rows.length === 0, 'Rows must be defined and the length of the rows array must be zero');
+        assert.ok(result && result.rows && result.rows.length === 0, 'Rows must be defined and the length of the rows array must be zero');
         done();
       });
     });
@@ -268,7 +268,7 @@ describe('Connection', function () {
       });
     });
     
-    it('queue the query when the amount of parallel requests is reached', function (done) {
+    it('should queue the query when the amount of parallel requests is reached', function (done) {
       //tests that max streamId is reached and the connection waits for a free id
       var options = utils.extend({}, con.options, {maxRequests: 10, maxRequestsRetry: 0});
       //total amount of queries to issue
@@ -281,6 +281,17 @@ describe('Connection', function () {
           var query = util.format('SELECT * FROM %s.sampletable1 WHERE ID IN (?, ?, ?);', keyspace);
           localCon.execute(query, [1, 100, 200], callback);
         }, done);
+      });
+    });
+
+    it('should return page state when page size is smaller that total rows ', function (done) {
+      var query = 'SELECT * FROM sampletable1';
+      con.execute(query, [], types.consistencies.one, {pageSize: 2}, function (err, result) {
+        assert.ok(!err, err);
+        assert.ok(result && result.rows, 'It should return rows');
+        assert.strictEqual(result.rows.length, 2);
+        assert.ok(result.meta.pageState, 'Page state should be returned');
+        done();
       });
     });
   });

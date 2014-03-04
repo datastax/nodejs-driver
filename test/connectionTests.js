@@ -285,7 +285,7 @@ describe('Connection', function () {
     });
 
     it('should return page state when page size is smaller that total rows ', function (done) {
-      var query = 'SELECT * FROM sampletable1';
+      var query = 'SELECT * FROM sampletable1 LIMIT 200';
       con.execute(query, [], types.consistencies.one, {pageSize: 2}, function (err, result) {
         assert.ok(!err, err);
         assert.ok(result && result.rows, 'It should return rows');

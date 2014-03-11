@@ -113,6 +113,22 @@ describe('types', function () {
           'Hexadecimal values should match for ' + item[1]);
       });
     });
+
+    it('should return a valid number for int greater than 2^53 and less than -2^53', function () {
+      [
+        new Long(0, 0x7FFFFFFF),
+        new Long(0xFFFFFFFF, 0x7FFFFFFF),
+        new Long(0xFFFFFFFF, 0x7FFFFF01)
+      ].forEach(function (item) {
+        assert.ok(item.toNumber() > Math.pow(2, 53), util.format('Value should be greater than 2^53 for %s', item));
+      });
+      [
+        new Long(0, 0xF0000000),
+        new Long(0, 0xF0000001)
+      ].forEach(function (item) {
+        assert.ok(item.toNumber() < Math.pow(2, 53), util.format('Value should be less than -2^53 for %s', item));
+      });
+    });
   });
 
   describe('ResultStream', function () {

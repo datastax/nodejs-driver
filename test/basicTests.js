@@ -70,7 +70,14 @@ describe('encoder', function () {
       var decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-  })
+
+    it('should encode undefined as null', function () {
+      var hinted = typeEncoder.encode({hint: 'set<text>', value: undefined});
+      var unhinted = typeEncoder.encode();
+      assert.strictEqual(hinted, null);
+      assert.strictEqual(unhinted, null);
+    });
+  });
 });
 
 describe('types', function () {

@@ -361,8 +361,6 @@ Client.prototype.stream = function () {
   return resultStream;
 };
 
-Client.prototype.streamRows = Client.prototype.eachRow;
-
 /**
  * Executes batch of queries on an available connection.
  * If the Cassandra node does down before responding, it retries the batch.

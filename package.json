@@ -1,9 +1,10 @@
 {
-  "name": "node-cassandra-cql",
-  "version": "0.5.0",
-  "description": "Node.js driver for Apache Cassandra",
-  "author": "Jorge Bay <jorgebaygondra@gmail.com>",
+  "name": "datastax-node-driver",
+  "version": "0.1.0",
+  "description": "DataStax Node.js Driver for Apache Cassandra",
+  "author": "DataStax",
   "contributors" :[
+    "Jorge Bay",
     "Andrew Kish",
     "Tommy Messbauer",
     "Adam Faulkner",
@@ -19,12 +20,13 @@
     "cql",
     "cql3",
     "connection",
-    "pool"
+    "pool",
+    "datastax"
   ],
   "licenses": [
     {
-      "type": "MIT",
-      "url": "https://github.com/jorgebay/node-cassandra-cql/raw/master/LICENSE.txt"
+      "type": "Apache License, Version 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
     }
   ],
   "dependencies": {
@@ -34,13 +36,6 @@
   },
   "devDependencies": {
     "mocha": ">= 1.14.0"
-  },
-  "repository": { 
-    "type" : "git", 
-    "url" : "https://github.com/jorgebay/node-cassandra-cql.git"
-  },
-  "bugs": { 
-    "url" : "https://github.com/jorgebay/node-cassandra-cql/issues"
   },
   "engines": {"node" : ">=0.10.0"},
   "scripts": {

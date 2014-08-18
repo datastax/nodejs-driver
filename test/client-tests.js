@@ -6,7 +6,7 @@ var Connection = require('../index.js').Connection;
 var utils = require('../lib/utils.js');
 var types = require('../lib/types.js');
 var config = require('./config.js');
-var helper = require('./testHelper.js');
+var helper = require('./test-helper.js');
 var keyspace = 'unittestkp1_2';
 types.consistencies.getDefault = function () { return this.one; };
 

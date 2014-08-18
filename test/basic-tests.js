@@ -27,7 +27,11 @@ before(function (done) {
         next();
       });
     },
-    con.close.bind(con)], done);
+    con.close.bind(con)
+  ], function () {
+      //ignore errors
+      done();
+  });
 });
 
 describe('encoder', function () {

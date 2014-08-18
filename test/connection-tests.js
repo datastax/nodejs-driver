@@ -6,7 +6,7 @@ var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;
-var helper = require('./testHelper.js');
+var helper = require('./test-helper.js');
 var keyspace = 'unittestkp1_1';
 var config = require('./config.js');
 

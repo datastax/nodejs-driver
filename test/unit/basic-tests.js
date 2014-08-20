@@ -3,36 +3,11 @@ var util = require('util');
 var events = require('events');
 var uuid = require('node-uuid');
 var async = require('async');
-var utils = require('../lib/utils.js');
-var types = require('../lib/types.js');
-var encoder = require('../lib/encoder.js');
-var config = require('./config.js');
+var utils = require('../../lib/utils.js');
+var types = require('../../lib/types.js');
+var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
-var Connection = require('../index.js').Connection;
-
-before(function (done) {
-  this.timeout(5000);
-  var con = new Connection(utils.extend({}, config));
-  async.series([
-    function (next) {
-      con.open(next);
-    },
-    function (next) {
-      con.execute('select cql_version, native_protocol_version, release_version from system.local', function (err, result) {
-        if (!err && result && result.rows) {
-          console.log();
-          console.log('Cassandra version', result.rows[0].get('release_version'));
-          console.log('Cassandra higher protocol version', result.rows[0].get('native_protocol_version'), '\n');
-        }
-        next();
-      });
-    },
-    con.close.bind(con)
-  ], function () {
-      //ignore errors
-      done();
-  });
-});
+var Connection = require('../../index.js').Connection;
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {

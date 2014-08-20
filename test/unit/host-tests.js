@@ -3,10 +3,10 @@ var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
-var hostModule = rewire('../lib/host.js');
+var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
-var types = require('../lib/types.js');
+var types = require('../../lib/types.js');
 
 before(function () {
   //inject a mock Connection class
@@ -116,7 +116,6 @@ describe('Host', function () {
               assert.notEqual(c, null);
               //The right size afterwards
               assert.equal(host.pool.connections.length, 3);
-              console.log(n);
               timesNext();
             });
           }, next);

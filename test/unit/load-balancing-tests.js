@@ -1,9 +1,8 @@
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
-var rewire = require('rewire');
 //project modules
-var loadBalancing = require('../lib/policies/load-balancing.js');
+var loadBalancing = require('../../lib/policies/load-balancing.js');
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
 
 //mocha test fixture

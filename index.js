@@ -1,24 +1,22 @@
 var events = require('events');
 var util = require('util');
 var async = require('async');
+
 var Connection = require('./lib/connection.js').Connection;
 var utils = require('./lib/utils.js');
 var types = require('./lib/types.js');
+var ControlConnection = require('./lib/control-connection.js');
+var RequestHandler = require('./lib/request-handler.js');
+var loadBalancing = require('./lib/policies/load-balancing.js');
+var writers = require('./lib/writers.js');
 
 var optionsDefault = {
-  version: '3.0.0',
-  //max simultaneous requests (before waiting for a response) (max=128) on each connection
-  maxRequests: 32,
-  //When the simultaneous requests has been reached, it determines the amount of milliseconds before retrying to get an available streamId
-  maxRequestsRetry: 100,
-  //Time that has to pass before trying to reconnect
-  staleTime: 1000,
-  //maximum amount of times an execute can be retried (using another connection) because of an unhealthy server response
-  maxExecuteRetries: 3,
-  //maximum time (in milliseconds) to get a healthy connection from the pool. It should be connection Timeout * n.
-  getAConnectionTimeout: 3500,
-  //number of connections to open for each host
-  poolSize: 1
+  policies: {
+    loadBalancingPolicy: new loadBalancing.RoundRobinPolicy()
+  },
+  poolOptions: {
+
+  }
 };
 //Represents a pool of connection to multiple hosts
 function Client(options) {
@@ -26,95 +24,26 @@ function Client(options) {
   //Unlimited amount of listeners for internal event queues by default
   this.setMaxListeners(0);
   this.options = utils.extend({}, optionsDefault, options);
-  //current connection index
-  this.connectionIndex = 0;
-  //current connection index for prepared queries
-  this.prepareConnectionIndex = 0;
-  this.preparedQueries = {};
-  
-  this._createPool();
+  this.controlConnection = new ControlConnection(this.options);
+  this.hosts = null;
 }
 
 util.inherits(Client, events.EventEmitter);
-
-/**
- * Creates the pool of connections suitable for round robin
- */
-Client.prototype._createPool = function () {
-  this.connections = [];
-  for (var poolIndex = 0; poolIndex < this.options.poolSize; poolIndex++) {
-    for (var i = 0; i < this.options.hosts.length; i++) {
-      var host = this.options.hosts[i].split(':');
-      var connOptions = utils.extend({}, this.options, {host: host[0], port: host[1] || 9042});
-      var c = new Connection(connOptions);
-      c.indexInPool = (this.options.poolSize * poolIndex) + i;
-      this.connections.push(c);
-    }
-  }
-
-  this.emit('log', 'info', this.connections.length + ' connections created across ' + this.options.hosts.length + ' hosts.');
-};
-
-/**
- * Connects to each host
- */
-Client.prototype._connectAllHosts = function (connectCallback) {
-  this.emit('log', 'info', 'Connecting to all hosts');
-  var errors = [];
-  this.connecting = true;
-  var self = this;
-  async.each(this.connections, 
-    function (c, callback) {
-      c.open(function (err) {
-        if (err) {
-          self._setUnhealthy(c);
-          errors.push(err);
-          self.emit('log', 'error', 'There was an error opening connection #' + c.indexInPool, err);
-        }
-        else {
-          self.emit('log', 'info', 'Opened connection #' + c.indexInPool);
-        }
-        callback();
-      });
-    },
-    function () {
-      self.connecting = false;
-      var error = null;
-      if (errors.length === self.connections.length) {
-        error = new PoolConnectionError(errors);
-      }
-      self.connected = !error;
-      connectCallback(error);
-      self.emit('connection', error);
-    });
-};
 
 /** 
  * Connects to all hosts, in case the pool is disconnected.
  * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect 
  */
 Client.prototype.connect = function (callback) {
-  if (!callback) {
-    callback = function () {};
-  }
-  if (this.connected || this.connectionError) {
-    callback(this.connectionError);
-    return;
-  }
-  if (this.connecting) {
-    //queue while is connecting
-    this.emit('log', 'info', 'Waiting for the pool to connect');
-    this.once('connection', callback);
-    return;
-  }
-  //it is the first time. Try to connect to all hosts
+  //TODO: Allow multiple calls
   var self = this;
-  this.connecting = true;
-  this._connectAllHosts(function (err) {
-    if (err) {
-      self.connectionError = err;
-    }
-    callback(err);
+  this.controlConnection.init(function (err) {
+    if (err) return callback(err);
+    self.hosts = self.controlConnection.hosts;
+    self.options.loadBalancingPolicy.init(self, self.hosts, function (err) {
+      if (err) return callback(err);
+      callback();
+    });
   });
 };
 
@@ -187,42 +116,8 @@ Client.prototype.execute = function () {
   //Get stack trace before sending request
   var stackContainer = {};
   Error.captureStackTrace(stackContainer);
-  var executeError;
-  var retryCount = 0;
-  var self = this;
-  var executionResult;
-  async.doWhilst(
-    function iterator(next) {
-      self._getAConnection(function(err, c) {
-        executeError = err;
-        if (err) {
-          //exit the loop
-          return next(err);
-        }
-        self.emit('log', 'info', util.format('connection #%d acquired, executing query: %s', c.indexInPool, args.query));
-        c.execute(args.query, args.params, args.consistency, function(err, result) {
-          if (self._isServerUnhealthy(err)) {
-            self._setUnhealthy(c);
-          }
-          executeError = err;
-          executionResult = result;
-          next();
-        });
-      });
-    },
-    function condition() {
-      retryCount++;
-      //retry in case the node went down
-      return self._isServerUnhealthy(executeError) && retryCount < self.options.maxExecuteRetries;
-    },
-    function loopFinished() {
-      if (executeError) {
-        utils.fixStack(stackContainer.stack, executeError);
-        executeError.query = args.query;
-      }
-      args.callback(executeError, executionResult, retryCount);
-    }
-  );
+  var handler = new RequestHandler(this.options);
+  handler.send(new writers.QueryWriter(args.query, [], null, null, null), args.callback);
 };
 
 /**

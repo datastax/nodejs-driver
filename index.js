@@ -26,6 +26,7 @@ function Client(options) {
   this.options = utils.extend({}, optionsDefault, options);
   this.controlConnection = new ControlConnection(this.options);
   this.hosts = null;
+  this.connected = false;
 }
 
 util.inherits(Client, events.EventEmitter);
@@ -35,14 +36,20 @@ util.inherits(Client, events.EventEmitter);
  * @param {function} callback is called when the pool is connected (or at least 1 connected and the rest failed to connect) or it is not possible to connect 
  */
 Client.prototype.connect = function (callback) {
-  //TODO: Allow multiple calls
+  if (this.connected) return callback();
+  if (this.connecting) {
+    //add a listener and move on
+    return this.once('connected', callback);
+  }
   var self = this;
   this.controlConnection.init(function (err) {
     if (err) return callback(err);
     self.hosts = self.controlConnection.hosts;
-    self.options.loadBalancingPolicy.init(self, self.hosts, function (err) {
-      if (err) return callback(err);
-      callback();
+    self.options.policies.loadBalancingPolicy.init(self, self.hosts, function (err) {
+      self.connected = !err;
+      self.connecting = false;
+      callback(err);
+      self.emit('connected', err);
     });
   });
 };
@@ -116,8 +123,12 @@ Client.prototype.execute = function () {
   //Get stack trace before sending request
   var stackContainer = {};
   Error.captureStackTrace(stackContainer);
-  var handler = new RequestHandler(this.options);
-  handler.send(new writers.QueryWriter(args.query, [], null, null, null), args.callback);
+  var self = this;
+  this.connect(function (err) {
+    if (err) return callback(err);
+    var handler = new RequestHandler(self.options);
+    handler.send(new writers.QueryWriter(args.query, [], null, null, null), null, args.callback);
+  });
 };
 
 /**

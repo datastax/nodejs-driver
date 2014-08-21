@@ -26,5 +26,14 @@ describe('Client', function () {
         done();
       });
     });
+    it('should callback with syntax error', function (done) {
+      var options = {contactPoints: [ip]};
+      var client = new Client(options);
+      client.execute('SELECT WILL FAIL', function (err, result) {
+        assert.notEqual(err, null);
+        assert.equal(result, null);
+        done();
+      });
+    });
   });
 });

@@ -7,6 +7,7 @@ var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
 var types = require('../../lib/types.js');
+var reconnection = require('../../lib/policies/reconnection.js');
 
 before(function () {
   //inject a mock Connection class
@@ -50,8 +51,17 @@ describe('HostConnectionPool', function () {
 
 describe('Host', function () {
   describe('#borrowConnection()', function () {
+    var options = {
+      poolOptions: {
+        coreConnectionsPerHost: {},
+        maxConnectionsPerHost: {}
+      },
+      policies: {
+        reconnection: new reconnection.ConstantReconnectionPolicy(1)
+      }
+    };
     it('should get an open connection', function (done) {
-      var host = new Host('0.0.0.1', 2, {});
+      var host = new Host('0.0.0.1', 2, options);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
@@ -63,7 +73,6 @@ describe('Host', function () {
       });
     });
     it('should create a pool of size determined by the relative distance local', function (done) {
-      var options = { poolOptions: { coreConnectionsPerHost: {}, maxConnectionsPerHost: {}}};
       options.poolOptions.coreConnectionsPerHost[types.distance.local] = 5;
       options.poolOptions.maxConnectionsPerHost[types.distance.local] = 10;
       var host = new Host('0.0.0.1', 2, options);
@@ -78,7 +87,6 @@ describe('Host', function () {
       });
     });
     it('should create a pool of size determined by the relative distance remote', function (done) {
-      var options = { poolOptions: { coreConnectionsPerHost: {}, maxConnectionsPerHost: {}}};
       options.poolOptions.coreConnectionsPerHost[types.distance.remote] = 2;
       options.poolOptions.maxConnectionsPerHost[types.distance.remote] = 4;
       var host = new Host('0.0.0.1', 2, options);
@@ -93,7 +101,6 @@ describe('Host', function () {
       });
     });
     it('should resize the pool after distance is set', function (done) {
-      var options = { poolOptions: { coreConnectionsPerHost: {}, maxConnectionsPerHost: {}}};
       options.poolOptions.coreConnectionsPerHost[types.distance.local] = 3;
       options.poolOptions.maxConnectionsPerHost[types.distance.local] = 4;
       var host = new Host('0.0.0.1', 2, options);

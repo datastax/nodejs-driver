@@ -7,17 +7,23 @@ var utils = require('./lib/utils.js');
 var types = require('./lib/types.js');
 var ControlConnection = require('./lib/control-connection.js');
 var RequestHandler = require('./lib/request-handler.js');
-var loadBalancing = require('./lib/policies/load-balancing.js');
 var writers = require('./lib/writers.js');
 
-var optionsDefault = {
-  policies: {
-    loadBalancingPolicy: new loadBalancing.RoundRobinPolicy()
-  },
-  poolOptions: {
+//TODO: Move to own file
+var optionsDefault = (function () {
+  var loadBalancing = require('./lib/policies/load-balancing.js');
+  var reconnection = require('./lib/policies/reconnection.js');
+  return {
+    policies: {
+      loadBalancing: new loadBalancing.RoundRobinPolicy(),
+      reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false)
+    },
+    poolOptions: {
 
-  }
-};
+    }
+  };
+})();
+
 //Represents a pool of connection to multiple hosts
 function Client(options) {
   events.EventEmitter.call(this);
@@ -45,7 +51,7 @@ Client.prototype.connect = function (callback) {
   this.controlConnection.init(function (err) {
     if (err) return callback(err);
     self.hosts = self.controlConnection.hosts;
-    self.options.policies.loadBalancingPolicy.init(self, self.hosts, function (err) {
+    self.options.policies.loadBalancing.init(self, self.hosts, function (err) {
       self.connected = !err;
       self.connecting = false;
       callback(err);

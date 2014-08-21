@@ -10,7 +10,7 @@ describe('ControlConnection', function () {
       var options = {
         contactPoints: ['127.0.0.1'],
         policies: {
-          loadBalancingPolicy: new RoundRobinPolicy()
+          loadBalancing: new RoundRobinPolicy()
         }};
       var cc = new ControlConnection(options);
       cc.init(function () {

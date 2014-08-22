@@ -130,4 +130,35 @@ describe('Host', function () {
       ], done);
     });
   });
+  describe('#setUp()', function () {
+    //Use a test policy that starts at zero to be easier to track down
+    var maxDelay = 1000;
+
+    var options = {
+      policies: {
+        reconnection: new reconnection.ExponentialReconnectionPolicy(100, maxDelay, true)
+      }};
+    it('should reset the reconnection schedule when bring it up', function () {
+      var host = new Host('0.0.0.1', 2, options);
+      host.setDown();
+      //start at zero
+      assert.strictEqual(host.reconnectionDelay, 0);
+      host.setDown();
+      host.setDown();
+      assert.ok(host.reconnectionDelay > 0);
+      host.setDown();
+      host.setDown();
+      //hitting max
+      assert.strictEqual(host.reconnectionDelay, maxDelay);
+      host.setDown();
+      assert.strictEqual(host.reconnectionDelay, maxDelay);
+
+      //BRING IT UP!
+      host.setUp();
+      //Oh no, DOWN again :)
+      host.setDown();
+      //restart at zero
+      assert.strictEqual(host.reconnectionDelay, 0);
+    });
+  });
 });

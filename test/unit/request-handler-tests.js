@@ -6,11 +6,12 @@ var rewire = require('rewire');
 var RequestHandler = rewire('../../lib/request-handler.js');
 var errors = require('../../lib/errors.js');
 var types = require('../../lib/types.js');
+var utils = require('../../lib/utils.js');
+var retry = require('../../lib/policies/retry.js');
 
 var options = (function () {
   var loadBalancing = require('../../lib/policies/load-balancing.js');
   var reconnection = require('../../lib/policies/reconnection.js');;
-  var retry = require('../../lib/policies/retry.js');
   return {
     policies: {
       loadBalancing: new loadBalancing.RoundRobinPolicy(),
@@ -53,11 +54,63 @@ describe('RequestHandler', function () {
       var handler = new RequestHandler(options);
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.overloaded;
-      handler.retry = function () {
+
+      var retryCalled = false;
+      handler.retry = function (cb) {
+        retryCalled = true;
+        cb();
+      };
+
+      handler.handleError(responseError, function (err) {
+        assert.equal(err, null);
+        assert.strictEqual(retryCalled, true);
         done();
+      });
+    });
+
+    it('should rely on the RetryPolicy onWriteTimeout', function (done) {
+      var policy = new retry.RetryPolicy();
+      var policyCalled = false;
+      policy.onWriteTimeout = function (info) {
+        assert.notEqual(info, null);
+        policyCalled = true;
+        return {decision: retry.RetryPolicy.retryDecision.retry}
+      };
+      var handler = new RequestHandler(utils.extend({}, options, { policies: { retry: policy }}));
+      var responseError = new errors.ResponseError();
+      responseError.code = types.responseErrorCodes.writeTimeout;
+      var retryCalled = false;
+      handler.retry = function (cb) {
+        retryCalled = true;
+        cb();
+      };
+
+      handler.handleError(responseError, function (err) {
+        assert.equal(err, null);
+        assert.strictEqual(retryCalled, true);
+        assert.strictEqual(policyCalled, true);
+        done();
+      });
+    });
+
+    it('should rely on the RetryPolicy onUnavailable', function (done) {
+      var policy = new retry.RetryPolicy();
+      var policyCalled = false;
+      policy.onUnavailable = function (info) {
+        assert.notEqual(info, null);
+        policyCalled = true;
+        return {decision: retry.RetryPolicy.retryDecision.retrow};
+      };
+      var handler = new RequestHandler(utils.extend({}, options, { policies: { retry: policy }}));
+      var responseError = new errors.ResponseError();
+      responseError.code = types.responseErrorCodes.unavailableException;
+      handler.retry = function () {
+        assert.fail();
       };
       handler.handleError(responseError, function (err) {
-        assert.notEqual(err, null);
+        assert.strictEqual(err, responseError);
+        assert.strictEqual(policyCalled, true);
+        done();
       });
     });
   });

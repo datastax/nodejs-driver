@@ -12,11 +12,13 @@ var writers = require('./lib/writers.js');
 //TODO: Move to own file
 var optionsDefault = (function () {
   var loadBalancing = require('./lib/policies/load-balancing.js');
-  var reconnection = require('./lib/policies/reconnection.js');
+  var reconnection = require('./lib/policies/reconnection.js');;
+  var retry = require('./lib/policies/retry.js');
   return {
     policies: {
       loadBalancing: new loadBalancing.RoundRobinPolicy(),
-      reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false)
+      reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false),
+      retry: new retry.RetryPolicy()
     },
     poolOptions: {
 

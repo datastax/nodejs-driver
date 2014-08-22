@@ -2,6 +2,7 @@ var assert = require('assert');
 var async = require('async');
 
 var Client = require('../../index.js').Client;
+var types = require('../../lib/types.js');
 var ip = '127.0.0.1';
 
 describe('Client', function () {
@@ -31,6 +32,7 @@ describe('Client', function () {
       var client = new Client(options);
       client.execute('SELECT WILL FAIL', function (err, result) {
         assert.notEqual(err, null);
+        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
         assert.equal(result, null);
         done();
       });

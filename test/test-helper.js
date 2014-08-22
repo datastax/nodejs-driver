@@ -29,7 +29,84 @@ var helper = {
       },
       contactPoints: ['127.0.0.1']
     };
-  })()
+  })(),
+  Ccm: Ccm,
+  ccmHelper: {
+    start: function (nodeLength) {
+      return (function (done) {
+        new Ccm().startAll(nodeLength, function (err) {
+          if (err) return done(err);
+          setTimeout(done, 10000);
+        });
+      });
+    },
+    remove: function (done) {
+      new Ccm().remove(done);
+    }
+  }
 };
+
+function Ccm() {
+  //Use an instance to maintain state
+}
+
+Ccm.prototype.startAll = function (nodeLength, callback) {
+  var self = this;
+  async.series([
+    function (next) {
+      //it wont hurt to remove
+      self.exec(['remove'], function () {
+        //ignore error
+        next();
+      });
+    },
+    function (next) {
+      self.exec(['create', 'test', '-v', '2.0.8'], next);
+    },
+    function (next) {
+      self.exec(['populate', '-n', nodeLength.toString()], next);
+    },
+    function (next) {
+      self.exec(['start'], next);
+    }
+  ], function (err) {
+    callback(err);
+  });
+};
+
+Ccm.prototype.exec = function (params, callback) {
+  var spawn = require('child_process').spawn;
+  var process = spawn('ccm', params);
+  var stdoutArray= [];
+  var stderrArray= [];
+  process.stdout.setEncoding('utf8');
+  process.stderr.setEncoding('utf8');
+  process.stdout.on('data', function (data) {
+    stdoutArray.push(data);
+  });
+
+  process.stderr.on('data', function (data) {
+    stderrArray.push(data);
+  });
+
+  process.on('close', function (code) {
+    var info = {code: code, stdout: stdoutArray, stderr: stderrArray};
+    var err = null;
+    if (code !== 0) {
+      err = new Error(
+          'Error executing ccm\n' +
+          info.stderr.join('\n') +
+          info.stdout.join('\n')
+      );
+      err.info = info;
+    }
+    callback(err, info);
+  });
+};
+
+Ccm.prototype.remove = function (callback) {
+  this.exec(['remove'], callback);
+};
+
 
 module.exports = helper;

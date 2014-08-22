@@ -1,14 +1,24 @@
 var assert = require('assert');
 var async = require('async');
 
-var Client = require('../../index.js').Client;
-var types = require('../../lib/types.js');
+var helper = require('../../test-helper.js');
+var Client = require('../../../index.js').Client;
+var types = require('../../../lib/types.js');
 var ip = '127.0.0.1';
 
 describe('Client', function () {
-  describe('#connect()', function () {
+  describe.only('#connect()', function () {
+    before(helper.ccmHelper.start(1));
+    after(helper.ccmHelper.remove);
+    it('should connect', function (done) {
+      var options = {contactPoints: [ip]};
+      var client = new Client(options);
+      client.connect(function (err) {
+        done(err);
+      });
+    });
     it('should allow multiple parallel calls', function (done) {
-      async.times(1, function (n, next) {
+      async.times(100, function (n, next) {
         var options = {contactPoints: [ip]};
         var client = new Client(options);
         client.connect(next);
@@ -16,7 +26,8 @@ describe('Client', function () {
     });
   });
   describe('#execute()', function () {
-    //CMM 2
+    before(helper.ccmHelper.start(2));
+    after(helper.ccmHelper.remove);
     it('should execute a basic query', function (done) {
       var options = {contactPoints: [ip]};
       var client = new Client(options);

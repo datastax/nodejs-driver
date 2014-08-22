@@ -1,11 +1,13 @@
 var assert = require('assert');
 
-var helper = require('../test-helper.js');
-var ControlConnection = require('../../lib/control-connection.js');
+var helper = require('../../test-helper.js');
+var ControlConnection = require('../../../lib/control-connection.js');
 
 describe('ControlConnection', function () {
+  this.timeout(120000);
   describe('#init()', function () {
-    //CMM 2
+    before(helper.ccmHelper.start(2));
+    after(helper.ccmHelper.remove);
     it('should retrieve local host and peers', function (done) {
       var cc = new ControlConnection(helper.baseOptions);
       cc.init(function () {

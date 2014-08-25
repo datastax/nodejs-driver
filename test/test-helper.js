@@ -35,8 +35,7 @@ var helper = {
     start: function (nodeLength) {
       return (function (done) {
         new Ccm().startAll(nodeLength, function (err) {
-          if (err) return done(err);
-          setTimeout(done, 10000);
+          done(err);
         });
       });
     },
@@ -68,7 +67,8 @@ Ccm.prototype.startAll = function (nodeLength, callback) {
     },
     function (next) {
       self.exec(['start'], next);
-    }
+    },
+    self.waitForUp.bind(self)
   ], function (err) {
     callback(err);
   });
@@ -79,6 +79,7 @@ Ccm.prototype.exec = function (params, callback) {
   var process = spawn('ccm', params);
   var stdoutArray= [];
   var stderrArray= [];
+  var closing = 0;
   process.stdout.setEncoding('utf8');
   process.stderr.setEncoding('utf8');
   process.stdout.on('data', function (data) {
@@ -90,6 +91,10 @@ Ccm.prototype.exec = function (params, callback) {
   });
 
   process.on('close', function (code) {
+    if (closing++ > 0) {
+      //avoid calling multiple times
+      return;
+    }
     var info = {code: code, stdout: stdoutArray, stderr: stderrArray};
     var err = null;
     if (code !== 0) {
@@ -106,6 +111,31 @@ Ccm.prototype.exec = function (params, callback) {
 
 Ccm.prototype.remove = function (callback) {
   this.exec(['remove'], callback);
+};
+
+/**
+ * Reads the logs to see if the cql protocol is up
+ * @param callback
+ */
+Ccm.prototype.waitForUp = function (callback) {
+  var started = false;
+  var retryCount = 0;
+  var self = this;
+  async.whilst(function () {
+    return !started && retryCount < 10;
+  }, function iterator (next) {
+    self.exec(['node1', 'showlog'], function (err, info) {
+      if (err) return next(err);
+      var regex = /Starting listening for CQL clients/mi;
+      started = regex.test(info.stdout.join(''));
+      retryCount++;
+      if (!started) {
+        //wait 1 sec between retries
+        return setTimeout(next, 1000);
+      }
+      return next();
+    });
+  }, callback);
 };
 
 

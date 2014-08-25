@@ -7,7 +7,8 @@ var types = require('../../../lib/types.js');
 var ip = '127.0.0.1';
 
 describe('Client', function () {
-  describe.only('#connect()', function () {
+  this.timeout(30000);
+  describe('#connect()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should connect', function (done) {

@@ -41,6 +41,9 @@ var helper = {
     },
     remove: function (done) {
       new Ccm().remove(done);
+    },
+    exec: function (params, callback) {
+      new Ccm().exec(params, callback);
     }
   }
 };

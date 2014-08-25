@@ -46,6 +46,51 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
 
+    it('should read a STATUS_CHANGE UP EVENT response', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.event);
+        assert.ok(item.event, 'it should return the details of the event');
+        assert.strictEqual(item.event.up, true);
+        done();
+      });
+
+      var eventData = getEventData('STATUS_CHANGE', 'UP');
+      parser._transform(eventData, null, doneIfError(done));
+    });
+
+    it('should read a STATUS_CHANGE DOWN EVENT response', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.event);
+        assert.ok(item.event, 'it should return the details of the event');
+        assert.strictEqual(item.event.up, false);
+        done();
+      });
+
+      var eventData = getEventData('STATUS_CHANGE', 'DOWN');
+      parser._transform(eventData, null, doneIfError(done));
+    });
+
+    it('should read a STATUS_CHANGE DOWN EVENT response chunked', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.event);
+        assert.ok(item.event, 'it should return the details of the event');
+        assert.strictEqual(item.event.up, false);
+        done();
+      });
+
+      var eventData = getEventData('STATUS_CHANGE', 'DOWN');
+      var chunk1 = eventData.chunk.slice(0, 5);
+      var chunk2 = eventData.chunk.slice(5);
+      parser._transform({header: eventData.header, chunk: chunk1}, null, doneIfError(done));
+      parser._transform({header: eventData.header, chunk: chunk2}, null, doneIfError(done));
+    });
+
     it('should read a buffer until there is enough data', function (done) {
       var parser = new streams.Parser({objectMode:true});
       parser.on('readable', function () {
@@ -166,6 +211,31 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex) {
     header: getFrameHeader(fullChunk.length, types.opcodes.result),
     chunk: new Buffer(fullChunk.slice(fromIndex, toIndex || undefined))
   };
+}
+
+function getEventData(eventType, value) {
+  var bodyArray = [];
+  //EVENT TYPE
+  bodyArray.push(new Buffer([0, eventType.length]));
+  bodyArray.push(new Buffer(eventType));
+  //STATUS CHANGE DESCRIPTION
+  bodyArray.push(new Buffer([0, value.length]));
+  bodyArray.push(new Buffer(value));
+  //Address
+  bodyArray.push(new Buffer([4, 127, 0, 0, 1]));
+  //Port
+  bodyArray.push(new Buffer([0, 0, 0, 200]));
+
+  var body = Buffer.concat(bodyArray);
+  var header = new types.FrameHeader();
+  header.bufferLength = body.length + 8;
+  header.isResponse = true;
+  header.version = 2;
+  header.flags = 0;
+  header.streamId = -1;
+  header.opcode = types.opcodes.event;
+  header.bodyLength = body.length;
+  return {header: header, chunk: body};
 }
 
 /**

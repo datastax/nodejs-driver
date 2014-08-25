@@ -19,5 +19,25 @@ describe('ControlConnection', function () {
         done();
       });
     });
+    it('should subscribe to STATUS_CHANGE events', function (done) {
+      //This test brings nodes down
+      var cc = new ControlConnection(helper.baseOptions);
+      cc.init(function () {
+        helper.ccmHelper.exec(['node2', 'stop'], function (err) {
+          if (err) return done(err);
+          //setting host as down
+          setTimeout(function () {
+            var hosts = cc.hosts.slice(0);
+            assert.strictEqual(hosts.length, 2);
+            var countUp = hosts.reduce(function (value, host) {
+              value += host.isUp() ? 1 : 0;
+              return value;
+            }, 0);
+            assert.strictEqual(countUp, 1);
+            done();
+          }, 3000);
+        });
+      });
+    });
   });
 });

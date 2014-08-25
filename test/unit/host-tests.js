@@ -161,4 +161,15 @@ describe('Host', function () {
       assert.strictEqual(host.reconnectionDelay, 0);
     });
   });
+  describe('#setDown()', function () {
+    var options = {
+      policies: {
+        reconnection: new reconnection.ConstantReconnectionPolicy(100)
+      }};
+    it('should emit event when called', function (done) {
+      var host = new Host('0.0.0.1', 2, options);
+      host.on('down', done);
+      host.setDown();
+    });
+  });
 });

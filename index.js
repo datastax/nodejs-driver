@@ -20,9 +20,7 @@ var optionsDefault = (function () {
       reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false),
       retry: new retry.RetryPolicy()
     },
-    poolOptions: {
-
-    }
+    poolOptions: {}
   };
 })();
 

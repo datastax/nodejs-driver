@@ -30,6 +30,7 @@ var helper = {
       contactPoints: ['127.0.0.1']
     };
   })(),
+  ipPrefix: '127.0.0.',
   Ccm: Ccm,
   ccmHelper: {
     start: function (nodeLength) {
@@ -39,8 +40,32 @@ var helper = {
         });
       });
     },
-    remove: function (done) {
-      new Ccm().remove(done);
+    remove: function (callback) {
+      new Ccm().remove(callback);
+    },
+    /**
+     * Adds a new node to the cluster
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    bootstrapNode: function (nodeIndex, callback) {
+      var ipPrefix = helper.ipPrefix;
+      new Ccm().exec([
+        'add',
+        'node' + nodeIndex,
+        '-i',
+        ipPrefix + nodeIndex,
+        '-j',
+        (7000 + 100 * nodeIndex).toString(),
+        '-b'
+      ], callback);
+    },
+    /**
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    startNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'start'], callback);
     },
     exec: function (params, callback) {
       new Ccm().exec(params, callback);

@@ -1,5 +1,6 @@
 var async = require('async');
 var types = require('../lib/types.js');
+var utils = require('../lib/utils.js');
 
 var helper = {
   /**
@@ -30,6 +31,14 @@ var helper = {
       contactPoints: ['127.0.0.1']
     };
   })(),
+  /**
+   * Returns a pseudo random name in the form of 'ab{n}', n being an int
+   * @returns {string}
+   */
+  getRandomName: function () {
+    var value = Math.floor(Math.random() * utils.maxInt);
+    return 'ab' + value.toString();
+  },
   ipPrefix: '127.0.0.',
   Ccm: Ccm,
   ccmHelper: {

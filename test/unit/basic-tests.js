@@ -7,7 +7,7 @@ var utils = require('../../lib/utils.js');
 var types = require('../../lib/types.js');
 var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
-var Connection = require('../../client.js').Connection;
+var Connection = require('../../index.js').Connection;
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {

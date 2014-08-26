@@ -3,7 +3,7 @@ var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
-var RequestHandler = rewire('../../lib/request-handler.js');
+var RequestHandler = require('../../lib/request-handler.js');
 var errors = require('../../lib/errors.js');
 var types = require('../../lib/types.js');
 var utils = require('../../lib/utils.js');
@@ -25,7 +25,7 @@ var options = (function () {
 describe('RequestHandler', function () {
   describe('#handleError()', function () {
     it('should retrow on syntax error', function (done) {
-      var handler = new RequestHandler(options);
+      var handler = new RequestHandler(null, options);
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.syntaxError;
       handler.retry = function () {
@@ -38,7 +38,7 @@ describe('RequestHandler', function () {
     });
 
     it('should retrow on unauthorized error', function (done) {
-      var handler = new RequestHandler(options);
+      var handler = new RequestHandler(null, options);
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.unauthorized;
       handler.retry = function () {
@@ -51,7 +51,7 @@ describe('RequestHandler', function () {
     });
 
     it('should retry on overloaded error', function (done) {
-      var handler = new RequestHandler(options);
+      var handler = new RequestHandler(null, options);
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.overloaded;
 
@@ -76,7 +76,7 @@ describe('RequestHandler', function () {
         policyCalled = true;
         return {decision: retry.RetryPolicy.retryDecision.retry}
       };
-      var handler = new RequestHandler(utils.extend({}, options, { policies: { retry: policy }}));
+      var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.writeTimeout;
       var retryCalled = false;
@@ -101,7 +101,7 @@ describe('RequestHandler', function () {
         policyCalled = true;
         return {decision: retry.RetryPolicy.retryDecision.retrow};
       };
-      var handler = new RequestHandler(utils.extend({}, options, { policies: { retry: policy }}));
+      var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.unavailableException;
       handler.retry = function () {

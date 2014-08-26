@@ -2,7 +2,7 @@
 var util = require('util');
 var async = require('async');
 
-var Connection = require('../client.js').Connection;
+var Connection = require('../index.js').Connection;
 var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 var dataTypes = types.dataTypes;

@@ -2,26 +2,28 @@ var assert = require('assert');
 var async = require('async');
 
 var helper = require('../../test-helper.js');
-var Client = require('../../../index.js').Client;
+var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var ip = '127.0.0.1';
 
 describe('Client', function () {
   this.timeout(30000);
   describe('#connect()', function () {
-    before(helper.ccmHelper.start(1));
+    before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
-    it('should connect', function (done) {
+    it('should discover all hosts in the ring', function (done) {
       var options = {contactPoints: [ip]};
       var client = new Client(options);
       client.connect(function (err) {
-        done(err);
+        if (err) return done(err);
+        assert.strictEqual(client.hosts.length, 3);
+        done();
       });
     });
     it('should allow multiple parallel calls', function (done) {
+      var options = {contactPoints: [ip]};
+      var client = new Client(options);
       async.times(100, function (n, next) {
-        var options = {contactPoints: [ip]};
-        var client = new Client(options);
         client.connect(next);
       }, done);
     });

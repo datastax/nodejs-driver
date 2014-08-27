@@ -8,17 +8,6 @@ var utils = require('../../../lib/utils.js');
 var writers = require('../../../lib/writers.js');
 var helper = require('../../test-helper.js');
 
-function newInstance(address){
-  if (!address) {
-    address = helper.baseOptions.contactPoints[0];
-  }
-  return new Connection(address, {});
-}
-
-function getRequest(query) {
-  return new writers.QueryWriter(query, [], types.consistencies.one, null, null);
-}
-
 describe('Connection', function () {
   this.timeout(120000);
   before(helper.ccmHelper.start(1));
@@ -81,3 +70,14 @@ describe('Connection', function () {
     });
   });
 });
+
+function newInstance(address){
+  if (!address) {
+    address = helper.baseOptions.contactPoints[0];
+  }
+  return new Connection(address, {});
+}
+
+function getRequest(query) {
+  return new writers.QueryWriter(query, [], types.consistencies.one, null, null);
+}

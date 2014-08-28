@@ -76,8 +76,10 @@ describe('Client', function () {
       };
       var client = new Client(utils.extend({}, helper.baseOptions, options));
       //execute a couple of queries
-      async.timesSeries(30, function (n, next) {
-        client.execute('SELECT * FROM system.schema_keyspaces', next);
+      async.times(100, function (n, next) {
+        setTimeout(function () {
+          client.execute('SELECT * FROM system.schema_keyspaces', next);
+          }, 100 + n * 2)
       }, function (err) {
         if (err) return done(err);
         assert.strictEqual(client.hosts.length, 2);

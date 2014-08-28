@@ -4,6 +4,9 @@ var async = require('async');
 var helper = require('../../test-helper.js');
 var ControlConnection = require('../../../lib/control-connection.js');
 var utils = require('../../../lib/utils.js');
+var clientOptions = require('../../../lib/client-options.js');
+
+var options = utils.extend({}, clientOptions, helper.baseOptions);
 
 describe('ControlConnection', function () {
   this.timeout(120000);
@@ -11,7 +14,7 @@ describe('ControlConnection', function () {
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should retrieve local host and peers', function (done) {
-      var cc = new ControlConnection(helper.baseOptions);
+      var cc = new ControlConnection(options);
       cc.init(function () {
         assert.equal(cc.hosts.length, 2);
         cc.hosts.forEach(function (h) {
@@ -22,7 +25,7 @@ describe('ControlConnection', function () {
       });
     });
     it('should subscribe to STATUS_CHANGE events', function (done) {
-      var cc = new ControlConnection(helper.baseOptions);
+      var cc = new ControlConnection(options);
       cc.init(function () {
         helper.ccmHelper.exec(['node2', 'stop'], function (err) {
           if (err) return done(err);
@@ -40,7 +43,7 @@ describe('ControlConnection', function () {
       });
     });
     it('should subscribe to TOPOLOGY_CHANGE events and refresh ring info', function (done) {
-      var cc = new ControlConnection(helper.baseOptions);
+      var cc = new ControlConnection(options);
       async.series([
         cc.init.bind(cc),
         function (next) {
@@ -66,7 +69,6 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should reconnect when host used goes down', function (done) {
-      var options = utils.extend({}, helper.baseOptions);
       var cc = new ControlConnection(options);
       cc.init(function () {
         //initialize the load balancing policy

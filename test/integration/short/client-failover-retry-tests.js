@@ -4,6 +4,7 @@ var async = require('async');
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
+var utils = require('../../../lib/utils.js');
 
 describe('Client', function () {
   this.timeout(30000);
@@ -61,6 +62,31 @@ describe('Client', function () {
         async.times(100, function (n, next) {
           client.execute('SELECT * FROM schema_keyspaces', [], next);
         }, done)
+      });
+    });
+    it('should create the amount of connections determined by the options', function (done) {
+      var options = {
+        pooling: {
+          coreConnectionsPerHost: {
+            '0': 3,
+            '1': 0,
+            '2': 0
+          }
+        }
+      };
+      var client = new Client(utils.extend({}, helper.baseOptions, options));
+      //execute a couple of queries
+      async.timesSeries(30, function (n, next) {
+        client.execute('SELECT * FROM system.schema_keyspaces', next);
+      }, function (err) {
+        if (err) return done(err);
+        assert.strictEqual(client.hosts.length, 2);
+        var hosts = client.hosts.slice(0);
+        assert.strictEqual(hosts[0].pool.coreConnectionsLength, 3);
+        assert.strictEqual(hosts[1].pool.coreConnectionsLength, 3);
+        assert.strictEqual(hosts[0].pool.connections.length, 3);
+        assert.strictEqual(hosts[1].pool.connections.length, 3);
+        done(err);
       });
     });
   });

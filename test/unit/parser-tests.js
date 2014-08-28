@@ -46,6 +46,29 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
 
+    it('should read a SET_KEYSPACE result', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        done();
+      });
+      //kind + stringLength + string
+      var bodyLength = 4 + 2 + 3;
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: new Buffer([0, 0, 0, types.resultKind.setKeyspace])
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: new Buffer([0, 3])
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: new Buffer('ks1')
+      }, null, doneIfError(done));
+    });
+
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
       var parser = new streams.Parser({objectMode:true});
       parser.on('readable', function () {
@@ -166,7 +189,7 @@ function getFrameHeader(bodyLength, opcode) {
   var header = new types.FrameHeader();
   header.bufferLength = bodyLength + 8;
   header.isResponse = true;
-  header.version = 1;
+  header.version = 2;
   header.flags = 0;
   header.streamId = 12;
   header.opcode = opcode;

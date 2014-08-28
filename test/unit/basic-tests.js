@@ -279,4 +279,18 @@ describe('utils', function () {
       assert.strictEqual(originalObject, extended);
     });
   });
+
+  describe('#funcCompare()', function () {
+    it('should return a compare function valid for Array#sort', function () {
+      var values = [
+        {id: 1, getValue : function () { return 100;}},
+        {id: 2, getValue : function () { return 3;}},
+        {id: 3, getValue : function () { return 1;}}
+      ];
+      values.sort(utils.funcCompare('getValue'));
+      assert.strictEqual(values[0].id, 3);
+      assert.strictEqual(values[1].id, 2);
+      assert.strictEqual(values[2].id, 1);
+    });
+  });
 });

@@ -52,7 +52,7 @@ describe('HostConnectionPool', function () {
 describe('Host', function () {
   describe('#borrowConnection()', function () {
     var options = {
-      poolOptions: {
+      pooling: {
         coreConnectionsPerHost: {},
         maxConnectionsPerHost: {}
       },
@@ -73,8 +73,8 @@ describe('Host', function () {
       });
     });
     it('should create a pool of size determined by the relative distance local', function (done) {
-      options.poolOptions.coreConnectionsPerHost[types.distance.local] = 5;
-      options.poolOptions.maxConnectionsPerHost[types.distance.local] = 10;
+      options.pooling.coreConnectionsPerHost[types.distance.local] = 5;
+      options.pooling.maxConnectionsPerHost[types.distance.local] = 10;
       var host = new Host('0.0.0.1', 2, options);
       host.setDistance(types.distance.local);
       host.borrowConnection(function (err, c) {
@@ -87,8 +87,8 @@ describe('Host', function () {
       });
     });
     it('should create a pool of size determined by the relative distance remote', function (done) {
-      options.poolOptions.coreConnectionsPerHost[types.distance.remote] = 2;
-      options.poolOptions.maxConnectionsPerHost[types.distance.remote] = 4;
+      options.pooling.coreConnectionsPerHost[types.distance.remote] = 2;
+      options.pooling.maxConnectionsPerHost[types.distance.remote] = 4;
       var host = new Host('0.0.0.1', 2, options);
       host.setDistance(types.distance.remote);
       host.borrowConnection(function (err, c) {
@@ -101,8 +101,8 @@ describe('Host', function () {
       });
     });
     it('should resize the pool after distance is set', function (done) {
-      options.poolOptions.coreConnectionsPerHost[types.distance.local] = 3;
-      options.poolOptions.maxConnectionsPerHost[types.distance.local] = 4;
+      options.pooling.coreConnectionsPerHost[types.distance.local] = 3;
+      options.pooling.maxConnectionsPerHost[types.distance.local] = 4;
       var host = new Host('0.0.0.1', 2, options);
       async.series([
         function (next) {

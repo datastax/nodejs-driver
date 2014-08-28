@@ -270,7 +270,7 @@ describe('Connection', function () {
     
     it('should queue the query when the amount of parallel requests is reached', function (done) {
       //tests that max streamId is reached and the connection waits for a free id
-      var options = utils.extend({}, con.options, {maxRequests: 10, maxRequestsRetry: 0});
+      var options = utils.extend({}, con.options, {maxRequestsRetry: 0});
       //total amount of queries to issue
       var totalQueries = 50;
       var timeoutId;

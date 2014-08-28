@@ -7,7 +7,20 @@ var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 
 describe('Client', function () {
-  this.timeout(30000);
+  this.timeout(120000);
+  describe('constructor', function () {
+    it('should throw an exception when contactPoints provided', function () {
+      assert.throws(function () {
+        var client = new Client({});
+      });
+      assert.throws(function () {
+        var client = new Client(null);
+      });
+      assert.throws(function () {
+        var client = new Client();
+      });
+    });
+  });
   describe('#connect()', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);

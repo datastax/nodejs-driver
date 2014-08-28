@@ -4,10 +4,13 @@ var events = require('events');
 var uuid = require('node-uuid');
 var async = require('async');
 var utils = require('../../lib/utils.js');
+var clientOptions = require('../../lib/client-options.js');
 var types = require('../../lib/types.js');
 var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
 var Connection = require('../../index.js').Connection;
+var loadBalancing = require('../../lib/policies/load-balancing.js');
+var retry = require('../../lib/policies/retry.js');
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {
@@ -291,6 +294,110 @@ describe('utils', function () {
       assert.strictEqual(values[0].id, 3);
       assert.strictEqual(values[1].id, 2);
       assert.strictEqual(values[2].id, 1);
+    });
+  });
+
+  describe('#deepExtend', function () {
+    it('should override only the most inner props', function () {
+      var value;
+      //single values
+      value = utils.deepExtend({}, {a: '1'});
+      assert.strictEqual(value.a, '1');
+      value = utils.deepExtend({a: '2'}, {a: '1'});
+      assert.strictEqual(value.a, '1');
+      value = utils.deepExtend({a: new Date()}, {a: new Date(100)});
+      assert.strictEqual(value.a.toString(), new Date(100).toString());
+      value = utils.deepExtend({a: 2}, {a: 1});
+      assert.strictEqual(value.a, 1);
+      //composed 1 level
+      value = utils.deepExtend({a: { a1: 1, a2: 2}, b: 1000}, {a: {a2: 15}});
+      assert.strictEqual(value.a.a2, 15);
+      assert.strictEqual(value.a.a1, 1);
+      assert.strictEqual(value.b, 1000);
+      //composed 2 level
+      value = utils.deepExtend({a: { a1: 1, a2: { a21: 10,  a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
+      assert.strictEqual(value.a.a2.a21, 11);
+      assert.strictEqual(value.a.a2.a22, 20);
+      assert.strictEqual(value.a.a1, 1);
+      assert.strictEqual(value.b.b1, 100);
+      assert.strictEqual(value.b.b2, 200);
+      //multiple sources
+      value = utils.deepExtend({z: 9}, {a: { a1: 1, a2: { a21: 10,  a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
+      assert.strictEqual(value.a.a2.a21, 11);
+      assert.strictEqual(value.a.a2.a22, 20);
+      assert.strictEqual(value.a.a1, 1);
+      assert.strictEqual(value.b.b1, 100);
+      assert.strictEqual(value.b.b2, 200);
+      assert.strictEqual(value.z, 9);
+      //!source
+      value = utils.deepExtend({z: 3}, null);
+      assert.strictEqual(value.z, 3);
+      //undefined
+      var o;
+      value = utils.deepExtend({z: 4}, o);
+      assert.strictEqual(value.z, 4);
+    });
+  });
+});
+
+describe('clientOptions', function () {
+  describe('#extend', function () {
+    it('should require contactPoints', function () {
+      assert.doesNotThrow(function () {
+        clientOptions.extend({contactPoints: ['host1', 'host2']});
+      });
+      assert.throws(function () {
+        clientOptions.extend({contactPoints: {}});
+      });
+      assert.throws(function () {
+        clientOptions.extend({});
+      });
+      assert.throws(function () {
+        clientOptions.extend(null);
+      });
+      assert.throws(function () {
+        clientOptions.extend(undefined);
+      });
+    });
+    it('should validate the policies', function () {
+      var policy1 = new loadBalancing.RoundRobinPolicy();
+      var policy2 = new retry.RetryPolicy();
+      var options = clientOptions.extend({
+        contactPoints: ['host1'],
+        policies: {
+          loadBalancing: policy1,
+          retry: policy2
+        }
+      });
+      assert.strictEqual(options.policies.loadBalancing, policy1);
+      assert.strictEqual(options.policies.retry, policy2);
+
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          policies: {
+            loadBalancing: {}
+          }
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          policies: {
+            //Use whatever object
+            loadBalancing: new Connection()
+          }
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          policies: {
+            //Use whatever object
+            retry: new Connection()
+          }
+        });
+      });
     });
   });
 });

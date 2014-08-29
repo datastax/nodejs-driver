@@ -73,34 +73,6 @@ describe('Client', function () {
     }
   });
   
-  describe('constructor', function () {
-    it('should create the connection pool', function () {
-      //The pool should be created like [conHost1, conHost2, conHost3, conHost1, conHost2, conHost3, conHost1, ...]
-      var poolSize = 3;
-      var localClient = getANewClient({hosts: ['host1', 'host2', 'host3'], poolSize: poolSize});
-      var connections = localClient.connections;
-      assert.ok(connections.length, 9, 'There must be 9 connections (amount hosts * pool size)');
-      for (var i = 0; i < poolSize; i++) {
-        assert.ok(
-          connections[0 + (i * poolSize)].options.host === 'host1' &&
-          connections[1 + (i * poolSize)].options.host === 'host2' &&
-          connections[2 + (i * poolSize)].options.host === 'host3', 'The connections inside the pool are not correctly ordered');
-      }
-    });
-  });
-  
-  describe('#connect()', function () {
-    it('possible to call connect multiple times in parallel', function (done) {
-      var localClient = getANewClient();
-      async.times(5, function (n, next) {
-        localClient.connect(next);
-      }, function (err) {
-        assert.ok(!err, err);
-        localClient.shutdown(done);
-      });
-    });
-  });
-  
   describe('#execute()', function () {
     it('should allow different argument lengths', function (done) {
       async.series([
@@ -225,7 +197,7 @@ describe('Client', function () {
   describe('#executeAsPrepared()', function () {
     it('should prepare and execute a query', function (done) {
       client.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
-        types.consistencies.one, 
+        types.consistencies.one,
         function (err, result) {
           assert.ok(!err, err);
           assert.strictEqual(result.rows.length, 1, 'There should be a row');
@@ -246,7 +218,7 @@ describe('Client', function () {
       };
       
       localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
-        types.consistencies.one, 
+        types.consistencies.one,
         function (err, result) {
           assert.ok(!err, err);
           assert.ok(result && result.rows.length === 1, 'There should be one row');
@@ -264,7 +236,7 @@ describe('Client', function () {
       };
       
       localClient.executeAsPrepared('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [keyspace],
-        types.consistencies.one, 
+        types.consistencies.one,
         function (err, result) {
           assert.ok(!result, 'It must stop retrying and callback without a result');
           assert.strictEqual(counter, localClient.options.maxExecuteRetries, 'It must retry an specific amount of times');

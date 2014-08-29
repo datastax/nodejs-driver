@@ -247,7 +247,6 @@ describe('utils', function () {
         assert.strictEqual(typeof args.callback, 'function', 'Callback must be a function ');
         if (args && args.length > 2) {
           assert.ok(util.isArray(args.params) || args.params === null, 'params must be an array or null');
-          assert.ok(typeof args.consistency === 'number' || args.consistency === null, 'Consistency must be an int or null');
         }
       }
       var args = utils.parseCommonArgs('A QUERY 1', function (){});
@@ -256,15 +255,12 @@ describe('utils', function () {
       args = utils.parseCommonArgs('A QUERY 2', [1, 2, 3], function (){});
       testArgs(args, 3);
       assert.ok(util.isArray(args.params) && args.params.length === 3);
-      args = utils.parseCommonArgs('A QUERY 3', types.consistencies.quorum, function (){});
+      args = utils.parseCommonArgs('A QUERY 3', [], function (){});
       testArgs(args, 3);
-      assert.ok(args.params === null && args.consistency === types.consistencies.quorum, 'Consistency does not match');
-      args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, function (){});
+      assert.ok(util.isArray(args.params), 'Params should be set');
+      args = utils.parseCommonArgs('A QUERY', [1, 2, 3], {}, function (){});
       testArgs(args, 4);
-      assert.ok(args.params && args.consistency, 'Params and consistency must not be null');
-      args = utils.parseCommonArgs('A QUERY', [1, 2, 3], types.consistencies.quorum, {}, function (){});
-      testArgs(args, 5);
-      assert.ok(args.params && args.consistency && args.options, 'Params, consistency and options must not be null');
+      assert.ok(args.params && args.options, 'Params and options must not be null');
     });
 
     it('parses args and can be retrieved as an array', function () {
@@ -358,6 +354,12 @@ describe('clientOptions', function () {
       assert.throws(function () {
         clientOptions.extend(undefined);
       });
+    });
+    it('should create a new instance', function () {
+      var a = {contactPoints: ['host1']};
+      var options = clientOptions.extend(a);
+      assert.notStrictEqual(a, options);
+      assert.notStrictEqual(options, clientOptions.defaultOptions);
     });
     it('should validate the policies', function () {
       var policy1 = new loadBalancing.RoundRobinPolicy();

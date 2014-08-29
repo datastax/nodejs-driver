@@ -66,22 +66,6 @@ describe('Connection', function () {
   });
   
   describe('#open()', function () {
-    it('should fail when the host does not exits', function (done) {
-      this.timeout(5000);
-      var localCon = new Connection(utils.extend({}, config, {host: 'not-existent-host'}));
-      localCon.open(function (err) {
-        assert.ok(err, 'Must return a connection error');
-        assert.ok(!localCon.connected && !localCon.connecting);
-        localCon.close(done);
-      });
-    });
-    it('should fail when the keyspace does not exist', function (done) {
-      var localCon = new Connection(utils.extend({}, con.options, {keyspace: 'this__keyspace__does__not__exist'}));
-      localCon.open(function (err) {
-        assert.ok(err, 'An error must be returned as the keyspace does not exist');
-        localCon.close(done);
-      });
-    });
     it('should fail when the username and password are incorrect', function (done) {
       this.timeout(5000);
       var localCon = new Connection(utils.extend({}, con.options, {password: 'invalidpassword789'}));

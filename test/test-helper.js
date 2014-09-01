@@ -1,4 +1,6 @@
 var async = require('async');
+var assert = require('assert');
+var util = require('util');
 var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 
@@ -32,12 +34,15 @@ var helper = {
     };
   })(),
   /**
-   * Returns a pseudo random name in the form of 'ab{n}', n being an int
+   * Returns a pseudo-random name in the form of 'ab{n}', n being an int zero padded with string length 16
    * @returns {string}
    */
-  getRandomName: function () {
+  getRandomName: function (prefix) {
+    if (!prefix) {
+      prefix = 'ab';
+    }
     var value = Math.floor(Math.random() * utils.maxInt);
-    return 'ab' + value.toString();
+    return prefix + ('000000000000000' + value.toString()).slice(-16);
   },
   ipPrefix: '127.0.0.',
   Ccm: Ccm,
@@ -79,6 +84,63 @@ var helper = {
     exec: function (params, callback) {
       new Ccm().exec(params, callback);
     }
+  },
+  /**
+   * Creates a table containing all common types
+   * @param {String} tableName
+   */
+  createTableCql: function (tableName) {
+    return  util.format(' CREATE TABLE %s (' +
+            '   id uuid primary key,' +
+            '   ascii_sample ascii,' +
+            '   text_sample text,' +
+            '   int_sample int,' +
+            '   bigint_sample bigint,' +
+            '   float_sample float,' +
+            '   double_sample double,' +
+            '   decimal_sample decimal,' +
+            '   blob_sample blob,' +
+            '   boolean_sample boolean,' +
+            '   timestamp_sample timestamp,' +
+            '   inet_sample inet,' +
+            '   timeuuid_sample timeuuid,' +
+            '   map_sample map<text, text>,' +
+            '   list_sample list<text>,' +
+            '   set_sample set<text>)', tableName);
+  },
+  createKeyspaceCql: function (keyspace, replicationFactor) {
+    return util.format('CREATE KEYSPACE %s WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d};',
+      keyspace,
+      replicationFactor);
+  },
+  assertValueEqual: function (val1, val2) {
+    if (val1 instanceof Buffer && val2 instanceof Buffer) {
+      val1 = val1.toString('hex');
+      val2 = val2.toString('hex');
+    }
+    if (val1 instanceof types.Long && val2 instanceof types.Long) {
+      val1 = val1.toString();
+      val2 = val2.toString();
+    }
+    assert.strictEqual(val1, val2);
+  },
+  /**
+   * Returns a function that waits on schema agreement before executing callback
+   * @param {Client} client
+   * @param {Function} callback
+   * @returns {Function}
+   */
+  waitSchema: function (client, callback) {
+    return (function (err) {
+      if (err) return callback(err);
+      if (!client.hosts) {
+        throw new Error('No hosts on Client')
+      }
+      if (client.hosts.length === 1) {
+        return callback();
+      }
+      setTimeout(callback, 200 * client.hosts.length);
+    });
   }
 };
 

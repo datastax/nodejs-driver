@@ -6,7 +6,7 @@ var ControlConnection = require('../../../lib/control-connection.js');
 var utils = require('../../../lib/utils.js');
 var clientOptions = require('../../../lib/client-options.js');
 
-var options = utils.extend({}, clientOptions, helper.baseOptions);
+var options = clientOptions.extend(helper.baseOptions);
 
 describe('ControlConnection', function () {
   this.timeout(120000);

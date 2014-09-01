@@ -9,7 +9,7 @@ var utils = require('../../../lib/utils.js');
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#execute(query, params, {prepared: 1}, callback)', function () {
+  describe('#execute(query, params, {prepare: 1}, callback)', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
     it('should execute a prepared query with parameters on all hosts', function (done) {
@@ -70,11 +70,11 @@ function serializationTest(values, columns, done) {
       var query = util.format('INSERT INTO %s ' +
         '(%s) VALUES ' +
         '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', table, columns);
-      client.execute(query, values, {prepared: 1}, next);
+      client.execute(query, values, {prepare: 1}, next);
     },
     function (next) {
       var query = util.format('SELECT %s FROM %s WHERE id = ?', columns, table);
-      client.execute(query, [values[0]], {prepared: 1}, function (err, result) {
+      client.execute(query, [values[0]], {prepare: 1}, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');

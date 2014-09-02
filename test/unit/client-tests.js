@@ -12,16 +12,17 @@ describe('Client', function () {
       //make it async
       setTimeout(function () {
         prepareCounter++;
-        cb(null, {id: new Buffer([0])});
+        cb(null, {id: new Buffer([0]), meta: {}});
       }, 50);
     };
     Client.__set__("RequestHandler", requestHandlerMock);
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
       prepareCounter = 0;
-      client._getPrepared('QUERY1', function (err, id) {
+      client._getPrepared('QUERY1', function (err, id, meta) {
         assert.equal(err, null);
         assert.notEqual(id, null);
+        assert.notEqual(meta, null);
         assert.strictEqual(id.constructor.name, 'Buffer');
         assert.strictEqual(prepareCounter, 1);
         done();
@@ -77,9 +78,10 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
-      client._getPrepared('QUERY1', function (err, id) {
+      client._getPrepared('QUERY1', function (err, id, meta) {
         assert.ok(err, 'It should callback with error');
         assert.equal(id, null);
+        assert.equal(meta, null);
         done();
       });
     });

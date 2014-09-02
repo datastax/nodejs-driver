@@ -374,52 +374,6 @@ describe('Client', function () {
     });
   });
 
-  describe('#streamField()', function () {
-    it('should yield a readable stream', function (done) {
-      var id = 100;
-      var blob = new Buffer('Freaks and geeks 1999');
-      async.series([
-        function (next) {
-          client.execute(queryBlobInsert, [id, blob], next);
-        },
-        function (next) {
-          client.streamField(queryBlobSelect, [id], function (n, row, blobStream) {
-            assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
-            assert.strictEqual(n, 0);
-            assertStreamReadable(blobStream, blob, next);
-          });
-        }
-      ], done);
-    });
-
-    it('should callback with error', function (done) {
-      client.streamField('SELECT TO FAIL MISERABLY', function (n, row, stream) {
-        assert.ok(fail, 'It should never execute the row callback');
-      }, function (err) {
-        assert.ok(err, 'It should yield an error');
-        done();
-      });
-    });
-    
-    it('should yield a null stream when the field is null', function (done) {
-      var id = 110;
-      var blob = null;
-
-      async.series([
-        function (next) {
-          client.execute(queryBlobInsert, [id, blob], next);
-        },
-        function (next) {
-          client.streamField(queryBlobSelect, [id], function (n, row, blobStream) {
-            assert.strictEqual(row.get('id'), id, 'The row must be retrieved');
-            assert.equal(blobStream, null, 'The file stream must be NULL');
-            next();
-          });
-        }
-      ], done);
-    });
-  });
-
   after(function (done) {
     client.shutdown(done);
   });

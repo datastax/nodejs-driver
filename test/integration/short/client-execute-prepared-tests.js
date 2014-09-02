@@ -45,6 +45,13 @@ describe('Client', function () {
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(values, columnNames, done);
     });
+    it('should use prepared metadata to determine the type of params in query', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_keyspaces where keyspace_name = ?', ['system'], {prepare: 1}, function (err, result) {
+        assert.ifError(err);
+        done();
+      });
+    });
   });
 });
 

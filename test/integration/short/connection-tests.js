@@ -79,5 +79,5 @@ function newInstance(address){
 }
 
 function getRequest(query) {
-  return new writers.QueryWriter(query, [], types.consistencies.one, null, null);
+  return new writers.QueryWriter(query, null, null);
 }

@@ -7,7 +7,6 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
-
 describe('Client', function () {
   this.timeout(120000);
   describe('#stream(query, params, {prepare: 0})', function () {

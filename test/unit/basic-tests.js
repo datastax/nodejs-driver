@@ -14,7 +14,7 @@ var retry = require('../../lib/policies/retry.js');
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {
-    it('should guess the native types', function () {
+    it('should guess the native types @c1-2', function () {
       var guessDataType = encoder.guessDataType;
       assert.strictEqual(guessDataType(1), dataTypes.int, 'Guess type for an integer number failed');
       assert.strictEqual(guessDataType(1.01), dataTypes.double, 'Guess type for a double number failed');
@@ -32,7 +32,7 @@ describe('encoder', function () {
 
   describe('#encode() and #decode', function () {
     var typeEncoder = encoder;
-    it('should encode and decode maps', function () {
+    it('should encode and decode maps @c2-1', function () {
       var value = {value1: 'Surprise', value2: 'Madafaka'};
       var encoded = typeEncoder.encode({hint: dataTypes.map, value: value});
       var decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);

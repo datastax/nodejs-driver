@@ -14,7 +14,7 @@ var helper = {
    */
   batchInsert: function (con, query, paramsArray, callback) {
     async.mapSeries(paramsArray, function (params, next) {
-      con.execute(query, params, types.consistencies.one, next);
+      con.execute(query, params, {consistency: types.consistencies.one}, next);
     }, callback);
   },
   throwop: function (err) {

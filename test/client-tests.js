@@ -583,30 +583,9 @@ describe('Client', function () {
         }).on('error', done);
     });
 
-    it('should end when no rows', function (done) {
-      var stream = client.stream(selectInQuery, [-1, -1, -1, -1], helper.throwop);
-      stream
-        .on('end', done)
-        .on('readable', function () {
-          assert.ok(false, 'Readable event should not be fired');
-        }).on('error', done);
-    });
-
     it('should emit a ResponseError', function (done) {
       var counter = 0;
       var stream = client.stream(selectInQuery, [0], function (err) {
-        assert.ok(err, 'It should callback with error');
-        if (++counter === 2) done();
-      });
-      stream.on('error', function (err) {
-        assert.strictEqual(err.name, 'ResponseError');
-        if (++counter === 2) done();
-      });
-    });
-
-    it('bad query should emit a ResponseError', function (done) {
-      var counter = 0;
-      var stream = client.stream('SELECT SHOULD FAIL', function (err) {
         assert.ok(err, 'It should callback with error');
         if (++counter === 2) done();
       });

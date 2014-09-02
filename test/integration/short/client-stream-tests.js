@@ -110,6 +110,7 @@ describe('Client', function () {
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 1000;
       async.series([
+        client.connect.bind(client),
         function (next) {
           client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
         },
@@ -126,7 +127,7 @@ describe('Client', function () {
         function (next) {
           var query = util.format('SELECT * FROM %s LIMIT 10000', table);
           var counter = 0;
-          var stream = client.stream(query, [], {prepare: 1})
+          var stream = client.stream(query, [], {prepare: 1, consistency: types.consistencies.quorum})
             .on('end', function () {
               assert.strictEqual(counter, 1000)
               done();
@@ -144,6 +145,67 @@ describe('Client', function () {
             });
         }
       ], done);
+    });
+    it('should emit argument parsing errors', function (done) {
+      var client = newInstance();
+      var stream = client.stream('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [{}], {prepare: 1});
+      var errCalled = false;
+      stream
+        .on('error', function (err) {
+          assert.ok(err);
+          assert.ok(err instanceof TypeError, 'Error should be an instance of TypeError');
+          errCalled = true;
+        })
+        .on('end', function () {
+          assert.strictEqual(errCalled, true);
+          done();
+        });
+    });
+    it('should emit other ResponseErrors', function (done) {
+      var client = newInstance();
+      //Invalid consistency
+      var stream = client.stream('SELECT * FROM system.schema_keyspaces', null, {prepare: 1, consistency: 35});
+      var errCalled = false;
+      stream
+        .on('readable', function () {
+          var row;
+          while (row = this.read()) {
+            assert.ok(row);
+          }
+        })
+        .on('error', function (err) {
+          assert.ok(err);
+          assert.ok(err instanceof errors.ResponseError, 'Error should be an instance of ResponseError');
+          assert.ok(err.code === types.responseErrorCodes.invalid || err.code === types.responseErrorCodes.protocolError, 'Obtained err code ' + err.code);
+          errCalled = true;
+        })
+        .on('end', function () {
+          assert.strictEqual(errCalled, true);
+          done();
+        });
+    });
+    it('should wait buffer until read', function (done) {
+      var client = newInstance();
+      var allRead = false;
+      var stream = client.stream('SELECT * FROM system.schema_keyspaces', null, {prepare: 1});
+      stream.
+        on('end', function () {
+          assert.strictEqual(allRead, true);
+          done();
+        })
+        .on('error', helper.throwop)
+        .on('readable', function () {
+          var row;
+          var streamContext = this;
+          setTimeout(function () {
+            //delay all reading
+            var row;
+            while (row = streamContext.read()) {
+              assert.ok(row);
+            }
+            allRead = true;
+          }, 2000);
+        });
     });
   });
 });

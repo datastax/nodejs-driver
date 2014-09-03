@@ -33,12 +33,13 @@ describe('Client', function () {
       ], done);
     });
     after(helper.ccmHelper.remove);
-    it('should use parameter hints', function (done) {
-      var query = util.format('INSERT INTO %s (id, text_sample, float_sample) VALUES (?, ?, ?)', table);
-      var args = [types.uuid(), 'text sample', 1000.1];
-      var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float];
-      var client = newInstance();
-      client.execute(query, args, {hints: hints}, done);
-    });
+    it('should use parameter hints');
+//    , function (done) {
+//      var query = util.format('INSERT INTO %s (id, text_sample, float_sample) VALUES (?, ?, ?)', table);
+//      var args = [types.uuid(), 'text sample', 1000.1];
+//      var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float];
+//      var client = newInstance();
+//      client.execute(query, args, {hints: hints}, done);
+//    });
   });
 });

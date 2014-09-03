@@ -64,14 +64,14 @@ describe('Client', function () {
       ], done);
     });
     it('should execute a batch of queries with params', function (done) {
-      var insertQuery = 'INSERT INTO %s (id, int_sample) VALUES (?, ?)';
+      var insertQuery = 'INSERT INTO %s (id, double_sample) VALUES (?, ?)';
       var selectQuery = 'SELECT * FROM %s WHERE id = %s';
       var id1 = types.uuid();
       var id2 = types.uuid();
       var client = newInstance();
       var queries = [
         {query: util.format(insertQuery, table1), params: [id1, 1000]},
-        {query: util.format(insertQuery, table2), params: [id2, 2000]}
+        {query: util.format(insertQuery, table2), params: [id2, 2000.2]}
       ];
       async.series([
         function (next) {
@@ -83,7 +83,7 @@ describe('Client', function () {
             assert.ok(result);
             assert.ok(result.rows);
             assert.equal(result.rows[0].text_sample, null);
-            assert.equal(result.rows[0].int_sample, 1000);
+            assert.equal(result.rows[0].double_sample, 1000);
             next();
           });
         },
@@ -92,7 +92,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.ok(result);
             assert.ok(result.rows);
-            assert.strictEqual(result.rows[0].int_sample, 2000);
+            assert.strictEqual(result.rows[0].double_sample, 2000.2);
             next();
           });
         }

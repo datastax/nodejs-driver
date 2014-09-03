@@ -118,7 +118,8 @@ var helper = {
       val1 = val1.toString('hex');
       val2 = val2.toString('hex');
     }
-    if (val1 instanceof types.Long && val2 instanceof types.Long) {
+    if (val1 instanceof types.Long && val2 instanceof types.Long ||
+      val1 instanceof Date && val2 instanceof Date) {
       val1 = val1.toString();
       val2 = val2.toString();
     }

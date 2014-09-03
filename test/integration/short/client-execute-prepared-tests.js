@@ -35,7 +35,7 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.uuid(), 'as', '111', 1, new types.Long(0x1001, 0x0109AA), null, null, null, null, null, null, null, null];
+      var values = [types.uuid(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
 
       serializationTest(values, columnNames, done);
@@ -74,9 +74,14 @@ function serializationTest(values, columns, done) {
       client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
     },
     function (next) {
+      var markers = '?';
+      var columnsSplit = columns.split(',');
+      for (var i = 1; i < columnsSplit.length; i++) {
+        markers += ', ?';
+      }
       var query = util.format('INSERT INTO %s ' +
         '(%s) VALUES ' +
-        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', table, columns);
+        '(%s)', table, columns, markers);
       client.execute(query, values, {prepare: 1}, next);
     },
     function (next) {

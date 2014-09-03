@@ -34,6 +34,15 @@ describe('Client', function () {
         done();
       });
     });
+    it('should prepare and execute a query without parameters', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_columnfamilies', null, {prepare: 1}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result);
+        assert.ok(result.rows.length);
+        done();
+      });
+    });
     it('should serialize all guessed types', function (done) {
       var values = [types.uuid(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
@@ -46,11 +55,9 @@ describe('Client', function () {
       serializationTest(values, columnNames, done);
     });
     it('should use prepared metadata to determine the type of params in query', function (done) {
-      var client = newInstance();
-      client.execute('SELECT * FROM system.schema_keyspaces where keyspace_name = ?', ['system'], {prepare: 1}, function (err, result) {
-        assert.ifError(err);
-        done();
-      });
+      var values = [types.uuid(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], new Buffer([192, 168, 1, 200])];
+      var columnNames = 'id, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
+      serializationTest(values, columnNames, done);
     });
   });
 });

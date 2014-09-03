@@ -91,22 +91,23 @@ var helper = {
    */
   createTableCql: function (tableName) {
     return  util.format(' CREATE TABLE %s (' +
-            '   id uuid primary key,' +
-            '   ascii_sample ascii,' +
-            '   text_sample text,' +
-            '   int_sample int,' +
-            '   bigint_sample bigint,' +
-            '   float_sample float,' +
-            '   double_sample double,' +
-            '   decimal_sample decimal,' +
-            '   blob_sample blob,' +
-            '   boolean_sample boolean,' +
-            '   timestamp_sample timestamp,' +
-            '   inet_sample inet,' +
-            '   timeuuid_sample timeuuid,' +
-            '   map_sample map<text, text>,' +
-            '   list_sample list<text>,' +
-            '   set_sample set<text>)', tableName);
+      '   id uuid primary key,' +
+      '   ascii_sample ascii,' +
+      '   text_sample text,' +
+      '   int_sample int,' +
+      '   bigint_sample bigint,' +
+      '   float_sample float,' +
+      '   double_sample double,' +
+      '   decimal_sample decimal,' +
+      '   blob_sample blob,' +
+      '   boolean_sample boolean,' +
+      '   timestamp_sample timestamp,' +
+      '   inet_sample inet,' +
+      '   timeuuid_sample timeuuid,' +
+      '   map_sample map<text, text>,' +
+      '   list_sample list<text>,' +
+      '   list_sample2 list<int>,' +
+      '   set_sample set<text>)', tableName);
   },
   createKeyspaceCql: function (keyspace, replicationFactor) {
     return util.format('CREATE KEYSPACE %s WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d};',
@@ -114,6 +115,9 @@ var helper = {
       replicationFactor);
   },
   assertValueEqual: function (val1, val2) {
+    if (val1 === null && val2 === null) {
+      return;
+    }
     if (val1 instanceof Buffer && val2 instanceof Buffer) {
       val1 = val1.toString('hex');
       val2 = val2.toString('hex');
@@ -124,8 +128,8 @@ var helper = {
       val2 = val2.toString();
     }
     if (util.isArray(val1) || (val1.constructor && val1.constructor.name === 'Object')) {
-      val1 = util.inspect(val1);
-      val2 = util.inspect(val2);
+      val1 = util.inspect(val1, {depth: null});
+      val2 = util.inspect(val2, {depth: null});
     }
     assert.strictEqual(val1, val2);
   },

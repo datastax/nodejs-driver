@@ -123,6 +123,10 @@ var helper = {
       val1 = val1.toString();
       val2 = val2.toString();
     }
+    if (util.isArray(val1) || (val1.constructor && val1.constructor.name === 'Object')) {
+      val1 = util.inspect(val1);
+      val2 = util.inspect(val2);
+    }
     assert.strictEqual(val1, val2);
   },
   /**

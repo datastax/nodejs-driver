@@ -1,9 +1,13 @@
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
-//project modules
+
+var helper = require('../test-helper.js');
+var Client = require('../../lib/client.js');
+var Host = require('../../lib/host.js').Host;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
+var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 
 //mocha test fixture
 describe('RoundRobinPolicy', function () {
@@ -14,7 +18,7 @@ describe('RoundRobinPolicy', function () {
     var times = 100;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(function (err, iterator) {
+        policy.newQueryPlan(null, function (err, iterator) {
           assert.equal(err, null);
           var item = iterator.next();
           assert.strictEqual(item.done, false);
@@ -46,7 +50,7 @@ describe('RoundRobinPolicy', function () {
     var times = 15;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(function (err, iterator) {
+        policy.newQueryPlan(null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
@@ -79,7 +83,7 @@ describe('RoundRobinPolicy', function () {
     var times = 10;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(function (err, iterator) {
+        policy.newQueryPlan(null, function (err, iterator) {
           var item;
           for (var i = 0; i < originalHosts.length; i++) {
             item = iterator.next();
@@ -98,5 +102,55 @@ describe('RoundRobinPolicy', function () {
       }, done);
     });
   });
-  //TODO: Check with hosts changing
+  describe('DCAwareRoundRobinPolicy', function () {
+    it('should yield local nodes in a round robin manner in parallel', function (done) {
+      var policy = new DCAwareRoundRobinPolicy('dc1');
+      var hosts = [];
+      var originalHosts = [];
+      for (var i = 0; i < 50; i++) {
+        var h = new Host(i, 2, helper.baseOptions);
+        h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
+        originalHosts.push(h);
+      }
+      var localLength = originalHosts.length / 2;
+      var times = 1;
+      policy.init(new Client(helper.baseOptions), originalHosts, function (err) {
+        assert.ifError(err);
+        async.times(times, function (n, next) {
+          policy.newQueryPlan(null, function (err, iterator) {
+            assert.equal(err, null);
+            for (var i = 0; i < localLength; i++) {
+              var item = iterator.next();
+              assert.strictEqual(item.done, false, 'It shouldn\'t be done at index ' + i);
+              hosts.push(item.value);
+            }
+            next();
+          });
+        }, function (err) {
+          assert.equal(err, null);
+          assert.strictEqual(hosts.length, times * localLength);
+          //Count the number of times of each element
+          originalHosts.forEach(function (item) {
+            var length = 0;
+            var lastHost = null;
+            hosts.forEach(function (host) {
+              length += (host === item ? 1 : 0);
+              assert.notEqual(lastHost, host);
+              lastHost = host;
+            });
+            if (item.datacenter === 'dc1') {
+              //check that appears the same times it was iterated.
+              assert.strictEqual(length, times);
+            }
+            else {
+              //check that it never hit the remote dc
+              assert.strictEqual(length, 0);
+            }
+          });
+          done();
+        });
+      });
+    });
+  });
+  //TODO: Check with hosts changing, check if they are considered.
 });

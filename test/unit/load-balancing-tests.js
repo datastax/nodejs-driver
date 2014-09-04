@@ -105,6 +105,8 @@ describe('RoundRobinPolicy', function () {
   });
   describe('DCAwareRoundRobinPolicy', function () {
     it('should yield local nodes in a round robin manner in parallel', function (done) {
+      //local datacenter: dc1
+      //0 host per remote datacenter
       var policy = new DCAwareRoundRobinPolicy('dc1');
       var hosts = [];
       var originalHosts = [];
@@ -114,14 +116,20 @@ describe('RoundRobinPolicy', function () {
         originalHosts.push(h);
       }
       var localLength = originalHosts.length / 2;
-      var times = 70;
+      var times = 1;
       policy.init(new Client(helper.baseOptions), originalHosts, function (err) {
         assert.ifError(err);
         async.times(times, function (n, next) {
           policy.newQueryPlan(null, function (err, iterator) {
             assert.equal(err, null);
-            for (var i = 0; i < localLength; i++) {
+            for (var i = 0; i < originalHosts.length; i++) {
               var item = iterator.next();
+              if (i >= localLength) {
+                //once the local have ended, it should be "done"
+                assert.strictEqual(item.done, true, 'Not done for item ' + i);
+                assert.equal(item.value, null);
+                continue;
+              }
               assert.strictEqual(item.done, false, 'It shouldn\'t be done at index ' + i);
               hosts.push(item.value);
             }
@@ -153,7 +161,8 @@ describe('RoundRobinPolicy', function () {
       });
     });
     it('should yield the correct amount of remote nodes at the end', function (done) {
-      //local dc + 2 per each datacenter
+      //local datacenter: null (first host's datacenter will be used)
+      //2 host per remote datacenter
       var policy = new DCAwareRoundRobinPolicy(null, 2);
       var hosts = [];
       var originalHosts = [];

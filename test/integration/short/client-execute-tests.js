@@ -7,14 +7,6 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 
-
-/**
- * @returns {Client}
- */
-function newInstance() {
-  return new Client(helper.baseOptions);
-}
-
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 0}, callback)', function () {
@@ -101,4 +93,11 @@ function insertSelectTest(client, table, columns, values, hints, done) {
       });
     }
   ], done);
+}
+
+/**
+ * @returns {Client}
+ */
+function newInstance() {
+  return new Client(helper.baseOptions);
 }

@@ -157,6 +157,11 @@ function Ccm() {
   //Use an instance to maintain state
 }
 
+/**
+ * Removes previous and creates a new cluster (create, populate and start)
+ * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
+ * @param {Function} callback
+ */
 Ccm.prototype.startAll = function (nodeLength, callback) {
   var self = this;
   async.series([

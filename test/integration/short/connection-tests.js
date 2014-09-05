@@ -2,7 +2,8 @@ var assert = require('assert');
 var util = require('util');
 var async = require('async');
 
-var Connection = require('../../../index.js').Connection;
+var Connection = require('../../../lib/connection.js');
+var defaultOptions = require('../../../lib/client-options.js').defaultOptions;
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 var writers = require('../../../lib/writers.js');
@@ -16,7 +17,7 @@ describe('Connection', function () {
     it('should open', function (done) {
       var localCon = newInstance();
       localCon.open(function (err) {
-        assert.equal(err, null);
+        assert.ifError(err);
         assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
         localCon.close(done);
       });
@@ -75,7 +76,8 @@ function newInstance(address){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
   }
-  return new Connection(address, {});
+  var options = utils.extend({}, defaultOptions);
+  return new Connection(address, 2, null, options);
 }
 
 function getRequest(query) {

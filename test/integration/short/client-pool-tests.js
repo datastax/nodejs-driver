@@ -5,6 +5,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
+var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -39,33 +40,33 @@ describe('Client', function () {
       }, done);
     });
   });
+  describe.skip('#connect() with auth', function () {
+    //launch manual C* instance
+    var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
+    it('should connect using the plain text authenticator', function (done) {
+      var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')});
+      var client = new Client(options);
+      async.times(100, function (n, next) {
+        client.connect(next);
+      }, function (err) {
+        done(err);
+      });
+    });
+    it('should connect using return an AuthenticationError', function (done) {
+      var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS')});
+      var client = new Client(options);
+      client.connect(function (err) {
+        assert.ok(err);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        helper.assertInstanceOf(err.innerErrors, Array);
+        helper.assertInstanceOf(err.innerErrors[0], errors.AuthenticationError);
+        done();
+      });
+    });
+  });
   describe('#execute()', function () {
     before(helper.ccmHelper.start(2));
     after(helper.ccmHelper.remove);
-    it('should execute a basic query', function (done) {
-      var client = newInstance();
-      client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
-        assert.equal(err, null);
-        assert.notEqual(result, null);
-        assert.notEqual(result.rows, null);
-        done();
-      });
-    });
-    it('should callback with syntax error', function (done) {
-      var client = newInstance();
-      client.execute('SELECT WILL FAIL', function (err, result) {
-        assert.notEqual(err, null);
-        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
-        assert.equal(result, null);
-        done();
-      });
-    });
-    it('should handle 500 parallel queries', function (done) {
-      var client = newInstance();
-      async.times(500, function (n, next) {
-        client.execute('SELECT * FROM system.schema_keyspaces', [], next);
-      }, done)
-    });
     it('should change the active keyspace after USE statement', function (done) {
       var client = newInstance();
       client.execute('USE system', function (err, result) {

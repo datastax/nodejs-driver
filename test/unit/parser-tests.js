@@ -4,6 +4,7 @@ var async = require('async');
 
 var streams = require('../../lib/streams.js');
 var types = require('../../lib/types.js');
+var helper = require('../test-helper.js');
 
 /**
  * Tests for the transform streams that are involved in the reading of a response
@@ -51,6 +52,7 @@ describe('Parser', function () {
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.strictEqual(item.keyspaceSet, 'ks1');
         done();
       });
       //kind + stringLength + string
@@ -177,6 +179,27 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
+    });
+
+    it('should read a AUTH_CHALLENGE response', function (done) {
+      var parser = new streams.Parser({objectMode:true});
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.authChallenge);
+        helper.assertValueEqual(item.token, new Buffer([100, 100]));
+        assert.strictEqual(item.authChallenge, true);
+        done();
+      });
+      //Length + buffer
+      var bodyLength = 4 + 2;
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
+        chunk: new Buffer([0, 0, 0, 2])
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
+        chunk: new Buffer([100, 100])
+      }, null, doneIfError(done));
     });
   });
 });

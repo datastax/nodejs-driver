@@ -25,6 +25,30 @@ describe('Client', function () {
       ], done);
     });
     after(helper.ccmHelper.remove);
+    it('should execute a basic query', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+        assert.equal(err, null);
+        assert.notEqual(result, null);
+        assert.notEqual(result.rows, null);
+        done();
+      });
+    });
+    it('should callback with syntax error', function (done) {
+      var client = newInstance();
+      client.execute('SELECT WILL FAIL', function (err, result) {
+        assert.notEqual(err, null);
+        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+        assert.equal(result, null);
+        done();
+      });
+    });
+    it('should handle 500 parallel queries', function (done) {
+      var client = newInstance();
+      async.times(500, function (n, next) {
+        client.execute('SELECT * FROM system.schema_keyspaces', [], next);
+      }, done)
+    });
     it('should guess known types', function (done) {
       var client = newInstance();
       var columns = 'id, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';

@@ -39,6 +39,20 @@ describe('Client', function () {
         client.connect(next);
       }, done);
     });
+    it('should use the keyspace provided', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
+      //on all hosts
+      async.times(10, function (n, next) {
+        assert.strictEqual(client.keyspace, 'system');
+        //A query in the system ks
+        client.execute('SELECT * FROM schema_keyspaces', function (err, result) {
+          assert.ifError(err);
+          assert.ok(result.rows);
+          assert.ok(result.rows.length > 0);
+          next();
+        });
+      }, done);
+    });
   });
   describe.skip('#connect() with auth', function () {
     //launch manual C* instance
@@ -67,6 +81,17 @@ describe('Client', function () {
   describe('#execute()', function () {
     before(helper.ccmHelper.start(2));
     after(helper.ccmHelper.remove);
+    it('should fail to execute if the keyspace does not exists', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
+      //on all hosts
+      async.times(10, function (n, next) {
+        //No matter what, the keyspace does not exists
+        client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+          helper.assertInstanceOf(err, Error);
+          next();
+        });
+      }, done);
+    });
     it('should change the active keyspace after USE statement', function (done) {
       var client = newInstance();
       client.execute('USE system', function (err, result) {
@@ -76,6 +101,15 @@ describe('Client', function () {
         async.times(100, function (n, next) {
           client.execute('SELECT * FROM schema_keyspaces', [], next);
         }, done)
+      });
+    });
+    it('should return ResponseError when executing USE with a wrong keyspace @usefail', function (done) {
+      var client = newInstance();
+      var count = 0;
+      client.execute('USE ks_not_exist', function (err, result) {
+        assert.ok(err instanceof errors.ResponseError);
+        assert.equal(client.keyspace, null);
+        done();
       });
     });
     it('should create the amount of connections determined by the options', function (done) {

@@ -106,6 +106,36 @@ describe('Client', function () {
       });
     });
   });
+  describe('#shutdown()', function () {
+    before(helper.ccmHelper.start(2));
+    after(helper.ccmHelper.remove);
+    it('should close all connections to all hosts', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function makeSomeQueries(next) {
+          //to ensure that the pool is all up!
+          async.times(100, function (n, timesNext) {
+            client.execute('SELECT * FROM system.schema_keyspaces', timesNext);
+          }, next);
+        },
+        function shutDown(next) {
+          var hosts = client.hosts.slice(0);
+          assert.strictEqual(hosts.length, 2);
+          assert.ok(hosts[0].pool.connections.length > 0);
+          assert.ok(hosts[1].pool.connections.length > 0);
+          client.shutdown(next);
+        },
+        function checkPool(next) {
+          var hosts = client.hosts.slice(0);
+          assert.strictEqual(hosts.length, 2);
+          assert.strictEqual(hosts[0].pool.connections, null);
+          assert.strictEqual(hosts[1].pool.connections, null);
+          next();
+        }
+      ], done);
+    });
+  });
 });
 
 /**

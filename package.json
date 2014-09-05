@@ -1,20 +1,8 @@
 {
-  "name": "datastax-node-driver",
+  "name": "cassandra-driver",
   "version": "0.1.0",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
-  "contributors" :[
-    "Jorge Bay",
-    "Andrew Kish",
-    "Tommy Messbauer",
-    "Adam Faulkner",
-    "Adrian Pike",
-    "Suguru Namura",
-    "Jan Schmidle",
-    "Sam Grönblom",
-    "Daniel Smedegaard Buus",
-    "Bryce Baril"
-  ],
   "keywords": [
     "cassandra",
     "cql",
@@ -40,6 +28,6 @@
   },
   "engines": {"node" : ">=0.10.0"},
   "scripts": {
-    "test": "mocha test -R spec -t 5000"
+    "test": "mocha test/unit -R spec -t 5000"
   }
 }

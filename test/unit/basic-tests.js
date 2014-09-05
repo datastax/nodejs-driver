@@ -4,13 +4,15 @@ var events = require('events');
 var uuid = require('node-uuid');
 var async = require('async');
 var utils = require('../../lib/utils.js');
+
+var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
 var types = require('../../lib/types.js');
 var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
-var Connection = require('../../index.js').Connection;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var helper = require('../test-helper.js')
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {
@@ -469,5 +471,22 @@ describe('clientOptions', function () {
         });
       });
     });
+  });
+});
+
+describe('exports', function () {
+  it('should contain API', function () {
+    //test that the exposed API is the one expected
+    //it looks like a dumb test and it is, but it is necessary!
+    var api = require('../../index.js');
+    assert.strictEqual(api, Client);
+    assert.ok(api.errors);
+    assert.ok(api.types);
+    assert.ok(api.policies);
+    assert.ok(api.auth);
+    assert.strictEqual(api.policies.loadBalancing, loadBalancing);
+    assert.strictEqual(api.policies.retry, retry);
+    assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection.js'));
+    assert.strictEqual(api.auth, require('../../lib/auth'));
   });
 });

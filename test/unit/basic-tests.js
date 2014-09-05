@@ -479,7 +479,7 @@ describe('exports', function () {
     //test that the exposed API is the one expected
     //it looks like a dumb test and it is, but it is necessary!
     var api = require('../../index.js');
-    assert.strictEqual(api, Client);
+    assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
     assert.ok(api.types);
     assert.ok(api.policies);

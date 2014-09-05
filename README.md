@@ -1,15 +1,40 @@
-﻿## DataStax Node.js Driver for Apache Cassandra
+﻿# DataStax Node.js Driver for Apache Cassandra
 
-Node.js CQL driver for [Apache Cassandra](http://cassandra.apache.org/).
+Node.js driver for [Apache Cassandra][cassandra]. This driver works exclusively with the Cassandra Query Language version 3 (CQL3) and Cassandra's native protocol.
 
-The driver uses Cassandra's binary protocol which was introduced in Cassandra version 1.2.
+## Installation
+
+```bash
+$ npm install cassandra-driver
+```
+
+## Features
+
+- Nodes discovery
+- Configurable load balancing
+- Transparent failover
+- Tunability
+- Row streaming
+- Prepared statements and query batches
+
+## Basic usage
+
+```javascript
+var driver = require('cassandra-driver');
+var client = new driver.Client({contactPoints: ['host1', 'host2'], keyspace: 'ks1'});
+var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
+client.execute(query, ['guy'], function(err, result) {
+  console.log('got user profile with email ' + result.rows[0].email);
+});
+
+```
 
 ## API
 ### Client
 
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the setup of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
 
-*The Client is the recommended driver class to interact with Cassandra nodes*.
+*Usually you need one Client instance per Cassandra cluster.*
 
 #### new Client(options)
 
@@ -23,48 +48,72 @@ It ensures the pool is connected. It is not required to call it, internally the 
 
 The optional `callback` parameter will be executed when the pool is connected. If the pool is already connected, it will be called instantly. 
 
-#### client.execute(query, [params], [options], callback)
+#### client.execute(query, [params], [queryOptions], callback)
 
-Prepares (the first time) and executes the prepared query.
+The `query` is the cql query to execute, with `?` marker for parameter placeholder.
 
-The `query` is the cql query to execute, with `?` placeholders as parameters.
-
-
-Using **prepared statements increases performance** compared to plain executes, especially for repeated queries.
+To prepare an statement, provide {prepare: true} in the queryOptions. It will prepare (the first time) and execute the prepared statement.
+                                                                                                                     
+Using prepared statements increases performance compared to plain executes, especially for repeated queries. 
+It has the additional benefit of providing metadata of the parameters to the driver, 
+**allowing better type mapping between javascript and Cassandra** without the need of additional info (hints) from the user. 
 
 In the case the query is already being prepared on a host, it queues the executing of a prepared statement on that
 host until the preparing finished (the driver will not issue a request to prepare statement more than once).
 
-The driver will execute the query in a connection to a node. In case the Cassandra node becomes unreachable,
-it will automatically retry it on another connection until `maxExecuteRetries` is reached.
+`callback` should take two arguments err and result.
 
-Callback should take two arguments err and result.
+`queryOptions` is an Object that may contain the following optional properties:
+
+- `prepare`: (boolean) if set, prepares the query (once) and executes the prepared statement.
+- `consistency`: the consistency level for the operation (defaults to one).
+The possible consistency levels are defined in `driver.types.consistencies`.
+- `fetchSize`: The maximum amount of rows to be retrieved per request (defaults to 5000)
 
 ##### Example: Updating a row
 ```javascript
 var query = 'UPDATE user_profiles SET birth=? WHERE key=?';
-var params = [new Date(1950, 5, 1), 'jbay'];
-var consistency = cql.types.consistencies.quorum;
-client.execute(query, params, {consistency: consistency}, function(err) {
-  if (err) console.log('Something when wrong and the row was not updated');
-  else {
-    console.log('Updated on the cluster');
-  }
+var options = {
+  consistency: driver.types.consistencies.quorum,
+  prepare: true};
+var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
+client.execute(query, params, queryOptions, function(err) {
+  if (err) return console.log('Something when wrong', err);
+  console.log('Row updated on the cluster');
 });
 ```
 
-#### client.executeBatch(queries, [options], callback)
+#### client.batch(queries, [queryOptions], callback)
 
 Executes batch of queries on an available connection.
 
-In case the Cassandra node becomes unreachable before a response,
-it will automatically retry it on another connection until `maxExecuteRetries` is reached.
-
 Callback should take two arguments err and result.
 
-#### client.eachRow(query, [params], [options], rowCallback, endCallback)
+#####Example: Update multiple column families
 
-Prepares (the first time), executes the prepared query and streams the rows as soon as they are received.
+```javascript
+var userId = driver.types.uuid();
+var messageId = driver.types.uuid();
+var queries = [
+  {
+    query: 'INSERT INTO users (id, name) values (?, ?)',
+    params: [userId, 'jimi-hendrix']
+  },
+  {
+    query: 'INSERT INTO messages (id, user_id, body) values (?, ?, ?)',
+    params: [messageId, userId, 'Message from user jimi-hendrix']
+  }
+];
+var queryOptions: { consistency: driver.types.consistencies.quorum };
+client.batch(queries, queryOptions, function(err) {
+  if (err) return console.log('The rows were not inserted', err);
+  console.log('Data updated on cluster');
+});
+```
+
+#### client.eachRow(query, [params], [queryOptions], rowCallback, endCallback)
+
+Executes a query and streams the rows as soon as they are received.
 
 It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
 
@@ -85,13 +134,11 @@ client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id
 );
 ```
 
-#### client.stream(query, [params], [options])
+#### client.stream(query, [params], [queryOptions])
 
-Returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
+Executes the query and returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
 When a row can be read from the stream, it will emit a `readable` event.
 It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
-
-Prepares (the first time), executes the prepared query.
 
 It executes `callback(err)` when all rows have been received or there is an error retrieving the row.
 
@@ -151,11 +198,19 @@ Function to generate a uuid __v1__. It uses [node-uuid][uuid] module to generate
 
 Function to generate a uuid __v4__. It uses [node-uuid][uuid] module to generate and accepts the same arguments.
 
+
+### policies
+
+The `policies` module contains load balancing, retry and reconnection classes.
+
+### auth
+
+The `auth` module provides the classes required for authentication. 
 ----
 
 ## Logging
 
-Instances of `Client()` and `Connection()` are `EventEmitter`'s and emit `log` events:
+Instances of `Client()` is an `EventEmitter` and emits `log` events:
 ```javascript
 client.on('log', function(level, message) {
   console.log('log event: %s -- %j', level, message);
@@ -175,31 +230,20 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 
 ## FAQ
 #### Which Cassandra versions does this driver support?
-It supports any Cassandra version greater than 1.2.0.
+It supports any Cassandra version greater than 2.0 and above.
 
 #### Which CQL version does this driver support?
 It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).
-
-#### How can specify the target data type of a query parameter?
-The driver tries to guess the target data type, if you want to set the target data type use a param object with
-the **hint** and **value** properties.
-
-All the cassandra data types are defined in the object `types.dataTypes`.
-
-For example:
-
-```javascript
-//hint as string
-var keyParam = {value: key, hint: 'int'};
-client.execute('SELECT * from users where k=?', [keyParam], callback);
-
-//hint using dataTypes
-var keyParam = {value: key, hint: types.dataTypes.int};
-client.execute('SELECT * from users where k=?', [keyParam], callback);
 ```
 
 #### Should I shutdown the pool after executing a query?
 No, you should only call `client.shutdown` once in your application lifetime.
+
+## Credits
+
+This driver is based on the original work of [Jorge Bay][jorgebay] on [node-cassandra-cql][old-driver] and adds a series of advanced features that are common across all other [DataStax drivers][drivers] for Apache Cassandra.
+
+The development effort to provide an up to date, high performance, fully featured Node.js Driver for Apache Cassandra will continue on this project, while [node-cassandra-cql][old-driver] will be discontinued.
 
 ## License
 
@@ -214,3 +258,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 [uuid]: https://github.com/broofa/node-uuid
 [long]: https://github.com/dcodeIO/Long.js
+[cassandra]: http://cassandra.apache.org/
+[old-driver]: https://github.com/jorgebay/node-cassandra-cql
+[jorgebay]: https://github.com/jorgebay
+[drivers]: https://github.com/datastax

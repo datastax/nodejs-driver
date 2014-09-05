@@ -65,7 +65,7 @@ host until the preparing finished (the driver will not issue a request to prepar
 
 `queryOptions` is an Object that may contain the following optional properties:
 
-- `prepare`: (boolean) if set, prepares the query (once) and executes the prepared statement.
+- `prepare`: if set, prepares the query (once) and executes the prepared statement.
 - `consistency`: the consistency level for the operation (defaults to one).
 The possible consistency levels are defined in `driver.types.consistencies`.
 - `fetchSize`: The maximum amount of rows to be retrieved per request (defaults to 5000)
@@ -73,7 +73,7 @@ The possible consistency levels are defined in `driver.types.consistencies`.
 ##### Example: Updating a row
 ```javascript
 var query = 'UPDATE user_profiles SET birth=? WHERE key=?';
-var options = {
+var queryOptions = {
   consistency: driver.types.consistencies.quorum,
   prepare: true};
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
@@ -234,7 +234,6 @@ It supports any Cassandra version greater than 2.0 and above.
 
 #### Which CQL version does this driver support?
 It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).
-```
 
 #### Should I shutdown the pool after executing a query?
 No, you should only call `client.shutdown` once in your application lifetime.

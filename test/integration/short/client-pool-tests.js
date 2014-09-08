@@ -158,7 +158,7 @@ describe('Client', function () {
         },
         function killNode(seriesNext) {
           setTimeout(function () {
-            helper.ccmHelper.exec(['node2', 'stop', '--not-gently']);
+            helper.ccmHelper.exec(['node1', 'stop', '--not-gently']);
             seriesNext();
           }, 0);
         },

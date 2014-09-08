@@ -52,12 +52,3 @@ describe('DCAwareRoundRobinPolicy', function () {
     ], done);
   });
 });
-
-
-
-/**
- * @returns {Client}
- */
-function newInstance() {
-  return new Client(helper.baseOptions);
-}

@@ -430,6 +430,14 @@ describe('clientOptions', function () {
       var options = clientOptions.extend(a);
       assert.notStrictEqual(a, options);
       assert.notStrictEqual(options, clientOptions.defaultOptions);
+      //it should use baseOptions as source
+      var b = {};
+      options = clientOptions.extend(b, a);
+      //B is the instance source
+      assert.strictEqual(b, options);
+      //A is the target
+      assert.notStrictEqual(a, options);
+      assert.notStrictEqual(options, clientOptions.defaultOptions);
     });
     it('should validate the policies', function () {
       var policy1 = new loadBalancing.RoundRobinPolicy();

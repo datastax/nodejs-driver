@@ -8,7 +8,7 @@ var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
-  this.timeout(120000);
+  this.timeout(30000);
   describe('constructor', function () {
     it('should throw an exception when contactPoints provided', function () {
       assert.throws(function () {
@@ -79,7 +79,7 @@ describe('Client', function () {
     });
   });
   describe('#execute()', function () {
-    before(helper.ccmHelper.start(2));
+    before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
     it('should fail to execute if the keyspace does not exists', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
@@ -103,7 +103,7 @@ describe('Client', function () {
         }, done)
       });
     });
-    it('should return ResponseError when executing USE with a wrong keyspace @usefail', function (done) {
+    it('should return ResponseError when executing USE with a wrong keyspace', function (done) {
       var client = newInstance();
       var count = 0;
       client.execute('USE ks_not_exist', function (err, result) {
@@ -130,7 +130,7 @@ describe('Client', function () {
           }, 100 + n * 2)
       }, function (err) {
         if (err) return done(err);
-        assert.strictEqual(client.hosts.length, 2);
+        assert.strictEqual(client.hosts.length, 3);
         var hosts = client.hosts.slice(0);
         assert.strictEqual(hosts[0].pool.coreConnectionsLength, 3);
         assert.strictEqual(hosts[1].pool.coreConnectionsLength, 3);
@@ -138,6 +138,114 @@ describe('Client', function () {
         assert.strictEqual(hosts[1].pool.connections.length, 3);
         done(err);
       });
+    });
+  });
+  describe('failover', function () {
+    beforeEach(helper.ccmHelper.start(3));
+    afterEach(helper.ccmHelper.remove);
+    it('should failover after a node goes down', function (done) {
+      var client = newInstance();
+      var hosts = {};
+      async.series([
+        function warmUpPool(seriesNext) {
+          async.times(100, function (n, next) {
+            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+              assert.ifError(err);
+              hosts[result._queriedHost] = true;
+              next();
+            });
+          }, seriesNext);
+        },
+        function killNode(seriesNext) {
+          setTimeout(function () {
+            helper.ccmHelper.exec(['node2', 'stop', '--not-gently']);
+            seriesNext();
+          }, 0);
+        },
+        function testCase(seriesNext) {
+          //3 hosts alive
+          assert.strictEqual(Object.keys(hosts).length, 3);
+          var counter = 0;
+          async.times(1000, function (i, next) {
+            client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+              counter++;
+              assert.ifError(err);
+              next();
+            });
+          }, function (err) {
+            assert.ifError(err);
+            //Only 2 hosts alive at the end
+            assert.strictEqual(
+              client.hosts.slice(0).reduce(function (val, h) {
+                return val + (h.isUp() ? 1 : 0);
+              }, 0),
+              2);
+            seriesNext();
+          });
+        }
+      ], done);
+    });
+    it('should failover when a node goes down with some outstanding requests', function (done) {
+      var options = utils.extend({}, helper.baseOptions);
+      options.pooling = {
+        coreConnectionsPerHost: {
+          '0': 1,
+          '1': 1,
+          '2': 0
+        }
+      };
+      var client = new Client(options);
+      var hosts = {};
+      async.series([
+        function warmUpPool(seriesNext) {
+          async.times(10, function (n, next) {
+            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+              assert.ifError(err);
+              hosts[result._queriedHost] = true;
+              next();
+            });
+          }, seriesNext);
+        },
+        function testCase(seriesNext) {
+          //3 hosts alive
+          assert.strictEqual(Object.keys(hosts).length, 3);
+          var counter = 0;
+          var issued = 0;
+          var killed = false;
+          async.times(500, function (n, next) {
+            //console.log('--starting', n);
+            if (n === 10) {
+              //kill a node when there are some outstanding requests
+              helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
+                killed = true;
+                assert.ifError(err);
+                next();
+              });
+              return;
+            }
+            if (killed) {
+              //Don't issue more requests
+              return next();
+            }
+            issued++;
+            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+              assert.ifError(err);
+              counter++;
+              //console.log('issued vs counter', issued, counter);
+              next();
+            });
+          }, function (err) {
+            assert.ifError(err);
+            //Only 2 hosts alive at the end
+            assert.strictEqual(
+              client.hosts.slice(0).reduce(function (val, h) {
+                return val + (h.isUp() ? 1 : 0);
+              }, 0),
+              2);
+            seriesNext();
+          });
+        }
+      ], done);
     });
   });
   describe('#shutdown()', function () {

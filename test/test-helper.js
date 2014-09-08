@@ -50,6 +50,9 @@ var helper = {
   ipPrefix: '127.0.0.',
   Ccm: Ccm,
   ccmHelper: {
+    /**
+     * @returns {Function}
+     */
     start: function (nodeLength) {
       return (function (done) {
         new Ccm().startAll(nodeLength, function (err) {
@@ -195,6 +198,9 @@ Ccm.prototype.startAll = function (nodeLength, callback) {
 };
 
 Ccm.prototype.exec = function (params, callback) {
+  if (!callback) {
+    callback = function () {};
+  }
   var spawn = require('child_process').spawn;
   var process = spawn('ccm', params);
   var stdoutArray= [];

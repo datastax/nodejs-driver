@@ -10,7 +10,7 @@ var writers = require('../../../lib/writers.js');
 var helper = require('../../test-helper.js');
 
 describe('Connection', function () {
-  this.timeout(120000);
+  this.timeout(30000);
   before(helper.ccmHelper.start(1));
   after(helper.ccmHelper.remove);
   describe('#open()', function () {
@@ -70,13 +70,53 @@ describe('Connection', function () {
       ], done);
     });
   });
+  describe('#execute()', function () {
+    it('should queue pending if there is not an available stream id', function (done) {
+      var connection = newInstance();
+      async.series([
+        connection.open.bind(connection),
+        function asserting(seriesNext) {
+          async.times(connection.maxRequests * 2, function (n, next) {
+            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            connection.sendStream(request, null, next);
+          }, seriesNext);
+        }
+      ], done);
+    });
+    it('should callback the pending queue if the connection is there is a socket error', function (done) {
+      var connection = newInstance();
+      var killed = false;
+      async.series([
+        connection.open.bind(connection),
+        function asserting(seriesNext) {
+          async.times(connection.maxRequests * 2, function (n, next) {
+            if (n === connection.maxRequests * 2 - 1) {
+              connection.netClient.destroy();
+              killed = true;
+              return next();
+            }
+            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            connection.sendStream(request, null, function (err) {
+              if (killed && err) {
+                assert.ok(err.isServerUnhealthy);
+                err = null;
+              }
+              next(err);
+            });
+          }, seriesNext);
+        }
+      ], done);
+    });
+  });
 });
 
 function newInstance(address){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
   }
-  var options = utils.extend({}, defaultOptions);
+  //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
+  var logEmitter = function () {};
+  var options = utils.extend({logEmitter: logEmitter}, defaultOptions);
   return new Connection(address, 2, null, options);
 }
 

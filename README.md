@@ -206,6 +206,7 @@ The `policies` module contains load balancing, retry and reconnection classes.
 ### auth
 
 The `auth` module provides the classes required for authentication. 
+
 ----
 
 ## Logging

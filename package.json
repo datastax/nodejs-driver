@@ -30,10 +30,10 @@
     "type" : "git",
     "url" : "https://github.com/datastax/nodejs-driver.git"
   },
+  "scripts":  {
+    "test": "mocha test/unit -R spec -t 5000"
+  },
   "engines": {
     "node" : ">=0.10.0"
-  },
-  "scripts": {
-    "test": "mocha test/unit -R spec -t 5000"
-  }
+   }
 }

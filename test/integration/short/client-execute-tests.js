@@ -36,11 +36,14 @@ describe('Client', function () {
     });
     it('should callback with syntax error', function (done) {
       var client = newInstance();
-      client.execute('SELECT WILL FAIL', function (err, result) {
-        assert.notEqual(err, null);
-        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
-        assert.equal(result, null);
-        done();
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.execute('SELECT WILL FAIL', function (err, result) {
+          assert.notEqual(err, null);
+          assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+          assert.equal(result, null);
+          done();
+        });
       });
     });
     it('should handle 500 parallel queries', function (done) {
@@ -86,6 +89,36 @@ describe('Client', function () {
       var hints = [null, 'map<text, text>', 'list<text>', 'set<text>'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
+    });
+    it('should use pageState and fetchSize', function (done) {
+      var client = newInstance();
+      var pageState = null;
+      async.series([
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          async.times(100, function (n, next) {
+            client.execute(query, [types.uuid(), n.toString()], next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          //Only fetch 70
+          client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 70}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 70);
+            pageState = result.meta.pageState;
+            seriesNext();
+          });
+        },
+        function selectDataRemaining(seriesNext) {
+          //The remaining
+          console.log('starting page state');
+          client.execute(util.format('SELECT * FROM %s', table), [], {pageState: pageState}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 30);
+            seriesNext();
+          });
+        }
+      ], done);
     });
   });
 });

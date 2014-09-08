@@ -94,6 +94,9 @@ describe('Client', function () {
       var client = newInstance();
       var pageState = null;
       async.series([
+        function truncate(seriesNext) {
+          client.execute('TRUNCATE ' + table, seriesNext);
+        },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
@@ -111,7 +114,6 @@ describe('Client', function () {
         },
         function selectDataRemaining(seriesNext) {
           //The remaining
-          console.log('starting page state');
           client.execute(util.format('SELECT * FROM %s', table), [], {pageState: pageState}, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 30);

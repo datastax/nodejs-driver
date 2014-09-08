@@ -7,6 +7,7 @@ var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
 var types = require('../../lib/types.js');
+var utils = require('../../lib/utils.js');
 var reconnection = require('../../lib/policies/reconnection.js');
 
 before(function () {
@@ -19,7 +20,7 @@ before(function () {
 describe('HostConnectionPool', function () {
   describe('#_maybeCreatePool()', function () {
     it('should create the pool once', function (done) {
-      var hostPool = new HostConnectionPool('0.0.0.1', 2, {});
+      var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
       async.times(5, function (n, next) {
         //even though it is called multiple times in parallel
@@ -35,7 +36,7 @@ describe('HostConnectionPool', function () {
 
   describe('#borrowConnection()', function () {
     it('should get an open connection', function (done) {
-      var hostPool = new HostConnectionPool('0.0.0.1', 2, {});
+      var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
       hostPool.borrowConnection(function (err, c) {
         assert.equal(err, null);
@@ -75,7 +76,7 @@ describe('Host', function () {
     it('should create a pool of size determined by the relative distance local', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 5;
       options.pooling.maxConnectionsPerHost[types.distance.local] = 10;
-      var host = new Host('0.0.0.1', 2, options);
+      var host = newHostInstance(options);
       host.setDistance(types.distance.local);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
@@ -89,7 +90,7 @@ describe('Host', function () {
     it('should create a pool of size determined by the relative distance remote', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.remote] = 2;
       options.pooling.maxConnectionsPerHost[types.distance.remote] = 4;
-      var host = new Host('0.0.0.1', 2, options);
+      var host = newHostInstance(options);
       host.setDistance(types.distance.remote);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
@@ -103,7 +104,7 @@ describe('Host', function () {
     it('should resize the pool after distance is set', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 3;
       options.pooling.maxConnectionsPerHost[types.distance.local] = 4;
-      var host = new Host('0.0.0.1', 2, options);
+      var host = newHostInstance(options);
       async.series([
         function (next) {
           host.borrowConnection(function (err, c) {
@@ -139,7 +140,7 @@ describe('Host', function () {
         reconnection: new reconnection.ExponentialReconnectionPolicy(100, maxDelay, true)
       }};
     it('should reset the reconnection schedule when bring it up', function () {
-      var host = new Host('0.0.0.1', 2, options);
+      var host = newHostInstance(options);
       host.setDown();
       //start at zero
       assert.strictEqual(host.reconnectionDelay, 0);
@@ -167,9 +168,24 @@ describe('Host', function () {
         reconnection: new reconnection.ConstantReconnectionPolicy(100)
       }};
     it('should emit event when called', function (done) {
-      var host = new Host('0.0.0.1', 2, options);
+      var host = newHostInstance(options);
       host.on('down', done);
       host.setDown();
     });
   });
 });
+
+/**
+ * @returns {HostConnectionPool}
+ */
+function newHostConnectionPoolInstance() {
+  return new HostConnectionPool('0.0.0.1', 2, {logEmitter: function (){}});
+}
+
+/**
+ * @returns {Host}
+ */
+function newHostInstance(options) {
+  options = utils.extend({logEmitter: function () {}}, options);
+  return new Host('0.0.0.1', 2, options);
+}

@@ -66,7 +66,7 @@ describe('Client', function () {
         done(err);
       });
     });
-    it('should connect using return an AuthenticationError', function (done) {
+    it('should return an AuthenticationError', function (done) {
       var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS')});
       var client = new Client(options);
       client.connect(function (err) {

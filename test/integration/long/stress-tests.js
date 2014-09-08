@@ -85,7 +85,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(times), 200, function (i, next) {
+      async.eachLimit(new Array(times), 100, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one};

@@ -34,6 +34,13 @@ client.execute(query, ['guy'], function(err, result) {
 You can use the project [Mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
 ## API
+
+- [Client](#client) class
+- [types](#types) module
+- [policies](#policies) module
+- [auth](#auth) module
+
+
 ### Client
 
 The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the setup of a CQL binary protocol connection (socket connection, startup message, authentication, ...).

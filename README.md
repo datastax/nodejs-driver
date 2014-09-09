@@ -29,6 +29,10 @@ client.execute(query, ['guy'], function(err, result) {
 
 ```
 
+## Getting Help
+
+You can use the project [Mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
+
 ## API
 ### Client
 
@@ -83,11 +87,35 @@ client.execute(query, params, queryOptions, function(err) {
 });
 ```
 
+#### client.eachRow(query, [params], [queryOptions], rowCallback, endCallback)
+
+Executes a query and streams the rows as soon as they are received.
+
+It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
+
+It executes `callback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
+
+
+##### Example: Reducing a result set
+```javascript
+client.eachRow('SELECT time, temperature FROM temperature WHERE station_id=', ['abc'],
+  function(n, row) {
+    //the callback will be invoked per each row as soon as they are received
+    minTemperature = Math.min(row.temperature, minTemperature);
+  },
+  function (err, rowLength) {
+    if (err) console.error(err);
+    console.log('%d rows where returned', rowLength);
+  }
+);
+```
+
 #### client.batch(queries, [queryOptions], callback)
 
-Executes batch of queries on an available connection.
+Executes batch of queries on an available connection, where `queries` is an Array of string containing the CQL queries
+ or an Array of objects containing the query and the parameters.
 
-Callback should take two arguments err and result.
+`callback` should take two arguments err and result.
 
 #####Example: Update multiple column families
 
@@ -111,29 +139,6 @@ client.batch(queries, queryOptions, function(err) {
 });
 ```
 
-#### client.eachRow(query, [params], [queryOptions], rowCallback, endCallback)
-
-Executes a query and streams the rows as soon as they are received.
-
-It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
-
-It executes `endCallback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
-
-
-##### Example: Streaming query rows
-```javascript
-client.eachRow('SELECT event_time, temperature FROM temperature WHERE station_id=', ['abc'],
-  function(n, row) {
-    //the callback will be invoked per each row as soon as they are received
-    console.log('temperature value', n, row.temperature);
-  },
-  function (err, rowLength) {
-    if (err) console.log('Oh dear...');
-    console.log('%d rows where returned', rowLength);
-  }
-);
-```
-
 #### client.stream(query, [params], [queryOptions])
 
 Executes the query and returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
@@ -142,7 +147,7 @@ It can be **piped** downstream and provides automatic pause/resume logic (it buf
 
 It executes `callback(err)` when all rows have been received or there is an error retrieving the row.
 
-##### Example: Reading the whole resultset as stream
+##### Example: Reading the whole result as stream
 ```javascript
 client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
   .on('readable', function () {
@@ -203,21 +208,70 @@ Function to generate a uuid __v4__. It uses [node-uuid][uuid] module to generate
 
 The `policies` module contains load balancing, retry and reconnection classes.
 
+#### loadBalancing
+
+Load balancing policies lets you decide which node of the cluster will be used for each query.
+
+- **RoundRobinPolicy**: This policy yield nodes in a round-robin fashion (default).
+- **DCAwareRoundRobinPolicy**: A data-center aware round-robin load balancing policy. This policy provides round-robin 
+queries over the node of the local data center. It also includes in the query plans returned a configurable 
+number of hosts in the remote data centers, but those are always tried after the local nodes.
+
+To use it, you must provide load balancing policy the instance in the `clientOptions` of the `Client` instance.
+
+```javascript
+//You can specify the local dc relatively to the node.js app
+var localDc = 'us-east';
+var lbPolicy = new driver.policies.loadBalancing.DCAwareRoundRobinPolicy(localDc);
+var clientOptions = {
+  policies: {loadBalancing: loadBalancingPolicy}
+};
+var client = new driver.Client(clientOptions);
+```
+
+Load balancing policy classes inherit from **LoadBalancingPolicy**. If you want make your own policy, you should use the same base class.
+
+#### retry
+
+Retry policies lets you configure what the driver should do when there certain types of exceptions from Cassandra are received.
+
+- **RetryPolicy**: Default policy and base class for retry policies. 
+It retries once in case there is a read or write timeout and the alive replicas are enough to satisfy the consistency level. 
+
+#### reconnection
+
+Reconnection policies lets you configure when the driver should try to reconnect to a Cassandra node that appears to be down.
+
+- **ConstantReconnectionPolicy**: It waits a constant time between each reconnection attempt.
+- **ExponentialReconnectionPolicy**: waits exponentially longer between each reconnection attempt, until maximum delay is reached. 
+
 ### auth
 
-The `auth` module provides the classes required for authentication. 
+The `auth` module provides the classes required for authentication.
+
+- **PlainTextAuthProvider**: Authentication provider for Cassandra's PasswordAuthenticator.
+
+Using an authentication provider on an auth-enabled Cassandra cluster:
+
+```javascript
+var authProvider = new driver.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+//Setting the auth provider in the clientOptions
+var client = new driver.Client({authProvider: authProvider});
+```
+
+Authenticator provider classes inherit from **AuthProvider**. If you want to create your own auth provider, use the that as your base class. 
 
 ----
 
 ## Logging
 
-Instances of `Client()` is an `EventEmitter` and emits `log` events:
+Instances of `Client()` are `EventEmitter` and emit `log` events:
 ```javascript
-client.on('log', function(level, message) {
-  console.log('log event: %s -- %j', level, message);
+client.on('log', function(level, className, message, furtherInfo) {
+  console.log('log event: %s -- %s', level, message);
 });
 ```
-The `level` being passed to the listener can be `info` or `error`.
+The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
 
 ## Data types
 
@@ -231,10 +285,14 @@ Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
 
 ## FAQ
 #### Which Cassandra versions does this driver support?
-It supports any Cassandra version greater than 2.0 and above.
+The beta version of this driver supports any Cassandra version greater than 2.0 and above.
+On future versions, any Cassandra version from 1.2 will be supported.
 
 #### Which CQL version does this driver support?
 It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).
+
+#### Should I create a `Client` instance per repository module?
+Normally you should use 1 client instance per application domain, you should share that instance between modules within your application.
 
 #### Should I shutdown the pool after executing a query?
 No, you should only call `client.shutdown` once in your application lifetime.
@@ -262,3 +320,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
+[mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
+[jira]: https://datastax-oss.atlassian.net/browse/NODEJS

@@ -160,6 +160,14 @@ var helper = {
       }
       setTimeout(callback, 200 * client.hosts.length);
     });
+  },
+  getCassandraVersion: function() {
+    //noinspection JSUnresolvedVariable
+    var version = process.env.TEST_CASSANDRA_VERSION;
+    if (!version) {
+      version = '2.0.8';
+    }
+    return version;
   }
 };
 
@@ -183,7 +191,7 @@ Ccm.prototype.startAll = function (nodeLength, callback) {
       });
     },
     function (next) {
-      self.exec(['create', 'test', '-v', '2.0.8'], next);
+      self.exec(['create', 'test', '-v', helper.getCassandraVersion()], next);
     },
     function (next) {
       self.exec(['populate', '-n', nodeLength.toString()], next);

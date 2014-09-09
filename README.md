@@ -26,12 +26,23 @@ var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   console.log('got user profile with email ' + result.rows[0].email);
 });
-
 ```
+
+## Documentation
+
+- [Documentation index][doc-index]
+- [CQL types to javascript types][doc-datatypes]
+- [FAQ][faq]
 
 ## Getting Help
 
 You can use the project [Mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
+
+## What's coming next
+
+- SSL support
+- Automatic paging
+- Token-aware load balancing policy
 
 ## API
 
@@ -282,27 +293,7 @@ The `level` being passed to the listener can be `verbose`, `info`, `warning` or 
 
 ## Data types
 
-Cassandra's bigint data types are parsed as [Long][long].
-
-List / Set datatypes are encoded from / decoded to Javascript Arrays.
-
-Map datatype are encoded from / decoded to Javascript objects with keys as props.
-
-Decimal and Varint are not parsed yet, they are yielded as byte Buffers.
-
-## FAQ
-#### Which Cassandra versions does this driver support?
-The beta version of this driver supports any Cassandra version greater than 2.0 and above.
-On future versions, any Cassandra version from 1.2 will be supported.
-
-#### Which CQL version does this driver support?
-It supports [CQL3](http://cassandra.apache.org/doc/cql3/CQL.html).
-
-#### Should I create a `Client` instance per repository module?
-Normally you should use 1 client instance per application domain, you should share that instance between modules within your application.
-
-#### Should I shutdown the pool after executing a query?
-No, you should only call `client.shutdown` once in your application lifetime.
+See [documentation on CQL data types and ECMAScript types][doc-datatypes].
 
 ## Credits
 
@@ -329,3 +320,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/browse/NODEJS
+[doc-index]: http://datastax.github.io/nodejs-driver/
+[doc-datatypes]: http://datastax.github.io/nodejs-driver/datatypes
+[faq]: http://datastax.github.io/nodejs-driver/faq

@@ -20,8 +20,8 @@ $ npm install cassandra-driver
 ## Basic usage
 
 ```javascript
-var driver = require('cassandra-driver');
-var client = new driver.Client({contactPoints: ['host1', 'host2'], keyspace: 'ks1'});
+var cassandra = require('cassandra-driver');
+var client = new cassandra.Client({contactPoints: ['host1', 'host2'], keyspace: 'ks1'});
 var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   console.log('got user profile with email ' + result.rows[0].email);
@@ -96,7 +96,7 @@ The possible consistency levels are defined in `driver.types.consistencies`.
 ```javascript
 var query = 'UPDATE user_profiles SET birth=? WHERE key=?';
 var queryOptions = {
-  consistency: driver.types.consistencies.quorum,
+  consistency: cassandra.types.consistencies.quorum,
   prepare: true};
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
 client.execute(query, params, queryOptions, function(err) {
@@ -138,8 +138,8 @@ Executes batch of queries on an available connection, where `queries` is an Arra
 #####Example: Update multiple column families
 
 ```javascript
-var userId = driver.types.uuid();
-var messageId = driver.types.uuid();
+var userId = cassandra.types.uuid();
+var messageId = cassandra.types.uuid();
 var queries = [
   {
     query: 'INSERT INTO users (id, name) values (?, ?)',
@@ -150,7 +150,7 @@ var queries = [
     params: [messageId, userId, 'Message from user jimi-hendrix']
   }
 ];
-var queryOptions: { consistency: driver.types.consistencies.quorum };
+var queryOptions: { consistency: cassandra.types.consistencies.quorum };
 client.batch(queries, queryOptions, function(err) {
   if (err) return console.log('The rows were not inserted', err);
   console.log('Data updated on cluster');
@@ -240,11 +240,11 @@ To use it, you must provide load balancing policy the instance in the `clientOpt
 ```javascript
 //You can specify the local dc relatively to the node.js app
 var localDc = 'us-east';
-var lbPolicy = new driver.policies.loadBalancing.DCAwareRoundRobinPolicy(localDc);
+var lbPolicy = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(localDc);
 var clientOptions = {
   policies: {loadBalancing: loadBalancingPolicy}
 };
-var client = new driver.Client(clientOptions);
+var client = new Client(clientOptions);
 ```
 
 Load balancing policy classes inherit from **LoadBalancingPolicy**. If you want make your own policy, you should use the same base class.
@@ -272,9 +272,9 @@ The `auth` module provides the classes required for authentication.
 Using an authentication provider on an auth-enabled Cassandra cluster:
 
 ```javascript
-var authProvider = new driver.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
 //Setting the auth provider in the clientOptions
-var client = new driver.Client({authProvider: authProvider});
+var client = new Client({authProvider: authProvider});
 ```
 
 Authenticator provider classes inherit from **AuthProvider**. If you want to create your own auth provider, use the that as your base class. 

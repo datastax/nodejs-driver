@@ -8,6 +8,8 @@ Node.js driver for [Apache Cassandra][cassandra]. This driver works exclusively 
 $ npm install cassandra-driver
 ```
 
+[![Build Status](https://travis-ci.org/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver)
+
 ## Features
 
 - Nodes discovery

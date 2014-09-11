@@ -30,7 +30,7 @@ client.execute(query, ['guy'], function(err, result) {
 
 ## Documentation
 
-- [Documentation index][doc-index]
+- [Getting started][start]
 - [CQL types to javascript types][doc-datatypes]
 - [FAQ][faq]
 
@@ -321,5 +321,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/browse/NODEJS
 [doc-index]: http://datastax.github.io/nodejs-driver/
+[start]: http://datastax.github.io/nodejs-driver/getting-started
 [doc-datatypes]: http://datastax.github.io/nodejs-driver/datatypes
 [faq]: http://datastax.github.io/nodejs-driver/faq

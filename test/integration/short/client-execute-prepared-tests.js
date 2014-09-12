@@ -59,6 +59,15 @@ describe('Client', function () {
       var columnNames = 'id, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(values, columnNames, done);
     });
+    it('should support IN clause with 1 marker', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name IN ?', [['system', 'another']], {prepare: 1}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result);
+        assert.ok(result.rows.length);
+        done();
+      });
+    });
   });
 });
 

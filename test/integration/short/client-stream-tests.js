@@ -103,7 +103,7 @@ describe('Client', function () {
           assert.ifError(err);
         });
     });
-    it('should prepare emit and contain the exact amount of rows', function (done) {
+    it('should prepare and emit the exact amount of rows', function (done) {
       var client = newInstance();
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -128,7 +128,7 @@ describe('Client', function () {
           var counter = 0;
           var stream = client.stream(query, [], {prepare: 1, consistency: types.consistencies.quorum})
             .on('end', function () {
-              assert.strictEqual(counter, 1000)
+              assert.strictEqual(counter, length);
               done();
             })
             .on('readable', function () {
@@ -136,6 +136,48 @@ describe('Client', function () {
               while (row = this.read()) {
                 assert.ok(row);
                 assert.strictEqual(typeof row.int_sample, 'number');
+                counter++;
+              }
+            })
+            .on('error', function (err) {
+              assert.ifError(err);
+            });
+        }
+      ], done);
+    });
+    it('should prepare and fetch paging the exact amount of rows', function (done) {
+      var client = newInstance();
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      var length = 350;
+      async.series([
+        client.connect.bind(client),
+        function (next) {
+          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
+        },
+        function (next) {
+          client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
+        },
+        function (next) {
+          async.times(length, function (n, timesNext) {
+            var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
+            query = util.format(query, table, types.uuid(), n + 1, new types.Long(n, 0x090807).toString());
+            client.execute(query, timesNext);
+          }, next);
+        },
+        function (next) {
+          var query = util.format('SELECT * FROM %s LIMIT 10000', table);
+          var counter = 0;
+          var stream = client.stream(query, [], {autoPage: true, fetchSize: 100, prepare: 1, consistency: types.consistencies.quorum})
+            .on('end', function () {
+              assert.strictEqual(counter, length);
+              done();
+            })
+            .on('readable', function () {
+              var row;
+              while (row = this.read()) {
+                assert.ok(row);
+                assert.ok(row.int_sample);
                 counter++;
               }
             })

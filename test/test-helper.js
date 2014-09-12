@@ -168,6 +168,16 @@ var helper = {
       version = '2.0.8';
     }
     return version;
+  },
+  log: function(levels) {
+    if (!levels) {
+      levels = ['info', 'warning', 'error'];
+    }
+    return (function (l) {
+      if (levels.indexOf(l) >= 0) {
+        console.log.apply(console, arguments);
+      }
+    });
   }
 };
 

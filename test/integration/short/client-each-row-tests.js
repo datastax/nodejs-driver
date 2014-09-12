@@ -211,6 +211,71 @@ describe('Client', function () {
           });
         }], done);
     });
+    it('should autoPage on parallel different tables', function (done) {
+      var keyspace = helper.getRandomName('ks');
+      var table1 = keyspace + '.' + helper.getRandomName('table');
+      var table2 = keyspace + '.' + helper.getRandomName('table');
+      var client = newInstance();
+      //client.on('log', helper.log());
+      var noop = function () {};
+      async.series([
+        function createKs(next) {
+          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+        },
+        function createTable(next) {
+          client.eachRow(helper.createTableCql(table1), [], noop, helper.waitSchema(client, next));
+        },
+        function createTable(next) {
+          client.eachRow(helper.createTableCql(table2), [], noop, helper.waitSchema(client, next));
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
+          async.times(200, function (n, next) {
+            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+          }, seriesNext);
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
+          async.times(135, function (n, next) {
+            client.eachRow(query, [types.uuid(), n+1], {prepare: 1}, noop, next);
+          }, seriesNext);
+        },
+        function selectDataMultiplePages(seriesNext) {
+          async.parallel([
+            function (parallelNext) {
+              var query = util.format('SELECT * FROM %s', table1);
+              var rowCount = 0;
+              client.eachRow(query, [], {fetchSize: 39, autoPage: true, prepare: true}, function (n, row) {
+                assert.ok(row['text_sample']);
+                rowCount++;
+              }, function (err, result) {
+                validateResult(err, result, rowCount, 200, 39);
+                parallelNext();
+              });
+            },
+            function (parallelNext) {
+              var query = util.format('SELECT * FROM %s', table2);
+              var rowCount = 0;
+              client.eachRow(query, [], {fetchSize: 23, autoPage: true, prepare: true}, function (n, row) {
+                rowCount++;
+                assert.ok(row['int_sample']);
+              }, function (err, result) {
+                validateResult(err, result, rowCount, 135, 23);
+                parallelNext();
+              });
+            }
+          ], seriesNext);
+        }
+      ], done);
+      function validateResult(err, result, rowCount, expectedLength, fetchSize){
+        assert.ifError(err);
+        assert.strictEqual(rowCount, expectedLength);
+        assert.strictEqual(rowCount, result.rowLength);
+        assert.ok(result.rowLengthArray);
+        assert.strictEqual(result.rowLengthArray[0], fetchSize);
+        assert.strictEqual(result.rowLengthArray[1], fetchSize);
+      }
+    });
   });
 });
 

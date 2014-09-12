@@ -122,6 +122,30 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should not autoPage', function (done) {
+      var client = newInstance();
+      var pageState = null;
+      async.series([
+        function truncate(seriesNext) {
+          client.execute('TRUNCATE ' + table, seriesNext);
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          async.times(100, function (n, next) {
+            client.execute(query, [types.uuid(), n.toString()], next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          //It should only return the first page
+          client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 65, autoPage: true}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 65);
+            pageState = result.meta.pageState;
+            seriesNext();
+          });
+        }
+      ], done);
+    });
   });
 });
 

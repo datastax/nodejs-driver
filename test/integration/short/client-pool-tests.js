@@ -10,9 +10,12 @@ var errors = require('../../../lib/errors.js');
 describe('Client', function () {
   this.timeout(30000);
   describe('constructor', function () {
-    it('should throw an exception when contactPoints provided', function () {
+    it('should throw an exception when contactPoints are not provided', function () {
       assert.throws(function () {
         var client = new Client({});
+      });
+      assert.throws(function () {
+        var client = new Client({contactPoints: []});
       });
       assert.throws(function () {
         var client = new Client(null);

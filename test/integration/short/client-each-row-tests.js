@@ -89,12 +89,69 @@ describe('Client', function () {
           client.eachRow(util.format('SELECT * FROM %s', table), [], function (n, row) {
             assert.strictEqual(n, counter++);
             assert.ok(row instanceof types.Row);
-          }, function (err) {
+          }, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(counter, length);
+            //rowLength should be exposed
+            assert.strictEqual(counter, result.rowLength);
             next();
           });
         }], done);
+    });
+
+    it('should autoPage', function (done) {
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      var client = newInstance();
+      var noop = function () {};
+      var pageState = null;
+      async.series([
+        function createKs(next) {
+          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+        },
+        function createTable(next) {
+          client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          async.times(100, function (n, next) {
+            client.eachRow(query, [types.uuid(), n.toString()], noop, next);
+          }, seriesNext);
+        },
+        function selectDataMultiplePages(seriesNext) {
+          //It should fetch 3 times, a total of 100 rows (45+45+10)
+          var query = util.format('SELECT * FROM %s', table);
+          var rowCount = 0;
+          client.eachRow(query, [], {fetchSize: 45, autoPage: true}, function (n, row) {
+            rowCount++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(rowCount, 100);
+            assert.strictEqual(rowCount, result.rowLength);
+            assert.ok(result.rowLengthArray);
+            assert.strictEqual(result.rowLengthArray[0], 45);
+            assert.strictEqual(result.rowLengthArray[1], 45);
+            assert.strictEqual(result.rowLengthArray[2], 10);
+            seriesNext();
+          });
+        },
+        function selectDataOnePage(seriesNext) {
+          //It should fetch 1 time, a total of 100 rows (even if asked more)
+          var query = util.format('SELECT * FROM %s', table);
+          var rowCount = 0;
+          client.eachRow(query, [], {fetchSize: 2000, autoPage: true}, function (n, row) {
+            rowCount++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(rowCount, 100);
+            assert.strictEqual(rowCount, result.rowLength);
+            assert.ok(result.rowLengthArray);
+            assert.strictEqual(result.rowLengthArray.length, 1);
+            assert.strictEqual(result.rowLengthArray[0], 100);
+            seriesNext();
+          });
+        }
+      ], done);
     });
   });
 

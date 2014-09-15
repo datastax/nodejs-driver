@@ -30,6 +30,28 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    it('should fail when the host exists but port closed', function (done) {
+      var localCon = newInstance('127.0.0.1:8090');
+      localCon.open(function (err) {
+        assert.ok(err, 'Must return a connection error');
+        assert.ok(!localCon.connected && !localCon.connecting);
+        localCon.close(done);
+      });
+    });
+    it.skip('should open to a ssl enabled host @exclude', function (done) {
+      var localCon = newInstance();
+      localCon.options.sslOptions = {};
+      localCon.open(function (err) {
+        assert.ifError(err);
+        assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+        localCon.sendStream(getRequest('SELECT * FROM system.schema_keyspaces'), null, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result);
+          assert.ok(result.rows.length);
+          localCon.close(done);
+        });
+      });
+    });
   });
   describe('#changeKeyspace()', function () {
     it('should change active keyspace', function (done) {

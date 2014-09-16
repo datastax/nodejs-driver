@@ -102,7 +102,7 @@ var queryOptions = {
   prepare: true};
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
 client.execute(query, params, queryOptions, function(err) {
-  if (err) return console.log('Something when wrong', err);
+  if (err) return console.log('Something went wrong', err);
   console.log('Row updated on the cluster');
 });
 ```

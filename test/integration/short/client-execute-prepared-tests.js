@@ -43,6 +43,30 @@ describe('Client', function () {
         done();
       });
     });
+    it('should prepare and execute a queries in parallel', function (done) {
+      var client = newInstance();
+      var queries = [
+        'SELECT * FROM system.schema_columnfamilies',
+        'SELECT * FROM system.schema_keyspaces',
+        'SELECT * FROM system.schema_keyspaces where keyspace_name = ?',
+        'SELECT * FROM system.schema_columnfamilies where keyspace_name IN (?, ?)'
+      ];
+      var params = [
+        null,
+        null,
+        ['system'],
+        ['system', 'other']
+      ];
+      async.times(100, function (n, next) {
+        var index = n % 4;
+        client.execute(queries[index], params[index], {prepare: 1}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result);
+          assert.ok(result.rows.length);
+          next();
+        });
+      }, done);
+    });
     it('should serialize all guessed types', function (done) {
       var values = [types.uuid(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';

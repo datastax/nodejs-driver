@@ -2,6 +2,7 @@ var assert = require('assert');
 
 var tokenizer = require('../../lib/tokenizer.js');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
+var RandomTokenizer = tokenizer.RandomTokenizer;
 var types = require('../../lib/types.js');
 var Long = types.Long;
 
@@ -47,6 +48,16 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.hash([0, 0, 0, 0]).toString(), '-3485513579396041028');
       assert.strictEqual(t.hash([0, 1, 127, 127]).toString(), '6573459401642635627');
       assert.strictEqual(t.hash([226, 231, 226, 231, 226, 231, 1]).toString(), '2222373981930033306');
+    });
+  });
+  describe('RandomTokenizer', function () {
+    describe('hash', function () {
+      it('should return expected results', function () {
+        var t = new RandomTokenizer();
+        assert.strictEqual(t.hash([1, 2, 3, 4]).toString('hex'),                      '08d6c05a21512a79a1dfeb9d2a8f262f');
+        assert.strictEqual(t.hash([1, 2, 3, 4, 5, 6]).toString('hex'),                '6ac1e56bc78f031059be7be854522c4c');
+        assert.strictEqual(t.hash([254, 222, 1, 1, 1, 1, 1, 0, 129]).toString('hex'), 'ab0b00c618d3ebd330367bb238e0e27b');
+      });
     });
   });
 });

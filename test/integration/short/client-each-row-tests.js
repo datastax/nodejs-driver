@@ -104,7 +104,6 @@ describe('Client', function () {
       var table = keyspace + '.' + helper.getRandomName('table');
       var client = newInstance();
       var noop = function () {};
-      var pageState = null;
       async.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
@@ -156,7 +155,21 @@ describe('Client', function () {
   });
 
   describe('#eachRow(query, params, {prepare: 1})', function () {
-    before(helper.ccmHelper.start(3));
+    var keyspace = helper.getRandomName('ks');
+    var table = keyspace + '.' + helper.getRandomName('table');
+    var noop = function () {};
+    before(function (done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.start(3),
+        function (next) {
+          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, next);
+        },
+        function (next) {
+          client.eachRow(helper.createTableCql(table), [], noop, next);
+        }
+      ], done);
+    });
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {
       var client = newInstance();
@@ -275,6 +288,42 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[0], fetchSize);
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
+    });
+    it('should use pageState and fetchSize', function (done) {
+      var client = newInstance();
+      var pageState = null;
+      async.series([
+        function truncate(seriesNext) {
+          client.eachRow('TRUNCATE ' + table, [], noop, seriesNext);
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          async.times(131, function (n, next) {
+            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          //Only fetch 70
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (n, row) {
+            counter++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(counter, 70);
+            assert.strictEqual(result.rowLength, counter);
+            pageState = result.meta.pageState;
+            seriesNext();
+          });
+        },
+        function selectDataRemaining(seriesNext) {
+          //The remaining
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, noop, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 61);
+            seriesNext();
+          });
+        }
+      ], done);
     });
   });
 });

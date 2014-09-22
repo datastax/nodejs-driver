@@ -220,21 +220,26 @@ Ccm.prototype.exec = function (params, callback) {
     callback = function () {};
   }
   var spawn = require('child_process').spawn;
-  var process = spawn('ccm', params);
+  var processName = 'ccm';
+  if (process.platform.indexOf('win') === 0) {
+    processName = 'cmd.exe';
+    params = ['/c', 'ccm'].concat(params);
+  }
+  var p = spawn(processName, params);
   var stdoutArray= [];
   var stderrArray= [];
   var closing = 0;
-  process.stdout.setEncoding('utf8');
-  process.stderr.setEncoding('utf8');
-  process.stdout.on('data', function (data) {
+  p.stdout.setEncoding('utf8');
+  p.stderr.setEncoding('utf8');
+  p.stdout.on('data', function (data) {
     stdoutArray.push(data);
   });
 
-  process.stderr.on('data', function (data) {
+  p.stderr.on('data', function (data) {
     stderrArray.push(data);
   });
 
-  process.on('close', function (code) {
+  p.on('close', function (code) {
     if (closing++ > 0) {
       //avoid calling multiple times
       return;

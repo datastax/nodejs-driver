@@ -188,6 +188,18 @@ var helper = {
       result[i] = val;
     }
     return result;
+  },
+  /**
+   * @returns {Array}
+   */
+  iteratorToArray: function (iterator) {
+    var result = [];
+    var item = iterator.next();
+    while (!item.done) {
+      result.push(item.value);
+      item = iterator.next();
+    }
+    return result;
   }
 };
 

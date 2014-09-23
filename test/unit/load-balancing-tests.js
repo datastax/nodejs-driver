@@ -236,17 +236,7 @@ describe('DCAwareRoundRobinPolicy', function () {
 });
 describe('TokenAwarePolicy', function () {
   it('should use the childPolicy when no routingKey provided', function (done) {
-    var childPolicy = new LoadBalancingPolicy();
-    var initCalled = 0;
-    var newQueryPlanCalled = 0;
-    childPolicy.init = function (c, hs, cb) {
-      initCalled++;
-      cb();
-    };
-    childPolicy.newQueryPlan = function (o, cb) {
-      newQueryPlanCalled++;
-      cb(null, utils.arrayIterator(['h1', 'h2']));
-    };
+    var childPolicy = createDummyPolicy();
     var policy = new TokenAwarePolicy(childPolicy);
     async.series([
       function (next) {
@@ -257,12 +247,61 @@ describe('TokenAwarePolicy', function () {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 2);
-          assert.strictEqual(initCalled, 1);
-          assert.strictEqual(newQueryPlanCalled, 1);
+          assert.strictEqual(childPolicy.initCalled, 1);
+          assert.strictEqual(childPolicy.newQueryPlanCalled, 1);
+          next();
+        });
+      }
+    ], done);
+  });
+  it('should retrieve local replicas plus childPolicy hosts plus remote replicas', function (done) {
+    var childPolicy = createDummyPolicy();
+    var policy = new TokenAwarePolicy(childPolicy);
+    var client = new Client(helper.baseOptions);
+    client.getReplicas = function () {
+      var hosts = new HostMap();
+      hosts.push('a1', 'ha1');
+      hosts.push('a2', 'ha2');
+      return hosts;
+    };
+    async.series([
+      function (next) {
+        policy.init(client, new HostMap(), next);
+      },
+      function (next) {
+        policy.newQueryPlan({routingKey: new Buffer(16)}, function (err, iterator) {
+          var hosts = helper.iteratorToArray(iterator);
+          assert.ok(hosts);
+          assert.strictEqual(hosts.length, 4);
+          assert.strictEqual(childPolicy.initCalled, 1);
+          assert.strictEqual(childPolicy.newQueryPlanCalled, 1);
+          assert.strictEqual(hosts[0], 'ha2');
+          assert.strictEqual(hosts[1], 'h1');
+          assert.strictEqual(hosts[2], 'h2');
+          assert.strictEqual(hosts[3], 'ha1');
           next();
         });
       }
     ], done);
   });
 });
+
+function createDummyPolicy() {
+  var childPolicy = new LoadBalancingPolicy();
+  childPolicy.initCalled = 0;
+  childPolicy.newQueryPlanCalled = 0;
+  childPolicy.remoteCounter = 0;
+  childPolicy.init = function (c, hs, cb) {
+    childPolicy.initCalled++;
+    cb();
+  };
+  childPolicy.getDistance = function () {
+    return childPolicy.remoteCounter++ % 2 === 0 ? types.distance.remote : types.distance.local;
+  };
+  childPolicy.newQueryPlan = function (o, cb) {
+    childPolicy.newQueryPlanCalled++;
+    cb(null, utils.arrayIterator(['h1', 'h2']));
+  };
+  return childPolicy;
+}
 //TODO: Check with hosts changing, check if they are considered.

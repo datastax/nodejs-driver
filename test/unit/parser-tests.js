@@ -174,11 +174,47 @@ describe('Parser', function () {
           done();
         }
       });
-      //2 columns, 1 rows
+      //3 columns, 2 rows
       parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
+    });
+
+    it('should emit row with large row values', function (done) {
+      //3mb value
+      var cellValue = helper.fillArray(3 * 1024 * 1024, 74);
+      //Add the length 0x00300000 of the value
+      cellValue = [0, 30, 0, 0].concat(cellValue);
+      var rowLength = 1;
+      async.series([function (next) {
+        var parser = new streams.Parser({objectMode:true});
+        var rowCounter = 0;
+        parser.on('readable', function () {
+          var item = parser.read();
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            next();
+          }
+        });
+        //1 columns, 1 row, 1 chunk
+        parser._transform(getBodyChunks(1, rowLength, 0, null, cellValue), null, doneIfError(done));
+      }, function (next) {
+        var parser = new streams.Parser({objectMode:true});
+        var rowCounter = 0;
+        parser.on('readable', function () {
+          var item = parser.read();
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            next();
+          }
+        });
+        //1 columns, 1 row, 2 chunks
+        parser._transform(getBodyChunks(1, rowLength, 0, 50, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 50, null, cellValue), null, doneIfError(done));
+      }], done);
     });
 
     it('should read a AUTH_CHALLENGE response', function (done) {
@@ -220,7 +256,7 @@ function getFrameHeader(bodyLength, opcode) {
   return header;
 }
 
-function getBodyChunks(columnLength, rowLength, fromIndex, toIndex) {
+function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {
   var i;
   var fullChunk = [
     //kind
@@ -243,12 +279,17 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex) {
     var rowChunk = [];
     for (var j = 0; j < columnLength; j++) {
       //4 bytes length + bytes of each column value
-      rowChunk.push(0);
-      rowChunk.push(0);
-      rowChunk.push(0);
-      rowChunk.push(1);
-      //value
-      rowChunk.push(j);
+      if (!cellValue) {
+        rowChunk.push(0);
+        rowChunk.push(0);
+        rowChunk.push(0);
+        rowChunk.push(1);
+        //value
+        rowChunk.push(j);
+      }
+      else {
+        rowChunk = rowChunk.concat(cellValue);
+      }
     }
     fullChunk = fullChunk.concat(rowChunk);
   }

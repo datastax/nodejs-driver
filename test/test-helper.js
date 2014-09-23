@@ -178,6 +178,16 @@ var helper = {
         console.log.apply(console, arguments);
       }
     });
+  },
+  /**
+   * @returns {Array}
+   */
+  fillArray: function (length, val) {
+    var result = new Array(length);
+    for (var i = 0; i < length; i++) {
+      result[i] = val;
+    }
+    return result;
   }
 };
 

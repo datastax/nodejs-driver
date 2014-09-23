@@ -20,6 +20,7 @@ describe('ControlConnection', function () {
         cc.hosts.forEach(function (h) {
           assert.ok(h.datacenter);
           assert.ok(h.rack);
+          assert.ok(h.tokens);
         });
         done();
       });

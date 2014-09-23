@@ -36,6 +36,14 @@ describe('Client', function () {
         done();
       });
     });
+    it('should select a tokenizer', function (done) {
+      var client = newInstance();
+      client.connect(function (err) {
+        if (err) return done(err);
+        helper.assertInstanceOf(client.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
+        done();
+      });
+    });
     it('should allow multiple parallel calls to connect', function (done) {
       var client = newInstance();
       async.times(100, function (n, next) {

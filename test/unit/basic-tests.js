@@ -363,6 +363,25 @@ describe('utils', function () {
     });
   });
 
+  describe('#binarySearch()', function () {
+    it('should return the key index if found, or the bitwise compliment of the first larger value', function () {
+      var compareFunc = function (a, b) {
+        if (a > b) return 1;
+        if (a < b) return -1;
+        return 0;
+      };
+      var val;
+      val = utils.binarySearch([0, 1, 2, 3, 4], 2, compareFunc);
+      assert.strictEqual(val, 2);
+      val = utils.binarySearch(['A', 'B', 'C', 'D', 'E'], 'D', compareFunc);
+      assert.strictEqual(val, 3);
+      val = utils.binarySearch(['A', 'B', 'C', 'D', 'Z'], 'M', compareFunc);
+      assert.strictEqual(val, ~4);
+      val = utils.binarySearch([0, 1, 2, 3, 4], 2.5, compareFunc);
+      assert.strictEqual(val, ~3);
+    });
+  });
+
   describe('#deepExtend', function () {
     it('should override only the most inner props', function () {
       var value;

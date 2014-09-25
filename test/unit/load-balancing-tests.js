@@ -23,7 +23,7 @@ describe('RoundRobinPolicy', function () {
     var times = 100;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           var item = iterator.next();
           assert.strictEqual(item.done, false);
@@ -55,7 +55,7 @@ describe('RoundRobinPolicy', function () {
     var times = 15;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
@@ -88,7 +88,7 @@ describe('RoundRobinPolicy', function () {
     var times = 10;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           var item;
           for (var i = 0; i < originalHosts.length; i++) {
             item = iterator.next();
@@ -125,7 +125,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     policy.init(new Client(helper.baseOptions), originalHosts, function (err) {
       assert.ifError(err);
       async.times(times, function (n, next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
@@ -194,7 +194,7 @@ describe('DCAwareRoundRobinPolicy', function () {
       assert.ifError(err);
       assert.strictEqual(policy.localDc, 'dc1');
       async.times(times, function (n, next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
@@ -243,7 +243,7 @@ describe('TokenAwarePolicy', function () {
         policy.init(new Client(helper.baseOptions), new HostMap(), next);
       },
       function (next) {
-        policy.newQueryPlan(null, function (err, iterator) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 2);
@@ -269,7 +269,7 @@ describe('TokenAwarePolicy', function () {
         policy.init(client, new HostMap(), next);
       },
       function (next) {
-        policy.newQueryPlan({routingKey: new Buffer(16)}, function (err, iterator) {
+        policy.newQueryPlan(null, {routingKey: new Buffer(16)}, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 4);
@@ -298,7 +298,7 @@ function createDummyPolicy() {
   childPolicy.getDistance = function () {
     return childPolicy.remoteCounter++ % 2 === 0 ? types.distance.remote : types.distance.local;
   };
-  childPolicy.newQueryPlan = function (o, cb) {
+  childPolicy.newQueryPlan = function (k, o, cb) {
     childPolicy.newQueryPlanCalled++;
     cb(null, utils.arrayIterator(['h1', 'h2']));
   };

@@ -149,4 +149,73 @@ describe('TokenAwarePolicy', function () {
       helper.ccmHelper.remove
     ], done);
   });
+  it('should yield local replicas plus childPolicy plus remote replicas', function (done) {
+    var keyspace1 = 'ks1';
+    var keyspace2 = 'ks2';
+    var createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";var client = new Client({
+      policies: { loadBalancing: new TokenAwarePolicy(new DCAwareRoundRobinPolicy())},
+      contactPoints: helper.baseOptions.contactPoints
+    });
+    /** @type {LoadBalancingPolicy} */
+    var policy = client.options.policies.loadBalancing;
+    var localDc = 'dc1';
+    async.series([
+      helper.ccmHelper.start('4:4'),
+      function createKs1(next) {
+        var localClient = new Client(helper.baseOptions);
+        localClient.execute(util.format(createQuery, keyspace1, 3, 3), helper.waitSchema(localClient, next));
+      },
+      function createKs1(next) {
+        var localClient = new Client(helper.baseOptions);
+        localClient.execute(util.format(createQuery, keyspace2, 1, 1), helper.waitSchema(localClient, next));
+      },
+      client.connect.bind(client),
+      function testCase1(next) {
+        async.times(20, function (n, timesNext) {
+          //keyspace 1
+          policy.newQueryPlan(keyspace1, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
+            var hosts = helper.iteratorToArray(iterator);
+            //6 replicas plus an additional local node
+            assert.ok(hosts.length, 7);
+            assert.strictEqual(hosts[0].datacenter, localDc);
+            assert.strictEqual(hosts[1].datacenter, localDc);
+            assert.strictEqual(hosts[2].datacenter, localDc);
+            assert.strictEqual(hosts[3].datacenter, localDc);
+            timesNext();
+          });
+        }, next);
+      },
+      function testCase2(next) {
+        async.times(20, function (n, timesNext) {
+          //keyspace 2
+          policy.newQueryPlan(keyspace2, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
+            var hosts = helper.iteratorToArray(iterator);
+            //2 replicas plus 3 additional local nodes
+            assert.ok(hosts.length, 5);
+            assert.strictEqual(hosts[0].datacenter, localDc);
+            assert.strictEqual(hosts[1].datacenter, localDc);
+            assert.strictEqual(hosts[2].datacenter, localDc);
+            assert.strictEqual(hosts[3].datacenter, localDc);
+            timesNext();
+          });
+        }, next);
+      },
+      function testCase3(next) {
+        async.times(20, function (n, timesNext) {
+          //no keyspace
+          policy.newQueryPlan(null, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
+            var hosts = helper.iteratorToArray(iterator);
+            //1 (closest) replica plus 3 additional local nodes
+            assert.ok(hosts.length, 4);
+            assert.strictEqual(hosts[0].datacenter, localDc);
+            assert.strictEqual(hosts[1].datacenter, localDc);
+            assert.strictEqual(hosts[2].datacenter, localDc);
+            assert.strictEqual(hosts[3].datacenter, localDc);
+            timesNext();
+          });
+        }, next);
+      },
+      helper.ccmHelper.remove
+    ], done);
+  });
 });

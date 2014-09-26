@@ -246,7 +246,7 @@ describe('TokenAwarePolicy', function () {
         policy.newQueryPlan(null, null, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
-          assert.strictEqual(hosts.length, 2);
+          assert.strictEqual(hosts.length, 3);
           assert.strictEqual(childPolicy.initCalled, 1);
           assert.strictEqual(childPolicy.newQueryPlanCalled, 1);
           next();
@@ -257,12 +257,10 @@ describe('TokenAwarePolicy', function () {
   it('should retrieve local replicas plus childPolicy hosts plus remote replicas', function (done) {
     var childPolicy = createDummyPolicy();
     var policy = new TokenAwarePolicy(childPolicy);
-    var client = new Client(helper.baseOptions);
+    var options = utils.extend({}, helper.baseOptions);
+    var client = new Client(options);
     client.getReplicas = function () {
-      var hosts = new HostMap();
-      hosts.push('a1', 'ha1');
-      hosts.push('a2', 'ha2');
-      return hosts;
+      return [new Host('repl1', 2, options), new Host('repl2', 2, options), new Host('repl3', 2, options), new Host('repl4', 2, options)];
     };
     async.series([
       function (next) {
@@ -272,13 +270,17 @@ describe('TokenAwarePolicy', function () {
         policy.newQueryPlan(null, {routingKey: new Buffer(16)}, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
-          assert.strictEqual(hosts.length, 4);
+          assert.strictEqual(hosts.length, 6);
           assert.strictEqual(childPolicy.initCalled, 1);
           assert.strictEqual(childPolicy.newQueryPlanCalled, 1);
-          assert.strictEqual(hosts[0], 'ha2');
-          assert.strictEqual(hosts[1], 'h1');
-          assert.strictEqual(hosts[2], 'h2');
-          assert.strictEqual(hosts[3], 'ha1');
+          assert.strictEqual(hosts[0].address, 'repl2');
+          assert.strictEqual(hosts[1].address, 'repl4');
+          //Child load balancing policy nodes, do not repeat repl2
+          assert.strictEqual(hosts[2].address, 'child1');
+          assert.strictEqual(hosts[3].address, 'child2');
+          //Remote replicas
+          assert.strictEqual(hosts[4].address, 'repl1');
+          assert.strictEqual(hosts[5].address, 'repl3');
           next();
         });
       }
@@ -300,7 +302,9 @@ function createDummyPolicy() {
   };
   childPolicy.newQueryPlan = function (k, o, cb) {
     childPolicy.newQueryPlanCalled++;
-    cb(null, utils.arrayIterator(['h1', 'h2']));
+
+    var hosts = [new Host('repl2', 2, helper.baseOptions), new Host('child1', 2, helper.baseOptions), new Host('child2', 2, helper.baseOptions)];
+    cb(null, utils.arrayIterator(hosts));
   };
   return childPolicy;
 }

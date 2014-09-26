@@ -66,7 +66,7 @@ describe('TokenAwarePolicy', function () {
       },
       function testCase(next) {
         //Pre-calculated based on Murmur
-        //This test can be improved using query tracing and checking hops
+        //This test can be improved using query tracing, consistency all and checking hops
         var expectedPartition = {
           '1': '2',
           '2': '2',

@@ -53,9 +53,9 @@ var helper = {
     /**
      * @returns {Function}
      */
-    start: function (nodeLength) {
+    start: function (nodeLength, options) {
       return (function (done) {
-        new Ccm().startAll(nodeLength, function (err) {
+        new Ccm().startAll(nodeLength, options, function (err) {
           done(err);
         });
       });
@@ -175,6 +175,7 @@ var helper = {
     }
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
+        //noinspection JSUnresolvedVariable
         console.log.apply(console, arguments);
       }
     });
@@ -210,9 +211,10 @@ function Ccm() {
 /**
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
+ * @param {{vnodes: Boolean, yaml: Array}} options
  * @param {Function} callback
  */
-Ccm.prototype.startAll = function (nodeLength, callback) {
+Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
   async.series([
     function (next) {
@@ -226,7 +228,26 @@ Ccm.prototype.startAll = function (nodeLength, callback) {
       self.exec(['create', 'test', '-v', helper.getCassandraVersion()], next);
     },
     function (next) {
-      self.exec(['populate', '-n', nodeLength.toString()], next);
+      if (!options || !options.yaml) {
+        return next();
+      }
+      var i = 0;
+      async.whilst(
+        function condition() {
+          return i < options.yaml.length
+        },
+        function iterator(whilstNext) {
+          self.exec(['updateconf', options.yaml[i++]], whilstNext);
+        },
+        next
+      );
+    },
+    function (next) {
+      var populate = ['populate', '-n', nodeLength.toString()];
+      if (options && options.vnodes) {
+        populate.push('--vnodes');
+      }
+      self.exec(populate, next);
     },
     function (next) {
       self.exec(['start'], next);

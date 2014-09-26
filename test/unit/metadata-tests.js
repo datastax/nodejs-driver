@@ -59,7 +59,7 @@ describe('Metadata', function () {
       metadata.setKeyspaces({rows: [{
         'keyspace_name': 'dummy',
         'strategy_class': 'NetworkTopologyStrategy',
-        'strategy_options': {'dc1': 3, 'dc2': 1}
+        'strategy_options': '{"dc1": "3", "dc2": "1"}'
       }]});
       var replicas = metadata.getReplicas('dummy', new Buffer([0]));
       assert.ok(replicas);

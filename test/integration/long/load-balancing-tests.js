@@ -99,4 +99,54 @@ describe('TokenAwarePolicy', function () {
       helper.ccmHelper.remove
     ], done);
   });
+  it('should use primary replica according to Murmur multiple dc', function (done) {
+    var keyspace = 'ks1';
+    var table = 'table1';
+    async.series([
+      helper.ccmHelper.start('3:3'),
+      function createKs(next) {
+        var client = new Client(helper.baseOptions);
+        var createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";
+        client.execute(util.format(createQuery, keyspace, 3, 3), helper.waitSchema(client, next));
+      },
+      function createTable(next) {
+        var client = new Client(helper.baseOptions);
+        var query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
+        client.execute(query, helper.waitSchema(client, next));
+      },
+      function testCase(next) {
+        //Pre-calculated based on Murmur
+        //This test can be improved using query tracing, consistency all and checking hops
+        var expectedPartition = {
+          '1': '2',
+          '2': '2',
+          '3': '1',
+          '4': '3',
+          '5': '2',
+          '6': '3',
+          '7': '3',
+          '8': '2',
+          '9': '1',
+          '10': '2'
+        };
+        var client = new Client({
+          policies: { loadBalancing: new TokenAwarePolicy(new DCAwareRoundRobinPolicy())},
+          keyspace: keyspace,
+          contactPoints: helper.baseOptions.contactPoints
+        });
+        async.times(100, function (n, timesNext) {
+          var id = (n % 10) + 1;
+          var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
+          client.execute(query, null, {routingKey: new Buffer([0, 0, 0, id])}, function (err, result) {
+            assert.ifError(err);
+            //for murmur id = 1, it go to replica 2
+            var address = result._queriedHost;
+            assert.strictEqual(address.charAt(address.length-1), expectedPartition[id.toString()]);
+            timesNext();
+          });
+        }, next);
+      },
+      helper.ccmHelper.remove
+    ], done);
+  });
 });

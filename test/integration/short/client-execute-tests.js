@@ -52,7 +52,7 @@ describe('Client', function () {
         client.execute('SELECT * FROM system.schema_keyspaces', [], next);
       }, done)
     });
-    it('should guess known types', function (done) {
+    it('should guess known types @c2_0', function (done) {
       var client = newInstance();
       var columns = 'id, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
@@ -60,7 +60,7 @@ describe('Client', function () {
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
-    it('should use parameter hints as number for simple types', function (done) {
+    it('should use parameter hints as number for simple types @c2_0', function (done) {
       var client = newInstance();
       var columns = 'id, text_sample, float_sample, int_sample';
       //a precision a float32 can represent
@@ -68,21 +68,21 @@ describe('Client', function () {
       var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float, types.dataTypes.int];
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for simple types', function (done) {
+    it('should use parameter hints as string for simple types @c2_0', function (done) {
       var columns = 'id, text_sample, float_sample, int_sample';
       var values = [types.uuid(), 'text sample', -9, 1];
       var hints = [null, 'text', 'float', 'int'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for complex types partial', function (done) {
+    it('should use parameter hints as string for complex types partial @c2_0', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
       var values = [types.uuid(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       var hints = [null, 'map', 'list', 'set'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for complex types complete', function (done) {
+    it('should use parameter hints as string for complex types complete @c2_0', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
       var values = [types.uuid(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       //complete info
@@ -90,7 +90,7 @@ describe('Client', function () {
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use pageState and fetchSize', function (done) {
+    it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([
@@ -122,7 +122,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should not autoPage', function (done) {
+    it('should not autoPage @c2_', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([

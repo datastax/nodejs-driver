@@ -99,7 +99,7 @@ describe('Client', function () {
         }], done);
     });
 
-    it('should autoPage', function (done) {
+    it('should autoPage @c2_0', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var client = newInstance();
@@ -224,7 +224,7 @@ describe('Client', function () {
           });
         }], done);
     });
-    it('should autoPage on parallel different tables', function (done) {
+    it('should autoPage on parallel different tables @c2_0', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');
       var table2 = keyspace + '.' + helper.getRandomName('table');
@@ -289,7 +289,7 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
-    it('should use pageState and fetchSize', function (done) {
+    it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([

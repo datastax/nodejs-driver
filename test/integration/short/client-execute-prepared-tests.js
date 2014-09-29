@@ -83,7 +83,7 @@ describe('Client', function () {
       var columnNames = 'id, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(values, columnNames, done);
     });
-    it('should support IN clause with 1 marker', function (done) {
+    it('should support IN clause with 1 marker @c2_0', function (done) {
       var client = newInstance();
       client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name IN ?', [['system', 'another']], {prepare: 1}, function (err, result) {
         assert.ifError(err);
@@ -99,7 +99,7 @@ describe('Client', function () {
  * @returns {Client}
  */
 function newInstance() {
-  //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
+  //var logEmitter = function (name, type) { if (type === 'verbose1') { return; } console.log.apply(console, arguments);};
   var logEmitter = function () {};
   var options = utils.extend({logEmitter: logEmitter}, helper.baseOptions);
   return new Client(options);

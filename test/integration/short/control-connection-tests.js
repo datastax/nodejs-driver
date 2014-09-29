@@ -16,7 +16,8 @@ describe('ControlConnection', function () {
     it('should retrieve local host and peers', function (done) {
       var cc = new ControlConnection(options);
       cc.init(function () {
-        assert.equal(cc.hosts.length, 2);
+        assert.strictEqual(cc.hosts.length, 2);
+        assert.ok(cc.protocolVersion);
         cc.hosts.forEach(function (h) {
           assert.ok(h.datacenter);
           assert.ok(h.rack);

@@ -8,7 +8,7 @@ var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
-  this.timeout(30000);
+  this.timeout(120000);
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
       assert.throws(function () {

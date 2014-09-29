@@ -9,7 +9,7 @@ var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 describe('Client', function () {
   this.timeout(120000);
-  describe('#batch()', function () {
+  describe('#batch() @c2_0', function () {
     var keyspace = helper.getRandomName('ks');
     var table1 = keyspace + '.' + helper.getRandomName('tblA');
     var table2 = keyspace + '.' + helper.getRandomName('tblB');

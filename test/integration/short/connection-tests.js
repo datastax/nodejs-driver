@@ -22,6 +22,15 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    it('should use the max supported protocol version', function (done) {
+      var localCon = newInstance(null, null);
+      localCon.open(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
+        assert.strictEqual(localCon.checkingVersion, true);
+        localCon.close(done);
+      });
+    });
     it('should fail when the host does not exits', function (done) {
       var localCon = newInstance('1.1.1.1');
       localCon.open(function (err) {
@@ -132,16 +141,33 @@ describe('Connection', function () {
   });
 });
 
-function newInstance(address){
+function newInstance(address, protocolVersion){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
+  }
+  if (typeof protocolVersion === 'undefined') {
+    protocolVersion = getProtocolVersion();
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
   var logEmitter = function () {};
   var options = utils.extend({logEmitter: logEmitter}, defaultOptions);
-  return new Connection(address, 2, null, options);
+  return new Connection(address, protocolVersion, options);
 }
 
 function getRequest(query) {
   return new writers.QueryWriter(query, null, null);
+}
+
+/**
+ * Gets the max supported protocol version for the current Cassandra version
+ * @returns {number}
+ */
+function getProtocolVersion() {
+  //expected protocol version
+  var expectedVersion = 1;
+  if (helper.getCassandraVersion().indexOf('2.') === 0) {
+    expectedVersion = 2;
+  }
+  //protocol v3 not supported yet
+  return expectedVersion;
 }

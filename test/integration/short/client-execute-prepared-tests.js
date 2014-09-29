@@ -99,7 +99,10 @@ describe('Client', function () {
  * @returns {Client}
  */
 function newInstance() {
-  return new Client(helper.baseOptions);
+  //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
+  var logEmitter = function () {};
+  var options = utils.extend({logEmitter: logEmitter}, helper.baseOptions);
+  return new Client(options);
 }
 
 function serializationTest(values, columns, done) {

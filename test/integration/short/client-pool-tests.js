@@ -40,7 +40,7 @@ describe('Client', function () {
       var client = newInstance();
       client.connect(function (err) {
         if (err) return done(err);
-        helper.assertInstanceOf(client.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
+        helper.assertInstanceOf(client.metadata.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
         done();
       });
     });

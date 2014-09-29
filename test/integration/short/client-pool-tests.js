@@ -92,7 +92,7 @@ describe('Client', function () {
         }
       ], done)
     });
-    //after(helper.ccmHelper.remove);
+    after(helper.ccmHelper.remove);
     var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
     it('should connect using the plain text authenticator', function (done) {
       var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')});

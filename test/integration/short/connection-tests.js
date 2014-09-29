@@ -6,7 +6,7 @@ var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions;
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
-var writers = require('../../../lib/writers.js');
+var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');
 
 describe('Connection', function () {
@@ -155,7 +155,7 @@ function newInstance(address, protocolVersion){
 }
 
 function getRequest(query) {
-  return new writers.QueryWriter(query, null, null);
+  return new requests.QueryWriter(query, null, null);
 }
 
 /**

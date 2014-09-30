@@ -9,6 +9,7 @@ var utils = require('../../lib/utils.js');
 
 describe('Client', function () {
   describe('#connect()', function () {
+    this.timeout(35000);
     it('should fail if no host name can be resolved', function (done) {
       var options = utils.extend({}, helper.baseOptions, {contactPoints: ['not1.existent-host', 'not2.existent-host']});
       var Client = require('../../lib/client.js');

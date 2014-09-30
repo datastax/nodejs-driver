@@ -201,6 +201,28 @@ var helper = {
       item = iterator.next();
     }
     return result;
+  },
+  find: function (arr, predicate, val) {
+    if (arr == null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate === 'string') {
+      var propName = predicate;
+      predicate = function (item) {
+        return (item && item[propName] === val);
+      };
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var value;
+    for (var i = 0; i < arr.length; i++) {
+      value = arr[i];
+      if (predicate.call(null, value, i, arr)) {
+        return value;
+      }
+    }
+    return undefined;
   }
 };
 

@@ -7,6 +7,7 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
+
 describe('Client', function () {
   this.timeout(120000);
   describe('#batch() @c2_0', function () {
@@ -103,6 +104,7 @@ describe('Client', function () {
       client.batch(['INSERT WILL FAIL'], function (err) {
         assert.ok(err);
         assert.ok(err instanceof errors.ResponseError);
+        assert.ok(err instanceof errors.ResponseError);
         done();
       });
     });
@@ -141,12 +143,40 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should use hints when provided', function (done) {
+      var client = newInstance();
+      var id1 = types.uuid();
+      var id2 = types.uuid();
+      var queries = [
+        { query: util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1),
+          params: [id1, 'sample1']
+        },
+        { query: util.format('INSERT INTO %s (id, int_sample, bigint_sample) VALUES (?, ?, ?)', table1),
+          params: [id2, -1, -1]
+        }
+      ];
+      var hints = [
+        null,
+        [null, 'int', 'bigint']
+      ];
+      client.batch(queries, {hints: hints, consistency: types.consistencies.quorum}, function (err) {
+        assert.ifError(err);
+        var query = util.format('SELECT * FROM %s where id IN (%s, %s)', table1, id1, id2);
+        client.execute(query, [], {consistency: types.consistencies.quorum}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 2);
+          assert.strictEqual(helper.find(result.rows, 'id', id2)['int_sample'], -1);
+          done();
+        });
+      });
+    });
   });
 });
 
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  return new Client(utils.extend({}, helper.baseOptions, options));
 }

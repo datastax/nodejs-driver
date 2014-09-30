@@ -52,7 +52,6 @@ describe('Client', function () {
     });
     it('should resolve host names', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
-      client.on('log', helper.log);
       client.connect(function (err) {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 3);

@@ -3,7 +3,25 @@ var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
+var helper = require('../test-helper.js');
+var errors = require('../../lib/errors.js');
+var utils = require('../../lib/utils.js');
+
 describe('Client', function () {
+  describe('#connect()', function () {
+    it('should fail if no host name can be resolved', function (done) {
+      var options = utils.extend({}, helper.baseOptions, {contactPoints: ['not1.existent-host', 'not2.existent-host']});
+      var Client = require('../../lib/client.js');
+      var client = new Client(options);
+      client.connect(function (err) {
+        assert.ok(err);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.ok(err.message.indexOf('resolve') > 0);
+        assert.ok(!client.hosts);
+        done();
+      });
+    });
+  });
   describe('#_getPrepared()', function () {
     var Client = rewire('../../lib/client.js');
     var requestHandlerMock = function () {this.counter = 0;};

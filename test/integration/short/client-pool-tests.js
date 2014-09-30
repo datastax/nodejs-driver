@@ -50,6 +50,18 @@ describe('Client', function () {
         client.connect(next);
       }, done);
     });
+    it('should resolve host names', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
+      client.on('log', helper.log);
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.forEach(function (h) {
+          assert.notEqual(h.address, 'localhost');
+        });
+        done();
+      });
+    });
     it('should use the keyspace provided', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
       //on all hosts

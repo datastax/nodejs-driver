@@ -38,9 +38,11 @@ describe('Client', function () {
       var client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
-        client.execute('SELECT WILL FAIL', function (err, result) {
-          assert.notEqual(err, null);
+        var query = 'SELECT WILL FAIL';
+        client.execute(query, function (err, result) {
+          assert.ok(err);
           assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+          assert.strictEqual(err.query, query);
           assert.equal(result, null);
           done();
         });

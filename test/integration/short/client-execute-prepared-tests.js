@@ -31,6 +31,7 @@ describe('Client', function () {
       client.execute(query, ['system'], {prepare: 1}, function (err, result) {
         assert.ok(err);
         assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+        assert.strictEqual(err.query, query);
         done();
       });
     });

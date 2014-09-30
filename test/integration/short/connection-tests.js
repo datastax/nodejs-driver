@@ -155,7 +155,7 @@ function newInstance(address, protocolVersion){
 }
 
 function getRequest(query) {
-  return new requests.QueryWriter(query, null, null);
+  return new requests.QueryRequest(query, null, null);
 }
 
 /**

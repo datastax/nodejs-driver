@@ -1,5 +1,6 @@
 var assert = require('assert');
 var async = require('async');
+var domain = require('domain');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
@@ -186,6 +187,91 @@ describe('Client', function () {
         assert.strictEqual(hosts[1].pool.connections.length, 3);
         done(err);
       });
+    });
+
+    it('should maintain the domain in the callbacks', function (done) {
+      var unexpectedErrors = [];
+      var errors = [];
+      var domains = [
+        domain.create(),
+        domain.create(),
+        domain.create(),
+        domain.create(),
+        domain.create()
+      ];
+      var fatherDomain = domain.create();
+      var childDomain = domain.create();
+      var client = new Client(helper.baseOptions);
+      async.series([
+        client.connect.bind(client),
+        function executeABunchOfTimes(next) {
+          async.times(10, function (n, timesNext) {
+            client.execute('SELECT * FROM system.local', timesNext);
+          }, next);
+        },
+        function (next) {
+          async.timesSeries(domains.length, function (n, timesNext) {
+            var waiting = true;
+            var d = domains[n];
+            d.on('error', function (err) {
+              errors.push([err.toString(), n.toString()]);
+            });
+            d.run(function() {
+              client.execute('SELECT * FROM system.local', function (err) {
+                waiting = false;
+                if (err) {
+                  unexpectedErrors.push(err);
+                }
+                throw new Error('From domain ' + n);
+              });
+            });
+            function wait() {
+              if (waiting) {
+                return setTimeout(wait, 50);
+              }
+              //Delay to allow throw
+              setTimeout(timesNext, 100);
+            }
+            wait();
+          }, next);
+        },
+        function nestedDomain(next) {
+          var waiting = true;
+          fatherDomain.on('error', function (err) {
+            errors.push([err.toString(), 'father']);
+          });
+          fatherDomain.run(function () {
+            childDomain.on('error', function (err) {
+              errors.push([err.toString(), 'child']);
+            });
+            childDomain.run(function() {
+              client.execute('SELECT * FROM system.local', function (err) {
+                waiting = false;
+                if (err) {
+                  unexpectedErrors.push(err);
+                }
+                throw new Error('From domain child');
+              });
+            });
+          });
+          function wait() {
+            if (waiting) {
+              return setTimeout(wait, 50);
+            }
+            //Delay to allow throw
+            setTimeout(next, 100);
+          }
+          wait();
+        },
+        function assertResults(next) {
+          assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
+          assert.strictEqual(errors.length, domains.length + 1);
+          errors.forEach(function (item) {
+            assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
+          });
+          next();
+        }
+      ], done);
     });
   });
   describe('failover', function () {

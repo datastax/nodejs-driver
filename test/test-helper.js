@@ -161,6 +161,12 @@ var helper = {
       setTimeout(callback, 200 * client.hosts.length);
     });
   },
+  wait: function (ms, callback) {
+    return (function (err) {
+      if (err) return callback(err);
+      setTimeout(callback, ms);
+    });
+  },
   getCassandraVersion: function() {
     //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;

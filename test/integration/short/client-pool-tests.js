@@ -188,13 +188,10 @@ describe('Client', function () {
         done(err);
       });
     });
-
     it('should maintain the domain in the callbacks', function (done) {
       var unexpectedErrors = [];
       var errors = [];
       var domains = [
-        domain.create(),
-        domain.create(),
         domain.create(),
         domain.create(),
         domain.create()
@@ -210,15 +207,19 @@ describe('Client', function () {
           }, next);
         },
         function (next) {
+          var EventEmitter = require('events').EventEmitter;
+          var emitter = new EventEmitter();
           async.timesSeries(domains.length, function (n, timesNext) {
-            var waiting = true;
+            var waiting = 1;
             var d = domains[n];
+            d.add(emitter);
             d.on('error', function (err) {
               errors.push([err.toString(), n.toString()]);
+              d.dispose();
             });
             d.run(function() {
-              client.execute('SELECT * FROM system.local', function (err) {
-                waiting = false;
+              client.execute('SELECT * FROM system.local', [], {prepare: n % 2}, function (err) {
+                waiting = 0;
                 if (err) {
                   unexpectedErrors.push(err);
                 }
@@ -226,11 +227,17 @@ describe('Client', function () {
               });
             });
             function wait() {
-              if (waiting) {
+              if (waiting > 0) {
+                waiting++;
+                if (waiting > 100) {
+                  return timesNext(new Error('Timed out'));
+                }
                 return setTimeout(wait, 50);
               }
               //Delay to allow throw
-              setTimeout(timesNext, 100);
+              setTimeout(function () {
+                timesNext();
+              }, 100);
             }
             wait();
           }, next);

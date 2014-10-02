@@ -320,7 +320,7 @@ describe('utils', function () {
         }
       }
       var args = utils.parseCommonArgs('A QUERY 1', function (){});
-      assert.ok(args && args.length == 2 && args.query && args.callback);
+      assert.ok(args && args.query && args.callback);
       assert.throws(utils.parseCommonArgs, Error, 'It must contain at least 2 arguments.');
       args = utils.parseCommonArgs('A QUERY 2', [1, 2, 3], function (){});
       testArgs(args, 3);
@@ -331,13 +331,6 @@ describe('utils', function () {
       args = utils.parseCommonArgs('A QUERY', [1, 2, 3], {}, function (){});
       testArgs(args, 4);
       assert.ok(args.params && args.options, 'Params and options must not be null');
-    });
-
-    it('parses args and can be retrieved as an array', function () {
-      var args = utils.parseCommonArgs('A QUERY', function (){});
-      assert.ok(util.isArray(args), 'The returned object must be an Array');
-      assert.strictEqual(args[0], 'A QUERY', 'The first element must be the query');
-      assert.strictEqual(args.length, 2, 'There must be 2 arguments in array');
     });
   });
 

@@ -93,6 +93,43 @@ describe('Client', function () {
         done();
       });
     });
+    it('should use pageState and fetchSize @c2_0', function (done) {
+      var client = newInstance();
+      var pageState = null;
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      async.series([
+        function (next) {
+          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
+        },
+        function (next) {
+          client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          async.times(100, function (n, next) {
+            client.execute(query, [types.uuid(), n.toString()], {prepare: 1}, next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          //Only fetch 70
+          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 70);
+            pageState = result.meta.pageState;
+            seriesNext();
+          });
+        },
+        function selectDataRemaining(seriesNext) {
+          //The remaining
+          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 30);
+            seriesNext();
+          });
+        }
+      ], done);
+    });
   });
 });
 

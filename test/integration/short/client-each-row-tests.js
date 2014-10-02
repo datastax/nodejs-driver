@@ -289,7 +289,7 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
-    it('should use pageState and fetchSize @c2_0', function (done) {
+    it('should use pageState and fetchSize @c2_0 @debug', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([
@@ -317,9 +317,14 @@ describe('Client', function () {
         },
         function selectDataRemaining(seriesNext) {
           //The remaining
-          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, noop, function (err, result) {
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: pageState}, function (n, row) {
+            assert.ok(row);
+            counter++;
+          }, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rowLength, 61);
+            assert.strictEqual(counter, result.rowLength);
             seriesNext();
           });
         }

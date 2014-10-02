@@ -347,7 +347,6 @@ describe('Client', function () {
           var issued = 0;
           var killed = false;
           async.times(500, function (n, next) {
-            //console.log('--starting', n);
             if (n === 10) {
               //kill a node when there are some outstanding requests
               helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
@@ -365,7 +364,6 @@ describe('Client', function () {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
               assert.ifError(err);
               counter++;
-              //console.log('issued vs counter', issued, counter);
               next();
             });
           }, function (err) {

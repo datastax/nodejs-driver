@@ -6,6 +6,8 @@ var rewire = require('rewire');
 var helper = require('../test-helper.js');
 var errors = require('../../lib/errors.js');
 var utils = require('../../lib/utils.js');
+var HostMap = require('../../lib/host.js').HostMap;
+var Metadata = require('../../lib/metadata.js');
 
 describe('Client', function () {
   describe('#connect()', function () {
@@ -19,6 +21,34 @@ describe('Client', function () {
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.ok(err.message.indexOf('resolve') > 0);
         assert.ok(!client.hosts);
+        done();
+      });
+    });
+    it('should connect once and queue if multiple calls in parallel', function (done) {
+      var Client = rewire('../../lib/client.js');
+      var initCounter = 0;
+      var emitCounter = 0;
+      var controlConnectionMock = function () {
+        this.hosts = new HostMap();
+        this.metadata = new Metadata();
+        this.init = function (cb) {
+          initCounter++;
+          //Async
+          setTimeout(cb, 100);
+        }
+      };
+      Client.__set__("ControlConnection", controlConnectionMock);
+      var client = new Client(helper.baseOptions);
+      client.on('connected', function () {emitCounter++;});
+      async.times(1000, function (n, next) {
+        client.connect(function (err) {
+          assert.ifError(err);
+          next();
+        });
+      }, function (err){
+        assert.ifError(err);
+        assert.strictEqual(emitCounter, 1);
+        assert.strictEqual(initCounter, 1);
         done();
       });
     });

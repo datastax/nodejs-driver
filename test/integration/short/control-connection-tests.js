@@ -81,7 +81,7 @@ describe('ControlConnection', function () {
         });
       });
     });
-    it('should subscribe to TOPOLOGY_CHANGE events and refresh ring info', function (done) {
+    it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
       var cc = new ControlConnection(options);
       async.series([
         cc.init.bind(cc),
@@ -104,6 +104,21 @@ describe('ControlConnection', function () {
             assert.strictEqual(countUp, 2);
             next();
           }, 3000);
+        }
+      ], done);
+    });
+    it('should subscribe to TOPOLOGY_CHANGE remove events and refresh ring info', function (done) {
+      var cc = new ControlConnection(options);
+      async.series([
+        cc.init.bind(cc),
+        function (next) {
+          //decommission node
+          helper.ccmHelper.exec(['node2', 'decommission'], helper.wait(3000, next));
+        },
+        function (next) {
+          var hosts = cc.hosts.slice(0);
+          assert.strictEqual(hosts.length, 1);
+          next();
         }
       ], done);
     });

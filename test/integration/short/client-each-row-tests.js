@@ -289,7 +289,7 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
-    it('should use pageState and fetchSize @c2_0 @debug', function (done) {
+    it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([

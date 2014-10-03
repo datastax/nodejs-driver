@@ -62,16 +62,11 @@ describe('Client', function () {
         done();
       });
     });
-    it('should use the keyspace provided', function (done) {
-      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
-      //on all hosts
+    it('should fail if the keyspace does not exists', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'not-existent-ks'}));
       async.times(10, function (n, next) {
-        assert.strictEqual(client.keyspace, 'system');
-        //A query in the system ks
-        client.execute('SELECT * FROM schema_keyspaces', function (err, result) {
-          assert.ifError(err);
-          assert.ok(result.rows);
-          assert.ok(result.rows.length > 0);
+        client.connect(function (err) {
+          assert.ok(err);
           next();
         });
       }, done);
@@ -130,6 +125,20 @@ describe('Client', function () {
   describe('#execute()', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
+    it('should use the keyspace provided', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
+      //on all hosts
+      async.times(10, function (n, next) {
+        assert.strictEqual(client.keyspace, 'system');
+        //A query in the system ks
+        client.execute('SELECT * FROM schema_keyspaces', function (err, result) {
+          assert.ifError(err);
+          assert.ok(result.rows);
+          assert.ok(result.rows.length > 0);
+          next();
+        });
+      }, done);
+    });
     it('should fail to execute if the keyspace does not exists', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
       //on all hosts

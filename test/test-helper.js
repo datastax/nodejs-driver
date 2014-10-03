@@ -30,16 +30,12 @@ var helper = {
    * @type {ClientOptions}
    */
   baseOptions: (function () {
-    var loadBalancing = require('../lib/policies/load-balancing.js');
-    var reconnection = require('../lib/policies/reconnection.js');
-    var retry = require('../lib/policies/retry.js');
+    var clientOptions = require('../lib/client-options.js');
     return {
-      policies: {
-        loadBalancing: new loadBalancing.RoundRobinPolicy(),
-        reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false),
-        retry: new retry.RetryPolicy()
-      },
-      contactPoints: ['127.0.0.1']
+      //required
+      contactPoints: ['127.0.0.1'],
+      //Even-though the client add the policies, we should copy the policies to ease up test dev
+      policies: utils.extend({}, clientOptions.defaultOptions.policies)
     };
   })(),
   /**

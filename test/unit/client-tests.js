@@ -3,6 +3,7 @@ var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
+var policies = require('../../lib/policies');
 var helper = require('../test-helper.js');
 var errors = require('../../lib/errors.js');
 var utils = require('../../lib/utils.js');
@@ -38,7 +39,13 @@ describe('Client', function () {
         }
       };
       Client.__set__("ControlConnection", controlConnectionMock);
-      var client = new Client(helper.baseOptions);
+      var options = utils.extend({
+        contactPoints: helper.baseOptions.contactPoints,
+        policies: {
+          loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
+        }
+      });
+      var client = new Client(options);
       client.on('connected', function () {emitCounter++;});
       async.times(1000, function (n, next) {
         client.connect(function (err) {

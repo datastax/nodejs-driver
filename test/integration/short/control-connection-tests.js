@@ -26,6 +26,43 @@ describe('ControlConnection', function () {
         done();
       });
     });
+    it('should subscribe to SCHEMA_CHANGE events and refresh keyspace information', function (done) {
+      var cc = new ControlConnection(options);
+      async.series([
+        cc.init.bind(cc),
+        function createKeyspace(next) {
+          var query = "CREATE KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}";
+          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        },
+        function (next) {
+          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          assert.ok(keyspaceInfo);
+          assert.ok(keyspaceInfo.strategy);
+          assert.equal(JSON.parse(keyspaceInfo.strategyOptions).replication_factor, 3);
+          assert.ok(keyspaceInfo.strategy.indexOf('SimpleStrategy') > 0);
+          next();
+        },
+        function alterKeyspace(next) {
+          var query = "ALTER KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}";
+          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        },
+        function (next) {
+          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          assert.ok(keyspaceInfo);
+          assert.equal(JSON.parse(keyspaceInfo.strategyOptions).replication_factor, 2);
+          next();
+        },
+        function alterKeyspace(next) {
+          var query = "DROP keyspace sample_change_1";
+          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        },
+        function (next) {
+          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          assert.ok(!keyspaceInfo);
+          next();
+        }
+      ], done);
+    });
     it('should subscribe to STATUS_CHANGE events', function (done) {
       var cc = new ControlConnection(options);
       cc.init(function () {

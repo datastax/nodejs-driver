@@ -17,8 +17,14 @@ var helper = {
       con.execute(query, params, {consistency: types.consistencies.one}, next);
     }, callback);
   },
+  /**
+   * Sync throws the error
+   */
   throwop: function (err) {
     if (err) throw err;
+  },
+  noop: function () {
+    //do nothing
   },
   /**
    * @type {ClientOptions}

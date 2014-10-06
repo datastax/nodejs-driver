@@ -67,6 +67,7 @@ describe('Client', function () {
       async.times(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
+          assert.ok(err.message.indexOf('Keyspace') > 0);
           next();
         });
       }, done);

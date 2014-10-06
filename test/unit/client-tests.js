@@ -142,4 +142,28 @@ describe('Client', function () {
       });
     });
   });
+  describe('#batch()', function () {
+    var Client = rewire('../../lib/client.js');
+    var requestHandlerMock = function () {this.counter = 0;};
+    requestHandlerMock.prototype.send = function noop (query, options, cb) {
+      //make it async
+      setTimeout(function () {
+        cb(null, {meta: {}});
+      }, 50);
+    };
+    Client.__set__("RequestHandler", requestHandlerMock);
+    it('should internally call to connect', function (done) {
+      var client = new Client(helper.baseOptions);
+      var connectCalled = false;
+      client.connect = function (cb) {
+        connectCalled = true;
+        cb();
+      };
+      client.batch([], function (err) {
+        assert.ifError(err);
+        assert.strictEqual(connectCalled, true);
+        done();
+      });
+    });
+  });
 });

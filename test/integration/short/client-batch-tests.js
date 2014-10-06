@@ -30,7 +30,7 @@ describe('Client', function () {
       ], done);
     });
     after(helper.ccmHelper.remove);
-    it('should execute a batch of queries with no params @debug', function (done) {
+    it('should execute a batch of queries with no params', function (done) {
       var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'%s\')';
       var selectQuery = 'SELECT * FROM %s WHERE id = %s';
       var id1 = types.uuid();

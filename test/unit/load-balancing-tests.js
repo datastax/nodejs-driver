@@ -4,6 +4,7 @@ var util = require('util');
 
 var helper = require('../test-helper.js');
 var Client = require('../../lib/client.js');
+var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
 var HostMap = require('../../lib/host.js').HostMap;
 var types = require('../../lib/types.js');
@@ -113,16 +114,17 @@ describe('DCAwareRoundRobinPolicy', function () {
     //local datacenter: dc1
     //0 host per remote datacenter
     var policy = new DCAwareRoundRobinPolicy('dc1');
+    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var hosts = [];
     var originalHosts = [];
     for (var i = 0; i < 50; i++) {
-      var h = new Host(i, 2, helper.baseOptions);
+      var h = new Host(i, 2, options);
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
       originalHosts.push(h);
     }
     var localLength = originalHosts.length / 2;
     var times = 1;
-    policy.init(new Client(helper.baseOptions), originalHosts, function (err) {
+    policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
       async.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
@@ -169,10 +171,11 @@ describe('DCAwareRoundRobinPolicy', function () {
     //local datacenter: null (first host's datacenter will be used)
     //2 host per remote datacenter
     var policy = new DCAwareRoundRobinPolicy(null, 2);
+    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var hosts = [];
     var originalHosts = [];
     for (var i = 0; i < 60; i++) {
-      var h = new Host(i, 2, helper.baseOptions);
+      var h = new Host(i, 2, options);
       switch (i % 3) {
         case 0:
           h.datacenter = 'dc1';
@@ -190,7 +193,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     //2 nodes per each remote dc
     var expectedLength = localLength + 2 * 2;
     var times = 1;
-    policy.init(new Client(helper.baseOptions), originalHosts, function (err) {
+    policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
       assert.strictEqual(policy.localDc, 'dc1');
       async.times(times, function (n, next) {
@@ -236,11 +239,12 @@ describe('DCAwareRoundRobinPolicy', function () {
 });
 describe('TokenAwarePolicy', function () {
   it('should use the childPolicy when no routingKey provided', function (done) {
-    var childPolicy = createDummyPolicy();
+    var options = clientOptions.extend({}, helper.baseOptions);
+    var childPolicy = createDummyPolicy(options);
     var policy = new TokenAwarePolicy(childPolicy);
     async.series([
       function (next) {
-        policy.init(new Client(helper.baseOptions), new HostMap(), next);
+        policy.init(new Client(options), new HostMap(), next);
       },
       function (next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
@@ -255,9 +259,9 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
   it('should retrieve local replicas plus childPolicy hosts plus remote replicas', function (done) {
-    var childPolicy = createDummyPolicy();
+    var options = clientOptions.extend({}, helper.baseOptions);
+    var childPolicy = createDummyPolicy(options);
     var policy = new TokenAwarePolicy(childPolicy);
-    var options = utils.extend({}, helper.baseOptions);
     var client = new Client(options);
     client.getReplicas = function () {
       return [new Host('repl1', 2, options), new Host('repl2', 2, options), new Host('repl3', 2, options), new Host('repl4', 2, options)];
@@ -288,7 +292,11 @@ describe('TokenAwarePolicy', function () {
   });
 });
 
-function createDummyPolicy() {
+/**
+ * @param {Object} options
+ * @returns {LoadBalancingPolicy}
+ */
+function createDummyPolicy(options) {
   var childPolicy = new LoadBalancingPolicy();
   childPolicy.initCalled = 0;
   childPolicy.newQueryPlanCalled = 0;
@@ -303,7 +311,7 @@ function createDummyPolicy() {
   childPolicy.newQueryPlan = function (k, o, cb) {
     childPolicy.newQueryPlanCalled++;
 
-    var hosts = [new Host('repl2', 2, helper.baseOptions), new Host('child1', 2, helper.baseOptions), new Host('child2', 2, helper.baseOptions)];
+    var hosts = [new Host('repl2', 2, options), new Host('child1', 2, options), new Host('child2', 2, options)];
     cb(null, utils.arrayIterator(hosts));
   };
   return childPolicy;

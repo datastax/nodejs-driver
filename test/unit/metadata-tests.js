@@ -4,6 +4,7 @@ var util = require('util');
 
 var helper = require('../test-helper.js');
 var Client = require('../../lib/client.js');
+var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
 var Metadata = require('../../lib/metadata.js');
 var tokenizer = require('../../lib/tokenizer.js');
@@ -41,7 +42,7 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[2], '1');
     });
     it('should return depending on the dc rf with network topology', function () {
-      var options = utils.extend({}, helper.baseOptions);
+      var options = clientOptions.extend({}, helper.baseOptions);
       var metadata = new Metadata();
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token

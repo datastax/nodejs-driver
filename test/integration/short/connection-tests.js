@@ -3,7 +3,7 @@ var util = require('util');
 var async = require('async');
 
 var Connection = require('../../../lib/connection.js');
-var defaultOptions = require('../../../lib/client-options.js').defaultOptions;
+var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');

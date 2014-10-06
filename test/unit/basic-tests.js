@@ -441,7 +441,7 @@ describe('clientOptions', function () {
       var a = {contactPoints: ['host1']};
       var options = clientOptions.extend(a);
       assert.notStrictEqual(a, options);
-      assert.notStrictEqual(options, clientOptions.defaultOptions);
+      assert.notStrictEqual(options, clientOptions.defaultOptions());
       //it should use baseOptions as source
       var b = {};
       options = clientOptions.extend(b, a);
@@ -449,7 +449,7 @@ describe('clientOptions', function () {
       assert.strictEqual(b, options);
       //A is the target
       assert.notStrictEqual(a, options);
-      assert.notStrictEqual(options, clientOptions.defaultOptions);
+      assert.notStrictEqual(options, clientOptions.defaultOptions());
     });
     it('should validate the policies', function () {
       var policy1 = new loadBalancing.RoundRobinPolicy();

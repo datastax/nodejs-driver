@@ -33,9 +33,7 @@ var helper = {
     var clientOptions = require('../lib/client-options.js');
     return {
       //required
-      contactPoints: ['127.0.0.1'],
-      //Even-though the client add the policies, we should copy the policies to ease up test dev
-      policies: utils.extend({}, clientOptions.defaultOptions.policies)
+      contactPoints: ['127.0.0.1']
     };
   })(),
   /**

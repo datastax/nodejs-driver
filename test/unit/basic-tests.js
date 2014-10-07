@@ -142,8 +142,34 @@ describe('encoder', function () {
     it('should throw on unknown types', function () {
       assert.throws(function () {
         typeEncoder.encode({});
-      });
+      }, TypeError);
     });
+    it('should throw when the typeInfo and the value source type does not match', function () {
+      assert.throws(function () {
+        typeEncoder.encode('hello', 'int');
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode('1', 'bigint');
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode('1.1', 'float');
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode(100, dataTypes.uuid);
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode(200, dataTypes.timeuuid);
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode('Its anybody in there? I know that you can hear me', dataTypes.blob);
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode(100, dataTypes.blob);
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode({}, dataTypes.list);
+      }, TypeError);
+    })
   });
 });
 

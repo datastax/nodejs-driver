@@ -171,6 +171,45 @@ describe('Client', function () {
         });
       });
     });
+    it('should callback in err when wrong hints are provided', function (done) {
+      var client = newInstance();
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table1),
+        params: [types.uuid(), 'what', 1]
+      }];
+      async.series([
+        client.connect.bind(client),
+        function hintsArrayAsObject(next) {
+          client.batch(queries, {hints: {}}, function (err) {
+            //it should not fail, dismissed
+            next(err);
+          });
+        },
+        function hintsDifferentAmount(next) {
+          client.batch(queries, {hints: [['uuid']]}, function (err) {
+            //it should not fail
+            next(err);
+          });
+        },
+        function hintsEmptyArray(next) {
+          client.batch(queries, {hints: [[]]}, function (err) {
+            next(err);
+          });
+        },
+        function hintsArrayWrongSubtype(next) {
+          client.batch(queries, {hints: [{what: true}]}, function (err) {
+            next(err);
+          });
+        },
+        function hintsInvalidStrings(next) {
+          client.batch(queries, {hints: [['zzz', 'mmmm']]}, function (err) {
+            helper.assertInstanceOf(err, Error);
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

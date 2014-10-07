@@ -143,6 +143,10 @@ var helper = {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+  assertNotInstanceOf: function (instance, constructor) {
+    assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
+    assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
+  },
   /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client

@@ -6,6 +6,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
+var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -124,8 +125,8 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should not autoPage @c2_', function (done) {
-      var client = newInstance();
+    it('should not autoPage @c2_0', function (done) {
+      var client = newInstance({keyspace: keyspace});
       var pageState = null;
       async.series([
         function truncate(seriesNext) {
@@ -144,6 +145,41 @@ describe('Client', function () {
             assert.strictEqual(result.rows.length, 65);
             pageState = result.meta.pageState;
             seriesNext();
+          });
+        }
+      ], done);
+    });
+    it('should callback in err when wrong hints are provided @c2_0', function (done) {
+      var client = newInstance();
+      var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
+      //valid params
+      var params = [types.uuid(), types.uuid(), types.uuid()];
+      async.series([
+        client.connect.bind(client),
+        function hintsArrayAsObject(next) {
+          client.execute(query, params, {hints: {}}, function (err) {
+            //it should not fail
+            next(err);
+          });
+        },
+        function hintsDifferentAmount(next) {
+          client.execute(query, params, {hints: ['uuid']}, function (err) {
+            //it should not fail
+            next(err);
+          });
+        },
+        function hintsArrayWrongSubtype(next) {
+          client.execute(query, params, {hints: [[]]}, function (err) {
+            helper.assertInstanceOf(err, Error);
+            helper.assertNotInstanceOf(err, errors.NoHostAvailableError);
+            next();
+          });
+        },
+        function hintsInvalidStrings(next) {
+          client.execute(query, params, {hints: ['zzz', 'mmmm']}, function (err) {
+            helper.assertInstanceOf(err, Error);
+            helper.assertNotInstanceOf(err, errors.NoHostAvailableError);
+            next();
           });
         }
       ], done);
@@ -181,8 +217,9 @@ function insertSelectTest(client, table, columns, values, hints, done) {
 }
 
 /**
+ * @param [options]
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  return new Client(utils.extend({}, helper.baseOptions, options));
 }

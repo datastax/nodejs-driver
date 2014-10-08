@@ -41,7 +41,6 @@ describe('encoder', function () {
       assert.strictEqual(typeInfo.type, expectedType, message + ': ' + value);
     }
   });
-
   describe('#encode() and #decode', function () {
     var typeEncoder = encoder;
     it('should encode and decode maps', function () {
@@ -170,6 +169,84 @@ describe('encoder', function () {
         typeEncoder.encode({}, dataTypes.list);
       }, TypeError);
     })
+  });
+  describe('#setRoutingKey', function () {
+    it('should concat Array of buffers in the correct format',function () {
+      var options = {
+        routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
+      };
+      var initialRoutingKey = options.routingKey.toString('hex');
+      encoder.setRoutingKey([1, 'text'], options);
+      assert.strictEqual(options.routingKey.toString('hex'), '00010100000102000002030300');
+
+      options = {
+        routingKey: [new Buffer([1])]
+      };
+      encoder.setRoutingKey([1, 'text'], options);
+      assert.strictEqual(options.routingKey.toString('hex'), '01');
+    });
+    it('should not affect Buffer routing keys', function () {
+      var options = {
+        routingKey: new Buffer([1, 2, 3, 4])
+      };
+      var initialRoutingKey = options.routingKey.toString('hex');
+      encoder.setRoutingKey([1, 'text'], options);
+      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
+
+      options = {
+        routingIndexes: [1],
+        routingKey: new Buffer([1, 2, 3, 4])
+      };
+      encoder.setRoutingKey([1, 'text'], options);
+      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
+    });
+    it('should build routing key based on routingIndexes', function () {
+      var options = {
+        hints: ['int'],
+        routingIndexes: [0]
+      };
+      encoder.setRoutingKey([1], options);
+      assert.strictEqual(options.routingKey.toString('hex'), '00000001');
+
+      options = {
+        hints: ['int', 'string', 'int'],
+        routingIndexes: [0, 2]
+      };
+      encoder.setRoutingKey([1, 'yeah', 2], options);
+      //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '00000002' + '00');
+
+      options = {
+        //less hints
+        hints: ['int'],
+        routingIndexes: [0, 2]
+      };
+      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
+      //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
+      options = {
+        //no hints
+        routingIndexes: [1, 2]
+      };
+      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
+      //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      assert.strictEqual(options.routingKey.toString('hex'), '0004' + new Buffer('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
+    });
+    it('should throw if the type could not be encoded', function () {
+      assert.throws(function () {
+        var options = {
+          routingIndexes: [0]
+        };
+        encoder.setRoutingKey([{a: 1}], options);
+      }, TypeError);
+      assert.throws(function () {
+        var options = {
+          hints: ['int'],
+          routingIndexes: [0]
+        };
+        encoder.setRoutingKey(['this is text'], options);
+      }, TypeError);
+    });
   });
 });
 

@@ -6,12 +6,13 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
+var policies = require('../../../lib/policies');
 
 describe('Client', function () {
   this.timeout(120000);
   afterEach(helper.ccmHelper.remove);
   it('should handle parallel insert and select', function (done) {
-    var client = newInstance();
+    var client = newInstance({policies: { retry: new RetryMultipleTimes(10)}});
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;
@@ -57,7 +58,7 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select with nodes failing', function (done) {
-    var client = newInstance();
+    var client = newInstance({policies: { retry: new RetryMultipleTimes(10)}});
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;
@@ -108,9 +109,43 @@ describe('Client', function () {
     }
   });
 });
+
+/**
+ * A retry policy for testing purposes only, retries for a number of times
+ * @param {Number} times
+ * @constructor
+ */
+function RetryMultipleTimes(times) {
+  this.times = times;
+}
+
+util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
+
+RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  return new Client(utils.extend({}, helper.baseOptions, options));
 }

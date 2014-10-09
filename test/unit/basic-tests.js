@@ -17,7 +17,7 @@ var helper = require('../test-helper.js')
 describe('encoder', function () {
   describe('#guessDataType()', function () {
     it('should guess the native types', function () {
-      assertGuessed(1, dataTypes.double, 'Guess type for an integer (double) number failed');
+      assertGuessed(1, dataTypes.int, 'Guess type for an integer (double) number failed');
       assertGuessed(1.01, dataTypes.double, 'Guess type for a double number failed');
       assertGuessed(true, dataTypes.boolean, 'Guess type for a boolean value failed');
       assertGuessed([1,2,3], dataTypes.list, 'Guess type for an Array value failed');
@@ -64,7 +64,7 @@ describe('encoder', function () {
       value[types.uuid()] = 0;
       value[types.uuid()] = 2;
       encoded = typeEncoder.encode(value, 'map');
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.uuid], [dataTypes.double]]]);
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.uuid], [dataTypes.int]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
       //full info string
       value = {value1: 1, valueN: -3};
@@ -86,7 +86,7 @@ describe('encoder', function () {
     });
 
     it('should encode and decode a guessed double', function () {
-      var value = 1111;
+      var value = 1111.1;
       var encoded = typeEncoder.encode(value);
       var decoded = typeEncoder.decode(encoded, [dataTypes.double]);
       assert.strictEqual(decoded, value);
@@ -99,15 +99,22 @@ describe('encoder', function () {
       assert.strictEqual(decoded, value);
     });
 
+    it('should encode and decode a guessed int', function () {
+      var value = 1;
+      var encoded = typeEncoder.encode(value);
+      var decoded = typeEncoder.decode(encoded, [dataTypes.int]);
+      assert.strictEqual(decoded, value);
+    });
+
     it('should encode and decode list<double>', function () {
-      var value = [1, 2, 3, 100];
+      var value = [1.1, 2.1, 3.1, 100.1];
       var encoded = typeEncoder.encode(value, 'list<double>');
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
 
     it('should encode and decode list<double> without hint', function () {
-      var value = [1, 2, 3, 100.1];
+      var value = [1.1, 2.1, 3.1, 100.1];
       var encoded = typeEncoder.encode(value);
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
@@ -297,7 +304,7 @@ describe('types', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
       var stream = new types.ResultStream();
-      
+
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
         done();
@@ -308,7 +315,7 @@ describe('types', function () {
           buf.push(item);
         }
       });
-      
+
       stream.add(new Buffer('Jimmy'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('McNulty'));
@@ -396,8 +403,8 @@ describe('utils', function () {
   describe('#syncEvent()', function () {
     it('should execute callback once for all emitters', function () {
       var emitter1 = new events.EventEmitter();
-      var emitter2 = new events.EventEmitter(); 
-      var emitter3 = new events.EventEmitter(); 
+      var emitter2 = new events.EventEmitter();
+      var emitter3 = new events.EventEmitter();
       var callbackCounter = 0;
       utils.syncEvent([emitter1, emitter2, emitter3], 'dummy', this, function (text){
         assert.strictEqual(text, 'bop');

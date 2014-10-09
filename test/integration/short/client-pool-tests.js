@@ -72,6 +72,7 @@ describe('Client', function () {
         });
       }, done);
     });
+    it('should remove not use contactPoints that are not part of peers');
   });
   describe('#connect() with auth', function () {
     before(function (done) {

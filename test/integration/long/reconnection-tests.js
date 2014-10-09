@@ -138,4 +138,53 @@ describe('reconnection', function () {
       ], done);
     });
   });
+  describe('when connections are silently dropped', function () {
+    it('should callback in err the next request @debug', function (done) {
+      //never reconnect
+      var client = new Client(utils.extend({}, helper.baseOptions, {policies: {reconnection: new reconnection.ConstantReconnectionPolicy(Number.MAX_VALUE)}}));
+      async.series([
+        helper.ccmHelper.start(1),
+        client.connect.bind(client),
+        function doSomeQueries(next) {
+          async.times(30, function (n, timesNext) {
+            client.execute('SELECT * FROM system.schema_columnfamilies', timesNext);
+          }, next);
+        },
+        function silentlyKillConnections(next) {
+          killConnections(client, true);
+          setTimeout(next, 2000);
+        },
+        function issueARequest(next) {
+          global.DEBUGGING = true;
+          client.execute('SELECT * FROM system.local', function (err) {
+            //The error is expected
+            assert.ok(err);
+            assert.ok(err.message.indexOf('undefined') < 0);
+            assert.ok(Object.keys(err.innerErrors).length > 0);
+            next();
+          });
+        }
+      ], function (err) {
+        assert.ifError(err);
+        helper.ccmHelper.removeIfAny(done);
+      });
+    });
+  });
 });
+
+/**
+ * @param {Client} client
+ * @param {Boolean} destroy
+ */
+function killConnections(client, destroy) {
+  client.hosts.forEach(function (h) {
+    h.pool.connections.forEach(function (c) {
+      if (destroy) {
+        c.netClient.destroy();
+      }
+      else {
+        c.netClient.end();
+      }
+    });
+  });
+}

@@ -63,6 +63,12 @@ var helper = {
     remove: function (callback) {
       new Ccm().remove(callback);
     },
+    removeIfAny: function (callback) {
+      new Ccm().remove(function () {
+        //ignore err
+        callback();
+      });
+    },
     /**
      * Adds a new node to the cluster
      * @param {Number} nodeIndex 1 based index of the node

@@ -12,7 +12,8 @@ describe('Client', function () {
   this.timeout(120000);
   afterEach(helper.ccmHelper.remove);
   it('should handle parallel insert and select', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(10)}});
+    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    //var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;
@@ -58,7 +59,7 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select with nodes failing', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(10)}});
+    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;

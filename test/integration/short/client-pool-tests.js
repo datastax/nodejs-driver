@@ -67,12 +67,27 @@ describe('Client', function () {
       async.times(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
+          //Not very nice way to check but here it is
+          //Does the message contains Keyspace
           assert.ok(err.message.indexOf('Keyspace') > 0);
           next();
         });
       }, done);
     });
-    it('should remove not use contactPoints that are not part of peers');
+    it('should not use contactPoints that are not part of peers', function (done) {
+      var contactPoints = helper.baseOptions.contactPoints.slice(0);
+      contactPoints.push('host-not-existent-not-peer');
+      contactPoints.push('1.1.1.1');
+      var client = newInstance({contactPoints: contactPoints});
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        assert.strictEqual(client.hosts.slice(0)[0].address, contactPoints[0]);
+        assert.notEqual(client.hosts.slice(0)[1].address, contactPoints[1]);
+        assert.notEqual(client.hosts.slice(0)[2].address, contactPoints[2]);
+        done();
+      });
+    });
   });
   describe('#connect() with auth', function () {
     before(function (done) {

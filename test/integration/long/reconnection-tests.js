@@ -139,7 +139,7 @@ describe('reconnection', function () {
     });
   });
   describe('when connections are silently dropped', function () {
-    it('should callback in err the next request @debug', function (done) {
+    it('should callback in err the next request', function (done) {
       //never reconnect
       var client = new Client(utils.extend({}, helper.baseOptions, {policies: {reconnection: new reconnection.ConstantReconnectionPolicy(Number.MAX_VALUE)}}));
       async.series([

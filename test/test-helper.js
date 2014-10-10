@@ -66,7 +66,7 @@ var helper = {
     removeIfAny: function (callback) {
       new Ccm().remove(function () {
         //ignore err
-        callback();
+        if (callback) callback();
       });
     },
     /**

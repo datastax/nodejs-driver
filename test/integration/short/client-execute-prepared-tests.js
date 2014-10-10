@@ -172,6 +172,7 @@ function serializationTest(values, columns, done) {
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');
         var row = result.rows[0];
+        assert.strictEqual(row.values().length, values.length);
         for (var i = 0; i < values.length; i++) {
           helper.assertValueEqual(values[i], row.get(i));
         }

@@ -188,10 +188,10 @@ describe('Client', function () {
 });
 
 function insertSelectTest(client, table, columns, values, hints, done) {
+  var columnsSplit = columns.split(',');
   async.series([
     function (next) {
       var markers = '?';
-      var columnsSplit = columns.split(',');
       for (var i = 1; i < columnsSplit.length; i++) {
         markers += ', ?';
       }
@@ -207,6 +207,8 @@ function insertSelectTest(client, table, columns, values, hints, done) {
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');
         var row = result.rows[0];
+        assert.strictEqual(row.values().length, values.length);
+        assert.strictEqual(row.keys().join(','), columnsSplit.join(','));
         for (var i = 0; i < values.length; i++) {
           helper.assertValueEqual(values[i], row.get(i));
         }

@@ -37,6 +37,22 @@ describe('Client', function () {
         done();
       });
     });
+    it('should fail if contact points can not be resolved', function (done) {
+      var client = newInstance({contactPoints: ['not-a-host']});
+      client.connect(function (err) {
+        assert.ok(err);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        done();
+      });
+    });
+    it('should fail if contact points can not be reached', function (done) {
+      var client = newInstance({contactPoints: ['1.1.1.1']});
+      client.connect(function (err) {
+        assert.ok(err);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        done();
+      });
+    });
     it('should select a tokenizer', function (done) {
       var client = newInstance();
       client.connect(function (err) {
@@ -133,8 +149,8 @@ describe('Client', function () {
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        helper.assertInstanceOf(err.innerErrors, Array);
-        helper.assertInstanceOf(err.innerErrors[0], errors.AuthenticationError);
+        assert.ok(err.innerErrors);
+        helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
         done();
       });
     });

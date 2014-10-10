@@ -240,6 +240,20 @@ var helper = {
       }
     }
     return undefined;
+  },
+  /**
+   * Returns the values of an object
+   * @param {Object} obj
+   */
+  values : function (obj) {
+    var vals = [];
+    for (var key in obj) {
+      if (!obj.hasOwnProperty(key)) {
+        continue;
+      }
+      vals.push(obj[key]);
+    }
+    return vals;
   }
 };
 

@@ -1,6 +1,7 @@
 var async = require('async');
 var assert = require('assert');
 var util = require('util');
+var path = require('path');
 var types = require('../lib/types.js');
 var utils = require('../lib/utils.js');
 
@@ -254,6 +255,7 @@ function Ccm() {
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
+  options = options || {};
   async.series([
     function (next) {
       //it wont hurt to remove
@@ -263,10 +265,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      self.exec(['create', 'test', '-v', helper.getCassandraVersion()], next);
+      var create = ['create', 'test', '-v', helper.getCassandraVersion()];
+      if (options.ssl) {
+        create.push('--ssl', self.getPath('ssl'));
+      }
+      self.exec(create, next);
     },
     function (next) {
-      if (!options || !options.yaml) {
+      if (!options.yaml) {
         return next();
       }
       var i = 0;
@@ -282,7 +288,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       var populate = ['populate', '-n', nodeLength.toString()];
-      if (options && options.vnodes) {
+      if (options.vnodes) {
         populate.push('--vnodes');
       }
       self.exec(populate, next);
@@ -297,14 +303,19 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
 };
 
 Ccm.prototype.exec = function (params, callback) {
+  this.spawn('ccm', params, callback);
+};
+
+Ccm.prototype.spawn = function (processName, params, callback) {
   if (!callback) {
     callback = function () {};
   }
+  params = params || [];
+  var originalProcessName = processName;
   var spawn = require('child_process').spawn;
-  var processName = 'ccm';
   if (process.platform.indexOf('win') === 0) {
+    params = ['/c', processName].concat(params);
     processName = 'cmd.exe';
-    params = ['/c', 'ccm'].concat(params);
   }
   var p = spawn(processName, params);
   var stdoutArray= [];
@@ -329,7 +340,7 @@ Ccm.prototype.exec = function (params, callback) {
     var err = null;
     if (code !== 0) {
       err = new Error(
-          'Error executing ccm\n' +
+          'Error executing ' + originalProcessName + ':\n' +
           info.stderr.join('\n') +
           info.stdout.join('\n')
       );
@@ -368,5 +379,17 @@ Ccm.prototype.waitForUp = function (callback) {
   }, callback);
 };
 
+/**
+ * Gets the path of the ccm
+ * @param subPath
+ */
+Ccm.prototype.getPath = function (subPath) {
+  var ccmPath = process.env.CCM_PATH;
+  if (!ccmPath) {
+    ccmPath = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
+    ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
+  }
+  return path.join(ccmPath, subPath);
+};
 
 module.exports = helper;

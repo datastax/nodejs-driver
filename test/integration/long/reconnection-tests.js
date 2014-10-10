@@ -155,7 +155,6 @@ describe('reconnection', function () {
           setTimeout(next, 2000);
         },
         function issueARequest(next) {
-          global.DEBUGGING = true;
           client.execute('SELECT * FROM system.local', function (err) {
             //The error is expected
             assert.ok(err);

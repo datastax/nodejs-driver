@@ -50,7 +50,7 @@ async.series([
           console.log('Inserted', callbackCounter);
         }
         assert.ifError(err);
-        timesNext();
+        setImmediate(timesNext);
       });
     }, function (err) {
       if (err) return next(err);
@@ -62,7 +62,7 @@ async.series([
         return next(new Error('Difference between starting heap and finish heap used size is too large ' + formatLength(diff)));
       }
       if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
-      next();
+      setImmediate(next);
     });
   },
   function selectData(next) {
@@ -83,7 +83,7 @@ async.series([
       assert.strictEqual(rowCount, result.rowLength);
       console.log('Heap used difference', formatLength(diff));
       console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
-      next();
+      setImmediate(next);
     });
   },
   client.shutdown.bind(client)

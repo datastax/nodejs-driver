@@ -11,9 +11,9 @@ var helper = require('../../test-helper.js');
 
 describe('Connection', function () {
   this.timeout(30000);
-  before(helper.ccmHelper.start(1));
-  after(helper.ccmHelper.remove);
   describe('#open()', function () {
+    before(helper.ccmHelper.start(1));
+    after(helper.ccmHelper.remove);
     it('should open', function (done) {
       var localCon = newInstance();
       localCon.open(function (err) {
@@ -47,7 +47,11 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
-    it.skip('should open to a ssl enabled host @exclude', function (done) {
+  });
+  describe('#open with ssl', function () {
+    before(helper.ccmHelper.start(1, {ssl: true}));
+    after(helper.ccmHelper.remove);
+    it('should open to a ssl enabled host', function (done) {
       var localCon = newInstance();
       localCon.options.sslOptions = {};
       localCon.open(function (err) {
@@ -63,6 +67,8 @@ describe('Connection', function () {
     });
   });
   describe('#changeKeyspace()', function () {
+    before(helper.ccmHelper.start(1));
+    after(helper.ccmHelper.remove);
     it('should change active keyspace', function (done) {
       var localCon = newInstance();
       var keyspace = helper.getRandomName();
@@ -102,6 +108,8 @@ describe('Connection', function () {
     });
   });
   describe('#execute()', function () {
+    before(helper.ccmHelper.start(1));
+    after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
       var connection = newInstance();
       async.series([

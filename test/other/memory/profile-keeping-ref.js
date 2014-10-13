@@ -45,7 +45,9 @@ async.series([
     var heapUsed = process.memoryUsage().heapUsed;
     async.eachLimit(new Array(10000), 500, function (v, timesNext) {
       var n = counter++;
-      client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), new Buffer(1024)], {prepare: 1}, function (err) {
+      var buf = new Buffer(1024);
+      buf.write(helper.getRandomName('fill in with pseudo-random values'));
+      client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), buf], {prepare: 1}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {
           console.log('Inserted', callbackCounter);
         }
@@ -83,7 +85,7 @@ async.series([
       global.gc();
       var diff = process.memoryUsage().heapUsed - heapUsed;
       assert.strictEqual(rowCount, result.rowLength);
-      console.log('Heap used difference', formatLength(diff), ', should be around' + formatLength(totalByteLength));
+      console.log('Heap used difference', formatLength(diff), ', should be around', formatLength(totalByteLength));
       console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
       setImmediate(next);
     });

@@ -26,10 +26,7 @@ $ npm install cassandra-driver
 - [Documentation index][doc-index]
 - [CQL types to javascript types][doc-datatypes]
 - [API docs][doc-api]
-<!--
-- [Getting started][start]
-- [FAQ][faq]
--->
+
 ## Getting Help
 
 You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].

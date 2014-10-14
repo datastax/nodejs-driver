@@ -11,6 +11,22 @@ var HostMap = require('../../lib/host.js').HostMap;
 var Metadata = require('../../lib/metadata.js');
 
 describe('Client', function () {
+  describe('constructor', function () {
+    it('should throw an exception when contactPoints are not provided', function () {
+      assert.throws(function () {
+        var client = new Client({});
+      });
+      assert.throws(function () {
+        var client = new Client({contactPoints: []});
+      });
+      assert.throws(function () {
+        var client = new Client(null);
+      });
+      assert.throws(function () {
+        var client = new Client();
+      });
+    });
+  });
   describe('#connect()', function () {
     this.timeout(35000);
     it('should fail if no host name can be resolved', function (done) {

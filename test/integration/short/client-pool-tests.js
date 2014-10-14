@@ -10,22 +10,6 @@ var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('constructor', function () {
-    it('should throw an exception when contactPoints are not provided', function () {
-      assert.throws(function () {
-        var client = new Client({});
-      });
-      assert.throws(function () {
-        var client = new Client({contactPoints: []});
-      });
-      assert.throws(function () {
-        var client = new Client(null);
-      });
-      assert.throws(function () {
-        var client = new Client();
-      });
-    });
-  });
   describe('#connect()', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);

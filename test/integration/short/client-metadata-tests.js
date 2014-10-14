@@ -12,7 +12,7 @@ var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 
 describe('Client', function () {
-  this.timeout(120000);
+  this.timeout(240000);
   describe('#getReplicas() with Murmur', function () {
     before(function (done) {
       var client = new Client(helper.baseOptions);

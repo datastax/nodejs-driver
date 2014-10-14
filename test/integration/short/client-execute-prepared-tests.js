@@ -6,6 +6,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
+var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -67,6 +68,23 @@ describe('Client', function () {
           next();
         });
       }, done);
+    });
+    it('should fail if the column name does not match', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_keyspaces where invalid_column = ?', ['val'], {prepare: 1}, function (err) {
+        helper.assertInstanceOf(err, Error);
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+        done();
+      });
+    });
+    it('should fail if the type does not match', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.schema_keyspaces where keyspace_name = ?', [1000], {prepare: 1}, function (err) {
+        helper.assertInstanceOf(err, Error);
+        helper.assertInstanceOf(err, TypeError);
+        done();
+      });
     });
     it('should serialize all guessed types', function (done) {
       var values = [types.uuid(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];

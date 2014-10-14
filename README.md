@@ -16,272 +16,117 @@ $ npm install cassandra-driver
 - Configurable load balancing
 - Transparent failover
 - Tunability
+- Paging
+- Client-to-node SSL support
 - Row streaming
 - Prepared statements and query batches
+
+## Documentation
+
+- [Documentation index][doc-index]
+- [CQL types to javascript types][doc-datatypes]
+- [API docs][doc-api]
+<!--
+- [Getting started][start]
+- [FAQ][faq]
+-->
+## Getting Help
+
+You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
 ## Basic usage
 
 ```javascript
 var cassandra = require('cassandra-driver');
-var client = new cassandra.Client({contactPoints: ['host1', 'host2'], keyspace: 'ks1'});
+var client = new cassandra.Client({contactPoints: ['host1', 'h2'], keyspace: 'ks1'});
 var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
+  assert.ifError(err);
   console.log('got user profile with email ' + result.rows[0].email);
 });
 ```
 
-## Documentation
+### Prepare your queries
 
-- [Getting started][start]
-- [CQL types to javascript types][doc-datatypes]
-- [FAQ][faq]
+Use prepared statements to obtain best performance. The driver will prepare the query once on each host and
+ execute the statement with the bound parameters.
 
-## Getting Help
-
-You can use the project [Mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
-
-## What's coming next
-
-- SSL support
-- Automatic paging
-- Token-aware load balancing policy
-
-## API
-
-- [Client](#client) class
-- [types](#types) module
-- [policies](#policies) module
-- [auth](#auth) module
-
-
-### Client
-
-The `Client` maintains a pool of opened connections to the hosts to avoid several time-consuming steps that are involved with the setup of a CQL binary protocol connection (socket connection, startup message, authentication, ...).
-
-*Usually you need one Client instance per Cassandra cluster.*
-
-#### new Client(options)
-
-Constructs a new client object.
-
-#### client.connect([callback])
-
-Connects / warms up the pool.
-
-It ensures the pool is connected. It is not required to call it, internally the driver will call to `connect` when executing a query.
-
-The optional `callback` parameter will be executed when the pool is connected. If the pool is already connected, it will be called instantly. 
-
-#### client.execute(query, [params], [queryOptions], callback)
-
-The `query` is the cql query to execute, with `?` marker for parameter placeholder.
-
-To prepare an statement, provide {prepare: true} in the queryOptions. It will prepare (the first time) and execute the prepared statement.
-                                                                                                                     
-Using prepared statements increases performance compared to plain executes, especially for repeated queries. 
-It has the additional benefit of providing metadata of the parameters to the driver, 
-**allowing better type mapping between javascript and Cassandra** without the need of additional info (hints) from the user. 
-
-In the case the query is already being prepared on a host, it queues the executing of a prepared statement on that
-host until the preparing finished (the driver will not issue a request to prepare statement more than once).
-
-`callback` should take two arguments err and result.
-
-`queryOptions` is an Object that may contain the following optional properties:
-
-- `prepare`: if set, prepares the query (once) and executes the prepared statement.
-- `consistency`: the consistency level for the operation (defaults to one).
-The possible consistency levels are defined in `driver.types.consistencies`.
-- `fetchSize`: The maximum amount of rows to be retrieved per request (defaults to 5000)
-
-##### Example: Updating a row
 ```javascript
-var query = 'UPDATE user_profiles SET birth=? WHERE key=?';
-var queryOptions = {
-  consistency: cassandra.types.consistencies.quorum,
-  prepare: true};
+//When using parameter markers ? the prepared query will be reused
+var query = 'UPDATE user_profiles SET birth=? WHERE key=?'; 
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
-client.execute(query, params, queryOptions, function(err) {
-  if (err) return console.log('Something went wrong', err);
+//Set the prepare flag in the query options
+client.execute(query, params, {prepare: true}, function(err) {
+  assert.ifError(err);
   console.log('Row updated on the cluster');
 });
 ```
 
-#### client.eachRow(query, [params], [queryOptions], rowCallback, endCallback)
+### Avoid buffering
 
-Executes a query and streams the rows as soon as they are received.
+When using `#eachRow()` and `#stream()` methods, the driver parses each row as soon as it is received,
+ yielding rows without buffering them.
 
-It executes `rowCallback(n, row)` per each row received, where `n` is the index of the row.
-
-It executes `callback(err, rowLength)` when all rows have been received or there is an error retrieving the row.
-
-
-##### Example: Reducing a result set
 ```javascript
-client.eachRow('SELECT time, temperature FROM temperature WHERE station_id=', ['abc'],
+//Reducing a large result
+client.eachRow('SELECT time, val FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
     //the callback will be invoked per each row as soon as they are received
-    minTemperature = Math.min(row.temperature, minTemperature);
+    minTemperature = Math.min(row.val, minTemperature);
   },
-  function (err, rowLength) {
-    if (err) console.error(err);
-    console.log('%d rows where returned', rowLength);
+  function (err) {
+    assert.ifError(err);
   }
 );
 ```
 
-#### client.batch(queries, [queryOptions], callback)
+The `#stream()` method works in the same way but instead of callback it returns a [Readable Streams2][streams2] object
+ in `objectMode` that emits instances of `Row`. It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
 
-Executes batch of queries on an available connection, where `queries` is an Array of string containing the CQL queries
- or an Array of objects containing the query and the parameters.
+### Paging
 
-`callback` should take two arguments err and result.
-
-#####Example: Update multiple column families
+All driver methods use a default `fetchSize` of 5000 rows, retrieving only first page of results up to a
+ maximum of 5000 rows to shield an application against accidentally large result sets. To retrieve the following
+ records you can use the `autoPage` flag in the query options of `#eachRow()` and `#stream()` methods.
 
 ```javascript
-var userId = cassandra.types.uuid();
-var messageId = cassandra.types.uuid();
+//Imagine a column family with millions of rows
+var query = 'SELECT * FROM largetable';
+client.eachRow(query, [], {autoPage: true}, function (n, row) {
+  //This function will be called per each of the rows in all the table
+}, endCallback);
+```
+
+### Batch multiple statements
+
+You can execute multiple statements in a batch to update/insert several rows atomically even in different column families.
+
+```javascript
 var queries = [
   {
-    query: 'INSERT INTO users (id, name) values (?, ?)',
-    params: [userId, 'jimi-hendrix']
+    query: 'UPDATE user_profiles SET email=? WHERE key=?',
+    params: [emailAddress, 'hendrix']
   },
   {
-    query: 'INSERT INTO messages (id, user_id, body) values (?, ?, ?)',
-    params: [messageId, userId, 'Message from user jimi-hendrix']
+    query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
+    params: ['hendrix', 'Changed email', new Date()]
   }
 ];
 var queryOptions: { consistency: cassandra.types.consistencies.quorum };
 client.batch(queries, queryOptions, function(err) {
-  if (err) return console.log('The rows were not inserted', err);
+  assert.ifError(err);
   console.log('Data updated on cluster');
 });
 ```
 
-#### client.stream(query, [params], [queryOptions])
-
-Executes the query and returns a [Readable Streams2](http://nodejs.org/api/stream.html#stream_class_stream_readable) object in `objectMode`.
-When a row can be read from the stream, it will emit a `readable` event.
-It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
-
-It executes `callback(err)` when all rows have been received or there is an error retrieving the row.
-
-##### Example: Reading the whole result as stream
-```javascript
-client.stream('SELECT time1, value1 FROM timeseries WHERE key=', ['key123'])
-  .on('readable', function () {
-    //readable is emitted as soon a row is received and parsed
-    var row;
-    while (row = this.read()) {
-      console.log('time %s and value %s', row.time1, row.value1);
-    }
-  })
-  .on('end', function () {
-    //stream ended, there aren't any more rows
-  })
-  .on('error', function (err) {
-    //Something went wrong: err is a response error from Cassandra
-  });
-```
-
-#### client.shutdown([callback])
-
-Disconnects the pool.
-
-Closes all connections in the pool. Normally, it should be called once in your application lifetime.
-
-The optional `callback` parameter will be executed when the pool is disconnected.
-
 ----
 
-### types
+## Data types
 
-The `types` module contains field definitions that are useful to interact with Cassandra nodes.
+There are few data types defined in the ECMAScript standard, this usually represents a problem when you are trying to
+ deal with data types that come from other systems in javascript. 
 
-#### consistencies
-
-Object that contains the CQL consistencies defined as properties. For example: `consistencies.one`, `consistencies.quorum`, ...
-
-#### dataTypes
-
-Object that contains all the [CQL data types](http://cassandra.apache.org/doc/cql3/CQL.html#types) defined as properties.
-
-#### responseErrorCodes
-
-Object containing all the possible response error codes returned by Cassandra defined as properties.
-
-#### Long()
-
-Constructs a 64-bit two's-complement integer. See [Long API Documentation](http://docs.closure-library.googlecode.com/git/class_goog_math_Long.html).
-
-#### timeuuid()
-
-Function to generate a uuid __v1__. It uses [node-uuid][uuid] module to generate and accepts the same arguments.
-
-#### uuid()
-
-Function to generate a uuid __v4__. It uses [node-uuid][uuid] module to generate and accepts the same arguments.
-
-
-### policies
-
-The `policies` module contains load balancing, retry and reconnection classes.
-
-#### loadBalancing
-
-Load balancing policies lets you decide which node of the cluster will be used for each query.
-
-- **RoundRobinPolicy**: This policy yield nodes in a round-robin fashion (default).
-- **DCAwareRoundRobinPolicy**: A data-center aware round-robin load balancing policy. This policy provides round-robin 
-queries over the node of the local data center. It also includes in the query plans returned a configurable 
-number of hosts in the remote data centers, but those are always tried after the local nodes.
-
-To use it, you must provide load balancing policy the instance in the `clientOptions` of the `Client` instance.
-
-```javascript
-//You can specify the local dc relatively to the node.js app
-var localDc = 'us-east';
-var lbPolicy = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(localDc);
-var clientOptions = {
-  policies: {loadBalancing: loadBalancingPolicy}
-};
-var client = new Client(clientOptions);
-```
-
-Load balancing policy classes inherit from **LoadBalancingPolicy**. If you want make your own policy, you should use the same base class.
-
-#### retry
-
-Retry policies lets you configure what the driver should do when there certain types of exceptions from Cassandra are received.
-
-- **RetryPolicy**: Default policy and base class for retry policies. 
-It retries once in case there is a read or write timeout and the alive replicas are enough to satisfy the consistency level. 
-
-#### reconnection
-
-Reconnection policies lets you configure when the driver should try to reconnect to a Cassandra node that appears to be down.
-
-- **ConstantReconnectionPolicy**: It waits a constant time between each reconnection attempt.
-- **ExponentialReconnectionPolicy**: waits exponentially longer between each reconnection attempt, until maximum delay is reached. 
-
-### auth
-
-The `auth` module provides the classes required for authentication.
-
-- **PlainTextAuthProvider**: Authentication provider for Cassandra's PasswordAuthenticator.
-
-Using an authentication provider on an auth-enabled Cassandra cluster:
-
-```javascript
-var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
-//Setting the auth provider in the clientOptions
-var client = new Client({authProvider: authProvider});
-```
-
-Authenticator provider classes inherit from **AuthProvider**. If you want to create your own auth provider, use the that as your base class. 
-
-----
+You should read the [documentation on CQL data types and ECMAScript types][doc-datatypes] for more information.
 
 ## Logging
 
@@ -292,10 +137,6 @@ client.on('log', function(level, className, message, furtherInfo) {
 });
 ```
 The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
-
-## Data types
-
-See [documentation on CQL data types and ECMAScript types][doc-datatypes].
 
 ## Credits
 
@@ -317,12 +158,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [uuid]: https://github.com/broofa/node-uuid
 [long]: https://github.com/dcodeIO/Long.js
 [cassandra]: http://cassandra.apache.org/
+[doc-index]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/
+[doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-api]: http://www.datastax.com/drivers/nodejs/1.0/Client.html
+[start]: http://datastax.github.io/nodejs-driver/getting-started
+[faq]: http://datastax.github.io/nodejs-driver/faq
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/browse/NODEJS
-[doc-index]: http://datastax.github.io/nodejs-driver/
-[start]: http://datastax.github.io/nodejs-driver/getting-started
-[doc-datatypes]: http://datastax.github.io/nodejs-driver/datatypes
-[faq]: http://datastax.github.io/nodejs-driver/faq
+[streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable

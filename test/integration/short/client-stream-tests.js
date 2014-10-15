@@ -7,6 +7,7 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types.js');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
+
 describe('Client', function () {
   this.timeout(120000);
   describe('#stream(query, params, {prepare: 0})', function () {
@@ -76,6 +77,21 @@ describe('Client', function () {
           assert.ok(err, 'It should yield an error');
           assert.ok(err instanceof errors.ResponseError);
           errorCalled = true;
+        });
+    });
+    it('should not fail with autoPage when there isnt any data', function (done) {
+      var client = newInstance({keyspace: 'system'});
+      var stream = client.stream('SELECT * from schema_keyspaces WHERE keyspace_name = \'KS_NOT_EXISTS\'', [], {autoPage: true});
+      var errorCalled = false;
+      stream
+        .on('end', function () {
+          done();
+        })
+        .on('readable', function () {
+          assert.ok(false, 'It should not be emit readable');
+        })
+        .on('error', function (err) {
+          assert.ifError(err);
         });
     });
   });
@@ -254,6 +270,6 @@ describe('Client', function () {
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  return new Client(utils.extend({}, helper.baseOptions, options));
 }

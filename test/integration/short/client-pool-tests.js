@@ -106,7 +106,7 @@ describe('Client', function () {
           helper.ccmHelper.exec(['updateconf', "authenticator: PasswordAuthenticator"], next);
         },
         function (next) {
-          helper.ccmHelper.exec(['populate', '-n', '1'], next);
+          helper.ccmHelper.exec(['populate', '-n', '2'], next);
         },
         function (next) {
           helper.ccmHelper.exec(['start'], function () {
@@ -119,24 +119,48 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
     it('should connect using the plain text authenticator', function (done) {
-      var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')});
-      var client = new Client(options);
+      var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')};
+      var client = newInstance(options);
       async.times(100, function (n, next) {
         client.connect(next);
       }, function (err) {
         done(err);
       });
     });
-    it('should return an AuthenticationError', function (done) {
-      var options = utils.extend({}, helper.baseOptions, {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS')});
-      var client = new Client(options);
-      client.connect(function (err) {
-        assert.ok(err);
-        helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        assert.ok(err.innerErrors);
-        helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
-        done();
+    it('should connect using the plain text authenticator when calling execute', function (done) {
+      var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
+      var client = newInstance(options);
+      async.times(100, function (n, next) {
+        client.execute('SELECT * FROM schema_keyspaces', next);
+      }, function (err) {
+        done(err);
       });
+    });
+    it('should return an AuthenticationError', function (done) {
+      var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
+      var client = newInstance(options);
+      async.timesSeries(10, function (n, next) {
+        client.connect(function (err) {
+          assert.ok(err);
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.ok(err.innerErrors);
+          helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
+          next();
+        });
+      }, done);
+    });
+    it('should return an AuthenticationError when calling execute', function (done) {
+      var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
+      var client = newInstance(options);
+      async.times(10, function (n, next) {
+        client.execute('SELECT * FROM schema_keyspaces', function (err) {
+          assert.ok(err);
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.ok(err.innerErrors);
+          helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
+          next();
+        });
+      }, done);
     });
   });
   describe('#connect() with ssl', function () {

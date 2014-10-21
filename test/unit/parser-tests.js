@@ -214,6 +214,24 @@ describe('Parser', function () {
         //1 columns, 1 row, 2 chunks
         parser._transform(getBodyChunks(1, rowLength, 0, 50, cellValue), null, doneIfError(done));
         parser._transform(getBodyChunks(1, rowLength, 50, null, cellValue), null, doneIfError(done));
+      }, function (next) {
+        var parser = new streams.Parser({objectMode:true});
+        var rowCounter = 0;
+        parser.on('readable', function () {
+          var item = parser.read();
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            next();
+          }
+        });
+        //1 columns, 1 row, 6 chunks
+        parser._transform(getBodyChunks(1, rowLength, 0, 50, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 50, 60, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 60, 120, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 120, 195, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 195, 1501, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 1501, null, cellValue), null, doneIfError(done));
       }], done);
     });
 

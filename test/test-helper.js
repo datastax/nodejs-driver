@@ -173,6 +173,9 @@ var helper = {
     });
   },
   wait: function (ms, callback) {
+    if (!ms) {
+      ms = 0;
+    }
     return (function (err) {
       if (err) return callback(err);
       setTimeout(callback, ms);
@@ -283,7 +286,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }
-      self.exec(create, next);
+      self.exec(create, helper.wait(options.sleep, next));
     },
     function (next) {
       if (!options.yaml) {
@@ -305,10 +308,10 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       if (options.vnodes) {
         populate.push('--vnodes');
       }
-      self.exec(populate, next);
+      self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      self.exec(['start'], next);
+      self.exec(['start'], helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {

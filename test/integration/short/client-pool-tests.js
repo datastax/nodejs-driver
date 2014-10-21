@@ -164,13 +164,13 @@ describe('Client', function () {
     });
   });
   describe('#connect() with ssl', function () {
-    before(helper.ccmHelper.start(2, {ssl: true}));
+    before(helper.ccmHelper.start(1, {ssl: true}));
     after(helper.ccmHelper.remove);
     it('should connect to a ssl enabled cluster', function (done) {
       var client = newInstance({sslOptions: {}});
       client.connect(function (err) {
         assert.ifError(err);
-        assert.strictEqual(client.hosts.length, 2);
+        assert.strictEqual(client.hosts.length, 1);
         done();
       });
     });

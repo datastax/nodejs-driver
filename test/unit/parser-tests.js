@@ -232,6 +232,45 @@ describe('Parser', function () {
         parser._transform(getBodyChunks(1, rowLength, 120, 195, cellValue), null, doneIfError(done));
         parser._transform(getBodyChunks(1, rowLength, 195, 1501, cellValue), null, doneIfError(done));
         parser._transform(getBodyChunks(1, rowLength, 1501, null, cellValue), null, doneIfError(done));
+      }, function (next) {
+        var cellValue = helper.fillArray(256, 74);
+        //Add the length 256 of the value
+        cellValue = [0, 0, 1, 0].concat(cellValue);
+        var parser = new streams.Parser({objectMode:true});
+        var rowCounter = 0;
+        parser.on('readable', function () {
+          var item = parser.read();
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            next();
+          }
+        });
+        //1 columns, 1 row, 6 small chunks
+        parser._transform(getBodyChunks(1, rowLength, 0, 50, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 50, 100, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 100, 150, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 150, 200, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(1, rowLength, 200, null, cellValue), null, doneIfError(done));
+      }, function (next) {
+        var cellValue = helper.fillArray(256, 74);
+        //Add the length 256 of the value
+        cellValue = [0, 0, 1, 0].concat(cellValue);
+        var parser = new streams.Parser({objectMode:true});
+        var rowCounter = 0;
+        parser.on('readable', function () {
+          var item = parser.read();
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            next();
+          }
+        });
+        //2 columns, 1 row, small and large chunks
+        parser._transform(getBodyChunks(2, rowLength, 0, 19, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(2, rowLength, 19, 20, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(2, rowLength, 20, 24, cellValue), null, doneIfError(done));
+        parser._transform(getBodyChunks(2, rowLength, 24, null, cellValue), null, doneIfError(done));
       }], done);
     });
 

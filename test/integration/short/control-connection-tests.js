@@ -147,13 +147,14 @@ describe('ControlConnection', function () {
     });
   });
   describe('#metadata', function () {
-    before(helper.ccmHelper.start(3));
+    before(helper.ccmHelper.start(3, {vnodes: true}));
     after(helper.ccmHelper.remove);
     it('should contain keyspaces information', function (done) {
       var cc = new ControlConnection(options);
       cc.init(function () {
         assert.equal(cc.hosts.length, 3);
         assert.ok(cc.metadata);
+        assert.strictEqual(cc.hosts.slice(0)[0].tokens.length, 256);
         assert.ok(cc.metadata.keyspaces);
         assert.ok(cc.metadata.keyspaces['system']);
         assert.ok(cc.metadata.keyspaces['system'].strategy);

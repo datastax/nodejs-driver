@@ -26,6 +26,7 @@ $ npm install cassandra-driver
 - [Documentation index][doc-index]
 - [CQL types to javascript types][doc-datatypes]
 - [API docs][doc-api]
+- [FAQ][faq]
 
 ## Getting Help
 
@@ -159,7 +160,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
 [doc-api]: http://www.datastax.com/drivers/nodejs/1.0/Client.html
 [start]: http://datastax.github.io/nodejs-driver/getting-started
-[faq]: http://datastax.github.io/nodejs-driver/faq
+[faq]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/faq/njdFaq.html
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax

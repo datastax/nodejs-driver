@@ -12,7 +12,7 @@ $ npm install cassandra-driver
 
 ## Features
 
-- Nodes discovery
+- Node discovery
 - Configurable load balancing
 - Transparent failover
 - Tunability

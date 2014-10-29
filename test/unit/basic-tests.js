@@ -131,6 +131,13 @@ describe('encoder', function () {
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
 
+    it('should encode and decode string timestamp with typeInfo', function () {
+      var value = '1999-12-31 23:59:59+0000';
+      var encoded = typeEncoder.encode(value, dataTypes.timestamp);
+      var decoded = typeEncoder.decode(encoded, [dataTypes.timestamp]);
+      assert.strictEqual(util.inspect(decoded.getTime()), util.inspect((new Date(value)).getTime()));
+    });
+
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
       var unHinted = typeEncoder.encode();
@@ -143,6 +150,7 @@ describe('encoder', function () {
         typeEncoder.encode({});
       }, TypeError);
     });
+
     it('should throw when the typeInfo and the value source type does not match', function () {
       assert.throws(function () {
         typeEncoder.encode('hello', 'int');
@@ -158,6 +166,9 @@ describe('encoder', function () {
       }, TypeError);
       assert.throws(function () {
         typeEncoder.encode(200, dataTypes.timeuuid);
+      }, TypeError);
+      assert.throws(function () {
+        typeEncoder.encode('not-a-date', dataTypes.timestamp);
       }, TypeError);
       assert.throws(function () {
         typeEncoder.encode('Its anybody in there? I know that you can hear me', dataTypes.blob);
@@ -297,7 +308,7 @@ describe('types', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
       var stream = new types.ResultStream();
-      
+
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
         done();
@@ -308,7 +319,7 @@ describe('types', function () {
           buf.push(item);
         }
       });
-      
+
       stream.add(new Buffer('Jimmy'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('McNulty'));
@@ -396,8 +407,8 @@ describe('utils', function () {
   describe('#syncEvent()', function () {
     it('should execute callback once for all emitters', function () {
       var emitter1 = new events.EventEmitter();
-      var emitter2 = new events.EventEmitter(); 
-      var emitter3 = new events.EventEmitter(); 
+      var emitter2 = new events.EventEmitter();
+      var emitter3 = new events.EventEmitter();
       var callbackCounter = 0;
       utils.syncEvent([emitter1, emitter2, emitter3], 'dummy', this, function (text){
         assert.strictEqual(text, 'bop');

@@ -184,6 +184,20 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should encode CONTAINS parameter @c2_1', function (done) {
+      var client = newInstance();
+      client.execute(util.format('CREATE INDEX list_sample_index ON %s(list_sample)', table), function (err) {
+        assert.ifError(err);
+        var query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
+        //valid params
+        var params = ['val1', 'val2'];
+        client.execute(query, params, function (err) {
+          //it should not fail
+          assert.ifError(err);
+          done();
+        });
+      });
+    });
   });
 });
 

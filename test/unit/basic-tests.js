@@ -12,7 +12,7 @@ var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
-var helper = require('../test-helper.js')
+var helper = require('../test-helper.js');
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {
@@ -175,7 +175,6 @@ describe('encoder', function () {
       var options = {
         routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
       };
-      var initialRoutingKey = options.routingKey.toString('hex');
       encoder.setRoutingKey([1, 'text'], options);
       assert.strictEqual(options.routingKey.toString('hex'), '00010100000102000002030300');
 
@@ -388,7 +387,14 @@ describe('types', function () {
       assert.strictEqual(row.get(0), row['first']);
       assert.strictEqual(row.get('second'), row['second']);
       assert.strictEqual(row.get(1), row['second']);
-    })
+    });
+
+    it('should enumerate only columns defined', function () {
+      var row = new types.Row([{name: 'col1'}, {name: 'col2'}]);
+      row['col1'] = 'val1';
+      row['col2'] = 'val2';
+      assert.strictEqual(JSON.stringify(row), JSON.stringify({'col1': 'val1', 'col2': 'val2'}));
+    });
   })
 });
 
@@ -514,7 +520,7 @@ describe('utils', function () {
       value = utils.deepExtend({z: 3}, null);
       assert.strictEqual(value.z, 3);
       //undefined
-      var o;
+      var o = undefined;
       value = utils.deepExtend({z: 4}, o);
       assert.strictEqual(value.z, 4);
     });

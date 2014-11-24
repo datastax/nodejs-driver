@@ -31,7 +31,6 @@ var helper = {
    * @type {ClientOptions}
    */
   baseOptions: (function () {
-    var clientOptions = require('../lib/client-options.js');
     return {
       //required
       contactPoints: ['127.0.0.1']
@@ -185,7 +184,7 @@ var helper = {
     //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
-      version = '2.0.8';
+      version = '2.1.0';
     }
     return version;
   },

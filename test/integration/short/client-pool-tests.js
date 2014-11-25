@@ -197,7 +197,7 @@ describe('Client', function () {
       //on all hosts
       async.times(10, function (n, next) {
         //No matter what, the keyspace does not exists
-        client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+        client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
           helper.assertInstanceOf(err, Error);
           next();
         });
@@ -205,7 +205,7 @@ describe('Client', function () {
     });
     it('should change the active keyspace after USE statement', function (done) {
       var client = newInstance();
-      client.execute('USE system', function (err, result) {
+      client.execute('USE system', function (err) {
         if (err) return done(err);
         assert.strictEqual(client.keyspace, 'system');
         //all next queries, the instance should still "be" in the system keyspace
@@ -216,8 +216,7 @@ describe('Client', function () {
     });
     it('should return ResponseError when executing USE with a wrong keyspace', function (done) {
       var client = newInstance();
-      var count = 0;
-      client.execute('USE ks_not_exist', function (err, result) {
+      client.execute('USE ks_not_exist', function (err) {
         assert.ok(err instanceof errors.ResponseError);
         assert.equal(client.keyspace, null);
         done();
@@ -399,10 +398,11 @@ describe('Client', function () {
       };
       var client = new Client(options);
       var hosts = {};
+      var query = 'SELECT * FROM system.schema_keyspaces';
       async.series([
         function warmUpPool(seriesNext) {
           async.times(10, function (n, next) {
-            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+            client.execute(query, function (err, result) {
               assert.ifError(err);
               hosts[result._queriedHost] = true;
               next();
@@ -421,7 +421,10 @@ describe('Client', function () {
               helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
                 killed = true;
                 assert.ifError(err);
-                next();
+                //do a couple of more queries
+                async.times(10, function (n, next2) {
+                  client.execute(query, next2);
+                }, next);
               });
               return;
             }
@@ -430,7 +433,7 @@ describe('Client', function () {
               return next();
             }
             issued++;
-            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+            client.execute(query, function (err) {
               assert.ifError(err);
               counter++;
               next();

@@ -105,7 +105,7 @@ describe('reconnection', function () {
           }, next);
         },
         function killNode(next) {
-          helper.ccmHelper.exec(['node1', 'stop', '--not-gently'], next);
+          helper.ccmHelper.exec(['node1', 'stop'], next);
         },
         function insert2(next) {
           //execute a couple of times to even though the cluster is DOWN
@@ -122,16 +122,20 @@ describe('reconnection', function () {
         },
         function insert1_plus(next) {
           //The cluster should be UP!
-          async.times(15, function (n, timesNext) {
-            client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
-          }, next);
+          client.execute(util.format('SELECT * from %s', table), function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 15);
+            async.times(25, function (n, timesNext) {
+              client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
+            }, next);
+          });
         },
         function assertResults(next) {
           client.execute(util.format('SELECT * from %s', table), function (err, result) {
             assert.ifError(err);
             assert.ok(result);
-            //It should have inserted 15+15
-            assert.strictEqual(result.rows.length, 30);
+            //It should have inserted 15+25
+            assert.strictEqual(result.rows.length, 40);
             next();
           });
         }

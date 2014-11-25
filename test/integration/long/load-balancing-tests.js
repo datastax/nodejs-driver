@@ -13,7 +13,7 @@ var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 
 
 describe('DCAwareRoundRobinPolicy', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   it('should never hit remote dc if not set', function (done) {
     var countByHost = {};
     async.series([

@@ -220,15 +220,12 @@ describe('Client', function () {
     });
     it('should emit other ResponseErrors', function (done) {
       var client = newInstance();
-      //Invalid consistency
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces', null, {prepare: 1, consistency: 35});
+      //Invalid amount of parameters
+      var stream = client.stream('SELECT * FROM system.schema_keyspaces', ['param1'], {prepare: 1});
       var errCalled = false;
       stream
         .on('readable', function () {
-          var row;
-          while (row = this.read()) {
-            assert.ok(row);
-          }
+          assert.ifError(new Error('It should not be readable'));
         })
         .on('error', function (err) {
           assert.ok(err);

@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "async": ">= 0.9.0",
-    "long": ">= 1.1.2",
+    "long": ">= 2.2.0",
     "node-uuid": "1.4.1"
   },
   "devDependencies": {

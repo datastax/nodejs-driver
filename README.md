@@ -110,7 +110,7 @@ var queries = [
     params: ['hendrix', 'Changed email', new Date()]
   }
 ];
-var queryOptions: { consistency: cassandra.types.consistencies.quorum };
+var queryOptions = { consistency: cassandra.types.consistencies.quorum };
 client.batch(queries, queryOptions, function(err) {
   assert.ifError(err);
   console.log('Data updated on cluster');

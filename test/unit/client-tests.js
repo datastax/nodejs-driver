@@ -8,6 +8,7 @@ var helper = require('../test-helper.js');
 var errors = require('../../lib/errors.js');
 var utils = require('../../lib/utils.js');
 var HostMap = require('../../lib/host.js').HostMap;
+var Host = require('../../lib/host.js').Host;
 var Metadata = require('../../lib/metadata.js');
 
 describe('Client', function () {
@@ -180,6 +181,66 @@ describe('Client', function () {
         assert.strictEqual(connectCalled, true);
         done();
       });
+    });
+  });
+  describe('#shutdown()', function () {
+    var options = utils.extend({}, helper.baseOptions, {
+      policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
+      logEmitter: helper.noop
+    });
+    it('should callback when called multiple times serially', function (done) {
+      var hosts = new HostMap();
+      var h1 = new Host('192.1.1.1', 1, options);
+      h1.datacenter = "dc1";
+      h1.pool.connections = [{close: setImmediate}];
+      var h2 = new Host('192.1.1.2', 1, options);
+      h2.datacenter = "dc1";
+      h2.pool.connections = [{close: setImmediate}];
+      hosts.push(h1.address, h1);
+      hosts.push(h2.address, h2);
+      var Client = rewire('../../lib/client.js');
+      var controlConnectionMock = function () {
+        this.hosts = hosts;
+        this.metadata = new Metadata();
+        this.init = setImmediate;
+      };
+      Client.__set__("ControlConnection", controlConnectionMock);
+      var client = new Client(options);
+      async.series([
+        client.connect.bind(client),
+        function shutDownMultiple(seriesNext) {
+          async.timesSeries(10, function(n, next) {
+            client.shutdown(next);
+          }, seriesNext);
+        }
+      ], done);
+    });
+    it('should callback when called multiple times in parallel', function (done) {
+      var hosts = new HostMap();
+      var h1 = new Host('192.1.1.1', 1, options);
+      h1.datacenter = "dc1";
+      h1.pool.connections = [{close: setImmediate}];
+      var h2 = new Host('192.1.1.2', 1, options);
+      h2.datacenter = "dc1";
+      h2.pool.connections = [{close: setImmediate}];
+      hosts.push(h1.address, h1);
+      hosts.push(h2.address, h2);
+      var Client = rewire('../../lib/client.js');
+      var controlConnectionMock = function () {
+        this.hosts = hosts;
+        this.metadata = new Metadata();
+        this.init = setImmediate;
+      };
+      Client.__set__("ControlConnection", controlConnectionMock);
+      var client = new Client(options);
+      async.series([
+        client.connect.bind(client),
+        function shutDownMultiple(seriesNext) {
+          async.times(10, function(n, next) {
+            client.shutdown(next);
+          }, seriesNext);
+        }
+      ], done);
     });
   });
 });

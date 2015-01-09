@@ -198,6 +198,30 @@ describe('Client', function () {
         });
       });
     });
+    it('should handle several concurrent executes while the pool is not ready', function (done) {
+      var client = newInstance({pooling: {
+        coreConnectionsPerHost: {
+          //lots of connections per host
+          '0': 100,
+          '1': 1,
+          '2': 0
+        }}});
+      var execute = function (next) {
+        client.execute('SELECT * FROM ' + table, next);
+      };
+      async.parallel([
+        function (parallelNext) {
+          async.parallel(helper.fillArray(400, execute), parallelNext);
+        },
+        function (parallelNext) {
+          async.times(200, function (n, next) {
+            setTimeout(function () {
+              execute(next);
+            }, n * 5 + 50);
+          }, parallelNext);
+        }
+      ], done);
+    });
   });
 });
 

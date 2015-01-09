@@ -470,8 +470,8 @@ describe('Client', function () {
           assert.strictEqual(hosts.length, 2);
           assert.ok(hosts[0].pool.connections.length > 0);
           assert.ok(hosts[1].pool.connections.length > 0);
-          assert.ok(hosts[0].pool.shuttingDown === false);
-          assert.ok(hosts[1].pool.shuttingDown === false);
+          assert.ok(!hosts[0].pool.shuttingDown);
+          assert.ok(!hosts[1].pool.shuttingDown);
           client.shutdown(next);
         },
         function checkPool(next) {

@@ -13,6 +13,7 @@ describe('Client', function () {
   describe('#execute(query, params, {prepare: 0}, callback)', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
+    var selectAllQuery = 'SELECT * FROM ' + table;
     before(function (done) {
       var client = newInstance();
       async.series([
@@ -198,6 +199,17 @@ describe('Client', function () {
         });
       });
     });
+    it('should accept localOne and localQuorum consistencies', function (done) {
+      var client = newInstance();
+      async.series([
+        function (next) {
+          client.execute(selectAllQuery, [], {consistency: types.consistencies.localOne}, next);
+        },
+        function (next) {
+          client.execute(selectAllQuery, [], {consistency: types.consistencies.localQuorum}, next);
+        }
+      ], done);
+    });
     it('should handle several concurrent executes while the pool is not ready', function (done) {
       var client = newInstance({pooling: {
         coreConnectionsPerHost: {
@@ -207,7 +219,7 @@ describe('Client', function () {
           '2': 0
         }}});
       var execute = function (next) {
-        client.execute('SELECT * FROM ' + table, next);
+        client.execute(selectAllQuery, next);
       };
       async.parallel([
         function (parallelNext) {

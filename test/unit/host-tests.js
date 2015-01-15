@@ -9,16 +9,27 @@ var HostConnectionPool = hostModule.HostConnectionPool;
 var types = require('../../lib/types.js');
 var utils = require('../../lib/utils.js');
 var reconnection = require('../../lib/policies/reconnection.js');
+//Delay before connection.open callbacks
+var openDelay = 10;
 
 before(function () {
   //inject a mock Connection class
   var connectionMock = function () {};
-  connectionMock.prototype.open = function noop (cb) {cb()};
+  connectionMock.prototype.open = function noop (cb) {
+    var self = this;
+    setTimeout(function () {
+      self.connected = true;
+      cb();
+    }, openDelay);
+  };
   hostModule.__set__("Connection", connectionMock);
 });
 
 describe('HostConnectionPool', function () {
   describe('#_maybeCreatePool()', function () {
+    afterEach(function () {
+      openDelay = 10;
+    });
     it('should create the pool once', function (done) {
       var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
@@ -31,6 +42,26 @@ describe('HostConnectionPool', function () {
           next();
         });
       }, done);
+    });
+    it('should never callback with unopened connections', function (done) {
+      openDelay = 800;
+      var hostPool = newHostConnectionPoolInstance();
+      async.times(5, function(n, next) {
+        setTimeout(function () {
+          hostPool._maybeCreatePool(function (err) {
+            assert.ifError(err);
+            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected}).length;
+            if (closedConnections)
+            {
+              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'))
+            }
+            next();
+          });
+        }, n);
+      }, function (err) {
+        assert.ifError(err);
+        done();
+      });
     });
   });
 

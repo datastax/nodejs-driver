@@ -5,13 +5,13 @@ var rewire = require('rewire');
 
 var RequestHandler = require('../../lib/request-handler.js');
 var errors = require('../../lib/errors.js');
-var types = require('../../lib/types.js');
+var types = require('../../lib/types');
 var utils = require('../../lib/utils.js');
 var retry = require('../../lib/policies/retry.js');
 
 var options = (function () {
   var loadBalancing = require('../../lib/policies/load-balancing.js');
-  var reconnection = require('../../lib/policies/reconnection.js');;
+  var reconnection = require('../../lib/policies/reconnection.js');
   return {
     policies: {
       loadBalancing: new loadBalancing.RoundRobinPolicy(),

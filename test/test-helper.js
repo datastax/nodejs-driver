@@ -2,7 +2,7 @@ var async = require('async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
-var types = require('../lib/types.js');
+var types = require('../lib/types');
 var utils = require('../lib/utils.js');
 
 var helper = {

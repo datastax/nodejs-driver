@@ -8,7 +8,7 @@ var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
 var Metadata = require('../../lib/metadata.js');
 var tokenizer = require('../../lib/tokenizer.js');
-var types = require('../../lib/types.js');
+var types = require('../../lib/types');
 var utils = require('../../lib/utils.js');
 
 describe('Metadata', function () {

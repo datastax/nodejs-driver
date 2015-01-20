@@ -3,7 +3,7 @@ var assert = require('assert');
 var tokenizer = require('../../lib/tokenizer.js');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 var RandomTokenizer = tokenizer.RandomTokenizer;
-var types = require('../../lib/types.js');
+var types = require('../../lib/types');
 var Long = types.Long;
 
 describe('Murmur3Tokenizer', function () {

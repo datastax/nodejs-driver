@@ -6,7 +6,7 @@ var rewire = require('rewire');
 var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
-var types = require('../../lib/types.js');
+var types = require('../../lib/types');
 var utils = require('../../lib/utils.js');
 var reconnection = require('../../lib/policies/reconnection.js');
 //Delay before connection.open callbacks

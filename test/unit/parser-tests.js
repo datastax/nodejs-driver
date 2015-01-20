@@ -3,7 +3,7 @@ var util = require('util');
 var async = require('async');
 
 var streams = require('../../lib/streams.js');
-var types = require('../../lib/types.js');
+var types = require('../../lib/types');
 var helper = require('../test-helper.js');
 
 /**

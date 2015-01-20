@@ -4,7 +4,7 @@ var async = require('async');
 
 var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');

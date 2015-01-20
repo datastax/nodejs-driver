@@ -80,6 +80,41 @@ describe('encoder', function () {
       var encoded = typeEncoder.encode(value, {type: dataTypes.map, subtypes: [dataTypes.timestamp, dataTypes.text]});
       var decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.timestamp], [dataTypes.text]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value[101] = 'number1';
+      value[102] = 'number2';
+      encoded = typeEncoder.encode(value, 'map<int, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.int], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value[types.Long.fromBits(0x12002001, 0x7f999299)] = 'bigint1';
+      value[types.Long.fromBits(0x12002000, 0x7f999299)] = 'bigint2';
+      encoded = typeEncoder.encode(value, 'map<bigint, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.bigint], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['201'] = 'bigint1_1';
+      value['202'] = 'bigint2_1';
+      encoded = typeEncoder.encode(value, 'map<bigint, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.bigint], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['2d5db74c-c2da-4e59-b5ec-d8ad3d0aefb9'] = 'uuid1';
+      value['651b5c17-5357-4764-ae2d-21c409288822'] = 'uuid2';
+      encoded = typeEncoder.encode(value, 'map<uuid, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.uuid], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['1ab50440-a0ab-11e4-9d01-1dc0e727b460'] = 'timeuuid1';
+      value['1820c4d0-a0ab-11e4-9d01-1dc0e727b460'] = 'timeuuid2';
+      encoded = typeEncoder.encode(value, 'map<timeuuid, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.timeuuid], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
 
     it('should encode and decode list<int>', function () {
@@ -153,9 +188,6 @@ describe('encoder', function () {
         typeEncoder.encode('hello', 'int');
       }, TypeError);
       assert.throws(function () {
-        typeEncoder.encode('1', 'bigint');
-      }, TypeError);
-      assert.throws(function () {
         typeEncoder.encode('1.1', 'float');
       }, TypeError);
       assert.throws(function () {
@@ -191,6 +223,51 @@ describe('encoder', function () {
       assert.throws(function () {
         encoder.encode('This is an invalid date string', dataTypes.timestamp);
       }, TypeError);
+    });
+    it('should encode Long/Date/Number/String as timestamps', function () {
+      var buffer = encoder.encode(types.Long.fromBits(0x00fafafa, 0x07090909), dataTypes.timestamp);
+      assert.strictEqual(buffer.toString('hex'), '0709090900fafafa');
+      buffer = encoder.encode(1421755130012, dataTypes.timestamp);
+      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
+      buffer = encoder.encode(new Date(1421755130012), dataTypes.timestamp);
+      assert.throws(function () {
+        encoder.encode(new Date('This is an invalid date string'), dataTypes.timestamp);
+      }, TypeError);
+      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
+      buffer = encoder.encode(new Date(1421755130012), dataTypes.timestamp);
+      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
+      buffer = encoder.encode('Tue Jan 20 2015 13:00:35 GMT+0100 (CET)', dataTypes.timestamp);
+      assert.strictEqual(buffer.toString('hex'), '0000014b07373ab8');
+      assert.throws(function () {
+        encoder.encode('This is an invalid date string', dataTypes.timestamp);
+      }, TypeError);
+    });
+    it('should encode String/Number (not NaN) as int', function () {
+      var buffer = encoder.encode(0x071272ab, dataTypes.int);
+      assert.strictEqual(buffer.toString('hex'), '071272ab');
+      buffer = encoder.encode('0x071272ab', dataTypes.int);
+      assert.strictEqual(buffer.toString('hex'), '071272ab');
+      buffer = encoder.encode(-1, 'int');
+      assert.strictEqual(buffer.toString('hex'), 'ffffffff');
+      buffer = encoder.encode('-1', 'int');
+      assert.strictEqual(buffer.toString('hex'), 'ffffffff');
+      buffer = encoder.encode(0, 'int');
+      assert.strictEqual(buffer.toString('hex'), '00000000');
+      buffer = encoder.encode('0', 'int');
+      assert.strictEqual(buffer.toString('hex'), '00000000');
+      assert.throws(function () {
+        encoder.encode(NaN, 'int');
+      }, TypeError);
+    });
+    it('should encode String/Long/Number as bigint', function () {
+      var buffer = encoder.encode(types.Long.fromString('506946367331695353'), dataTypes.bigint);
+      assert.strictEqual(buffer.toString('hex'), '0709090900fafaf9');
+      buffer = encoder.encode('506946367331695353', dataTypes.bigint);
+      assert.strictEqual(buffer.toString('hex'), '0709090900fafaf9');
+      buffer = encoder.encode(0, dataTypes.bigint);
+      assert.strictEqual(buffer.toString('hex'), '0000000000000000');
+      buffer = encoder.encode(255, dataTypes.bigint);
+      assert.strictEqual(buffer.toString('hex'), '00000000000000ff');
     });
   });
   describe('#setRoutingKey', function () {

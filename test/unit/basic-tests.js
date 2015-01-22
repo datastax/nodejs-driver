@@ -59,26 +59,36 @@ describe('types', function () {
 
   describe('Integer', function () {
     var Integer = types.Integer;
-    it('should convert from buffer', function () {
-      [
-        //hex value                      |      string varint
-        ['02000001',                            '33554433'],
-        ['02000000',                            '33554432'],
-        ['1111111111111111',                    '1229782938247303441'],
-        ['01',                                  '1'],
-        ['0400',                                '1024'],
-        ['7fffffff',                            '2147483647'],
-        ['02000000000001',                      '562949953421313'],
-        ['ff',                                  '-1'],
-        ['ff01',                                '-255'],
-        ['faa8c4',                              '-350012'],
-        ['eb233d9f',                            '-350012001'],
-        ['f7d9c411c4',                          '-35001200188']
-      ].forEach(function (item) {
-          var buffer = new Buffer(item[0], 'hex');
-          var value = Integer.fromBuffer(buffer);
-          assert.strictEqual(value.toString(), item[1]);
-        });
+    var values = [
+      //hex value                      |      string varint
+      ['02000001',                            '33554433'],
+      ['02000000',                            '33554432'],
+      ['1111111111111111',                    '1229782938247303441'],
+      ['01',                                  '1'],
+      ['0400',                                '1024'],
+      ['7fffffff',                            '2147483647'],
+      ['02000000000001',                      '562949953421313'],
+      ['ff',                                  '-1'],
+      ['ff01',                                '-255'],
+      ['faa8c4',                              '-350012'],
+      ['eb233d9f',                            '-350012001'],
+      ['f7d9c411c4',                          '-35001200188'],
+      ['f0bdc0',                              '-1000000'],
+      ['ff172b5aeff4',                        '-1000000000012'],
+      ['9c',                                  '-100']
+    ];
+    it('should create from buffer', function () {
+      values.forEach(function (item) {
+        var buffer = new Buffer(item[0], 'hex');
+        var value = Integer.fromBuffer(buffer);
+        assert.strictEqual(value.toString(), item[1]);
+      });
+    });
+    it('should convert to buffer', function () {
+      values.forEach(function (item) {
+        var buffer = Integer.toBuffer(Integer.fromString(item[1]));
+        assert.strictEqual(buffer.toString('hex'), item[0]);
+      });
     });
   });
 

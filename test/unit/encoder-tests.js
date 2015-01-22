@@ -21,6 +21,8 @@ describe('encoder', function () {
       assertGuessed(new types.Long(10), dataTypes.bigint, 'Guess type for a Int 64 value failed');
       assertGuessed(types.uuid(), dataTypes.uuid, 'Guess type for a UUID value failed');
       assertGuessed(types.timeuuid(), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
+      assertGuessed(types.Integer.fromNumber(1), dataTypes.varint, 'Guess type for a varint value failed');
+      assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
 
@@ -71,7 +73,6 @@ describe('encoder', function () {
       decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode and decode maps with stringified keys', function () {
       var value = {};
       value[new Date(1421756675488)] = 'date1';
@@ -115,43 +116,44 @@ describe('encoder', function () {
       encoded = typeEncoder.encode(value, 'map<timeuuid, text>');
       decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.timeuuid], [dataTypes.text]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
 
+      value = {};
+      value['988229782938247303441911118'] = 'varint1';
+      value['988229782938247303441911119'] = 'varint2';
+      encoded = typeEncoder.encode(value, 'map<varint, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.varint], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+    });
     it('should encode and decode list<int>', function () {
       var value = [1, 2, 3, 4];
       var encoded = typeEncoder.encode(value, 'list<int>');
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.int]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode and decode a guessed double', function () {
       var value = 1111;
       var encoded = typeEncoder.encode(value);
       var decoded = typeEncoder.decode(encoded, [dataTypes.double]);
       assert.strictEqual(decoded, value);
     });
-
     it('should encode and decode a guessed string', function () {
       var value = 'Pennsatucky';
       var encoded = typeEncoder.encode(value);
       var decoded = typeEncoder.decode(encoded, [dataTypes.text]);
       assert.strictEqual(decoded, value);
     });
-
     it('should encode and decode list<double>', function () {
       var value = [1, 2, 3, 100];
       var encoded = typeEncoder.encode(value, 'list<double>');
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode and decode list<double> without hint', function () {
       var value = [1, 2, 3, 100.1];
       var encoded = typeEncoder.encode(value);
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode and decode set<text>', function () {
       var value = ['Alex Vause', 'Piper Chapman', '3', '4'];
       var encoded = typeEncoder.encode(value, 'set<text>');
@@ -162,27 +164,23 @@ describe('encoder', function () {
       decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode and decode list<float> with typeInfo', function () {
       var value = [1.1122000217437744, 2.212209939956665, 3.3999900817871094, 4.412120819091797, -1000, 1];
       var encoded = typeEncoder.encode(value, {type: dataTypes.list, subtypes: [dataTypes.float]});
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.float]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
-
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
       var unHinted = typeEncoder.encode();
       assert.strictEqual(hinted, null);
       assert.strictEqual(unHinted, null);
     });
-
     it('should throw on unknown types', function () {
       assert.throws(function () {
         typeEncoder.encode({});
       }, TypeError);
     });
-
     it('should throw when the typeInfo and the value source type does not match', function () {
       assert.throws(function () {
         typeEncoder.encode('hello', 'int');
@@ -204,24 +202,6 @@ describe('encoder', function () {
       }, TypeError);
       assert.throws(function () {
         typeEncoder.encode({}, dataTypes.list);
-      }, TypeError);
-    });
-    it('should encode Long/Date/Number/String as timestamps', function () {
-      var buffer = encoder.encode(types.Long.fromBits(0x00fafafa, 0x07090909), dataTypes.timestamp);
-      assert.strictEqual(buffer.toString('hex'), '0709090900fafafa');
-      buffer = encoder.encode(1421755130012, dataTypes.timestamp);
-      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
-      buffer = encoder.encode(new Date(1421755130012), dataTypes.timestamp);
-      assert.throws(function () {
-        encoder.encode(new Date('This is an invalid date string'), dataTypes.timestamp);
-      }, TypeError);
-      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
-      buffer = encoder.encode(new Date(1421755130012), dataTypes.timestamp);
-      assert.strictEqual(buffer.toString('hex'), '0000014b0735a09c');
-      buffer = encoder.encode('Tue Jan 20 2015 13:00:35 GMT+0100 (CET)', dataTypes.timestamp);
-      assert.strictEqual(buffer.toString('hex'), '0000014b07373ab8');
-      assert.throws(function () {
-        encoder.encode('This is an invalid date string', dataTypes.timestamp);
       }, TypeError);
     });
     it('should encode Long/Date/Number/String as timestamps', function () {
@@ -268,6 +248,18 @@ describe('encoder', function () {
       assert.strictEqual(buffer.toString('hex'), '0000000000000000');
       buffer = encoder.encode(255, dataTypes.bigint);
       assert.strictEqual(buffer.toString('hex'), '00000000000000ff');
+    });
+    it('should encode String/Integer/Number as varint', function () {
+      var buffer = encoder.encode(types.Integer.fromString('33554433'), dataTypes.varint);
+      assert.strictEqual(buffer.toString('hex'), '02000001');
+      buffer = encoder.encode('-150012', dataTypes.varint);
+      assert.strictEqual(buffer.toString('hex'), 'fdb604');
+      buffer = encoder.encode('-1000000000012', dataTypes.varint);
+      assert.strictEqual(buffer.toString('hex'), 'ff172b5aeff4');
+      buffer = encoder.encode(-128, dataTypes.varint);
+      assert.strictEqual(buffer.toString('hex'), '80');
+      buffer = encoder.encode(-100, dataTypes.varint);
+      assert.strictEqual(buffer.toString('hex'), '9c');
     });
   });
   describe('#setRoutingKey', function () {

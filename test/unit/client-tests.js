@@ -243,4 +243,92 @@ describe('Client', function () {
       ], done);
     });
   });
+  describe('#waitForSchemaAgreement()', function () {
+    var Client = require('../../lib/client.js');
+    it('should use the control connection to retrieve schema information', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.hosts = {length: 3};
+      var localCalls = 0;
+      var peerCalls = 0;
+      client.controlConnection = {
+        getLocalSchemaVersion: function (cb) {
+          localCalls++;
+          setImmediate(function () { cb(null, '1'); });
+        },
+        getPeersSchemaVersions: function (cb) {
+          peerCalls++;
+          setImmediate(function () { cb(null, ['1', '1']); })
+        }
+      };
+      client.waitForSchemaAgreement(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(localCalls, 1);
+        assert.strictEqual(peerCalls, 1);
+        done();
+      });
+    });
+    it('should continue querying until the version matches', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.hosts = {length: 3};
+      var localCalls = 0;
+      var peerCalls = 0;
+      client.controlConnection = {
+        getLocalSchemaVersion: function (cb) {
+          localCalls++;
+          setImmediate(function () { cb(null, '3'); });
+        },
+        getPeersSchemaVersions: function (cb) {
+          peerCalls++;
+          //The third time it gets called versions will match
+          setImmediate(function () { cb(null, [peerCalls]); })
+        }
+      };
+      client.waitForSchemaAgreement(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(localCalls, 3);
+        assert.strictEqual(peerCalls, 3);
+        done();
+      });
+    });
+    it('should timeout if there is no agreement', function (done) {
+      var client = new Client(utils.extend({}, helper.baseOptions, {protocolOptions: {maxSchemaAgreementWaitSeconds: 1}}));
+      client.hosts = {length: 3};
+      var localCalls = 0;
+      var peerCalls = 0;
+      client.controlConnection = {
+        getLocalSchemaVersion: function (cb) {
+          localCalls++;
+          setImmediate(function () { cb(null, '1'); });
+        },
+        getPeersSchemaVersions: function (cb) {
+          peerCalls++;
+          //The versions are always different
+          setImmediate(function () { cb(null, ['2']); })
+        }
+      };
+      client.waitForSchemaAgreement(function (err) {
+        assert.ifError(err);
+        assert.ok(localCalls > 0);
+        assert.ok(peerCalls > 0);
+        done();
+      });
+    });
+    it('should callback when there is an error retrieving versions', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.hosts = {length: 3};
+      var dummyError = new Error('dummy error');
+      client.controlConnection = {
+        getLocalSchemaVersion: function (cb) {
+          setImmediate(function () { cb(); });
+        },
+        getPeersSchemaVersions: function (cb) {
+          setImmediate(function () { cb(dummyError); });
+        }
+      };
+      client.waitForSchemaAgreement(function (err) {
+        assert.strictEqual(err, dummyError);
+        done();
+      });
+    });
+  });
 });

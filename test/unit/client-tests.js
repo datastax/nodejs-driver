@@ -92,6 +92,7 @@ describe('Client', function () {
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
       prepareCounter = 0;
+      //noinspection JSAccessibilityCheck
       client._getPrepared('QUERY1', function (err, id, meta) {
         assert.equal(err, null);
         assert.notEqual(id, null);
@@ -107,6 +108,7 @@ describe('Client', function () {
       async.parallel([
         function (nextParallel) {
           async.times(100, function (n, next) {
+            //noinspection JSAccessibilityCheck
             client._getPrepared('QUERY ONE', next);
           }, function (err, results) {
             assert.equal(err, null);
@@ -157,6 +159,75 @@ describe('Client', function () {
         assert.equal(meta, null);
         done();
       });
+    });
+  });
+  describe('#_executeAsPrepared()', function () {
+    it('should adapt the parameters into array', function (done) {
+      var Client = rewire('../../lib/client.js');
+      var requestHandlerMock = function () {};
+      requestHandlerMock.prototype.send = function () { };
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = function (cb) {setImmediate(cb); };
+      //noinspection JSAccessibilityCheck
+      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});};
+      requestHandlerMock.prototype.send = function (req) {
+        assert.ok(req);
+        assert.strictEqual(util.inspect(req.params), util.inspect([100, 101]));
+        done();
+      };
+      //noinspection JSAccessibilityCheck
+      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, {}, helper.noop);
+    });
+    it('should keep the parameters if an array is provided', function (done) {
+      var Client = rewire('../../lib/client.js');
+      var requestHandlerMock = function () {};
+      requestHandlerMock.prototype.send = function () { };
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = function (cb) {setImmediate(cb); };
+      //noinspection JSAccessibilityCheck
+      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      requestHandlerMock.prototype.send = function (req) {
+        assert.ok(req);
+        assert.strictEqual(util.inspect(req.params), util.inspect([101]));
+        done();
+      };
+      //noinspection JSAccessibilityCheck
+      client._executeAsPrepared('SELECT ...', [101], {}, helper.noop);
+    });
+    it('should callback with error if named parameters are not provided', function (done) {
+      var Client = rewire('../../lib/client.js');
+      var requestHandlerMock = function () {};
+      requestHandlerMock.prototype.send = function () { };
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = function (cb) {setImmediate(cb); };
+      //noinspection JSAccessibilityCheck
+      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      async.series([function (next) {
+        //noinspection JSAccessibilityCheck
+        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {}, function (err) {
+          helper.assertInstanceOf(err, Error);
+          assert.ok(err.message.indexOf('Parameter') >= 0);
+          next();
+        });
+      }, function (next) {
+        //noinspection JSAccessibilityCheck
+        client._executeAsPrepared('SELECT ...', {}, {}, function (err) {
+          helper.assertInstanceOf(err, Error);
+          assert.ok(err.message.indexOf('Parameter') >= 0);
+          next();
+        });
+      }, function (next) {
+        //different casing
+        //noinspection JSAccessibilityCheck
+        client._executeAsPrepared('SELECT ...', {ABC: 100}, {}, function (err) {
+          helper.assertInstanceOf(err, Error);
+          assert.ok(err.message.indexOf('Parameter') >= 0);
+          next();
+        });
+      }], done);
     });
   });
   describe('#batch()', function () {

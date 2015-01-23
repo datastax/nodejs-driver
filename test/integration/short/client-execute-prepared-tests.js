@@ -203,6 +203,26 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should allow named parameters with array of parameters', function (done) {
+      var client = newInstance();
+      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
+      client.execute(query, ['system'], {prepare: 1}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result && result.rows);
+        assert.strictEqual(result.rows.length, 1);
+        done();
+      });
+    });
+    it('should allow named parameters with parameters as an associative array', function (done) {
+      var client = newInstance();
+      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
+      client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result && result.rows);
+        assert.strictEqual(result.rows.length, 1);
+        done();
+      });
+    });
   });
 });
 

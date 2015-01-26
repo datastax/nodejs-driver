@@ -15,10 +15,9 @@ $ npm install cassandra-driver
 - Node discovery
 - Configurable load balancing
 - Transparent failover
-- Tunability
 - Paging
 - Client-to-node SSL support
-- Row streaming
+- Row streaming and pipes
 - Prepared statements and query batches
 
 ## Documentation
@@ -46,11 +45,15 @@ client.execute(query, ['guy'], function(err, result) {
 
 ### Prepare your queries
 
-Use prepared statements to obtain best performance. The driver will prepare the query once on each host and
- execute the statement with the bound parameters.
+Using prepared statements provides multiple benefits.
+Prepared statements are parsed and prepared on the Cassandra nodes and are ready for future execution.
+Also, when preparing, the driver retrieves information about the parameter types which
+ **allows an accurate mapping between a JavaScript type and a Cassandra type**.
+
+The driver will prepare the query once on each host and execute the statement with the bound parameters.
 
 ```javascript
-//When using parameter markers ? the prepared query will be reused
+//Use query markers (?) and parameters
 var query = 'UPDATE user_profiles SET birth=? WHERE key=?'; 
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
 //Set the prepare flag in the query options
@@ -79,7 +82,25 @@ client.eachRow('SELECT time, val FROM temperature WHERE station_id=', ['abc'],
 ```
 
 The `#stream()` method works in the same way but instead of callback it returns a [Readable Streams2][streams2] object
- in `objectMode` that emits instances of `Row`. It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+ in `objectMode` that emits instances of `Row`.
+It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+
+```javascript
+client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
+  .on('readable', function () {
+    //readable is emitted as soon a row is received and parsed
+    var row;
+    while (row = this.read()) {
+      console.log('time %s and value %s', row.time, row.val);
+    }
+  })
+  .on('end', function () {
+    //stream ended, there aren't any more rows
+  })
+  .on('error', function (err) {
+    //Something went wrong: err is a response error from Cassandra
+  });
+```
 
 ### Paging
 

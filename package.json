@@ -1,6 +1,6 @@
 {
   "name": "cassandra-driver",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
   "keywords": [
@@ -9,7 +9,9 @@
     "cql3",
     "connection",
     "pool",
-    "datastax"
+    "datastax",
+    "nosql",
+    "driver"
   ],
   "licenses": [
     {

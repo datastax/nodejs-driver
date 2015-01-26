@@ -14,18 +14,19 @@ var Metadata = require('../../lib/metadata.js');
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
+      var Client = require('../../lib/client');
       assert.throws(function () {
-        var client = new Client({});
-      });
+        new Client({});
+      }, TypeError);
       assert.throws(function () {
-        var client = new Client({contactPoints: []});
-      });
+        new Client({contactPoints: []});
+      }, TypeError);
       assert.throws(function () {
-        var client = new Client(null);
-      });
+        new Client(null);
+      }, TypeError);
       assert.throws(function () {
-        var client = new Client();
-      });
+        new Client();
+      }, TypeError);
     });
   });
   describe('#connect()', function () {
@@ -208,14 +209,14 @@ describe('Client', function () {
       async.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {}, function (err) {
-          helper.assertInstanceOf(err, Error);
+          helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
       }, function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {}, {}, function (err) {
-          helper.assertInstanceOf(err, Error);
+          helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
@@ -223,11 +224,24 @@ describe('Client', function () {
         //different casing
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {ABC: 100}, {}, function (err) {
-          helper.assertInstanceOf(err, Error);
+          helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
       }], done);
+    });
+  });
+  describe('#execute()', function () {
+    it('should not support named parameters for simple statements', function (done) {
+      //when supported with protocol v3, replace test to use protocol versions
+      var Client = require('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      //fake connected
+      client.connect = function (cb) {cb(); };
+      client.execute('QUERY', {named: 'parameter'}, function (err) {
+        helper.assertInstanceOf(err, errors.ArgumentError);
+        done();
+      });
     });
   });
   describe('#batch()', function () {

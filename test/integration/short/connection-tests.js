@@ -47,6 +47,27 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    it('should set the timeout for the hearbeat', function (done) {
+      var options = utils.extend({}, defaultOptions);
+      options.pooling.heartBeatInterval = 200;
+      var c = newInstance(null, undefined, options);
+      var sendCounter = 0;
+      c.open(function (err) {
+        assert.ifError(err);
+        assert.ok(c.idleTimeout);
+        var originalSend = c.sendStream;
+        c.sendStream = function() {
+          sendCounter++;
+          originalSend.apply(c, Array.prototype.slice.call(arguments));
+        };
+      });
+      setTimeout(function () {
+        //wait for requests to take place
+        //at least 3 requests
+        assert.ok(sendCounter > 2, 'sendCounter ' + sendCounter);
+        done();
+      }, 1000)
+    });
   });
   describe('#open with ssl', function () {
     before(helper.ccmHelper.start(1, {ssl: true}));
@@ -149,7 +170,7 @@ describe('Connection', function () {
   });
 });
 
-function newInstance(address, protocolVersion){
+function newInstance(address, protocolVersion, options){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
   }
@@ -158,7 +179,7 @@ function newInstance(address, protocolVersion){
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
   var logEmitter = function () {};
-  var options = utils.extend({logEmitter: logEmitter}, defaultOptions);
+  options = utils.extend({logEmitter: logEmitter}, options || defaultOptions);
   return new Connection(address, protocolVersion, options);
 }
 

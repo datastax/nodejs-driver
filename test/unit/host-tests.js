@@ -1,20 +1,23 @@
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
+var events = require('events');
 var rewire = require('rewire');
 
 var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
 var types = require('../../lib/types');
+var defaultOptions = require('../../lib/client-options').defaultOptions();
 var utils = require('../../lib/utils.js');
 var reconnection = require('../../lib/policies/reconnection.js');
+var helper = require('../test-helper');
 //Delay before connection.open callbacks
 var openDelay = 10;
 
 before(function () {
   //inject a mock Connection class
-  var connectionMock = function () {};
+  var connectionMock = events.EventEmitter;
   connectionMock.prototype.open = function noop (cb) {
     var self = this;
     setTimeout(function () {
@@ -64,7 +67,6 @@ describe('HostConnectionPool', function () {
       });
     });
   });
-
   describe('#borrowConnection()', function () {
     it('should get an open connection', function (done) {
       var hostPool = newHostConnectionPoolInstance();
@@ -79,9 +81,18 @@ describe('HostConnectionPool', function () {
     });
   });
 });
-
-
 describe('Host', function () {
+  describe('constructor', function () {
+    it('should listen for pool idleRequestError event', function (done) {
+      var host = newHostInstance(defaultOptions);
+      host.pool.forceShutdown = helper.noop;
+      //should be marked as down
+      host.on('down', done);
+      host.borrowConnection(function () {
+        host.pool.connections[0].emit('idleRequestError');
+      });
+    });
+  });
   describe('#borrowConnection()', function () {
     var options = {
       pooling: {
@@ -175,13 +186,22 @@ describe('Host', function () {
       host.setDown();
       //start at zero
       assert.strictEqual(host.reconnectionDelay, 0);
+      //Force to be considered as up
+      host.unhealthyAt = 1;
+      assert.ok(host.canBeConsideredAsUp());
       host.setDown();
+      host.unhealthyAt = 1;
+      host.setDown();
+      host.unhealthyAt = 1;
       host.setDown();
       assert.ok(host.reconnectionDelay > 0);
+      host.unhealthyAt = 1;
       host.setDown();
+      host.unhealthyAt = 1;
       host.setDown();
       //hitting max
       assert.strictEqual(host.reconnectionDelay, maxDelay);
+      host.unhealthyAt = 1;
       host.setDown();
       assert.strictEqual(host.reconnectionDelay, maxDelay);
 

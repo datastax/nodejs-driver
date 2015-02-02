@@ -71,6 +71,14 @@ describe('BigDecimal', function () {
       });
     });
   });
+  describe('BigDecimal.fromNumber()', function () {
+      it('should convert from string in decimal representation', function () {
+        intAndScaleToString.forEach(function (item) {
+          var value = BigDecimal.fromNumber(Number(item[2]));
+          assert.strictEqual(value.toNumber(), parseFloat(item[2]));
+        });
+    });
+  });
   describe('#toString()', function () {
     it('should convert to string decimal representation', function () {
       intAndScaleToString.forEach(function (item) {
@@ -94,6 +102,26 @@ describe('BigDecimal', function () {
           var first = BigDecimal.fromString(item[0]);
           var second = BigDecimal.fromString(item[1]);
           assert.strictEqual(first.subtract(second).toString(), item[2]);
+          //check mutations
+          assert.strictEqual(first.toString(), item[0]);
+        });
+    });
+  });
+  describe('#add()', function () {
+    it('should substract the values with any scale', function () {
+      [
+        ['1234.5', '12.345', '1246.845'],
+        ['12345', '100.00001', '12445.00001'],
+        ['100.00001', '2', '102.00001'],
+        ['100.01001', '2.01', '102.02001'],
+        ['100', '-102', '-2'],
+        ['102', '100', '202'],
+        ['102.1', '100.05', '202.15'],
+        ['10201.00', '-10201', '0.00']
+      ].forEach(function (item) {
+          var first = BigDecimal.fromString(item[0]);
+          var second = BigDecimal.fromString(item[1]);
+          assert.strictEqual(first.add(second).toString(), item[2]);
           //check mutations
           assert.strictEqual(first.toString(), item[0]);
         });

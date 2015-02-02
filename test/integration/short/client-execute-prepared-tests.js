@@ -180,7 +180,7 @@ describe('Client', function () {
             async.times(150, function (n, next) {
               var id = types.uuid();
               var value = types.Integer.fromNumber(n * 999);
-              value.multiply(types.Integer.fromString('9999901443'));
+              value = value.multiply(types.Integer.fromString('9999901443'));
               if (n % 2 === 0) {
                 //as a string also
                 value = value.toString();
@@ -222,6 +222,49 @@ describe('Client', function () {
         assert.strictEqual(result.rows.length, 1);
         done();
       });
+    });
+    it('should encode and decode decimal values', function (done) {
+      var client = newInstance();
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      var expectedRows = {};
+      async.series([
+        function (next) {
+          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
+        },
+        function (next) {
+          var query = util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table);
+          client.execute(query, helper.waitSchema(client, next));
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
+          async.times(150, function (n, next) {
+            var id = types.uuid();
+            var value = (n * 999).toString() + '.' + (100 + n * 7).toString();
+            if (n % 10 === 0) {
+              value = '-' + value;
+            }
+            if (n % 2 === 0) {
+              //as a BigDecimal too
+              value = types.BigDecimal.fromString(value);
+            }
+            expectedRows[id] = value.toString();
+            client.execute(query, [id, value], {prepare: 1}, next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          client.execute(util.format('SELECT id, val FROM %s', table), [], {prepare: 1}, function (err, result) {
+            assert.ifError(err);
+            result.rows.forEach(function (row) {
+              helper.assertInstanceOf(row['val'], types.BigDecimal);
+              var expectedValue = expectedRows[row['id']];
+              assert.ok(expectedValue);
+              assert.strictEqual(row['val'].toString(), expectedValue.toString());
+            });
+            seriesNext();
+          });
+        }
+      ], done);
     });
   });
 });

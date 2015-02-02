@@ -22,6 +22,7 @@ describe('encoder', function () {
       assertGuessed(types.uuid(), dataTypes.uuid, 'Guess type for a UUID value failed');
       assertGuessed(types.timeuuid(), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
       assertGuessed(types.Integer.fromNumber(1), dataTypes.varint, 'Guess type for a varint value failed');
+      assertGuessed(types.BigDecimal.fromString('1.01'), dataTypes.decimal, 'Guess type for a varint value failed');
       assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
@@ -122,6 +123,13 @@ describe('encoder', function () {
       value['988229782938247303441911119'] = 'varint2';
       encoded = typeEncoder.encode(value, 'map<varint, text>');
       decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.varint], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['12.1'] = 'decimal1';
+      value['12.90'] = 'decimal2';
+      encoded = typeEncoder.encode(value, 'map<decimal, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.decimal], [dataTypes.text]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
     it('should encode and decode list<int>', function () {
@@ -260,6 +268,18 @@ describe('encoder', function () {
       assert.strictEqual(buffer.toString('hex'), '80');
       buffer = encoder.encode(-100, dataTypes.varint);
       assert.strictEqual(buffer.toString('hex'), '9c');
+    });
+    it('should encode String/BigDecimal/Number as decimal', function () {
+      var buffer = encoder.encode(types.BigDecimal.fromString('0.00256'), dataTypes.decimal);
+      assert.strictEqual(buffer.toString('hex'), '000000050100');
+      buffer = encoder.encode('-0.01', dataTypes.decimal);
+      assert.strictEqual(buffer.toString('hex'), '00000002ff');
+      buffer = encoder.encode('-25.5', dataTypes.decimal);
+      assert.strictEqual(buffer.toString('hex'), '00000001ff01');
+      buffer = encoder.encode(0.004, dataTypes.decimal);
+      assert.strictEqual(buffer.toString('hex'), '0000000304');
+      buffer = encoder.encode(-25.5, dataTypes.decimal);
+      assert.strictEqual(buffer.toString('hex'), '00000001ff01');
     });
   });
   describe('#setRoutingKey', function () {

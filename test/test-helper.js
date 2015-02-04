@@ -28,6 +28,17 @@ var helper = {
     //do nothing
   },
   /**
+   * Uses the last parameter as callback, invokes it via setImmediate
+   */
+  callbackNoop: function () {
+    var args = Array.prototype.slice.call(arguments);
+    var cb = args[args.length-1];
+    if (typeof cb !== 'function') {
+      throw new Error('Helper method needs a callback as last parameter');
+    }
+    setImmediate(cb);
+  },
+  /**
    * @type {ClientOptions}
    */
   baseOptions: (function () {

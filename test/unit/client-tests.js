@@ -92,6 +92,7 @@ describe('Client', function () {
     Client.__set__("RequestHandler", requestHandlerMock);
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
       client._getPrepared('QUERY1', function (err, id, meta) {
@@ -105,6 +106,7 @@ describe('Client', function () {
     });
     it('should prepare make the same request once and queue the rest', function (done) {
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       async.parallel([
         function (nextParallel) {
@@ -139,11 +141,12 @@ describe('Client', function () {
     it('should check for overflow and remove older', function (done) {
       var maxPrepared = 10;
       var client = new Client({contactPoints: ['host'], maxPrepared: maxPrepared});
+      client.metadata = new Metadata(client.options);
       async.timesSeries(maxPrepared + 2, function (n, next) {
         client._getPrepared('QUERY ' + n.toString(), next);
       }, function (err) {
         if (err) return done(err);
-        assert.strictEqual(client.preparedQueries.__length, maxPrepared);
+        assert.strictEqual(client.metadata.preparedQueries.__length, maxPrepared);
         done();
       });
     });
@@ -154,6 +157,7 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       client._getPrepared('QUERY1', function (err, id, meta) {
         assert.ok(err, 'It should callback with error');
         assert.equal(id, null);

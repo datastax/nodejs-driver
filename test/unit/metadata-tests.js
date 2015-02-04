@@ -14,7 +14,7 @@ var utils = require('../../lib/utils.js');
 describe('Metadata', function () {
   describe('#getReplicas()', function () {
     it('should return depending on the rf and ring size with simple strategy', function () {
-      var metadata = new Metadata();
+      var metadata = new Metadata(clientOptions.defaultOptions());
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0]};
@@ -43,7 +43,7 @@ describe('Metadata', function () {
     });
     it('should return depending on the dc rf with network topology', function () {
       var options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata();
+      var metadata = new Metadata(options);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0]};

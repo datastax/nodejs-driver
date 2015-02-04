@@ -420,4 +420,39 @@ describe('Client', function () {
       });
     });
   });
+  describe('#_waitForPendingPrepares()', function () {
+    var Client = rewire('../../lib/client.js');
+    it('should return the same amount when no query is being prepared', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.metadata = new Metadata(client.options);
+      var queriesInfo = [{info: {}}, {info: {}}];
+      client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
+        assert.ifError(err);
+        assert.strictEqual(toPrepare.length, 2);
+        done();
+      });
+    });
+    it('should wait for queries being prepared', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.metadata = new Metadata(client.options);
+      var cbs = [];
+      var queriesInfo = [
+        {info: {}, query: 'query1'},
+        {info: { preparing: true, once: function (name, cb) { cbs.push(cb); }}},
+        {info: { preparing: true, once: function (name, cb) { cbs.push(cb); }}}
+      ];
+      var calledBack = false;
+      client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
+        assert.ifError(err);
+        assert.ok(calledBack);
+        assert.strictEqual(toPrepare.length, 1);
+        assert.strictEqual(toPrepare[0].query, 'query1');
+        done();
+      });
+      setTimeout(function () {
+        calledBack = true;
+        cbs.forEach(function (cb) { cb();});
+      }, 50);
+    });
+  });
 });

@@ -296,11 +296,11 @@ describe('Client', function () {
       var Client = rewire('../../lib/client.js');
       var called;
       var handlerMock = function () {};
-      handlerMock.prototype.sendMultiple = function (queries, cbs, callback) {
+      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
         called = true;
         assert.strictEqual(queries.length, 3);
-        helper.assertInstanceOf(queries[0], requests.PrepareRequest);
-        assert.strictEqual(queries[1].query, 'q2');
+        assert.strictEqual(queries[0], 'q1');
+        assert.strictEqual(queries[1], 'q2');
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;
@@ -318,11 +318,11 @@ describe('Client', function () {
       var Client = rewire('../../lib/client.js');
       var called;
       var handlerMock = function () {};
-      handlerMock.prototype.sendMultiple = function (queries, cbs, callback) {
+      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
         called = true;
         assert.strictEqual(queries.length, 3);
-        helper.assertInstanceOf(queries[0], requests.PrepareRequest);
-        assert.strictEqual(queries[1].query, 'q3');
+        assert.strictEqual(queries[0], 'q1');
+        assert.strictEqual(queries[1], 'q3');
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;
@@ -344,11 +344,11 @@ describe('Client', function () {
       var sendMultipleCalled;
       var preparingCallbackCalled;
       var handlerMock = function () {};
-      handlerMock.prototype.sendMultiple = function (queries, cbs, callback) {
+      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
         sendMultipleCalled = true;
         assert.strictEqual(queries.length, 2);
-        helper.assertInstanceOf(queries[0], requests.PrepareRequest);
-        assert.strictEqual(queries[1].query, 'q5');
+        assert.strictEqual(queries[0], 'q1');
+        assert.strictEqual(queries[1], 'q5');
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;

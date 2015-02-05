@@ -4,6 +4,7 @@ var util = require('util');
 var rewire = require('rewire');
 
 var RequestHandler = require('../../lib/request-handler.js');
+var helper = require('../test-helper.js');
 var errors = require('../../lib/errors.js');
 var types = require('../../lib/types');
 var utils = require('../../lib/utils.js');
@@ -20,8 +21,6 @@ var options = (function () {
     }
   };
 })();
-
-
 describe('RequestHandler', function () {
   describe('#handleError()', function () {
     it('should retrow on syntax error', function (done) {
@@ -110,6 +109,77 @@ describe('RequestHandler', function () {
       handler.handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         assert.strictEqual(policyCalled, true);
+        done();
+      });
+    });
+  });
+  describe('#prepareMultiple()', function () {
+    it('should prepare each query serially and callback with the response', function (done) {
+      var handler = new RequestHandler(null, options);
+      var prepareCounter = 0;
+      var eachCounter = 0;
+      var connection = {
+        prepareOnce: function (q, cb) {
+          prepareCounter++;
+          setImmediate(function () {
+            cb(null, {});
+          });
+        }
+      };
+      handler.getNextConnection = function (o, cb) {
+        cb(null, connection);
+      };
+      var eachCallback = function () { eachCounter++; };
+      handler.prepareMultiple(['q1', 'q2'], [eachCallback, eachCallback], {}, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(2, eachCounter);
+        assert.strictEqual(2, prepareCounter);
+        done();
+      });
+    });
+    it('should retry with a handler when there is an error', function (done) {
+      var handler = new RequestHandler(null, options);
+      var retryCounter = 0;
+      var connection = {
+        prepareOnce: function (q, cb) {
+          var err;
+          if (retryCounter === 0) {
+            err = new errors.ResponseError(types.responseErrorCodes.overloaded, 'dummy error');
+          }
+          setImmediate(function () {
+            cb(err, {});
+          });
+        }
+      };
+      handler.getNextConnection = function (o, cb) {
+        cb(null, connection);
+      };
+      handler.retry = function (cb) {
+        retryCounter++;
+        setImmediate(cb);
+      };
+      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
+        assert.ifError(err);
+        assert.ok(handler.retryHandler);
+        assert.strictEqual(1, retryCounter);
+        done();
+      });
+    });
+    it('should not retry when there is an query error', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connection = {
+        prepareOnce: function (q, cb) {
+          setImmediate(function () {
+            cb(new errors.ResponseError(types.responseErrorCodes.syntaxError, 'syntax error'));
+          });
+        }
+      };
+      handler.getNextConnection = function (o, cb) {
+        cb(null, connection);
+      };
+      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
         done();
       });
     });

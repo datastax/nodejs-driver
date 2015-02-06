@@ -266,7 +266,7 @@ describe('Client', function () {
         connectCalled = true;
         cb();
       };
-      client.batch([], function (err) {
+      client.batch(['q1'], function (err) {
         assert.ifError(err);
         assert.strictEqual(connectCalled, true);
         done();
@@ -274,23 +274,21 @@ describe('Client', function () {
     });
   });
   describe('#batch(queries, {prepare: 1}, callback)', function () {
-    it('should callback with error if the queries are not string', function (done) {
+    it('should callback with error if the queries are not string', function () {
       var Client = rewire('../../lib/client.js');
       var client = new Client(helper.baseOptions);
       client.connect = helper.callbackNoop;
-      client.batch([{noQuery: true}], {prepare: true}, function (err) {
-        helper.assertInstanceOf(err, errors.ArgumentError);
-        done();
-      });
+      assert.throws(function () {
+        client.batch([{noQuery: true}], {prepare: true}, helper.throwop);
+      }, errors.ArgumentError);
     });
-    it('should callback with error if the queries are undefined', function (done) {
+    it('should callback with error if the queries are undefined', function () {
       var Client = rewire('../../lib/client.js');
       var client = new Client(helper.baseOptions);
       client.connect = helper.callbackNoop;
-      client.batch([undefined, undefined], {prepare: true}, function (err) {
-        helper.assertInstanceOf(err, errors.ArgumentError);
-        done();
-      });
+      assert.throws(function () {
+        client.batch([undefined, undefined, 'q3'], {prepare: true}, helper.throwop);
+      }, errors.ArgumentError);
     });
     it('should prepare for the first time', function (done) {
       var Client = rewire('../../lib/client.js');

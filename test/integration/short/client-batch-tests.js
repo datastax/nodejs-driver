@@ -210,6 +210,29 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should prepare and send the request', function (done) {
+      var client = newInstance();
+      var id1 = types.uuid();
+      var id2 = types.uuid();
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1),
+        params: [id1, 'sample1']
+      },{
+        query: util.format('INSERT INTO %s (id, int_sample, bigint_sample) VALUES (?, ?, ?)', table1),
+        params: [id2, -1, -1]
+      }];
+      client.batch(queries, {prepare: true}, function (err) {
+        assert.ifError(err);
+        var query = util.format('SELECT * FROM %s where id IN (%s, %s)', table1, id1, id2);
+        client.execute(query, [], {consistency: types.consistencies.quorum}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 2);
+          assert.strictEqual(helper.find(result.rows, 'id', id2)['int_sample'], -1);
+          done();
+        });
+      });
+    });
   });
 });
 

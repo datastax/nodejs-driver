@@ -3,12 +3,13 @@ var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
-var RequestHandler = require('../../lib/request-handler.js');
-var helper = require('../test-helper.js');
-var errors = require('../../lib/errors.js');
+var RequestHandler = require('../../lib/request-handler');
+var requests = require('../../lib/requests');
+var helper = require('../test-helper');
+var errors = require('../../lib/errors');
 var types = require('../../lib/types');
-var utils = require('../../lib/utils.js');
-var retry = require('../../lib/policies/retry.js');
+var utils = require('../../lib/utils');
+var retry = require('../../lib/policies/retry');
 
 var options = (function () {
   var loadBalancing = require('../../lib/policies/load-balancing.js');
@@ -18,7 +19,8 @@ var options = (function () {
       loadBalancing: new loadBalancing.RoundRobinPolicy(),
       reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false),
       retry: new retry.RetryPolicy()
-    }
+    },
+    logEmitter: helper.noop
   };
 })();
 describe('RequestHandler', function () {
@@ -180,6 +182,42 @@ describe('RequestHandler', function () {
       handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
         helper.assertInstanceOf(err, errors.ResponseError);
         assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+        done();
+      });
+    });
+  });
+  describe('#prepareAndRetry()', function () {
+    it('should only re-prepare of ExecuteRequest and BatchRequest', function (done) {
+      var handler = new RequestHandler(null, options);
+      handler.request = {};
+      handler.host = {};
+      handler.prepareAndRetry(new Buffer(0), function (err) {
+        helper.assertInstanceOf(err, errors.DriverInternalError);
+        done();
+      });
+    });
+    it('should prepare all BatchRequest queries and send request again on the same connection', function (done) {
+      var handler = new RequestHandler(null, options);
+      handler.request = {};
+      handler.host = {};
+      handler.request = new requests.BatchRequest([
+        { info: { queryId: new Buffer('10')}, query: '1'},
+        { info: { queryId: new Buffer('20')}, query: '2'}
+      ], {});
+      var connection = { prepareOnce: function (q, cb) {
+        queriesPrepared.push(q);
+        setImmediate(function () { cb(null, { id: new Buffer(q)})});
+      }};
+      handler.connection = connection;
+      var queriesPrepared = [];
+      handler.sendOnConnection = function (request, o, cb) {
+        helper.assertInstanceOf(request, requests.BatchRequest);
+        assert.strictEqual(handler.connection, connection);
+        setImmediate(cb);
+      };
+      handler.prepareAndRetry(new Buffer(0), function (err) {
+        assert.ifError(err);
+        assert.strictEqual(queriesPrepared.toString(), handler.request.queries.map(function (x) {return x.query; }).toString());
         done();
       });
     });

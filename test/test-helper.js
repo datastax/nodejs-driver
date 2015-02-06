@@ -132,10 +132,14 @@ var helper = {
       '   list_sample2 list<int>,' +
       '   set_sample set<text>)', tableName);
   },
-  createKeyspaceCql: function (keyspace, replicationFactor) {
-    return util.format('CREATE KEYSPACE %s WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d};',
+  createKeyspaceCql: function (keyspace, replicationFactor, durableWrites) {
+    return util.format('CREATE KEYSPACE %s' +
+      ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d}' +
+      ' AND durable_writes = %s;',
       keyspace,
-      replicationFactor);
+      replicationFactor,
+      !!durableWrites
+    );
   },
   assertValueEqual: function (val1, val2) {
     if (val1 === null && val2 === null) {
@@ -180,6 +184,16 @@ var helper = {
         return callback();
       }
       setTimeout(callback, 200 * client.hosts.length);
+    });
+  },
+  /**
+   * @returns {Function} A function with a single callback param, applying the fn with parameters
+   */
+  toTask: function (fn, context) {
+    var params = Array.prototype.slice.call(arguments, 2);
+    return (function (next) {
+      params.push(next);
+      fn.apply(context, params);
     });
   },
   wait: function (ms, callback) {

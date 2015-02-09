@@ -20,7 +20,10 @@ describe('Client', function () {
       stream
         .on('end', done)
         .on('readable', function () {
-          assert.ok(false, 'Readable event should not be fired');
+          //Node.js 0.10, readable is never called
+          //Node.js 0.12, readable is called with null
+          var chunk = stream.read();
+          assert.strictEqual(chunk, null);
         })
         .on('error', done);
     });
@@ -71,7 +74,9 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'It should not be emit readable');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ok(err, 'It should yield an error');
@@ -88,7 +93,9 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'It should not be emit readable');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ifError(err);
@@ -113,7 +120,9 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'Readable event should not be fired');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ifError(err);
@@ -213,6 +222,9 @@ describe('Client', function () {
           assert.ok(err instanceof TypeError, 'Error should be an instance of TypeError');
           errCalled = true;
         })
+        .on('readable', function () {
+          assert.strictEqual(stream.read(), null);
+        })
         .on('end', function () {
           assert.strictEqual(errCalled, true);
           done();
@@ -225,7 +237,9 @@ describe('Client', function () {
       var errCalled = false;
       stream
         .on('readable', function () {
-          assert.ifError(new Error('It should not be readable'));
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ok(err);

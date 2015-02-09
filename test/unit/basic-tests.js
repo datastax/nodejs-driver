@@ -8,7 +8,6 @@ var utils = require('../../lib/utils.js');
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
 var types = require('../../lib/types');
-var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');

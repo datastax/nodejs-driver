@@ -1,12 +1,13 @@
 var assert = require('assert');
 var util = require('util');
 var async = require('async');
-var utils = require('../../lib/utils.js');
+var utils = require('../../lib/utils');
 
+var Encoder = require('../../lib/encoder');
+var encoder = new Encoder();
 var types = require('../../lib/types');
-var encoder = require('../../lib/encoder.js');
 var dataTypes = types.dataTypes;
-var helper = require('../test-helper.js');
+var helper = require('../test-helper');
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {

@@ -72,4 +72,14 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[3].address, '4');
     });
   });
+  describe('#clearPrepared()', function () {
+    it('should clear the internal state', function () {
+      var metadata = new Metadata(clientOptions.defaultOptions());
+      metadata.getPreparedInfo('QUERY1');
+      metadata.getPreparedInfo('QUERY2');
+      assert.strictEqual(metadata.preparedQueries['__length'], 2);
+      metadata.clearPrepared();
+      assert.strictEqual(metadata.preparedQueries['__length'], 0);
+    });
+  });
 });

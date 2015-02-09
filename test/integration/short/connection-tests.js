@@ -25,20 +25,20 @@ describe('Connection', function () {
     it('should use the max supported protocol version', function (done) {
       var localCon = newInstance(null, null);
       localCon.open(function (err) {
-        assert.ifError(err);
-        assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
-        assert.strictEqual(localCon.checkingVersion, true);
-        localCon.close(done);
-      });
+      assert.ifError(err);
+      assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
+      assert.strictEqual(localCon.checkingVersion, true);
+      localCon.close(done);
     });
-    it('should fail when the host does not exits', function (done) {
-      var localCon = newInstance('1.1.1.1');
-      localCon.open(function (err) {
-        assert.ok(err, 'Must return a connection error');
-        assert.ok(!localCon.connected && !localCon.connecting);
-        localCon.close(done);
-      });
+  });
+  it('should fail when the host does not exits', function (done) {
+    var localCon = newInstance('1.1.1.1');
+    localCon.open(function (err) {
+      assert.ok(err, 'Must return a connection error');
+      assert.ok(!localCon.connected && !localCon.connecting);
+      localCon.close(done);
     });
+  });
     it('should fail when the host exists but port closed', function (done) {
       var localCon = newInstance('127.0.0.1:8090');
       localCon.open(function (err) {

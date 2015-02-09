@@ -2,9 +2,10 @@ var assert = require('assert');
 var util = require('util');
 var async = require('async');
 
-var streams = require('../../lib/streams.js');
+var Encoder = require('../../lib/encoder');
+var streams = require('../../lib/streams');
 var types = require('../../lib/types');
-var helper = require('../test-helper.js');
+var helper = require('../test-helper');
 
 /**
  * Tests for the transform streams that are involved in the reading of a response
@@ -12,7 +13,7 @@ var helper = require('../test-helper.js');
 describe('Parser', function () {
   describe('#_transform()', function () {
     it('should read a READY opcode', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.bodyLength, 0);
@@ -23,7 +24,7 @@ describe('Parser', function () {
     });
 
     it('should read a AUTHENTICATE opcode', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
@@ -34,7 +35,7 @@ describe('Parser', function () {
     });
 
     it('should read a VOID result', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
@@ -48,7 +49,7 @@ describe('Parser', function () {
     });
 
     it('should read a SET_KEYSPACE result', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -72,7 +73,7 @@ describe('Parser', function () {
     });
 
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
@@ -86,7 +87,7 @@ describe('Parser', function () {
     });
 
     it('should read a STATUS_CHANGE DOWN EVENT response', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
@@ -100,7 +101,7 @@ describe('Parser', function () {
     });
 
     it('should read a STATUS_CHANGE DOWN EVENT response chunked', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
@@ -117,7 +118,7 @@ describe('Parser', function () {
     });
 
     it('should read a buffer until there is enough data', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
@@ -135,7 +136,7 @@ describe('Parser', function () {
     });
 
     it('should emit empty result one column no rows', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -151,7 +152,7 @@ describe('Parser', function () {
     });
 
     it('should emit empty result two columns no rows', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -163,7 +164,7 @@ describe('Parser', function () {
     });
 
     it('should emit row when rows present', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       var rowLength = 2;
       var rowCounter = 0;
       parser.on('readable', function () {
@@ -188,7 +189,7 @@ describe('Parser', function () {
       cellValue = [0, 30, 0, 0].concat(cellValue);
       var rowLength = 1;
       async.series([function (next) {
-        var parser = new streams.Parser({objectMode:true});
+        var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {
           var item = parser.read();
@@ -201,7 +202,7 @@ describe('Parser', function () {
         //1 columns, 1 row, 1 chunk
         parser._transform(getBodyChunks(1, rowLength, 0, null, cellValue), null, doneIfError(done));
       }, function (next) {
-        var parser = new streams.Parser({objectMode:true});
+        var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {
           var item = parser.read();
@@ -215,7 +216,7 @@ describe('Parser', function () {
         parser._transform(getBodyChunks(1, rowLength, 0, 50, cellValue), null, doneIfError(done));
         parser._transform(getBodyChunks(1, rowLength, 50, null, cellValue), null, doneIfError(done));
       }, function (next) {
-        var parser = new streams.Parser({objectMode:true});
+        var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {
           var item = parser.read();
@@ -236,7 +237,7 @@ describe('Parser', function () {
         var cellValue = helper.fillArray(256, 74);
         //Add the length 256 of the value
         cellValue = [0, 0, 1, 0].concat(cellValue);
-        var parser = new streams.Parser({objectMode:true});
+        var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {
           var item = parser.read();
@@ -256,7 +257,7 @@ describe('Parser', function () {
         var cellValue = helper.fillArray(256, 74);
         //Add the length 256 of the value
         cellValue = [0, 0, 1, 0].concat(cellValue);
-        var parser = new streams.Parser({objectMode:true});
+        var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {
           var item = parser.read();
@@ -275,7 +276,7 @@ describe('Parser', function () {
     });
 
     it('should read a AUTH_CHALLENGE response', function (done) {
-      var parser = new streams.Parser({objectMode:true});
+      var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authChallenge);
@@ -296,6 +297,17 @@ describe('Parser', function () {
     });
   });
 });
+
+/**
+ * @param {Number} [protocolVersion]
+ * @returns {exports.Parser}
+ */
+function newInstance(protocolVersion) {
+  if (!protocolVersion) {
+    protocolVersion = 2;
+  }
+  return new streams.Parser({objectMode:true}, new Encoder(protocolVersion, {}));
+}
 
 /**
  * Test Helper method to get a frame header

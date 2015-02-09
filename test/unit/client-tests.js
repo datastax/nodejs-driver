@@ -4,13 +4,14 @@ var util = require('util');
 var rewire = require('rewire');
 
 var policies = require('../../lib/policies');
-var helper = require('../test-helper.js');
-var errors = require('../../lib/errors.js');
-var utils = require('../../lib/utils.js');
+var helper = require('../test-helper');
+var errors = require('../../lib/errors');
+var utils = require('../../lib/utils');
 var requests = require('../../lib/requests');
-var HostMap = require('../../lib/host.js').HostMap;
-var Host = require('../../lib/host.js').Host;
-var Metadata = require('../../lib/metadata.js');
+var HostMap = require('../../lib/host').HostMap;
+var Host = require('../../lib/host').Host;
+var Metadata = require('../../lib/metadata');
+var Encoder = require('../../lib/encoder');
 
 describe('Client', function () {
   describe('constructor', function () {
@@ -174,7 +175,8 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
-      client.connect = function (cb) {setImmediate(cb); };
+      client._getEncoder = function () { return new Encoder(2, {})};
+      client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
       client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});};
       requestHandlerMock.prototype.send = function (req) {
@@ -183,7 +185,7 @@ describe('Client', function () {
         done();
       };
       //noinspection JSAccessibilityCheck
-      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, {}, helper.noop);
+      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, {}, helper.throwop);
     });
     it('should keep the parameters if an array is provided', function (done) {
       var Client = rewire('../../lib/client.js');
@@ -191,7 +193,8 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
-      client.connect = function (cb) {setImmediate(cb); };
+      client._getEncoder = function () { return new Encoder(2, {})};
+      client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
       client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       requestHandlerMock.prototype.send = function (req) {
@@ -200,7 +203,7 @@ describe('Client', function () {
         done();
       };
       //noinspection JSAccessibilityCheck
-      client._executeAsPrepared('SELECT ...', [101], {}, helper.noop);
+      client._executeAsPrepared('SELECT ...', [101], {}, helper.throwop);
     });
     it('should callback with error if named parameters are not provided', function (done) {
       var Client = rewire('../../lib/client.js');
@@ -208,7 +211,8 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
-      client.connect = function (cb) {setImmediate(cb); };
+      client._getEncoder = function () { return new Encoder(2, {})};
+      client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
       client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       async.series([function (next) {

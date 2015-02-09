@@ -4,13 +4,13 @@ var async = require('async');
 var utils = require('../../lib/utils');
 
 var Encoder = require('../../lib/encoder');
-var encoder = new Encoder();
 var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var helper = require('../test-helper');
 
 describe('encoder', function () {
   describe('#guessDataType()', function () {
+    var encoder = new Encoder(2, {});
     it('should guess the native types', function () {
       assertGuessed(1, dataTypes.double, 'Guess type for an integer (double) number failed');
       assertGuessed(1.01, dataTypes.double, 'Guess type for a double number failed');
@@ -40,7 +40,7 @@ describe('encoder', function () {
     }
   });
   describe('#encode() and #decode', function () {
-    var typeEncoder = encoder;
+    var typeEncoder = new Encoder(2, {});
     it('should encode and decode maps', function () {
       var value = {value1: 'Surprise', value2: 'Madafaka'};
       //Minimum info, guessed
@@ -214,6 +214,7 @@ describe('encoder', function () {
       }, TypeError);
     });
     it('should encode Long/Date/Number/String as timestamps', function () {
+      var encoder = new Encoder(2, {});
       var buffer = encoder.encode(types.Long.fromBits(0x00fafafa, 0x07090909), dataTypes.timestamp);
       assert.strictEqual(buffer.toString('hex'), '0709090900fafafa');
       buffer = encoder.encode(1421755130012, dataTypes.timestamp);
@@ -232,6 +233,7 @@ describe('encoder', function () {
       }, TypeError);
     });
     it('should encode String/Number (not NaN) as int', function () {
+      var encoder = new Encoder(2, {});
       var buffer = encoder.encode(0x071272ab, dataTypes.int);
       assert.strictEqual(buffer.toString('hex'), '071272ab');
       buffer = encoder.encode('0x071272ab', dataTypes.int);
@@ -249,6 +251,7 @@ describe('encoder', function () {
       }, TypeError);
     });
     it('should encode String/Long/Number as bigint', function () {
+      var encoder = new Encoder(2, {});
       var buffer = encoder.encode(types.Long.fromString('506946367331695353'), dataTypes.bigint);
       assert.strictEqual(buffer.toString('hex'), '0709090900fafaf9');
       buffer = encoder.encode('506946367331695353', dataTypes.bigint);
@@ -259,6 +262,7 @@ describe('encoder', function () {
       assert.strictEqual(buffer.toString('hex'), '00000000000000ff');
     });
     it('should encode String/Integer/Number as varint', function () {
+      var encoder = new Encoder(2, {});
       var buffer = encoder.encode(types.Integer.fromString('33554433'), dataTypes.varint);
       assert.strictEqual(buffer.toString('hex'), '02000001');
       buffer = encoder.encode('-150012', dataTypes.varint);
@@ -271,6 +275,7 @@ describe('encoder', function () {
       assert.strictEqual(buffer.toString('hex'), '9c');
     });
     it('should encode String/BigDecimal/Number as decimal', function () {
+      var encoder = new Encoder(2, {});
       var buffer = encoder.encode(types.BigDecimal.fromString('0.00256'), dataTypes.decimal);
       assert.strictEqual(buffer.toString('hex'), '000000050100');
       buffer = encoder.encode('-0.01', dataTypes.decimal);
@@ -284,6 +289,7 @@ describe('encoder', function () {
     });
   });
   describe('#setRoutingKey', function () {
+    var encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {
       var options = {
         routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]

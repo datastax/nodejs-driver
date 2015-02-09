@@ -281,7 +281,8 @@ var helper = {
       vals.push(obj[key]);
     }
     return vals;
-  }
+  },
+  Map: MapPolyFill
 };
 
 function Ccm() {
@@ -431,6 +432,36 @@ Ccm.prototype.getPath = function (subPath) {
     ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
   }
   return path.join(ccmPath, subPath);
+};
+
+/**
+ * A polyfill of Map, valid for testing. It does not support update of values
+ * @constructor
+ */
+function MapPolyFill() {
+  this.arr = [];
+  var self = this;
+  Object.defineProperty(this, 'size', {
+    get: function() { return self.arr.length; },
+    configurable: false
+  });
+}
+
+MapPolyFill.prototype.set = function (k, v) {
+  this.arr.push([k, v]);
+};
+
+MapPolyFill.prototype.get = function (k) {
+  return this.arr.filter(function (item) {
+    return item[0] === k;
+  })[0];
+};
+
+MapPolyFill.prototype.forEach = function (callback) {
+  this.arr.forEach(function (item) {
+    //first the value, then the key
+    callback(item[1], item[0]);
+  });
 };
 
 module.exports = helper;

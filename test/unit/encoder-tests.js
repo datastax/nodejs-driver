@@ -287,6 +287,26 @@ describe('encoder', function () {
       buffer = encoder.encode(-25.5, dataTypes.decimal);
       assert.strictEqual(buffer.toString('hex'), '00000001ff01');
     });
+    it('should encode/decode Map polyfills as maps', function () {
+      var encoder = new Encoder(2, { encoding: { map: helper.Map}});
+      var m = new helper.Map();
+      m.set('k1', 'v1');
+      m.set('k2', 'v2');
+      var encoded = encoder.encode(m, 'map<text,text>');
+      assert.strictEqual(encoded.toString('hex'), '000200026b310002763100026b3200027632');
+      var decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
+      helper.assertInstanceOf(decoded, helper.Map);
+      assert.strictEqual(decoded.arr.toString(), m.arr.toString());
+
+      m = new helper.Map();
+      m.set('k1', 1);
+      m.set('k2', 2);
+      m.set('k3', 3);
+      encoded = encoder.encode(m, 'map<text,int>');
+      assert.strictEqual(encoded.toString('hex'), '000300026b3100040000000100026b3200040000000200026b33000400000003');
+      decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
+      assert.strictEqual(decoded.arr.toString(), m.arr.toString());
+    });
   });
   describe('#setRoutingKey', function () {
     var encoder = new Encoder(2, {});

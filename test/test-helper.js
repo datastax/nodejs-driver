@@ -295,7 +295,8 @@ var helper = {
     }
     return vals;
   },
-  Map: MapPolyFill
+  Map: MapPolyFill,
+  Set: SetPolyFill
 };
 
 function Ccm() {
@@ -478,6 +479,22 @@ MapPolyFill.prototype.forEach = function (callback) {
 };
 
 MapPolyFill.prototype.toString = function() {
+  return this.arr.toString();
+};
+
+function SetPolyFill(arr) {
+  this.arr = arr || [];
+}
+
+SetPolyFill.prototype.forEach = function (cb, thisArg) {
+  this.arr.forEach(cb, thisArg);
+};
+
+SetPolyFill.prototype.add = function (x) {
+  this.arr.push(x);
+};
+
+SetPolyFill.prototype.toString = function() {
   return this.arr.toString();
 };
 

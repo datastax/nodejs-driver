@@ -266,7 +266,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should encode and decode maps using Map and polyfills', function (done) {
+    it('should encode and decode maps using Map polyfills', function (done) {
       var client = newInstance({ encoding: { map: helper.Map}});
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -283,12 +283,12 @@ describe('Client', function () {
         ]
       ];
       var createTableCql = util.format('CREATE TABLE %s ' +
-        '(id uuid primary key, ' +
-        'map_text_text map<text,text>, ' +
-        'map_int_date map<int,timestamp>, ' +
-        'map_date_float map<timestamp,float>, ' +
-        'map_varint_boolean map<varint,boolean>, ' +
-        'map_timeuuid_text map<timeuuid,decimal>)', table);
+      '(id uuid primary key, ' +
+      'map_text_text map<text,text>, ' +
+      'map_int_date map<int,timestamp>, ' +
+      'map_date_float map<timestamp,float>, ' +
+      'map_varint_boolean map<varint,boolean>, ' +
+      'map_timeuuid_text map<timeuuid,decimal>)', table);
       async.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
@@ -312,6 +312,70 @@ describe('Client', function () {
               assert.strictEqual(row['map_date_float'].toString(), expectedValues[3].toString());
               assert.strictEqual(row['map_varint_boolean'].toString(), expectedValues[4].toString());
               assert.strictEqual(row['map_timeuuid_text'].toString(), expectedValues[5].toString());
+            });
+            seriesNext();
+          });
+        }
+      ], done);
+    });
+    it('should encode and decode sets using Set polyfills', function (done) {
+      var client = newInstance({ encoding: { set: helper.Set}});
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      var SetPF = helper.Set;
+      var values = [
+        [
+          types.uuid(),
+          new SetPF(['k3', 'v33333122', 'z1', 'z2']),
+          new SetPF([new Date(1423499543481), new Date()]),
+          new SetPF([-2, 0, 1, 1.1233799457550049]),
+          new SetPF([types.Long.fromString('100000001')]),
+          new SetPF([types.timeuuid(), types.timeuuid(), types.timeuuid()])
+        ],
+        [
+          types.uuid(),
+          new SetPF(['v1']),
+          new SetPF([new Date(1423199543111), new Date()]),
+          new SetPF([1, 2]),
+          new SetPF([types.Long.fromNumber(-3)]),
+          null
+        ]
+      ];
+      var createTableCql = util.format('CREATE TABLE %s ' +
+      '(id uuid primary key, ' +
+      'set_text set<text>, ' +
+      'set_timestamp set<timestamp>, ' +
+      'set_float set<float>, ' +
+      'set_bigint set<bigint>, ' +
+      'set_timeuuid set<timeuuid>)', table);
+      async.series([
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(client.execute, client, createTableCql),
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, set_text, set_timestamp, set_float, set_bigint, set_timeuuid) ' +
+          'VALUES (?, ?, ?, ?, ?, ?)', table);
+          async.each(values, function (params, next) {
+            client.execute(query, params, {prepare: true}, next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          var query = util.format('SELECT * FROM %s WHERE id IN ?', table);
+          client.execute(query, [values.map(function (x) { return x[0]; })], {prepare: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result.rows.length);
+            result.rows.forEach(function (row) {
+              var expectedValues = helper.first(values, function (item) { return item[0] === row.id});
+              helper.assertInstanceOf(row['set_text'], SetPF);
+              assert.strictEqual(row['set_text'].toString(), expectedValues[1].toString());
+              assert.strictEqual(row['set_timestamp'].toString(), expectedValues[2].toString());
+              assert.strictEqual(row['set_float'].toString(), expectedValues[3].toString());
+              assert.strictEqual(row['set_bigint'].toString(), expectedValues[4].toString());
+              if (row['set_timeuuid'] === null) {
+                assert.strictEqual(expectedValues[5], null);
+              }
+              else {
+                assert.strictEqual(row['set_timeuuid'].toString(), expectedValues[5].toString());
+              }
             });
             seriesNext();
           });

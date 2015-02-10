@@ -404,6 +404,33 @@ describe('clientOptions', function () {
         });
       });
     });
+    it('should validate the encoding options', function () {
+      function DummyConstructor() {}
+      assert.doesNotThrow(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: {}
+        });
+      });
+      assert.doesNotThrow(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: helper.Map}
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: 1}
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: DummyConstructor}
+        });
+      });
+    });
   });
 });
 

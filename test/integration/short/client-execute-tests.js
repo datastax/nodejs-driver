@@ -94,6 +94,17 @@ describe('Client', function () {
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
+    it('should use parameter hints for custom map polyfills @c2_0', function (done) {
+      var columns = 'id, map_sample';
+      var map = new helper.Map();
+      map.set('k1', 'value 1');
+      map.set('k2', 'value 2');
+      var values = [types.uuid(), map];
+      //complete info
+      var hints = [null, 'map<text, text>'];
+      var client = newInstance({encoding: { map: helper.Map }});
+      insertSelectTest(client, table, columns, values, hints, done);
+    });
     it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
       var pageState = null;

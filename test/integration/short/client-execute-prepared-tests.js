@@ -266,16 +266,68 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should encode and decode maps using Map and polyfills', function (done) {
+      var client = newInstance({ encoding: { map: helper.Map}});
+      var keyspace = helper.getRandomName('ks');
+      var table = keyspace + '.' + helper.getRandomName('table');
+      var MapPF = helper.Map;
+      var values = [
+        [
+          //map1 to n with array of length 2 as values
+          types.uuid(),
+          new MapPF([['k1', 'v1'], ['k2', 'v2'], ['k3', 'v33333']]),
+          new MapPF([[-100, new Date(1423499543481)], [1, new Date()]]),
+          new MapPF([[new Date(1413496543466), -2], [new Date(), 1.1233799457550049]]),
+          new MapPF([[types.Integer.fromString('100000001'), true]]),
+          new MapPF([[types.timeuuid(), types.BigDecimal.fromString('1.20008')], [types.timeuuid(), types.BigDecimal.fromString('-9.26')]])
+        ]
+      ];
+      var createTableCql = util.format('CREATE TABLE %s ' +
+        '(id uuid primary key, ' +
+        'map_text_text map<text,text>, ' +
+        'map_int_date map<int,timestamp>, ' +
+        'map_date_float map<timestamp,float>, ' +
+        'map_varint_boolean map<varint,boolean>, ' +
+        'map_timeuuid_text map<timeuuid,decimal>)', table);
+      async.series([
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(client.execute, client, createTableCql),
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, map_text_text, map_int_date, map_date_float, map_varint_boolean, map_timeuuid_text) ' +
+          'VALUES (?, ?, ?, ?, ?, ?)', table);
+          async.each(values, function (params, next) {
+            client.execute(query, params, {prepare: true}, next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          var query = util.format('SELECT * FROM %s WHERE id IN ?', table);
+          client.execute(query, [values.map(function (x) { return x[0]; })], {prepare: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result.rows.length);
+            result.rows.forEach(function (row) {
+              var expectedValues = helper.first(values, function (item) { return item[0] === row.id});
+              helper.assertInstanceOf(row['map_text_text'], MapPF);
+              assert.strictEqual(row['map_text_text'].toString(), expectedValues[1].toString());
+              assert.strictEqual(row['map_int_date'].toString(), expectedValues[2].toString());
+              assert.strictEqual(row['map_date_float'].toString(), expectedValues[3].toString());
+              assert.strictEqual(row['map_varint_boolean'].toString(), expectedValues[4].toString());
+              assert.strictEqual(row['map_timeuuid_text'].toString(), expectedValues[5].toString());
+            });
+            seriesNext();
+          });
+        }
+      ], done);
+    });
   });
 });
 
 /**
  * @returns {Client}
  */
-function newInstance() {
-  //var logEmitter = function (name, type) { if (type === 'verbose1') { return; } console.log.apply(console, arguments);};
+function newInstance(options) {
   var logEmitter = function () {};
-  var options = utils.extend({logEmitter: logEmitter}, helper.baseOptions);
+  options = options || {};
+  options = utils.extend(options, {logEmitter: logEmitter}, helper.baseOptions);
   return new Client(options);
 }
 

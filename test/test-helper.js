@@ -150,11 +150,13 @@ var helper = {
       val2 = val2.toString('hex');
     }
     if (val1 instanceof types.Long && val2 instanceof types.Long ||
-      val1 instanceof Date && val2 instanceof Date) {
+        val1 instanceof Date && val2 instanceof Date) {
       val1 = val1.toString();
       val2 = val2.toString();
     }
-    if (util.isArray(val1) || (val1.constructor && val1.constructor.name === 'Object')) {
+    if (util.isArray(val1) ||
+        (val1.constructor && val1.constructor.name === 'Object') ||
+        val1 instanceof helper.Map) {
       val1 = util.inspect(val1, {depth: null});
       val2 = util.inspect(val2, {depth: null});
     }
@@ -267,6 +269,17 @@ var helper = {
       }
     }
     return undefined;
+  },
+  /**
+   * @param {Array} arr
+   * @param {Function }predicate
+   */
+  first: function (arr, predicate) {
+    var filterArr = arr.filter(predicate);
+    if (filterArr.length === 0) {
+      throw new Error('Item not found: ' + predicate);
+    }
+    return filterArr[0];
   },
   /**
    * Returns the values of an object
@@ -438,8 +451,8 @@ Ccm.prototype.getPath = function (subPath) {
  * A polyfill of Map, valid for testing. It does not support update of values
  * @constructor
  */
-function MapPolyFill() {
-  this.arr = [];
+function MapPolyFill(arr) {
+  this.arr = arr || [];
   var self = this;
   Object.defineProperty(this, 'size', {
     get: function() { return self.arr.length; },
@@ -462,6 +475,10 @@ MapPolyFill.prototype.forEach = function (callback) {
     //first the value, then the key
     callback(item[1], item[0]);
   });
+};
+
+MapPolyFill.prototype.toString = function() {
+  return this.arr.toString();
 };
 
 module.exports = helper;

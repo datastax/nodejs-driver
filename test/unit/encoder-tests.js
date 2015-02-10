@@ -307,6 +307,47 @@ describe('encoder', function () {
       decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
       assert.strictEqual(decoded.arr.toString(), m.arr.toString());
     });
+    it('should encode/decode ES6 Map as maps', function () {
+      //noinspection JSUnresolvedVariable
+      if (typeof Map !== 'function') {
+        //Running on Node.js version where Ecmascript 6 Maps are not available
+        return;
+      }
+      function getValues(m) {
+        var arr = [];
+        m.forEach(function (val, key) {
+          arr.push([key, val])
+        });
+        return arr.toString();
+      }
+      //noinspection JSUnresolvedVariable
+      var Es6Map = Map;
+      var encoder = new Encoder(2, { encoding: { map: Es6Map}});
+      var m = new Es6Map();
+      m.set('k1', 'v1');
+      m.set('k2', 'v2');
+      var encoded = encoder.encode(m, 'map<text,text>');
+      assert.strictEqual(encoded.toString('hex'), '000200026b310002763100026b3200027632');
+      var decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
+      helper.assertInstanceOf(decoded, Es6Map);
+      assert.strictEqual(getValues(decoded), getValues(m));
+
+      m = new Es6Map();
+      m.set('k1', 1);
+      m.set('k2', 2);
+      m.set('k3', 3);
+      encoded = encoder.encode(m, 'map<text,int>');
+      assert.strictEqual(encoded.toString('hex'), '000300026b3100040000000100026b3200040000000200026b33000400000003');
+      decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
+      assert.strictEqual(getValues(decoded), getValues(m));
+
+      m = new Es6Map();
+      m.set(new Date('2005-08-05'), 10);
+      m.set(new Date('2010-04-29'), 2);
+      encoded = encoder.encode(m, 'map<timestamp,int>');
+      decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.timestamp], [dataTypes.int]]]);
+      assert.strictEqual(getValues(decoded), getValues(m));
+    });
   });
   describe('#setRoutingKey', function () {
     var encoder = new Encoder(2, {});

@@ -353,7 +353,7 @@ describe('Client', function () {
           async.times(100, function (n, next) {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
               assert.ifError(err);
-              hosts[result._queriedHost] = true;
+              hosts[result.info.queriedHost] = true;
               next();
             });
           }, seriesNext);
@@ -404,7 +404,7 @@ describe('Client', function () {
           async.times(10, function (n, next) {
             client.execute(query, function (err, result) {
               assert.ifError(err);
-              hosts[result._queriedHost] = true;
+              hosts[result.info.queriedHost] = true;
               next();
             });
           }, seriesNext);

@@ -50,6 +50,18 @@ describe('Client', function () {
         });
       });
     });
+    it('should callback with an empty Array instance as rows when not found', function (done) {
+      var client = newInstance();
+      var query = "SELECT * FROM system.schema_keyspaces WHERE keyspace_name = '__ks_does_not_exists'";
+      client.execute(query, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result);
+        assert.ok(util.isArray(result.rows));
+        helper.assertInstanceOf(result, types.ResultSet);
+        assert.strictEqual(result.rows.length, 0);
+        done();
+      });
+    });
     it('should handle 500 parallel queries', function (done) {
       var client = newInstance();
       async.times(500, function (n, next) {

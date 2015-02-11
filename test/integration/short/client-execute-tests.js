@@ -259,6 +259,40 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should return the column definitions', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function verifyColumns(next) {
+          var query = util.format('SELECT text_sample, timestamp_sample, int_sample, timeuuid_sample, list_sample2, map_sample from %s LIMIT 1', table);
+          client.execute(query, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result.columns);
+            assert.ok(util.isArray(result.columns));
+            assert.strictEqual(result.columns.length, 6);
+            assert.strictEqual(result.columns[1].type, types.dataTypes.timestamp);
+            assert.strictEqual(result.columns[1].subtypes, null);
+            assert.strictEqual(result.columns[2].type, types.dataTypes.int);
+            assert.strictEqual(result.columns[4].name, 'list_sample2');
+            assert.strictEqual(result.columns[4].type, types.dataTypes.list);
+            assert.strictEqual(result.columns[4].subtypes[0], types.dataTypes.int);
+            assert.strictEqual(result.columns[5].type, types.dataTypes.map);
+            assert.ok(
+              result.columns[5].subtypes[0].type === types.dataTypes.text ||
+              result.columns[5].subtypes[0].type === types.dataTypes.varchar);
+            next();
+          });
+        },
+        function verifyColumnsInAnEmptyResultSet(next) {
+          var query = "SELECT * from system.schema_keyspaces WHERE keyspace_name = '__ks_does_not_exists'";
+          client.execute(query, function (err, result) {
+            assert.ifError(err);
+            assert.ok(!result.columns);
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

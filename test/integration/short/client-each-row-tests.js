@@ -291,7 +291,8 @@ describe('Client', function () {
     });
     it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
-      var pageState = null;
+      var metaPageState;
+      var pageState;
       async.series([
         function truncate(seriesNext) {
           client.eachRow('TRUNCATE ' + table, [], noop, seriesNext);
@@ -311,7 +312,8 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(counter, 70);
             assert.strictEqual(result.rowLength, counter);
-            pageState = result.meta.pageState;
+            pageState = result.pageState;
+            metaPageState = result.meta.pageState;
             seriesNext();
           });
         },
@@ -319,6 +321,19 @@ describe('Client', function () {
           //The remaining
           var counter = 0;
           client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: pageState}, function (n, row) {
+            assert.ok(row);
+            counter++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 61);
+            assert.strictEqual(counter, result.rowLength);
+            seriesNext();
+          });
+        },
+        function selectDataRemainingWithMetaPageState(seriesNext) {
+          //The remaining
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: metaPageState}, function (n, row) {
             assert.ok(row);
             counter++;
           }, function (err, result) {

@@ -127,7 +127,8 @@ describe('Client', function () {
     });
     it('should use pageState and fetchSize @c2_0', function (done) {
       var client = newInstance();
-      var pageState = null;
+      var pageState;
+      var metaPageState;
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       async.series([
@@ -148,13 +149,22 @@ describe('Client', function () {
           client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 70);
-            pageState = result.meta.pageState;
+            pageState = result.pageState;
+            metaPageState = result.meta.pageState;
             seriesNext();
           });
         },
         function selectDataRemaining(seriesNext) {
           //The remaining
           client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 30);
+            seriesNext();
+          });
+        },
+        function selectDataRemainingWithMetaPageState(seriesNext) {
+          //The remaining
+          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: metaPageState}, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 30);
             seriesNext();

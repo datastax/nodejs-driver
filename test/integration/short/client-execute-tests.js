@@ -135,7 +135,9 @@ describe('Client', function () {
           client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 70}, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 70);
-            pageState = result.meta.pageState;
+            pageState = result.pageState;
+            //ResultSet#pageState is the hex string representation of the meta.pageState
+            assert.strictEqual(pageState, result.meta.pageState.toString('hex'));
             seriesNext();
           });
         },

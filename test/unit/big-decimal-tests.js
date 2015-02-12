@@ -1,7 +1,6 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var uuid = require('node-uuid');
 var async = require('async');
 var utils = require('../../lib/utils.js');
 

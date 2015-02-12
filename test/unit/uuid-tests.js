@@ -5,6 +5,7 @@ var utils = require('../../lib/utils');
 var helper = require('../test-helper');
 
 var Uuid = require('../../lib/types').Uuid;
+var TimeUuid = require('../../lib/types').TimeUuid;
 
 describe('Uuid', function () {
   describe('constructor', function () {
@@ -103,6 +104,20 @@ describe('Uuid', function () {
         values[Uuid.random().toString()] = true;
       }
       assert.strictEqual(Object.keys(values).length, length);
+    });
+  });
+});
+describe('TimeUuid', function () {
+  describe('constructor()', function () {
+    it('should generate based on the parameters', function () {
+      //Gregorian calendar epoch
+      var val = new TimeUuid(new Date(-12219292800000), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      assert.strictEqual(val.toString(), '00000000-0000-1000-8000-000000000000');
+      val = new TimeUuid(new Date(-12219292800000 + 1000), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      assert.strictEqual(val.toString(), '00989680-0000-1000-8000-000000000000');
+      //unix  epoch
+      val = new TimeUuid(new Date(0), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      assert.strictEqual(val.toString(), '13814000-1dd2-11b2-8000-000000000000');
     });
   });
 });

@@ -144,7 +144,7 @@ describe('Client', function () {
         function (next) {
           async.times(length, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
-            query = util.format(query, table, types.uuid(), n, new types.Long(n, 0x090807).toString());
+            query = util.format(query, table, types.Uuid.random(), n, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
         },
@@ -186,7 +186,7 @@ describe('Client', function () {
         function (next) {
           async.times(length, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
-            query = util.format(query, table, types.uuid(), n + 1, new types.Long(n, 0x090807).toString());
+            query = util.format(query, table, types.Uuid.random(), n + 1, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
         },

@@ -47,6 +47,16 @@ describe('Uuid', function () {
       assert.strictEqual(val3.equals(val2), false);
     });
   });
+  describe('#getBuffer()', function () {
+    it('should return the Buffer representation', function () {
+      var buf = new Buffer(16);
+      var val = new Uuid(buf);
+      assert.strictEqual(val.getBuffer().toString('hex'), buf.toString('hex'));
+      buf = new Buffer('ffffccddeeff00222233445566778813', 'hex');
+      val = new Uuid(buf);
+      assert.strictEqual(val.getBuffer().toString('hex'), buf.toString('hex'));
+    });
+  });
   describe('fromString()', function () {
     it('should validate that the string', function () {
       assert.throws(function () {
@@ -70,16 +80,6 @@ describe('Uuid', function () {
       assert.strictEqual(val.buffer.toString('hex'), 'acb1ccddeeff00112233445566778813');
       val = Uuid.fromString('ffffccdd-eeff-0022-2233-445566778813');
       assert.strictEqual(val.buffer.toString('hex'), 'ffffccddeeff00222233445566778813');
-    });
-  });
-  describe('toBuffer()', function () {
-    it('should return the Buffer representation', function () {
-      var buf = new Buffer(16);
-      var val = new Uuid(buf);
-      assert.strictEqual(Uuid.toBuffer(val).toString('hex'), buf.toString('hex'));
-      buf = new Buffer('ffffccddeeff00222233445566778813', 'hex');
-      val = new Uuid(buf);
-      assert.strictEqual(Uuid.toBuffer(val).toString('hex'), buf.toString('hex'));
     });
   });
   describe('random()', function () {
@@ -172,6 +172,15 @@ describe('TimeUuid', function () {
       assert.strictEqual(Object.keys(values).length, length);
       //next should collide
       assert.strictEqual(values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()], true);
+    });
+  });
+  describe('fromString()', function () {
+    it('should parse the string representation', function () {
+      var text = '3d555680-9886-11e4-8101-010101010101';
+      var val = TimeUuid.fromString(text);
+      helper.assertInstanceOf(val, TimeUuid);
+      assert.strictEqual(val.toString(), text);
+      assert.strictEqual(val.getDate().getTime(), new Date('2015-01-10 5:05:05 GMT+0000').getTime());
     });
   });
   describe('now()', function () {

@@ -20,7 +20,9 @@ describe('encoder', function () {
       assertGuessed(new Buffer('bip bop'), dataTypes.blob, 'Guess type for a buffer value failed');
       assertGuessed(new Date(), dataTypes.timestamp, 'Guess type for a Date value failed');
       assertGuessed(new types.Long(10), dataTypes.bigint, 'Guess type for a Int 64 value failed');
-      assertGuessed(types.uuid(), dataTypes.uuid, 'Guess type for a UUID value failed');
+      assertGuessed(types.Uuid.random(), dataTypes.uuid, 'Guess type for a UUID value failed');
+      assertGuessed(types.TimeUuid.now(), dataTypes.uuid, 'Guess type for a TimeUuid value failed');
+      assertGuessed(types.TimeUuid.now().toString(), dataTypes.uuid, 'Guess type for a string uuid value failed');
       assertGuessed(types.timeuuid(), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
       assertGuessed(types.Integer.fromNumber(1), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(types.BigDecimal.fromString('1.01'), dataTypes.decimal, 'Guess type for a varint value failed');
@@ -178,6 +180,15 @@ describe('encoder', function () {
       var encoded = typeEncoder.encode(value, {type: dataTypes.list, subtypes: [dataTypes.float]});
       var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.float]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
+    });
+    it('should encode stringified uuids for backward-compatibility', function () {
+      var uuid = types.Uuid.random();
+      var encoded = typeEncoder.encode(uuid.toString(), types.dataTypes.uuid);
+      assert.strictEqual(encoded.toString('hex'), uuid.getBuffer().toString('hex'));
+
+      uuid = types.TimeUuid.now();
+      encoded = typeEncoder.encode(uuid.toString(), types.dataTypes.uuid);
+      assert.strictEqual(encoded.toString('hex'), uuid.getBuffer().toString('hex'));
     });
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
@@ -384,6 +395,24 @@ describe('encoder', function () {
       assert.strictEqual(encoded.toString('hex'), '00030004000000010004000000020004000003e8');
       decoded = encoder.decode(encoded, [dataTypes.set, [dataTypes.int]]);
       assert.strictEqual(decoded.toString(), m.toString());
+    });
+    it('should decode uuids into Uuid', function () {
+      var uuid = types.Uuid.random();
+      var decoded = typeEncoder.decode(uuid.getBuffer(), [dataTypes.uuid]);
+      helper.assertInstanceOf(decoded, types.Uuid);
+      assert.strictEqual(uuid.toString(), decoded.toString());
+      assert.ok(uuid.equals(decoded));
+      var decoded2 = typeEncoder.decode(types.Uuid.random().getBuffer(), [dataTypes.uuid]);
+      assert.ok(!decoded.equals(decoded2));
+    });
+    it('should decode timeuuids into TimeUuid', function () {
+      var uuid = types.TimeUuid.now();
+      var decoded = typeEncoder.decode(uuid.getBuffer(), [dataTypes.timeuuid]);
+      helper.assertInstanceOf(decoded, types.TimeUuid);
+      assert.strictEqual(uuid.toString(), decoded.toString());
+      assert.ok(uuid.equals(decoded));
+      var decoded2 = typeEncoder.decode(types.TimeUuid.now().getBuffer(), [dataTypes.timeuuid]);
+      assert.ok(!decoded.equals(decoded2));
     });
   });
   describe('#setRoutingKey', function () {

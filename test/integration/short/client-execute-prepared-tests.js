@@ -101,19 +101,19 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.uuid(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
+      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
 
       serializationTest(values, columnNames, done);
     });
     it('should serialize all null values', function (done) {
-      var values = [types.uuid(), null, null, null, null, null, null, null, null, null, null, null, null];
+      var values = [types.Uuid.random(), null, null, null, null, null, null, null, null, null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(values, columnNames, done);
     });
     it('should use prepared metadata to determine the type of params in query', function (done) {
-      var values = [types.uuid(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], new Buffer([192, 168, 1, 200])];
-      var columnNames = 'id, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
+      var values = [types.Uuid.random(), types.TimeUuid.now(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], new Buffer([192, 168, 1, 200])];
+      var columnNames = 'id, timeuuid_sample, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(values, columnNames, done);
     });
     it('should support IN clause with 1 marker @c2_0', function (done) {
@@ -249,7 +249,7 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
           async.times(150, function (n, next) {
-            var id = types.uuid();
+            var id = types.Uuid.random();
             var value = (n * 999).toString() + '.' + (100 + n * 7).toString();
             if (n % 10 === 0) {
               value = '-' + value;
@@ -284,7 +284,7 @@ describe('Client', function () {
       var values = [
         [
           //map1 to n with array of length 2 as values
-          types.uuid(),
+          types.Uuid.random(),
           new MapPF([['k1', 'v1'], ['k2', 'v2'], ['k3', 'v33333']]),
           new MapPF([[-100, new Date(1423499543481)], [1, new Date()]]),
           new MapPF([[new Date(1413496543466), -2], [new Date(), 1.1233799457550049]]),
@@ -315,7 +315,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {
-              var expectedValues = helper.first(values, function (item) { return item[0] === row.id});
+              var expectedValues = helper.first(values, function (item) { return item[0].equals(row.id); });
               helper.assertInstanceOf(row['map_text_text'], MapPF);
               assert.strictEqual(row['map_text_text'].toString(), expectedValues[1].toString());
               assert.strictEqual(row['map_int_date'].toString(), expectedValues[2].toString());
@@ -335,7 +335,7 @@ describe('Client', function () {
       var SetPF = helper.Set;
       var values = [
         [
-          types.uuid(),
+          types.Uuid.random(),
           new SetPF(['k3', 'v33333122', 'z1', 'z2']),
           new SetPF([new Date(1423499543481), new Date()]),
           new SetPF([-2, 0, 1, 1.1233799457550049]),
@@ -343,7 +343,7 @@ describe('Client', function () {
           new SetPF([types.timeuuid(), types.timeuuid(), types.timeuuid()])
         ],
         [
-          types.uuid(),
+          types.Uuid.random(),
           new SetPF(['v1']),
           new SetPF([new Date(1423199543111), new Date()]),
           new SetPF([1, 2]),
@@ -374,7 +374,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {
-              var expectedValues = helper.first(values, function (item) { return item[0] === row.id});
+              var expectedValues = helper.first(values, function (item) { return item[0].equals(row.id); });
               helper.assertInstanceOf(row['set_text'], SetPF);
               assert.strictEqual(row['set_text'].toString(), expectedValues[1].toString());
               assert.strictEqual(row['set_timestamp'].toString(), expectedValues[2].toString());

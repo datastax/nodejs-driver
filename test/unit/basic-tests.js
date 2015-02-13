@@ -1,7 +1,6 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var uuid = require('node-uuid');
 var async = require('async');
 var utils = require('../../lib/utils.js');
 
@@ -199,7 +198,39 @@ describe('types', function () {
       row['col2'] = 'val2';
       assert.strictEqual(JSON.stringify(row), JSON.stringify({'col1': 'val1', 'col2': 'val2'}));
     });
-  })
+  });
+
+  describe('uuid() backward-compatibility', function () {
+    it('should generate a random string uuid', function () {
+      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      var val = types.uuid();
+      assert.strictEqual(typeof val, 'string');
+      assert.strictEqual(val.length, 36);
+      assert.ok(uuidRegex.test(val));
+      assert.notEqual(val, types.uuid());
+    });
+    it('should fill in the values in a buffer', function () {
+      var buf = new Buffer(16);
+      var val = types.uuid(null, buf);
+      assert.strictEqual(val, buf);
+    });
+  });
+
+  describe('timeuuid() backward-compatibility', function () {
+    it('should generate a string uuid', function () {
+      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      var val = types.timeuuid();
+      assert.strictEqual(typeof val, 'string');
+      assert.strictEqual(val.length, 36);
+      assert.ok(uuidRegex.test(val));
+      assert.notEqual(val, types.timeuuid());
+    });
+    it('should fill in the values in a buffer', function () {
+      var buf = new Buffer(16);
+      var val = types.timeuuid(null, buf);
+      assert.strictEqual(val, buf);
+    });
+  });
 });
 
 describe('utils', function () {

@@ -82,7 +82,7 @@ describe('Client', function () {
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
           async.timesSeries(length, function (n, timesNext) {
-            client.eachRow(util.format(query, table, types.uuid(), n), [], noop, timesNext);
+            client.eachRow(util.format(query, table, types.Uuid.random(), n), [], noop, timesNext);
           }, next);
         },
         function select(next) {
@@ -114,7 +114,7 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], noop, next);
+            client.eachRow(query, [types.Uuid.random(), n.toString()], noop, next);
           }, seriesNext);
         },
         function selectDataMultiplePages(seriesNext) {
@@ -210,7 +210,7 @@ describe('Client', function () {
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
           async.timesSeries(length, function (n, timesNext) {
-            client.eachRow(util.format(query, table, types.uuid(), n), [], {prepare: true}, noop, timesNext);
+            client.eachRow(util.format(query, table, types.Uuid.random(), n), [], {prepare: true}, noop, timesNext);
           }, next);
         },
         function select(next) {
@@ -244,13 +244,13 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
           async.times(200, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
           async.times(135, function (n, next) {
-            client.eachRow(query, [types.uuid(), n+1], {prepare: 1}, noop, next);
+            client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function selectDataMultiplePages(seriesNext) {
@@ -300,7 +300,7 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(131, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function selectData(seriesNext) {

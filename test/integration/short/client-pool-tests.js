@@ -2,11 +2,10 @@ var assert = require('assert');
 var async = require('async');
 var domain = require('domain');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
-var errors = require('../../../lib/errors.js');
+var helper = require('../../test-helper');
+var Client = require('../../../lib/client');
+var utils = require('../../../lib/utils');
+var errors = require('../../../lib/errors');
 
 describe('Client', function () {
   this.timeout(120000);

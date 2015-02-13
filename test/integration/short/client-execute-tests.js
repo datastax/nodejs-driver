@@ -70,9 +70,9 @@ describe('Client', function () {
     });
     it('should guess known types @c2_0', function (done) {
       var client = newInstance();
-      var columns = 'id, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
+      var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
-      var values = [types.uuid(), 'text sample 1', 133, new Date(121212211), new Buffer(100), ['one', 'two']];
+      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), new Buffer(100), ['one', 'two']];
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
@@ -80,27 +80,27 @@ describe('Client', function () {
       var client = newInstance();
       var columns = 'id, text_sample, float_sample, int_sample';
       //a precision a float32 can represent
-      var values = [types.uuid(), 'text sample', 1000.0999755859375, -12];
+      var values = [types.Uuid.random(), 'text sample', 1000.0999755859375, -12];
       var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float, types.dataTypes.int];
       insertSelectTest(client, table, columns, values, hints, done);
     });
     it('should use parameter hints as string for simple types @c2_0', function (done) {
       var columns = 'id, text_sample, float_sample, int_sample';
-      var values = [types.uuid(), 'text sample', -9, 1];
+      var values = [types.Uuid.random(), 'text sample', -9, 1];
       var hints = [null, 'text', 'float', 'int'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
     it('should use parameter hints as string for complex types partial @c2_0', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
-      var values = [types.uuid(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
+      var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       var hints = [null, 'map', 'list', 'set'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
     it('should use parameter hints as string for complex types complete @c2_0', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
-      var values = [types.uuid(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
+      var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       //complete info
       var hints = [null, 'map<text, text>', 'list<text>', 'set<text>'];
       var client = newInstance();
@@ -111,7 +111,7 @@ describe('Client', function () {
       var map = new helper.Map();
       map.set('k1', 'value 1');
       map.set('k2', 'value 2');
-      var values = [types.uuid(), map];
+      var values = [types.Uuid.random(), map];
       //complete info
       var hints = [null, 'map<text, text>'];
       var client = newInstance({encoding: { map: helper.Map }});
@@ -127,7 +127,7 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
-            client.execute(query, [types.uuid(), n.toString()], next);
+            client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
         },
         function selectData(seriesNext) {
@@ -161,7 +161,7 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
-            client.execute(query, [types.uuid(), n.toString()], next);
+            client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
         },
         function selectData(seriesNext) {
@@ -179,7 +179,7 @@ describe('Client', function () {
       var client = newInstance();
       var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
       //valid params
-      var params = [types.uuid(), types.uuid(), types.uuid()];
+      var params = [types.Uuid.random(), types.Uuid.random(), types.Uuid.random()];
       async.series([
         client.connect.bind(client),
         function hintsArrayAsObject(next) {

@@ -1,0 +1,16 @@
+{
+  "source": {
+    "include": [
+      "lib/types",
+      "lib/auth",
+      "lib/policies",
+      "lib/client.js",
+      "lib/errors.js"
+    ]
+  },
+  "templates": {
+    "default": {
+      "outputSourceFiles": false
+    }
+  }
+}

@@ -185,4 +185,16 @@ describe('TimeUuid', function () {
       assert.strictEqual(val.getDate().getTime(), date.getTime());
     });
   });
+  describe('min()', function () {
+    it('should generate uuid with the minimum node and clock id values', function () {
+      var val = TimeUuid.min(new Date());
+      assert.strictEqual(val.getNodeId().toString('hex'), '808080808080');
+    });
+  });
+  describe('max()', function () {
+    it('should generate uuid with the maximum node and clock id values', function () {
+      var val = TimeUuid.max(new Date());
+      assert.strictEqual(val.getNodeId().toString('hex'), '7f7f7f7f7f7f');
+    });
+  });
 });

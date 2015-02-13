@@ -97,7 +97,7 @@ describe('Uuid', function () {
       assert.strictEqual(val.toString().charAt(14), '4');
       assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
     });
-    it('should generate v4 Uuid that do not collide', function () {
+    it('should generate v4 uuids that do not collide', function () {
       var values = {};
       var length = 100000;
       for (var i = 0; i < length; i++) {
@@ -118,6 +118,71 @@ describe('TimeUuid', function () {
       //unix  epoch
       val = new TimeUuid(new Date(0), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
       assert.strictEqual(val.toString(), '13814000-1dd2-11b2-8000-000000000000');
+      val = new TimeUuid(new Date(0), 0, new Buffer([255,255,255,255,255,255]), new Buffer([255,255]));
+      assert.strictEqual(val.toString(), '13814000-1dd2-11b2-bfff-ffffffffffff');
+      val = new TimeUuid(new Date(0), 0, new Buffer([1,1,1,1,1,1]), new Buffer([1,1]));
+      assert.strictEqual(val.toString(), '13814000-1dd2-11b2-8101-010101010101');
+
+      val = new TimeUuid(new Date('2015-01-10 5:05:05 GMT+0000'), 0, new Buffer([1,1,1,1,1,1]), new Buffer([1,1]));
+      assert.strictEqual(val.toString(), '3d555680-9886-11e4-8101-010101010101');
+    });
+  });
+  describe('#getDatePrecision()', function () {
+    it('should get the Date and ticks of the Uuid representation', function () {
+      var date = new Date();
+      var val = new TimeUuid(date, 1);
+      assert.strictEqual(val.getDatePrecision().ticks, 1);
+      assert.strictEqual(val.getDatePrecision().date.getTime(), date.getTime());
+
+      date = new Date('2015-02-13 06:07:08.450');
+      val = new TimeUuid(date, 699);
+      assert.strictEqual(val.getDatePrecision().ticks, 699);
+      assert.strictEqual(val.getDatePrecision().date.getTime(), date.getTime());
+      assert.strictEqual(val.getDate().getTime(), date.getTime());
+    });
+  });
+  describe('#getNodeId()', function () {
+    it('should get the node id of the Uuid representation', function () {
+      var val = new TimeUuid(new Date(), 0, new Buffer([1, 2, 3, 4, 5, 6]));
+      helper.assertInstanceOf(val.getNodeId(), Buffer);
+      assert.strictEqual(val.getNodeId().toString('hex'), '010203040506');
+      val = new TimeUuid(new Date(), 0, 'host01');
+      assert.strictEqual(val.getNodeIdString(), 'host01');
+      val = new TimeUuid(new Date(), 0, 'h12288');
+      assert.strictEqual(val.getNodeIdString(), 'h12288');
+    });
+  });
+  describe('fromDate()', function () {
+    it('should generate v1 uuids that do not collide', function () {
+      var values = {};
+      var length = 50000;
+      var date = new Date();
+      for (var i = 0; i < length; i++) {
+        values[TimeUuid.fromDate(date).toString()] = true;
+      }
+      assert.strictEqual(Object.keys(values).length, length);
+    });
+    it('should collide exactly at 10001 if date but not the ticks are specified', function () {
+      var values = {};
+      var length = 10000;
+      var date = new Date();
+      for (var i = 0; i < length; i++) {
+        values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()] = true;
+      }
+      assert.strictEqual(Object.keys(values).length, length);
+      //next should collide
+      assert.strictEqual(values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()], true);
+    });
+  });
+  describe('now()', function () {
+    it('should pass the nodeId when provided', function () {
+      var val = TimeUuid.now('h12345');
+      assert.strictEqual(val.getNodeIdString(), 'h12345');
+    });
+    it('should use current date', function () {
+      var date = new Date();
+      var val = TimeUuid.now();
+      assert.strictEqual(val.getDate().getTime(), date.getTime());
     });
   });
 });

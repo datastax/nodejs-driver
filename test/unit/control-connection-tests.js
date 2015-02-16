@@ -3,8 +3,9 @@ var async = require('async');
 
 var helper = require('../test-helper.js');
 var ControlConnection = require('../../lib/control-connection.js');
-var Host = require('../../lib/host.js').Host;
-var utils = require('../../lib/utils.js');
+var Host = require('../../lib/host').Host;
+var utils = require('../../lib/utils');
+var types = require('../../lib/types');
 var clientOptions = require('../../lib/client-options.js');
 
 describe('ControlConnection', function () {
@@ -42,13 +43,13 @@ describe('ControlConnection', function () {
       var cc = new ControlConnection(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
-      var peer = new Buffer([100, 100, 100, 100]);
+      var peer = getInet([100, 100, 100, 100]);
 
-      var row = {'rpc_address': new Buffer([1, 2, 3, 4]), peer: peer};
+      var row = {'rpc_address': getInet([1, 2, 3, 4]), peer: peer};
       var address = cc.getAddressForPeerHost(row);
       assert.strictEqual(address, '1.2.3.4');
 
-      row = {'rpc_address': new Buffer([0, 0, 0, 0]), peer: peer};
+      row = {'rpc_address': getInet([0, 0, 0, 0]), peer: peer};
       address = cc.getAddressForPeerHost(row);
       //should return peer address
       assert.strictEqual(address, '100.100.100.100');
@@ -67,13 +68,13 @@ describe('ControlConnection', function () {
       cc.log = helper.noop;
       var rows = [
         //valid rpc address
-        {'rpc_address': new Buffer([5, 4, 3, 2]), peer: new Buffer([1, 1, 1, 1])},
+        {'rpc_address': getInet([5, 4, 3, 2]), peer: getInet([1, 1, 1, 1])},
         //valid rpc address
-        {'rpc_address': new Buffer([9, 8, 7, 6]), peer: new Buffer([1, 1, 1, 1])},
+        {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1])},
         //should not be added
         {'rpc_address': null, peer: new Buffer([1, 1, 1, 1])},
         //should use peer address
-        {'rpc_address': new Buffer([0, 0, 0, 0]), peer: new Buffer([5, 5, 5, 5])}
+        {'rpc_address': getInet([0, 0, 0, 0]), peer: getInet([5, 5, 5, 5])}
       ];
       cc.setPeersInfo(true, {rows: rows});
       assert.strictEqual(cc.hosts.length, 3);
@@ -83,3 +84,11 @@ describe('ControlConnection', function () {
     });
   });
 });
+
+/**
+ * @param {Array} bytes
+ * @returns {exports.InetAddress}
+ */
+function getInet(bytes) {
+  return new types.InetAddress(new Buffer(bytes));
+}

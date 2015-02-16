@@ -27,6 +27,7 @@ describe('encoder', function () {
       assertGuessed(types.Integer.fromNumber(1), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(types.BigDecimal.fromString('1.01'), dataTypes.decimal, 'Guess type for a varint value failed');
       assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
+      assertGuessed(new types.InetAddress(new Buffer([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
 
@@ -133,6 +134,21 @@ describe('encoder', function () {
       value['12.90'] = 'decimal2';
       encoded = typeEncoder.encode(value, 'map<decimal, text>');
       decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.decimal], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['127.0.0.1'] = 'inet1';
+      value['12.10.10.2'] = 'inet2';
+      encoded = typeEncoder.encode(value, 'map<inet, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.inet], [dataTypes.text]]]);
+      assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+      value = {};
+      value['::1'] = 'inet1';
+      value['::2233:0:0:b1'] = 'inet2';
+      value['aabb::11:2233:4455:6677:88ff'] = 'inet3';
+      encoded = typeEncoder.encode(value, 'map<inet, text>');
+      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.inet], [dataTypes.text]]]);
       assert.strictEqual(util.inspect(decoded), util.inspect(value));
     });
     it('should encode and decode list<int>', function () {
@@ -297,6 +313,23 @@ describe('encoder', function () {
       assert.strictEqual(buffer.toString('hex'), '0000000304');
       buffer = encoder.encode(-25.5, dataTypes.decimal);
       assert.strictEqual(buffer.toString('hex'), '00000001ff01');
+    });
+    it('should encode/decode InetAddress/Buffer as inet', function () {
+      var InetAddress = types.InetAddress;
+      var encoder = new Encoder(2, {});
+      var val1 = new InetAddress(new Buffer([15, 15, 15, 1]));
+      var encoded = encoder.encode(val1, dataTypes.inet);
+      assert.strictEqual(encoded.toString('hex'), '0f0f0f01');
+      var val2 = encoder.decode(encoded, [dataTypes.inet]);
+      assert.strictEqual(val2.toString(), '15.15.15.1');
+      assert.ok(val1.equals(val2));
+      val1 = new InetAddress(new Buffer('00000000000100112233445500aa00bb', 'hex'));
+      encoded = encoder.encode(val1, dataTypes.inet);
+      val2 = encoder.decode(encoded, [dataTypes.inet]);
+      assert.ok(val1.equals(val2));
+      //Buffers are valid InetAddress
+      encoded = encoder.encode(val1.getBuffer(), dataTypes.inet);
+      assert.strictEqual(encoded.toString('hex'), val1.getBuffer().toString('hex'));
     });
     it('should encode/decode Map polyfills as maps', function () {
       var encoder = new Encoder(2, { encoding: { map: helper.Map}});

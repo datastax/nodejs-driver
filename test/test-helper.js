@@ -151,6 +151,7 @@ var helper = {
     }
     if ((val1 instanceof types.Long && val2 instanceof types.Long) ||
         (val1 instanceof Date && val2 instanceof Date) ||
+        (val1 instanceof types.InetAddress && val2 instanceof types.InetAddress) ||
         (val1 instanceof types.Uuid && val2 instanceof types.Uuid)) {
       val1 = val1.toString();
       val2 = val2.toString();

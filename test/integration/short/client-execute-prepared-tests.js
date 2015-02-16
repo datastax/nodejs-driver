@@ -101,9 +101,10 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]), true, new Date(1221111111), null, null, null, null];
-      var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
-
+      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]),
+        true, new Date(1221111111), types.InetAddress.fromString('10.12.0.1'), null, null, null];
+      var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
+        'boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(values, columnNames, done);
     });
     it('should serialize all null values', function (done) {
@@ -112,7 +113,7 @@ describe('Client', function () {
       serializationTest(values, columnNames, done);
     });
     it('should use prepared metadata to determine the type of params in query', function (done) {
-      var values = [types.Uuid.random(), types.TimeUuid.now(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], new Buffer([192, 168, 1, 200])];
+      var values = [types.Uuid.random(), types.TimeUuid.now(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], types.InetAddress.fromString('192.168.1.1')];
       var columnNames = 'id, timeuuid_sample, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(values, columnNames, done);
     });

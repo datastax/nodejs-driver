@@ -133,12 +133,8 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       async.series([
-        function (next) {
-          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
-        },
-        function (next) {
-          client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
-        },
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(client.execute, client, helper.createTableCql(table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
@@ -179,26 +175,21 @@ describe('Client', function () {
       var table = keyspace + '.' + helper.getRandomName('table');
       var expectedRows = {};
       async.series([
-        function (next) {
-          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
-        },
-        function (next) {
-          var query = util.format('CREATE TABLE %s (id uuid primary key, val varint)', table);
-          client.execute(query, helper.waitSchema(client, next));
-        },
-          function insertData(seriesNext) {
-            var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
-            async.times(150, function (n, next) {
-              var id = types.uuid();
-              var value = types.Integer.fromNumber(n * 999);
-              value = value.multiply(types.Integer.fromString('9999901443'));
-              if (n % 2 === 0) {
-                //as a string also
-                value = value.toString();
-              }
-              expectedRows[id] = value.toString();
-              client.execute(query, [id, value], {prepare: 1}, next);
-            }, seriesNext);
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
+          async.times(150, function (n, next) {
+            var id = types.uuid();
+            var value = types.Integer.fromNumber(n * 999);
+            value = value.multiply(types.Integer.fromString('9999901443'));
+            if (n % 2 === 0) {
+              //as a string also
+              value = value.toString();
+            }
+            expectedRows[id] = value.toString();
+            client.execute(query, [id, value], {prepare: 1}, next);
+          }, seriesNext);
         },
         function selectData(seriesNext) {
           client.execute(util.format('SELECT id, val, varintAsBlob(val) FROM %s', table), [], {prepare: 1}, function (err, result) {
@@ -240,13 +231,8 @@ describe('Client', function () {
       var table = keyspace + '.' + helper.getRandomName('table');
       var expectedRows = {};
       async.series([
-        function (next) {
-          client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
-        },
-        function (next) {
-          var query = util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table);
-          client.execute(query, helper.waitSchema(client, next));
-        },
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
           async.times(150, function (n, next) {
@@ -411,12 +397,8 @@ function serializationTest(values, columns, done) {
   var keyspace = helper.getRandomName('ks');
   var table = keyspace + '.' + helper.getRandomName('table');
   async.series([
-    function (next) {
-      client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
-    },
-    function (next) {
-      client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
-    },
+    helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+    helper.toTask(client.execute, client, helper.createTableCql(table)),
     function (next) {
       var markers = '?';
       var columnsSplit = columns.split(',');

@@ -37,6 +37,28 @@ describe('ControlConnection', function () {
       assert.strictEqual(typeof cc.metadata.keyspaces[ksName], 'undefined');
     });
   });
+  describe('#nodeStatusChangeHandler()', function () {
+    it('should call event address toString() to get', function () {
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var toStringCalled = false;
+      var hostsGetCalled = false;
+      var cc = new ControlConnection(options);
+      cc.hosts = { get : function () { hostsGetCalled = true;}};
+      var event = { inet: { address: { toString: function () { toStringCalled = true; return 'host1';}}}};
+      cc.nodeStatusChangeHandler(event);
+      assert.strictEqual(toStringCalled, true);
+      assert.strictEqual(hostsGetCalled, true);
+    });
+    it('should set the node down', function () {
+      var downSet = false;
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var cc = new ControlConnection(options);
+      cc.hosts = { get : function () { return { setDown: function () { downSet = true;}} }};
+      var event = { inet: { address: { toString: function () { return 'host1';}}}};
+      cc.nodeStatusChangeHandler(event);
+      assert.strictEqual(downSet, true);
+    });
+  });
   describe('#getAddressForPeerHost()', function() {
     it('should handle null, 0.0.0.0 and valid addresses', function () {
       var options = clientOptions.extend({}, helper.baseOptions);

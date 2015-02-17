@@ -346,6 +346,36 @@ describe('Client', function () {
         });
       });
     });
+    it('should allow named parameters', function (done) {
+      var client = newInstance();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
+      var consistency = types.consistencies.quorum;
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, time, text_sample) VALUES (:paramId, :time, :text_sample)', table1),
+        params: { text_SAMPLE: 'named params', paramID: id1, time: types.TimeUuid.now()}
+      },{
+        query: util.format('INSERT INTO %s (id, time, int_sample, varint_sample) VALUES (?, ?, ?, ?)', table2),
+        params: [id2, types.TimeUuid.now(), 501, '2010']
+      }];
+      client.batch(queries, {prepare: true, consistency: consistency}, function (err) {
+        assert.ifError(err);
+        var query = 'SELECT * FROM %s where id = %s';
+        async.series([
+          helper.toTask(client.execute, client, util.format(query, table1, id1), [], {consistency: consistency}),
+          helper.toTask(client.execute, client, util.format(query, table2, id2), [], {consistency: consistency})
+        ], function (err, resultArray) {
+          assert.ifError(err);
+          assert.strictEqual(resultArray.length, 2);
+          var row1 = resultArray[0].rows[0];
+          assert.strictEqual(row1['text_sample'], 'named params');
+          var row2 = resultArray[1].rows[0];
+          assert.strictEqual(row2['int_sample'], 501);
+          assert.strictEqual(row2['varint_sample'].toString(), '2010');
+          done();
+        });
+      });
+    });
   });
 });
 

@@ -95,8 +95,7 @@ describe('InetAddress', function () {
     });
     it('should throw when can not parse to 4 or 16 bytes', function () {
       assert.throws(function () {
-        var inet = InetAddress.fromString('127.0.0.1.10');
-        console.log(inet);
+        InetAddress.fromString('127.0.0.1.10');
       }, Error);
     });
   });

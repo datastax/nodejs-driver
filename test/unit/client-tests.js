@@ -214,7 +214,7 @@ describe('Client', function () {
     it('should callback with error if named parameters are not provided', function (done) {
       var Client = rewire('../../lib/client.js');
       var requestHandlerMock = function () {};
-      requestHandlerMock.prototype.send = function () { };
+      requestHandlerMock.prototype.send = helper.callbackNoop;
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
       //noinspection JSAccessibilityCheck
@@ -240,8 +240,7 @@ describe('Client', function () {
         //different casing
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {ABC: 100}, {}, function (err) {
-          helper.assertInstanceOf(err, errors.ArgumentError);
-          assert.ok(err.message.indexOf('Parameter') >= 0);
+          assert.ifError(err);
           next();
         });
       }], done);
@@ -280,13 +279,13 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function (q, options, cb) {
         assert.ok(options);
         assert.ok(options.routingKey);
-        assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '0004000000ff00');
+        assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
         cb();
         done();
       };
       var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       var queryOptions = { prepare: true, routingNames: ['key1', 'key2']};
-      client.execute(query, {key2: 0xff, key1: 1}, queryOptions, helper.throwop);
+      client.execute(query, {key2: 2, key1: 1}, queryOptions, helper.throwop);
     });
   });
   describe('#batch()', function () {

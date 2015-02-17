@@ -7,6 +7,7 @@ var policies = require('../../lib/policies');
 var helper = require('../test-helper');
 var errors = require('../../lib/errors');
 var utils = require('../../lib/utils');
+var types = require('../../lib/types');
 var requests = require('../../lib/requests');
 var HostMap = require('../../lib/host').HostMap;
 var Host = require('../../lib/host').Host;
@@ -125,6 +126,7 @@ describe('Client', function () {
         },
         function (nextParallel) {
           async.times(100, function (n, next) {
+            //noinspection JSAccessibilityCheck
             client._getPrepared('QUERY TWO', next);
           }, function (err, results) {
             assert.equal(err, null);
@@ -145,6 +147,7 @@ describe('Client', function () {
       var client = new Client({contactPoints: ['host'], maxPrepared: maxPrepared});
       client.metadata = new Metadata(client.options);
       async.timesSeries(maxPrepared + 2, function (n, next) {
+        //noinspection JSAccessibilityCheck
         client._getPrepared('QUERY ' + n.toString(), next);
       }, function (err) {
         if (err) return done(err);
@@ -160,6 +163,7 @@ describe('Client', function () {
       };
       var client = new Client({contactPoints: ['host']});
       client.metadata = new Metadata(client.options);
+      //noinspection JSAccessibilityCheck
       client._getPrepared('QUERY1', function (err, id, meta) {
         assert.ok(err, 'It should callback with error');
         assert.equal(id, null);
@@ -175,6 +179,7 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
+      //noinspection JSAccessibilityCheck
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
@@ -193,6 +198,7 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
+      //noinspection JSAccessibilityCheck
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
@@ -211,6 +217,7 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function () { };
       Client.__set__("RequestHandler", requestHandlerMock);
       var client = new Client(helper.baseOptions);
+      //noinspection JSAccessibilityCheck
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
@@ -242,15 +249,44 @@ describe('Client', function () {
   });
   describe('#execute()', function () {
     it('should not support named parameters for simple statements', function (done) {
-      //when supported with protocol v3, replace test to use protocol versions
       var Client = require('../../lib/client');
+      //when supported with protocol v3, replace test to use protocol versions
       var client = new Client(helper.baseOptions);
       //fake connected
-      client.connect = function (cb) {cb(); };
+      client.connect = helper.callbackNoop;
       client.execute('QUERY', {named: 'parameter'}, function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
         done();
       });
+    });
+    it('should build the routingKey based on routingNames', function (done) {
+      var Client = rewire('../../lib/client');
+      var requestHandlerMock = function () {};
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      //fake connected
+      client.connect = helper.callbackNoop;
+      //noinspection JSAccessibilityCheck
+      client._getPrepared = function (q, cb) {
+        cb(null, new Buffer([1]), { columns: [
+          { name: 'key1', type: [types.dataTypes.int] },
+          { name: 'key2', type: [types.dataTypes.int] }
+        ]});
+      };
+      //noinspection JSAccessibilityCheck
+      client._getEncoder = function () {
+        return new Encoder(2, client.options);
+      };
+      requestHandlerMock.prototype.send = function (q, options, cb) {
+        assert.ok(options);
+        assert.ok(options.routingKey);
+        assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '0004000000ff00');
+        cb();
+        done();
+      };
+      var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+      var queryOptions = { prepare: true, routingNames: ['key1', 'key2']};
+      client.execute(query, {key2: 0xff, key1: 1}, queryOptions, helper.throwop);
     });
   });
   describe('#batch()', function () {
@@ -535,6 +571,7 @@ describe('Client', function () {
       var client = new Client(helper.baseOptions);
       client.metadata = new Metadata(client.options);
       var queriesInfo = [{info: {}}, {info: {}}];
+      //noinspection JSAccessibilityCheck
       client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
         assert.ifError(err);
         assert.strictEqual(toPrepare.length, 2);
@@ -551,6 +588,7 @@ describe('Client', function () {
         {info: { preparing: true, once: function (name, cb) { cbs.push(cb); }}}
       ];
       var calledBack = false;
+      //noinspection JSAccessibilityCheck
       client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
         assert.ifError(err);
         assert.ok(calledBack);

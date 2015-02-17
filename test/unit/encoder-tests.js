@@ -452,15 +452,19 @@ describe('encoder', function () {
     var encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {
       var options = {
+        //Its an array of 3 values
         routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
       };
       encoder.setRoutingKey([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), '00010100000102000002030300');
+      //The routingKey should have the form: [2-byte-length] + key + [0]
+      assert.strictEqual(options.routingKey.toString('hex'), '00010100' + '00010200' + '0002030300');
 
       options = {
+        //Its an array of 1 value
         routingKey: [new Buffer([1])]
       };
-      encoder.setRoutingKey([1, 'text'], options);
+      encoder.setRoutingKey([], options);
+      //the result should be a single value
       assert.strictEqual(options.routingKey.toString('hex'), '01');
     });
     it('should not affect Buffer routing keys', function () {
@@ -476,6 +480,7 @@ describe('encoder', function () {
         routingKey: new Buffer([1, 2, 3, 4])
       };
       encoder.setRoutingKey([1, 'text'], options);
+      //The routing key should take precedence over routingIndexes
       assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
     });
     it('should build routing key based on routingIndexes', function () {

@@ -37,7 +37,6 @@ describe('RequestHandler', function () {
         done();
       });
     });
-
     it('should retrow on unauthorized error', function (done) {
       var handler = new RequestHandler(null, options);
       var responseError = new errors.ResponseError();
@@ -50,7 +49,6 @@ describe('RequestHandler', function () {
         done();
       });
     });
-
     it('should retry on overloaded error', function (done) {
       var handler = new RequestHandler(null, options);
       var responseError = new errors.ResponseError();
@@ -68,7 +66,6 @@ describe('RequestHandler', function () {
         done();
       });
     });
-
     it('should rely on the RetryPolicy onWriteTimeout', function (done) {
       var policy = new retry.RetryPolicy();
       var policyCalled = false;
@@ -93,7 +90,6 @@ describe('RequestHandler', function () {
         done();
       });
     });
-
     it('should rely on the RetryPolicy onUnavailable', function (done) {
       var policy = new retry.RetryPolicy();
       var policyCalled = false;
@@ -218,6 +214,56 @@ describe('RequestHandler', function () {
       handler.prepareAndRetry(new Buffer(0), function (err) {
         assert.ifError(err);
         assert.strictEqual(queriesPrepared.toString(), handler.request.queries.map(function (x) {return x.query; }).toString());
+        done();
+      });
+    });
+  });
+  describe('#send()', function () {
+    it('should return a ResultSet with valid columns', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connection = { sendStream: function (r, o, cb) {
+        setImmediate(function () {
+          cb(null, { meta: {
+            columns: [{ type: [types.dataTypes.text], name: 'col1'}],
+            pageState: new Buffer('1234aa', 'hex')
+          }});
+        });
+      }};
+      handler.getNextConnection = function (o, cb) {
+        setImmediate(function () {
+          handler.host = { setUp: helper.noop };
+          cb(null, connection);
+        });
+      };
+      handler.send(new requests.QueryRequest('Dummy QUERY'), {}, function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        assert.ok(util.isArray(result.columns));
+        assert.strictEqual(result.columns.length, 1);
+        assert.strictEqual(result.columns[0].type, types.dataTypes.text);
+        assert.strictEqual(result.columns[0].name, 'col1');
+        assert.ok(result.info);
+        assert.strictEqual(result.pageState, '1234aa');
+        done();
+      });
+    });
+    it('should return a ResultSet with null columns when there is no metadata', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connection = { sendStream: function (r, o, cb) {
+        setImmediate(function () {
+          cb(null, {});
+        });
+      }};
+      handler.getNextConnection = function (o, cb) {
+        setImmediate(function () {
+          handler.host = { setUp: helper.noop };
+          cb(null, connection);
+        });
+      };
+      handler.send(new requests.QueryRequest('Dummy QUERY'), {}, function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        assert.strictEqual(result.columns, null);
         done();
       });
     });

@@ -141,6 +141,63 @@ describe('reconnection', function () {
         }
       ], done);
     });
+    it('should re-prepare and execute batches of prepared queries', function (done) {
+      var dummyClient = new Client(helper.baseOptions);
+      var keyspace = helper.getRandomName('ks');
+      var table = helper.getRandomName('tbl');
+      var insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      var insertQuery2 = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table);
+      var queriedHosts = {};
+      var client = new Client(utils.extend({
+        keyspace: keyspace,
+        contactPoints: helper.baseOptions.contactPoints,
+        policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)},
+        //disable heartbeat
+        pooling: { heartBeatInterval: 0}
+      }));
+      async.series([
+        function removeCcm(next) {
+          helper.ccmHelper.remove(function () {
+            //Ignore error
+            next()
+          });
+        },
+        helper.ccmHelper.start(3),
+        helper.toTask(dummyClient.execute, dummyClient, helper.createKeyspaceCql(keyspace, 3)),
+        helper.toTask(dummyClient.execute, dummyClient, helper.createTableCql(keyspace + '.' + table)),
+        //Connect using an active keyspace
+        client.connect.bind(client),
+        //Kill node1
+        helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
+        function (next) {
+          setTimeout(next, 5000);
+        },
+        function insert1(next) {
+          async.times(10, function (n, timesNext) {
+            var queries = [
+              { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
+              { query: insertQuery2, params: [types.Uuid.random(), n]}
+            ];
+            client.batch(queries, {prepare: true}, timesNext);
+          }, next);
+        },
+        //restart node1
+        helper.toTask(helper.ccmHelper.exec, null, ['node2', 'start']),
+        function insertAfterRestart(next) {
+          async.times(15, function (n, timesNext) {
+            var queries = [
+              { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
+              { query: insertQuery2, params: [types.Uuid.random(), n]}
+            ];
+            client.batch(queries, {prepare: true}, function (err, result) {
+              assert.ifError(err);
+              queriedHosts[result.info.queriedHost] = true;
+              timesNext();
+            });
+          }, next);
+        }
+      ], done);
+    });
   });
   describe('when connections are silently dropped', function () {
     it('should callback in err the next request', function (done) {

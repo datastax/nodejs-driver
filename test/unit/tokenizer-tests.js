@@ -1,13 +1,14 @@
 var assert = require('assert');
 
-var tokenizer = require('../../lib/tokenizer.js');
+var tokenizer = require('../../lib/tokenizer');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 var RandomTokenizer = tokenizer.RandomTokenizer;
 var types = require('../../lib/types');
 var Long = types.Long;
+var helper = require('../test-helper');
 
 describe('Murmur3Tokenizer', function () {
-  describe('rotl64', function () {
+  describe('#rotl64()', function () {
     it('should return expected results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.rotl64(Long.fromString('12002002'), 4).toString(), '192032032');
@@ -16,7 +17,7 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.rotl64(Long.fromString('44744441112828'), 31).toString(), '-1134251256001325992');
     });
   });
-  describe('fmix', function () {
+  describe('#fmix()', function () {
     it('should return expected results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.fmix(Long.fromString('44744441112828')).toString(), '-7224089102552050611');
@@ -26,7 +27,7 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.fmix(Long.fromString('-1')).toString(), '7256831767414464289');
     });
   });
-  describe('getBlock', function () {
+  describe('#getBlock()', function () {
     it('should return expected results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.getBlock([1, 2, 3, 4, 5, 6, 7, 8], 0, 0).toString(), '578437695752307201');
@@ -36,7 +37,7 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.getBlock([100, -2, 3, 4, -102, -6, 7, 122], 0, 0).toString(), '8793272336863460964');
     });
   });
-  describe('hash', function () {
+  describe('#hash()', function () {
     it('should hash the according results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.hash([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).toString(), '-5563837382979743776');
@@ -51,12 +52,24 @@ describe('Murmur3Tokenizer', function () {
     });
   });
   describe('RandomTokenizer', function () {
-    describe('hash', function () {
+    var t = new RandomTokenizer();
+    describe('#hash', function () {
       it('should return expected results', function () {
-        var t = new RandomTokenizer();
-        assert.strictEqual(t.hash([1, 2, 3, 4]).toString('hex'),                      '08d6c05a21512a79a1dfeb9d2a8f262f');
-        assert.strictEqual(t.hash([1, 2, 3, 4, 5, 6]).toString('hex'),                '6ac1e56bc78f031059be7be854522c4c');
-        assert.strictEqual(t.hash([254, 222, 1, 1, 1, 1, 1, 0, 129]).toString('hex'), 'ab0b00c618d3ebd330367bb238e0e27b');
+        [
+          [[1, 2, 3, 4], '11748876857495436398853550283091289647'],
+          [[1, 2, 3, 4, 5, 6], '141904934057871337334287797400233978956'],
+          [new Buffer('fffafa000102030405fe', 'hex'), '93979376327542758013347018124903879310'],
+          [new Buffer('f000ee0000', 'hex'), '155172302213453714586395175393246848871']
+        ].forEach(function (item) {
+          assert.strictEqual(t.hash(item[0]).toString(), item[1]);
+        });
+      });
+    });
+    describe('#parse()', function () {
+      it('should return the Integer representation', function () {
+        var val = t.parse('141904934057871337334287797400233978956');
+        helper.assertInstanceOf(val, types.Integer);
+        assert.ok(val.equals(types.Integer.fromString('141904934057871337334287797400233978956')));
       });
     });
   });

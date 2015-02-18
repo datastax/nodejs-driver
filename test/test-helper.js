@@ -352,7 +352,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      self.exec(['start'], helper.wait(options.sleep, next));
+      self.exec(['start', '--wait-for-binary-proto'], helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {

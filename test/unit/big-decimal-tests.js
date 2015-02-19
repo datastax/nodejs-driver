@@ -41,7 +41,16 @@ describe('BigDecimal', function () {
     ['34', 0, '34'],
     ['34', 10, '0.0000000034']
   ];
-  describe('BigDecimal.fromString()', function () {
+  describe('constructor', function () {
+    it('should allow Number and Integer unscaled values', function () {
+      intAndScaleToString.forEach(function (item) {
+        var value1 = new BigDecimal(parseInt(item[0], 10), item[1]);
+        var value2 = new BigDecimal(Integer.fromString(item[0]), item[1]);
+        assert.ok(value1.equals(value2));
+      });
+    });
+  });
+  describe('fromString()', function () {
     it('should convert from string in decimal representation', function () {
       intAndScaleToString.forEach(function (item) {
         var value = new BigDecimal(Integer.fromString(item[0]), item[1]);
@@ -49,7 +58,7 @@ describe('BigDecimal', function () {
       });
     });
   });
-  describe('BigDecimal.fromBuffer()', function () {
+  describe('fromBuffer()', function () {
     it('should convert from buffer (scale + unscaledValue in BE)', function () {
       hexToDecimalValues.forEach(function (item) {
         var buffer = new Buffer(item[0], 'hex');
@@ -58,7 +67,7 @@ describe('BigDecimal', function () {
       });
     });
   });
-  describe('BigDecimal.toBuffer()', function () {
+  describe('toBuffer()', function () {
     it('should convert to buffer (scale + unscaledValue in BE)', function () {
       hexToDecimalValues.forEach(function (item) {
         var avoidConvert = item[2];
@@ -70,7 +79,7 @@ describe('BigDecimal', function () {
       });
     });
   });
-  describe('BigDecimal.fromNumber()', function () {
+  describe('fromNumber()', function () {
       it('should convert from string in decimal representation', function () {
         intAndScaleToString.forEach(function (item) {
           var value = BigDecimal.fromNumber(Number(item[2]));

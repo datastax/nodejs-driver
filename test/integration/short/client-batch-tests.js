@@ -205,7 +205,7 @@ describe('Client', function () {
       ], done);
     });
   });
-  describe('#batch(queries, {prepare: 1}, callback) @2_0', function () {
+  describe('#batch(queries, {prepare: 1}, callback) @c2_0', function () {
     var keyspace = helper.getRandomName('ks');
     var table1 = keyspace + '.' + helper.getRandomName('tblA');
     var table2 = keyspace + '.' + helper.getRandomName('tblB');

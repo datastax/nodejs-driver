@@ -261,12 +261,16 @@ describe('Client', function () {
     });
     it('should return the column definitions', function (done) {
       var client = newInstance();
+      //insert at least 1 row
+      var insertQuery = util.format('INSERT INTO %s (id) VALUES (%s)', table, types.Uuid.random());
       async.series([
         client.connect.bind(client),
+        helper.toTask(client.execute, client, insertQuery),
         function verifyColumns(next) {
           var query = util.format('SELECT text_sample, timestamp_sample, int_sample, timeuuid_sample, list_sample2, map_sample from %s LIMIT 1', table);
           client.execute(query, function (err, result) {
             assert.ifError(err);
+            assert.ok(result.rows.length);
             assert.ok(result.columns);
             assert.ok(util.isArray(result.columns));
             assert.strictEqual(result.columns.length, 6);

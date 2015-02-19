@@ -205,7 +205,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should allow named parameters with array of parameters', function (done) {
+    it('should allow named parameters with array of parameters @c2_0', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
       client.execute(query, ['system'], {prepare: 1}, function (err, result) {
@@ -215,7 +215,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an associative array', function (done) {
+    it('should allow named parameters as an associative array @c2_0', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
       client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
@@ -225,7 +225,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an associative array case insensitive', function (done) {
+    it('should allow named parameters as an associative array case insensitive @c2_0', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
       client.execute(query, {'ksNamE': 'system'}, {prepare: 1}, function (err, result) {
@@ -235,7 +235,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an object with other props', function (done) {
+    it('should allow named parameters as an object with other props @c2_0', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
       client.execute(query, {'KSNAME': 'system', other: 'value'}, {prepare: 1}, function (err, result) {
@@ -317,8 +317,10 @@ describe('Client', function () {
           }, seriesNext);
         },
         function selectData(seriesNext) {
-          var query = util.format('SELECT * FROM %s WHERE id IN ?', table);
-          client.execute(query, [values.map(function (x) { return x[0]; })], {prepare: true}, function (err, result) {
+          //Make ? markers C*1.2-compatible
+          var markers = values.map(function () { return '?'; }).join(',');
+          var query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
+          client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {
@@ -376,8 +378,10 @@ describe('Client', function () {
           }, seriesNext);
         },
         function selectData(seriesNext) {
-          var query = util.format('SELECT * FROM %s WHERE id IN ?', table);
-          client.execute(query, [values.map(function (x) { return x[0]; })], {prepare: true}, function (err, result) {
+          //Make ? markers C*1.2-compatible
+          var markers = values.map(function () { return '?'; }).join(',');
+          var query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
+          client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {

@@ -15,7 +15,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should emit end when no rows', function (done) {
       var client = newInstance();
-      client._getPrepared = function () { throw new Error('Query should not be prepared')};
+      client._prepare = function () { throw new Error('Query should not be prepared')};
       var stream = client.stream('SELECT * FROM system.schema_keyspaces where keyspace_name = \'___notexists\'', [], {prepare: false});
       stream
         .on('end', done)
@@ -107,11 +107,11 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should prepare and emit end when no rows', function (done) {
       var client = newInstance();
-      var originalGetPrepared = client._getPrepared;
-      var calledPrepare = true;
-      client._getPrepared = function () {
+      var originalPrepareQuery = client._prepareQuery;
+      var calledPrepare = false;
+      client._prepareQuery = function () {
         calledPrepare = true;
-        originalGetPrepared.apply(client, arguments);
+        originalPrepareQuery.apply(client, arguments);
       };
       var stream = client.stream('SELECT * FROM system.schema_columnfamilies where keyspace_name = \'___notexists\'', [], {prepare: 1});
       stream

@@ -341,7 +341,7 @@ describe('Client', function () {
       ], done);
     });
   });
-  describe('failover', function () {
+  xdescribe('failover', function () {
     beforeEach(helper.ccmHelper.start(3));
     afterEach(helper.ccmHelper.remove);
     it('should failover after a node goes down', function (done) {

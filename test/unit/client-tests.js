@@ -81,7 +81,9 @@ describe('Client', function () {
       });
     });
   });
-  describe('#_getPrepared()', function () {
+  describe('#_prepareQueries()', function () {
+  });
+  describe('#prepare()', function () {
     var Client = rewire('../../lib/client.js');
     var requestHandlerMock = function () {this.counter = 0;};
     var prepareCounter;
@@ -95,27 +97,37 @@ describe('Client', function () {
     Client.__set__("RequestHandler", requestHandlerMock);
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client.prepare('QUERY1', function (err, res) {
         assert.equal(err, null);
-        assert.notEqual(id, null);
-        assert.notEqual(meta, null);
-        assert.strictEqual(id.constructor.name, 'Buffer');
+        assert.notEqual(res, null);
+        assert.strictEqual(res.id.constructor.name, 'Buffer');
         assert.strictEqual(prepareCounter, 1);
+        done();
+      });
+    });
+    it('should prepare each query serially and callback with the responses', function (done) {
+      var client = new Client({contactPoints: ['host']});
+      prepareCounter = 0;
+      //noinspection JSAccessibilityCheck
+      client.prepare(['QUERY1', 'QUERY2'], function (err, responses) {
+        assert.equal(err, null);
+        assert.notEqual(responses, null);
+        assert.strictEqual(prepareCounter, 2);
+        assert.strictEqual(responses[0].id.constructor.name, 'Buffer');
+        assert.strictEqual(responses[1].id.constructor.name, 'Buffer');
         done();
       });
     });
     it('should prepare make the same request once and queue the rest', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       async.parallel([
         function (nextParallel) {
           async.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY ONE', next);
+            client.prepare('QUERY ONE', next);
           }, function (err, results) {
             assert.equal(err, null);
             assert.ok(results);
@@ -127,7 +139,7 @@ describe('Client', function () {
         function (nextParallel) {
           async.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY TWO', next);
+            client.prepare('QUERY TWO', next);
           }, function (err, results) {
             assert.equal(err, null);
             assert.ok(results);
@@ -145,13 +157,12 @@ describe('Client', function () {
     it('should check for overflow and remove older', function (done) {
       var maxPrepared = 10;
       var client = new Client({contactPoints: ['host'], maxPrepared: maxPrepared});
-      client.metadata = new Metadata(client.options);
       async.timesSeries(maxPrepared + 2, function (n, next) {
         //noinspection JSAccessibilityCheck
-        client._getPrepared('QUERY ' + n.toString(), next);
+        client.prepare('QUERY ' + n.toString(), next);
       }, function (err) {
         if (err) return done(err);
-        assert.strictEqual(client.metadata.preparedQueries.__length, maxPrepared);
+        assert.strictEqual(client._preparedCount, maxPrepared);
         done();
       });
     });
@@ -162,14 +173,27 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client.prepare('QUERY1', function (err, res) {
         assert.ok(err, 'It should callback with error');
-        assert.equal(id, null);
-        assert.equal(meta, null);
+        assert.equal(res, null);
         done();
       });
+    });
+  });
+  describe('#clearPrepared()', function () {
+    it('should clear the internal state', function () {
+      var Client = rewire('../../lib/client.js');
+      var requestHandlerMock = function () {};
+      requestHandlerMock.prototype.send = function (r, o, cb) {cb(null, {})};
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = function (cb) {cb()};
+      client.prepare('QUERY1', helper.noop);
+      client.prepare('QUERY2', helper.noop);
+      assert.strictEqual(client._preparedCount, 2);
+      client.clearPrepared();
+      assert.strictEqual(client._preparedCount, 0);
     });
   });
   describe('#_executeAsPrepared()', function () {
@@ -183,7 +207,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._prepare = function (q, h, cb) { cb (null, { id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]}});};
+      client._prepareQuery = function (q, h, cb) { cb (null, { id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]}});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([100, 101]));
@@ -202,7 +226,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._prepare = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
+      client._prepareQuery = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
@@ -221,7 +245,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._prepare = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
+      client._prepareQuery = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
       async.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {}, function (err) {
@@ -266,7 +290,7 @@ describe('Client', function () {
       //fake connected
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._prepare = function (q, h, cb) {
+      client._prepareQuery = function (q, h, cb) {
         cb(null, {id: new Buffer([1]), meta: { columns: [
           { name: 'key1', type: [types.dataTypes.int] },
           { name: 'key2', type: [types.dataTypes.int] }
@@ -338,7 +362,7 @@ describe('Client', function () {
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
       var prepareCount = 0;
-      client._prepare = function (q, h, cb) {
+      client._prepareQuery = function (q, h, cb) {
         prepareCount++;
         cb(null, {id: new Buffer(3), meta: {}});
       };
@@ -555,43 +579,6 @@ describe('Client', function () {
         assert.strictEqual(err, dummyError);
         done();
       });
-    });
-  });
-  describe('#_waitForPendingPrepares()', function () {
-    var Client = rewire('../../lib/client.js');
-    it('should return the same amount when no query is being prepared', function (done) {
-      var client = new Client(helper.baseOptions);
-      client.metadata = new Metadata(client.options);
-      var queriesInfo = [{info: {}}, {info: {}}];
-      //noinspection JSAccessibilityCheck
-      client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
-        assert.ifError(err);
-        assert.strictEqual(toPrepare.length, 2);
-        done();
-      });
-    });
-    it('should wait for queries being prepared', function (done) {
-      var client = new Client(helper.baseOptions);
-      client.metadata = new Metadata(client.options);
-      var cbs = [];
-      var queriesInfo = [
-        {info: {}, query: 'query1'},
-        {info: { preparing: true, once: function (name, cb) { cbs.push(cb); }}},
-        {info: { preparing: true, once: function (name, cb) { cbs.push(cb); }}}
-      ];
-      var calledBack = false;
-      //noinspection JSAccessibilityCheck
-      client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
-        assert.ifError(err);
-        assert.ok(calledBack);
-        assert.strictEqual(toPrepare.length, 1);
-        assert.strictEqual(toPrepare[0].query, 'query1');
-        done();
-      });
-      setTimeout(function () {
-        calledBack = true;
-        cbs.forEach(function (cb) { cb();});
-      }, 50);
     });
   });
 });

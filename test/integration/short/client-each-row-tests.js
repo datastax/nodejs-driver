@@ -17,7 +17,7 @@ describe('Client', function () {
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
       //fail if its preparing
-      client._prepare = function () {throw new Error('Prepare should not be called')};
+      client._prepareQuery = function () {throw new Error('Prepare should not be called')};
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -175,9 +175,9 @@ describe('Client', function () {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
-      var originalPrepare = client._prepare;
+      var originalPrepare = client._prepareQuery;
       var prepareCalled = false;
-      client._prepare = function () {
+      client._prepareQuery = function () {
         prepareCalled = true;
         originalPrepare.apply(client, arguments);
       };

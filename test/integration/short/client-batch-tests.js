@@ -291,7 +291,7 @@ describe('Client', function () {
         });
       }, done);
     });
-    xit('should prepare for repeated queries with different params', function (done) {
+    it('should prepare for repeated queries with different params', function (done) {
       var query = util.format('INSERT INTO %s (id, time) VALUES (?, ?)', table1);
       var time = types.timeuuid();
       var client = newInstance();

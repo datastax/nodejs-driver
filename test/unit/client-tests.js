@@ -183,7 +183,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});};
+      client._prepare = function (q, h, cb) { cb (null, { id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]}});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([100, 101]));
@@ -202,7 +202,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._prepare = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
@@ -221,7 +221,7 @@ describe('Client', function () {
       client._getEncoder = function () { return new Encoder(2, {})};
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._prepare = function (q, h, cb) { cb (null, {id: new Buffer(0), meta: {columns: [{name: 'abc', type: 2}]}});};
       async.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {}, function (err) {
@@ -266,11 +266,11 @@ describe('Client', function () {
       //fake connected
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) {
-        cb(null, new Buffer([1]), { columns: [
+      client._prepare = function (q, h, cb) {
+        cb(null, {id: new Buffer([1]), meta: { columns: [
           { name: 'key1', type: [types.dataTypes.int] },
           { name: 'key2', type: [types.dataTypes.int] }
-        ]});
+        ]}});
       };
       //noinspection JSAccessibilityCheck
       client._getEncoder = function () {
@@ -331,89 +331,82 @@ describe('Client', function () {
     });
     it('should prepare for the first time', function (done) {
       var Client = rewire('../../lib/client.js');
-      var called;
       var handlerMock = function () {};
-      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
-        called = true;
-        assert.strictEqual(queries.length, 3);
-        assert.strictEqual(queries[0], 'q1');
-        assert.strictEqual(queries[1], 'q2');
-        callback();
-      };
       handlerMock.prototype.send = helper.callbackNoop;
       Client.__set__("RequestHandler", handlerMock);
       var client = new Client(helper.baseOptions);
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
+      var prepareCount = 0;
+      client._prepare = function (q, h, cb) {
+        prepareCount++;
+        cb(null, {id: new Buffer(3), meta: {}});
+      };
       client.batch(['q1', 'q2', 'q3'], {prepare: 1}, function (err) {
         assert.ifError(err);
-        assert.ok(called);
+        assert.strictEqual(prepareCount, 3);
         done();
       });
     });
     it('should only prepare the ones that are not', function (done) {
       var Client = rewire('../../lib/client.js');
-      var called;
+      var sendCount = 0;
       var handlerMock = function () {};
-      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
-        called = true;
-        assert.strictEqual(queries.length, 3);
-        assert.strictEqual(queries[0], 'q1');
-        assert.strictEqual(queries[1], 'q3');
-        callback();
+      handlerMock.prototype.send = function (r, o, cb) {
+        if (r.query) {
+          assert.ok(!/q2/.test(r.query) && !/q4/.test(r.query));
+          sendCount++;
+        }
+        cb(null, {id: new Buffer(3), meta: {}});
       };
-      handlerMock.prototype.send = helper.callbackNoop;
       Client.__set__("RequestHandler", handlerMock);
       var client = new Client(helper.baseOptions);
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
       //q2 and q4 are prepared
-      client.metadata.getPreparedInfo('q2').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo('q4').queryId = new Buffer(3);
+      client._prepared['q2'] = {id: new Buffer(3)};
+      client._prepared['q4'] = {id: new Buffer(3)};
+      client._preparedCount = 2;
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);
-        assert.ok(called);
+        assert.strictEqual(sendCount, 3);
         done();
       });
     });
     it('should only prepare the ones that are not and wait for the ones preparing', function (done) {
       var Client = rewire('../../lib/client.js');
-      var sendMultipleCalled;
-      var preparingCallbackCalled;
+      var prepareCount = 0;
       var handlerMock = function () {};
-      handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
-        sendMultipleCalled = true;
-        assert.strictEqual(queries.length, 2);
-        assert.strictEqual(queries[0], 'q1');
-        assert.strictEqual(queries[1], 'q5');
-        callback();
+      handlerMock.prototype.send = function (r, o, cb) {
+        function send() {
+          cb(null, {id: new Buffer(3), meta: {}});
+        }
+        if (r.query) {
+          prepareCount++;
+          if (r.query === 'q1') setTimeout(send, 100);
+          else {
+            assert.ok(/q4|q5/.test(r.query));
+            send();
+          }
+        }
+        else send();
       };
-      handlerMock.prototype.send = helper.callbackNoop;
       Client.__set__("RequestHandler", handlerMock);
       var client = new Client(helper.baseOptions);
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
-      //q3 and q4 are prepared
-      client.metadata.getPreparedInfo('q3').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo('q4').queryId = new Buffer(3);
-      //q2 is being prepared
-      var q2Info = client.metadata.getPreparedInfo('q2');
-      q2Info.preparing = true;
-      q2Info.once = function (name, cb) {
-        q2Info.dummyCb = cb;
-      };
+      //q1 is being prepared
+      client.prepare('q1', helper.noop);
+      //q2 and q3 are prepared
+      client._prepared['q2'] = {id: new Buffer(3)};
+      client._prepared['q3'] = {id: new Buffer(3)};
+      client._preparedCount += 2;
+      //batch all of them
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);
-        assert.ok(sendMultipleCalled);
-        assert.ok(preparingCallbackCalled);
+        assert.strictEqual(prepareCount, 3);
         done();
       });
-      setTimeout(function () {
-        q2Info.preparing = false;
-        q2Info.queryId = new Buffer(1);
-        preparingCallbackCalled = true;
-        q2Info.dummyCb();
-      }, 80);
     });
   });
   describe('#shutdown()', function () {

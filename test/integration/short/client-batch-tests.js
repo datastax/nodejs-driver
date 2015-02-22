@@ -291,6 +291,16 @@ describe('Client', function () {
         });
       }, done);
     });
+    it.only('should prepare for repeated queries with different params', function (done) {
+      var query = util.format('INSERT INTO %s (id, time) VALUES (?, ?)', table1);
+      var time = types.timeuuid();
+      var client = newInstance();
+      var queries = [
+        { query: query, params: [types.Uuid.random(), time] },
+        { query: query, params: [types.Uuid.random(), time] }
+      ];
+      client.batch(queries, {prepare: true}, done);
+    });
     it('should handle multiple prepares in parallel', function (done) {
       var consistency = types.consistencies.quorum;
       var id1Tbl1 = types.Uuid.random();

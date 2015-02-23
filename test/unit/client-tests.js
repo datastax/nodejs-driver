@@ -569,11 +569,22 @@ describe('Client', function () {
     it('should return the same amount when no query is being prepared', function (done) {
       var client = new Client(helper.baseOptions);
       client.metadata = new Metadata(client.options);
-      var queriesInfo = [{info: {}}, {info: {}}];
+      var queriesInfo = [{info: {}, query: 'q1'}, {info: {}, query: 'q2'}];
       //noinspection JSAccessibilityCheck
       client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
         assert.ifError(err);
-        assert.strictEqual(toPrepare.length, 2);
+        assert.strictEqual(Object.keys(toPrepare).length, 2);
+        done();
+      });
+    });
+    it('should return distinct queries to prepare', function (done) {
+      var client = new Client(helper.baseOptions);
+      client.metadata = new Metadata(client.options);
+      var queriesInfo = [{info: {}, query: 'same query'}, {info: {}, query: 'same query'}];
+      //noinspection JSAccessibilityCheck
+      client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
+        assert.ifError(err);
+        assert.strictEqual(Object.keys(toPrepare).length, 1);
         done();
       });
     });
@@ -591,8 +602,8 @@ describe('Client', function () {
       client._waitForPendingPrepares(queriesInfo, function (err, toPrepare) {
         assert.ifError(err);
         assert.ok(calledBack);
-        assert.strictEqual(toPrepare.length, 1);
-        assert.strictEqual(toPrepare[0].query, 'query1');
+        assert.strictEqual(Object.keys(toPrepare).length, 1);
+        assert.strictEqual(Object.keys(toPrepare)[0], 'query1');
         done();
       });
       setTimeout(function () {

@@ -217,6 +217,33 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should prepare distinct BatchRequest queries', function (done) {
+      var handler = new RequestHandler(null, options);
+      handler.request = {};
+      handler.host = {};
+      handler.request = new requests.BatchRequest([
+        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'},
+        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'}
+      ], {});
+      var connection = { prepareOnce: function (q, cb) {
+        queriesPrepared.push(q);
+        setImmediate(function () { cb(null, { id: new Buffer(q)})});
+      }};
+      handler.connection = connection;
+      var queriesPrepared = [];
+      handler.sendOnConnection = function (request, o, cb) {
+        helper.assertInstanceOf(request, requests.BatchRequest);
+        assert.strictEqual(handler.connection, connection);
+        setImmediate(cb);
+      };
+      handler.prepareAndRetry(new Buffer(0), function (err) {
+        assert.ifError(err);
+        //Only 1 query
+        assert.strictEqual(queriesPrepared.length, 1);
+        assert.strictEqual(queriesPrepared.join(','), 'SAME QUERY');
+        done();
+      });
+    });
   });
   describe('#send()', function () {
     it('should return a ResultSet with valid columns', function (done) {

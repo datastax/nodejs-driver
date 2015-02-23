@@ -263,14 +263,16 @@ describe('Client', function () {
     });
     it('should callback in error when the one of the queries contains syntax error', function (done) {
       var client = newInstance();
-      var queries = [{
+      var queries1 = [{
         query: util.format('INSERT INTO %s (id, time, text_sample) VALUES (?, ?, ?)', table2),
         params: [types.Uuid.random(), types.timeuuid(), 'sample1']
       },{
         query: util.format('INSERT WILL FAIL'),
         params: [types.Uuid.random(), types.timeuuid(), -101, -1]
       }];
+      var queries2 = [queries1[1], queries1[1]];
       async.times(10, function (n, next) {
+        var queries = (n % 2 === 0) ? queries1 : queries2;
         client.batch(queries, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, errors.ResponseError);
           assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
@@ -374,6 +376,20 @@ describe('Client', function () {
           assert.strictEqual(row2['varint_sample'].toString(), '2010');
           done();
         });
+      });
+    });
+    it('should execute batch containing the same query multiple times', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var query = util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1);
+      var queries = [
+        { query: query, params: [id, types.TimeUuid.now(), 100]},
+        { query: query, params: [id, types.TimeUuid.now(), 200]}
+      ];
+      client.batch(queries, { prepare: true}, function (err) {
+        assert.ifError(err);
+        //Check values inserted
+        done();
       });
     });
   });

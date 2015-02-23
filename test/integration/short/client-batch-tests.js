@@ -383,13 +383,20 @@ describe('Client', function () {
       var id = types.Uuid.random();
       var query = util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1);
       var queries = [
-        { query: query, params: [id, types.TimeUuid.now(), 100]},
-        { query: query, params: [id, types.TimeUuid.now(), 200]}
+        { query: query, params: [id, types.TimeUuid.now(), 1000]},
+        { query: query, params: [id, types.TimeUuid.now(), 2000]}
       ];
       client.batch(queries, { prepare: true}, function (err) {
         assert.ifError(err);
         //Check values inserted
-        done();
+        var selectQuery = util.format('SELECT int_sample FROM %s WHERE id = ?', table1);
+        client.execute(selectQuery, [id], function (err, result) {
+          assert.ifError(err);
+          assert.strictEqual(result.rows.length, 2);
+          assert.ok(helper.find(result.rows, 'int_sample', 1000));
+          assert.ok(helper.find(result.rows, 'int_sample', 2000));
+          done();
+        });
       });
     });
   });

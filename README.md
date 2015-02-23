@@ -31,11 +31,15 @@ $ npm install cassandra-driver
 
 You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
+## Upgrading from 1.x branch
+
+If you are upgrading from the 1.x branch of the driver, be sure to have a look at the [upgrade guide][upgrade1].
+
 ## Basic usage
 
 ```javascript
 var cassandra = require('cassandra-driver');
-var client = new cassandra.Client({contactPoints: ['host1', 'h2'], keyspace: 'ks1'});
+var client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
 var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   assert.ifError(err);
@@ -131,8 +135,7 @@ var queries = [
     params: ['hendrix', 'Changed email', new Date()]
   }
 ];
-var queryOptions = { consistency: cassandra.types.consistencies.quorum };
-client.batch(queries, queryOptions, function(err) {
+client.batch(queries, { prepare: true }, function(err) {
   assert.ifError(err);
   console.log('Data updated on cluster');
 });
@@ -142,10 +145,12 @@ client.batch(queries, queryOptions, function(err) {
 
 ## Data types
 
-There are few data types defined in the ECMAScript standard, this usually represents a problem when you are trying to
- deal with data types that come from other systems in javascript. 
+There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
+ to deal with data types that come from other systems in Javascript.
 
-You should read the [documentation on CQL data types and ECMAScript types][doc-datatypes] for more information.
+The driver supports all the CQL data types in Apache Cassandra (2.0 and below) even for types that no built-in
+Javascript representation exists, like decimal, varint and bigint. Check the documentation on working with
+ [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
 ## Logging
 
@@ -173,15 +178,15 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-
-[uuid]: https://github.com/broofa/node-uuid
-[long]: https://github.com/dcodeIO/Long.js
 [cassandra]: http://cassandra.apache.org/
-[doc-index]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/
-[doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
-[doc-api]: http://www.datastax.com/drivers/nodejs/1.0/Client.html
-[start]: http://datastax.github.io/nodejs-driver/getting-started
-[faq]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/faq/njdFaq.html
+[doc-index]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/
+[doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-api]: http://www.datastax.com/drivers/nodejs/2.0/Client.html
+[doc-numerical]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/numericalValues.html
+[doc-uuid]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/uuids-timeuuids.html
+[doc-collections]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/collections.html
+[faq]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/faq/njdFaq.html
+[upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax

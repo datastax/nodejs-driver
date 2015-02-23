@@ -250,6 +250,12 @@ var helper = {
     }
     return result;
   },
+  /**
+   * @param arr
+   * @param {Function|String} predicate function to compare or property name to compare
+   * @param val
+   * @returns {*}
+   */
   find: function (arr, predicate, val) {
     if (arr == null) {
       throw new TypeError('Array.prototype.find called on null or undefined');

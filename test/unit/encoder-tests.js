@@ -209,7 +209,7 @@ describe('encoder', function () {
     it('should throw when string is not an uuid', function () {
       assert.throws(function () {
         typeEncoder.encode('', types.dataTypes.uuid);
-      })
+      }, TypeError);
     });
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');

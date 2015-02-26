@@ -206,6 +206,11 @@ describe('encoder', function () {
       encoded = typeEncoder.encode(uuid.toString(), types.dataTypes.uuid);
       assert.strictEqual(encoded.toString('hex'), uuid.getBuffer().toString('hex'));
     });
+    it('should throw when string is not an uuid', function () {
+      assert.throws(function () {
+        typeEncoder.encode('', types.dataTypes.uuid);
+      })
+    });
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
       var unHinted = typeEncoder.encode();

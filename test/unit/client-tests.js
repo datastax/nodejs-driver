@@ -438,6 +438,29 @@ describe('Client', function () {
       policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
       logEmitter: helper.noop
     });
+    it('should set connected flag to false when hosts successfully shutdown', function(done) {
+      var hosts = new HostMap();
+      var h1 = new Host('192.1.1.1', 1, options);
+      h1.datacenter = "dc1";
+      h1.pool.connections = [{close: setImmediate}];
+      var h2 = new Host('192.1.1.2', 1, options);
+      h2.datacenter = "dc1";
+      h2.pool.connections = [{close: setImmediate}];
+      hosts.push(h1.address, h1);
+      hosts.push(h2.address, h2);
+      var Client = rewire('../../lib/client.js');
+      var controlConnectionMock = function () {
+        this.hosts = hosts;
+        this.metadata = new Metadata();
+        this.init = setImmediate;
+      };
+      Client.__set__("ControlConnection", controlConnectionMock);
+      var client = new Client(options);
+      client.shutdown(function(){
+        assert.equal(client.connected, false);
+        done();
+      });
+    });
     it('should callback when called multiple times serially', function (done) {
       var hosts = new HostMap();
       var h1 = new Host('192.1.1.1', 1, options);

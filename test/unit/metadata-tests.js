@@ -1,6 +1,7 @@
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
+var rewire = require('rewire');
 
 var helper = require('../test-helper.js');
 var Client = require('../../lib/client.js');
@@ -70,6 +71,22 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[1].address, '1');
       assert.strictEqual(replicas[2].address, '2');
       assert.strictEqual(replicas[3].address, '4');
+    });
+  });
+  describe('#clearPrepared()', function () {
+    it('should clear the internal state', function () {
+      var Client = rewire('../../lib/client.js');
+      var requestHandlerMock = function () {};
+      requestHandlerMock.prototype.send = function (r, o, cb) {cb(null, {})};
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.metadata = new Metadata(client.options);
+      client.connect = function (cb) {cb()};
+      client.prepare('QUERY1', helper.noop);
+      client.prepare('QUERY2', helper.noop);
+      assert.strictEqual(client.metadata.preparedQueriesCount, 2);
+      client.metadata.clearPrepared();
+      assert.strictEqual(client.metadata.preparedQueriesCount, 0);
     });
   });
 });

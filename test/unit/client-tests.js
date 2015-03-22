@@ -81,8 +81,6 @@ describe('Client', function () {
       });
     });
   });
-  describe('#_prepareQueries()', function () {
-  });
   describe('#prepare()', function () {
     var Client = rewire('../../lib/client.js');
     var requestHandlerMock = function () {this.counter = 0;};
@@ -97,6 +95,7 @@ describe('Client', function () {
     Client.__set__("RequestHandler", requestHandlerMock);
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
       client.prepare('QUERY1', function (err, res) {
@@ -109,6 +108,7 @@ describe('Client', function () {
     });
     it('should prepare each query serially and callback with the responses', function (done) {
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
       client.prepare(['QUERY1', 'QUERY2'], function (err, responses) {
@@ -122,6 +122,7 @@ describe('Client', function () {
     });
     it('should prepare make the same request once and queue the rest', function (done) {
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       prepareCounter = 0;
       async.parallel([
         function (nextParallel) {
@@ -157,12 +158,13 @@ describe('Client', function () {
     it('should check for overflow and remove older', function (done) {
       var maxPrepared = 10;
       var client = new Client({contactPoints: ['host'], maxPrepared: maxPrepared});
+      client.metadata = new Metadata(client.options);
       async.timesSeries(maxPrepared + 2, function (n, next) {
         //noinspection JSAccessibilityCheck
         client.prepare('QUERY ' + n.toString(), next);
       }, function (err) {
         if (err) return done(err);
-        assert.strictEqual(client._preparedCount, maxPrepared);
+        assert.strictEqual(client.metadata.preparedQueriesCount, maxPrepared);
         done();
       });
     });
@@ -173,27 +175,13 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
+      client.metadata = new Metadata(client.options);
       //noinspection JSAccessibilityCheck
       client.prepare('QUERY1', function (err, res) {
         assert.ok(err, 'It should callback with error');
         assert.equal(res, null);
         done();
       });
-    });
-  });
-  describe('#clearPrepared()', function () {
-    it('should clear the internal state', function () {
-      var Client = rewire('../../lib/client.js');
-      var requestHandlerMock = function () {};
-      requestHandlerMock.prototype.send = function (r, o, cb) {cb(null, {})};
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = function (cb) {cb()};
-      client.prepare('QUERY1', helper.noop);
-      client.prepare('QUERY2', helper.noop);
-      assert.strictEqual(client._preparedCount, 2);
-      client.clearPrepared();
-      assert.strictEqual(client._preparedCount, 0);
     });
   });
   describe('#_executeAsPrepared()', function () {
@@ -388,9 +376,9 @@ describe('Client', function () {
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
       //q2 and q4 are prepared
-      client._prepared['q2'] = {id: new Buffer(3)};
-      client._prepared['q4'] = {id: new Buffer(3)};
-      client._preparedCount = 2;
+      client.metadata.preparedQueries['q2'] = {id: new Buffer(3)};
+      client.metadata.preparedQueries['q4'] = {id: new Buffer(3)};
+      client.metadata.preparedQueriesCount = 2;
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);
         assert.strictEqual(sendCount, 3);
@@ -422,9 +410,9 @@ describe('Client', function () {
       //q1 is being prepared
       client.prepare('q1', helper.noop);
       //q2 and q3 are prepared
-      client._prepared['q2'] = {id: new Buffer(3)};
-      client._prepared['q3'] = {id: new Buffer(3)};
-      client._preparedCount += 2;
+      client.metadata.preparedQueries['q2'] = {id: new Buffer(3)};
+      client.metadata.preparedQueries['q3'] = {id: new Buffer(3)};
+      client.metadata.preparedQueriesCount += 2;
       //batch all of them
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);

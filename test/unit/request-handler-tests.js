@@ -240,5 +240,36 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should queue multiple requests', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connection = { sendStream: function (r, o, cb) {
+        setImmediate(function () {
+          cb(null, {query: r.query});
+        });
+      }};
+      handler.getNextConnection = function (o, cb) {
+        setImmediate(function () {
+          handler.host = { setUp: helper.noop };
+          cb(null, connection);
+        });
+      };
+      var history = '';
+      var _send = handler._send;
+      handler._send = function (r, o, c) {
+        history += r.query;
+        return _send.call(this, r, o, c);
+      };
+      handler.send(new requests.QueryRequest('q1'), {}, handleResponse.bind({query: 'q1'}));
+      handler.send(new requests.QueryRequest('q2'), {}, handleResponse.bind({query: 'q2'}));
+      var count = 0;
+      function handleResponse (err, result) {
+        if (err) return done(err);
+        history += this.query;
+        if (++count === 2) {
+          assert.strictEqual(history, 'q1q1q2q2');
+          done();
+        }
+      }
+    });
   });
 });

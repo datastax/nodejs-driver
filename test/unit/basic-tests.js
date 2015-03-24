@@ -54,7 +54,6 @@ describe('types', function () {
       });
     });
   });
-
   describe('Integer', function () {
     var Integer = types.Integer;
     var values = [
@@ -94,7 +93,6 @@ describe('types', function () {
       });
     });
   });
-
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
@@ -177,7 +175,6 @@ describe('types', function () {
       });
     });
   });
-
   describe('Row', function () {
     it('should get the value by column name or index', function () {
       var columnList = [{name: 'first'}, {name: 'second'}];
@@ -191,15 +188,33 @@ describe('types', function () {
       assert.strictEqual(row.get('second'), row['second']);
       assert.strictEqual(row.get(1), row['second']);
     });
-
     it('should enumerate only columns defined', function () {
       var row = new types.Row([{name: 'col1'}, {name: 'col2'}]);
       row['col1'] = 'val1';
       row['col2'] = 'val2';
       assert.strictEqual(JSON.stringify(row), JSON.stringify({'col1': 'val1', 'col2': 'val2'}));
     });
+    it('should be serializable to json', function () {
+      var row = new types.Row();
+      row['col1'] = 'val1';
+      row['col2'] = 'val2';
+      assert.strictEqual(JSON.stringify(row), '{"col1":"val1","col2":"val2"}');
+      row = new types.Row();
+      row['cid'] = types.Uuid.random();
+      row['ctid'] = types.TimeUuid.now();
+      row['clong'] = types.Long.fromNumber(1000);
+      row['cvarint'] = types.Integer.fromNumber(22);
+      var expected = util.format('{"cid":"%s","ctid":"%s","clong":"1000","cvarint":"22"}',
+        row['cid'].toString(), row['ctid'].toString());
+      assert.strictEqual(JSON.stringify(row), expected);
+      row = new types.Row();
+      row['cdecimal'] = types.BigDecimal.fromString("1.762");
+      row['inet1'] = new types.InetAddress(new Buffer([192, 168, 0, 1]));
+      row['inet2'] = null;
+      expected = '{"cdecimal":"1.762","inet1":"192.168.0.1","inet2":null}';
+      assert.strictEqual(JSON.stringify(row), expected);
+    });
   });
-
   describe('uuid() backward-compatibility', function () {
     it('should generate a random string uuid', function () {
       var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -215,7 +230,6 @@ describe('types', function () {
       assert.strictEqual(val, buf);
     });
   });
-
   describe('timeuuid() backward-compatibility', function () {
     it('should generate a string uuid', function () {
       var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -232,7 +246,6 @@ describe('types', function () {
     });
   });
 });
-
 describe('utils', function () {
   describe('#syncEvent()', function () {
     it('should execute callback once for all emitters', function () {
@@ -252,7 +265,6 @@ describe('utils', function () {
       assert.strictEqual(callbackCounter, 1);
     });
   });
-
   describe('#parseCommonArgs()', function () {
     it('parses args and can be retrieved by name', function () {
       function testArgs(args, expectedLength) {
@@ -277,7 +289,6 @@ describe('utils', function () {
       assert.ok(args.params && args.options, 'Params and options must not be null');
     });
   });
-
   describe('#extend()', function () {
     it('should allow null sources', function () {
       var originalObject = {};
@@ -285,7 +296,6 @@ describe('utils', function () {
       assert.strictEqual(originalObject, extended);
     });
   });
-
   describe('#funcCompare()', function () {
     it('should return a compare function valid for Array#sort', function () {
       var values = [
@@ -299,7 +309,6 @@ describe('utils', function () {
       assert.strictEqual(values[2].id, 1);
     });
   });
-
   describe('#binarySearch()', function () {
     it('should return the key index if found, or the bitwise compliment of the first larger value', function () {
       var compareFunc = function (a, b) {
@@ -318,7 +327,6 @@ describe('utils', function () {
       assert.strictEqual(val, ~3);
     });
   });
-
   describe('#deepExtend', function () {
     it('should override only the most inner props', function () {
       var value;
@@ -361,7 +369,6 @@ describe('utils', function () {
     });
   });
 });
-
 describe('clientOptions', function () {
   describe('#extend', function () {
     it('should require contactPoints', function () {
@@ -464,7 +471,6 @@ describe('clientOptions', function () {
     });
   });
 });
-
 describe('exports', function () {
   it('should contain API', function () {
     //test that the exposed API is the one expected

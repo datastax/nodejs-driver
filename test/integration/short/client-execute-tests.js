@@ -297,6 +297,35 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should return rows that are serializable to json', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var timeId = types.TimeUuid.now();
+      async.series([
+        function insert(next) {
+          var query = util.format(
+            'INSERT INTO %s (id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample) VALUES (%s, %s, \'%s\', %s, %s)',
+            table, id, timeId, '::2233:0:0:bb', -100, "0.1");
+          client.execute(query, next);
+        },
+        function select(next) {
+          var query = util.format(
+            'SELECT id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample from %s WHERE id = %s', table, id);
+          client.execute(query, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rows.length, 1);
+            var row = result.rows[0];
+            var expected = util.format('{"id":"%s",' +
+              '"timeuuid_sample":"%s",' +
+              '"inet_sample":"::2233:0:0:bb",' +
+              '"bigint_sample":"-100",' +
+              '"decimal_sample":"0.1"}', id, timeId);
+            assert.strictEqual(JSON.stringify(row), expected);
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

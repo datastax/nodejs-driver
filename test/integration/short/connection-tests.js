@@ -193,10 +193,11 @@ function getRequest(query) {
  */
 function getProtocolVersion() {
   //expected protocol version
-  var expectedVersion = 1;
-  if (helper.getCassandraVersion().indexOf('2.') === 0) {
-    expectedVersion = 2;
+  if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
+    return 2;
   }
-  //protocol v3 not supported yet
-  return expectedVersion;
+  if (helper.getCassandraVersion().indexOf('1.') === 0) {
+    return 1;
+  }
+  return 3;
 }

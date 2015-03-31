@@ -311,18 +311,10 @@ function newInstance(protocolVersion) {
 
 /**
  * Test Helper method to get a frame header
- * @returns {FrameHeader}
+ * @returns {exports.FrameHeader}
  */
-function getFrameHeader(bodyLength, opcode) {
-  var header = new types.FrameHeader();
-  header.bufferLength = bodyLength + 8;
-  header.isResponse = true;
-  header.version = 2;
-  header.flags = 0;
-  header.streamId = 12;
-  header.opcode = opcode;
-  header.bodyLength = bodyLength;
-  return header;
+function getFrameHeader(bodyLength, opcode, version) {
+  return new types.FrameHeader(version || 2, 0, 12, opcode, bodyLength);
 }
 
 function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {
@@ -383,14 +375,7 @@ function getEventData(eventType, value) {
   bodyArray.push(new Buffer([0, 0, 0, 200]));
 
   var body = Buffer.concat(bodyArray);
-  var header = new types.FrameHeader();
-  header.bufferLength = body.length + 8;
-  header.isResponse = true;
-  header.version = 2;
-  header.flags = 0;
-  header.streamId = -1;
-  header.opcode = types.opcodes.event;
-  header.bodyLength = body.length;
+  var header = new types.FrameHeader(2, 0, -1, types.opcodes.event, body.length);
   return {header: header, chunk: body};
 }
 

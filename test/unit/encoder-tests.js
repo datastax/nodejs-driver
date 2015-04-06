@@ -367,14 +367,18 @@ describe('encoder', function () {
         var encoder = new Encoder(version, { encoding: { set: Es6Set}});
         var m = new Es6Set(['k1', 'k2', 'k3']);
         var encoded = encoder.encode(m, 'set<text>');
-        assert.strictEqual(encoded.toString('hex'), '000300026b3100026b3200026b33');
+        if (version === 2) {
+          assert.strictEqual(encoded.toString('hex'), '000300026b3100026b3200026b33');
+        }
         var decoded = encoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
         helper.assertInstanceOf(decoded, Es6Set);
         assert.strictEqual(decoded.toString(), m.toString());
 
         m = new Es6Set([1, 2, 1000]);
         encoded = encoder.encode(m, 'set<int>');
-        assert.strictEqual(encoded.toString('hex'), '00030004000000010004000000020004000003e8');
+        if (version === 2) {
+          assert.strictEqual(encoded.toString('hex'), '00030004000000010004000000020004000003e8');
+        }
         decoded = encoder.decode(encoded, [dataTypes.set, [dataTypes.int]]);
         assert.strictEqual(decoded.toString(), m.toString());
       });
@@ -422,7 +426,9 @@ describe('encoder', function () {
         m.set('k1', 'v1');
         m.set('k2', 'v2');
         var encoded = encoder.encode(m, 'map<text,text>');
-        assert.strictEqual(encoded.toString('hex'), '000200026b310002763100026b3200027632');
+        if (version === 2) {
+          assert.strictEqual(encoded.toString('hex'), '000200026b310002763100026b3200027632');
+        }
         var decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
         helper.assertInstanceOf(decoded, Es6Map);
         assert.strictEqual(getValues(decoded), getValues(m));
@@ -432,7 +438,9 @@ describe('encoder', function () {
         m.set('k2', 2);
         m.set('k3', 3);
         encoded = encoder.encode(m, 'map<text,int>');
-        assert.strictEqual(encoded.toString('hex'), '000300026b3100040000000100026b3200040000000200026b33000400000003');
+        if (version === 2) {
+          assert.strictEqual(encoded.toString('hex'), '000300026b3100040000000100026b3200040000000200026b33000400000003');
+        }
         decoded = encoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
         assert.strictEqual(getValues(decoded), getValues(m));
 

@@ -204,6 +204,66 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should support protocol level timestamp @c2_1', function (done) {
+      var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (?, ?)';
+      var selectQuery = 'SELECT id, text_sample, writetime(text_sample) FROM %s WHERE id = %s';
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
+      var client = newInstance();
+      var timestamp = types.Long.fromString('1428311323417123');
+      var queries = [
+        {query: util.format(insertQuery, table1), params: [id1, 'value 1 with timestamp']},
+        {query: util.format(insertQuery, table2), params: [id2, 'value 2 with timestamp']}
+      ];
+      async.series([
+        function (next) {
+          client.batch(queries, { timestamp: timestamp}, next);
+        },
+        function assertValue1(next) {
+          client.execute(util.format(selectQuery, table1, id1), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value 1 with timestamp');
+            helper.assertInstanceOf(result.first()['writetime(text_sample)'], types.Long);
+            assert.strictEqual(result.first()['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        },
+        function assertValue2(next) {
+          client.execute(util.format(selectQuery, table2, id2), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value 2 with timestamp');
+            assert.strictEqual(result.first()['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should support serial consistency @c2_1', function (done) {
+      var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (?, ?)';
+      var selectQuery = 'SELECT id, text_sample, writetime(text_sample) FROM %s WHERE id = %s';
+      var id1 = types.Uuid.random();
+      var client = newInstance();
+      var queries = [
+        {query: util.format(insertQuery, table1), params: [id1, 'value with serial']}
+      ];
+      async.series([
+        function (next) {
+          client.batch(queries, { serialConsistency: types.consistencies.localSerial}, next);
+        },
+        function assertValue(next) {
+          client.execute(util.format(selectQuery, table1, id1), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value with serial');
+            next();
+          });
+        }], done);
+    });
   });
   describe('#batch(queries, {prepare: 1}, callback) @c2_0', function () {
     var keyspace = helper.getRandomName('ks');

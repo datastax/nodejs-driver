@@ -11,7 +11,16 @@ var errors = require('../../../lib/errors.js');
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
-    before(helper.ccmHelper.start(3));
+    var commonKs = helper.getRandomName('ks');
+    var commonTable = commonKs + '.' + helper.getRandomName('table');
+    before(function (done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.start(3),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
+        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable))
+      ], done);
+    });
     after(helper.ccmHelper.remove);
     it('should execute a prepared query with parameters on all hosts', function (done) {
       var client = newInstance();
@@ -399,6 +408,28 @@ describe('Client', function () {
               }
             });
             seriesNext();
+          });
+        }
+      ], done);
+    });
+    it('should support protocol level timestamp @c2_0', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var timestamp = types.generateTimestamp(new Date(), 456);
+      async.series([
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
+          var params = [id, types.TimeUuid.now(), 'hello sample timestamp'];
+          client.execute(query, params, { timestamp: timestamp, consistency: types.consistencies.quorum, prepare: 1}, next);
+        },
+        function select(next) {
+          var query = util.format('SELECT text_sample, writetime(text_sample) from %s WHERE id1 = ?', commonTable);
+          client.execute(query, [id], { consistency: types.consistencies.quorum, prepare: 1}, function (err, result) {
+            var row = result.first();
+            assert.ok(row);
+            assert.strictEqual(row['text_sample'], 'hello sample timestamp');
+            assert.strictEqual(row['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
           });
         }
       ], done);

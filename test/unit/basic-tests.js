@@ -245,6 +245,27 @@ describe('types', function () {
       assert.strictEqual(val, buf);
     });
   });
+  describe('generateTimestamp()', function () {
+    it('should generate using date and microseconds parts', function () {
+      var date = new Date();
+      var value = types.generateTimestamp(date, 123);
+      helper.assertInstanceOf(value, types.Long);
+      assert.strictEqual(value.toString(), types.Long
+        .fromNumber(date.getTime())
+        .multiply(types.Long.fromInt(1000))
+        .add(types.Long.fromInt(123))
+        .toString());
+
+      date = new Date('2010-04-29');
+      value = types.generateTimestamp(date, 898);
+      helper.assertInstanceOf(value, types.Long);
+      assert.strictEqual(value.toString(), types.Long
+        .fromNumber(date.getTime())
+        .multiply(types.Long.fromInt(1000))
+        .add(types.Long.fromInt(898))
+        .toString());
+    });
+  });
 });
 describe('utils', function () {
   describe('#syncEvent()', function () {

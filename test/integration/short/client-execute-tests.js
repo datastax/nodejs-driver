@@ -326,6 +326,46 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should support serial consistency @c2_0', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      async.series([
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
+          client.execute(query, [id, 'hello serial'], { serialConsistency: types.consistencies.localSerial}, next);
+        },
+        function select(next) {
+          var query = util.format('SELECT id, text_sample from %s WHERE id = ?', table);
+          client.execute(query, [id], function (err, result) {
+            var row = result.first();
+            assert.ok(row);
+            assert.strictEqual(row['text_sample'], 'hello serial');
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should support protocol level timestamp @c2_0', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var timestamp = types.generateTimestamp(new Date(), 777);
+      async.series([
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          client.execute(query, [id, 'hello timestamp'], { timestamp: timestamp}, next);
+        },
+        function select(next) {
+          var query = util.format('SELECT id, text_sample, writetime(text_sample) from %s WHERE id = ?', table);
+          client.execute(query, [id], function (err, result) {
+            var row = result.first();
+            assert.ok(row);
+            assert.strictEqual(row['text_sample'], 'hello timestamp');
+            assert.strictEqual(row['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

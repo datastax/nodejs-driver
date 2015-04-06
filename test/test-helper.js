@@ -109,11 +109,12 @@ var helper = {
     }
   },
   /**
-   * Creates a table containing all common types
+   * Returns a cql string with a CREATE TABLE command containing all common types
    * @param {String} tableName
+   * @returns {String}
    */
   createTableCql: function (tableName) {
-    return  util.format(' CREATE TABLE %s (' +
+    return  util.format('CREATE TABLE %s (' +
       '   id uuid primary key,' +
       '   ascii_sample ascii,' +
       '   text_sample text,' +
@@ -131,6 +132,25 @@ var helper = {
       '   list_sample list<text>,' +
       '   list_sample2 list<int>,' +
       '   set_sample set<text>)', tableName);
+  },
+  /**
+   * Returns a cql string with a CREATE TABLE command 1 partition key and 1 clustering key
+   * @param {String} tableName
+   * @returns {String}
+   */
+  createTableWithClusteringKeyCql: function (tableName) {
+    return  util.format('CREATE TABLE %s (' +
+    '   id1 uuid,' +
+    '   id2 timeuuid,' +
+    '   text_sample text,' +
+    '   int_sample int,' +
+    '   bigint_sample bigint,' +
+    '   float_sample float,' +
+    '   double_sample double,' +
+    '   map_sample map<uuid, int>,' +
+    '   list_sample list<timeuuid>,' +
+    '   set_sample set<int>,' +
+    '   PRIMARY KEY (id1, id2))', tableName);
   },
   createKeyspaceCql: function (keyspace, replicationFactor, durableWrites) {
     return util.format('CREATE KEYSPACE %s' +

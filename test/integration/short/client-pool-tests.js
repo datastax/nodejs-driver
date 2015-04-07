@@ -485,9 +485,7 @@ describe('Client', function () {
   });
 });
 
-/**
- * @returns {Client}
- */
+/** @returns {Client}  */
 function newInstance(options) {
   return new Client(utils.extend({}, helper.baseOptions, options));
 }

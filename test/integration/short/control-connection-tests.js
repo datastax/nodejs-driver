@@ -11,9 +11,10 @@ describe('ControlConnection', function () {
   describe('#init()', function () {
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
-    it('should retrieve local host and peers', function (done) {
+    it('should retrieve local host and peers @debug', function (done) {
       var cc = newInstance();
-      cc.init(function () {
+      cc.init(function (err) {
+        assert.ifError(err);
         assert.strictEqual(cc.hosts.length, 2);
         assert.ok(cc.protocolVersion);
         cc.hosts.forEach(function (h) {
@@ -36,7 +37,7 @@ describe('ControlConnection', function () {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
           assert.ok(keyspaceInfo.strategy);
-          assert.equal(JSON.parse(keyspaceInfo.strategyOptions).replication_factor, 3);
+          assert.equal(keyspaceInfo.strategyOptions.replication_factor, 3);
           assert.ok(keyspaceInfo.strategy.indexOf('SimpleStrategy') > 0);
           next();
         },
@@ -47,7 +48,7 @@ describe('ControlConnection', function () {
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
-          assert.equal(JSON.parse(keyspaceInfo.strategyOptions).replication_factor, 2);
+          assert.equal(keyspaceInfo.strategyOptions.replication_factor, 2);
           next();
         },
         function alterKeyspace(next) {

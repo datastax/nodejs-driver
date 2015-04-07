@@ -324,7 +324,19 @@ var helper = {
     return vals;
   },
   Map: MapPolyFill,
-  Set: SetPolyFill
+  Set: SetPolyFill,
+  /**
+   * Determines if test tracing is enabled
+   */
+  isTracing: function () {
+    return (process.env.TEST_TRACE === 'on');
+  },
+  trace: function (format) {
+    if (!helper.isTracing()) {
+      return;
+    }
+    console.log('\t...' + util.format.apply(null, arguments));
+  }
 };
 
 function Ccm() {
@@ -340,6 +352,8 @@ function Ccm() {
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
   options = options || {};
+  var version = helper.getCassandraVersion();
+  helper.trace('Starting test C* cluster v%s with %s nodes', version, nodeLength);
   async.series([
     function (next) {
       //it wont hurt to remove
@@ -349,7 +363,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      var create = ['create', 'test', '-v', helper.getCassandraVersion()];
+      var create = ['create', 'test', '-v', version];
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }

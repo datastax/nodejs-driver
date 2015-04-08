@@ -345,7 +345,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should support protocol level timestamp @c2_0', function (done) {
+    it('should support protocol level timestamp @c2_1', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
       var timestamp = types.generateTimestamp(new Date(), 777);

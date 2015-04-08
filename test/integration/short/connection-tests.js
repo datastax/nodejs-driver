@@ -25,20 +25,36 @@ describe('Connection', function () {
     it('should use the max supported protocol version', function (done) {
       var localCon = newInstance(null, null);
       localCon.open(function (err) {
-      assert.ifError(err);
-      assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
-      assert.strictEqual(localCon.checkingVersion, true);
-      localCon.close(done);
+        assert.ifError(err);
+        assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
+        assert.strictEqual(localCon.checkingVersion, true);
+        localCon.close(done);
+      });
     });
-  });
-  it('should fail when the host does not exits', function (done) {
-    var localCon = newInstance('1.1.1.1');
-    localCon.open(function (err) {
-      assert.ok(err, 'Must return a connection error');
-      assert.ok(!localCon.connected && !localCon.connecting);
-      localCon.close(done);
+    it('should open with all the protocol versions supported', function (done) {
+      var maxProtocolVersionSupported = getProtocolVersion();
+      var protocolVersion = 0;
+      async.whilst(function condition() {
+        return (++protocolVersion) <= maxProtocolVersionSupported;
+      }, function iterator (next) {
+        var localCon = newInstance(null, protocolVersion);
+        localCon.open(function (err) {
+          assert.ifError(err);
+          assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+          localCon.close(next);
+        });
+      }, done);
+      for (var i = 1; i <= maxProtocolVersionSupported; i++) {
+      }
     });
-  });
+    it('should fail when the host does not exits', function (done) {
+      var localCon = newInstance('1.1.1.1');
+      localCon.open(function (err) {
+        assert.ok(err, 'Must return a connection error');
+        assert.ok(!localCon.connected && !localCon.connecting);
+        localCon.close(done);
+      });
+    });
     it('should fail when the host exists but port closed', function (done) {
       var localCon = newInstance('127.0.0.1:8090');
       localCon.open(function (err) {
@@ -178,8 +194,7 @@ function newInstance(address, protocolVersion, options){
     protocolVersion = getProtocolVersion();
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
-  var logEmitter = function () {};
-  options = utils.extend({logEmitter: logEmitter}, options || defaultOptions);
+  options = utils.extend({logEmitter: helper.noop}, options || defaultOptions);
   return new Connection(address, protocolVersion, options);
 }
 

@@ -11,7 +11,7 @@ describe('ControlConnection', function () {
   describe('#init()', function () {
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
-    it('should retrieve local host and peers @debug', function (done) {
+    it('should retrieve local host and peers', function (done) {
       var cc = newInstance();
       cc.init(function (err) {
         assert.ifError(err);

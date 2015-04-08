@@ -17,7 +17,7 @@ describe('ControlConnection', function () {
       //mock connection
       cc.connection = {
         sendStream: function (a, b, c) {
-          c(null, {rows: [{'keyspace_name': ksName}]});
+          c(null, {rows: [{'keyspace_name': ksName, 'strategy_options': null}]});
         }
       };
       assert.strictEqual(Object.keys(cc.metadata.keyspaces).length, 0);

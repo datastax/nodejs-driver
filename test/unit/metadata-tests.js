@@ -24,7 +24,7 @@ describe('Metadata', function () {
       metadata.setKeyspaces({rows: [{
         'keyspace_name': 'dummy',
         'strategy_class': 'SimpleStrategy',
-        'strategy_options': {'replication_factor': 3}
+        'strategy_options': '{"replication_factor": 3}'
       }]});
       var replicas = metadata.getReplicas('dummy', new Buffer([0]));
       assert.ok(replicas);

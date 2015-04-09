@@ -1,3 +1,4 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 var rewire = require('rewire');

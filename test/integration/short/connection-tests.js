@@ -149,11 +149,12 @@ describe('Connection', function () {
     after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
       var connection = newInstance();
+      var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       async.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(connection.maxRequests * 2, function (n, next) {
-            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+          async.times(maxRequests + 10, function (n, next) {
+            var request = getRequest('SELECT key FROM system.local');
             connection.sendStream(request, null, next);
           }, seriesNext);
         }
@@ -161,17 +162,18 @@ describe('Connection', function () {
     });
     it('should callback the pending queue if the connection is there is a socket error', function (done) {
       var connection = newInstance();
+      var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       var killed = false;
       async.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(connection.maxRequests * 2, function (n, next) {
-            if (n === connection.maxRequests * 2 - 1) {
+          async.times(maxRequests + 10, function (n, next) {
+            if (n === maxRequests + 9) {
               connection.netClient.destroy();
               killed = true;
               return next();
             }
-            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            var request = getRequest('SELECT key FROM system.local');
             connection.sendStream(request, null, function (err) {
               if (killed && err) {
                 assert.ok(err.isServerUnhealthy);
@@ -186,6 +188,7 @@ describe('Connection', function () {
   });
 });
 
+/** @returns {Connection} */
 function newInstance(address, protocolVersion, options){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];

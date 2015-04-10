@@ -268,8 +268,8 @@ describe('Client', function () {
       //noinspection JSAccessibilityCheck
       client._getPrepared = function (q, cb) {
         cb(null, new Buffer([1]), { columns: [
-          { name: 'key1', type: [types.dataTypes.int] },
-          { name: 'key2', type: [types.dataTypes.int] }
+          { name: 'key1', type: { code: types.dataTypes.int} },
+          { name: 'key2', type: { code: types.dataTypes.int} }
         ]});
       };
       //noinspection JSAccessibilityCheck

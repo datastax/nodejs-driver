@@ -251,7 +251,10 @@ describe('RequestHandler', function () {
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
           cb(null, { meta: {
-            columns: [{ type: [types.dataTypes.text], name: 'col1'}],
+            columns: [
+              { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
+              { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
+            ],
             pageState: new Buffer('1234aa', 'hex')
           }});
         });
@@ -266,9 +269,13 @@ describe('RequestHandler', function () {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
         assert.ok(util.isArray(result.columns));
-        assert.strictEqual(result.columns.length, 1);
-        assert.strictEqual(result.columns[0].type, types.dataTypes.text);
+        assert.strictEqual(result.columns.length, 2);
+        assert.strictEqual(util.inspect(result.columns[0].type), util.inspect({code: types.dataTypes.text, info: null}));
+        assert.strictEqual(result.columns[0].type.code, types.dataTypes.text);
         assert.strictEqual(result.columns[0].name, 'col1');
+        assert.strictEqual(result.columns[1].type.code, types.dataTypes.list);
+        assert.strictEqual(result.columns[1].type.info.code, types.dataTypes.uuid);
+        assert.strictEqual(result.columns[1].name, 'col2');
         assert.ok(result.info);
         assert.strictEqual(result.pageState, '1234aa');
         done();

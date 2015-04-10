@@ -111,75 +111,17 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#prepareMultiple()', function () {
-    it('should prepare each query serially and callback with the response', function (done) {
+  describe('#retry()', function () {
+    it('should cause a getNextConnection', function () {
       var handler = new RequestHandler(null, options);
-      var prepareCounter = 0;
-      var eachCounter = 0;
-      var connection = {
-        prepareOnce: function (q, cb) {
-          prepareCounter++;
-          setImmediate(function () {
-            cb(null, {});
-          });
-        }
-      };
+      handler.connection = {};
+      handler.sendOnConnection = helper.noop;
       handler.getNextConnection = function (o, cb) {
-        cb(null, connection);
+        called = true;
+        cb(null, {});
       };
-      var eachCallback = function () { eachCounter++; };
-      handler.prepareMultiple(['q1', 'q2'], [eachCallback, eachCallback], {}, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(2, eachCounter);
-        assert.strictEqual(2, prepareCounter);
-        done();
-      });
-    });
-    it('should retry with a handler when there is an error', function (done) {
-      var handler = new RequestHandler(null, options);
-      var retryCounter = 0;
-      var connection = {
-        prepareOnce: function (q, cb) {
-          var err;
-          if (retryCounter === 0) {
-            err = new errors.ResponseError(types.responseErrorCodes.overloaded, 'dummy error');
-          }
-          setImmediate(function () {
-            cb(err, {});
-          });
-        }
-      };
-      handler.getNextConnection = function (o, cb) {
-        cb(null, connection);
-      };
-      handler.retry = function (cb) {
-        retryCounter++;
-        setImmediate(cb);
-      };
-      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
-        assert.ifError(err);
-        assert.ok(handler.retryHandler);
-        assert.strictEqual(1, retryCounter);
-        done();
-      });
-    });
-    it('should not retry when there is an query error', function (done) {
-      var handler = new RequestHandler(null, options);
-      var connection = {
-        prepareOnce: function (q, cb) {
-          setImmediate(function () {
-            cb(new errors.ResponseError(types.responseErrorCodes.syntaxError, 'syntax error'));
-          });
-        }
-      };
-      handler.getNextConnection = function (o, cb) {
-        cb(null, connection);
-      };
-      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
-        helper.assertInstanceOf(err, errors.ResponseError);
-        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
-        done();
-      });
+      handler.retry(helper.noop);
+      assert.ok(called);
     });
   });
   describe('#prepareAndRetry()', function () {
@@ -200,12 +142,14 @@ describe('RequestHandler', function () {
         { info: { queryId: new Buffer('10')}, query: '1'},
         { info: { queryId: new Buffer('20')}, query: '2'}
       ], {});
-      var connection = { prepareOnce: function (q, cb) {
-        queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)})});
-      }};
-      handler.connection = connection;
       var queriesPrepared = [];
+      var connection = {
+        sendStream: function (r, o, cb) {
+          queriesPrepared.push(r.query);
+          setImmediate(function () { cb(null, { id: new Buffer(r.query)})});
+        }
+      };
+      handler.connection = connection;
       handler.sendOnConnection = function (request, o, cb) {
         helper.assertInstanceOf(request, requests.BatchRequest);
         assert.strictEqual(handler.connection, connection);
@@ -225,10 +169,12 @@ describe('RequestHandler', function () {
         { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'},
         { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'}
       ], {});
-      var connection = { prepareOnce: function (q, cb) {
-        queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)})});
-      }};
+      var connection = {
+        sendStream: function (r, o, cb) {
+          queriesPrepared.push(r.query);
+          setImmediate(function () { cb(null, { id: new Buffer(r.query)})});
+        }
+      };
       handler.connection = connection;
       var queriesPrepared = [];
       handler.sendOnConnection = function (request, o, cb) {
@@ -293,6 +239,37 @@ describe('RequestHandler', function () {
         assert.strictEqual(result.columns, null);
         done();
       });
+    });
+    it('should queue multiple requests', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connection = { sendStream: function (r, o, cb) {
+        setImmediate(function () {
+          cb(null, {query: r.query});
+        });
+      }};
+      handler.getNextConnection = function (o, cb) {
+        setImmediate(function () {
+          handler.host = { setUp: helper.noop };
+          cb(null, connection);
+        });
+      };
+      var history = '';
+      var _send = handler._send;
+      handler._send = function (r, o, c) {
+        history += r.query;
+        return _send.call(this, r, o, c);
+      };
+      handler.send(new requests.QueryRequest('q1'), {}, handleResponse.bind({query: 'q1'}));
+      handler.send(new requests.QueryRequest('q2'), {}, handleResponse.bind({query: 'q2'}));
+      var count = 0;
+      function handleResponse (err, result) {
+        if (err) return done(err);
+        history += this.query;
+        if (++count === 2) {
+          assert.strictEqual(history, 'q1q1q2q2');
+          done();
+        }
+      }
     });
   });
 });

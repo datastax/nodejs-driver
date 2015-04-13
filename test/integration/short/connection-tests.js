@@ -154,7 +154,7 @@ describe('Connection', function () {
         connection.open.bind(connection),
         function asserting(seriesNext) {
           async.times(maxRequests + 10, function (n, next) {
-            var request = getRequest('SELECT key FROM system.local');
+            var request = getRequest('SELECT * FROM system.schema_keyspaces');
             connection.sendStream(request, null, next);
           }, seriesNext);
         }

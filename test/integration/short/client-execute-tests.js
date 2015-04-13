@@ -274,16 +274,17 @@ describe('Client', function () {
             assert.ok(result.columns);
             assert.ok(util.isArray(result.columns));
             assert.strictEqual(result.columns.length, 6);
-            assert.strictEqual(result.columns[1].type, types.dataTypes.timestamp);
-            assert.strictEqual(result.columns[1].subtypes, null);
-            assert.strictEqual(result.columns[2].type, types.dataTypes.int);
+            assert.strictEqual(result.columns[1].type.code, types.dataTypes.timestamp);
+            assert.equal(result.columns[1].type.info, null);
+            assert.strictEqual(result.columns[2].type.code, types.dataTypes.int);
             assert.strictEqual(result.columns[4].name, 'list_sample2');
-            assert.strictEqual(result.columns[4].type, types.dataTypes.list);
-            assert.strictEqual(result.columns[4].subtypes[0], types.dataTypes.int);
-            assert.strictEqual(result.columns[5].type, types.dataTypes.map);
+            assert.strictEqual(result.columns[4].type.code, types.dataTypes.list);
+            assert.ok(result.columns[4].type.info);
+            assert.strictEqual(result.columns[4].type.info.code, types.dataTypes.int);
+            assert.strictEqual(result.columns[5].type.code, types.dataTypes.map);
             assert.ok(
-              result.columns[5].subtypes[0].type === types.dataTypes.text ||
-              result.columns[5].subtypes[0].type === types.dataTypes.varchar);
+              result.columns[5].type.info[0].code === types.dataTypes.text ||
+              result.columns[5].type.info[0].code === types.dataTypes.varchar);
             next();
           });
         },

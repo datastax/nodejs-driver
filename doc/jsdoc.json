@@ -5,7 +5,8 @@
       "lib/auth",
       "lib/policies",
       "lib/client.js",
-      "lib/errors.js"
+      "lib/errors.js",
+      "lib/metadata.js"
     ]
   },
   "templates": {

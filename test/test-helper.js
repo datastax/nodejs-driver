@@ -157,7 +157,7 @@ var helper = {
       ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d}' +
       ' AND durable_writes = %s;',
       keyspace,
-      replicationFactor,
+      replicationFactor || 1,
       !!durableWrites
     );
   },
@@ -336,6 +336,23 @@ var helper = {
       return;
     }
     console.log('\t...' + util.format.apply(null, arguments));
+  },
+  /**
+   * Version dependant it() method for mocha test case
+   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} testCase Test case name
+   * @param {Function} func
+   */
+  vit: function (testVersion, testCase, func) {
+    var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+    var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
+    v = testVersion.split('.');
+    var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
+    if (currentVersion >= minimumVersion) {
+      //Mocha it method
+      //noinspection JSUnresolvedFunction
+      it(testCase, func);
+    }
   }
 };
 

@@ -1,8 +1,8 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
 var async = require('async');
-var utils = require('../../lib/utils.js');
 
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
@@ -10,8 +10,9 @@ var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var Encoder = require('../../lib/encoder');
+var utils = require('../../lib/utils.js');
 var helper = require('../test-helper.js');
-
 describe('types', function () {
   describe('Long', function () {
     var Long = types.Long;
@@ -176,43 +177,65 @@ describe('types', function () {
     });
   });
   describe('Row', function () {
+    var encoder = new Encoder(3, {});
     it('should get the value by column name or index', function () {
-      var columnList = [{name: 'first'}, {name: 'second'}];
-      var row = new types.Row(columnList);
-      row['first'] = 'value1';
-      row['second'] = 'value2';
+      var columns = [{name: 'first', type: { code: dataTypes.varchar}}, {name: 'second', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(encoder, { columns: columns}, [new Buffer('hello'), new Buffer('world')]);
 
       assert.ok(row.get, 'It should contain a get method');
+      assert.strictEqual(row['first'], 'hello');
       assert.strictEqual(row.get('first'), row['first']);
       assert.strictEqual(row.get(0), row['first']);
       assert.strictEqual(row.get('second'), row['second']);
       assert.strictEqual(row.get(1), row['second']);
     });
     it('should enumerate only columns defined', function () {
-      var row = new types.Row([{name: 'col1'}, {name: 'col2'}]);
-      row['col1'] = 'val1';
-      row['col2'] = 'val2';
-      assert.strictEqual(JSON.stringify(row), JSON.stringify({'col1': 'val1', 'col2': 'val2'}));
+      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(encoder, { columns: columns}, [new Buffer('val1'), new Buffer('val2')]);
+      assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
     });
     it('should be serializable to json', function () {
-      var row = new types.Row();
-      row['col1'] = 'val1';
-      row['col2'] = 'val2';
-      assert.strictEqual(JSON.stringify(row), '{"col1":"val1","col2":"val2"}');
-      row = new types.Row();
-      row['cid'] = types.Uuid.random();
-      row['ctid'] = types.TimeUuid.now();
-      row['clong'] = types.Long.fromNumber(1000);
-      row['cvarint'] = types.Integer.fromNumber(22);
+      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(encoder, { columns: columns}, [new Buffer('val1'), new Buffer('val2')]);
+      assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
+
+      var rowValues = [];
+      rowValues.push(types.Uuid.random());
+      rowValues.push(types.TimeUuid.now());
+      rowValues.push(types.Long.fromNumber(1000));
+      rowValues.push(types.Integer.fromNumber(22));
+      row = new types.Row(
+        encoder,
+        {
+          columns: [
+            {name: 'cid', type: { code: dataTypes.uuid}},
+            {name: 'ctid', type: { code: dataTypes.timeuuid}},
+            {name: 'clong', type: { code: dataTypes.bigint}},
+            {name: 'cvarint', type: { code: dataTypes.varint}}]
+        },
+        rowValues.map(function (x) { return encoder.encode(x)})
+      );
       var expected = util.format('{"cid":"%s","ctid":"%s","clong":"1000","cvarint":"22"}',
-        row['cid'].toString(), row['ctid'].toString());
+        rowValues[0].toString(), rowValues[1].toString());
       assert.strictEqual(JSON.stringify(row), expected);
-      row = new types.Row();
-      row['cdecimal'] = types.BigDecimal.fromString("1.762");
-      row['inet1'] = new types.InetAddress(new Buffer([192, 168, 0, 1]));
-      row['inet2'] = null;
+      rowValues = [types.BigDecimal.fromString("1.762"), new types.InetAddress(new Buffer([192, 168, 0, 1])), null];
+      row = new types.Row(
+        encoder,
+        {
+          columns: [
+            {name: 'cdecimal', type: { code: dataTypes.decimal}},
+            {name: 'inet1', type: { code: dataTypes.inet}},
+            {name: 'inet2', type: { code: dataTypes.inet}}]
+        },
+        rowValues.map(function (x) { return encoder.encode(x)})
+      );
       expected = '{"cdecimal":"1.762","inet1":"192.168.0.1","inet2":null}';
       assert.strictEqual(JSON.stringify(row), expected);
+    });
+    it('should have values that can be inspected', function () {
+      var columns = [{name: 'col10', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(encoder, { columns: columns}, [new Buffer('val1'), new Buffer('val2')]);
+      assert.strictEqual(util.inspect(row), util.inspect({col10: 'val1', col2: 'val2'}));
     });
   });
   describe('uuid() backward-compatibility', function () {

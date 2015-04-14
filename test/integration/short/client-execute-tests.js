@@ -36,7 +36,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should callback with syntax error', function (done) {
+    it('should callback with syntax error @debug', function (done) {
       var client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);

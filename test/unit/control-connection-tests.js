@@ -5,10 +5,17 @@ var helper = require('../test-helper.js');
 var ControlConnection = require('../../lib/control-connection.js');
 var Host = require('../../lib/host').Host;
 var utils = require('../../lib/utils');
+var Metadata = require('../../lib/metadata');
 var types = require('../../lib/types');
 var clientOptions = require('../../lib/client-options.js');
 
 describe('ControlConnection', function () {
+  describe('constructor', function () {
+    it('should create a new metadata instance', function () {
+      var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
+      helper.assertInstanceOf(cc.metadata, Metadata);
+    });
+  });
   describe('#nodeSchemaChangeHandler()', function () {
     it('should update keyspace metadata information', function () {
       var cc = new ControlConnection(helper.baseOptions);

@@ -7,6 +7,7 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
+var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -36,7 +37,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should callback with syntax error @debug', function (done) {
+    it('should callback with syntax error', function (done) {
       var client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
@@ -366,6 +367,57 @@ describe('Client', function () {
           });
         }
       ], done);
+    });
+    describe('with udt', function () {
+      var sampleId = types.Uuid.random();
+      var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
+      var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
+          helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
+          helper.toTask(client.execute, client, util.format(insertQuery, sampleId, "{alias: 'home', number: '555 1234'}", 'null'))
+        ], done);
+      });
+      vit('2.1', 'should retrieve column information', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        client.execute(util.format(selectQuery, sampleId), function (err, result) {
+          assert.ifError(err);
+          assert.ok(result.columns);
+          assert.strictEqual(result.columns.length, 3);
+          assert.strictEqual(result.columns[1].type.code, types.dataTypes.udt);
+          var phoneInfo = result.columns[1].type.info;
+          assert.strictEqual(phoneInfo.name, 'phone');
+          assert.strictEqual(phoneInfo.fields.length, 4);
+          assert.strictEqual(phoneInfo.fields[0].name, 'alias');
+          assert.strictEqual(phoneInfo.fields[0].type.code, types.dataTypes.varchar);
+          assert.strictEqual(phoneInfo.fields[2].name, 'country_code');
+          assert.strictEqual(phoneInfo.fields[2].type.code, types.dataTypes.int);
+          assert.strictEqual(result.columns[2].type.code, types.dataTypes.udt);
+          var addressInfo = result.columns[2].type.info;
+          assert.strictEqual(addressInfo.name, 'address');
+          assert.strictEqual(addressInfo.fields.length, 3);
+          assert.strictEqual(addressInfo.fields[0].name, 'street');
+          assert.strictEqual(addressInfo.fields[1].name, 'ZIP');
+          assert.strictEqual(addressInfo.fields[1].type.code, types.dataTypes.int);
+          assert.strictEqual(addressInfo.fields[2].name, 'phones');
+          assert.strictEqual(addressInfo.fields[2].type.code, types.dataTypes.set);
+          assert.strictEqual(addressInfo.fields[2].type.info.code, types.dataTypes.udt);
+          var subPhone = addressInfo.fields[2].type.info.info;
+          assert.strictEqual(subPhone.name, 'phone');
+          assert.strictEqual(subPhone.fields.length, 4);
+          assert.strictEqual(subPhone.fields[0].name, 'alias');
+          assert.strictEqual(subPhone.fields[0].type.code, types.dataTypes.varchar);
+          assert.strictEqual(subPhone.fields[1].name, 'number');
+          assert.strictEqual(subPhone.fields[1].type.code, types.dataTypes.varchar);
+          assert.strictEqual(subPhone.fields[2].name, 'country_code');
+          assert.strictEqual(subPhone.fields[2].type.code, types.dataTypes.int);
+          done();
+        });
+      });
     });
   });
 });

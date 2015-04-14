@@ -17,6 +17,7 @@ describe('Client', function () {
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
       //fail if its preparing
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () {throw new Error('Prepared should not be called')};
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
@@ -32,7 +33,6 @@ describe('Client', function () {
     it('should allow calls without end callback', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
-      var counter = 0;
       client.eachRow(query, [], {}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -44,7 +44,7 @@ describe('Client', function () {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'' + helper.getRandomName() + '\'';
       var counter = 0;
-      client.eachRow(query, [], {}, function (n, row) {
+      client.eachRow(query, [], {}, function () {
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -57,7 +57,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var query = helper.createKeyspaceCql(keyspace, 1);
       var counter = 0;
-      client.eachRow(query, [], {}, function (n, row) {
+      client.eachRow(query, [], {}, function () {
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -98,7 +98,6 @@ describe('Client', function () {
           });
         }], done);
     });
-
     it('should autoPage @c2_0', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -121,7 +120,7 @@ describe('Client', function () {
           //It should fetch 3 times, a total of 100 rows (45+45+10)
           var query = util.format('SELECT * FROM %s', table);
           var rowCount = 0;
-          client.eachRow(query, [], {fetchSize: 45, autoPage: true}, function (n, row) {
+          client.eachRow(query, [], {fetchSize: 45, autoPage: true}, function () {
             rowCount++;
           }, function (err, result) {
             assert.ifError(err);
@@ -138,7 +137,7 @@ describe('Client', function () {
           //It should fetch 1 time, a total of 100 rows (even if asked more)
           var query = util.format('SELECT * FROM %s', table);
           var rowCount = 0;
-          client.eachRow(query, [], {fetchSize: 2000, autoPage: true}, function (n, row) {
+          client.eachRow(query, [], {fetchSize: 2000, autoPage: true}, function () {
             rowCount++;
           }, function (err, result) {
             assert.ifError(err);
@@ -153,7 +152,6 @@ describe('Client', function () {
       ], done);
     });
   });
-
   describe('#eachRow(query, params, {prepare: 1})', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
@@ -175,8 +173,10 @@ describe('Client', function () {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
+      //noinspection JSAccessibilityCheck
       var originalGetPrepared = client._getPrepared;
       var prepareCalled = false;
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () {
         prepareCalled = true;
         originalGetPrepared.apply(client, arguments);
@@ -306,7 +306,7 @@ describe('Client', function () {
         function selectData(seriesNext) {
           //Only fetch 70
           var counter = 0;
-          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (n, row) {
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function () {
             counter++;
           }, function (err, result) {
             assert.ifError(err);

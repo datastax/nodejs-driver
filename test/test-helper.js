@@ -349,7 +349,7 @@ var helper = {
     v = testVersion.split('.');
     var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
     if (currentVersion >= minimumVersion) {
-      //Mocha it method
+      //Mocha it() method
       //noinspection JSUnresolvedFunction
       it(testCase, func);
     }

@@ -287,6 +287,85 @@ describe('Client', function () {
       var queryOptions = { prepare: true, routingNames: ['key1', 'key2']};
       client.execute(query, {key2: 2, key1: 1}, queryOptions, helper.throwop);
     });
+    it('should fill parameter information for string hints', function (done) {
+      var Client = rewire('../../lib/client');
+      var options;
+      var requestHandlerMock = function () {};
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = helper.callbackNoop;
+      //noinspection JSAccessibilityCheck
+      client._getEncoder = function () {
+        return new Encoder(2, client.options);
+      };
+      client.metadata.getUdt = function (ks, n, cb) {
+        cb(null, {keyspace: ks, name: n});
+      };
+      requestHandlerMock.prototype.send = function (q, o, cb) {
+        options = o;
+        cb();
+      };
+      var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+      var queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>']};
+      client.execute(query, [0, 1, 2, 3], queryOptions, function (err) {
+        assert.ifError(err);
+        assert.ok(options);
+        assert.ok(options.hints);
+        assert.ok(options.hints[0]);
+        assert.strictEqual(options.hints[0].code, types.dataTypes.int);
+        assert.ok(options.hints[1]);
+        assert.strictEqual(options.hints[1].code, types.dataTypes.list);
+        assert.ok(options.hints[1].info);
+        assert.strictEqual(options.hints[1].info.code, types.dataTypes.uuid);
+        assert.ok(options.hints[2]);
+        assert.strictEqual(options.hints[2].code, types.dataTypes.map);
+        assert.ok(util.isArray(options.hints[2].info));
+        assert.strictEqual(options.hints[2].info[0].code, types.dataTypes.text);
+        assert.strictEqual(options.hints[2].info[1].code, types.dataTypes.timestamp);
+        assert.ok(options.hints[3]);
+        assert.strictEqual(options.hints[3].code, types.dataTypes.udt);
+        assert.ok(options.hints[3].info);
+        assert.strictEqual(options.hints[3].info.keyspace, 'ks1');
+        done();
+      });
+    });
+    it('should callback with an argument error when the hints are not valid strings', function (done) {
+      var Client = rewire('../../lib/client');
+      var options;
+      var requestHandlerMock = function () {};
+      Client.__set__("RequestHandler", requestHandlerMock);
+      var client = new Client(helper.baseOptions);
+      client.connect = helper.callbackNoop;
+      //noinspection JSAccessibilityCheck
+      client._getEncoder = function () {
+        return new Encoder(2, client.options);
+      };
+      requestHandlerMock.prototype.send = function (q, o, cb) {
+        options = o;
+        cb();
+      };
+      var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+      async.series([
+        function (next) {
+          client.execute(query, [], { hints: ['int2']}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function (next) {
+          client.execute(query, [], { hints: ['map<zeta>']}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function (next) {
+          client.execute(query, [], { hints: ['udt<myudt>']}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        }
+      ], done);
+    });
   });
   describe('#batch()', function () {
     var Client = rewire('../../lib/client.js');

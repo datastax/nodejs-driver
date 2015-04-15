@@ -7,6 +7,7 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
+var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -433,6 +434,48 @@ describe('Client', function () {
           });
         }
       ], done);
+    });
+    describe('with udt', function () {
+      var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: commonKs });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
+          helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)')
+        ], done);
+      });
+      vit('2.1', 'it should encode objects into udt', function (done) {
+        var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
+        var id = types.Uuid.random();
+        var phone = { alias: 'work2', number: '555 9012', country_code: 54};
+        var address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
+        async.series([
+          function insert(next) {
+            client.execute(insertQuery, [id, phone, address], next);
+          },
+          function select(next) {
+            client.execute(selectQuery, [id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              var phoneResult = row['phone_col'];
+              assert.strictEqual(phoneResult.alias, phone.alias);
+              assert.strictEqual(phoneResult.number, phone.number);
+              assert.strictEqual(phoneResult.country_code, phone.country_code);
+              assert.equal(phoneResult.other, phone.other);
+              var addressResult = row['address_col'];
+              assert.strictEqual(addressResult.street, address.street);
+              assert.strictEqual(addressResult.ZIP, address.ZIP);
+              assert.strictEqual(addressResult.phones.length, 1);
+              assert.strictEqual(addressResult.phones[0].alias, address.phones[0].alias);
+              assert.strictEqual(addressResult.phones[0].number, null);
+              next();
+            });
+          }
+        ], done);
+      });
     });
   });
 });

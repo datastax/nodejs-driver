@@ -379,7 +379,11 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
-          helper.toTask(client.execute, client, util.format(insertQuery, sampleId, "{alias: 'home', number: '555 1234'}", 'null'))
+          helper.toTask(client.execute, client, util.format(
+            insertQuery,
+            sampleId,
+            "{alias: 'home', number: '555 1234', country_code: 54}",
+            "{street: 'NightMan', \"ZIP\": 90988, phones: {{alias: 'personal', number: '555 5678'}, {alias: 'work'}}}"))
         ], done);
       });
       vit('2.1', 'should retrieve column information', function (done) {
@@ -415,6 +419,31 @@ describe('Client', function () {
           assert.strictEqual(subPhone.fields[1].type.code, types.dataTypes.varchar);
           assert.strictEqual(subPhone.fields[2].name, 'country_code');
           assert.strictEqual(subPhone.fields[2].type.code, types.dataTypes.int);
+          done();
+        });
+      });
+      vit('2.1', 'should parse udt row', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        client.execute(util.format(selectQuery, sampleId), function (err, result) {
+          assert.ifError(err);
+          var row = result.first();
+          assert.ok(row);
+          var phone = row['phone_col'];
+          assert.ok(phone);
+          assert.strictEqual(phone['alias'], 'home');
+          assert.strictEqual(phone['number'], '555 1234');
+          assert.strictEqual(phone['country_code'], 54);
+          assert.strictEqual(phone['other'], null);
+          var address = row['address_col'];
+          assert.ok(address);
+          assert.strictEqual(address['street'], 'NightMan');
+          assert.strictEqual(address['ZIP'], 90988);
+          assert.ok(util.isArray(address['phones']));
+          assert.strictEqual(address['phones'].length, 2);
+          assert.strictEqual(address['phones'][0]['alias'], 'personal');
+          assert.strictEqual(address['phones'][0]['number'], '555 5678');
+          assert.strictEqual(address['phones'][1]['alias'], 'work');
+          assert.strictEqual(address['phones'][1]['number'], null);
           done();
         });
       });

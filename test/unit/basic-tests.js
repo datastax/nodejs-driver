@@ -13,6 +13,8 @@ var retry = require('../../lib/policies/retry.js');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
 var helper = require('../test-helper.js');
+
+
 describe('types', function () {
   describe('Long', function () {
     var Long = types.Long;
@@ -91,6 +93,56 @@ describe('types', function () {
       values.forEach(function (item) {
         var buffer = Integer.toBuffer(Integer.fromString(item[1]));
         assert.strictEqual(buffer.toString('hex'), item[0]);
+      });
+    });
+  });
+  describe('Tuple', function () {
+    var Tuple = types.Tuple;
+    describe('#get()', function () {
+      it('should return the element at position', function () {
+        var t = new Tuple('first', 'second');
+        assert.strictEqual(t.get(0), 'first');
+        assert.strictEqual(t.get(1), 'second');
+        assert.strictEqual(t.get(2), undefined);
+        assert.strictEqual(t.length, 2);
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string of the elements surrounded by parenthesis', function () {
+        var id = types.Uuid.random();
+        var decimal = types.BigDecimal.fromString('1.2');
+        var t = new Tuple(id, decimal, 0);
+        assert.strictEqual(t.toString(), '(' + id.toString() + ',' + decimal.toString() + ',0)');
+      });
+    });
+    describe('#toJSON()', function () {
+      it('should return the string of the elements surrounded by square brackets', function () {
+        var id = types.TimeUuid.now();
+        var decimal = types.BigDecimal.fromString('-1');
+        var t = new Tuple(id, decimal, 1);
+        assert.strictEqual(t.toJSON(), '["' + id.toString() + '","' + decimal.toString() + '","1"]');
+      });
+    });
+    describe('#values()', function () {
+      it('should return the Array representation of the Tuple', function () {
+        var t = new Tuple('first2', 'second2', 'third2');
+        assert.strictEqual(t.length, 3);
+        var values = t.values();
+        assert.ok(util.isArray(values));
+        assert.strictEqual(values.length, 3);
+        assert.strictEqual(values[0], 'first2');
+        assert.strictEqual(values[1], 'second2');
+        assert.strictEqual(values[2], 'third2');
+      });
+      it('when modifying the returned Array the Tuple should not change its values', function () {
+        var t = new Tuple('first3', 'second3', 'third3');
+        var values = t.values();
+        assert.strictEqual(values.length, 3);
+        values[0] = 'whatever';
+        values.shift();
+        assert.strictEqual(t.get(0), 'first3');
+        assert.strictEqual(t.get(1), 'second3');
+        assert.strictEqual(t.get(2), 'third3');
       });
     });
   });

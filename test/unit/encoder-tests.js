@@ -471,6 +471,16 @@ describe('encoder', function () {
         assert.strictEqual(decoded.toString(), m.toString());
       });
     });
+    it('should encode/decode udts', function () {
+      var encoder = new Encoder(3, {});
+      var type = { code: dataTypes.udt, info: { fields:[
+        {name: 'alias', type:{code:dataTypes.text}},
+        {name: 'number', type:{code:dataTypes.text}}] }};
+      var encoded = encoder.encode({ alias: 'zeta'}, type);
+      var decoded = encoder.decode(encoded, type);
+      assert.strictEqual(decoded['alias'], 'zeta');
+      assert.strictEqual(decoded['number'], null);
+    });
   });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});

@@ -447,6 +447,37 @@ describe('Client', function () {
           done();
         });
       });
+      vit('2.1', 'should allow udt parameter hints and retrieve metadata', function (done) {
+        var phone = { alias: 'home2', number: '555 0000', country_code: 34, other: true};
+        var address = {street: 'NightMan2', ZIP: 90987, phones: [{ 'alias': 'personal2', 'number': '555 0001'}, {alias: 'work2'}]};
+        var id = types.Uuid.random();
+        var client = newInstance({ keyspace: keyspace});
+        async.series([
+          function insert(next) {
+            var query = util.format(insertQuery, '?', '?', '?');
+            client.execute(query, [id, phone, address], { hints: [null, 'udt<phone>', 'udt<address>']}, next);
+          },
+          function select(next) {
+            client.execute(util.format(selectQuery, '?'), [id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.ok(row['phone_col']);
+              assert.strictEqual(row['phone_col']['alias'], phone.alias);
+              assert.strictEqual(row['phone_col']['number'], phone.number);
+              assert.strictEqual(row['phone_col']['country_code'], phone.country_code);
+              assert.strictEqual(row['phone_col']['other'], phone.other);
+              assert.ok(row['address_col']);
+              assert.strictEqual(row['address_col']['street'], address.street);
+              assert.strictEqual(row['address_col']['ZIP'], address.ZIP);
+              assert.ok(row['address_col']['phones']);
+              assert.strictEqual(row['address_col']['phones'].length, 2);
+              assert.strictEqual(row['address_col']['phones'][0]['alias'], address.phones[0]['alias']);
+              next();
+            });
+          }
+        ], done);
+      });
     });
   });
 });

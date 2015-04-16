@@ -306,8 +306,8 @@ describe('Client', function () {
         cb();
       };
       var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
-      var queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>']};
-      client.execute(query, [0, 1, 2, 3], queryOptions, function (err) {
+      var queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
+      client.execute(query, [0, 1, 2, 3, 4], queryOptions, function (err) {
         assert.ifError(err);
         assert.ok(options);
         assert.ok(options.hints);
@@ -326,6 +326,14 @@ describe('Client', function () {
         assert.strictEqual(options.hints[3].code, types.dataTypes.udt);
         assert.ok(options.hints[3].info);
         assert.strictEqual(options.hints[3].info.keyspace, 'ks1');
+        //nested collections
+        assert.ok(options.hints[4]);
+        assert.strictEqual(options.hints[4].code, types.dataTypes.map);
+        assert.ok(util.isArray(options.hints[4].info));
+        assert.ok(options.hints[4].info[0]);
+        assert.strictEqual(options.hints[4].info[0].code, types.dataTypes.uuid);
+        assert.strictEqual(options.hints[4].info[1].code, types.dataTypes.set);
+        assert.strictEqual(options.hints[4].info[1].info.code, types.dataTypes.text);
         done();
       });
     });

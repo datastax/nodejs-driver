@@ -481,6 +481,20 @@ describe('encoder', function () {
       assert.strictEqual(decoded['alias'], 'zeta');
       assert.strictEqual(decoded['number'], null);
     });
+    it('should encode/decode nested collections', function () {
+      var encoder = new Encoder(3, {});
+      var type = { code: dataTypes.map, info: [{code: dataTypes.text}, {code: dataTypes.set, info: {code: dataTypes.text}}]};
+      var encoded = encoder.encode({ key1: ['first', 'second', 'third'], key2: ['2-first']}, type);
+      var decoded = encoder.decode(encoded, type);
+      assert.ok(decoded.key1);
+      assert.strictEqual(decoded.key1.length, 3);
+      assert.strictEqual(decoded.key1[0], 'first');
+      assert.strictEqual(decoded.key1[1], 'second');
+      assert.strictEqual(decoded.key1[2], 'third');
+      assert.ok(decoded.key2);
+      assert.strictEqual(decoded.key2.length, 1);
+      assert.strictEqual(decoded.key2[0], '2-first');
+    });
   });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});

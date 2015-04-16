@@ -435,6 +435,52 @@ describe('Client', function () {
         }
       ], done);
     });
+    vit('2.1.3', 'should support nested collections', function (done) {
+      var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
+      var createTableCql = 'CREATE TABLE tbl_nested (' +
+        'id uuid PRIMARY KEY, ' +
+        'map1 map<text, frozen<set<timeuuid>>>, ' +
+        'list1 list<frozen<set<uuid>>>)';
+      var id = types.Uuid.random();
+      var map = {
+        'key1': [types.TimeUuid.now(), types.TimeUuid.now()],
+        'key2': [types.TimeUuid.now()]
+      };
+      var list = [
+        [types.Uuid.random()],
+        [types.Uuid.random(), types.Uuid.random()]
+      ];
+      async.series([
+        helper.toTask(client.execute, client, createTableCql),
+        function insert(next) {
+          var query = 'INSERT INTO tbl_nested (id, map1, list1) VALUES (?, ?, ?)';
+          client.execute(query, [id, map, list], next);
+        },
+        function select(next) {
+          var query = 'SELECT * FROM tbl_nested WHERE id = ?';
+          client.execute(query, [id], function (err, result) {
+            assert.ifError(err);
+            var row = result.first();
+            assert.ok(row['map1']);
+            assert.strictEqual(Object.keys(row['map1']).length, 2);
+            assert.ok(util.isArray(row['map1']['key1']));
+            assert.strictEqual(row['map1']['key1'].length, 2);
+            assert.strictEqual(row['map1']['key1'][0].toString(), map.key1[0].toString());
+            assert.strictEqual(row['map1']['key1'][1].toString(), map.key1[1].toString());
+            assert.strictEqual(row['map1']['key2'].length, 1);
+            assert.strictEqual(row['map1']['key2'][0].toString(), map.key2[0].toString());
+            assert.ok(row['list1']);
+            assert.strictEqual(row['list1'].length, 2);
+            assert.ok(util.isArray(row['list1'][0]));
+            assert.strictEqual(row['list1'][0][0].toString(), list[0][0].toString());
+            assert.ok(util.isArray(row['list1'][1]));
+            assert.strictEqual(row['list1'][1][0].toString(), list[1][0].toString());
+            assert.strictEqual(row['list1'][1][1].toString(), list[1][1].toString());
+            next();
+          });
+        }
+      ], done);
+    });
     describe('with udt', function () {
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
       var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';

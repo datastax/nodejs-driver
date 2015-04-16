@@ -233,7 +233,7 @@ var helper = {
     //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
-      version = '2.1.0';
+      version = '2.1.4';
     }
     return version;
   },

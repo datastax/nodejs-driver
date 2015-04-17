@@ -1,3 +1,4 @@
+"use strict";
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
@@ -7,6 +8,7 @@ var rewire = require('rewire');
 var hostModule = rewire('../../lib/host.js');
 var Host = hostModule.Host;
 var HostConnectionPool = hostModule.HostConnectionPool;
+var HostMap = hostModule.HostMap;
 var types = require('../../lib/types');
 var defaultOptions = require('../../lib/client-options').defaultOptions();
 var utils = require('../../lib/utils.js');
@@ -222,6 +224,28 @@ describe('Host', function () {
       var host = newHostInstance(options);
       host.on('down', done);
       host.setDown();
+    });
+  });
+});
+describe('HostMap', function () {
+  describe('#values()', function () {
+    it('should return a frozen array', function () {
+      var map = new HostMap();
+      map.set('h1', 'h1');
+      var values = map.values();
+      assert.strictEqual(values.length, 1);
+      assert.ok(Object.isFrozen(values));
+    });
+    it('should return the same instance as long as the value does not change', function () {
+      var map = new HostMap();
+      map.set('h1', 'h1');
+      var values1 = map.values();
+      var values2 = map.values();
+      assert.strictEqual(values1, values2);
+      map.set('h2', 'h2');
+      var values3 = map.values();
+      assert.strictEqual(values3.length, 2);
+      assert.notEqual(values3, values1);
     });
   });
 });

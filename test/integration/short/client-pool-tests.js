@@ -73,7 +73,7 @@ describe('Client', function () {
         });
       }, done);
     });
-    it('should not use contactPoints that are not part of peers', function (done) {
+    it('should not use contactPoints that are not part of peers @debug', function (done) {
       var contactPoints = helper.baseOptions.contactPoints.slice(0);
       contactPoints.push('host-not-existent-not-peer');
       contactPoints.push('1.1.1.1');

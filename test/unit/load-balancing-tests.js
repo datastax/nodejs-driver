@@ -20,7 +20,7 @@ describe('RoundRobinPolicy', function () {
   it('should yield nodes in a round robin manner even in parallel', function (done) {
     var policy = new RoundRobinPolicy();
     var hosts = [];
-    var originalHosts = ['A', 'B', 'C', 'E'];
+    var originalHosts = createHostMap(['A', 'B', 'C', 'E']);
     var times = 100;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
@@ -52,7 +52,7 @@ describe('RoundRobinPolicy', function () {
   it('should yield host in a round robin manner when consuming', function (done) {
     var policy = new RoundRobinPolicy();
     var hosts = [];
-    var originalHosts = ['A', 'B', 'C', 'E', 'F'];
+    var originalHosts = createHostMap(['A', 'B', 'C', 'E', 'F']);
     var times = 15;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
@@ -85,7 +85,7 @@ describe('RoundRobinPolicy', function () {
   });
   it('should yield no more than N host', function (done) {
     var policy = new RoundRobinPolicy();
-    var originalHosts = ['A', 'B', 'C'];
+    var originalHosts = createHostMap(['A', 'B', 'C']);
     var times = 10;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
@@ -116,11 +116,11 @@ describe('DCAwareRoundRobinPolicy', function () {
     var policy = new DCAwareRoundRobinPolicy('dc1');
     var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var hosts = [];
-    var originalHosts = [];
+    var originalHosts = new HostMap();
     for (var i = 0; i < 50; i++) {
       var h = new Host(i, 2, options);
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
-      originalHosts.push(h);
+      originalHosts.set(i.toString(), h);
     }
     var localLength = originalHosts.length / 2;
     var times = 1;
@@ -173,7 +173,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     var policy = new DCAwareRoundRobinPolicy(null, 2);
     var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var hosts = [];
-    var originalHosts = [];
+    var originalHosts = new HostMap();
     for (var i = 0; i < 60; i++) {
       var h = new Host(i, 2, options);
       switch (i % 3) {
@@ -187,7 +187,7 @@ describe('DCAwareRoundRobinPolicy', function () {
           h.datacenter = 'dc3';
           break;
       }
-      originalHosts.push(h);
+      originalHosts.set(i.toString(), h);
     }
     var localLength = originalHosts.length / 3;
     //2 nodes per each remote dc
@@ -316,4 +316,15 @@ function createDummyPolicy(options) {
   };
   return childPolicy;
 }
-//TODO: Check with hosts changing, check if they are considered.
+/**
+ * Creates a dummy host map containing the key as key and value
+ * @param {Array} hosts
+ * @returns {HostMap}
+ */
+function createHostMap(hosts) {
+  var map = new HostMap();
+  for (var i = 0; i < hosts.length; i++) {
+    map.set(hosts[i], hosts[i]);
+  }
+  return map;
+}

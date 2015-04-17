@@ -20,7 +20,7 @@ describe('types', function () {
     var Long = types.Long;
     it('should convert from and to Buffer', function () {
       [
-       //int64 decimal value    //hex value
+        //int64 decimal value    //hex value
         ['-123456789012345678', 'fe4964b459cf0cb2'],
         ['-800000000000000000', 'f4e5d43d13b00000'],
         ['-888888888888888888', 'f3aa0843dcfc71c8'],
@@ -119,8 +119,8 @@ describe('types', function () {
       it('should return the string of the elements surrounded by square brackets', function () {
         var id = types.TimeUuid.now();
         var decimal = types.BigDecimal.fromString('-1');
-        var t = new Tuple(id, decimal, 1);
-        assert.strictEqual(t.toJSON(), '["' + id.toString() + '","' + decimal.toString() + '","1"]');
+        var t = new Tuple(id, decimal, 1, {z: 1});
+        assert.strictEqual(JSON.stringify(t), '["' + id.toString() + '","' + decimal.toString() + '",1,{"z":1}]');
       });
     });
     describe('#values()', function () {
@@ -161,7 +161,6 @@ describe('types', function () {
           buf.push(item);
         }
       });
-      
       stream.add(new Buffer('Jimmy'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('McNulty'));

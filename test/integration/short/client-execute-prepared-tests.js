@@ -127,7 +127,7 @@ describe('Client', function () {
       var columnNames = 'id, timeuuid_sample, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(values, columnNames, done);
     });
-    it('should support IN clause with 1 marker @c2_0', function (done) {
+    vit('2.0', 'should support IN clause with 1 marker', function (done) {
       var client = newInstance();
       client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name IN ?', [['system', 'another']], {prepare: 1}, function (err, result) {
         assert.ifError(err);
@@ -136,7 +136,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should use pageState and fetchSize @c2_0', function (done) {
+    vit('2.0', 'should use pageState and fetchSize', function (done) {
       var client = newInstance();
       var pageState;
       var metaPageState;
@@ -215,7 +215,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should allow named parameters with array of parameters @c2_0', function (done) {
+    vit('2.0', 'should allow named parameters with array of parameters', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
       client.execute(query, ['system'], {prepare: 1}, function (err, result) {
@@ -225,7 +225,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an associative array @c2_0', function (done) {
+    vit('2.0', 'should allow named parameters as an associative array', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
       client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
@@ -235,7 +235,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an associative array case insensitive @c2_0', function (done) {
+    vit('2.0', 'should allow named parameters as an associative array case insensitive', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
       client.execute(query, {'ksNamE': 'system'}, {prepare: 1}, function (err, result) {
@@ -245,7 +245,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should allow named parameters as an object with other props @c2_0', function (done) {
+    vit('2.0', 'should allow named parameters as an object with other props', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
       client.execute(query, {'KSNAME': 'system', other: 'value'}, {prepare: 1}, function (err, result) {
@@ -413,7 +413,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should support protocol level timestamp @c2_1', function (done) {
+    vit('2.1',  'should support protocol level timestamp', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
       var timestamp = types.generateTimestamp(new Date(), 456);
@@ -481,19 +481,20 @@ describe('Client', function () {
         }
       ], done);
     });
-    describe('with udt', function () {
-      var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
-      var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
+    describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
         async.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
-          helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)')
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>)')
         ], done);
       });
       vit('2.1', 'it should encode objects into udt', function (done) {
+        var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
+        var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
         var id = types.Uuid.random();
         var phone = { alias: 'work2', number: '555 9012', country_code: 54};
@@ -517,6 +518,36 @@ describe('Client', function () {
               assert.strictEqual(addressResult.phones.length, 1);
               assert.strictEqual(addressResult.phones[0].alias, address.phones[0].alias);
               assert.strictEqual(addressResult.phones[0].number, null);
+              next();
+            });
+          }
+        ], done);
+      });
+      vit('2.1', 'it should encode and decode tuples', function (done) {
+        var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
+        var selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
+        var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
+        var id = types.Uuid.random();
+        var tuple1 = new types.Tuple('val1', 1);
+        var tuple2 = new types.Tuple(types.Uuid.random(), types.Long.fromInt(12), true);
+        async.series([
+          function insert(next) {
+            client.execute(insertQuery, [id, tuple1, tuple2], next);
+          },
+          function select(next) {
+            client.execute(selectQuery, [id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              var tuple1Result = row['tuple_col1'];
+              var tuple2Result = row['tuple_col2'];
+              assert.strictEqual(tuple1Result.length, 2);
+              assert.strictEqual(tuple1Result.get(0), 'val1');
+              assert.strictEqual(tuple1Result.get(0), tuple1.get(0));
+              assert.strictEqual(tuple1Result.get(1), tuple1.get(1));
+              assert.strictEqual(tuple2Result.length, 3);
+              assert.strictEqual(tuple2Result.get(0).toString(), tuple2.get(0).toString());
+              assert.strictEqual(tuple2Result.get(1).toString(), '12');
+              assert.strictEqual(tuple2Result.get(2), tuple2.get(2));
               next();
             });
           }

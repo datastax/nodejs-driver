@@ -368,7 +368,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    describe('with udt', function () {
+    describe('with udt and tuple', function () {
       var sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
       var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
@@ -379,6 +379,7 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col tuple<text,int,blob>)'),
           helper.toTask(client.execute, client, util.format(
             insertQuery,
             sampleId,
@@ -473,6 +474,30 @@ describe('Client', function () {
               assert.ok(row['address_col']['phones']);
               assert.strictEqual(row['address_col']['phones'].length, 2);
               assert.strictEqual(row['address_col']['phones'][0]['alias'], address.phones[0]['alias']);
+              next();
+            });
+          }
+        ], done);
+      });
+      vit('2.1', 'should allow tuple parameter hints', function (done) {
+        var client = newInstance({ keyspace: keyspace});
+        var id = types.Uuid.random();
+        var tuple = new types.Tuple('Surf Rider', 110, new Buffer('0f0f', 'hex'));
+        async.series([
+          function insert(next) {
+            var query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
+            client.execute(query, [id, tuple], { hints: [null, 'tuple<text, int,blob>']}, next);
+          },
+          function select(next) {
+            client.execute(util.format('SELECT * FROM tbl_tuples WHERE id = ?'), [id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.ok(row['tuple_col']);
+              assert.strictEqual(row['tuple_col'].length, 3);
+              assert.strictEqual(row['tuple_col'].get(0), tuple.get(0));
+              assert.strictEqual(row['tuple_col'].get(1), tuple.get(1));
+              assert.strictEqual(row['tuple_col'].get(2).toString('hex'), '0f0f');
               next();
             });
           }

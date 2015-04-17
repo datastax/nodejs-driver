@@ -28,6 +28,7 @@ describe('encoder', function () {
       assertGuessed(types.BigDecimal.fromString('1.01'), dataTypes.decimal, 'Guess type for a varint value failed');
       assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(new types.InetAddress(new Buffer([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
+      assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
 
@@ -495,6 +496,15 @@ describe('encoder', function () {
       assert.strictEqual(decoded.key2.length, 1);
       assert.strictEqual(decoded.key2[0], '2-first');
     });
+    it('should encode/decode tuples', function () {
+      var encoder = new Encoder(3, {});
+      var type = { code: dataTypes.tuple, info: [ { code: dataTypes.text}, { code: dataTypes.timestamp }]};
+      var encoded = encoder.encode(new types.Tuple('one', new Date(1429259123607)), type);
+      var decoded = encoder.decode(encoded, type);
+      assert.strictEqual(decoded.length, 2);
+      assert.strictEqual(decoded.get(0), 'one');
+      assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
+    });
   });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});
@@ -637,6 +647,12 @@ describe('encoder', function () {
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.bigint, type.info[1].code);
+
+      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
+      assert.strictEqual(dataTypes.tuple, type.code);
+      assert.ok(util.isArray(type.info));
+      assert.strictEqual(dataTypes.varchar, type.info[0].code);
+      assert.strictEqual(dataTypes.int, type.info[1].code);
     });
     it('should parse frozen types', function () {
       var encoder = new Encoder(2, {});

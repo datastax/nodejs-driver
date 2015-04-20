@@ -41,7 +41,7 @@ describe('Client', function () {
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        assert.ok(err.message.indexOf('resolve') > 0);
+        assert.ok(err.message.indexOf('resolve') > 0, 'Message was: ' + err.message);
         assert.ok(!client.hosts);
         done();
       });

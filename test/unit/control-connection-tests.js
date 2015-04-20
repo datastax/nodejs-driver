@@ -75,18 +75,36 @@ describe('ControlConnection', function () {
       var peer = getInet([100, 100, 100, 100]);
 
       var row = {'rpc_address': getInet([1, 2, 3, 4]), peer: peer};
-      var address = cc.getAddressForPeerHost(row);
-      assert.strictEqual(address, '1.2.3.4');
+      var address = cc.getAddressForPeerHost(row, 9042);
+      assert.strictEqual(address, '1.2.3.4:9042');
 
       row = {'rpc_address': getInet([0, 0, 0, 0]), peer: peer};
-      address = cc.getAddressForPeerHost(row);
+      address = cc.getAddressForPeerHost(row, 9001);
       //should return peer address
-      assert.strictEqual(address, '100.100.100.100');
+      assert.strictEqual(address, '100.100.100.100:9001');
 
       row = {'rpc_address': null, peer: peer};
-      address = cc.getAddressForPeerHost(row);
+      address = cc.getAddressForPeerHost(row, 9042);
       //should return peer address
       assert.strictEqual(address, null);
+    });
+    it('should call the AddressTranslator', function () {
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var address = null;
+      var port = null;
+      options.policies.addressResolution = { translate: function (addr, p) {
+        address = addr;
+        port = p;
+        return addr + ':' + p;
+      }};
+      var cc = new ControlConnection(options);
+      cc.host = new Host('2.2.2.2', 1, options);
+      cc.log = helper.noop;
+      var row = {'rpc_address': getInet([5, 2, 3, 4]), peer: null};
+      var endPoint = cc.getAddressForPeerHost(row, 9055);
+      assert.strictEqual(endPoint, '5.2.3.4:9055');
+      assert.strictEqual(address, '5.2.3.4');
+      assert.strictEqual(port, 9055);
     });
   });
   describe('#setPeersInfo()', function () {
@@ -107,9 +125,9 @@ describe('ControlConnection', function () {
       ];
       cc.setPeersInfo(true, {rows: rows});
       assert.strictEqual(cc.hosts.length, 3);
-      assert.ok(cc.hosts.get('5.4.3.2'));
-      assert.ok(cc.hosts.get('9.8.7.6'));
-      assert.ok(cc.hosts.get('5.5.5.5'));
+      assert.ok(cc.hosts.get('5.4.3.2:9042'));
+      assert.ok(cc.hosts.get('9.8.7.6:9042'));
+      assert.ok(cc.hosts.get('5.5.5.5:9042'));
     });
   });
 });

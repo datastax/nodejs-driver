@@ -198,7 +198,7 @@ function newInstance(address, protocolVersion, options){
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
   options = utils.extend({logEmitter: helper.noop}, options || defaultOptions);
-  return new Connection(address, protocolVersion, options);
+  return new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
 }
 
 function getRequest(query) {

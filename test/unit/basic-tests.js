@@ -523,7 +523,7 @@ describe('clientOptions', function () {
           contactPoints: ['host1'],
           policies: {
             //Use whatever object
-            loadBalancing: new Connection()
+            loadBalancing: new (function C1() {})()
           }
         });
       });
@@ -532,7 +532,7 @@ describe('clientOptions', function () {
           contactPoints: ['host1'],
           policies: {
             //Use whatever object
-            retry: new Connection()
+            retry: new (function C2() {})()
           }
         });
       });

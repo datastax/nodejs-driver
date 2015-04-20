@@ -32,7 +32,6 @@ describe('ControlConnection', function () {
       assert.ok(cc.metadata.keyspaces[ksName]);
       cc.nodeSchemaChangeHandler({schemaChangeType: 'DROPPED', keyspace: ksName});
       assert.strictEqual(typeof cc.metadata.keyspaces[ksName], 'undefined');
-
       //check that the callback error does not throw
       cc.connection.sendStream =  function (a, b, c) {
         c(new Error('Fake error'));

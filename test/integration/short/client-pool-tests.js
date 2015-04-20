@@ -73,17 +73,21 @@ describe('Client', function () {
         });
       }, done);
     });
-    it('should not use contactPoints that are not part of peers @debug', function (done) {
+    it('should not use contactPoints that are not part of peers', function (done) {
       var contactPoints = helper.baseOptions.contactPoints.slice(0);
       contactPoints.push('host-not-existent-not-peer');
       contactPoints.push('1.1.1.1');
       var client = newInstance({contactPoints: contactPoints});
       client.connect(function (err) {
         assert.ifError(err);
+        //the 3 original hosts
         assert.strictEqual(client.hosts.length, 3);
-        assert.strictEqual(client.hosts.slice(0)[0].address, contactPoints[0]);
-        assert.notEqual(client.hosts.slice(0)[1].address, contactPoints[1]);
-        assert.notEqual(client.hosts.slice(0)[2].address, contactPoints[2]);
+        var hosts = client.hosts.keys();
+        assert.strictEqual(hosts[0], contactPoints[0] + ':9042');
+        assert.notEqual(hosts[1], contactPoints[1] + ':9042');
+        assert.notEqual(hosts[2], contactPoints[1] + ':9042');
+        assert.notEqual(hosts[1], contactPoints[2] + ':9042');
+        assert.notEqual(hosts[2], contactPoints[2] + ':9042');
         done();
       });
     });

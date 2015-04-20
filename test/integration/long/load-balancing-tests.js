@@ -27,7 +27,7 @@ describe('DCAwareRoundRobinPolicy', function () {
           client.execute('SELECT * FROM system.schema_columnfamilies', function (err, result) {
             assert.ifError(err);
             assert.ok(result && result.rows);
-            var hostId = options.policies.addressResolution.translate(result.info.queriedHost, 9042);
+            var hostId = result.info.queriedHost + ':9042';
             assert.ok(hostId);
             var h = client.hosts.get(hostId);
             assert.ok(h);

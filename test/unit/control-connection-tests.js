@@ -18,7 +18,7 @@ describe('ControlConnection', function () {
   });
   describe('#nodeSchemaChangeHandler()', function () {
     it('should update keyspace metadata information', function () {
-      var cc = new ControlConnection(helper.baseOptions);
+      var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
       cc.log = helper.noop;
       var ksName = 'dummy';
       //mock connection
@@ -66,44 +66,56 @@ describe('ControlConnection', function () {
     });
   });
   describe('#getAddressForPeerHost()', function() {
-    it('should handle null, 0.0.0.0 and valid addresses', function () {
+    it('should handle null, 0.0.0.0 and valid addresses', function (done) {
       var options = clientOptions.extend({}, helper.baseOptions);
       var cc = new ControlConnection(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var peer = getInet([100, 100, 100, 100]);
-
-      var row = {'rpc_address': getInet([1, 2, 3, 4]), peer: peer};
-      var address = cc.getAddressForPeerHost(row, 9042);
-      assert.strictEqual(address, '1.2.3.4:9042');
-
-      row = {'rpc_address': getInet([0, 0, 0, 0]), peer: peer};
-      address = cc.getAddressForPeerHost(row, 9001);
-      //should return peer address
-      assert.strictEqual(address, '100.100.100.100:9001');
-
-      row = {'rpc_address': null, peer: peer};
-      address = cc.getAddressForPeerHost(row, 9042);
-      //should return peer address
-      assert.strictEqual(address, null);
+      async.series([
+        function (next) {
+          var row = {'rpc_address': getInet([1, 2, 3, 4]), peer: peer};
+          cc.getAddressForPeerHost(row, 9042, function (endPoint) {
+            assert.strictEqual(endPoint, '1.2.3.4:9042');
+            next();
+          });
+        },
+        function (next) {
+          var row = {'rpc_address': getInet([0, 0, 0, 0]), peer: peer};
+          cc.getAddressForPeerHost(row, 9001, function (endPoint) {
+            //should return peer address
+            assert.strictEqual(endPoint, '100.100.100.100:9001');
+            next();
+          });
+        },
+        function (next) {
+          var row = {'rpc_address': null, peer: peer};
+          cc.getAddressForPeerHost(row, 9042, function (endPoint) {
+            //should callback with null
+            assert.strictEqual(endPoint, null);
+            next();
+          });
+        }
+      ], done);
     });
     it('should call the AddressTranslator', function () {
       var options = clientOptions.extend({}, helper.baseOptions);
       var address = null;
       var port = null;
-      options.policies.addressResolution = { translate: function (addr, p) {
+      options.policies.addressResolution = { translate: function (addr, p, cb) {
         address = addr;
         port = p;
-        return addr + ':' + p;
+        cb(addr + ':' + p);
       }};
       var cc = new ControlConnection(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var row = {'rpc_address': getInet([5, 2, 3, 4]), peer: null};
-      var endPoint = cc.getAddressForPeerHost(row, 9055);
-      assert.strictEqual(endPoint, '5.2.3.4:9055');
-      assert.strictEqual(address, '5.2.3.4');
-      assert.strictEqual(port, 9055);
+      cc.getAddressForPeerHost(row, 9055, function (endPoint) {
+        assert.strictEqual(endPoint, '5.2.3.4:9055');
+        assert.strictEqual(address, '5.2.3.4');
+        assert.strictEqual(port, 9055);
+      });
     });
   });
   describe('#setPeersInfo()', function () {
@@ -122,11 +134,13 @@ describe('ControlConnection', function () {
         //should use peer address
         {'rpc_address': getInet([0, 0, 0, 0]), peer: getInet([5, 5, 5, 5])}
       ];
-      cc.setPeersInfo(true, {rows: rows});
-      assert.strictEqual(cc.hosts.length, 3);
-      assert.ok(cc.hosts.get('5.4.3.2:9042'));
-      assert.ok(cc.hosts.get('9.8.7.6:9042'));
-      assert.ok(cc.hosts.get('5.5.5.5:9042'));
+      cc.setPeersInfo(true, {rows: rows}, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(cc.hosts.length, 3);
+        assert.ok(cc.hosts.get('5.4.3.2:9042'));
+        assert.ok(cc.hosts.get('9.8.7.6:9042'));
+        assert.ok(cc.hosts.get('5.5.5.5:9042'));
+      });
     });
   });
 });

@@ -14,13 +14,17 @@ describe('Client', function () {
   describe('#connect()', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
-    it('should discover all hosts in the ring', function (done) {
+    it('should discover all hosts in the ring and hosts object can be serializable', function (done) {
       var client = newInstance();
       client.connect(function (err) {
         if (err) return done(err);
         assert.strictEqual(client.hosts.length, 3);
         assert.strictEqual(client.hosts.values().length, 3);
         assert.strictEqual(client.hosts.keys().length, 3);
+        assert.doesNotThrow(function () {
+          //It should be serializable
+          JSON.stringify(client.hosts);
+        });
         done();
       });
     });

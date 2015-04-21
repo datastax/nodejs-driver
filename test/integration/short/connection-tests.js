@@ -8,6 +8,7 @@ var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');
+var vit = helper.vit;
 
 describe('Connection', function () {
   this.timeout(30000);
@@ -27,6 +28,17 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ifError(err);
         assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
+        assert.strictEqual(localCon.checkingVersion, true);
+        localCon.close(done);
+      });
+    });
+    vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
+      var options = utils.extend({}, defaultOptions);
+      options.protocolOptions.maxVersion =  getProtocolVersion() - 1;
+      var localCon = newInstance(null, null, options);
+      localCon.open(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(localCon.protocolVersion, options.protocolOptions.maxVersion);
         assert.strictEqual(localCon.checkingVersion, true);
         localCon.close(done);
       });

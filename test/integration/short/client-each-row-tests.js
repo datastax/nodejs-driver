@@ -345,6 +345,53 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should retrieve the trace id when queryTrace flag is set', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      async.series([
+        client.connect.bind(client),
+        function selectNotExistent(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+          var called = 0;
+          client.eachRow(query, [types.Uuid.random()], { traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 0);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function insertQuery(next) {
+          var query = util.format('INSERT INTO %s (id) VALUES (?)', table);
+          var called = 0;
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 0);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function selectSingleRow(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+          var called = 0;
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 1);
+            assert.strictEqual(result.rowLength, 1);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

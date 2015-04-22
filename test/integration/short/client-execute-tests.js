@@ -293,7 +293,7 @@ describe('Client', function () {
           var query = "SELECT * from system.schema_keyspaces WHERE keyspace_name = '__ks_does_not_exists'";
           client.execute(query, function (err, result) {
             assert.ifError(err);
-            assert.ok(!result.columns);
+            assert.ok(result.columns);
             next();
           });
         }
@@ -363,6 +363,40 @@ describe('Client', function () {
             assert.ok(row);
             assert.strictEqual(row['text_sample'], 'hello timestamp');
             assert.strictEqual(row['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should retrieve the trace id when queryTrace flag is set', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      async.series([
+        client.connect.bind(client),
+        function selectNotExistent(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = %s', table, types.Uuid.random());
+          client.execute(query, [], { traceQuery: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function insertQuery(next) {
+          var query = util.format('INSERT INTO %s (id) VALUES (%s)', table, id.toString());
+          client.execute(query, [], { traceQuery: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function selectSingleRow(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = %s', table, id.toString());
+          client.execute(query, [], { traceQuery: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
             next();
           });
         }

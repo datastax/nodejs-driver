@@ -22,7 +22,6 @@ describe('Parser', function () {
       });
       parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: new Buffer([])}, null, doneIfError(done));
     });
-
     it('should read a AUTHENTICATE opcode', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -33,7 +32,6 @@ describe('Parser', function () {
       });
       parser._transform({header: getFrameHeader(0, types.opcodes.authenticate), chunk: new Buffer([])}, null, doneIfError(done));
     });
-
     it('should read a VOID result', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -47,7 +45,45 @@ describe('Parser', function () {
         chunk: new Buffer([0, 0, 0, types.resultKind.voidResult])
       }, null, doneIfError(done));
     });
-
+    it('should read a VOID result with trace id', function (done) {
+      var parser = newInstance();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.bodyLength, 4);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        helper.assertInstanceOf(item.traceId, types.Uuid);
+        done();
+      });
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result, 2, true),
+        chunk: Buffer.concat([
+          new Buffer(16), //uuid
+          new Buffer([0, 0, 0, types.resultKind.voidResult])
+        ])
+      }, null, doneIfError(done));
+    });
+    it('should read a VOID result with trace id in chunks', function (done) {
+      var parser = newInstance();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.bodyLength, 4);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        helper.assertInstanceOf(item.traceId, types.Uuid);
+        assert.strictEqual(item.traceId.getBuffer().slice(0, 6).toString('hex'), 'fffffffffafa');
+        done();
+      });
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result, 2, true),
+        chunk: new Buffer('fffffffffafa', 'hex') //first part of the uuid
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(4, types.opcodes.result, 2, true),
+        chunk: Buffer.concat([
+          new Buffer(10), //second part uuid
+          new Buffer([0, 0, 0, types.resultKind.voidResult])
+        ])
+      }, null, doneIfError(done));
+    });
     it('should read a SET_KEYSPACE result', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -71,7 +107,6 @@ describe('Parser', function () {
         chunk: new Buffer('ks1')
       }, null, doneIfError(done));
     });
-
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -85,7 +120,6 @@ describe('Parser', function () {
       var eventData = getEventData('STATUS_CHANGE', 'UP');
       parser._transform(eventData, null, doneIfError(done));
     });
-
     it('should read a STATUS_CHANGE DOWN EVENT response', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -99,7 +133,6 @@ describe('Parser', function () {
       var eventData = getEventData('STATUS_CHANGE', 'DOWN');
       parser._transform(eventData, null, doneIfError(done));
     });
-
     it('should read a STATUS_CHANGE DOWN EVENT response chunked', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -116,7 +149,6 @@ describe('Parser', function () {
       parser._transform({header: eventData.header, chunk: chunk1}, null, doneIfError(done));
       parser._transform({header: eventData.header, chunk: chunk2}, null, doneIfError(done));
     });
-
     it('should read a buffer until there is enough data', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -134,7 +166,6 @@ describe('Parser', function () {
         chunk: new Buffer([0, 0, types.resultKind.voidResult])
       }, null, doneIfError(done));
     });
-
     it('should emit empty result one column no rows', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -150,7 +181,6 @@ describe('Parser', function () {
       //column names and rows
       parser._transform(getBodyChunks(1, 0, 12, null), null, doneIfError(done));
     });
-
     it('should emit empty result two columns no rows', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -162,7 +192,6 @@ describe('Parser', function () {
       //2 columns, no rows, in one chunk
       parser._transform(getBodyChunks(2, 0, 0, null), null, doneIfError(done));
     });
-
     it('should emit row when rows present', function (done) {
       var parser = newInstance();
       var rowLength = 2;
@@ -181,7 +210,6 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
     });
-
     it('should emit row with large row values', function (done) {
       //3mb value
       var cellValue = helper.fillArray(3 * 1024 * 1024, 74);
@@ -274,7 +302,6 @@ describe('Parser', function () {
         parser._transform(getBodyChunks(2, rowLength, 24, null, cellValue), null, doneIfError(done));
       }], done);
     });
-
     it('should read a AUTH_CHALLENGE response', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -313,8 +340,8 @@ function newInstance(protocolVersion) {
  * Test Helper method to get a frame header
  * @returns {exports.FrameHeader}
  */
-function getFrameHeader(bodyLength, opcode, version) {
-  return new types.FrameHeader(version || 2, 0, 12, opcode, bodyLength);
+function getFrameHeader(bodyLength, opcode, version, trace) {
+  return new types.FrameHeader(version || 2, trace ? 0x02 : 0, 12, opcode, bodyLength);
 }
 
 function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {

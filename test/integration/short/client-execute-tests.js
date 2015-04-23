@@ -402,6 +402,15 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should not retrieve trace id by default', function (done) {
+      var client = newInstance();
+      client.execute('SELECT * FROM system.local', function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info);
+        assert.equal(result.info.traceId, null); //its undefined really but anything that evaluates as null is OK
+        done();
+      });
+    });
     describe('with udt and tuple', function () {
       var sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';

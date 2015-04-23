@@ -109,6 +109,48 @@ describe('Metadata', function () {
       ], done);
     });
   });
+  describe('#getTrace()', function () {
+    it('should retrieve the trace immediately after', function (done) {
+      var client = newInstance();
+      async.waterfall([
+        client.connect.bind(client),
+        function executeQuery(next) {
+          client.execute('SELECT * FROM system.schema_keyspaces', [], { traceQuery: true}, next);
+        },
+        function getTrace(result, next) {
+          client.metadata.getTrace(result.info.traceId, next);
+        },
+        function checkTrace(trace, next) {
+          assert.ok(trace);
+          assert.strictEqual(typeof trace.duration, 'number');
+          assert.ok(trace.events.length);
+          next();
+        }
+      ], done);
+    });
+    it('should retrieve the trace a few seconds after', function (done) {
+      var client = newInstance();
+      async.waterfall([
+        client.connect.bind(client),
+        function executeQuery(next) {
+          client.execute('SELECT * FROM system.local', [], { traceQuery: true}, next);
+        },
+        function getTrace(result, next) {
+          client.metadata.getTrace(result.info.traceId, function (err, trace) {
+            setTimeout(function () {
+              next(err, trace);
+            }, 1500);
+          });
+        },
+        function checkTrace(trace, next) {
+          assert.ok(trace);
+          assert.strictEqual(typeof trace.duration, 'number');
+          assert.ok(trace.events.length);
+          next();
+        }
+      ], done);
+    });
+  });
 });
 
 /** @returns {Client}  */

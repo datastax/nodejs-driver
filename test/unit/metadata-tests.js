@@ -250,4 +250,137 @@ describe('Metadata', function () {
       });
     });
   });
+  describe('#getTrace()', function () {
+    it('should return the trace if its already stored', function (done) {
+      var sessionRow = {
+        request: 'request value',
+        coordinator: types.InetAddress.fromString('10.10.10.1'),
+        parameters: ['a', 'b'],
+        started_at: new Date(),
+        duration: 2002
+      };
+      var eventRows = [ {
+        event_id: types.TimeUuid.now(),
+        activity: 'act 1',
+        source: types.InetAddress.fromString('10.10.10.2'),
+        source_elapsed: 101
+      }];
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system_traces.sessions') >= 0) {
+              return cb(null, { rows: [ sessionRow]});
+            }
+            cb(null, { rows: eventRows})
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {})}
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+        assert.ifError(err);
+        assert.ok(trace);
+        assert.strictEqual(trace.requestType, sessionRow.request);
+        assert.strictEqual(trace.parameters, sessionRow.parameters);
+        assert.strictEqual(trace.coordinator, sessionRow.coordinator);
+        assert.strictEqual(trace.startedAt, sessionRow.started_at);
+        assert.strictEqual(trace.events.length, 1);
+        assert.strictEqual(trace.events[0].id, eventRows[0].event_id);
+        assert.strictEqual(trace.events[0].activity, eventRows[0].activity);
+        done();
+      });
+    });
+    it('should retry if its not already stored', function (done) {
+      var sessionRow = {
+        request: 'request value',
+        coordinator: types.InetAddress.fromString('10.10.10.1'),
+        parameters: ['a', 'b'],
+        started_at: new Date(),
+        duration: null
+      };
+      var eventRows = [ {
+        event_id: types.TimeUuid.now(),
+        activity: 'act 2',
+        source: types.InetAddress.fromString('10.10.10.1'),
+        source_elapsed: 102
+      }];
+      var calls = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system_traces.sessions') >= 0) {
+              if (++calls > 1) {
+                sessionRow.duration = 2002;
+              }
+              return cb(null, { rows: [ sessionRow]});
+            }
+            cb(null, { rows: eventRows})
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {})}
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+        assert.ifError(err);
+        assert.ok(trace);
+        assert.strictEqual(calls, 2);
+        assert.strictEqual(trace.requestType, sessionRow.request);
+        assert.strictEqual(trace.parameters, sessionRow.parameters);
+        assert.strictEqual(trace.coordinator, sessionRow.coordinator);
+        assert.strictEqual(trace.startedAt, sessionRow.started_at);
+        assert.strictEqual(trace.events.length, 1);
+        assert.strictEqual(trace.events[0].id, eventRows[0].event_id);
+        assert.strictEqual(trace.events[0].activity, eventRows[0].activity);
+        done();
+      });
+    });
+    it('should stop retrying after a few attempts', function (done) {
+      var sessionRow = {
+        request: 'request value',
+        coordinator: types.InetAddress.fromString('10.10.10.1'),
+        parameters: ['a', 'b'],
+        started_at: new Date(),
+        duration: null //duration null means that trace is not fully flushed
+      };
+      var calls = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            //try with empty result and null duration
+            var rows = [];
+            if (++calls > 1) {
+              rows = [ sessionRow ];
+            }
+            cb(null, { rows: rows});
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {})}
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+        assert.ok(err);
+        assert.ok(!trace);
+        assert.ok(err.message);
+        assert.ok(err.message.indexOf('attempt') > 0);
+        done();
+      });
+    });
+    it('should callback in error if there was an error retrieving the trace', function (done) {
+      var err = new Error('dummy err');
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            cb(err);
+          });
+        }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.getTrace(types.Uuid.random(), function (receivedErr, trace) {
+        assert.ok(err);
+        assert.strictEqual(receivedErr, err);
+        assert.ok(!trace);
+        done();
+      });
+    });
+  });
 });

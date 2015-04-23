@@ -190,7 +190,7 @@ describe('Client', function () {
         done();
       };
       //noinspection JSAccessibilityCheck
-      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, {}, helper.throwop);
+      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, { prepare: true }, helper.throwop);
     });
     it('should keep the parameters if an array is provided', function (done) {
       var Client = rewire('../../lib/client.js');
@@ -224,14 +224,14 @@ describe('Client', function () {
       client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       async.series([function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {}, function (err) {
+        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
       }, function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {}, {}, function (err) {
+        client._executeAsPrepared('SELECT ...', {}, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
@@ -239,7 +239,7 @@ describe('Client', function () {
       }, function (next) {
         //different casing
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {ABC: 100}, {}, function (err) {
+        client._executeAsPrepared('SELECT ...', {ABC: 100}, {prepare: true}, function (err) {
           assert.ifError(err);
           next();
         });

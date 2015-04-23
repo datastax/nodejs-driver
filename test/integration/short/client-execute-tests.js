@@ -118,7 +118,7 @@ describe('Client', function () {
       var client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use pageState and fetchSize @c2_0', function (done) {
+    it('should use pageState and fetchSize @c2_0 @debug', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([

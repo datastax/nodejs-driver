@@ -215,46 +215,6 @@ describe('Client', function () {
         }
       ], done);
     });
-    vit('2.0', 'should allow named parameters with array of parameters', function (done) {
-      var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
-      client.execute(query, ['system'], {prepare: 1}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result && result.rows);
-        assert.strictEqual(result.rows.length, 1);
-        done();
-      });
-    });
-    vit('2.0', 'should allow named parameters as an associative array', function (done) {
-      var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
-      client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result && result.rows);
-        assert.strictEqual(result.rows.length, 1);
-        done();
-      });
-    });
-    vit('2.0', 'should allow named parameters as an associative array case insensitive', function (done) {
-      var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
-      client.execute(query, {'ksNamE': 'system'}, {prepare: 1}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result && result.rows);
-        assert.strictEqual(result.rows.length, 1);
-        done();
-      });
-    });
-    vit('2.0', 'should allow named parameters as an object with other props', function (done) {
-      var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
-      client.execute(query, {'KSNAME': 'system', other: 'value'}, {prepare: 1}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result && result.rows);
-        assert.strictEqual(result.rows.length, 1);
-        done();
-      });
-    });
     it('should encode and decode decimal values', function (done) {
       var client = newInstance();
       var keyspace = helper.getRandomName('ks');
@@ -292,6 +252,48 @@ describe('Client', function () {
           });
         }
       ], done);
+    });
+    describe('with named parameters', function () {
+      vit('2.0', 'should allow an array of parameters', function (done) {
+        var client = newInstance();
+        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
+        client.execute(query, ['system'], {prepare: 1}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 1);
+          done();
+        });
+      });
+      vit('2.0', 'should allow associative array of parameters', function (done) {
+        var client = newInstance();
+        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
+        client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 1);
+          done();
+        });
+      });
+      vit('2.0', 'should be case insensitive', function (done) {
+        var client = newInstance();
+        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
+        client.execute(query, {'ksNamE': 'system'}, {prepare: 1}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 1);
+          done();
+        });
+      });
+      vit('2.0', 'should allow objects with other props as parameters', function (done) {
+        var client = newInstance();
+        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
+        client.execute(query, {'KSNAME': 'system', other: 'value'}, {prepare: 1}, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result && result.rows);
+          assert.strictEqual(result.rows.length, 1);
+          done();
+        });
+      });
     });
     it('should encode and decode maps using Map polyfills', function (done) {
       var client = newInstance({ encoding: { map: helper.Map}});

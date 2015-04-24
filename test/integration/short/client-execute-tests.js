@@ -69,7 +69,7 @@ describe('Client', function () {
         client.execute('SELECT * FROM system.schema_keyspaces', [], next);
       }, done)
     });
-    it('should guess known types @c2_0', function (done) {
+    vit('2.0', 'should guess known types', function (done) {
       var client = newInstance();
       var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
@@ -77,7 +77,7 @@ describe('Client', function () {
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
-    it('should use parameter hints as number for simple types @c2_0', function (done) {
+    vit('2.0', 'should use parameter hints as number for simple types', function (done) {
       var client = newInstance();
       var columns = 'id, text_sample, float_sample, int_sample';
       //a precision a float32 can represent
@@ -85,21 +85,21 @@ describe('Client', function () {
       var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float, types.dataTypes.int];
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for simple types @c2_0', function (done) {
+    vit('2.0', 'should use parameter hints as string for simple types', function (done) {
       var columns = 'id, text_sample, float_sample, int_sample';
       var values = [types.Uuid.random(), 'text sample', -9, 1];
       var hints = [null, 'text', 'float', 'int'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for complex types partial @c2_0', function (done) {
+    vit('2.0', 'should use parameter hints as string for complex types partial', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
       var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       var hints = [null, 'map', 'list', 'set'];
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints as string for complex types complete @c2_0', function (done) {
+    vit('2.0', 'should use parameter hints as string for complex types complete', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
       var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       //complete info
@@ -107,7 +107,7 @@ describe('Client', function () {
       var client = newInstance();
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use parameter hints for custom map polyfills @c2_0', function (done) {
+    vit('2.0', 'should use parameter hints for custom map polyfills', function (done) {
       var columns = 'id, map_sample';
       var map = new helper.Map();
       map.set('k1', 'value 1');
@@ -118,7 +118,7 @@ describe('Client', function () {
       var client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
     });
-    it('should use pageState and fetchSize @c2_0 @debug', function (done) {
+    vit('2.0', 'should use pageState and fetchSize', function (done) {
       var client = newInstance();
       var pageState = null;
       async.series([
@@ -152,7 +152,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should not autoPage @c2_0', function (done) {
+    vit('2.0', 'should not autoPage', function (done) {
       var client = newInstance({keyspace: keyspace});
       var pageState = null;
       async.series([
@@ -176,7 +176,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should callback in err when wrong hints are provided @c2_0', function (done) {
+    vit('2.0', 'should callback in err when wrong hints are provided', function (done) {
       var client = newInstance();
       var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
       //valid params
@@ -211,7 +211,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should encode CONTAINS parameter @c2_1', function (done) {
+    vit('2.1', 'should encode CONTAINS parameter', function (done) {
       var client = newInstance();
       client.execute(util.format('CREATE INDEX list_sample_index ON %s(list_sample)', table), function (err) {
         assert.ifError(err);
@@ -328,7 +328,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should support serial consistency @c2_0', function (done) {
+    vit('2.0', 'should support serial consistency', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
       async.series([
@@ -347,7 +347,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should support protocol level timestamp @c2_1', function (done) {
+    vit('2.1', 'should support protocol level timestamp', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
       var timestamp = types.generateTimestamp(new Date(), 777);
@@ -547,6 +547,35 @@ describe('Client', function () {
         ], done);
       });
     });
+    describe('with named parameters', function () {
+      vit('2.1', 'should allow named parameters', function (done) {
+        var query = util.format('INSERT INTO %s (id, text_sample, bigint_sample) VALUES (:id, :myText, :myBigInt)', table);
+        var values = { id: types.Uuid.random(), myText: 'hello', myBigInt: types.Long.fromNumber(2)};
+        var client = newInstance();
+        client.execute(query, values, function (err) {
+          assert.ifError(err);
+          verifyRow(table, values.id, 'text_sample, bigint_sample', [values.myText, values.myBigInt], done);
+        });
+      });
+      vit('2.1', 'should use parameter hints', function (done) {
+        var query = util.format('INSERT INTO %s (id, int_sample, float_sample) VALUES (:id, :myInt, :myFloat)', table);
+        var values = {id: types.Uuid.random(), myInt: 100, myFloat: 2.0999999046325684};
+        var client = newInstance();
+        client.execute(query, values, { hints: {myFloat: 'float', myInt: {code: types.dataTypes.int}}}, function (err) {
+          assert.ifError(err);
+          verifyRow(table, values.id, 'int_sample, float_sample', [values.myInt, values.myFloat], done);
+        });
+      });
+      vit('2.1', 'should allow parameters with different casings', function (done) {
+        var query = util.format('INSERT INTO %s (id, text_sample, list_sample2) VALUES (:ID, :MyText, :mylist)', table);
+        var values = { id: types.Uuid.random(), mytext: 'hello', myLIST: [ -1, 0, 500, 3]};
+        var client = newInstance();
+        client.execute(query, values, { hints: { myLIST: 'list<int>'}}, function (err) {
+          assert.ifError(err);
+          verifyRow(table, values.id, 'text_sample, list_sample2', [values.mytext, values.myLIST], done);
+        });
+      });
+    });
   });
 });
 
@@ -579,6 +608,17 @@ function insertSelectTest(client, table, columns, values, hints, done) {
       });
     }
   ], done);
+}
+
+function verifyRow(table, id, fields, values, callback) {
+  var client = newInstance();
+  client.execute(util.format('SELECT %s FROM %s WHERE id = %s', fields, table, id), function (err, result) {
+    assert.ifError(err);
+    var row = result.first();
+    assert.ok(row, 'It should contain a row');
+    helper.assertValueEqual(row.values(), values);
+    callback();
+  });
 }
 
 /**

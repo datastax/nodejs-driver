@@ -151,6 +151,37 @@ describe('Metadata', function () {
       ], done);
     });
   });
+  describe('#getTable()', function () {
+    var keyspace = 'ks_tbl_meta';
+    before(function createTables(done) {
+      var client = newInstance();
+      var queries = [
+        "CREATE KEYSPACE ks_tbl_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
+        "CREATE TABLE ks_tbl_meta.tbl1 (id uuid PRIMARY KEY, text_sample text)",
+        "CREATE TABLE ks_tbl_meta.tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
+        "CREATE TABLE ks_tbl_meta.tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
+        "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))"
+      ];
+      async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
+    });
+    it('should retrieve the metadata of a single partition key table', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
+          assert.ok(table.caching);
+          assert.strictEqual(typeof table.caching, 'string');
+          done();
+        });
+      });
+    });
+    it('should retrieve the metadata of a composite partition key table');
+    it('should retrieve the metadata of a partition key and clustering key table');
+    it('should retrieve the metadata of a counter table');
+  });
 });
 
 /** @returns {Client}  */

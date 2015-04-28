@@ -160,7 +160,9 @@ describe('Metadata', function () {
         "CREATE TABLE ks_tbl_meta.tbl1 (id uuid PRIMARY KEY, text_sample text)",
         "CREATE TABLE ks_tbl_meta.tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
         "CREATE TABLE ks_tbl_meta.tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
-        "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))"
+        "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
+        "CREATE TABLE ks_tbl_meta.tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
+        "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE"
       ];
       async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
     });
@@ -174,13 +176,84 @@ describe('Metadata', function () {
           assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
           assert.ok(table.caching);
           assert.strictEqual(typeof table.caching, 'string');
+          assert.strictEqual(table.columns.length, 2);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id', 'text_sample']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.clusteringKeys.length, 0);
           done();
         });
       });
     });
-    it('should retrieve the metadata of a composite partition key table');
+    it('should retrieve the metadata of a composite partition key table', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl2', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.columns.length, 2);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id', 'text_sample']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 2);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.partitionKeys[1].name, 'text_sample');
+          done();
+        });
+      });
+    });
     it('should retrieve the metadata of a partition key and clustering key table');
     it('should retrieve the metadata of a counter table');
+    it('should retrieve the metadata of a compact storaged table', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl6', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
+          assert.ok(table.caching);
+          assert.strictEqual(table.columns.length, 3);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id', 'text1', 'text2']);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.clusteringKeys.length, 0);
+          done();
+        });
+      });
+    });
+    it('should retrieve the metadata of a compact storaged table with clustering key', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl5', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.columns.length, 3);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id1', 'id2', 'text1']);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id1');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+          done();
+        });
+      });
+    });
   });
 });
 

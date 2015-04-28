@@ -391,7 +391,8 @@ describe('Metadata', function () {
     describe('with C*2.0+ metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
-          column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}', comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
+          column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
           key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
         var columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
@@ -406,6 +407,7 @@ describe('Metadata', function () {
           assert.ifError(err);
           assert.ok(table);
           assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.02);
+          assert.strictEqual(table.isCompact, false);
           assert.ok(table.caching);
           assert.strictEqual(table.caching, 'KEYS_ONLY');
           assert.strictEqual(table.columns.length, 5);
@@ -427,11 +429,39 @@ describe('Metadata', function () {
           done();
         });
       });
+      it('should parse table with compact storage', function (done) {
+        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: '{"keys":"ALL", "rows_per_partition":"NONE"}', cf_id: types.Uuid.fromString('96c86920-ed84-11e4-8991-199e66562428'),
+          column_aliases: '["id2"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.TimeUUIDType', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.UTF8Type', dropped_columns: null, gc_grace_seconds: 864000, index_interval: null, is_dense: true, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0.1, max_compaction_threshold: 32, max_index_interval: 2048, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, min_index_interval: 128, read_repair_chance: 0, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: 'text1' };
+        var columnRows = [
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'id1', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'id2', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text1', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'compact_value', validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.isCompact, true);
+          assert.ok(table.caching);
+          assert.strictEqual(table.columns.length, 3);
+          assert.strictEqual(table.columns[0].name, 'id1');
+          assert.strictEqual(table.columns[1].name, 'id2');
+          assert.strictEqual(table.columns[2].name, 'text1');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id1');
+          done();
+        });
+      });
     });
     describe('with C*1.2 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
-          column_aliases: '["zck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}', comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
+          column_aliases: '["zck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
           key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
         var columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.BytesType' },
@@ -442,6 +472,7 @@ describe('Metadata', function () {
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
           assert.ok(table);
+          assert.strictEqual(table.isCompact, false);
           assert.strictEqual(table.columns.length, 5);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
@@ -466,6 +497,69 @@ describe('Metadata', function () {
           assert.strictEqual(table.partitionKeys[0].name, 'id');
           assert.strictEqual(table.partitionKeys[0].type.code, types.dataTypes.uuid);
           assert.strictEqual(table.clusteringKeys.length, 0);
+          done();
+        });
+      });
+      it('should parse with compact storage', function (done) {
+        //1 pk, 1 ck and 1 val
+        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl5', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+          column_aliases: '["id2"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.TimeUUIDType', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}',
+          default_validator: 'org.apache.cassandra.db.marshal.UTF8Type', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard',
+          value_alias: 'text1' };
+        var columnRows = [];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.columns.length, 3);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id1');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+          done();
+        });
+      });
+      it('should parse with compact storage with pk', function (done) {
+        //1 pk, 2 val
+        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+          column_aliases: '[]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.UTF8Type', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
+        var columnRows = [
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text1', component_index: null, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text2', component_index: null, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.columns.length, 3);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys.length, 0);
+          done();
+        });
+      });
+      it('should parse with compact storage and all columns as clustering keys', function (done) {
+        //1 pk, 2 ck
+        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+          column_aliases: '["id2","text1"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+          comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: '' };
+        var columnRows = [];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.columns.length, 3);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys.length, 2);
+          assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+          assert.strictEqual(table.clusteringKeys[1].name, 'text1');
           done();
         });
       });

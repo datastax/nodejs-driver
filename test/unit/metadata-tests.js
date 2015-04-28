@@ -384,10 +384,146 @@ describe('Metadata', function () {
     });
   });
   describe('#getTable()', function () {
-    it('should be null when it is not found');
-    it('should be null when keyspace does not exists');
-    it('should query once when called in parallel');
-    it('should query the following times if it was null');
+    it('should be null when it is not found', function (done) {
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system.schema_columnfamilies') >= 0) {
+              return cb(null, {rows: []});
+            }
+            cb(null, {rows: []});
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+      metadata.getTable('ks_tbl_meta', 'tbl_does_not_exists', function (err, table) {
+        assert.ifError(err);
+        assert.strictEqual(table, null);
+        done();
+      });
+    });
+    it('should be null when keyspace does not exists', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), {});
+      metadata.keyspaces = { };
+      metadata.getTable('ks_does_not_exists', 'tbl1', function (err, table) {
+        assert.ifError(err);
+        assert.strictEqual(table, null);
+        done();
+      });
+    });
+    it('should query once when called in parallel', function (done) {
+      var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
+        column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+        comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
+        key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
+      var columnRows = [
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' }
+      ];
+      var calledTable = 0;
+      var calledRows = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system.schema_columnfamilies') >= 0) {
+              calledTable++;
+              return cb(null, {rows: [tableRow]});
+            }
+            calledRows++;
+            cb(null, {rows: columnRows});
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+      async.times(100, function (n, next) {
+        metadata.getTable('ks_tbl_meta', 'tbl1', next);
+      }, function (err, results) {
+        assert.ifError(err);
+        assert.strictEqual(calledTable, 1);
+        assert.strictEqual(calledRows, 1);
+        assert.strictEqual(results.length, 100);
+        assert.strictEqual(results[0].name, 'tbl1');
+        assert.strictEqual(results[0], results[1]);
+        assert.strictEqual(results[0], results[99]);
+        done();
+      });
+    });
+    it('should query once if query the same table serially', function (done) {
+      var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
+        column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
+        comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
+        key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
+      var columnRows = [
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
+        { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' }
+      ];
+      var calledTable = 0;
+      var calledRows = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system.schema_columnfamilies') >= 0) {
+              calledTable++;
+              return cb(null, {rows: [tableRow]});
+            }
+            calledRows++;
+            cb(null, {rows: columnRows});
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+      async.timesSeries(100, function (n, next) {
+        metadata.getTable('ks_tbl_meta', 'tbl1', next);
+      }, function (err, results) {
+        assert.ifError(err);
+        assert.strictEqual(calledTable, 1);
+        assert.strictEqual(calledRows, 1);
+        assert.strictEqual(results.length, 100);
+        assert.strictEqual(results[0].name, 'tbl1');
+        assert.strictEqual(results[0], results[1]);
+        assert.strictEqual(results[0], results[99]);
+        done();
+      });
+    });
+    it('should query the following times if it was not found', function (done) {
+      var calledTable = 0;
+      var calledRows = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system.schema_columnfamilies') >= 0) {
+              calledTable++;
+              return cb(null, {rows: []});
+            }
+            calledRows++;
+            cb(null, {rows: []});
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+      async.timesSeries(100, function (n, next) {
+        metadata.getTable('ks_tbl_meta', 'tbl1', next);
+      }, function (err, results) {
+        assert.ifError(err);
+        assert.strictEqual(calledTable, 100);
+        assert.strictEqual(calledRows, 0);
+        assert.strictEqual(results.length, 100);
+        assert.strictEqual(results[0], null);
+        assert.strictEqual(results[1], null);
+        assert.strictEqual(results[99], null);
+        done();
+      });
+    });
     describe('with C*2.0+ metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
@@ -421,11 +557,13 @@ describe('Metadata', function () {
           assert.strictEqual(table.columns[3].type.code, types.dataTypes.int);
           assert.strictEqual(table.columns[4].name, 'val2');
           assert.strictEqual(table.columns[4].type.code, types.dataTypes.blob);
-          assert.strictEqual(table.clusteringKeys.length, 1);
-          assert.strictEqual(table.clusteringKeys[0].name, 'ck');
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'ck');
+          assert.strictEqual(table.clusteringOrder.length, 1);
+          assert.strictEqual(table.clusteringOrder[0], 'ASC');
           done();
         });
       });

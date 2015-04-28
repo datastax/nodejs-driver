@@ -162,7 +162,9 @@ describe('Metadata', function () {
         "CREATE TABLE ks_tbl_meta.tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
         "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
         "CREATE TABLE ks_tbl_meta.tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
-        "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE"
+        "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
+        "CREATE TABLE ks_tbl_meta.tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
+        "CREATE TABLE ks_tbl_meta.tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))"
       ];
       async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
     });
@@ -185,6 +187,7 @@ describe('Metadata', function () {
           assert.strictEqual(table.partitionKeys.length, 1);
           assert.strictEqual(table.partitionKeys[0].name, 'id');
           assert.strictEqual(table.clusteringKeys.length, 0);
+          assert.strictEqual(table.clusteringOrder.length, 0);
           done();
         });
       });
@@ -209,8 +212,83 @@ describe('Metadata', function () {
         });
       });
     });
-    it('should retrieve the metadata of a partition key and clustering key table');
-    it('should retrieve the metadata of a counter table');
+    it('should retrieve the metadata of a partition key and clustering key table', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl3', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
+          assert.ok(table.caching);
+          assert.strictEqual(table.columns.length, 2);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id', 'text_sample']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'text_sample');
+          assert.strictEqual(table.clusteringOrder.length, 1);
+          assert.strictEqual(table.clusteringOrder[0], 'ASC');
+          done();
+        });
+      });
+    });
+    it('should retrieve the metadata of a table with reversed clustering order', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl7', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
+          assert.ok(table.caching);
+          assert.strictEqual(table.columns.length, 4);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id1', 'id3', 'int_sample', 'zid2']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id1');
+          assert.strictEqual(table.clusteringKeys.length, 2);
+          assert.strictEqual(table.clusteringKeys[0].name, 'zid2');
+          assert.strictEqual(table.clusteringKeys[1].name, 'id3');
+          assert.strictEqual(table.clusteringOrder.length, 2);
+          assert.strictEqual(table.clusteringOrder[0], 'ASC');
+          assert.strictEqual(table.clusteringOrder[1], 'DESC');
+          done();
+        });
+      });
+    });
+    it('should retrieve the metadata of a counter table', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl8', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.columns.length, 3);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['id', 'rating_value', 'rating_votes']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.partitionKeys[0].type.code, types.dataTypes.uuid);
+          assert.strictEqual(table.clusteringKeys.length, 0);
+          assert.strictEqual(table.columnsByName['rating_value'].type.code, types.dataTypes.counter);
+          assert.strictEqual(table.columnsByName['rating_votes'].type.code, types.dataTypes.counter);
+          //true counter tables
+          assert.strictEqual(table.replicateOnWrite, true);
+          done();
+        });
+      });
+    });
     it('should retrieve the metadata of a compact storaged table', function (done) {
       var client = newInstance({ keyspace: keyspace});
       client.connect(function (err) {

@@ -353,7 +353,7 @@ describe('Client', function () {
         function selectNotExistent(next) {
           var query = util.format('SELECT * FROM %s WHERE id = ?', table);
           var called = 0;
-          client.eachRow(query, [types.Uuid.random()], { traceQuery: true}, function () {
+          client.eachRow(query, [types.Uuid.random()], {prepare: true, traceQuery: true}, function () {
             called++;
           }, function (err, result) {
             assert.ifError(err);

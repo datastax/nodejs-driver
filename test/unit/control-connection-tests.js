@@ -142,6 +142,29 @@ describe('ControlConnection', function () {
         assert.ok(cc.hosts.get('5.5.5.5:9042'));
       });
     });
+    it('should set the host datacenter and cassandra version', function () {
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var cc = new ControlConnection(options);
+      //dummy
+      cc.host = new Host('18.18.18.18', 1, options);
+      cc.log = helper.noop;
+      var rows = [
+        //valid rpc address
+        {'rpc_address': getInet([5, 4, 3, 2]), peer: getInet([1, 1, 1, 1]), data_center: 'dc100', release_version: '2.1.4'},
+        //valid rpc address
+        {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1]), data_center: 'dc101', release_version: '2.1.4'}
+      ];
+      cc.setPeersInfo(true, {rows: rows}, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(cc.hosts.length, 2);
+        assert.ok(cc.hosts.get('5.4.3.2:9042'));
+        assert.strictEqual(cc.hosts.get('5.4.3.2:9042').datacenter, 'dc100');
+        assert.strictEqual(cc.hosts.get('5.4.3.2:9042').cassandraVersion, '2.1.4');
+        assert.ok(cc.hosts.get('9.8.7.6:9042'));
+        assert.strictEqual(cc.hosts.get('9.8.7.6:9042').datacenter, 'dc101');
+        assert.strictEqual(cc.hosts.get('9.8.7.6:9042').cassandraVersion, '2.1.4');
+      });
+    });
   });
 });
 

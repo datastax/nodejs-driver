@@ -19,6 +19,22 @@ describe('Client', function () {
       client.connect(function (err) {
         if (err) return done(err);
         assert.strictEqual(client.hosts.length, 3);
+        assert.strictEqual(client.hosts.values().length, 3);
+        assert.strictEqual(client.hosts.keys().length, 3);
+        done();
+      });
+    });
+    it('should retrieve the cassandra version of the hosts', function (done) {
+      var client = newInstance();
+      client.connect(function (err) {
+        if (err) return done(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.values().forEach(function (h) {
+          assert.strictEqual(typeof h.cassandraVersion, 'string');
+          assert.strictEqual(
+            h.cassandraVersion.split('.').slice(0, 2).join('.'),
+            helper.getCassandraVersion().split('.').slice(0, 2).join('.'));
+        });
         done();
       });
     });
@@ -296,7 +312,7 @@ describe('Client', function () {
         done(err);
       });
     });
-    it('should maintain the domain in the callbacks @debug', function (done) {
+    it('should maintain the domain in the callbacks', function (done) {
       var unexpectedErrors = [];
       var errors = [];
       var domains = [

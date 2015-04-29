@@ -98,8 +98,7 @@ describe('Host', function () {
   describe('#borrowConnection()', function () {
     var options = {
       pooling: {
-        coreConnectionsPerHost: {},
-        maxConnectionsPerHost: {}
+        coreConnectionsPerHost: {}
       },
       policies: {
         reconnection: new reconnection.ConstantReconnectionPolicy(1)
@@ -119,7 +118,6 @@ describe('Host', function () {
     });
     it('should create a pool of size determined by the relative distance local', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 5;
-      options.pooling.maxConnectionsPerHost[types.distance.local] = 10;
       var host = newHostInstance(options);
       host.setDistance(types.distance.local);
       host.borrowConnection(function (err, c) {
@@ -133,7 +131,6 @@ describe('Host', function () {
     });
     it('should create a pool of size determined by the relative distance remote', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.remote] = 2;
-      options.pooling.maxConnectionsPerHost[types.distance.remote] = 4;
       var host = newHostInstance(options);
       host.setDistance(types.distance.remote);
       host.borrowConnection(function (err, c) {
@@ -147,7 +144,6 @@ describe('Host', function () {
     });
     it('should resize the pool after distance is set', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 3;
-      options.pooling.maxConnectionsPerHost[types.distance.local] = 4;
       var host = newHostInstance(options);
       async.series([
         function (next) {

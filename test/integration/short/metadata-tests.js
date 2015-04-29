@@ -332,6 +332,35 @@ describe('Metadata', function () {
         });
       });
     });
+    it('should retrieve the updated metadata after an schema change', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, 'CREATE TABLE ks_tbl_meta.tbl_changing (id uuid PRIMARY KEY, text_sample text)'),
+        function checkTable1(next) {
+          client.metadata.getTable('ks_tbl_meta', 'tbl_changing', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.strictEqual(table.columns.length, 2);
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER TABLE ks_tbl_meta.tbl_changing ADD new_col1 timeuuid'),
+        function (next) {
+          setTimeout(next, 2000);
+        },
+        function checkTable2(next) {
+          client.metadata.getTable('ks_tbl_meta', 'tbl_changing', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.strictEqual(table.columns.length, 3);
+            assert.ok(table.columnsByName['new_col1']);
+            assert.strictEqual(table.columnsByName['new_col1'].type.code, types.dataTypes.timeuuid);
+            next();
+          });
+        }
+      ], done);
+    });
   });
 });
 

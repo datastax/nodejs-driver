@@ -42,20 +42,33 @@ describe('Client', function () {
         done();
       });
     });
-    it('should fail if contact points can not be resolved', function (done) {
+    it('should fail if the contact points can not be resolved', function (done) {
       var client = newInstance({contactPoints: ['not-a-host']});
+      client.connect(function (err) {
+        assert.ok(err);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        client.shutdown(function (err) {
+          assert.ifError(err);
+          done();
+        });
+      });
+    });
+    it('should fail if the contact points can not be reached', function (done) {
+      var client = newInstance({contactPoints: ['1.1.1.1']});
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         done();
       });
     });
-    it('should fail if contact points can not be reached', function (done) {
-      var client = newInstance({contactPoints: ['1.1.1.1']});
+    it('should fail if the keyspace does not exists', function (done) {
+      var client = newInstance({ keyspace: 'ks_does_not_exists'});
       client.connect(function (err) {
-        assert.ok(err);
-        helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        done();
+        helper.assertInstanceOf(err, Error);
+        client.shutdown(function (err) {
+          assert.ifError(err);
+          done();
+        });
       });
     });
     it('should select a tokenizer', function (done) {

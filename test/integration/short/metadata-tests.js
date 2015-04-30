@@ -41,8 +41,38 @@ describe('Metadata', function () {
           checkKeyspace('ks2', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '2');
           checkKeyspace('ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
           checkKeyspace('ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1', '1');
-          done();
+          client.execute("ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'datacenter2' : 1}", function (err, result) {
+            setTimeout(function() {
+              checkKeyspace('ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter2', '1');
+              done();
+            }, 2000);
+          });
         });
+      });
+    }),
+    it('should delete keyspace information on drop', function (done) {
+      var client = newInstance();
+      client.connect(function (err) {
+        assert.ifError(err);
+        var m = client.metadata;
+        assert.ok(m);
+        async.series([
+          helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_todelete', 1)),
+          function checkKeyspaceExists(next) {
+            var ks = m.keyspaces['ks_todelete'];
+            assert.ok(ks);
+            next();
+          },
+          helper.toTask(client.execute, client, 'DROP KEYSPACE ks_todelete;'),
+          function (next) {
+            setTimeout(next, 2000);
+          },
+          function checkKeyspaceDropped(next) {
+            var ks = m.keyspaces['ks_todelete'];
+            assert.strictEqual(ks, undefined);
+            next();
+          }
+        ], done);
       });
     });
   });
@@ -103,6 +133,37 @@ describe('Metadata', function () {
             assert.strictEqual(udtInfo.fields[2].type.info.info.name, 'phone');
             assert.strictEqual(udtInfo.fields[2].type.info.info.fields.length, 3);
             assert.strictEqual(udtInfo.fields[2].type.info.info.fields[0].name, 'alias');
+            next();
+          });
+        }
+      ], done);
+    });
+    vit('2.1', 'should retrieve the updated metadata after a schema change', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt_meta', 3)),
+        helper.toTask(client.execute, client, 'USE ks_udt_meta'),
+        helper.toTask(client.execute, client, 'CREATE TYPE type_changing (id uuid, name ascii)'),
+        function checkType1(next) {
+          client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
+            assert.ifError(err);
+            assert.ok(udt);
+            assert.strictEqual(udt.fields.length, 2);
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER TYPE type_changing ALTER name TYPE varchar'),
+        function (next) {
+          setTimeout(next, 2000);
+        },
+        function checkType2(next) {
+          client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
+            assert.ifError(err);
+            assert.ok(udt);
+            assert.strictEqual(udt.fields.length, 2);
+            assert.strictEqual(udt.fields[1].name, 'name');
+            assert.strictEqual(udt.fields[1].type.code, types.dataTypes.varchar);
             next();
           });
         }
@@ -332,7 +393,7 @@ describe('Metadata', function () {
         });
       });
     });
-    it('should retrieve the updated metadata after an schema change', function (done) {
+    it('should retrieve the updated metadata after a schema change', function (done) {
       var client = newInstance();
       async.series([
         client.connect.bind(client),

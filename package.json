@@ -32,6 +32,9 @@
     "type" : "git",
     "url" : "https://github.com/datastax/nodejs-driver.git"
   },
+  "bugs": {
+    "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
+  },
   "scripts":  {
     "test": "mocha test/unit -R spec -t 5000"
   },

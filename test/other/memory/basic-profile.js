@@ -8,7 +8,7 @@ try {
   heapdump = require('heapdump');
 }
 catch (e) {
-  console.log(e);
+  console.error('There was an error while trying to import heapdump', e);
 }
 
 var helper = require('../../test-helper.js');
@@ -17,7 +17,7 @@ var Client = cassandra.Client;
 var types = cassandra.types;
 var utils = require('../../../lib/utils.js');
 
-var client = new Client(helper.baseOptions);
+var client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
 var keyspace = helper.getRandomName('ks');
 var table = keyspace + '.' + helper.getRandomName('tbl');
 
@@ -25,6 +25,9 @@ if (!global.gc) {
   console.log('You must run this test exposing the GC');
   return
 }
+
+var insertOnly = process.argv.indexOf('--insert-only') > 0;
+var heapUsed = process.memoryUsage().heapUsed;
 
 async.series([
   helper.ccmHelper.removeIfAny,
@@ -42,10 +45,9 @@ async.series([
     var counter = 0;
     var callbackCounter = 0;
     global.gc();
-    var heapUsed = process.memoryUsage().heapUsed;
-    async.eachLimit(new Array(50000), 500, function (v, timesNext) {
+    async.eachLimit(new Array(10000), 500, function (v, timesNext) {
       var n = counter++;
-      client.execute(query, [types.uuid(), n, new Buffer(1024)], {prepare: 1}, function (err) {
+      client.execute(query, [types.Uuid.random(), n, new Buffer(generateAsciiString(1024), 'utf8')], {prepare: true}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {
           console.log('Inserted', callbackCounter);
         }
@@ -54,23 +56,18 @@ async.series([
       });
     }, function (err) {
       if (err) return next(err);
-      global.gc();
-      var diff = process.memoryUsage().heapUsed - heapUsed;
-      console.log('Heap used difference', formatLength(diff));
-      if (diff > 2024 * 1024) {
-        //not even a 2Mb
-        return next(new Error('Difference between starting heap and finish heap used size is too large ' + formatLength(diff)));
-      }
-      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
-      setImmediate(next);
+      next();
     });
-  },
+  }
+  ,
   function selectData(next) {
+    if (insertOnly) {
+      return next();
+    }
     console.log('Retrieving data...');
     var query = util.format('SELECT * FROM %s', table);
     var totalByteLength = 0;
     global.gc();
-    var heapUsed = process.memoryUsage().heapUsed;
     var rowCount = 0;
     client.eachRow(query, [], {prepare: true, autoPage: true}, function (n, row) {
       //Buffer + int + uuid
@@ -78,20 +75,36 @@ async.series([
       rowCount++;
     }, function (err, result) {
       if (err) return next(err);
+      assert.strictEqual(rowCount, result.rowLength);
+      console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
+      next();
+    });
+  }
+], function (err) {
+  assert.ifError(err);
+  client.shutdown(function (err) {
+    setImmediate(function () {
+      client = null;
       global.gc();
       var diff = process.memoryUsage().heapUsed - heapUsed;
-      assert.strictEqual(rowCount, result.rowLength);
       console.log('Heap used difference', formatLength(diff));
-      console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
-      setImmediate(next);
+      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      helper.ccmHelper.removeIfAny();
+      assert.ifError(err);
     });
-  },
-  client.shutdown.bind(client)
-], function (err) {
-  helper.ccmHelper.removeIfAny();
-  assert.ifError(err);
+  });
 });
 
 function formatLength(value) {
   return Math.floor(value / 1024) + 'KiB';
+}
+
+function generateAsciiString(length) {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for( var i=0; i < length; i++ ){
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

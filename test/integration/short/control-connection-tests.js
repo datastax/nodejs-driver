@@ -1,10 +1,11 @@
 var assert = require('assert');
 var async = require('async');
 
-var helper = require('../../test-helper.js');
-var ControlConnection = require('../../../lib/control-connection.js');
-var utils = require('../../../lib/utils.js');
-var clientOptions = require('../../../lib/client-options.js');
+var helper = require('../../test-helper');
+var ControlConnection = require('../../../lib/control-connection');
+var utils = require('../../../lib/utils');
+var types = require('../../../lib/types');
+var clientOptions = require('../../../lib/client-options');
 
 describe('ControlConnection', function () {
   this.timeout(120000);
@@ -166,8 +167,10 @@ describe('ControlConnection', function () {
 
 /** @returns {ControlConnection} */
 function newInstance() {
-  var options = clientOptions.extend(utils.extend({}, helper.baseOptions));
+  var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
   //disable the heartbeat
   options.pooling.heartBeatInterval = 0;
+  options.pooling.coreConnectionsPerHost[types.distance.local] = 2;
+  options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
   return new ControlConnection(options);
 }

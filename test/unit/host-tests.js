@@ -29,8 +29,8 @@ before(function () {
   };
   hostModule.__set__("Connection", connectionMock);
 });
-
 describe('HostConnectionPool', function () {
+  this.timeout(5000);
   describe('#_maybeCreatePool()', function () {
     afterEach(function () {
       openDelay = 10;
@@ -49,8 +49,9 @@ describe('HostConnectionPool', function () {
       }, done);
     });
     it('should never callback with unopened connections', function (done) {
-      openDelay = 800;
+      openDelay = 100;
       var hostPool = newHostConnectionPoolInstance();
+      hostPool.coreConnectionsLength = 10;
       async.times(5, function(n, next) {
         setTimeout(function () {
           hostPool._maybeCreatePool(function (err) {
@@ -63,6 +64,32 @@ describe('HostConnectionPool', function () {
             next();
           });
         }, n);
+      }, function (err) {
+        assert.ifError(err);
+        done();
+      });
+    });
+    it('should never callback with unopened connections when resizing', function (done) {
+      openDelay = 200;
+      var hostPool = newHostConnectionPoolInstance();
+      hostPool.coreConnectionsLength = 1;
+      var counter = 0;
+      async.eachLimit(new Array(10), 4, function(item, next) {
+        counter++;
+        hostPool._maybeCreatePool(function (err) {
+          setImmediate(function () {
+            assert.ifError(err);
+            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected}).length;
+            if (closedConnections)
+            {
+              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'))
+            }
+            if (counter > 5) {
+              hostPool.coreConnectionsLength = 20;
+            }
+            next();
+          })
+        });
       }, function (err) {
         assert.ifError(err);
         done();

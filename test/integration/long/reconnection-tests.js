@@ -5,8 +5,9 @@ var util = require('util');
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
-var reconnection = require('../../../lib/policies/reconnection.js');
+var utils = require('../../../lib/utils');
+var errors = require('../../../lib/errors');
+var reconnection = require('../../../lib/policies/reconnection');
 
 describe('reconnection', function () {
   this.timeout(120000);
@@ -110,15 +111,15 @@ describe('reconnection', function () {
         function insert2(next) {
           //execute a couple of times to even though the cluster is DOWN
           async.timesSeries(20, function (n, timesNext) {
-            client.execute(insertQuery1, [types.uuid(), n], {prepare: 1}, function (err) {
+            client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, function (err) {
               //It should callback in error
-              assert.ok(err);
+              helper.assertInstanceOf(err, errors.NoHostAvailableError);
               setTimeout(timesNext, 100);
             });
           }, next);
         },
         function restart(next) {
-          helper.ccmHelper.exec(['node1', 'start'], helper.wait(3000, next));
+          helper.ccmHelper.exec(['node1', 'start'], helper.wait(5000, next));
         },
         function insert1_plus(next) {
           //The cluster should be UP!

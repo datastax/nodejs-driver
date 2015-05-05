@@ -568,8 +568,8 @@ describe('Client', function () {
         function checkPool(next) {
           var hosts = client.hosts.slice(0);
           assert.strictEqual(hosts.length, 2);
-          assert.strictEqual(hosts[0].pool.connections, null);
-          assert.strictEqual(hosts[1].pool.connections, null);
+          assert.strictEqual(hosts[0].pool.connections.length, 0);
+          assert.strictEqual(hosts[1].pool.connections.length, 0);
           next();
         }
       ], done);

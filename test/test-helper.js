@@ -353,6 +353,19 @@ var helper = {
       //noinspection JSUnresolvedFunction
       it(testCase, func);
     }
+  },
+
+  /**
+   * Given a {Host} returns the last octet of its ip address.
+   * i.e. (127.0.0.247:9042) -> 247.
+   *
+   * @param {Host|string} host or host address to get ip address of.
+   * @returns {string} Last octet of the host address.
+   */
+  lastOctetOf: function(host) {
+    var address = typeof host == "string" ? host : host.address;
+    var ipAddress = address.split(':')[0].split('.');
+    return ipAddress[ipAddress.length-1];
   }
 };
 

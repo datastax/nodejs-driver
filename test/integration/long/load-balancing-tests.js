@@ -27,7 +27,7 @@ describe('DCAwareRoundRobinPolicy', function () {
           client.execute('SELECT * FROM system.schema_columnfamilies', function (err, result) {
             assert.ifError(err);
             assert.ok(result && result.rows);
-            var hostId = result.info.queriedHost + ':9042';
+            var hostId = result.info.queriedHost;
             assert.ok(hostId);
             var h = client.hosts.get(hostId);
             assert.ok(h);
@@ -91,7 +91,7 @@ describe('TokenAwarePolicy', function () {
             assert.ifError(err);
             //for murmur id = 1, it go to replica 2
             var address = result.info.queriedHost;
-            assert.strictEqual(address.charAt(address.length-1), expectedPartition[id.toString()]);
+            assert.strictEqual(helper.lastOctetOf(address), expectedPartition[id.toString()]);
             timesNext();
           });
         }, next);
@@ -141,7 +141,7 @@ describe('TokenAwarePolicy', function () {
             assert.ifError(err);
             //for murmur id = 1, it go to replica 2
             var address = result.info.queriedHost;
-            assert.strictEqual(address.charAt(address.length-1), expectedPartition[id.toString()]);
+            assert.strictEqual(helper.lastOctetOf(address), expectedPartition[id.toString()]);
             timesNext();
           });
         }, next);

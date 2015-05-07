@@ -1,6 +1,6 @@
-﻿# DataStax Node.js Driver for Apache Cassandra
+# DataStax Node.js Driver for Apache Cassandra
 
-Node.js driver for [Apache Cassandra][cassandra]. This driver works exclusively with the Cassandra Query Language version 3 (CQL3) and Cassandra's native protocol.
+A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra (1.2+) and DataStax Enterprise (3.1+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3.
 
 ## Installation
 
@@ -12,13 +12,14 @@ $ npm install cassandra-driver
 
 ## Features
 
-- Node discovery
-- Configurable load balancing
-- Transparent failover
-- Paging
-- Client-to-node SSL support
-- Row streaming and pipes
-- Prepared statements and query batches
+- Simple, Prepared, and Batch statements
+- Asynchronous IO, parallel execution, request pipelining
+- [Connection pooling][pooling]
+- Auto node discovery
+- Automatic reconnection
+- Configurable [load balancing][load-balancing] and [retry policies][retry]
+- Works with any cluster size
+- [Row streaming and pipes](#avoid-buffering)
 
 ## Documentation
 
@@ -106,6 +107,40 @@ client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
   });
 ```
 
+### User defined types
+
+[User defined types (UDT)][cql-udt] are represented as Javascript objects.
+
+For example:
+Consider the following UDT and table
+```cql
+CREATE TYPE address (
+  street text,
+  city text,
+  state text,
+  zip int,
+  phones set<text>
+);
+CREATE TABLE users (
+  name text PRIMARY KEY,
+  email text,
+  address frozen<address>
+);
+```
+
+You can retrieve the user address details as a regular Javascript object.
+
+```javascript
+var query = 'SELECT name, email, address FROM users WHERE name = ?';
+client.execute(query, [name], { prepare: true}, function (err, result) {
+	var row = result.first();
+	var address = row.address;
+	console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
+});
+```
+
+Read more information  about using [UDTs with the Node.js Driver][doc-udt].
+
 ### Paging
 
 All driver methods use a default `fetchSize` of 5000 rows, retrieving only first page of results up to a
@@ -148,7 +183,7 @@ client.batch(queries, { prepare: true }, function(err) {
 There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
  to deal with data types that come from other systems in Javascript.
 
-The driver supports all the CQL data types in Apache Cassandra (2.0 and below) even for types that no built-in
+The driver supports all the CQL data types in Apache Cassandra (2.1 and below) even for types that no built-in
 Javascript representation exists, like decimal, varint and bigint. Check the documentation on working with
  [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
@@ -170,7 +205,7 @@ The development effort to provide an up to date, high performance, fully feature
 
 ## License
 
-Copyright 2014 DataStax
+Copyright 2015 DataStax
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
@@ -179,17 +214,22 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 [cassandra]: http://cassandra.apache.org/
-[doc-index]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/
-[doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
-[doc-api]: http://www.datastax.com/drivers/nodejs/2.0/Client.html
-[doc-numerical]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/numericalValues.html
-[doc-uuid]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/uuids-timeuuids.html
-[doc-collections]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/reference/collections.html
-[faq]: http://www.datastax.com/documentation/developer/nodejs-driver/2.0/nodejs-driver/faq/njdFaq.html
+[doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.1/Client.html
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/
+[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/numericalValues.html
+[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/uuids-timeuuids.html
+[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/collections.html
+[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/userDefinedTypes.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/faq/njdFaq.html
+[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html
+[retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html#retry-policy
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/poolingConfiguration.html
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[jira]: https://datastax-oss.atlassian.net/browse/NODEJS
+[jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
+[cql-udt]: http://cassandra.apache.org/doc/cql3/CQL.html#createTypeStmt

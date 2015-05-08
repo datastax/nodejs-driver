@@ -16,3 +16,5 @@ npm-debug.log
 node_modules
 testing.js
 test/localConfig.json
+.DS_Store
+out/

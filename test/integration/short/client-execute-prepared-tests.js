@@ -189,7 +189,7 @@ describe('Client', function () {
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
-          async.times(150, function (n, next) {
+          helper.timesLimit(150, 100, function (n, next) {
             var id = types.uuid();
             var value = types.Integer.fromNumber(n * 999);
             value = value.multiply(types.Integer.fromString('9999901443'));
@@ -225,7 +225,7 @@ describe('Client', function () {
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
-          async.times(150, function (n, next) {
+          helper.timesLimit(150, 100, function (n, next) {
             var id = types.Uuid.random();
             var value = (n * 999).toString() + '.' + (100 + n * 7).toString();
             if (n % 10 === 0) {
@@ -423,11 +423,11 @@ describe('Client', function () {
         function insert(next) {
           var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
           var params = [id, types.TimeUuid.now(), 'hello sample timestamp'];
-          client.execute(query, params, { timestamp: timestamp, consistency: types.consistencies.quorum, prepare: 1}, next);
+          client.execute(query, params, { timestamp: timestamp, prepare: 1}, next);
         },
         function select(next) {
           var query = util.format('SELECT text_sample, writetime(text_sample) from %s WHERE id1 = ?', commonTable);
-          client.execute(query, [id], { consistency: types.consistencies.quorum, prepare: 1}, function (err, result) {
+          client.execute(query, [id], { prepare: 1}, function (err, result) {
             var row = result.first();
             assert.ok(row);
             assert.strictEqual(row['text_sample'], 'hello sample timestamp');
@@ -438,7 +438,9 @@ describe('Client', function () {
       ], done);
     });
     vit('2.1.3', 'should support nested collections', function (done) {
-      var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
+      var client = newInstance({ keyspace: commonKs,
+        queryOptions: { consistency: types.consistencies.quorum,
+          prepare: true}});
       var createTableCql = 'CREATE TABLE tbl_nested (' +
         'id uuid PRIMARY KEY, ' +
         'map1 map<text, frozen<set<timeuuid>>>, ' +
@@ -563,9 +565,10 @@ describe('Client', function () {
  * @returns {Client}
  */
 function newInstance(options) {
-  var logEmitter = function () {};
   options = options || {};
-  options = utils.extend(options, {logEmitter: logEmitter}, helper.baseOptions);
+  options = utils.extend({
+    queryOptions: {consistency: types.consistencies.quorum}
+  }, options, helper.baseOptions);
   return new Client(options);
 }
 

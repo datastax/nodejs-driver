@@ -488,7 +488,7 @@ describe('Client', function () {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
-          async.times(1000, function (i, next) {
+          helper.timesLimit(1000, 100, function (i, next) {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
               counter++;
               assert.ifError(err);

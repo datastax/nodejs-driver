@@ -368,7 +368,7 @@ describe('Client', function () {
       var client = newInstance();
       async.parallel([
         function (next) {
-          async.eachLimit(new Array(1000), 250, function (n, eachNext) {
+          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
             var queries = [{
               query: query1Table1,
               params: [id1Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
@@ -380,7 +380,7 @@ describe('Client', function () {
           }, next);
         },
         function (next) {
-          async.eachLimit(new Array(1000), 250, function (n, eachNext) {
+          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
             var queries = [{
               query: query2Table1,
               params: [id2Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]

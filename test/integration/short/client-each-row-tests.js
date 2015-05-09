@@ -244,13 +244,13 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
-          async.times(200, function (n, next) {
+          helper.timesLimit(200, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
-          async.times(135, function (n, next) {
+          helper.timesLimit(135, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },
@@ -291,7 +291,7 @@ describe('Client', function () {
       }
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {
-      var client = newInstance();
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var metaPageState;
       var pageState;
       async.series([
@@ -300,7 +300,7 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(131, function (n, next) {
+          helper.timesLimit(131, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
@@ -347,7 +347,7 @@ describe('Client', function () {
       ], done);
     });
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
-      var client = newInstance();
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var id = types.Uuid.random();
       async.series([
         client.connect.bind(client),
@@ -399,6 +399,8 @@ describe('Client', function () {
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  options = options || {};
+  options = utils.extend(options, helper.baseOptions);
+  return new Client(options);
 }

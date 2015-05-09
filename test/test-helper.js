@@ -366,6 +366,30 @@ var helper = {
     var address = typeof host == "string" ? host : host.address;
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
+  },
+
+  /**
+   * The same as async.times, only no more than limit iterators will be
+   * simultaneously running at any time.
+   *
+   * Note that the items are not processed in batches, so there is no guarantee
+   * that the first limit iterator functions will complete before any others
+   * are started.
+   *
+   * Taken from https://github.com/caolan/async/pull/560.
+   *
+   * @param count The number of times to run the function.
+   * @param limit The maximum number of iterators to run at any time.
+   * @param iterator The function to call n times.
+   * @param callback The function to call on completion of iterators.
+   */
+  timesLimit: function(count, limit, iterator, callback) {
+    var counter = [];
+    for (var i = 0; i < count; i++) {
+      counter.push(i);
+    }
+
+    return async.mapLimit(counter, limit, iterator, callback);
   }
 };
 

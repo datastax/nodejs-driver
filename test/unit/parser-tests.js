@@ -247,6 +247,7 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
     });
     it('should emit row with large row values', function (done) {
+      this.timeout(5000);
       //3mb value
       var cellValue = helper.fillArray(3 * 1024 * 1024, 74);
       //Add the length 0x00300000 of the value

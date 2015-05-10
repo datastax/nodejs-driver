@@ -11,7 +11,7 @@ var helper = require('../../test-helper.js');
 var vit = helper.vit;
 
 describe('Connection', function () {
-  this.timeout(30000);
+  this.timeout(120000);
   describe('#open()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);

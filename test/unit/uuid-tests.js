@@ -83,6 +83,7 @@ describe('Uuid', function () {
     });
   });
   describe('random()', function () {
+    this.timeout(5000);
     it('should return a Uuid instance', function () {
       helper.assertInstanceOf(Uuid.random(), Uuid);
     });
@@ -153,6 +154,7 @@ describe('TimeUuid', function () {
     });
   });
   describe('fromDate()', function () {
+    this.timeout(5000);
     it('should generate v1 uuids that do not collide', function () {
       var values = {};
       var length = 50000;

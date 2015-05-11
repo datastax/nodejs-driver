@@ -3,6 +3,7 @@
 var async = require('async');
 var exec = require('child_process').exec;
 var fs = require('fs');
+var path = require('path');
 
 /**
  * This script is used to check that the samples run correctly.
@@ -26,12 +27,13 @@ function getJsFiles(dir, fileArray) {
   return fileArray;
 }
 
-var runnerFileName = './' + module.filename.split('/').reduce(function (p, c) { return c;});
+var runnerFileName = path.basename(module.filename);
 var counter = 0;
-async.eachSeries(getJsFiles('./'), function (file, next) {
-  if (file === runnerFileName) return next();
+async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
+  if (file.indexOf(runnerFileName) >= 0) return next();
   exec('node ' + file, function (err) {
     counter++;
+    process.stdout.write('.');
     next(err);
   });
 }, function (err) {
@@ -39,5 +41,5 @@ async.eachSeries(getJsFiles('./'), function (file, next) {
     console.error(err);
     return;
   }
-  console.log('%d examples executed successfully', counter);
+  console.log('\n%d examples executed successfully', counter);
 });

@@ -383,7 +383,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
   options = options || {};
   var version = helper.getCassandraVersion();
-  helper.trace('Starting test C* cluster v%s with %s nodes', version, nodeLength);
+  helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   async.series([
     function (next) {
       //it wont hurt to remove
@@ -394,6 +394,10 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       var create = ['create', 'test', '-v', version];
+      if (process.env.TEST_CASSANDRA_DIR) {
+        create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
+        helper.trace('With', create[2]);
+      }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }

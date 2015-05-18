@@ -15,26 +15,33 @@ describe('Client', function () {
     var commonKs = helper.getRandomName('ks');
     var commonTable = commonKs + '.' + helper.getRandomName('table');
     before(function (done) {
-      var client = newInstance();
+      var client = newInstance({ pooling: { heartBeatInterval: 0}});
       async.series([
         helper.ccmHelper.start(3),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
-        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable))
+        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable)),
+        client.shutdown.bind(client)
       ], done);
     });
     after(helper.ccmHelper.remove);
     it('should execute a prepared query with parameters on all hosts', function (done) {
-      var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = ?';
-      async.timesSeries(3, function (n, next) {
-        client.execute(query, ['system'], {prepare: 1}, function (err, result) {
-          assert.ifError(err);
-          assert.strictEqual(client.hosts.length, 3);
-          assert.notEqual(result, null);
-          assert.notEqual(result.rows, null);
-          next();
-        });
-      }, done);
+      var client = newInstance({ pooling: { heartBeatInterval: 0}});
+      var query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
+      client.connect(function (err) {
+        assert.ifError(err);
+        async.timesSeries(3, function (n, next) {
+          client.execute(query, [types.Uuid.random()], {prepare: 1}, function (err, result) {
+            if (err) {
+              console.log(err);
+            }
+            assert.ifError(err);
+            assert.strictEqual(client.hosts.length, 3);
+            assert.notEqual(result, null);
+            assert.notEqual(result.rows, null);
+            next();
+          });
+        }, done);
+      });
     });
     it('should callback with error when query is invalid', function (done) {
       var client = newInstance();
@@ -554,6 +561,42 @@ describe('Client', function () {
             });
           }
         ], done);
+      });
+    });
+    describe('with smallint and tinyint', function () {
+      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, smallint_sample, tinyint_sample FROM tbl_smallints WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: commonKs });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)')
+        ], done);
+      });
+      vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
+        var values = [
+          [types.Uuid.random(), 1, 1],
+          [types.Uuid.random(), 0, 0],
+          [types.Uuid.random(), -1, -2],
+          [types.Uuid.random(), -130, -128]
+        ];
+        var client = newInstance({ keyspace: commonKs });
+        async.eachSeries(values, function (params, next) {
+          client.execute(insertQuery, params, { prepare: true}, function (err) {
+            assert.ifError(err);
+            client.execute(selectQuery, [params[0]], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.rowLength);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['id'].toString(), params[0].toString());
+              assert.strictEqual(row['smallint_sample'], params[1]);
+              assert.strictEqual(row['tinyint_sample'], params[2]);
+              next();
+            });
+          });
+        }, done);
       });
     });
   });

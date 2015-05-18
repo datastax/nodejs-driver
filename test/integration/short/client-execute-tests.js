@@ -576,6 +576,54 @@ describe('Client', function () {
         });
       });
     });
+    describe('with smallint and tinyint', function () {
+      var sampleId = types.Uuid.random();
+      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample, text_sample) VALUES (%s, %s, %s, %s)';
+      var selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)'),
+          helper.toTask(client.execute, client, util.format(
+            insertQuery, sampleId, 0x0200, 2, "'two'"))
+        ], done);
+      });
+      vit('2.2', 'should retrieve smallint and tinyint values as Number', function (done) {
+        var query = util.format(selectQuery, sampleId);
+        var client = newInstance({ keyspace: keyspace });
+        client.execute(query, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result);
+          assert.ok(result.rowLength);
+          var row = result.first();
+          assert.ok(row);
+          assert.strictEqual(row['text_sample'], 'two');
+          assert.strictEqual(row['smallint_sample'], 0x0200);
+          assert.strictEqual(row['tinyint_sample'], 2);
+          done();
+        });
+      });
+      vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var query = util.format(insertQuery, '?', '?', '?', '?');
+        var id = types.Uuid.random();
+        client.execute(query, [id, 10, 11, 'another text'], { hints: [null, 'smallint', 'tinyint']}, function (err) {
+          assert.ifError(err);
+          client.execute(util.format(selectQuery, id), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.rowLength);
+            var row = result.first();
+            assert.ok(row);
+            assert.strictEqual(row['text_sample'], 'another text');
+            assert.strictEqual(row['smallint_sample'], 10);
+            assert.strictEqual(row['tinyint_sample'], 11);
+            done();
+          });
+        });
+      });
+    });
   });
 });
 

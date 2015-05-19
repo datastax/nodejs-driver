@@ -41,7 +41,8 @@ describe('Metadata', function () {
           checkKeyspace('ks2', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '2');
           checkKeyspace('ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
           checkKeyspace('ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1', '1');
-          client.execute("ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'datacenter2' : 1}", function (err, result) {
+          client.execute("ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'datacenter2' : 1}", function (err) {
+            assert.ifError(err);
             setTimeout(function() {
               checkKeyspace('ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter2', '1');
               done();
@@ -49,7 +50,7 @@ describe('Metadata', function () {
           });
         });
       });
-    }),
+    });
     it('should delete keyspace information on drop', function (done) {
       var client = newInstance();
       client.connect(function (err) {
@@ -417,6 +418,31 @@ describe('Metadata', function () {
             assert.strictEqual(table.columns.length, 3);
             assert.ok(table.columnsByName['new_col1']);
             assert.strictEqual(table.columnsByName['new_col1'].type.code, types.dataTypes.timeuuid);
+            next();
+          });
+        }
+      ], done);
+    });
+    vit('2.2', 'should retrieve the metadata of a table containing new 2.2 types', function (done) {
+      var client = newInstance();
+      var createTableCql = 'CREATE TABLE ks_tbl_meta.tbl_c22 ' +
+        '(id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, date_sample date, time_sample time)';
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, createTableCql),
+        function checkTable(next) {
+          client.metadata.getTable('ks_tbl_meta', 'tbl_c22', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.strictEqual(table.columns.length, 5);
+            assert.ok(table.columnsByName['smallint_sample']);
+            assert.ok(table.columnsByName['tinyint_sample']);
+            assert.ok(table.columnsByName['date_sample']);
+            assert.ok(table.columnsByName['time_sample']);
+            assert.strictEqual(table.columnsByName['smallint_sample'].type.code, types.dataTypes.smallint);
+            assert.strictEqual(table.columnsByName['tinyint_sample'].type.code, types.dataTypes.tinyint);
+            assert.strictEqual(table.columnsByName['date_sample'].type.code, types.dataTypes.date);
+            assert.strictEqual(table.columnsByName['time_sample'].type.code, types.dataTypes.time);
             next();
           });
         }

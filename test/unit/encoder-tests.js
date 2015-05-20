@@ -505,6 +505,19 @@ describe('encoder', function () {
       assert.strictEqual(decoded.get(0), 'one');
       assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
     });
+    it('should encode/decode LocalDate as date', function () {
+      var encoder = new Encoder(3, {});
+      var type = {code: dataTypes.date};
+      var encoded = encoder.encode(new types.LocalDate(2010, 4, 29), type);
+      var decoded = encoder.decode(encoded, type);
+      helper.assertInstanceOf(decoded, types.LocalDate);
+      assert.strictEqual(decoded.toString(), '2010-04-29');
+
+      encoded = encoder.encode(new types.LocalDate(2005, 8, 5), type);
+      decoded = encoder.decode(encoded, type);
+      assert.strictEqual(decoded.toString(), '2005-08-05');
+      assert.ok(decoded.equals(new types.LocalDate(2005, 8, 5)));
+    });
   });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});

@@ -146,6 +146,27 @@ describe('types', function () {
       });
     });
   });
+  describe('LocalDate', function () {
+    var LocalDate = types.LocalDate;
+    describe('#toString()', function () {
+      it('should return the string in the form of yyyy-mm-dd', function () {
+        assert.strictEqual(new LocalDate(2015, 2, 1).toString(), '2015-02-01');
+        assert.strictEqual(new LocalDate(2015, 12, 13).toString(), '2015-12-13');
+        assert.strictEqual(new LocalDate(101, 12, 14).toString(), '0101-12-14');
+        assert.strictEqual(new LocalDate(-100, 11, 6).toString(), '-0100-11-06');
+      });
+    });
+    describe('#fromBuffer() and #toBuffer()', function () {
+      it('should encode and decode a LocalDate', function () {
+        var value = new LocalDate(2010, 8, 5);
+        var encoded = value.toBuffer();
+        var decoded = LocalDate.fromBuffer(encoded);
+        assert.strictEqual(decoded.toString(), value.toString());
+        assert.ok(decoded.equals(value));
+        assert.ok(value.equals(decoded));
+      });
+    });
+  });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];

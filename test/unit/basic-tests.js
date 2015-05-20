@@ -167,6 +167,28 @@ describe('types', function () {
       });
     });
   });
+  describe('LocalTime', function () {
+    var LocalTime = types.LocalTime;
+    var Long = types.Long;
+    var values = [
+      //Long value              |               string representation
+      ['1000000001',                            '00:00:01.000000001'],
+      ['0',                                     '00:00:00'],
+      ['3600000006001',                         '01:00:00.000006001'],
+      ['61000000000',                           '00:01:01'],
+      ['610000030000',                          '00:10:10.00003'],
+      ['52171800000000',                        '14:29:31.8'],
+      ['52171800600000',                        '14:29:31.8006']
+    ];
+    describe('#toString()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+  });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];

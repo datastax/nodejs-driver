@@ -171,20 +171,61 @@ describe('types', function () {
     var LocalTime = types.LocalTime;
     var Long = types.Long;
     var values = [
-      //Long value              |               string representation
-      ['1000000001',                            '00:00:01.000000001'],
-      ['0',                                     '00:00:00'],
-      ['3600000006001',                         '01:00:00.000006001'],
-      ['61000000000',                           '00:01:01'],
-      ['610000030000',                          '00:10:10.00003'],
-      ['52171800000000',                        '14:29:31.8'],
-      ['52171800600000',                        '14:29:31.8006']
+      //Long value         |     string representation  |   hour/min/sec/nanos
+      ['1000000001',             '00:00:01.000000001',      [0, 0, 1, 1]],
+      ['0',                      '00:00:00',                [0, 0, 0, 0]],
+      ['3600000006001',          '01:00:00.000006001',      [1, 0, 0, 6001]],
+      ['61000000000',            '00:01:01',                [0, 1, 1, 0]],
+      ['610000030000',           '00:10:10.00003',          [0, 10, 10, 30000]],
+      ['52171800000000',         '14:29:31.8',              [14, 29, 31, 800000000]],
+      ['52171800600000',         '14:29:31.8006',           [14, 29, 31, 800600000]]
     ];
     describe('#toString()', function () {
       it('should return the string representation', function () {
         values.forEach(function (item) {
           var val = new LocalTime(Long.fromString(item[0]));
           assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#toJSON()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#fromString()', function () {
+      it('should parse the string representation', function () {
+        values.forEach(function (item) {
+          var val = LocalTime.fromString(item[1]);
+          assert.ok(new LocalTime(Long.fromString(item[0])).equals(val));
+          assert.ok(new LocalTime(Long.fromString(item[0]))
+            .getTotalNanoseconds()
+            .equals(val.getTotalNanoseconds()));
+        });
+      });
+    });
+    describe('#toBuffer() and fromBuffer()', function () {
+      values.forEach(function (item) {
+        var val = new LocalTime(Long.fromString(item[0]));
+        var encoded = val.toBuffer();
+        var decoded = LocalTime.fromBuffer(encoded);
+        assert.ok(decoded.equals(val));
+        assert.strictEqual(val.toString(), decoded.toString());
+      });
+    });
+    describe('#hour #minute #second #nanosecond', function () {
+      it('should get the correct parts', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          var parts = item[2];
+          console.log(item[1]);
+          assert.strictEqual(val.hour, parts[0]);
+          assert.strictEqual(val.minute, parts[1]);
+          assert.strictEqual(val.second, parts[2]);
+          assert.strictEqual(val.nanosecond, parts[3]);
         });
       });
     });

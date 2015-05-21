@@ -229,6 +229,31 @@ describe('types', function () {
         });
       });
     });
+    describe('fromDate()', function () {
+      it('should use the local time', function () {
+        var date = new Date();
+        var time = LocalTime.fromDate(date, 1);
+        assert.strictEqual(time.hour, date.getHours());
+        assert.strictEqual(time.minute, date.getMinutes());
+        assert.strictEqual(time.second, date.getSeconds());
+        assert.strictEqual(time.nanosecond, date.getMilliseconds() * 1000000 + 1);
+      });
+    });
+    describe('fromMilliseconds', function () {
+      it('should monotonically increase the nanoseconds', function () {
+        var counter = 0;
+        var time = LocalTime.fromMilliseconds(0);
+        var val;
+        while (counter++ < 100) {
+          val = LocalTime.fromMilliseconds(0);
+          assert.ok(!val.equals(time));
+          assert.notStrictEqual(val.getTotalNanoseconds(), time.getTotalNanoseconds());
+          //its the next value or ZERO
+          assert.ok((val.getTotalNanoseconds()).equals(time.getTotalNanoseconds().add(Long.ONE)) || val.getTotalNanoseconds().equals(types.Long.ZERO));
+          time = val;
+        }
+      });
+    });
   });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {

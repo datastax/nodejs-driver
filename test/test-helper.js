@@ -366,6 +366,18 @@ var helper = {
     var address = typeof host == "string" ? host : host.address;
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
+  },
+  /**
+   * Returns a function, that when invoked shutdowns the client and callbacks
+   * @param {Client} client
+   * @param {Function} callback
+   * @returns {Function}
+   */
+  finish: function (client, callback) {
+    return (function (err) {
+      assert.ifError(err);
+      client.shutdown(callback);
+    });
   }
 };
 

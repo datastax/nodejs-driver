@@ -323,6 +323,22 @@ describe('encoder', function () {
         encoded = encoder.encode(value, 'map<inet, text>');
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.inet}, {code: dataTypes.text}]});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+        value = {};
+        value['12:59:56'] = 'time1';
+        value['15:01:02.1234'] = 'time2';
+        value['06:01:02.000000213'] = 'time3';
+        encoded = encoder.encode(value, 'map<time, text>');
+        decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.time}, {code: dataTypes.text}]});
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+        value = {};
+        value['2015-01-30'] = 'date1';
+        value['1999-11-12'] = 'date2';
+        value['-0001-11-12'] = 'date3';
+        encoded = encoder.encode(value, 'map<date, text>');
+        decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.date}, {code: dataTypes.text}]});
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
       it(util.format('should encode and decode list<int> for protocol v%d', version), function () {
         var value = [1, 2, 3, 4];

@@ -624,6 +624,48 @@ describe('Client', function () {
         });
       });
     });
+    describe('with date and time types', function () {
+      var LocalDate = types.LocalDate;
+      var LocalTime = types.LocalTime;
+      var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_datetimes (id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)'),
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
+        var values = [
+          [types.Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
+          [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
+          [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
+          [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
+          [types.Uuid.random(), new LocalDate(1981, 9, 14), new LocalTime(types.Long.fromString('6311999549933'))]
+        ];
+        var client = newInstance({ keyspace: keyspace });
+        async.eachSeries(values, function (params, next) {
+          client.execute(insertQuery, params, function (err) {
+            assert.ifError(err);
+            client.execute(selectQuery, [params[0]], function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.rowLength);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['id'].toString(), params[0].toString());
+              helper.assertInstanceOf(row['date_sample'], LocalDate);
+              assert.strictEqual(row['date_sample'].toString(), params[1].toString());
+              helper.assertInstanceOf(row['time_sample'], LocalTime);
+              assert.strictEqual(row['time_sample'].toString(), params[2].toString());
+              next();
+            });
+          });
+        }, helper.finish(client, done));
+      });
+    });
   });
 });
 

@@ -6,13 +6,12 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
-var policies = require('../../../lib/policies');
 
 describe('Client', function () {
   this.timeout(180000);
   afterEach(helper.ccmHelper.remove);
   it('should handle parallel insert and select', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}, encoding: { copyBuffer: false}});
+    var client = newInstance({encoding: { copyBuffer: false}});
     //var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
@@ -59,7 +58,7 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select with nodes failing', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;
@@ -110,11 +109,11 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select of large blobs', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = helper.getRandomName('tbl');
-    var clientInsert = newInstance({keyspace: keyspace, policies: { retry: new RetryMultipleTimes(2)}});
-    var clientSelect = newInstance({keyspace: keyspace, policies: { retry: new RetryMultipleTimes(2)}});
+    var clientInsert = newInstance({keyspace: keyspace});
+    var clientSelect = newInstance({keyspace: keyspace});
     var selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
     var insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
     var times = 500;
@@ -168,38 +167,6 @@ describe('Client', function () {
     }
   });
 });
-
-/**
- * A retry policy for testing purposes only, retries for a number of times
- * @param {Number} times
- * @constructor
- */
-function RetryMultipleTimes(times) {
-  this.times = times;
-}
-
-util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
-
-RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
-
-RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
-
-RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
 
 
 /**

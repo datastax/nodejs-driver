@@ -2,8 +2,11 @@ var async = require('async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
+var policies = require('../lib/policies');
 var types = require('../lib/types');
 var utils = require('../lib/utils.js');
+
+util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
   /**
@@ -44,7 +47,9 @@ var helper = {
   baseOptions: (function () {
     return {
       //required
-      contactPoints: ['127.0.0.1']
+      contactPoints: ['127.0.0.1'],
+      // retry all queries multiple times (for improved test resiliency).
+      policies: { retry: new RetryMultipleTimes(3) }
     };
   })(),
   /**
@@ -592,6 +597,36 @@ SetPolyFill.prototype.add = function (x) {
 
 SetPolyFill.prototype.toString = function() {
   return this.arr.toString();
+};
+
+/**
+ * A retry policy for testing purposes only, retries for a number of times
+ * @param {Number} times
+ * @constructor
+ */
+function RetryMultipleTimes(times) {
+  this.times = times;
+}
+
+RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
 };
 
 module.exports = helper;

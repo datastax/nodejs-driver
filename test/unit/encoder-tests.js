@@ -29,9 +29,10 @@ describe('encoder', function () {
       assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(new types.InetAddress(new Buffer([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
       assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
+      assertGuessed(new types.LocalDate(2010, 4, 29), dataTypes.date, 'Guess type for a date value failed');
+      assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
-
     function assertGuessed(value, expectedType, message) {
       var type = encoder.guessDataType(value);
       if (type === null) {
@@ -517,6 +518,25 @@ describe('encoder', function () {
       decoded = encoder.decode(encoded, type);
       assert.strictEqual(decoded.toString(), '2005-08-05');
       assert.ok(decoded.equals(new types.LocalDate(2005, 8, 5)));
+    });
+    it('should encode/decode LocalTime as time', function () {
+      var encoder = new Encoder(3, {});
+      var type = {code: dataTypes.time};
+      [
+        //Long value         |     string representation
+        ['2000000501',             '00:00:02.000000501'],
+        ['0',                      '00:00:00'],
+        ['3600000006001',          '01:00:00.000006001'],
+        ['61000000000',            '00:01:01'],
+        ['610000136000',           '00:10:10.000136'],
+        ['52171800000000',         '14:29:31.8'],
+        ['52171800600000',         '14:29:31.8006']
+      ].forEach(function (item) {
+          var encoded = encoder.encode(new types.LocalTime(types.Long.fromString(item[0])), type);
+          var decoded = encoder.decode(encoded, type);
+          helper.assertInstanceOf(decoded, types.LocalTime);
+          assert.strictEqual(decoded.toString(), item[1]);
+      });
     });
   });
   describe('#setRoutingKey()', function () {

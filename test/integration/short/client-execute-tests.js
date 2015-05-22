@@ -236,6 +236,29 @@ describe('Client', function () {
         }
       ], done);
     });
+    vit('2.2', 'should accept unset as a valid value', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      async.series([
+        client.connect.bind(client),
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table);
+          client.execute(query, [id, 'sample unset', types.unset], next);
+        },
+        function select(next) {
+          var query = util.format('SELECT id, text_sample, double_sample FROM %s WHERE id = ?', table);
+          client.execute(query, [id], function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 1);
+            var row = result.first();
+            assert.strictEqual(row['text_sample'], 'sample unset');
+            assert.strictEqual(row['double_sample'], null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     it('should handle several concurrent executes while the pool is not ready', function (done) {
       var client = newInstance({pooling: {
         coreConnectionsPerHost: {

@@ -641,6 +641,53 @@ describe('Client', function () {
         }, helper.finish(client, done));
       });
     });
+    describe('with unset', function () {
+      vit('2.2', 'should allow unset as a valid value', function (done) {
+        var client1 = newInstance();
+        var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
+        var id1 = types.Uuid.random();
+        var id2 = types.Uuid.random();
+        async.series([
+          client1.connect.bind(client1),
+          client2.connect.bind(client2),
+          function insert1(next) {
+            var query = util.format('INSERT INTO %s (id1, id2, text_sample, map_sample) VALUES (?, ?, ?, ?)', commonTable);
+            client1.execute(query, [id1, types.TimeUuid.now(), 'test unset', types.unset], { prepare: true}, next);
+          },
+          function select1(next) {
+            var query = util.format('SELECT id1, id2, text_sample, map_sample FROM %s WHERE id1 = ?', commonTable);
+            client1.execute(query, [id1], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var row = result.first();
+              assert.strictEqual(row['id1'].toString(), id1.toString());
+              assert.strictEqual(row['text_sample'], 'test unset');
+              assert.strictEqual(row['map_sample'], null);
+              next();
+            });
+          },
+          function insert2(next) {
+            //use undefined
+            var query = util.format('INSERT INTO %s (id1, id2, text_sample, map_sample) VALUES (?, ?, ?, ?)', commonTable);
+            client2.execute(query, [id2, types.TimeUuid.now(), 'test unset 2', undefined], { prepare: true}, next);
+          },
+          function select2(next) {
+            var query = util.format('SELECT id1, id2, text_sample, map_sample FROM %s WHERE id1 = ?', commonTable);
+            client2.execute(query, [id2], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var row = result.first();
+              assert.strictEqual(row['id1'].toString(), id2.toString());
+              assert.strictEqual(row['text_sample'], 'test unset 2');
+              assert.strictEqual(row['map_sample'], null);
+              next();
+            });
+          },
+          client1.shutdown.bind(client1),
+          client2.shutdown.bind(client2)
+        ], done);
+      });
+    });
   });
 });
 

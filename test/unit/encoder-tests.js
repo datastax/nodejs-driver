@@ -571,6 +571,36 @@ describe('encoder', function () {
       assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
     });
   });
+  describe('#encode()', function () {
+    it('should return null when value is null', function () {
+      var encoder = new Encoder(2, {});
+      assert.strictEqual(encoder.encode(null), null);
+    });
+    it('should return unset when value is unset', function () {
+      var encoder = new Encoder(4, {});
+      assert.strictEqual(encoder.encode(types.unset), types.unset);
+    });
+    it('should return null when value is undefined', function () {
+      var encoder = new Encoder(2, {});
+      assert.strictEqual(encoder.encode(undefined), null);
+    });
+    it('should return unset when value is undefined and flag set', function () {
+      var encoder = new Encoder(4, { encoding: { useUndefinedAsUnset: true}});
+      assert.strictEqual(encoder.encode(undefined), types.unset);
+    });
+    it('should throw TypeError when value is unset with low protocol version', function () {
+      var encoder = new Encoder(2, {});
+      assert.throws(function () {
+        encoder.encode(types.unset);
+      }, TypeError);
+    });
+    it('should throw TypeError when value is undefined and flag set with low protocol version', function () {
+      var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
+      assert.throws(function () {
+        encoder.encode(undefined);
+      }, TypeError);
+    });
+  });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {

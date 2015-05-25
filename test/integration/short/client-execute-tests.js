@@ -434,6 +434,33 @@ describe('Client', function () {
         done();
       });
     });
+    vit('2.2', 'should include the warning in the ResultSet', function (done) {
+      var client = newInstance();
+      var loggedMessage = false;
+      client.on('log', function (level, className, message) {
+        if (loggedMessage) return;
+        if (level !== 'warning') return;
+        message = message.toLowerCase();
+        if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
+          loggedMessage = true;
+        }
+      });
+      var query = util.format(
+        "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
+        table,
+        types.Uuid.random(),
+        utils.stringRepeat('a', 5 * 1025)
+      );
+      client.execute(query, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info.warnings);
+        assert.strictEqual(result.info.warnings.length, 1);
+        helper.assertContains(result.info.warnings[0], 'batch');
+        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.ok(loggedMessage);
+        client.shutdown(done);
+      });
+    });
     describe('with udt and tuple', function () {
       var sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
@@ -687,19 +714,6 @@ describe('Client', function () {
             });
           });
         }, helper.finish(client, done));
-      });
-    });
-    vit('2.2', 'should include the warning in the ResultSet', function (done) {
-      var client = newInstance();
-      var query = util.format(
-        "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
-        table,
-        types.Uuid.random(),
-        utils.stringRepeat('a', 5 * 1025)
-      );
-      client.execute(query, function (err) {
-        assert.ifError(err);
-        done();
       });
     });
   });

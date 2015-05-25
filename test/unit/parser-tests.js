@@ -107,6 +107,42 @@ describe('Parser', function () {
         chunk: new Buffer('ks1')
       }, null, doneIfError(done));
     });
+    it('should read a PREPARE result', function (done) {
+      var parser = newInstance();
+      var id = types.Uuid.random();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.ifError(item.error);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        helper.assertInstanceOf(item.id, Buffer);
+        assert.strictEqual(item.id.toString('hex'), id.getBuffer().toString('hex'));
+        done();
+      });
+      //kind +
+      // id length + id
+      // metadata (flags + columnLength + ksname + tblname + column name + column type) +
+      // result metadata (flags + columnLength + ksname + tblname + column name + column type)
+      var body = Buffer.concat([
+        new Buffer([0, 0, 0, types.resultKind.prepared]),
+        new Buffer([0, 16]),
+        id.getBuffer(),
+        new Buffer([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text]),
+        new Buffer([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text])
+      ]);
+      var bodyLength = body.length;
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: body.slice(0, 22)
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: body.slice(22, 41)
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result),
+        chunk: body.slice(41)
+      }, null, doneIfError(done));
+    });
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {

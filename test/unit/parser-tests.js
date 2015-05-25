@@ -51,7 +51,7 @@ describe('Parser', function () {
         var item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
-        helper.assertInstanceOf(item.traceId, types.Uuid);
+        helper.assertInstanceOf(item.flags.traceId, types.Uuid);
         done();
       });
       parser._transform({
@@ -68,8 +68,8 @@ describe('Parser', function () {
         var item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
-        helper.assertInstanceOf(item.traceId, types.Uuid);
-        assert.strictEqual(item.traceId.getBuffer().slice(0, 6).toString('hex'), 'fffffffffafa');
+        helper.assertInstanceOf(item.flags.traceId, types.Uuid);
+        assert.strictEqual(item.flags.traceId.getBuffer().slice(0, 6).toString('hex'), 'fffffffffafa');
         done();
       });
       parser._transform({

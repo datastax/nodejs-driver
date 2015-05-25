@@ -145,7 +145,7 @@ describe('RequestHandler', function () {
             err = new errors.ResponseError(types.responseErrorCodes.overloaded, 'dummy error');
           }
           setImmediate(function () {
-            cb(err, {});
+            cb(err, { flags: utils.emptyObject});
           });
         }
       };
@@ -250,13 +250,15 @@ describe('RequestHandler', function () {
       var handler = new RequestHandler(null, options);
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
-          cb(null, { meta: {
-            columns: [
-              { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
-              { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
-            ],
-            pageState: new Buffer('1234aa', 'hex')
-          }});
+          cb(null, {
+            meta: {
+              columns: [
+                { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
+                { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
+              ],
+              pageState: new Buffer('1234aa', 'hex')},
+            flags: utils.emptyObject
+          });
         });
       }};
       handler.getNextConnection = function (o, cb) {
@@ -285,7 +287,7 @@ describe('RequestHandler', function () {
       var handler = new RequestHandler(null, options);
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
-          cb(null, {});
+          cb(null, { flags: utils.emptyObject });
         });
       }};
       handler.getNextConnection = function (o, cb) {

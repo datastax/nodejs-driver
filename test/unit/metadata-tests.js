@@ -89,10 +89,12 @@ describe('Metadata', function () {
       var cc = {
         query: function (q, cb) {
           setImmediate(function () {
-            cb(null, new types.ResultSet({ rows: [ {
-              field_names: ['field1', 'field2'],
-              field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']
-            }]}));
+            cb(null, new types.ResultSet({
+              rows: [ {
+                field_names: ['field1', 'field2'],
+                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']}],
+              flags: utils.emptyObject
+            }));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -128,7 +130,7 @@ describe('Metadata', function () {
       var cc = {
         query: function (q, cb) {
           setImmediate(function () {
-            cb(null, new types.ResultSet({ rows: []}));
+            cb(null, new types.ResultSet({ rows: [], flags: utils.emptyObject}));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -145,10 +147,12 @@ describe('Metadata', function () {
       var cc = {
         query: function (q, cb) {
           setImmediate(function () {
-            cb(null, new types.ResultSet({ rows: [ {
-              field_names: ['field1', 'field2'],
-              field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']
-            }]}));
+            cb(null, new types.ResultSet({
+              rows: [ {
+                field_names: ['field1', 'field2'],
+                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']}],
+              flags: utils.emptyObject
+            }));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -168,10 +172,12 @@ describe('Metadata', function () {
         query: function (q, cb) {
           setImmediate(function () {
             queried++;
-            cb(null, new types.ResultSet({ rows: [ {
-              field_names: ['field1', 'field2'],
-              field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']
-            }]}));
+            cb(null, new types.ResultSet({
+              rows: [ {
+                field_names: ['field1', 'field2'],
+                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']}],
+              flags: utils.emptyObject
+            }));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -199,10 +205,12 @@ describe('Metadata', function () {
         query: function (q, cb) {
           setImmediate(function () {
             queried++;
-            cb(null, new types.ResultSet({ rows: [ {
-              field_names: ['field1', 'field2'],
-              field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.BooleanType']
-            }]}));
+            cb(null, new types.ResultSet({
+              rows: [ {
+                field_names: ['field1', 'field2'],
+                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.BooleanType']}],
+              flags: utils.emptyObject
+            }));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -230,7 +238,7 @@ describe('Metadata', function () {
         query: function (q, cb) {
           queried++;
           setImmediate(function () {
-            cb(null, new types.ResultSet({ rows: []}));
+            cb(null, new types.ResultSet({ rows: [], flags: utils.emptyObject}));
           });
         },
         getEncoder: function () { return new Encoder(1, {})}
@@ -269,7 +277,7 @@ describe('Metadata', function () {
         query: function (q, cb) {
           setImmediate(function () {
             if (q.indexOf('system_traces.sessions') >= 0) {
-              return cb(null, { rows: [ sessionRow]});
+              return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
             }
             cb(null, { rows: eventRows})
           });

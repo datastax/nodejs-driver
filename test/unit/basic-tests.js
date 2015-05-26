@@ -172,6 +172,40 @@ describe('types', function () {
         assert.ok(value.equals(decoded));
       });
     });
+    describe('#fromString()', function () {
+      it('should parse the string representation', function () {
+        [
+          ['1200-12-30', 1200, 12, 30],
+          ['1-1-1', 1, 1, 1],
+          ['21-2-1', 21, 2, 1],
+          ['-21-2-1', -21, 2, 1],
+          ['2010-4-29', 2010, 4, 29],
+          ['-199-06-30', -199, 6, 30],
+          ['1201-04-03', 1201, 4, 3],
+          ['-1201-04-03', -1201, 4, 3]
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.year, item[1]);
+            assert.strictEqual(value.month, item[2]);
+            assert.strictEqual(value.day, item[3]);
+        })
+      });
+      it('should throw when string representation is invalid', function () {
+        [
+          '',
+          '1',
+          '1880-1',
+          '1880-1-z',
+          undefined,
+          null,
+          '  '
+        ].forEach(function (value) {
+            assert.throws(function () {
+              LocalDate.fromString(value);
+            }, Error, 'For value: ' + value);
+        });
+      });
+    });
   });
   describe('LocalTime', function () {
     var LocalTime = types.LocalTime;
@@ -237,7 +271,6 @@ describe('types', function () {
         values.forEach(function (item) {
           var val = new LocalTime(Long.fromString(item[0]));
           var parts = item[2];
-          console.log(item[1]);
           assert.strictEqual(val.hour, parts[0]);
           assert.strictEqual(val.minute, parts[1]);
           assert.strictEqual(val.second, parts[2]);
@@ -256,18 +289,9 @@ describe('types', function () {
       });
     });
     describe('fromMilliseconds', function () {
-      it('should monotonically increase the nanoseconds', function () {
-        var counter = 0;
-        var time = LocalTime.fromMilliseconds(0);
-        var val;
-        while (counter++ < 100) {
-          val = LocalTime.fromMilliseconds(0);
-          assert.ok(!val.equals(time));
-          assert.notStrictEqual(val.getTotalNanoseconds(), time.getTotalNanoseconds());
-          //its the next value or ZERO
-          assert.ok((val.getTotalNanoseconds()).equals(time.getTotalNanoseconds().add(Long.ONE)) || val.getTotalNanoseconds().equals(types.Long.ZERO));
-          time = val;
-        }
+      it('should default nanoseconds to 0 when not provided', function () {
+        var time = LocalTime.fromMilliseconds(1);
+        assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)))
       });
     });
   });

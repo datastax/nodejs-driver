@@ -540,6 +540,8 @@ describe('encoder', function () {
       var type = {code: dataTypes.date};
       // Non Date/String/LocalDate
       assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
+      assert.throws(function () { encoder.encode('zzz', type)}, TypeError);
+      assert.throws(function () { encoder.encode('', type)}, TypeError);
     });
     it('should encode/decode LocalTime as time', function () {
       var encoder = new Encoder(3, {});
@@ -564,9 +566,9 @@ describe('encoder', function () {
       var encoder = new Encoder(4, {});
       var type = {code: dataTypes.time};
       // Negative value string.
-      assert.throws(function () { encoder.encode('-1:00:00', type)}, Error);
+      assert.throws(function () { encoder.encode('-1:00:00', type)}, TypeError);
       // Non string/LocalTime value.
-      assert.throws(function () { encoder.encode(23.0, type)}, Error);
+      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
     });
   });
   describe('#setRoutingKey()', function () {

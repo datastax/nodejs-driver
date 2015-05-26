@@ -148,6 +148,12 @@ describe('types', function () {
   });
   describe('LocalDate', function () {
     var LocalDate = types.LocalDate;
+    describe('new LocalDate', function (){
+      it('should refuse to create LocalDate from invalid values.', function () {
+        assert.throws(function () { new types.LocalDate() }, Error);
+        assert.throws(function () { new types.LocalDate(undefined) }, Error);
+      });
+    });
     describe('#toString()', function () {
       it('should return the string in the form of yyyy-mm-dd', function () {
         assert.strictEqual(new LocalDate(2015, 2, 1).toString(), '2015-02-01');
@@ -180,6 +186,16 @@ describe('types', function () {
       ['52171800000000',         '14:29:31.8',              [14, 29, 31, 800000000]],
       ['52171800600000',         '14:29:31.8006',           [14, 29, 31, 800600000]]
     ];
+    describe('new LocalTime', function () {
+      it('should refuse to create LocalTime from invalid values.', function () {
+        // Not a long.
+        assert.throws(function () { new types.LocalTime(23.0) }, Error);
+        // < 0
+        assert.throws(function () { new types.LocalTime(types.Long(-1)) }, Error);
+        // > maxNanos
+        assert.throws(function () { new types.LocalTime(Long.fromString('86400000000000')) }, Error);
+      });
+    });
     describe('#toString()', function () {
       it('should return the string representation', function () {
         values.forEach(function (item) {

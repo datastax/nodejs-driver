@@ -535,6 +535,12 @@ describe('encoder', function () {
       assert.strictEqual(decoded.toString(), '2005-08-05');
       assert.ok(decoded.equals(new types.LocalDate(2005, 8, 5)));
     });
+    it('should refuse to encode invalid values as LocalDate.', function () {
+      var encoder = new Encoder(4, {});
+      var type = {code: dataTypes.date};
+      // Non Date/String/LocalDate
+      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
+    });
     it('should encode/decode LocalTime as time', function () {
       var encoder = new Encoder(3, {});
       var type = {code: dataTypes.time};
@@ -553,6 +559,14 @@ describe('encoder', function () {
           helper.assertInstanceOf(decoded, types.LocalTime);
           assert.strictEqual(decoded.toString(), item[1]);
       });
+    });
+    it('should refuse to encode invalid values as LocalTime.', function () {
+      var encoder = new Encoder(4, {});
+      var type = {code: dataTypes.time};
+      // Negative value string.
+      assert.throws(function () { encoder.encode('-1:00:00', type)}, Error);
+      // Non string/LocalTime value.
+      assert.throws(function () { encoder.encode(23.0, type)}, Error);
     });
   });
   describe('#setRoutingKey()', function () {

@@ -476,7 +476,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      self.exec(['start', '--wait-for-binary-proto'], helper.wait(options.sleep, next));
+      var start = ['start', '--wait-for-binary-proto'];
+      if (util.isArray(options.jvmArgs)) {
+        options.jvmArgs.forEach(function (arg) {
+          start.push('--jvm_arg', arg);
+        }, this);
+        helper.trace('With jvm args', options.jvmArgs);
+      }
+      self.exec(start, helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {

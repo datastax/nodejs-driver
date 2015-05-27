@@ -432,6 +432,35 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should wait for schema agreement before calling back', function (done) {
+      var queries = [
+        "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};",
+        "CREATE TABLE ks1.tbl1 (id uuid PRIMARY KEY, value text)",
+        "SELECT * FROM ks1.tbl1",
+        "SELECT * FROM ks1.tbl1 where id = d54cb06d-d168-45a0-b1b2-9f5c75435d3d",
+        "CREATE KEYSPACE ks2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};",
+        "CREATE TABLE ks2.tbl2 (id uuid PRIMARY KEY, value text)",
+        "SELECT * FROM ks2.tbl2",
+        "SELECT * FROM ks2.tbl2",
+        "CREATE TABLE ks2.tbl3 (id uuid PRIMARY KEY, value text)",
+        "SELECT * FROM ks2.tbl3",
+        "SELECT * FROM ks2.tbl3",
+        "CREATE TABLE ks2.tbl4 (id uuid PRIMARY KEY, value text)",
+        "SELECT * FROM ks2.tbl4",
+        "SELECT * FROM ks2.tbl4",
+        "SELECT * FROM ks2.tbl4"
+      ];
+      var client = newInstance();
+      //warmup first
+      async.timesSeries(10, function (n, next) {
+        client.execute('SELECT key FROM system.local', next);
+      }, function (err) {
+        assert.ifError(err);
+        async.eachSeries(queries, function (query, next) {
+          client.execute(query, next);
+        }, done);
+      });
+    });
   });
   describe('failover', function () {
     beforeEach(helper.ccmHelper.start(3));
@@ -459,7 +488,7 @@ describe('Client', function () {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
-          async.times(1000, function (i, next) {
+          helper.timesLimit(1000, 100, function (i, next) {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
               counter++;
               assert.ifError(err);

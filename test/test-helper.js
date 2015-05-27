@@ -2,8 +2,11 @@ var async = require('async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
+var policies = require('../lib/policies');
 var types = require('../lib/types');
 var utils = require('../lib/utils.js');
+
+util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
   /**
@@ -44,7 +47,9 @@ var helper = {
   baseOptions: (function () {
     return {
       //required
-      contactPoints: ['127.0.0.1']
+      contactPoints: ['127.0.0.1'],
+      // retry all queries multiple times (for improved test resiliency).
+      policies: { retry: new RetryMultipleTimes(3) }
     };
   })(),
   /**
@@ -387,6 +392,30 @@ var helper = {
       assert.ifError(err);
       client.shutdown(callback);
     });
+  },
+
+  /**
+   * The same as async.times, only no more than limit iterators will be
+   * simultaneously running at any time.
+   *
+   * Note that the items are not processed in batches, so there is no guarantee
+   * that the first limit iterator functions will complete before any others
+   * are started.
+   *
+   * Taken from https://github.com/caolan/async/pull/560.
+   *
+   * @param count The number of times to run the function.
+   * @param limit The maximum number of iterators to run at any time.
+   * @param iterator The function to call n times.
+   * @param callback The function to call on completion of iterators.
+   */
+  timesLimit: function(count, limit, iterator, callback) {
+    var counter = [];
+    for (var i = 0; i < count; i++) {
+      counter.push(i);
+    }
+
+    return async.mapLimit(counter, limit, iterator, callback);
   }
 };
 
@@ -593,6 +622,36 @@ SetPolyFill.prototype.add = function (x) {
 
 SetPolyFill.prototype.toString = function() {
   return this.arr.toString();
+};
+
+/**
+ * A retry policy for testing purposes only, retries for a number of times
+ * @param {Number} times
+ * @constructor
+ */
+function RetryMultipleTimes(times) {
+  this.times = times;
+}
+
+RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
 };
 
 module.exports = helper;

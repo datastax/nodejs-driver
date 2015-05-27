@@ -593,17 +593,17 @@ describe('Client', function () {
       client.hosts = {length: 3};
       var localCalls = 0;
       var peerCalls = 0;
-      client.controlConnection = {
-        getLocalSchemaVersion: function (cb) {
+      client.metadata = {
+        getLocalSchemaVersion: function (c, cb) {
           localCalls++;
           setImmediate(function () { cb(null, '1'); });
         },
-        getPeersSchemaVersions: function (cb) {
+        getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
           setImmediate(function () { cb(null, ['1', '1']); })
         }
       };
-      client.waitForSchemaAgreement(function (err) {
+      client.waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.strictEqual(localCalls, 1);
         assert.strictEqual(peerCalls, 1);
@@ -615,18 +615,18 @@ describe('Client', function () {
       client.hosts = {length: 3};
       var localCalls = 0;
       var peerCalls = 0;
-      client.controlConnection = {
-        getLocalSchemaVersion: function (cb) {
+      client.metadata = {
+        getLocalSchemaVersion: function (c, cb) {
           localCalls++;
           setImmediate(function () { cb(null, '3'); });
         },
-        getPeersSchemaVersions: function (cb) {
+        getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
           //The third time it gets called versions will match
           setImmediate(function () { cb(null, [peerCalls]); })
         }
       };
-      client.waitForSchemaAgreement(function (err) {
+      client.waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.strictEqual(localCalls, 3);
         assert.strictEqual(peerCalls, 3);
@@ -638,18 +638,18 @@ describe('Client', function () {
       client.hosts = {length: 3};
       var localCalls = 0;
       var peerCalls = 0;
-      client.controlConnection = {
-        getLocalSchemaVersion: function (cb) {
+      client.metadata = {
+        getLocalSchemaVersion: function (c, cb) {
           localCalls++;
           setImmediate(function () { cb(null, '1'); });
         },
-        getPeersSchemaVersions: function (cb) {
+        getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
           //The versions are always different
           setImmediate(function () { cb(null, ['2']); })
         }
       };
-      client.waitForSchemaAgreement(function (err) {
+      client.waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.ok(localCalls > 0);
         assert.ok(peerCalls > 0);
@@ -660,15 +660,15 @@ describe('Client', function () {
       var client = new Client(helper.baseOptions);
       client.hosts = {length: 3};
       var dummyError = new Error('dummy error');
-      client.controlConnection = {
-        getLocalSchemaVersion: function (cb) {
+      client.metadata = {
+        getLocalSchemaVersion: function (c, cb) {
           setImmediate(function () { cb(); });
         },
-        getPeersSchemaVersions: function (cb) {
+        getPeersSchemaVersions: function (c, cb) {
           setImmediate(function () { cb(dummyError); });
         }
       };
-      client.waitForSchemaAgreement(function (err) {
+      client.waitForSchemaAgreement(null, function (err) {
         assert.strictEqual(err, dummyError);
         done();
       });

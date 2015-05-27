@@ -83,6 +83,7 @@ describe('Uuid', function () {
     });
   });
   describe('random()', function () {
+    this.timeout(5000);
     it('should return a Uuid instance', function () {
       helper.assertInstanceOf(Uuid.random(), Uuid);
     });
@@ -153,6 +154,7 @@ describe('TimeUuid', function () {
     });
   });
   describe('fromDate()', function () {
+    this.timeout(5000);
     it('should generate v1 uuids that do not collide', function () {
       var values = {};
       var length = 50000;
@@ -189,9 +191,10 @@ describe('TimeUuid', function () {
       assert.strictEqual(val.getNodeIdString(), 'h12345');
     });
     it('should use current date', function () {
-      var date = new Date();
-      var val = TimeUuid.now();
-      assert.strictEqual(val.getDate().getTime(), date.getTime());
+      var date = new Date().getTime();
+      var val = TimeUuid.now().getDate().getTime();
+      assert.ok([date-1, date, date+1].indexOf(val) > -1,
+        util.format("Expected %d to be within ± 1ms of %d.", val, date));
     });
   });
   describe('min()', function () {

@@ -6,6 +6,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
+var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -98,7 +99,7 @@ describe('Client', function () {
           });
         }], done);
     });
-    it('should autoPage @c2_0', function (done) {
+    vit('2.0', 'should autoPage', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var client = newInstance();
@@ -224,7 +225,7 @@ describe('Client', function () {
           });
         }], done);
     });
-    it('should autoPage on parallel different tables @c2_0', function (done) {
+    vit('2.0', 'should autoPage on parallel different tables', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');
       var table2 = keyspace + '.' + helper.getRandomName('table');
@@ -243,13 +244,13 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
-          async.times(200, function (n, next) {
+          helper.timesLimit(200, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
-          async.times(135, function (n, next) {
+          helper.timesLimit(135, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },
@@ -289,8 +290,8 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
-    it('should use pageState and fetchSize @c2_0', function (done) {
-      var client = newInstance();
+    vit('2.0', 'should use pageState and fetchSize', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var metaPageState;
       var pageState;
       async.series([
@@ -299,7 +300,7 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(131, function (n, next) {
+          helper.timesLimit(131, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
@@ -346,7 +347,7 @@ describe('Client', function () {
       ], done);
     });
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
-      var client = newInstance();
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var id = types.Uuid.random();
       async.series([
         client.connect.bind(client),
@@ -423,6 +424,8 @@ describe('Client', function () {
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  options = options || {};
+  options = utils.extend(options, helper.baseOptions);
+  return new Client(options);
 }

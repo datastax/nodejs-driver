@@ -192,6 +192,15 @@ var helper = {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+  assertContains: function (value, searchValue, caseInsensitive) {
+    assert.strictEqual(typeof value, 'string');
+    var message = 'String: "%s" does not contain "%s"';
+    if (caseInsensitive !== false) {
+      value = value.toLowerCase();
+      searchValue = searchValue.toLowerCase();
+    }
+    assert.ok(value.indexOf(searchValue) >= 0, util.format(message, value, searchValue));
+  },
   /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client

@@ -392,6 +392,31 @@ describe('Client', function () {
         }
       ], done);
     });
+    helper.vit('2.2', 'should include the warning in the ResultSet', function (done) {
+      var client = newInstance();
+      var loggedMessage = false;
+      client.on('log', function (level, className, message) {
+        if (loggedMessage) return;
+        if (level !== 'warning') return;
+        message = message.toLowerCase();
+        if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
+          loggedMessage = true;
+        }
+      });
+      var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (?, ?) APPLY BATCH", table);
+      var params = [types.Uuid.random(), utils.stringRepeat('c', 5 * 1025)];
+      client.eachRow(query, params, {prepare: true}, function () {
+        
+      }, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info.warnings);
+        assert.strictEqual(result.info.warnings.length, 1);
+        helper.assertContains(result.info.warnings[0], 'batch');
+        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.ok(loggedMessage);
+        client.shutdown(done);
+      });
+    });
   });
 });
 

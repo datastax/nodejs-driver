@@ -185,9 +185,14 @@ describe('Metadata', function () {
         function checkTrace(trace, next) {
           assert.ok(trace);
           assert.strictEqual(typeof trace.duration, 'number');
+          if (client.controlConnection.protocolVersion >= 4) {
+            //Check the new field added in C* 2.2
+            helper.assertInstanceOf(trace.clientAddress, types.InetAddress);
+          }
           assert.ok(trace.events.length);
           next();
-        }
+        },
+        client.shutdown.bind(client)
       ], done);
     });
     it('should retrieve the trace a few seconds after', function (done) {

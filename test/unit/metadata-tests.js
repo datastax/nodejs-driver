@@ -298,6 +298,52 @@ describe('Metadata', function () {
         done();
       });
     });
+    it('should parse the new client address column', function (done) {
+      var sessionRow = {
+        session_id: types.Uuid.fromString('69e37ff0-0475-11e5-9798-f3efee551757'),
+        client: types.InetAddress.fromString('127.0.0.2'),
+        command: 'QUERY',
+        coordinator: types.InetAddress.fromString('127.0.0.2'),
+        duration: 11922,
+        parameters: {
+          page_size: '5000',
+          query: 'SELECT * FROM system.schema_keyspaces'
+        },
+        request: 'Execute CQL3 query',
+        started_at: new Date()
+      };
+      var eventRows = [ {
+        event_id: types.TimeUuid.now(),
+        activity: 'act 1',
+        source: types.InetAddress.fromString('10.10.10.2'),
+        source_elapsed: 101
+      }];
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            if (q.indexOf('system_traces.sessions') >= 0) {
+              return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
+            }
+            cb(null, { rows: eventRows})
+          });
+        },
+        getEncoder: function () { return new Encoder(1, {})}
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+        assert.ifError(err);
+        assert.ok(trace);
+        assert.strictEqual(trace.requestType, sessionRow.request);
+        assert.strictEqual(trace.parameters, sessionRow.parameters);
+        assert.strictEqual(trace.coordinator, sessionRow.coordinator);
+        assert.strictEqual(trace.startedAt, sessionRow.started_at);
+        assert.strictEqual(trace.clientAddress, sessionRow.client);
+        assert.strictEqual(trace.events.length, 1);
+        assert.strictEqual(trace.events[0].id, eventRows[0].event_id);
+        assert.strictEqual(trace.events[0].activity, eventRows[0].activity);
+        done();
+      });
+    });
     it('should retry if its not already stored', function (done) {
       var sessionRow = {
         request: 'request value',

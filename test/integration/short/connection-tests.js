@@ -223,11 +223,14 @@ function getRequest(query) {
  */
 function getProtocolVersion() {
   //expected protocol version
+  if (helper.getCassandraVersion().indexOf('2.1.') === 0) {
+    return 3;
+  }
   if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
     return 2;
   }
   if (helper.getCassandraVersion().indexOf('1.') === 0) {
     return 1;
   }
-  return 3;
+  return 4;
 }

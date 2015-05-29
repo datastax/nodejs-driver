@@ -722,4 +722,137 @@ describe('Client', function () {
       }, 50);
     });
   });
+  describe('#_setQueryOptions()', function () {
+    it('should not allow named parameters when protocol version is lower than 3 and the query is not prepared', function (done) {
+      var Client = rewire('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      client.controlConnection = { protocolVersion: 2};
+      //noinspection JSAccessibilityCheck
+      client._setQueryOptions({ prepare: false}, { named: 'val'}, null, function (err) {
+        assert.ok(err);
+        done();
+      });
+    });
+    it('should adapt user hints using table metadata', function (done) {
+      var Client = rewire('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      var metaCalled = 0;
+      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client.controlConnection = { protocolVersion: 2};
+      client.metadata = {
+        adaptUserHints: function (ks, h, cb) {
+          metaCalled++;
+          setImmediate(function () {
+            h[1] = types.dataTypes.text;
+            cb();
+          });
+        }
+      };
+      var options = { prepare: false, hints: [null, 'text']};
+      //noinspection JSAccessibilityCheck
+      client._setQueryOptions(options, ['one', 'two'], null, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(options.hints.length, 2);
+        assert.strictEqual(options.hints[1], types.dataTypes.text);
+        assert.strictEqual(metaCalled, 1);
+        done();
+      });
+    });
+    it('should use meta columns', function (done) {
+      var Client = rewire('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client.controlConnection = { protocolVersion: 2};
+      var meta = {
+        columns: [
+          { type: types.dataTypes.int },
+          { type: types.dataTypes.text }
+        ]
+      };
+      var options = { prepare: true, routingKey: new Buffer(2)};
+      //noinspection JSAccessibilityCheck
+      client._setQueryOptions(options, [1, 'two'], meta, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(options.hints.length, 2);
+        assert.strictEqual(options.hints[0], types.dataTypes.int);
+        assert.strictEqual(options.hints[1], types.dataTypes.text);
+        done();
+      });
+    });
+    it('should use the meta partition keys to fill the routingIndexes', function (done) {
+      var Client = rewire('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client.controlConnection = { protocolVersion: 4};
+      var meta = {
+        columns: [
+          { type: types.dataTypes.uuid },
+          { type: types.dataTypes.text }
+        ],
+        partitionKeys: [1, 0]
+      };
+      var options = { prepare: true};
+      //noinspection JSAccessibilityCheck
+      client._setQueryOptions(options, [types.Uuid.random(), 'another'], meta, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(options.hints.length, 2);
+        assert.strictEqual(options.hints[0], types.dataTypes.uuid);
+        assert.strictEqual(options.hints[1], types.dataTypes.text);
+        assert.ok(options.routingIndexes);
+        assert.strictEqual(options.routingIndexes[0], 1);
+        assert.strictEqual(options.routingIndexes[1], 0);
+        done();
+      });
+    });
+    it('should use the table metadata to fill in the routing indexes', function (done) {
+      var Client = rewire('../../lib/client');
+      var client = new Client(helper.baseOptions);
+      var metaCalled = 0;
+      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client.controlConnection = { protocolVersion: 3};
+      var meta = {
+        keyspace: 'ks1',
+        table: 'table1',
+        columns: [
+          { type: types.dataTypes.uuid },
+          { type: types.dataTypes.text },
+          { type: types.dataTypes.timeuuid }
+        ]
+      };
+      meta.columnsByName = {
+        'val': 1,
+        'id1': 0,
+        'id2': 2
+      };
+      client.metadata = {
+        getTable: function (ks, tbl, cb) {
+          assert.strictEqual(ks, meta.keyspace);
+          assert.strictEqual(tbl, meta.table);
+          setImmediate(function () {
+            metaCalled++;
+            cb(null, {
+              partitionKeys: [ { name: 'id1'}, { name: 'id2'} ]
+            });
+          });
+        }
+      };
+      var options = { prepare: true};
+      async.timesSeries(20, function (n, next) {
+        //noinspection JSAccessibilityCheck
+        client._setQueryOptions(options, [types.Uuid.random(), 'hello', types.TimeUuid.now()], meta, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(metaCalled, 1);
+          assert.strictEqual(options.hints.length, 3);
+          assert.strictEqual(options.hints[0], types.dataTypes.uuid);
+          assert.strictEqual(options.hints[1], types.dataTypes.text);
+          assert.strictEqual(options.hints[2], types.dataTypes.timeuuid);
+          assert.ok(options.routingIndexes);
+          assert.strictEqual(options.routingIndexes.length, 2);
+          assert.strictEqual(options.routingIndexes[0], 0);
+          assert.strictEqual(options.routingIndexes[1], 2);
+          next();
+        });
+      }, done);
+    });
+  });
 });

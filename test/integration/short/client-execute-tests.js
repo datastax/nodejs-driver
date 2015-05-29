@@ -596,6 +596,37 @@ describe('Client', function () {
           }
         ], done);
       });
+      vit('2.2', 'should allow insertions as json', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var o = {
+          id: types.Uuid.random(),
+          address_col: {
+            street: 'whatever',
+            phones: [
+              { 'alias': 'main', 'number': '0000212123'}
+            ]}
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = 'INSERT INTO tbl_udts JSON ?';
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = 'SELECT * FROM tbl_udts WHERE id = ?';
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.ok(row['address_col']);
+              assert.strictEqual(row['address_col'].street, o.address_col.street);
+              assert.strictEqual(row['address_col'].toString(), o.address_col.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
     });
     describe('with named parameters', function () {
       vit('2.1', 'should allow named parameters', function (done) {
@@ -714,6 +745,112 @@ describe('Client', function () {
             });
           });
         }, helper.finish(client, done));
+      });
+    });
+    describe('with json support', function () {
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var query =
+          'CREATE TABLE tbl_json (' +
+          '  id uuid PRIMARY KEY,' +
+          '  tid timeuuid,' +
+          '  dec decimal,' +
+          '  vi varint,' +
+          '  bi bigint,' +
+          '  ip inet,' +
+          '  tup frozen<tuple<int, int>>,' +
+          '  d date,' +
+          '  t time)';
+        client.execute(query, function (err) {
+          assert.ifError(err);
+          client.shutdown(done);
+        });
+      });
+      vit('2.2', 'should allow insert of all ECMAScript types as json', function (done) {
+        var client = newInstance();
+        var o = {
+          id: types.Uuid.random(),
+          text_sample: 'hello json',
+          int_sample: 100,
+          float_sample: 1.2000000476837158,
+          double_sample: 1/3,
+          boolean_sample: true,
+          timestamp_sample: new Date(1432889533534),
+          map_sample: { a: 'one', z: 'two'},
+          list_sample: ['b', 'a', 'b', 'a', 's', 'o', 'n', 'i', 'c', 'o', 's'],
+          list_sample2: [100, 100, 1, 2],
+          set_sample: ['a', 'b', 'x', 'zzzz']
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = util.format('INSERT INTO %s JSON ?', table);
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['text_sample'], o.text_sample);
+              assert.strictEqual(row['int_sample'], o.int_sample);
+              assert.strictEqual(row['float_sample'], o.float_sample);
+              assert.strictEqual(row['double_sample'], o.double_sample);
+              assert.strictEqual(row['boolean_sample'], o.boolean_sample);
+              assert.strictEqual(row['timestamp_sample'].getTime(), o.timestamp_sample.getTime());
+              assert.ok(row['map_sample']);
+              assert.strictEqual(row['map_sample'].a, o.map_sample.a);
+              assert.strictEqual(row['map_sample'].z, o.map_sample.z);
+              assert.strictEqual(row['list_sample'].toString(), o.list_sample.toString());
+              assert.strictEqual(row['list_sample2'].toString(), o.list_sample2.toString());
+              assert.strictEqual(row['set_sample'].toString(), o.set_sample.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should allow insert of all non - ECMAScript types as json', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var o = {
+          id:   types.Uuid.random(),
+          tid:  types.TimeUuid.now(),
+          dec:  new types.BigDecimal(113, 2),
+          vi:   types.Integer.fromString('903234243231132008846'),
+          bi:   types.Long.fromString('2305843009213694123'),
+          ip:   types.InetAddress.fromString('12.10.126.11'),
+          tup:  new types.Tuple(1, 300),
+          d:    new types.LocalDate(2015, 6, 1),
+          t:    new types.LocalTime.fromMilliseconds(10160088, 123)
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = 'INSERT INTO tbl_json JSON ?';
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = 'SELECT * FROM tbl_json WHERE id = ?';
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['tid'].toString(), o.tid.toString());
+              assert.strictEqual(row['dec'].toString(), o.dec.toString());
+              assert.strictEqual(row['vi'].toString(), o.vi.toString());
+              assert.strictEqual(row['bi'].toString(), o.bi.toString());
+              assert.strictEqual(row['ip'].toString(), o.ip.toString());
+              assert.strictEqual(row['tup'].toString(), o.tup.toString());
+              assert.strictEqual(row['tup'].get(0), o.tup.get(0));
+              assert.strictEqual(row['tup'].get(1), o.tup.get(1));
+              assert.strictEqual(row['d'].toString(), o.d.toString());
+              assert.strictEqual(row['t'].toString(), o.t.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
       });
     });
   });

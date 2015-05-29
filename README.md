@@ -224,7 +224,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/faq/njdFaq.html
 [load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html
 [retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html#retry-policy
-[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/poolingConfiguration.html
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/poolingConfiguration.html
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay

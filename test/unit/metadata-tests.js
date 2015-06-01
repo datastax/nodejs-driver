@@ -818,6 +818,68 @@ describe('Metadata', function () {
       });
     });
   });
+  describe('#getFunctions()', function () {
+    it('should query');
+    it('should query once');
+    it('should be null when not found');
+    it('should query the following times if was previously not found');
+    it('should query the following times if there was an error previously');
+    it('should parse function metadata with 2 parameters', function (done) {
+      var rows = [
+        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"},
+        {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
+      ];
+      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      metadata.keyspaces['ks_udf'] = { functions: {}};
+      metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+        assert.ifError(err);
+        assert.ok(funcArray);
+        assert.strictEqual(funcArray.length, 2);
+        assert.strictEqual(funcArray[0].name, 'plus');
+        assert.strictEqual(funcArray[0].signature.join(', '), ['bigint', 'bigint'].join(', '));
+        assert.strictEqual(funcArray[0].argumentNames.join(', '), ['s', 'v'].join(', '));
+        assert.ok(funcArray[0].argumentTypes[0]);
+        assert.strictEqual(funcArray[0].argumentTypes[0].code, types.dataTypes.bigint);
+        assert.ok(funcArray[0].argumentTypes[1]);
+        assert.strictEqual(funcArray[0].argumentTypes[1].code, types.dataTypes.bigint);
+        assert.strictEqual(funcArray[0].language, 'java');
+        assert.ok(funcArray[0].returnType);
+        assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.bigint);
+
+        assert.strictEqual(funcArray[1].name, 'plus');
+        assert.strictEqual(funcArray[1].signature.join(', '), ['int', 'int'].join(', '));
+        assert.strictEqual(funcArray[1].argumentNames.join(', '), ['arg1', 'arg2'].join(', '));
+        assert.ok(funcArray[1].argumentTypes[0]);
+        assert.strictEqual(funcArray[1].argumentTypes[0].code, types.dataTypes.int);
+        assert.ok(funcArray[1].argumentTypes[1]);
+        assert.strictEqual(funcArray[1].argumentTypes[1].code, types.dataTypes.int);
+        assert.strictEqual(funcArray[1].language, 'java');
+        assert.ok(funcArray[1].returnType);
+        assert.strictEqual(funcArray[1].returnType.code, types.dataTypes.int);
+        done();
+      });
+    });
+    it('should parse a function metadata with no parameters', function (done) {
+      var rows = [
+        {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
+      ];
+      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      metadata.keyspaces['ks_udf'] = { functions: {}};
+      metadata.getFunctions('ks_udf', 'return_one', function (err, funcArray) {
+        assert.ifError(err);
+        assert.ok(funcArray);
+        assert.strictEqual(funcArray.length, 1);
+        assert.strictEqual(funcArray[0].name, 'return_one');
+        assert.strictEqual(funcArray[0].signature.length, 0);
+        assert.strictEqual(funcArray[0].argumentNames, utils.emptyArray);
+        assert.strictEqual(funcArray[0].argumentTypes.length, 0);
+        assert.strictEqual(funcArray[0].language, 'java');
+        assert.ok(funcArray[0].returnType);
+        assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.int);
+        done();
+      });
+    });
+  });
 });
 
 function getControlConnectionForTable(tableRow, columnRows) {
@@ -831,5 +893,16 @@ function getControlConnectionForTable(tableRow, columnRows) {
       });
     },
     getEncoder: function () { return new Encoder(1, {}); }
+  };
+}
+
+function getControlConnectionForRows(rows, protocolVersion) {
+  return {
+    query: function (q, cb) {
+      setImmediate(function () {
+        cb(null, {rows: rows});
+      });
+    },
+    getEncoder: function () { return new Encoder(protocolVersion || 4, {}); }
   };
 }

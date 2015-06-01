@@ -149,6 +149,36 @@ describe('Metadata', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should retrieve the most up to date metadata', function (done) {
+      var client = newInstance({ keyspace: keyspace });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, "CREATE FUNCTION stringify(i int) RETURNS NULL ON NULL INPUT RETURNS text LANGUAGE java AS 'return Integer.toString(i);'"),
+        function checkMetaInit(next) {
+          client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'stringify');
+            assert.strictEqual(func.body, 'return Integer.toString(i);');
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, "CREATE OR REPLACE FUNCTION stringify(i int) RETURNS NULL ON NULL INPUT RETURNS text LANGUAGE java AS 'return Integer.toString(i) + \"hello\";'"),
+        function (next) {
+          setTimeout(next, 5000);
+        },
+        function checkMetaAfter(next) {
+          client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'stringify');
+            assert.strictEqual(func.body, 'return Integer.toString(i) + \"hello\";');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
   });
 });
 

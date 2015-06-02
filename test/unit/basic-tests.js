@@ -155,6 +155,13 @@ describe('types', function () {
       it('should refuse to create LocalDate from invalid values.', function () {
         assert.throws(function () { new types.LocalDate() }, Error);
         assert.throws(function () { new types.LocalDate(undefined) }, Error);
+        // Outside of ES5 Date range.
+        assert.throws(function () { new types.LocalDate(-271821, 4, 19) }, Error);
+        assert.throws(function () { new types.LocalDate(275760, 9, 14) }, Error);
+        // Outside of LocalDate range.
+        assert.throws(function () { new types.LocalDate(-2147483649) }, Error);
+        assert.throws(function () { new types.LocalDate(2147483648) }, Error);
+
       });
     });
     describe('#toString()', function () {
@@ -176,7 +183,7 @@ describe('types', function () {
       });
     });
     describe('#fromString()', function () {
-      it('should parse the string representation', function () {
+      it('should parse the string representation as yyyy-mm-dd', function () {
         [
           ['1200-12-30', 1200, 12, 30],
           ['1-1-1', 1, 1, 1],
@@ -185,18 +192,30 @@ describe('types', function () {
           ['2010-4-29', 2010, 4, 29],
           ['-199-06-30', -199, 6, 30],
           ['1201-04-03', 1201, 4, 3],
-          ['-1201-04-03', -1201, 4, 3]
+          ['-1201-04-03', -1201, 4, 3],
+          ['0-1-1', 0, 1, 1],
         ].forEach(function (item) {
             var value = LocalDate.fromString(item[0]);
             assert.strictEqual(value.year, item[1]);
             assert.strictEqual(value.month, item[2]);
             assert.strictEqual(value.day, item[3]);
-        })
+        });
+      });
+      it('should parse the string representation as since epoch days', function () {
+        [
+          ['0', '1970-01-01'],
+          ['1', '1970-01-02'],
+          ['2147483647', '2147483647'],
+          ['-2147483648', '-2147483648'],
+          ['-719162', '0001-01-01']
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.toString(), item[1]);
+        });
       });
       it('should throw when string representation is invalid', function () {
         [
           '',
-          '1',
           '1880-1',
           '1880-1-z',
           undefined,

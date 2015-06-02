@@ -523,17 +523,51 @@ describe('encoder', function () {
       assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
     });
     it('should encode/decode LocalDate as date', function () {
-      var encoder = new Encoder(3, {});
+      var encoder = new Encoder(4, {});
       var type = {code: dataTypes.date};
-      var encoded = encoder.encode(new types.LocalDate(2010, 4, 29), type);
-      var decoded = encoder.decode(encoded, type);
-      helper.assertInstanceOf(decoded, types.LocalDate);
-      assert.strictEqual(decoded.toString(), '2010-04-29');
 
-      encoded = encoder.encode(new types.LocalDate(2005, 8, 5), type);
-      decoded = encoder.decode(encoded, type);
-      assert.strictEqual(decoded.toString(), '2005-08-05');
-      assert.ok(decoded.equals(new types.LocalDate(2005, 8, 5)));
+      var year1day1 = new Date(Date.UTC(1970, 0, 1));
+      year1day1.setUTCFullYear(1);
+
+      var year0day1 = new Date(Date.UTC(1970, 0, 1));
+      year0day1.setUTCFullYear(0);
+
+      var dates = [
+        // At epoch.
+        {ldate: new types.LocalDate(1970, 1, 1), string: '1970-01-01', date: new Date(Date.UTC(1970, 0, 1))},
+        // 10 days after epoch.
+        {ldate: new types.LocalDate(1970, 1, 11), string: '1970-01-11', date: new Date(Date.UTC(1970, 0, 11))},
+        // -10 days from epoch.
+        {ldate: new types.LocalDate(1969, 12, 22), string: '1969-12-22', date: new Date(Date.UTC(1969, 11, 22))},
+        // Year after 0.
+        {ldate: new types.LocalDate(1, 1, 1), string: '0001-01-01', date: year1day1},
+        // 0th year.
+        {ldate: new types.LocalDate(0, 1, 1), string: '0000-01-01', date: year0day1},
+        // Year before 0.
+        {ldate: new types.LocalDate(-1, 1, 1), string: '-0001-01-01', date: new Date(Date.UTC(-1, 0, 1))},
+        // Minimum possible ES5 date.
+        {ldate: new types.LocalDate(-271821, 4, 20), string: '-271821-04-20', date: new Date(Date.UTC(-271821, 3, 20))},
+        // Maximum possible ES5 date.
+        {ldate: new types.LocalDate(275760, 9, 13), string: '275760-09-13', date: new Date(Date.UTC(275760, 8, 13))},
+        // Minimum possible C* date.
+        {ldate: new types.LocalDate(-2147483648), string: '-2147483648', date: new Date(NaN)},
+        // Maximum possible C* date.
+        {ldate: new types.LocalDate(2147483647), string: '2147483647', date: new Date(NaN)}
+      ];
+
+      dates.forEach(function(item) {
+        var encoded = encoder.encode(item.ldate, type);
+        var decoded = encoder.decode(encoded, type);
+        helper.assertInstanceOf(decoded, types.LocalDate);
+        assert.ok(decoded.equals(item.ldate));
+        assert.strictEqual(decoded.toString(), item.string, "String mismatch for " + item.date);
+        if(isNaN(item.date.getTime())) {
+          assert.ok(isNaN(decoded.date.getTime()));
+        }
+        else {
+          assert.equal(decoded.date.getTime(), item.date.getTime(), decoded.date + " != " + item.date);
+        }
+    });
     });
     it('should refuse to encode invalid values as LocalDate.', function () {
       var encoder = new Encoder(4, {});

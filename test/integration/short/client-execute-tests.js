@@ -724,7 +724,7 @@ describe('Client', function () {
           [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
           [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
           [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
-          [types.Uuid.random(), new LocalDate(1981, 9, 14), new LocalTime(types.Long.fromString('6311999549933'))]
+          [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
         ];
         var client = newInstance({ keyspace: keyspace });
         async.eachSeries(values, function (params, next) {

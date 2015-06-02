@@ -19,8 +19,8 @@ describe('Metadata', function () {
       "CREATE FUNCTION  ks_udf.return_one() RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return 1;'",
       "CREATE FUNCTION  ks_udf.plus(s int, v int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return s+v;'",
       "CREATE FUNCTION  ks_udf.plus(s bigint, v bigint) RETURNS NULL ON NULL INPUT RETURNS bigint LANGUAGE java AS 'return s+v;'",
-      "CREATE AGGREGATE ks_udf.sum(int) SFUNC plus STYPE int INITCOND 0",
-      "CREATE AGGREGATE ks_udf.sum(bigint) SFUNC plus STYPE bigint INITCOND 0"
+      "CREATE AGGREGATE ks_udf.sum(int) SFUNC plus STYPE int INITCOND 1",
+      "CREATE AGGREGATE ks_udf.sum(bigint) SFUNC plus STYPE bigint INITCOND 2"
     ];
     async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
   });
@@ -86,7 +86,7 @@ describe('Metadata', function () {
     });
   });
   describe('#getFunction()', function () {
-    it('should retrieve the metadata of cql functions', function (done) {
+    it('should retrieve the metadata of a cql function', function (done) {
       var client = newInstance();
       async.series([
         client.connect.bind(client),
@@ -95,6 +95,7 @@ describe('Metadata', function () {
             assert.ifError(err);
             assert.ok(func);
             assert.strictEqual(func.name, 'plus');
+            assert.strictEqual(func.keyspaceName, keyspace);
             assert.strictEqual(func.argumentTypes.length, 2);
             assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
             assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
@@ -114,6 +115,7 @@ describe('Metadata', function () {
             assert.ifError(err);
             assert.ok(func);
             assert.strictEqual(func.name, 'return_one');
+            assert.strictEqual(func.keyspaceName, keyspace);
             assert.strictEqual(func.signature.length, 0);
             assert.strictEqual(func.argumentNames.length, 0);
             assert.strictEqual(func.argumentTypes.length, 0);
@@ -192,8 +194,8 @@ describe('Metadata', function () {
             assert.ifError(err);
             assert.ok(aggregatesArray);
             assert.strictEqual(aggregatesArray.length, 2);
-            helper.assertInstanceOf(aggregatesArray[0].name, 'sum');
-            helper.assertInstanceOf(aggregatesArray[1].name, 'sum');
+            assert.strictEqual(aggregatesArray[0].name, 'sum');
+            assert.strictEqual(aggregatesArray[1].name, 'sum');
             next();
           });
         },
@@ -222,6 +224,102 @@ describe('Metadata', function () {
           client.metadata.getAggregates('ks_does_not_exists', 'aggr1', function (err, funcArray) {
             assert.ifError(err);
             assert.strictEqual(funcArray.length, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+  });
+  describe('#getAggregate()', function () {
+    it('should retrieve the metadata of a cql aggregate', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregate(keyspace, 'sum', ['int'], function (err, aggregate) {
+            assert.ifError(err);
+            assert.ok(aggregate);
+            assert.strictEqual(aggregate.name, 'sum');
+            assert.strictEqual(aggregate.keyspaceName, keyspace);
+            assert.strictEqual(aggregate.argumentTypes.length, 1);
+            assert.strictEqual(aggregate.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(aggregate.returnType.code, types.dataTypes.int);
+            assert.strictEqual(aggregate.stateFunction, 'plus');
+            assert.strictEqual(aggregate.initCondition, 1);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should return null when not found', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregate(keyspace, 'aggregate_does_not_exists', [], function (err, func) {
+            assert.ifError(err);
+            assert.strictEqual(func, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should return null when not found by signature', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregate(keyspace, 'sum', ['text'], function (err, func) {
+            assert.ifError(err);
+            assert.strictEqual(func, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should return null when the keyspace does not exists', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregate('ks_does_not_exists', 'func1', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.strictEqual(func, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should retrieve the most up to date metadata', function (done) {
+      var client = newInstance({ keyspace: keyspace });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, "CREATE AGGREGATE ks_udf.sum2(int) SFUNC plus STYPE int INITCOND 0"),
+        function checkMetaInit(next) {
+          client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'sum2');
+            assert.strictEqual(func.initCondition, 0);
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, "CREATE OR REPLACE AGGREGATE ks_udf.sum2(int) SFUNC plus STYPE int INITCOND 200"),
+        function (next) {
+          setTimeout(next, 5000);
+        },
+        function checkMetaAfter(next) {
+          client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'sum2');
+            //changed
+            assert.strictEqual(func.initCondition, 200);
             next();
           });
         },

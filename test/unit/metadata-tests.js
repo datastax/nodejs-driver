@@ -979,6 +979,7 @@ describe('Metadata', function () {
         assert.ok(funcArray);
         assert.strictEqual(funcArray.length, 2);
         assert.strictEqual(funcArray[0].name, 'plus');
+        assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
         assert.strictEqual(funcArray[0].signature.join(', '), ['bigint', 'bigint'].join(', '));
         assert.strictEqual(funcArray[0].argumentNames.join(', '), ['s', 'v'].join(', '));
         assert.ok(funcArray[0].argumentTypes[0]);
@@ -990,6 +991,7 @@ describe('Metadata', function () {
         assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.bigint);
 
         assert.strictEqual(funcArray[1].name, 'plus');
+        assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
         assert.strictEqual(funcArray[1].signature.join(', '), ['int', 'int'].join(', '));
         assert.strictEqual(funcArray[1].argumentNames.join(', '), ['arg1', 'arg2'].join(', '));
         assert.ok(funcArray[1].argumentTypes[0]);
@@ -1318,16 +1320,17 @@ describe('Metadata', function () {
     });
     it('should parse function metadata with 2 parameters', function (done) {
       var rows = [
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
+        {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
+        {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
       ];
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
-      metadata.keyspaces['ks_udf'] = { aggregates: {}};
-      metadata.getAggregates('ks_udf', 'sum', function (err, aggregatesArray) {
+      metadata.keyspaces['ks_udf1'] = { aggregates: {}};
+      metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
         assert.ifError(err);
         assert.ok(aggregatesArray);
         assert.strictEqual(aggregatesArray.length, 2);
         assert.strictEqual(aggregatesArray[0].name, 'sum');
+        assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
         assert.strictEqual(aggregatesArray[0].signature.join(', '), ['bigint'].join(', '));
         assert.strictEqual(aggregatesArray[0].argumentTypes.length, 1);
         assert.ok(aggregatesArray[0].argumentTypes[0]);
@@ -1343,6 +1346,7 @@ describe('Metadata', function () {
         assert.ok(aggregatesArray[0].initCondition.equals(types.Long.ZERO));
 
         assert.strictEqual(aggregatesArray[1].name, 'sum');
+        assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
         assert.strictEqual(aggregatesArray[1].signature.join(', '), ['int'].join(', '));
         assert.strictEqual(aggregatesArray[1].argumentTypes.length, 1);
         assert.ok(aggregatesArray[1].argumentTypes[0]);

@@ -168,6 +168,16 @@ describe('Client', function () {
         });
       });
     });
+    it('should not fail when switching keyspace and a contact point is not valid', function (done) {
+      var client = new Client({
+        contactPoints: ['1.1.1.1', helper.baseOptions.contactPoints[0]],
+        keyspace: 'system'
+      });
+      client.connect(function (err) {
+        assert.ifError(err);
+        done();
+      });
+    });
   });
   describe('#connect() with auth', function () {
     before(function (done) {

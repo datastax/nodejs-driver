@@ -249,6 +249,16 @@ describe('Host', function () {
       host.setDown();
     });
   });
+  describe('#getActiveConnection()', function () {
+    it('should return null if a the pool is initialized', function () {
+      var options = {
+        policies: {
+          reconnection: new reconnection.ConstantReconnectionPolicy(100)
+        }};
+      var h = newHostInstance(options);
+      assert.strictEqual(h.getActiveConnection(), null);
+    });
+  });
 });
 describe('HostMap', function () {
   describe('#values()', function () {

@@ -107,7 +107,7 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'start'], callback);
+      new Ccm().exec(['node' + nodeIndex, 'start', '--wait-for-binary-proto'], callback);
     },
     exec: function (params, callback) {
       new Ccm().exec(params, callback);
@@ -608,21 +608,21 @@ function RetryMultipleTimes(times) {
   this.times = times;
 }
 
-RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
+RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo) {
   if (requestInfo.nbRetry > this.times) {
     return this.rethrowResult();
   }
   return this.retryResult();
 };
 
-RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
+RetryMultipleTimes.prototype.onUnavailable = function (requestInfo) {
   if (requestInfo.nbRetry > this.times) {
     return this.rethrowResult();
   }
   return this.retryResult();
 };
 
-RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
+RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo) {
   if (requestInfo.nbRetry > this.times) {
     return this.rethrowResult();
   }

@@ -15,10 +15,12 @@ describe('Metadata', function () {
   before(function createSchema(done) {
     var client = newInstance();
     var queries = [
-      "CREATE KEYSPACE ks_udf WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
-      "CREATE FUNCTION ks_udf.return_one() RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return 1;'",
-      "CREATE FUNCTION ks_udf.plus(s int, v int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return s+v;'",
-      "CREATE FUNCTION ks_udf.plus(s bigint, v bigint) RETURNS NULL ON NULL INPUT RETURNS bigint LANGUAGE java AS 'return s+v;'"
+      "CREATE KEYSPACE  ks_udf WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
+      "CREATE FUNCTION  ks_udf.return_one() RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return 1;'",
+      "CREATE FUNCTION  ks_udf.plus(s int, v int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return s+v;'",
+      "CREATE FUNCTION  ks_udf.plus(s bigint, v bigint) RETURNS NULL ON NULL INPUT RETURNS bigint LANGUAGE java AS 'return s+v;'",
+      "CREATE AGGREGATE ks_udf.sum(int) SFUNC plus STYPE int INITCOND 0",
+      "CREATE AGGREGATE ks_udf.sum(bigint) SFUNC plus STYPE bigint INITCOND 0"
     ];
     async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
   });
@@ -180,8 +182,54 @@ describe('Metadata', function () {
       ], done);
     });
   });
+  describe('#getAggregates()', function () {
+    it('should retrieve the metadata of cql aggregates', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregates(keyspace, 'sum', function (err, aggregatesArray) {
+            assert.ifError(err);
+            assert.ok(aggregatesArray);
+            assert.strictEqual(aggregatesArray.length, 2);
+            helper.assertInstanceOf(aggregatesArray[0].name, 'sum');
+            helper.assertInstanceOf(aggregatesArray[1].name, 'sum');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should return an empty array when not found', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregates(keyspace, 'aggregate_does_not_exists', function (err, funcArray) {
+            assert.ifError(err);
+            assert.strictEqual(funcArray.length, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should return an empty array when the keyspace does not exists', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregates('ks_does_not_exists', 'aggr1', function (err, funcArray) {
+            assert.ifError(err);
+            assert.strictEqual(funcArray.length, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+  });
 });
-
 
 /** @returns {Client}  */
 function newInstance(options) {

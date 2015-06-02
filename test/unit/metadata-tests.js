@@ -24,7 +24,8 @@ describe('Metadata', function () {
       metadata.tokenizer.compare = function (a, b) {if (a > b) return 1; if (a < b) return -1; return 0};
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
-      metadata.setKeyspaces({rows: [{
+      //noinspection JSCheckFunctionSignatures
+      metadata.setKeyspaces({ rows: [{
         'keyspace_name': 'dummy',
         'strategy_class': 'SimpleStrategy',
         'strategy_options': '{"replication_factor": 3}'
@@ -60,6 +61,7 @@ describe('Metadata', function () {
         h.datacenter = 'dc' + ((i % 2) + 1);
         metadata.primaryReplicas[i.toString()] = h;
       }
+      //noinspection JSCheckFunctionSignatures
       metadata.setKeyspaces({rows: [{
         'keyspace_name': 'dummy',
         'strategy_class': 'NetworkTopologyStrategy',
@@ -1026,6 +1028,7 @@ describe('Metadata', function () {
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       assert.throws(function () {
+        //noinspection JSCheckFunctionSignatures
         metadata.getFunction('ks_udf', 'plus', []);
       }, errors.ArgumentError);
     });
@@ -1091,6 +1094,7 @@ describe('Metadata', function () {
       var cc = {
         query: function (q, cb) {
           called++;
+          helper.assertContains(q, 'system.schema_functions');
           setImmediate(function () {
             cb(null, {rows: rows});
           });
@@ -1160,6 +1164,197 @@ describe('Metadata', function () {
         assert.strictEqual(func.language, 'java');
         assert.ok(func.returnType);
         assert.strictEqual(func.returnType.code, types.dataTypes.int);
+        done();
+      });
+    });
+  });
+  describe('#getAggregates()', function () {
+    it('should query once when called in parallel', function (done) {
+      var called = 0;
+      var rows = [
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+      ];
+      var cc = {
+        query: function (q, cb) {
+          called++;
+          helper.assertContains(q, 'system.schema_aggregates');
+          setImmediate(function () {
+            cb(null, {rows: rows});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      async.times(10, function (n, next) {
+        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          next();
+        });
+      }, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(called, 1);
+        done();
+      });
+    });
+    it('should query once when called serially', function (done) {
+      var called = 0;
+      var rows = [
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+      ];
+      var cc = {
+        query: function (q, cb) {
+          called++;
+          setImmediate(function () {
+            cb(null, {rows: rows});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      async.timesSeries(10, function (n, next) {
+        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          assert.strictEqual(funcArray.length, 1);
+          next();
+        });
+      }, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(called, 1);
+        done();
+      });
+    });
+    it('should return an empty array when not found', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      metadata.getAggregates('ks_udf', 'plus', function (err, funcArray) {
+        assert.ifError(err);
+        assert.ok(funcArray);
+        assert.strictEqual(funcArray.length, 0);
+        done();
+      });
+    });
+    it('should query the following times if was previously not found', function (done) {
+      var called = 0;
+      var rows = [
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+      ];
+      var cc = {
+        query: function (q, cb) {
+          if (called++ < 5) {
+            return setImmediate(function () {
+              cb(null, {rows: []});
+            });
+          }
+          setImmediate(function () {
+            cb(null, {rows: rows});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      async.timesSeries(10, function (n, next) {
+        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          if (n < 5) {
+            assert.strictEqual(funcArray.length, 0);
+          }
+          else {
+            //there should be a row
+            assert.strictEqual(funcArray.length, 1);
+          }
+          next();
+        });
+      }, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(called, 6);
+        done();
+      });
+    });
+    it('should query the following times if there was an error previously', function (done) {
+      var called = 0;
+      var rows = [
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+      ];
+      var cc = {
+        query: function (q, cb) {
+          helper.assertContains(q, 'system.schema_aggregates');
+          if (called++ < 5) {
+            return setImmediate(function () {
+              cb(new Error('Dummy'));
+            });
+          }
+          setImmediate(function () {
+            cb(null, {rows: rows});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      async.timesSeries(10, function (n, next) {
+        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+          if (n < 5) {
+            assert.ok(err);
+            assert.strictEqual(err.message, 'Dummy');
+          }
+          else {
+            assert.ifError(err);
+            assert.ok(funcArray);
+            assert.strictEqual(funcArray.length, 1);
+          }
+          next();
+        });
+      }, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(called, 6);
+        done();
+      });
+    });
+    it('should parse function metadata with 2 parameters', function (done) {
+      var rows = [
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
+        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
+      ];
+      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      metadata.keyspaces['ks_udf'] = { aggregates: {}};
+      metadata.getAggregates('ks_udf', 'sum', function (err, aggregatesArray) {
+        assert.ifError(err);
+        assert.ok(aggregatesArray);
+        assert.strictEqual(aggregatesArray.length, 2);
+        assert.strictEqual(aggregatesArray[0].name, 'sum');
+        assert.strictEqual(aggregatesArray[0].signature.join(', '), ['bigint'].join(', '));
+        assert.strictEqual(aggregatesArray[0].argumentTypes.length, 1);
+        assert.ok(aggregatesArray[0].argumentTypes[0]);
+        assert.strictEqual(aggregatesArray[0].argumentTypes[0].code, types.dataTypes.bigint);
+        assert.ok(aggregatesArray[0].returnType);
+        assert.strictEqual(aggregatesArray[0].returnType.code, types.dataTypes.bigint);
+        assert.strictEqual(aggregatesArray[0].finalFunction, null);
+        assert.ok(aggregatesArray[0].stateType);
+        assert.strictEqual(aggregatesArray[0].stateType.code, types.dataTypes.bigint);
+        assert.strictEqual(aggregatesArray[0].stateFunction, 'plus');
+        helper.assertInstanceOf(aggregatesArray[0].initConditionRaw, Buffer);
+        helper.assertInstanceOf(aggregatesArray[0].initCondition, types.Long);
+        assert.ok(aggregatesArray[0].initCondition.equals(types.Long.ZERO));
+
+        assert.strictEqual(aggregatesArray[1].name, 'sum');
+        assert.strictEqual(aggregatesArray[1].signature.join(', '), ['int'].join(', '));
+        assert.strictEqual(aggregatesArray[1].argumentTypes.length, 1);
+        assert.ok(aggregatesArray[1].argumentTypes[0]);
+        assert.strictEqual(aggregatesArray[1].argumentTypes[0].code, types.dataTypes.int);
+        assert.ok(aggregatesArray[1].returnType);
+        assert.strictEqual(aggregatesArray[1].returnType.code, types.dataTypes.int);
+        assert.strictEqual(aggregatesArray[1].finalFunction, null);
+        assert.ok(aggregatesArray[1].stateType);
+        assert.strictEqual(aggregatesArray[1].stateType.code, types.dataTypes.int);
+        assert.strictEqual(aggregatesArray[1].stateFunction, 'plus');
+        assert.strictEqual(typeof aggregatesArray[1].initCondition, 'number');
+        assert.strictEqual(aggregatesArray[1].initCondition, 0);
         done();
       });
     });

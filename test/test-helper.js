@@ -339,6 +339,7 @@ var helper = {
   },
   Map: MapPolyFill,
   Set: SetPolyFill,
+  WhiteListPolicy: WhiteListPolicy,
   /**
    * Determines if test tracing is enabled
    */
@@ -365,7 +366,7 @@ var helper = {
   /**
    * Version dependent describe() method for mocha test case
    * @param {String} testVersion Minimum version of Cassandra needed for this test
-   * @param {String} Title of the describe section.
+   * @param {String} title Title of the describe section.
    * @param {Function} func
    */
   vdescribe: function (testVersion, title, func) {
@@ -662,6 +663,42 @@ RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency
     return this.rethrowResult();
   }
   return this.retryResult();
+};
+
+/**
+ * For test purposes, filters the child policy by last octet of the ip address
+ * @param {Array} list
+ * @param [childPolicy]
+ * @constructor
+ */
+function WhiteListPolicy(list, childPolicy) {
+  this.list = list;
+  this.childPolicy = childPolicy || new policies.loadBalancing.RoundRobinPolicy();
+}
+
+util.inherits(WhiteListPolicy, policies.loadBalancing.LoadBalancingPolicy);
+
+WhiteListPolicy.prototype.init = function (client, hosts, callback) {
+  this.childPolicy.init(client, hosts, callback);
+};
+
+WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  var list = this.list;
+  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
+    callback(err, {
+      next: function () {
+        var item = iterator.next();
+        while (!item.done) {
+          //noinspection JSCheckFunctionSignatures
+          if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
+            break;
+          }
+          item = iterator.next();
+        }
+        return item;
+      }
+    });
+  });
 };
 
 /**

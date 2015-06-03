@@ -301,5 +301,43 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should use the retry policy defined in the QueryOptions', function (done) {
+      var handler = new RequestHandler(null, options);
+      var connectionCalled = 0;
+      var connection = { sendStream: function (r, o, cb) {
+        setImmediate(function () {
+          if (connectionCalled++ < 2) {
+            return cb(new errors.ResponseError(types.responseErrorCodes.readTimeout, 'dummy timeout'));
+          }
+          cb(null, { meta: {
+            columns: [
+              { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
+              { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
+            ],
+            pageState: new Buffer('1234aa', 'hex')
+          }});
+        });
+      }};
+      handler.getNextConnection = function (o, cb) {
+        setImmediate(function () {
+          handler.host = { setUp: helper.noop };
+          cb(null, connection);
+        });
+      };
+      var policy = new retry.RetryPolicy();
+      var policyCalled = 0;
+      policy.onReadTimeout = function () {
+        policyCalled++;
+        return {decision: retry.RetryPolicy.retryDecision.retry};
+      };
+      //noinspection JSCheckFunctionSignatures
+      handler.send(new requests.QueryRequest('Dummy QUERY'), { retry: policy}, function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        //2 error responses, 2 retry decisions
+        assert.strictEqual(policyCalled, 2);
+        done();
+      });
+    });
   });
 });

@@ -6,9 +6,9 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
-var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
-describe('Metadata', function () {
+vdescribe('2.2', 'Metadata', function () {
   this.timeout(60000);
   before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions: true']}));
   var keyspace = 'ks_udf';

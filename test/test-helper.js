@@ -351,22 +351,25 @@ var helper = {
     }
     console.log('\t...' + util.format.apply(null, arguments));
   },
+
   /**
-   * Version dependant it() method for mocha test case
+   * Version dependent it() method for mocha test case
    * @param {String} testVersion Minimum version of Cassandra needed for this test
    * @param {String} testCase Test case name
    * @param {Function} func
    */
   vit: function (testVersion, testCase, func) {
-    var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-    var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
-    v = testVersion.split('.');
-    var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
-    if (currentVersion >= minimumVersion) {
-      //Mocha it() method
-      //noinspection JSUnresolvedFunction
-      it(testCase, func);
-    }
+    executeIfVersion(testVersion, it, [testCase, func]);
+  },
+
+  /**
+   * Version dependent describe() method for mocha test case
+   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} Title of the describe section.
+   * @param {Function} func
+   */
+  vdescribe: function (testVersion, title, func) {
+    executeIfVersion(testVersion, describe, [title, func]);
   },
 
   /**
@@ -660,5 +663,21 @@ RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency
   }
   return this.retryResult();
 };
+
+/**
+ * Conditionally executes func if testVersion is <= the current cassandra version.
+ * @param {String} testVersion Minimum version of Cassandra needed.
+ * @param {Function} func The function to conditionally execute.
+ * @param {Array} args the arguments to apply to the function.
+ */
+function executeIfVersion (testVersion, func, args) {
+  var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+  var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
+  v = testVersion.split('.');
+  var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
+  if (currentVersion >= minimumVersion) {
+    func.apply(this, args);
+  }
+}
 
 module.exports = helper;

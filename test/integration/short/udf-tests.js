@@ -139,6 +139,20 @@ vdescribe('2.2', 'Metadata', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should return null when not found by signature', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getFunction(keyspace, 'plus', ['int'], function (err, func) {
+            assert.ifError(err);
+            assert.strictEqual(func, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     it('should return null when the keyspace does not exists', function (done) {
       var client = newInstance();
       async.series([

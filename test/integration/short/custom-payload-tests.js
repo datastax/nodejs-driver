@@ -68,6 +68,28 @@ describe('custom payload', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    vit('2.2', 'should encode and decode the payload and trace', function (done) {
+      var client = newInstance();
+      var payload = {
+        'key3': new Buffer('val3')
+      };
+      async.series([
+        client.connect.bind(client),
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          client.execute(query, [types.Uuid.random(), 'text3'], { customPayload: payload, traceQuery: true}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.info.customPayload);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            helper.assertInstanceOf(result.info.customPayload['key3'], Buffer);
+            assert.strictEqual(result.info.customPayload['key3'].toString(), 'val3');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
   });
   describe('using Client#execute(query, params, { prepare: 1 }, callback)', function () {
     vit('2.2', 'should encode and decode the payload with rows response', function (done) {
@@ -114,6 +136,34 @@ describe('custom payload', function () {
             assert.ok(result.info.customPayload);
             helper.assertInstanceOf(result.info.customPayload['key-batch1'], Buffer);
             assert.strictEqual(result.info.customPayload['key-batch1'].toString(), 'val-batch1');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.2', 'should encode and decode the payload with warnings', function (done) {
+      var client = newInstance();
+      var payload = {
+        'key-batch2': new Buffer('val-batch2')
+      };
+      async.series([
+        client.connect.bind(client),
+        function executeBatch(next) {
+          var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          var queries = [
+            { query: q, params: [types.Uuid.random(), 'text-batch2'] },
+            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 5 * 1025)] }
+          ];
+          client.batch(queries, { customPayload: payload}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.info.customPayload);
+            helper.assertInstanceOf(result.info.customPayload['key-batch2'], Buffer);
+            assert.strictEqual(result.info.customPayload['key-batch2'].toString(), 'val-batch2');
+            assert.ok(result.info.warnings);
+            assert.strictEqual(result.info.warnings.length, 1);
+            helper.assertContains(result.info.warnings[0], 'batch');
             next();
           });
         },

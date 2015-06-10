@@ -197,6 +197,10 @@ client.on('log', function(level, className, message, furtherInfo) {
 ```
 The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
 
+## Feedback Requested
+
+**Help us focus our efforts!** Provide your input on the [Platform and Runtime Survey][survey] (we kept it short).
+
 ## Credits
 
 This driver is based on the original work of [Jorge Bay][jorgebay] on [node-cassandra-cql][old-driver] and adds a series of advanced features that are common across all other [DataStax drivers][drivers] for Apache Cassandra.
@@ -214,7 +218,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 [cassandra]: http://cassandra.apache.org/
-[doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.1/Client.html
+[doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.2/Client.html
 [doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/
 [doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/nodejs2Cql3Datatypes.html
 [doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/numericalValues.html
@@ -233,3 +237,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: http://cassandra.apache.org/doc/cql3/CQL.html#createTypeStmt
+[survey]: http://goo.gl/forms/f216tY3Ebr

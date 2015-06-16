@@ -231,6 +231,54 @@ describe('reconnection', function () {
       });
     });
   });
+  describe('when a node is killed during connection initialization', function() {
+    it('should properly abort the connection and retry', function(done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.start(2),
+        function pauseNode2(next) {
+          // Pause node2 so establishing connection to it hangs.
+          helper.ccmHelper.exec(['node2', 'pause'], next);
+        },
+        client.connect.bind(client),
+        function doSomeQueries(next) {
+          // Issue some queries to get a connection attempt on node2.
+          async.times(30, function (n, timesNext) {
+            client.execute('SELECT * FROM system.schema_columnfamilies', function(err, result) {
+              timesNext();
+            });
+          });
+          // Since queries won't actually complete, wait 5 seconds and then kill node.
+          setTimeout(next, 5000);
+        },
+        function killNode2(next) {
+          // Kill node2 non-gently so OS sends a TCP RST on the connection.
+          helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], next);
+        },
+        function startNode2(next) {
+          // If we've made it this far without process dying we are in good
+          // shape, but validate node2 comes up anyways.
+          helper.ccmHelper.startNode(2, next);
+        },
+        function wait10(next) {
+          // Give 10 seconds for node to be marked up.
+          setTimeout(next, 10000);
+        },
+        function isUp(next) {
+          // Ensure all hosts are up.
+          var hosts = client.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          hosts.forEach(function(host) {
+            assert.ok(host.isUp());
+          });
+          next();
+        }
+      ], function (err) {
+        assert.ifError(err);
+        helper.ccmHelper.removeIfAny(done);
+      })
+    })
+  })
 });
 
 /**
@@ -248,4 +296,13 @@ function killConnections(client, destroy) {
       }
     });
   });
+}
+
+/**
+ * @returns {Client}
+ */
+function newInstance(options) {
+  options = options || {};
+  options = utils.extend(options, helper.baseOptions);
+  return new Client(options);
 }

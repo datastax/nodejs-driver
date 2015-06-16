@@ -19,7 +19,7 @@ describe('EC2MultiRegionTranslator', function () {
     });
     it('should do a reverse and a forward dns lookup', function (done) {
       var t = new EC2MultiRegionTranslator();
-      dns.lookup('google.com', function (err, address) {
+      dns.lookup('datastax.com', function (err, address) {
         assert.ifError(err);
         assert.ok(address);
         t.translate(address, 9001, function (endPoint) {

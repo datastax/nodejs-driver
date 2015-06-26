@@ -80,6 +80,31 @@ describe('Client', function () {
         done();
       });
     });
+    it('should fail when trying to connect after shutdown', function (done) {
+      var Client = require('../../lib/client');
+      var options = utils.extend({
+        contactPoints: helper.baseOptions.contactPoints,
+        policies: {
+          loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
+        }
+      });
+      var client = new Client(options);
+      client.controlConnection = {
+        init: helper.callbackNoop,
+        hosts: new HostMap()
+      };
+      async.series([
+        client.connect.bind(client),
+        client.shutdown.bind(client)
+      ], function (err) {
+        assert.ifError(err);
+        client.connect(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          helper.assertContains(err.message, 'after shutdown');
+          done();
+        });
+      });
+    });
   });
   describe('#_getPrepared()', function () {
     var Client = rewire('../../lib/client.js');

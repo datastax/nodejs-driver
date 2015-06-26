@@ -25,7 +25,7 @@ describe('Client', function () {
           //It should be serializable
           JSON.stringify(client.hosts);
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should retrieve the cassandra version of the hosts', function (done) {
@@ -39,7 +39,7 @@ describe('Client', function () {
             h.cassandraVersion.split('.').slice(0, 2).join('.'),
             helper.getCassandraVersion().split('.').slice(0, 2).join('.'));
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should fail if the contact points can not be resolved', function (done) {
@@ -76,14 +76,17 @@ describe('Client', function () {
       client.connect(function (err) {
         if (err) return done(err);
         helper.assertInstanceOf(client.metadata.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
-        done();
+        client.shutdown(done);
       });
     });
     it('should allow multiple parallel calls to connect', function (done) {
       var client = newInstance();
       async.times(100, function (n, next) {
         client.connect(next);
-      }, done);
+      }, function (err) {
+        assert.ifError(err);
+        client.shutdown(done);
+      });
     });
     it('should resolve host names', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
@@ -93,7 +96,7 @@ describe('Client', function () {
         client.hosts.forEach(function (h) {
           assert.notEqual(h.address, 'localhost');
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should fail if the keyspace does not exists', function (done) {
@@ -106,7 +109,10 @@ describe('Client', function () {
           assert.ok(err.message.toLowerCase().indexOf('keyspace') >= 0, 'Message mismatch, was: ' + err.message);
           next();
         });
-      }, done);
+      }, function (err) {
+        assert.ifError(err);
+        client.shutdown(done);
+      });
     });
     it('should not use contactPoints that are not part of peers', function (done) {
       var contactPoints = helper.baseOptions.contactPoints.slice(0);
@@ -123,7 +129,7 @@ describe('Client', function () {
         assert.notEqual(hosts[2], contactPoints[1] + ':9042');
         assert.notEqual(hosts[1], contactPoints[2] + ':9042');
         assert.notEqual(hosts[2], contactPoints[2] + ':9042');
-        done();
+        client.shutdown(done);
       });
     });
     it('should use the default pooling options according to the protocol version', function (done) {
@@ -142,7 +148,7 @@ describe('Client', function () {
         }, function (err) {
           if (err) return done(err);
           assert.strictEqual(client.hosts.values()[0].pool.connections.length, client.options.pooling.coreConnectionsPerHost[types.distance.local]);
-          done();
+          client.shutdown(done);
         });
       });
     });
@@ -164,7 +170,7 @@ describe('Client', function () {
         }, function (err) {
           if (err) return done(err);
           assert.strictEqual(client.hosts.values()[0].pool.connections.length, client.options.pooling.coreConnectionsPerHost[types.distance.local]);
-          done();
+          client.shutdown(done);
         });
       });
     });
@@ -175,7 +181,21 @@ describe('Client', function () {
       });
       client.connect(function (err) {
         assert.ifError(err);
-        done();
+        client.shutdown(done);
+      });
+    });
+    it('should open connections to all hosts when warmup is set', function (done) {
+      var connectionsPerHost = {};
+      connectionsPerHost[types.distance.local]  = 3;
+      connectionsPerHost[types.distance.remote] = 1;
+      var client = newInstance({ pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}});
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.forEach(function (host) {
+          assert.strictEqual(host.pool.connections.length, 3);
+        });
+        client.shutdown(done);
       });
     });
   });
@@ -577,6 +597,37 @@ describe('Client', function () {
               }, 0),
               2);
             seriesNext();
+          });
+        }
+      ], done);
+    });
+    it('should warn but not fail when warmup is enable and a node is down', function (done) {
+      async.series([
+        helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
+        function (next) {
+          var warnings = [];
+          var client = newInstance({ pooling: { warmup: true } });
+          client.on('log', function (level, className, message) {
+            if (level !== 'warning' || className !== 'Client') return;
+            warnings.push(message);
+          });
+          client.connect(function (err) {
+            assert.ifError(err);
+            assert.strictEqual(warnings.length, 1);
+            assert.ok(warnings[0].indexOf('pool') >= 0, 'warning does not contains the word pool: ' + warnings[0]);
+            client.shutdown(next);
+          });
+        }
+      ], done);
+    });
+    it('should connect when first contact point is down', function (done) {
+      async.series([
+        helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
+        function (next) {
+          var client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
+          client.connect(function (err) {
+            assert.ifError(err);
+            client.shutdown(next);
           });
         }
       ], done);

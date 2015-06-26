@@ -14,8 +14,8 @@ var LoadBalancingPolicy = loadBalancing.LoadBalancingPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
 var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
+var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
-//mocha test fixture
 describe('RoundRobinPolicy', function () {
   it('should yield nodes in a round robin manner even in parallel', function (done) {
     var policy = new RoundRobinPolicy();
@@ -289,6 +289,41 @@ describe('TokenAwarePolicy', function () {
         });
       }
     ], done);
+  });
+});
+describe('WhiteListPolicy', function () {
+  it('should use the childPolicy to determine the distance', function () {
+    var getDistanceCalled = 0;
+    var childPolicy = {
+      getDistance: function () {
+        getDistanceCalled++;
+        return types.distance.local;
+      }
+    };
+    var policy = new WhiteListPolicy(childPolicy, ['h1:9042', 'h2:9042']);
+    assert.strictEqual(policy.getDistance({ address: 'h1:9042'}), types.distance.local);
+    assert.strictEqual(getDistanceCalled, 1);
+    assert.strictEqual(policy.getDistance({ address: 'h2:9042'}), types.distance.local);
+    assert.strictEqual(getDistanceCalled, 2);
+    assert.strictEqual(policy.getDistance({ address: 'h_not_exists:9042'}), types.distance.ignored);
+    //child policy should not be called
+    assert.strictEqual(getDistanceCalled, 2);
+  });
+  it('should filter the child policy hosts', function (done) {
+    var childPolicy = {
+      newQueryPlan: function (ks, o, cb) {
+        cb(null, utils.arrayIterator([{ address: '1.1.1.1:9042'}, { address: '1.1.1.2:9042'}, { address: '1.1.1.3:9042'}]));
+      }
+    };
+    var policy = new WhiteListPolicy(childPolicy, ['1.1.1.3:9042', '1.1.1.1:9042']);
+    policy.newQueryPlan('ks1', {}, function (err, iterator) {
+      assert.ifError(err);
+      var hosts = helper.iteratorToArray(iterator);
+      assert.strictEqual(hosts.length, 2);
+      assert.strictEqual(helper.lastOctetOf(hosts[0]), '1');
+      assert.strictEqual(helper.lastOctetOf(hosts[1]), '3');
+      done()
+    });
   });
 });
 

@@ -10,6 +10,7 @@ var loadBalancing = require('../../../lib/policies/load-balancing.js');
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
 var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
+var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
 describe('DCAwareRoundRobinPolicy', function () {
   this.timeout(180000);
@@ -258,3 +259,25 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
 });
+describe('WhiteListPolicy', function () {
+  this.timeout(180000);
+  before(helper.ccmHelper.start(3));
+  after(helper.ccmHelper.remove);
+  it('should use the hosts in the white list only', function (done) {
+    var policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
+    var client = newInstance(policy);
+    helper.timesLimit(100, 20, function (n, next) {
+      client.execute('SELECT * FROM system.local', function (err, result) {
+        assert.ifError(err);
+        var lastOctet = helper.lastOctetOf(result.info.queriedHost);
+        assert.ok(lastOctet === '1' || lastOctet === '2');
+        next();
+      });
+    }, helper.finish(client, done));
+  });
+});
+
+function newInstance(policy) {
+  var options = utils.extend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
+  return new Client(options);
+}

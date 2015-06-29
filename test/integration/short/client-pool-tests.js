@@ -4,6 +4,7 @@ var domain = require('domain');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
+var Host = require('../../../lib/host').Host;
 var clientOptions = require('../../../lib/client-options');
 var utils = require('../../../lib/utils');
 var errors = require('../../../lib/errors');
@@ -498,6 +499,10 @@ describe('Client', function () {
     it('should failover after a node goes down', function (done) {
       var client = newInstance();
       var hosts = {};
+      var hostsDown = [];
+      client.on('hostDown', function (h) {
+        hostsDown.push(h);
+      });
       async.series([
         function warmUpPool(seriesNext) {
           async.times(100, function (n, next) {
@@ -532,6 +537,8 @@ describe('Client', function () {
                 return val + (h.isUp() ? 1 : 0);
               }, 0),
               2);
+            assert.strictEqual(hostsDown.length, 1);
+            assert.strictEqual(helper.lastOctetOf(hostsDown[0]), '1');
             seriesNext();
           });
         }
@@ -630,6 +637,75 @@ describe('Client', function () {
             client.shutdown(next);
           });
         }
+      ], done);
+    });
+  });
+  describe('events', function () {
+    //noinspection JSPotentiallyInvalidUsageOfThis
+    this.timeout(600000);
+    beforeEach(helper.ccmHelper.start(2));
+    afterEach(helper.ccmHelper.remove);
+    it('should emit hostUp hostDown', function (done) {
+      var client = newInstance();
+      var hostsWentUp = [];
+      var hostsWentDown = [];
+      async.series([
+        client.connect.bind(client),
+        function addListeners(next) {
+          client.on('hostUp', hostsWentUp.push.bind(hostsWentUp));
+          client.on('hostDown', hostsWentDown.push.bind(hostsWentDown));
+          next();
+        },
+        helper.toTask(helper.ccmHelper.stopNode, null, 2),
+        helper.toTask(helper.ccmHelper.startNode, null, 2),
+        function checkResults(next) {
+          assert.strictEqual(hostsWentUp.length, 1);
+          assert.strictEqual(hostsWentDown.length, 1);
+          helper.assertInstanceOf(hostsWentUp[0], Host);
+          helper.assertInstanceOf(hostsWentDown[0], Host);
+          assert.strictEqual(helper.lastOctetOf(hostsWentUp[0]),   '2');
+          assert.strictEqual(helper.lastOctetOf(hostsWentDown[0]), '2');
+          next();
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should emit hostAdd hostRemove', function (done) {
+      var client = newInstance();
+      var hostsAdded = [];
+      var hostsRemoved = [];
+      function trace(message) {
+        return (function (next) {
+          helper.trace(message);
+          next();
+        });
+      }
+      async.series([
+        client.connect.bind(client),
+        function addListeners(next) {
+          client.on('hostAdd', hostsAdded.push.bind(hostsAdded));
+          client.on('hostRemove', hostsRemoved.push.bind(hostsRemoved));
+          next();
+        },
+        trace('Bootstrapping node 3'),
+        helper.toTask(helper.ccmHelper.bootstrapNode, null, 3),
+        trace('Starting newly bootstrapped node 3'),
+        helper.toTask(helper.ccmHelper.startNode, null, 3),
+        trace('Decommissioning node 2'),
+        helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
+        trace('Stopping node 2'),
+        helper.toTask(helper.ccmHelper.stopNode, null, 2),
+        function checkResults(next) {
+          helper.trace('Checking results');
+          assert.strictEqual(hostsAdded.length, 1);
+          assert.strictEqual(hostsRemoved.length, 1);
+          helper.assertInstanceOf(hostsAdded[0], Host);
+          helper.assertInstanceOf(hostsRemoved[0], Host);
+          assert.strictEqual(helper.lastOctetOf(hostsAdded[0]), '3');
+          assert.strictEqual(helper.lastOctetOf(hostsRemoved[0]), '2');
+          next();
+        },
+        client.shutdown.bind(client)
       ], done);
     });
   });

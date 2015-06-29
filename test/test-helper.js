@@ -109,6 +109,20 @@ var helper = {
     startNode: function (nodeIndex, callback) {
       new Ccm().exec(['node' + nodeIndex, 'start', '--wait-for-binary-proto'], callback);
     },
+    /**
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    stopNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'stop'], callback);
+    },
+    /**
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    decommissionNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'decommission'], callback);
+    },
     exec: function (params, callback) {
       new Ccm().exec(params, callback);
     }

@@ -20,6 +20,9 @@ var options = (function () {
       reconnection: new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false),
       retry: new retry.RetryPolicy()
     },
+    socketOptions: {
+      readTimeout: 0
+    },
     logEmitter: helper.noop
   };
 })();
@@ -339,5 +342,92 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should callback with OperationTimedOutError when queryOptions.retryOnTimeout is set to false', function (done) {
+      var handler = newInstance( { socketOptions: { readTimeout: 1234 }});
+      handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop };
+      var connection = { sendStream: function (r, o, cb) {
+        cb(new errors.OperationTimedOutError('Testing timeout'))
+      }};
+      handler.getNextConnection = function (o, cb) {
+        cb(null, connection);
+      };
+      var queryOptions = { retryOnTimeout: false};
+      //noinspection JSCheckFunctionSignatures
+      handler.send(new requests.QueryRequest('q'), queryOptions, function (err) {
+        helper.assertInstanceOf(err, errors.OperationTimedOutError);
+        assert.strictEqual(err.message, 'Testing timeout');
+        done();
+      });
+    });
+    it('should retry sending using the next host', function (done) {
+      var handler = newInstance();
+      var getNextConnectionCounter = 0;
+      handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
+      var connection1 = { sendStream: function (r, o, cb) {
+        cb(new errors.OperationTimedOutError('Testing timeout'))
+      }};
+      var connection2 = { sendStream: function (r, o, cb) {
+        cb(null, {});
+      }};
+      handler.getNextConnection = function (o, cb) {
+        if (getNextConnectionCounter++ === 0) {
+          return cb(null, connection1);
+        }
+        cb(null, connection2);
+      };
+      var queryOptions = { retryOnTimeout: true };
+      //noinspection JSCheckFunctionSignatures
+      handler.send(new requests.QueryRequest('q'), queryOptions, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(getNextConnectionCounter, 2);
+        done();
+      });
+    });
+    it('should retry sending using the next host when is a PREPARE request', function (done) {
+      var handler = newInstance();
+      var getNextConnectionCounter = 0;
+      handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
+      var connection1 = { sendStream: function (r, o, cb) {
+        cb(new errors.OperationTimedOutError('Testing timeout'))
+      }};
+      var connection2 = { sendStream: function (r, o, cb) {
+        cb(null, {});
+      }};
+      handler.getNextConnection = function (o, cb) {
+        if (getNextConnectionCounter++ === 0) {
+          return cb(null, connection1);
+        }
+        cb(null, connection2);
+      };
+      //even though it is set to false, it should be retried
+      var queryOptions = { retryOnTimeout: false };
+      //noinspection JSCheckFunctionSignatures
+      handler.send(new requests.PrepareRequest('q'), queryOptions, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(getNextConnectionCounter, 2);
+        done();
+      });
+    });
+  });
+  describe('#onTimeout', function () {
+    it('should check host health', function (done) {
+      var checkHealth = 0;
+      var handler = newInstance();
+      handler.host = { address: '1.1.1.1:9042', checkHealth: function () {
+        checkHealth++;
+      }};
+      handler.connection = { onTimeout: helper.noop };
+      //noinspection JSCheckFunctionSignatures
+      handler.onTimeout(new errors.OperationTimedOutError('Testing'), function (err) {
+        helper.assertInstanceOf(err, errors.OperationTimedOutError);
+        assert.strictEqual(checkHealth, 1);
+        done();
+      });
+    });
   });
 });
+
+/** @returns {RequestHandler} */
+function newInstance(customOptions) {
+  return new RequestHandler(null, utils.extend({}, options, customOptions));
+}

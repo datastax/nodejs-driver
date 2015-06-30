@@ -85,6 +85,12 @@ var helper = {
         if (callback) callback();
       });
     },
+    pauseNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'pause'], callback);
+    },
+    resumeNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'resume'], callback);
+    },
     /**
      * Adds a new node to the cluster
      * @param {Number} nodeIndex 1 based index of the node

@@ -10,6 +10,8 @@ var utils = require('../../../lib/utils');
 var errors = require('../../../lib/errors');
 var types = require('../../../lib/types');
 
+var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
+
 describe('Client', function () {
   this.timeout(120000);
   describe('#connect()', function () {
@@ -195,6 +197,40 @@ describe('Client', function () {
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.forEach(function (host) {
           assert.strictEqual(host.pool.connections.length, 3);
+        });
+        client.shutdown(done);
+      });
+    });
+    it('should only warmup connections for hosts with local distance', function (done) {
+      var lbPolicy = new RoundRobinPolicy();
+      lbPolicy.getDistance = function (host) {
+        //noinspection JSCheckFunctionSignatures
+        var id = helper.lastOctetOf(host.address);
+        if(id == '1') {
+          return types.distance.local;
+        } else if(id == '2') {
+          return types.distance.remote;
+        }
+        return types.distance.ignored;
+      };
+
+      var connectionsPerHost = {};
+      connectionsPerHost[types.distance.local]  = 3;
+      connectionsPerHost[types.distance.remote] = 1;
+      var client = newInstance({
+        policies: { loadBalancing: lbPolicy },
+        pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}
+      });
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.forEach(function (host) {
+          var id = helper.lastOctetOf(host.address);
+          if(id == '1') {
+            assert.strictEqual(host.pool.connections.length, 3);
+          } else {
+            assert.strictEqual(host.pool.connections.length, 0);
+          }
         });
         client.shutdown(done);
       });

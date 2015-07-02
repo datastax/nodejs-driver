@@ -107,7 +107,7 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'start', '--wait-for-binary-proto'], callback);
+      new Ccm().exec(['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'], callback);
     },
     /**
      * @param {Number} nodeIndex 1 based index of the node

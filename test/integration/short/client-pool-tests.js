@@ -225,7 +225,7 @@ describe('Client', function () {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.forEach(function (host) {
-          var id = helper.lastOctetOf(host.address);
+          var id = helper.lastOctetOf(host);
           if(id == '1') {
             assert.strictEqual(host.pool.connections.length, 3);
           } else {
@@ -679,6 +679,7 @@ describe('Client', function () {
   describe('events', function () {
     //noinspection JSPotentiallyInvalidUsageOfThis
     this.timeout(600000);
+    var is1x = helper.getCassandraVersion().charAt(0) === '1';
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should emit hostUp hostDown', function (done) {
@@ -694,13 +695,33 @@ describe('Client', function () {
         },
         helper.toTask(helper.ccmHelper.stopNode, null, 2),
         helper.toTask(helper.ccmHelper.startNode, null, 2),
+        function wait1s(next) {
+          // If C* 1.x, we wait slightly before checking the listener
+          // because the node is marked UP just before the listeners are
+          // called since CCM considers the node up as soon as other nodes
+          // have seen it up, at which point they would send the
+          // notification on the control connection so there is a very small
+          // race here that is not evident at C* 2.x+.
+          if(is1x) {
+            setTimeout(next, 1000);
+          } else {
+            next();
+          }
+        },
         function checkResults(next) {
           assert.strictEqual(hostsWentUp.length, 1);
-          assert.strictEqual(hostsWentDown.length, 1);
           helper.assertInstanceOf(hostsWentUp[0], Host);
-          helper.assertInstanceOf(hostsWentDown[0], Host);
-          assert.strictEqual(helper.lastOctetOf(hostsWentUp[0]),   '2');
-          assert.strictEqual(helper.lastOctetOf(hostsWentDown[0]), '2');
+          assert.strictEqual(helper.lastOctetOf(hostsWentUp[0]), '2');
+
+          // Special exception for C* 1.x, as it may send duplicate down events
+          // for a single host.
+          if(!is1x) {
+            assert.strictEqual(hostsWentDown.length, 1);
+          }
+          hostsWentDown.forEach(function(downHost) {
+            helper.assertInstanceOf(downHost, Host);
+            assert.strictEqual(helper.lastOctetOf(downHost), '2');
+          });
           next();
         },
         client.shutdown.bind(client)

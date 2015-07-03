@@ -51,33 +51,66 @@ describe('RoundRobinPolicy', function () {
   });
   it('should yield host in a round robin manner when consuming', function (done) {
     var policy = new RoundRobinPolicy();
-    var hosts = [];
-    var originalHosts = createHostMap(['A', 'B', 'C', 'E', 'F']);
-    var times = 15;
+    var hostList = ['A', 'B', 'C', 'E', 'F'];
+    var permutations = [];
+    // Capture the various permutations of plans.
+    for (var i = 0; i < hostList.length; i++) {
+      var permutation = [];
+      for(var j = i; j < hostList.length + i; j++) {
+        permutation.push(hostList[j % hostList.length]);
+      }
+      permutations.push(permutation);
+    }
+    var originalHosts = createHostMap(hostList);
+    var times = 30;
     policy.init(null, originalHosts, function () {
       async.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
-          for (var i = 0; i < originalHosts.length; i++) {
+          async.timesSeries(originalHosts.length, function (planN, iteratorNext) {
             var item = iterator.next();
             assert.strictEqual(item.done, false);
-            hosts.push(item.value);
-          }
-          next();
-        });
-      }, function (err) {
-        assert.equal(err, null);
-        assert.strictEqual(hosts.length, times * originalHosts.length);
-        //Count the number of times of each element
-        originalHosts.forEach(function (item) {
-          var length = 0;
-          var lastHost = null;
-          hosts.forEach(function (host) {
-            length += (host === item ? 1 : 0);
-            assert.notEqual(lastHost, host);
-            lastHost = host;
+            // Wait a random amount of time between executions to ensure
+            // sequence of query plan iteration does not impact other
+            // query plans.
+            var randomWait = Math.floor((Math.random() * 5) + 1);
+            setTimeout(function () {
+              iteratorNext(null, item.value);
+            }, randomWait);
+          }, function(err, planHosts) {
+            assert.ifError(err);
+            // Ensure each host appears only once.
+            originalHosts.forEach(function(host) {
+              var length = 0;
+              planHosts.forEach(function(planHost) {
+                length += (host === planHost ? 1 : 0);
+              });
+              assert.strictEqual(1, length,
+                host + " appears " + length + " times in "
+                  + planHosts + ".  Expected only once.");
+            });
+            next(err, {number: n, plan: planHosts});
           });
-          assert.strictEqual(length, times);
+        });
+      }, function (err, plans) {
+        assert.equal(err, null);
+        // Sort plans in order of creation (they are emitted by completion
+        // which is random).
+        plans.sort(function(a, b) {
+          return a.number - b.number;
+        });
+        assert.strictEqual(times, plans.length);
+        // Ensure each permutation happened the expected number of times
+        // (times / permutations) and never consecutively.
+        permutations.forEach(function(permutation) {
+          var length = 0;
+          var lastPlan = null;
+          plans.forEach(function(item) {
+            length += (item.plan.toString() === permutation.toString() ? 1 : 0);
+            assert.notEqual(lastPlan, item.plan);
+            lastPlan = item.plan;
+          });
+          assert.strictEqual(length, times / permutations.length);
         });
         done();
       });

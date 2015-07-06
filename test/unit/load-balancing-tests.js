@@ -63,58 +63,8 @@ describe('RoundRobinPolicy', function () {
     }
     var originalHosts = createHostMap(hostList);
     var times = 30;
-    policy.init(null, originalHosts, function () {
-      async.times(times, function (n, next) {
-        policy.newQueryPlan(null, null, function (err, iterator) {
-          assert.equal(err, null);
-          async.timesSeries(originalHosts.length, function (planN, iteratorNext) {
-            var item = iterator.next();
-            assert.strictEqual(item.done, false);
-            // Wait a random amount of time between executions to ensure
-            // sequence of query plan iteration does not impact other
-            // query plans.
-            var randomWait = Math.floor((Math.random() * 5) + 1);
-            setTimeout(function () {
-              iteratorNext(null, item.value);
-            }, randomWait);
-          }, function(err, planHosts) {
-            assert.ifError(err);
-            // Ensure each host appears only once.
-            originalHosts.forEach(function(host) {
-              var length = 0;
-              planHosts.forEach(function(planHost) {
-                length += (host === planHost ? 1 : 0);
-              });
-              assert.strictEqual(1, length,
-                host + " appears " + length + " times in "
-                  + planHosts + ".  Expected only once.");
-            });
-            next(err, {number: n, plan: planHosts});
-          });
-        });
-      }, function (err, plans) {
-        assert.equal(err, null);
-        // Sort plans in order of creation (they are emitted by completion
-        // which is random).
-        plans.sort(function(a, b) {
-          return a.number - b.number;
-        });
-        assert.strictEqual(times, plans.length);
-        // Ensure each permutation happened the expected number of times
-        // (times / permutations) and never consecutively.
-        permutations.forEach(function(permutation) {
-          var length = 0;
-          var lastPlan = null;
-          plans.forEach(function(item) {
-            length += (item.plan.toString() === permutation.toString() ? 1 : 0);
-            assert.notEqual(lastPlan, item.plan);
-            lastPlan = item.plan;
-          });
-          assert.strictEqual(length, times / permutations.length);
-        });
-        done();
-      });
-    });
+
+    testRoundRobinPlan(times, policy, null, originalHosts, originalHosts, permutations, done);
   });
   it('should yield no more than N host', function (done) {
     var policy = new RoundRobinPolicy();
@@ -200,6 +150,32 @@ describe('DCAwareRoundRobinPolicy', function () {
       });
     });
   });
+  it('should yield local hosts in a round robin manner when consuming.', function (done) {
+    var policy = new DCAwareRoundRobinPolicy('dc1');
+    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    var originalHosts = new HostMap();
+    for (var i = 0; i < 50; i++) {
+      var h = new Host(i, 2, options);
+      h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
+      originalHosts.set(i.toString(), h);
+    }
+    var localHosts = originalHosts.values().filter(function(element, index, arr) {
+      return element.datacenter == 'dc1';
+    });
+    var times = 50;
+
+    var localPermutations = [];
+    // Capture the various permutations of plans.
+    for (var i = 0; i < localHosts.length; i++) {
+      var permutation = [];
+      for(var j = i; j < localHosts.length + i; j++) {
+        permutation.push(localHosts[j % localHosts.length]);
+      }
+      localPermutations.push(permutation);
+    }
+
+    testRoundRobinPlan(times, policy, options, originalHosts, localHosts, localPermutations, done);
+  });
   it('should yield the correct amount of remote nodes at the end', function (done) {
     //local datacenter: null (first host's datacenter will be used)
     //2 host per remote datacenter
@@ -264,6 +240,147 @@ describe('DCAwareRoundRobinPolicy', function () {
             //check that appears the same times it was iterated.
             assert.strictEqual(length, times);
           }
+        });
+        done();
+      });
+    });
+  });
+  it('should yield local + remote hosts in a round robin manner when' +
+    ' consuming', function (done) {
+    var policy = new DCAwareRoundRobinPolicy(null, 3);
+    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    var originalHosts = new HostMap();
+    for (var i = 0; i < 60; i++) {
+      var h = new Host(i, 2, options);
+      switch (i % 3) {
+        case 0:
+          h.datacenter = 'dc1';
+          break;
+        case 1:
+          h.datacenter = 'dc2';
+          break;
+        case 2:
+          h.datacenter = 'dc3';
+          break;
+      }
+      originalHosts.set(i.toString(), h);
+    }
+
+    var localHosts = originalHosts.values().filter(function(element, index, arr) {
+      return element.datacenter == 'dc1';
+    });
+
+    var dc2Hosts = originalHosts.values().filter(function(element, index, arr) {
+      return element.datacenter == 'dc2';
+    });
+
+    var dc3Hosts = originalHosts.values().filter(function(element, index, arr) {
+      return element.datacenter == 'dc3';
+    });
+
+    var times = 60;
+
+    var localPermutations = [];
+    // Capture the various permutations of plans.
+    for (var i = 0; i < localHosts.length; i++) {
+      var permutation = [];
+      for(var j = i; j < localHosts.length + i; j++) {
+        permutation.push(localHosts[j % localHosts.length]);
+      }
+      localPermutations.push(permutation);
+    }
+
+    policy.init(new Client(options), originalHosts, function (err) {
+      assert.ifError(err);
+      async.times(times, function (n, next) {
+        policy.newQueryPlan(null, null, function(err, iterator) {
+          assert.ifError(err);
+          // Iterate through plan local hosts + (remoteHosts * remoteDcs) + 1.
+          async.timesSeries(localHosts.length + (3 * 2) + 1, function (planN, iteratorNext) {
+            var item = iterator.next();
+            assert.strictEqual(item.done, (planN >= localHosts.length + (3 * 2)));
+            // Wait a random amount of time between executions to ensure
+            // sequence of query plan iteration does not impact other
+            // query plans.
+            var randomWait = Math.floor((Math.random() * 5) + 1);
+            setTimeout(function () {
+              iteratorNext(null, item.value);
+            }, randomWait);
+          }, function (err, planHosts) {
+            assert.ifError(err);
+
+            // Ensure each host appears only once and at the beginning of the
+            // plan.
+            localHosts.forEach(function (host) {
+              var length = 0;
+              planHosts.slice(0, localHosts.length).forEach(function (planHost) {
+                length += (host === planHost ? 1 : 0);
+              });
+              assert.strictEqual(1, length,
+                host + " appears " + length + " times in "
+                + planHosts + ".  Expected only once.");
+            });
+
+            var foundDc2Hosts = [];
+            var foundDc3Hosts = [];
+            // Ensure that planHosts returned 3 remote hosts from each dc and
+            // that they were unique.
+            planHosts.slice(localHosts.length, localHosts.length + (3 * 2)).forEach(function (host) {
+              var length = 0;
+              dc2Hosts.forEach(function (dc2Host) {
+                length += (host == dc2Host ? 1: 0);
+              });
+
+              assert.ok(length <= 1, host + " found more than once in plan.");
+              if(length == 1) {
+                foundDc2Hosts.push(host);
+              } else {
+                // If host is not in dc2, it should be in dc3.
+                length = 0;
+                dc3Hosts.forEach(function (dc3Host) {
+                  length += (host == dc3Host ? 1 : 0);
+                });
+
+                assert.ok(length <= 1, host + " found more than once in plan.");
+                assert.equal(1, length, host + " is a non-remote host found" +
+                  " in plan advanced past local hosts.");
+                if (length == 1) {
+                  foundDc3Hosts.push(host);
+                }
+              }
+            });
+
+            assert.strictEqual(foundDc2Hosts.length, 3, "Expected 3 hosts" +
+              " from dc2 in plan.");
+            assert.strictEqual(foundDc3Hosts.length, 3, "Expected 3 hosts" +
+              " from dc3 in plan.");
+            next(err, {number: n, plan: planHosts});
+          });
+        });
+      }, function (err, plans) {
+        assert.equal(err, null);
+        // Sort plans in order of creation (they are emitted by completion
+        // which is random).
+        plans.sort(function(a, b) {
+          return a.number - b.number;
+        });
+        assert.strictEqual(times, plans.length);
+
+        // Ensure each permutation happened the expected number of times
+        // (times / permutations) and never consecutively.
+        localPermutations.forEach(function(permutation) {
+          var length = 0;
+          var lastPlan = null;
+          plans.forEach(function(item) {
+            var localOnlyPlan = item.plan.slice(0, localHosts.length);
+            var localOnlyPlanDesc = JSON.stringify(localOnlyPlan);
+            var permutationDesc = JSON.stringify(permutation);
+            length += (localOnlyPlanDesc === permutationDesc ? 1 : 0);
+            assert.notEqual(lastPlan, localOnlyPlanDesc, "last encountered" +
+              " plan is the same as the previous one.\n" + lastPlan + "\n===\n" + localOnlyPlanDesc);
+            lastPlan = localOnlyPlanDesc;
+          });
+          assert.strictEqual(length, times / localPermutations.length);
         });
         done();
       });
@@ -359,6 +476,69 @@ describe('WhiteListPolicy', function () {
     });
   });
 });
+
+function testRoundRobinPlan(times, policy, options, allHosts, expectedHosts, permutations, done) {
+  var client = options ? new Client(options) : null;
+
+  policy.init(client, allHosts, function (err) {
+    assert.ifError(err);
+    async.times(times, function (n, next) {
+      policy.newQueryPlan(null, null, function(err, iterator) {
+        assert.ifError(err);
+        async.timesSeries(expectedHosts.length, function (planN, iteratorNext) {
+          var item = iterator.next();
+          assert.strictEqual(item.done, false);
+          // Wait a random amount of time between executions to ensure
+          // sequence of query plan iteration does not impact other
+          // query plans.
+          var randomWait = Math.floor((Math.random() * 5) + 1);
+          setTimeout(function () {
+            iteratorNext(null, item.value);
+          }, randomWait);
+        }, function(err, planHosts) {
+          assert.ifError(err);
+
+          // Ensure each host appears only once.
+          expectedHosts.forEach(function(host) {
+            var length = 0;
+            planHosts.forEach(function(planHost) {
+              length += (host === planHost ? 1 : 0);
+            });
+            assert.strictEqual(1, length,
+              host + " appears " + length + " times in "
+              + planHosts + ".  Expected only once.");
+          });
+          next(err, {number: n, plan: planHosts});
+        });
+      });
+    }, function (err, plans) {
+      assert.equal(err, null);
+      // Sort plans in order of creation (they are emitted by completion
+      // which is random).
+      plans.sort(function(a, b) {
+        return a.number - b.number;
+      });
+
+      assert.strictEqual(times, plans.length);
+      // Ensure each permutation happened the expected number of times
+      // (times / permutations) and never consecutively.
+      permutations.forEach(function(permutation) {
+        var length = 0;
+        var lastPlan = null;
+        plans.forEach(function(item) {
+          var planDesc = JSON.stringify(item.plan);
+          var permutationDesc = JSON.stringify(permutation);
+          length += (planDesc === permutationDesc ? 1 : 0);
+          assert.notEqual(lastPlan, planDesc, "last encountered plan is the" +
+            " same as the previous one.\n" + lastPlan + "\n===\n" + planDesc);
+          lastPlan = planDesc;
+        });
+        assert.strictEqual(length, times / permutations.length);
+      });
+      done();
+    });
+  });
+}
 
 /**
  * @param {Object} options

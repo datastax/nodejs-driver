@@ -159,7 +159,7 @@ describe('DCAwareRoundRobinPolicy', function () {
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
       originalHosts.set(i.toString(), h);
     }
-    var localHosts = originalHosts.values().filter(function(element, index, arr) {
+    var localHosts = originalHosts.values().filter(function(element) {
       return element.datacenter == 'dc1';
     });
     var times = 50;
@@ -266,15 +266,15 @@ describe('DCAwareRoundRobinPolicy', function () {
       originalHosts.set(i.toString(), h);
     }
 
-    var localHosts = originalHosts.values().filter(function(element, index, arr) {
+    var localHosts = originalHosts.values().filter(function(element) {
       return element.datacenter == 'dc1';
     });
 
-    var dc2Hosts = originalHosts.values().filter(function(element, index, arr) {
+    var dc2Hosts = originalHosts.values().filter(function(element) {
       return element.datacenter == 'dc2';
     });
 
-    var dc3Hosts = originalHosts.values().filter(function(element, index, arr) {
+    var dc3Hosts = originalHosts.values().filter(function(element) {
       return element.datacenter == 'dc3';
     });
 
@@ -381,6 +381,16 @@ describe('DCAwareRoundRobinPolicy', function () {
             lastPlan = localOnlyPlanDesc;
           });
           assert.strictEqual(length, times / localPermutations.length);
+        });
+
+        // Ensure remote part of query plans is non-repeating among plans.
+        var lastPlan = null;
+        plans.forEach(function (item){
+          var remoteOnlyPlan = item.plan.slice(localHosts.length);
+          var remoteOnlyPlanDesc = JSON.stringify(remoteOnlyPlan);
+          assert.notEqual(lastPlan, remoteOnlyPlanDesc, "last encountered" +
+            " remote plan is the same as the previous one.\n" + lastPlan + "\n==\n" + remoteOnlyPlanDesc);
+          lastPlan = remoteOnlyPlanDesc;
         });
         done();
       });

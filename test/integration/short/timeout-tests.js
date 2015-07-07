@@ -159,7 +159,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          async.times(32, function (n, timesNext) {
+          async.times(34, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) return timesNext(err);
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

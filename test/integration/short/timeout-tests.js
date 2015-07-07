@@ -52,6 +52,10 @@ describe('client read timeouts', function () {
           next();
         },
         helper.toTask(helper.ccmHelper.resumeNode, null, 2),
+        function waitForResponse(next) {
+          // Wait for 2 seconds after resume for node to respond.
+          setTimeout(next, 2000);
+        },
         function checkAfterResuming(next) {
           assert.strictEqual(Object.keys(coordinators).length, 2);
           assert.strictEqual(coordinators['1'], true);

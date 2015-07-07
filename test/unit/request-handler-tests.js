@@ -30,6 +30,7 @@ describe('RequestHandler', function () {
   describe('#handleError()', function () {
     it('should retrow on syntax error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.syntaxError;
       handler.retry = function () {
@@ -42,6 +43,7 @@ describe('RequestHandler', function () {
     });
     it('should retrow on unauthorized error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.unauthorized;
       handler.retry = function () {
@@ -54,6 +56,7 @@ describe('RequestHandler', function () {
     });
     it('should retry on overloaded error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.overloaded;
 
@@ -78,6 +81,7 @@ describe('RequestHandler', function () {
         return {decision: retry.RetryPolicy.retryDecision.retry}
       };
       var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
+      handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.writeTimeout;
       var retryCalled = false;
@@ -102,6 +106,7 @@ describe('RequestHandler', function () {
         return {decision: retry.RetryPolicy.retryDecision.retrow};
       };
       var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
+      handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.unavailableException;
       handler.retry = function () {
@@ -140,6 +145,7 @@ describe('RequestHandler', function () {
     });
     it('should retry with a handler when there is an error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
       var retryCounter = 0;
       var connection = {
         prepareOnce: function (q, cb) {
@@ -168,6 +174,7 @@ describe('RequestHandler', function () {
     });
     it('should not retry when there is an query error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
       var connection = {
         prepareOnce: function (q, cb) {
           setImmediate(function () {

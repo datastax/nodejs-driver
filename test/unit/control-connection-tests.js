@@ -166,6 +166,29 @@ describe('ControlConnection', function () {
       });
     });
   });
+  describe('#initOnConnection()', function () {
+    it('should subscribe to current host events first in case IO fails', function (done) {
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var cc = new ControlConnection(options);
+      cc.host = new Host('18.18.18.18', 1, options);
+      cc.log = helper.noop;
+      var fakeError = new Error('fake error');
+      var hostDownCalled;
+      cc.hostDownHandler = function () {
+        hostDownCalled = true;
+      };
+      cc.refreshHosts = function (up, cb) {
+        //for this to fail, there should be a query executing in parallel that resulted in host.setDown()
+        cc.host.setDown();
+        cb(fakeError);
+      };
+      cc.initOnConnection(false, function (err) {
+        assert.strictEqual(err, fakeError);
+        assert.strictEqual(hostDownCalled, true);
+        done();
+      });
+    });
+  });
 });
 
 /**

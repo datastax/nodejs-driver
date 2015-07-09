@@ -559,7 +559,7 @@ describe('Client', function () {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
-          helper.timesLimit(1000, 100, function (i, next) {
+          async.times(1000, function (i, next) {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
               counter++;
               assert.ifError(err);
@@ -573,8 +573,13 @@ describe('Client', function () {
                 return val + (h.isUp() ? 1 : 0);
               }, 0),
               2);
-            assert.strictEqual(hostsDown.length, 1);
-            assert.strictEqual(helper.lastOctetOf(hostsDown[0]), '1');
+            assert.ok(hostsDown.length >= 1, "Expected at least 1 host down" +
+              " event.");
+            //Ensure each down event is for the stopped host.  We may get
+            //multiple down events for the same host on a control connection.
+            hostsDown.forEach(function (downHost) {
+              assert.strictEqual(helper.lastOctetOf(downHost), '1');
+            });
             seriesNext();
           });
         }

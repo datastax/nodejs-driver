@@ -160,7 +160,9 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
-      var connection = newInstance();
+      var options = utils.extend({}, defaultOptions);
+      options.socketOptions.readTimeout = 0;
+      var connection = newInstance(null, null, options);
       var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       async.series([
         connection.open.bind(connection),
@@ -173,7 +175,9 @@ describe('Connection', function () {
       ], done);
     });
     it('should callback the pending queue if the connection is there is a socket error', function (done) {
-      var connection = newInstance();
+      var options = utils.extend({}, defaultOptions);
+      options.socketOptions.readTimeout = 0;
+      var connection = newInstance(null, null, options);
       var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       var killed = false;
       async.series([

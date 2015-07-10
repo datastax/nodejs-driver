@@ -700,17 +700,27 @@ describe('Client', function () {
         },
         helper.toTask(helper.ccmHelper.stopNode, null, 2),
         helper.toTask(helper.ccmHelper.startNode, null, 2),
-        function wait1s(next) {
-          // If C* 1.x, we wait slightly before checking the listener
+        function waitForUp(next) {
+          // We wait slightly before checking host states
           // because the node is marked UP just before the listeners are
           // called since CCM considers the node up as soon as other nodes
           // have seen it up, at which point they would send the
           // notification on the control connection so there is a very small
-          // race here that is not evident at C* 2.x+.
-          if(is1x) {
-            setTimeout(next, 1000);
-          } else {
+          // race here (evident in both 1.2 and 2.2).
+          // If the host was already marked up, we simply proceed.
+          if(hostsWentUp.length >= 1) {
             next();
+          } else {
+            // Set a timeout of 10 seconds to call next at which point
+            // things will likely fail if the hostUp event has not been
+            // surfaced yet.
+            var timeout = setTimeout(next, 10000);
+            client.on('hostUp', function() {
+              // Call next on a timeout since this callback may be invoked
+              // before the one that adds to hostsWentUp.
+              setTimeout(next, 1);
+              clearTimeout(timeout);
+            });
           }
         },
         function checkResults(next) {

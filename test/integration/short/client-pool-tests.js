@@ -4,10 +4,13 @@ var domain = require('domain');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
+var Host = require('../../../lib/host').Host;
 var clientOptions = require('../../../lib/client-options');
 var utils = require('../../../lib/utils');
 var errors = require('../../../lib/errors');
 var types = require('../../../lib/types');
+
+var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -25,7 +28,7 @@ describe('Client', function () {
           //It should be serializable
           JSON.stringify(client.hosts);
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should retrieve the cassandra version of the hosts', function (done) {
@@ -39,7 +42,7 @@ describe('Client', function () {
             h.cassandraVersion.split('.').slice(0, 2).join('.'),
             helper.getCassandraVersion().split('.').slice(0, 2).join('.'));
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should fail if the contact points can not be resolved', function (done) {
@@ -76,14 +79,17 @@ describe('Client', function () {
       client.connect(function (err) {
         if (err) return done(err);
         helper.assertInstanceOf(client.metadata.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
-        done();
+        client.shutdown(done);
       });
     });
     it('should allow multiple parallel calls to connect', function (done) {
       var client = newInstance();
       async.times(100, function (n, next) {
         client.connect(next);
-      }, done);
+      }, function (err) {
+        assert.ifError(err);
+        client.shutdown(done);
+      });
     });
     it('should resolve host names', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
@@ -93,7 +99,7 @@ describe('Client', function () {
         client.hosts.forEach(function (h) {
           assert.notEqual(h.address, 'localhost');
         });
-        done();
+        client.shutdown(done);
       });
     });
     it('should fail if the keyspace does not exists', function (done) {
@@ -106,7 +112,10 @@ describe('Client', function () {
           assert.ok(err.message.toLowerCase().indexOf('keyspace') >= 0, 'Message mismatch, was: ' + err.message);
           next();
         });
-      }, done);
+      }, function (err) {
+        assert.ifError(err);
+        client.shutdown(done);
+      });
     });
     it('should not use contactPoints that are not part of peers', function (done) {
       var contactPoints = helper.baseOptions.contactPoints.slice(0);
@@ -123,7 +132,7 @@ describe('Client', function () {
         assert.notEqual(hosts[2], contactPoints[1] + ':9042');
         assert.notEqual(hosts[1], contactPoints[2] + ':9042');
         assert.notEqual(hosts[2], contactPoints[2] + ':9042');
-        done();
+        client.shutdown(done);
       });
     });
     it('should use the default pooling options according to the protocol version', function (done) {
@@ -142,7 +151,7 @@ describe('Client', function () {
         }, function (err) {
           if (err) return done(err);
           assert.strictEqual(client.hosts.values()[0].pool.connections.length, client.options.pooling.coreConnectionsPerHost[types.distance.local]);
-          done();
+          client.shutdown(done);
         });
       });
     });
@@ -164,7 +173,7 @@ describe('Client', function () {
         }, function (err) {
           if (err) return done(err);
           assert.strictEqual(client.hosts.values()[0].pool.connections.length, client.options.pooling.coreConnectionsPerHost[types.distance.local]);
-          done();
+          client.shutdown(done);
         });
       });
     });
@@ -175,7 +184,55 @@ describe('Client', function () {
       });
       client.connect(function (err) {
         assert.ifError(err);
-        done();
+        client.shutdown(done);
+      });
+    });
+    it('should open connections to all hosts when warmup is set', function (done) {
+      var connectionsPerHost = {};
+      connectionsPerHost[types.distance.local]  = 3;
+      connectionsPerHost[types.distance.remote] = 1;
+      var client = newInstance({ pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}});
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.forEach(function (host) {
+          assert.strictEqual(host.pool.connections.length, 3);
+        });
+        client.shutdown(done);
+      });
+    });
+    it('should only warmup connections for hosts with local distance', function (done) {
+      var lbPolicy = new RoundRobinPolicy();
+      lbPolicy.getDistance = function (host) {
+        //noinspection JSCheckFunctionSignatures
+        var id = helper.lastOctetOf(host.address);
+        if(id == '1') {
+          return types.distance.local;
+        } else if(id == '2') {
+          return types.distance.remote;
+        }
+        return types.distance.ignored;
+      };
+
+      var connectionsPerHost = {};
+      connectionsPerHost[types.distance.local]  = 3;
+      connectionsPerHost[types.distance.remote] = 1;
+      var client = newInstance({
+        policies: { loadBalancing: lbPolicy },
+        pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}
+      });
+      client.connect(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(client.hosts.length, 3);
+        client.hosts.forEach(function (host) {
+          var id = helper.lastOctetOf(host);
+          if(id == '1') {
+            assert.strictEqual(host.pool.connections.length, 3);
+          } else {
+            assert.strictEqual(host.pool.connections.length, 0);
+          }
+        });
+        client.shutdown(done);
       });
     });
   });
@@ -478,6 +535,10 @@ describe('Client', function () {
     it('should failover after a node goes down', function (done) {
       var client = newInstance();
       var hosts = {};
+      var hostsDown = [];
+      client.on('hostDown', function (h) {
+        hostsDown.push(h);
+      });
       async.series([
         function warmUpPool(seriesNext) {
           async.times(100, function (n, next) {
@@ -498,7 +559,7 @@ describe('Client', function () {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
-          helper.timesLimit(1000, 100, function (i, next) {
+          async.times(1000, function (i, next) {
             client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
               counter++;
               assert.ifError(err);
@@ -512,6 +573,13 @@ describe('Client', function () {
                 return val + (h.isUp() ? 1 : 0);
               }, 0),
               2);
+            assert.ok(hostsDown.length >= 1, "Expected at least 1 host down" +
+              " event.");
+            //Ensure each down event is for the stopped host.  We may get
+            //multiple down events for the same host on a control connection.
+            hostsDown.forEach(function (downHost) {
+              assert.strictEqual(helper.lastOctetOf(downHost), '1');
+            });
             seriesNext();
           });
         }
@@ -579,6 +647,127 @@ describe('Client', function () {
             seriesNext();
           });
         }
+      ], done);
+    });
+    it('should warn but not fail when warmup is enable and a node is down', function (done) {
+      async.series([
+        helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
+        function (next) {
+          var warnings = [];
+          var client = newInstance({ pooling: { warmup: true } });
+          client.on('log', function (level, className, message) {
+            if (level !== 'warning' || className !== 'Client') return;
+            warnings.push(message);
+          });
+          client.connect(function (err) {
+            assert.ifError(err);
+            assert.strictEqual(warnings.length, 1);
+            assert.ok(warnings[0].indexOf('pool') >= 0, 'warning does not contains the word pool: ' + warnings[0]);
+            client.shutdown(next);
+          });
+        }
+      ], done);
+    });
+    it('should connect when first contact point is down', function (done) {
+      async.series([
+        helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
+        function (next) {
+          var client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
+          client.connect(function (err) {
+            assert.ifError(err);
+            client.shutdown(next);
+          });
+        }
+      ], done);
+    });
+  });
+  describe('events', function () {
+    //noinspection JSPotentiallyInvalidUsageOfThis
+    this.timeout(600000);
+    var is1x = helper.getCassandraVersion().charAt(0) === '1';
+    beforeEach(helper.ccmHelper.start(2));
+    afterEach(helper.ccmHelper.remove);
+    it('should emit hostUp hostDown', function (done) {
+      var client = newInstance();
+      var hostsWentUp = [];
+      var hostsWentDown = [];
+      async.series([
+        client.connect.bind(client),
+        function addListeners(next) {
+          client.on('hostUp', hostsWentUp.push.bind(hostsWentUp));
+          client.on('hostDown', hostsWentDown.push.bind(hostsWentDown));
+          next();
+        },
+        helper.toTask(helper.ccmHelper.stopNode, null, 2),
+        helper.toTask(helper.ccmHelper.startNode, null, 2),
+        function wait1s(next) {
+          // If C* 1.x, we wait slightly before checking the listener
+          // because the node is marked UP just before the listeners are
+          // called since CCM considers the node up as soon as other nodes
+          // have seen it up, at which point they would send the
+          // notification on the control connection so there is a very small
+          // race here that is not evident at C* 2.x+.
+          if(is1x) {
+            setTimeout(next, 1000);
+          } else {
+            next();
+          }
+        },
+        function checkResults(next) {
+          assert.strictEqual(hostsWentUp.length, 1);
+          helper.assertInstanceOf(hostsWentUp[0], Host);
+          assert.strictEqual(helper.lastOctetOf(hostsWentUp[0]), '2');
+
+          // Special exception for C* 1.x, as it may send duplicate down events
+          // for a single host.
+          if(!is1x) {
+            assert.strictEqual(hostsWentDown.length, 1);
+          }
+          hostsWentDown.forEach(function(downHost) {
+            helper.assertInstanceOf(downHost, Host);
+            assert.strictEqual(helper.lastOctetOf(downHost), '2');
+          });
+          next();
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should emit hostAdd hostRemove', function (done) {
+      var client = newInstance();
+      var hostsAdded = [];
+      var hostsRemoved = [];
+      function trace(message) {
+        return (function (next) {
+          helper.trace(message);
+          next();
+        });
+      }
+      async.series([
+        client.connect.bind(client),
+        function addListeners(next) {
+          client.on('hostAdd', hostsAdded.push.bind(hostsAdded));
+          client.on('hostRemove', hostsRemoved.push.bind(hostsRemoved));
+          next();
+        },
+        trace('Bootstrapping node 3'),
+        helper.toTask(helper.ccmHelper.bootstrapNode, null, 3),
+        trace('Starting newly bootstrapped node 3'),
+        helper.toTask(helper.ccmHelper.startNode, null, 3),
+        trace('Decommissioning node 2'),
+        helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
+        trace('Stopping node 2'),
+        helper.toTask(helper.ccmHelper.stopNode, null, 2),
+        function checkResults(next) {
+          helper.trace('Checking results');
+          assert.strictEqual(hostsAdded.length, 1);
+          assert.strictEqual(hostsRemoved.length, 1);
+          helper.assertInstanceOf(hostsAdded[0], Host);
+          helper.assertInstanceOf(hostsRemoved[0], Host);
+          assert.strictEqual(helper.lastOctetOf(hostsAdded[0]), '3');
+          assert.strictEqual(helper.lastOctetOf(hostsRemoved[0]), '2');
+          next();
+        },
+        client.shutdown.bind(client)
       ], done);
     });
   });

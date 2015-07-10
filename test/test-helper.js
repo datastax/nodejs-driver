@@ -738,3 +738,4 @@ function executeIfVersion (testVersion, func, args) {
 }
 
 module.exports = helper;
+module.exports.RetryMultipleTimes = RetryMultipleTimes;

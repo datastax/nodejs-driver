@@ -183,7 +183,7 @@ client.batch(queries, { prepare: true }, function(err) {
 There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
  to deal with data types that come from other systems in Javascript.
 
-The driver supports all the CQL data types in Apache Cassandra (2.1 and below) even for types that no built-in
+The driver supports all the CQL data types in Apache Cassandra (2.2 and below) even for types that no built-in
 Javascript representation exists, like decimal, varint and bigint. Check the documentation on working with
  [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
@@ -219,16 +219,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 [cassandra]: http://cassandra.apache.org/
 [doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.2/Client.html
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/
-[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/nodejs2Cql3Datatypes.html
-[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/numericalValues.html
-[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/uuids-timeuuids.html
-[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/collections.html
-[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/userDefinedTypes.html
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/faq/njdFaq.html
-[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html
-[retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/common/drivers/reference/tuningPolicies.html#retry-policy
-[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/reference/poolingConfiguration.html
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/
+[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/numericalValues.html
+[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/uuids-timeuuids.html
+[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/collections.html
+[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/userDefinedTypes.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/faq/njdFaq.html
+[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html
+[retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html#retry-policy
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/poolingConfiguration.html
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay

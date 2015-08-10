@@ -149,6 +149,174 @@ describe('types', function () {
       });
     });
   });
+  describe('LocalDate', function () {
+    var LocalDate = types.LocalDate;
+    describe('new LocalDate', function (){
+      it('should refuse to create LocalDate from invalid values.', function () {
+        assert.throws(function () { new types.LocalDate() }, Error);
+        assert.throws(function () { new types.LocalDate(undefined) }, Error);
+        // Outside of ES5 Date range.
+        assert.throws(function () { new types.LocalDate(-271821, 4, 19) }, Error);
+        assert.throws(function () { new types.LocalDate(275760, 9, 14) }, Error);
+        // Outside of LocalDate range.
+        assert.throws(function () { new types.LocalDate(-2147483649) }, Error);
+        assert.throws(function () { new types.LocalDate(2147483648) }, Error);
+
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string in the form of yyyy-mm-dd', function () {
+        assert.strictEqual(new LocalDate(2015, 2, 1).toString(), '2015-02-01');
+        assert.strictEqual(new LocalDate(2015, 12, 13).toString(), '2015-12-13');
+        assert.strictEqual(new LocalDate(101, 12, 14).toString(), '0101-12-14');
+        assert.strictEqual(new LocalDate(-100, 11, 6).toString(), '-0100-11-06');
+      });
+    });
+    describe('#fromBuffer() and #toBuffer()', function () {
+      it('should encode and decode a LocalDate', function () {
+        var value = new LocalDate(2010, 8, 5);
+        var encoded = value.toBuffer();
+        var decoded = LocalDate.fromBuffer(encoded);
+        assert.strictEqual(decoded.toString(), value.toString());
+        assert.ok(decoded.equals(value));
+        assert.ok(value.equals(decoded));
+      });
+    });
+    describe('#fromString()', function () {
+      it('should parse the string representation as yyyy-mm-dd', function () {
+        [
+          ['1200-12-30', 1200, 12, 30],
+          ['1-1-1', 1, 1, 1],
+          ['21-2-1', 21, 2, 1],
+          ['-21-2-1', -21, 2, 1],
+          ['2010-4-29', 2010, 4, 29],
+          ['-199-06-30', -199, 6, 30],
+          ['1201-04-03', 1201, 4, 3],
+          ['-1201-04-03', -1201, 4, 3],
+          ['0-1-1', 0, 1, 1],
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.year, item[1]);
+            assert.strictEqual(value.month, item[2]);
+            assert.strictEqual(value.day, item[3]);
+        });
+      });
+      it('should parse the string representation as since epoch days', function () {
+        [
+          ['0', '1970-01-01'],
+          ['1', '1970-01-02'],
+          ['2147483647', '2147483647'],
+          ['-2147483648', '-2147483648'],
+          ['-719162', '0001-01-01']
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.toString(), item[1]);
+        });
+      });
+      it('should throw when string representation is invalid', function () {
+        [
+          '',
+          '1880-1',
+          '1880-1-z',
+          undefined,
+          null,
+          '  '
+        ].forEach(function (value) {
+            assert.throws(function () {
+              LocalDate.fromString(value);
+            }, Error, 'For value: ' + value);
+        });
+      });
+    });
+  });
+  describe('LocalTime', function () {
+    var LocalTime = types.LocalTime;
+    var Long = types.Long;
+    var values = [
+      //Long value         |     string representation  |   hour/min/sec/nanos
+      ['1000000001',             '00:00:01.000000001',      [0, 0, 1, 1]],
+      ['0',                      '00:00:00',                [0, 0, 0, 0]],
+      ['3600000006001',          '01:00:00.000006001',      [1, 0, 0, 6001]],
+      ['61000000000',            '00:01:01',                [0, 1, 1, 0]],
+      ['610000030000',           '00:10:10.00003',          [0, 10, 10, 30000]],
+      ['52171800000000',         '14:29:31.8',              [14, 29, 31, 800000000]],
+      ['52171800600000',         '14:29:31.8006',           [14, 29, 31, 800600000]]
+    ];
+    describe('new LocalTime', function () {
+      it('should refuse to create LocalTime from invalid values.', function () {
+        // Not a long.
+        assert.throws(function () { new types.LocalTime(23.0) }, Error);
+        // < 0
+        assert.throws(function () { new types.LocalTime(types.Long(-1)) }, Error);
+        // > maxNanos
+        assert.throws(function () { new types.LocalTime(Long.fromString('86400000000000')) }, Error);
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#toJSON()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#fromString()', function () {
+      it('should parse the string representation', function () {
+        values.forEach(function (item) {
+          var val = LocalTime.fromString(item[1]);
+          assert.ok(new LocalTime(Long.fromString(item[0])).equals(val));
+          assert.ok(new LocalTime(Long.fromString(item[0]))
+            .getTotalNanoseconds()
+            .equals(val.getTotalNanoseconds()));
+        });
+      });
+    });
+    describe('#toBuffer() and fromBuffer()', function () {
+      values.forEach(function (item) {
+        var val = new LocalTime(Long.fromString(item[0]));
+        var encoded = val.toBuffer();
+        var decoded = LocalTime.fromBuffer(encoded);
+        assert.ok(decoded.equals(val));
+        assert.strictEqual(val.toString(), decoded.toString());
+      });
+    });
+    describe('#hour #minute #second #nanosecond', function () {
+      it('should get the correct parts', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          var parts = item[2];
+          assert.strictEqual(val.hour, parts[0]);
+          assert.strictEqual(val.minute, parts[1]);
+          assert.strictEqual(val.second, parts[2]);
+          assert.strictEqual(val.nanosecond, parts[3]);
+        });
+      });
+    });
+    describe('fromDate()', function () {
+      it('should use the local time', function () {
+        var date = new Date();
+        var time = LocalTime.fromDate(date, 1);
+        assert.strictEqual(time.hour, date.getHours());
+        assert.strictEqual(time.minute, date.getMinutes());
+        assert.strictEqual(time.second, date.getSeconds());
+        assert.strictEqual(time.nanosecond, date.getMilliseconds() * 1000000 + 1);
+      });
+    });
+    describe('fromMilliseconds', function () {
+      it('should default nanoseconds to 0 when not provided', function () {
+        var time = LocalTime.fromMilliseconds(1);
+        assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)))
+      });
+    });
+  });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];

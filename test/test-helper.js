@@ -217,6 +217,15 @@ var helper = {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+  assertContains: function (value, searchValue, caseInsensitive) {
+    assert.strictEqual(typeof value, 'string');
+    var message = 'String: "%s" does not contain "%s"';
+    if (caseInsensitive !== false) {
+      value = value.toLowerCase();
+      searchValue = searchValue.toLowerCase();
+    }
+    assert.ok(value.indexOf(searchValue) >= 0, util.format(message, value, searchValue));
+  },
   /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client
@@ -350,6 +359,7 @@ var helper = {
   },
   Map: MapPolyFill,
   Set: SetPolyFill,
+  WhiteListPolicy: WhiteListPolicy,
   /**
    * Determines if test tracing is enabled
    */
@@ -362,22 +372,25 @@ var helper = {
     }
     console.log('\t...' + util.format.apply(null, arguments));
   },
+
   /**
-   * Version dependant it() method for mocha test case
+   * Version dependent it() method for mocha test case
    * @param {String} testVersion Minimum version of Cassandra needed for this test
    * @param {String} testCase Test case name
    * @param {Function} func
    */
   vit: function (testVersion, testCase, func) {
-    var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-    var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
-    v = testVersion.split('.');
-    var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
-    if (currentVersion >= minimumVersion) {
-      //Mocha it() method
-      //noinspection JSUnresolvedFunction
-      it(testCase, func);
-    }
+    executeIfVersion(testVersion, it, [testCase, func]);
+  },
+
+  /**
+   * Version dependent describe() method for mocha test case
+   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} title Title of the describe section.
+   * @param {Function} func
+   */
+  vdescribe: function (testVersion, title, func) {
+    executeIfVersion(testVersion, describe, [title, func]);
   },
 
   /**
@@ -391,6 +404,18 @@ var helper = {
     var address = typeof host == "string" ? host : host.address;
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
+  },
+  /**
+   * Returns a function, that when invoked shutdowns the client and callbacks
+   * @param {Client} client
+   * @param {Function} callback
+   * @returns {Function}
+   */
+  finish: function (client, callback) {
+    return (function (err) {
+      assert.ifError(err);
+      client.shutdown(callback);
+    });
   },
 
   /**
@@ -432,7 +457,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
   options = options || {};
   var version = helper.getCassandraVersion();
-  helper.trace('Starting test C* cluster v%s with %s nodes', version, nodeLength);
+  helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   async.series([
     function (next) {
       //it wont hurt to remove
@@ -443,6 +468,10 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       var create = ['create', 'test', '-v', version];
+      if (process.env.TEST_CASSANDRA_DIR) {
+        create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
+        helper.trace('With', create[2]);
+      }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }
@@ -471,7 +500,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      self.exec(['start', '--wait-for-binary-proto'], helper.wait(options.sleep, next));
+      var start = ['start', '--wait-for-binary-proto'];
+      if (util.isArray(options.jvmArgs)) {
+        options.jvmArgs.forEach(function (arg) {
+          start.push('--jvm_arg', arg);
+        }, this);
+        helper.trace('With jvm args', options.jvmArgs);
+      }
+      self.exec(start, helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {
@@ -649,4 +685,57 @@ RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo) {
   return this.retryResult();
 };
 
+/**
+ * For test purposes, filters the child policy by last octet of the ip address
+ * @param {Array} list
+ * @param [childPolicy]
+ * @constructor
+ */
+function WhiteListPolicy(list, childPolicy) {
+  this.list = list;
+  this.childPolicy = childPolicy || new policies.loadBalancing.RoundRobinPolicy();
+}
+
+util.inherits(WhiteListPolicy, policies.loadBalancing.LoadBalancingPolicy);
+
+WhiteListPolicy.prototype.init = function (client, hosts, callback) {
+  this.childPolicy.init(client, hosts, callback);
+};
+
+WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  var list = this.list;
+  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
+    callback(err, {
+      next: function () {
+        var item = iterator.next();
+        while (!item.done) {
+          //noinspection JSCheckFunctionSignatures
+          if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
+            break;
+          }
+          item = iterator.next();
+        }
+        return item;
+      }
+    });
+  });
+};
+
+/**
+ * Conditionally executes func if testVersion is <= the current cassandra version.
+ * @param {String} testVersion Minimum version of Cassandra needed.
+ * @param {Function} func The function to conditionally execute.
+ * @param {Array} args the arguments to apply to the function.
+ */
+function executeIfVersion (testVersion, func, args) {
+  var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+  var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
+  v = testVersion.split('.');
+  var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
+  if (currentVersion >= minimumVersion) {
+    func.apply(this, args);
+  }
+}
+
 module.exports = helper;
+module.exports.RetryMultipleTimes = RetryMultipleTimes;

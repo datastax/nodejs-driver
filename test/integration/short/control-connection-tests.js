@@ -65,21 +65,30 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to STATUS_CHANGE events', function (done) {
       var cc = newInstance();
-      cc.init(function () {
-        helper.ccmHelper.exec(['node2', 'stop'], function (err) {
-          if (err) return done(err);
-          setTimeout(function () {
-            var hosts = cc.hosts.slice(0);
-            assert.strictEqual(hosts.length, 2);
-            var countUp = hosts.reduce(function (value, host) {
-              value += host.isUp() ? 1 : 0;
-              return value;
-            }, 0);
-            assert.strictEqual(countUp, 1);
-            done();
-          }, 3000);
-        });
-      });
+      async.series([
+        cc.init.bind(cc),
+        function (next) {
+          //wait for all initial events
+          setTimeout(next, 5000);
+        },
+        function (next) {
+          helper.ccmHelper.exec(['node2', 'stop'], next);
+        },
+        function (next) {
+          //wait for the status event to be received
+          setTimeout(next, 5000);
+        },
+        function (next) {
+          var hosts = cc.hosts.slice(0);
+          assert.strictEqual(hosts.length, 2);
+          var countUp = hosts.reduce(function (value, host) {
+            value += host.isUp() ? 1 : 0;
+            return value;
+          }, 0);
+          assert.strictEqual(countUp, 1);
+          next();
+        }
+      ], done);
     });
     it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
       var cc = newInstance();

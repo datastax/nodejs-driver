@@ -218,6 +218,46 @@ describe('TokenAwarePolicy', function () {
       helper.ccmHelper.remove
     ], done);
   });
+  it('should target the correct partition', function (done) {
+    var keyspace = 'ks1';
+    var table = 'table1';
+    async.series([
+      helper.ccmHelper.start('3'),
+      function createKs(next) {
+        var client = new Client(helper.baseOptions);
+        client.execute(helper.createKeyspaceCql(keyspace, 1), helper.waitSchema(client, next));
+      },
+      function createTable(next) {
+        var client = new Client(helper.baseOptions);
+        var query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
+        client.execute(query, helper.waitSchema(client, next));
+      },
+      function testCase(next) {
+        var client = new Client({
+          policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy())},
+          keyspace: keyspace,
+          contactPoints: helper.baseOptions.contactPoints
+        });
+        async.timesSeries(10, function (n, timesNext) {
+          var id = (n % 10) + 1;
+          var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
+          client.execute(query, [id, id], { traceQuery: true, prepare: true}, function (err, result) {
+            assert.ifError(err);
+            var coordinator = result.info.queriedHost;
+            var traceId = result.info.traceId;
+            client.metadata.getTrace(traceId, function (err, trace) {
+              assert.ifError(err);
+              trace.events.forEach(function (event) {
+                assert.strictEqual(helper.lastOctetOf(event['source'].toString()), helper.lastOctetOf(coordinator.toString()));
+              });
+              timesNext();
+            });
+          });
+        }, next);
+      },
+      helper.ccmHelper.remove
+    ], done);
+  });
 });
 describe('WhiteListPolicy', function () {
   this.timeout(180000);

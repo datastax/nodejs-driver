@@ -236,6 +236,29 @@ describe('Client', function () {
         }
       ], done);
     });
+    vit('2.2', 'should accept unset as a valid value', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      async.series([
+        client.connect.bind(client),
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table);
+          client.execute(query, [id, 'sample unset', types.unset], next);
+        },
+        function select(next) {
+          var query = util.format('SELECT id, text_sample, double_sample FROM %s WHERE id = ?', table);
+          client.execute(query, [id], function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 1);
+            var row = result.first();
+            assert.strictEqual(row['text_sample'], 'sample unset');
+            assert.strictEqual(row['double_sample'], null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     it('should handle several concurrent executes while the pool is not ready', function (done) {
       var client = newInstance({pooling: {
         coreConnectionsPerHost: {
@@ -411,6 +434,33 @@ describe('Client', function () {
         done();
       });
     });
+    vit('2.2', 'should include the warning in the ResultSet', function (done) {
+      var client = newInstance();
+      var loggedMessage = false;
+      client.on('log', function (level, className, message) {
+        if (loggedMessage) return;
+        if (level !== 'warning') return;
+        message = message.toLowerCase();
+        if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
+          loggedMessage = true;
+        }
+      });
+      var query = util.format(
+        "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
+        table,
+        types.Uuid.random(),
+        utils.stringRepeat('a', 5 * 1025)
+      );
+      client.execute(query, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info.warnings);
+        assert.strictEqual(result.info.warnings.length, 1);
+        helper.assertContains(result.info.warnings[0], 'batch');
+        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.ok(loggedMessage);
+        client.shutdown(done);
+      });
+    });
     describe('with udt and tuple', function () {
       var sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
@@ -546,6 +596,37 @@ describe('Client', function () {
           }
         ], done);
       });
+      vit('2.2', 'should allow insertions as json', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var o = {
+          id: types.Uuid.random(),
+          address_col: {
+            street: 'whatever',
+            phones: [
+              { 'alias': 'main', 'number': '0000212123'}
+            ]}
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = 'INSERT INTO tbl_udts JSON ?';
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = 'SELECT * FROM tbl_udts WHERE id = ?';
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.ok(row['address_col']);
+              assert.strictEqual(row['address_col'].street, o.address_col.street);
+              assert.strictEqual(row['address_col'].toString(), o.address_col.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
     });
     describe('with named parameters', function () {
       vit('2.1', 'should allow named parameters', function (done) {
@@ -574,6 +655,202 @@ describe('Client', function () {
           assert.ifError(err);
           verifyRow(table, values.id, 'text_sample, list_sample2', [values.mytext, values.myLIST], done);
         });
+      });
+    });
+    describe('with smallint and tinyint', function () {
+      var sampleId = types.Uuid.random();
+      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample, text_sample) VALUES (%s, %s, %s, %s)';
+      var selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)'),
+          helper.toTask(client.execute, client, util.format(
+            insertQuery, sampleId, 0x0200, 2, "'two'"))
+        ], done);
+      });
+      vit('2.2', 'should retrieve smallint and tinyint values as Number', function (done) {
+        var query = util.format(selectQuery, sampleId);
+        var client = newInstance({ keyspace: keyspace });
+        client.execute(query, function (err, result) {
+          assert.ifError(err);
+          assert.ok(result);
+          assert.ok(result.rowLength);
+          var row = result.first();
+          assert.ok(row);
+          assert.strictEqual(row['text_sample'], 'two');
+          assert.strictEqual(row['smallint_sample'], 0x0200);
+          assert.strictEqual(row['tinyint_sample'], 2);
+          done();
+        });
+      });
+      vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var query = util.format(insertQuery, '?', '?', '?', '?');
+        var id = types.Uuid.random();
+        client.execute(query, [id, 10, 11, 'another text'], { hints: [null, 'smallint', 'tinyint']}, function (err) {
+          assert.ifError(err);
+          client.execute(util.format(selectQuery, id), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.rowLength);
+            var row = result.first();
+            assert.ok(row);
+            assert.strictEqual(row['text_sample'], 'another text');
+            assert.strictEqual(row['smallint_sample'], 10);
+            assert.strictEqual(row['tinyint_sample'], 11);
+            done();
+          });
+        });
+      });
+    });
+    describe('with date and time types', function () {
+      var LocalDate = types.LocalDate;
+      var LocalTime = types.LocalTime;
+      var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_datetimes (id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)'),
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
+        var values = [
+          [types.Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
+          [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
+          [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
+          [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
+          [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
+        ];
+        var client = newInstance({ keyspace: keyspace });
+        async.eachSeries(values, function (params, next) {
+          client.execute(insertQuery, params, function (err) {
+            assert.ifError(err);
+            client.execute(selectQuery, [params[0]], function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.rowLength);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['id'].toString(), params[0].toString());
+              helper.assertInstanceOf(row['date_sample'], LocalDate);
+              assert.strictEqual(row['date_sample'].toString(), params[1].toString());
+              helper.assertInstanceOf(row['time_sample'], LocalTime);
+              assert.strictEqual(row['time_sample'].toString(), params[2].toString());
+              next();
+            });
+          });
+        }, helper.finish(client, done));
+      });
+    });
+    describe('with json support', function () {
+      before(function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var query =
+          'CREATE TABLE tbl_json (' +
+          '  id uuid PRIMARY KEY,' +
+          '  tid timeuuid,' +
+          '  dec decimal,' +
+          '  vi varint,' +
+          '  bi bigint,' +
+          '  ip inet,' +
+          '  tup frozen<tuple<int, int>>,' +
+          '  d date,' +
+          '  t time)';
+        client.execute(query, function (err) {
+          assert.ifError(err);
+          client.shutdown(done);
+        });
+      });
+      vit('2.2', 'should allow insert of all ECMAScript types as json', function (done) {
+        var client = newInstance();
+        var o = {
+          id: types.Uuid.random(),
+          text_sample: 'hello json',
+          int_sample: 100,
+          float_sample: 1.2000000476837158,
+          double_sample: 1/3,
+          boolean_sample: true,
+          timestamp_sample: new Date(1432889533534),
+          map_sample: { a: 'one', z: 'two'},
+          list_sample: ['b', 'a', 'b', 'a', 's', 'o', 'n', 'i', 'c', 'o', 's'],
+          list_sample2: [100, 100, 1, 2],
+          set_sample: ['a', 'b', 'x', 'zzzz']
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = util.format('INSERT INTO %s JSON ?', table);
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['text_sample'], o.text_sample);
+              assert.strictEqual(row['int_sample'], o.int_sample);
+              assert.strictEqual(row['float_sample'], o.float_sample);
+              assert.strictEqual(row['double_sample'], o.double_sample);
+              assert.strictEqual(row['boolean_sample'], o.boolean_sample);
+              assert.strictEqual(row['timestamp_sample'].getTime(), o.timestamp_sample.getTime());
+              assert.ok(row['map_sample']);
+              assert.strictEqual(row['map_sample'].a, o.map_sample.a);
+              assert.strictEqual(row['map_sample'].z, o.map_sample.z);
+              assert.strictEqual(row['list_sample'].toString(), o.list_sample.toString());
+              assert.strictEqual(row['list_sample2'].toString(), o.list_sample2.toString());
+              assert.strictEqual(row['set_sample'].toString(), o.set_sample.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should allow insert of all non - ECMAScript types as json', function (done) {
+        var client = newInstance({ keyspace: keyspace });
+        var o = {
+          id:   types.Uuid.random(),
+          tid:  types.TimeUuid.now(),
+          dec:  new types.BigDecimal(113, 2),
+          vi:   types.Integer.fromString('903234243231132008846'),
+          bi:   types.Long.fromString('2305843009213694123'),
+          ip:   types.InetAddress.fromString('12.10.126.11'),
+          tup:  new types.Tuple(1, 300),
+          d:    new types.LocalDate(2015, 6, 1),
+          t:    new types.LocalTime.fromMilliseconds(10160088, 123)
+        };
+        async.series([
+          client.connect.bind(client),
+          function insert(next) {
+            var query = 'INSERT INTO tbl_json JSON ?';
+            client.execute(query, [JSON.stringify(o)], next);
+          },
+          function select(next) {
+            var query = 'SELECT * FROM tbl_json WHERE id = ?';
+            client.execute(query, [o.id], function (err, result) {
+              assert.ifError(err);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['tid'].toString(), o.tid.toString());
+              assert.strictEqual(row['dec'].toString(), o.dec.toString());
+              assert.strictEqual(row['vi'].toString(), o.vi.toString());
+              assert.strictEqual(row['bi'].toString(), o.bi.toString());
+              assert.strictEqual(row['ip'].toString(), o.ip.toString());
+              assert.strictEqual(row['tup'].toString(), o.tup.toString());
+              assert.strictEqual(row['tup'].get(0), o.tup.get(0));
+              assert.strictEqual(row['tup'].get(1), o.tup.get(1));
+              assert.strictEqual(row['d'].toString(), o.d.toString());
+              assert.strictEqual(row['t'].toString(), o.t.toString());
+              next();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
       });
     });
   });

@@ -29,9 +29,10 @@ describe('encoder', function () {
       assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(new types.InetAddress(new Buffer([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
       assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
+      assertGuessed(new types.LocalDate(2010, 4, 29), dataTypes.date, 'Guess type for a date value failed');
+      assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
-
     function assertGuessed(value, expectedType, message) {
       var type = encoder.guessDataType(value);
       if (type === null) {
@@ -322,6 +323,22 @@ describe('encoder', function () {
         encoded = encoder.encode(value, 'map<inet, text>');
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.inet}, {code: dataTypes.text}]});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+        value = {};
+        value['12:59:56'] = 'time1';
+        value['15:01:02.1234'] = 'time2';
+        value['06:01:02.000000213'] = 'time3';
+        encoded = encoder.encode(value, 'map<time, text>');
+        decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.time}, {code: dataTypes.text}]});
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
+
+        value = {};
+        value['2015-01-30'] = 'date1';
+        value['1999-11-12'] = 'date2';
+        value['-0001-11-12'] = 'date3';
+        encoded = encoder.encode(value, 'map<date, text>');
+        decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.date}, {code: dataTypes.text}]});
+        assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
       it(util.format('should encode and decode list<int> for protocol v%d', version), function () {
         var value = [1, 2, 3, 4];
@@ -504,6 +521,118 @@ describe('encoder', function () {
       assert.strictEqual(decoded.length, 2);
       assert.strictEqual(decoded.get(0), 'one');
       assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
+    });
+    it('should encode/decode LocalDate as date', function () {
+      var encoder = new Encoder(4, {});
+      var type = {code: dataTypes.date};
+
+      var year1day1 = new Date(Date.UTC(1970, 0, 1));
+      year1day1.setUTCFullYear(1);
+
+      var year0day1 = new Date(Date.UTC(1970, 0, 1));
+      year0day1.setUTCFullYear(0);
+
+      var dates = [
+        // At epoch.
+        {ldate: new types.LocalDate(1970, 1, 1), string: '1970-01-01', date: new Date(Date.UTC(1970, 0, 1))},
+        // 10 days after epoch.
+        {ldate: new types.LocalDate(1970, 1, 11), string: '1970-01-11', date: new Date(Date.UTC(1970, 0, 11))},
+        // -10 days from epoch.
+        {ldate: new types.LocalDate(1969, 12, 22), string: '1969-12-22', date: new Date(Date.UTC(1969, 11, 22))},
+        // Year after 0.
+        {ldate: new types.LocalDate(1, 1, 1), string: '0001-01-01', date: year1day1},
+        // 0th year.
+        {ldate: new types.LocalDate(0, 1, 1), string: '0000-01-01', date: year0day1},
+        // Year before 0.
+        {ldate: new types.LocalDate(-1, 1, 1), string: '-0001-01-01', date: new Date(Date.UTC(-1, 0, 1))},
+        // Minimum possible ES5 date.
+        {ldate: new types.LocalDate(-271821, 4, 20), string: '-271821-04-20', date: new Date(Date.UTC(-271821, 3, 20))},
+        // Maximum possible ES5 date.
+        {ldate: new types.LocalDate(275760, 9, 13), string: '275760-09-13', date: new Date(Date.UTC(275760, 8, 13))},
+        // Minimum possible C* date.
+        {ldate: new types.LocalDate(-2147483648), string: '-2147483648', date: new Date(NaN)},
+        // Maximum possible C* date.
+        {ldate: new types.LocalDate(2147483647), string: '2147483647', date: new Date(NaN)}
+      ];
+
+      dates.forEach(function(item) {
+        var encoded = encoder.encode(item.ldate, type);
+        var decoded = encoder.decode(encoded, type);
+        helper.assertInstanceOf(decoded, types.LocalDate);
+        assert.ok(decoded.equals(item.ldate));
+        assert.strictEqual(decoded.toString(), item.string, "String mismatch for " + item.date);
+        if(isNaN(item.date.getTime())) {
+          assert.ok(isNaN(decoded.date.getTime()));
+        }
+        else {
+          assert.equal(decoded.date.getTime(), item.date.getTime(), decoded.date + " != " + item.date);
+        }
+    });
+    });
+    it('should refuse to encode invalid values as LocalDate.', function () {
+      var encoder = new Encoder(4, {});
+      var type = {code: dataTypes.date};
+      // Non Date/String/LocalDate
+      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
+      assert.throws(function () { encoder.encode('zzz', type)}, TypeError);
+      assert.throws(function () { encoder.encode('', type)}, TypeError);
+    });
+    it('should encode/decode LocalTime as time', function () {
+      var encoder = new Encoder(3, {});
+      var type = {code: dataTypes.time};
+      [
+        //Long value         |     string representation
+        ['2000000501',             '00:00:02.000000501'],
+        ['0',                      '00:00:00'],
+        ['3600000006001',          '01:00:00.000006001'],
+        ['61000000000',            '00:01:01'],
+        ['610000136000',           '00:10:10.000136'],
+        ['52171800000000',         '14:29:31.8'],
+        ['52171800600000',         '14:29:31.8006']
+      ].forEach(function (item) {
+          var encoded = encoder.encode(new types.LocalTime(types.Long.fromString(item[0])), type);
+          var decoded = encoder.decode(encoded, type);
+          helper.assertInstanceOf(decoded, types.LocalTime);
+          assert.strictEqual(decoded.toString(), item[1]);
+      });
+    });
+    it('should refuse to encode invalid values as LocalTime.', function () {
+      var encoder = new Encoder(4, {});
+      var type = {code: dataTypes.time};
+      // Negative value string.
+      assert.throws(function () { encoder.encode('-1:00:00', type)}, TypeError);
+      // Non string/LocalTime value.
+      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
+    });
+  });
+  describe('#encode()', function () {
+    it('should return null when value is null', function () {
+      var encoder = new Encoder(2, {});
+      assert.strictEqual(encoder.encode(null), null);
+    });
+    it('should return unset when value is unset', function () {
+      var encoder = new Encoder(4, {});
+      assert.strictEqual(encoder.encode(types.unset), types.unset);
+    });
+    it('should return null when value is undefined', function () {
+      var encoder = new Encoder(2, {});
+      assert.strictEqual(encoder.encode(undefined), null);
+    });
+    it('should return unset when value is undefined and flag set', function () {
+      var encoder = new Encoder(4, { encoding: { useUndefinedAsUnset: true}});
+      assert.strictEqual(encoder.encode(undefined), types.unset);
+    });
+    it('should throw TypeError when value is unset with low protocol version', function () {
+      var encoder = new Encoder(2, {});
+      assert.throws(function () {
+        encoder.encode(types.unset);
+      }, TypeError);
+    });
+    it('should throw TypeError when value is undefined and flag set with low protocol version', function () {
+      var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
+      assert.throws(function () {
+        encoder.encode(undefined);
+      }, TypeError);
     });
   });
   describe('#setRoutingKey()', function () {

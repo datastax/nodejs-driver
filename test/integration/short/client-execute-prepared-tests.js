@@ -15,11 +15,12 @@ describe('Client', function () {
     var commonKs = helper.getRandomName('ks');
     var commonTable = commonKs + '.' + helper.getRandomName('table');
     before(function (done) {
-      var client = newInstance();
+      var client = newInstance({ pooling: { heartBeatInterval: 0}});
       async.series([
         helper.ccmHelper.start(3),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
-        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable))
+        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable)),
+        client.shutdown.bind(client)
       ], done);
     });
     after(helper.ccmHelper.remove);
@@ -485,6 +486,29 @@ describe('Client', function () {
         }
       ], done);
     });
+    vit('2.2', 'should include the warning in the ResultSet', function (done) {
+      var client = newInstance();
+      var loggedMessage = false;
+      client.on('log', function (level, className, message) {
+        if (loggedMessage) return;
+        if (level !== 'warning') return;
+        message = message.toLowerCase();
+        if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
+          loggedMessage = true;
+        }
+      });
+      var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?) APPLY BATCH", commonTable);
+      var params = [types.Uuid.random(), types.TimeUuid.now(), utils.stringRepeat('b', 5 * 1025)];
+      client.execute(query, params, {prepare: true}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info.warnings);
+        assert.strictEqual(result.info.warnings.length, 1);
+        helper.assertContains(result.info.warnings[0], 'batch');
+        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.ok(loggedMessage);
+        client.shutdown(done);
+      });
+    });
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
@@ -555,6 +579,131 @@ describe('Client', function () {
               next();
             });
           }
+        ], done);
+      });
+    });
+    describe('with smallint and tinyint types', function () {
+      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, smallint_sample, tinyint_sample FROM tbl_smallints WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: commonKs });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)')
+        ], done);
+      });
+      vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
+        var values = [
+          [types.Uuid.random(), 1, 1],
+          [types.Uuid.random(), 0, 0],
+          [types.Uuid.random(), -1, -2],
+          [types.Uuid.random(), -130, -128]
+        ];
+        var client = newInstance({ keyspace: commonKs });
+        async.eachSeries(values, function (params, next) {
+          client.execute(insertQuery, params, { prepare: true}, function (err) {
+            assert.ifError(err);
+            client.execute(selectQuery, [params[0]], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.rowLength);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['id'].toString(), params[0].toString());
+              assert.strictEqual(row['smallint_sample'], params[1]);
+              assert.strictEqual(row['tinyint_sample'], params[2]);
+              next();
+            });
+          });
+        }, done);
+      });
+    });
+    describe('with date and time types', function () {
+      var LocalDate = types.LocalDate;
+      var LocalTime = types.LocalTime;
+      var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
+      var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
+      before(function (done) {
+        var client = newInstance({ keyspace: commonKs });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_datetimes (id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)'),
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
+        var values = [
+          [types.Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
+          [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
+          [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
+          [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
+          [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
+        ];
+        var client = newInstance({ keyspace: commonKs });
+        async.eachSeries(values, function (params, next) {
+          client.execute(insertQuery, params, { prepare: true}, function (err) {
+            assert.ifError(err);
+            client.execute(selectQuery, [params[0]], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.rowLength);
+              var row = result.first();
+              assert.ok(row);
+              assert.strictEqual(row['id'].toString(), params[0].toString());
+              helper.assertInstanceOf(row['date_sample'], LocalDate);
+              assert.strictEqual(row['date_sample'].toString(), params[1].toString());
+              helper.assertInstanceOf(row['time_sample'], LocalTime);
+              assert.strictEqual(row['time_sample'].toString(), params[2].toString());
+              next();
+            });
+          });
+        }, helper.finish(client, done));
+      });
+    });
+    describe('with unset', function () {
+      vit('2.2', 'should allow unset as a valid value', function (done) {
+        var client1 = newInstance();
+        var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
+        var id1 = types.Uuid.random();
+        var id2 = types.Uuid.random();
+        async.series([
+          client1.connect.bind(client1),
+          client2.connect.bind(client2),
+          function insert1(next) {
+            var query = util.format('INSERT INTO %s (id1, id2, text_sample, map_sample) VALUES (?, ?, ?, ?)', commonTable);
+            client1.execute(query, [id1, types.TimeUuid.now(), 'test unset', types.unset], { prepare: true}, next);
+          },
+          function select1(next) {
+            var query = util.format('SELECT id1, id2, text_sample, map_sample FROM %s WHERE id1 = ?', commonTable);
+            client1.execute(query, [id1], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var row = result.first();
+              assert.strictEqual(row['id1'].toString(), id1.toString());
+              assert.strictEqual(row['text_sample'], 'test unset');
+              assert.strictEqual(row['map_sample'], null);
+              next();
+            });
+          },
+          function insert2(next) {
+            //use undefined
+            var query = util.format('INSERT INTO %s (id1, id2, text_sample, map_sample) VALUES (?, ?, ?, ?)', commonTable);
+            client2.execute(query, [id2, types.TimeUuid.now(), 'test unset 2', undefined], { prepare: true}, next);
+          },
+          function select2(next) {
+            var query = util.format('SELECT id1, id2, text_sample, map_sample FROM %s WHERE id1 = ?', commonTable);
+            client2.execute(query, [id2], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var row = result.first();
+              assert.strictEqual(row['id1'].toString(), id2.toString());
+              assert.strictEqual(row['text_sample'], 'test unset 2');
+              assert.strictEqual(row['map_sample'], null);
+              next();
+            });
+          },
+          client1.shutdown.bind(client1),
+          client2.shutdown.bind(client2)
         ], done);
       });
     });

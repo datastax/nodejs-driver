@@ -509,6 +509,24 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+    it('should support hardcoded parameters that are part of the routing key', function (done) {
+      var client = newInstance({ keyspace: commonKs});
+      var table = helper.getRandomName('tbl');
+      var createQuery = util.format('CREATE TABLE %s (a int, b int, c int, d int, ' +
+        'PRIMARY KEY ((a, b, c)))', table);
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, createQuery),
+        function (next) {
+          var query = util.format('SELECT * FROM %s WHERE c = ? AND a = ? AND b = 0', table);
+          client.execute(query, [1, 1], { prepare: true}, function (err) {
+            assert.ifError(err);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });

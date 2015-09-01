@@ -118,6 +118,20 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should include the coordinator in the error object', function (done) {
+      var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
+      var responseError = new errors.ResponseError();
+      responseError.code = types.responseErrorCodes.readTimeout;
+      handler.retry = function () {
+        assert.fail();
+      };
+      handler.handleError(responseError, function (err) {
+        assert.strictEqual(err.coordinator, handler.host.address);
+        done();
+      });
+    });
+
   });
   describe('#prepareMultiple()', function () {
     it('should prepare each query serially and callback with the response', function (done) {

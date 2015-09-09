@@ -17,19 +17,24 @@ var Encoder = require('../../lib/encoder');
 describe('Metadata', function () {
   describe('#getReplicas()', function () {
     it('should return depending on the rf and ring size with simple strategy', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions());
+      var cc = {
+        query: function (q, cb) {
+          cb(null, { rows: [{
+            'keyspace_name': 'dummy',
+            'strategy_class': 'SimpleStrategy',
+            'strategy_options': '{"replication_factor": 3}'
+          }]});
+        }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0]};
       metadata.tokenizer.compare = function (a, b) {if (a > b) return 1; if (a < b) return -1; return 0};
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
-      //noinspection JSCheckFunctionSignatures
-      metadata.setKeyspaces({ rows: [{
-        'keyspace_name': 'dummy',
-        'strategy_class': 'SimpleStrategy',
-        'strategy_options': '{"replication_factor": 3}'
-      }]});
+      metadata.log = helper.noop;
+      metadata.refreshKeyspaces();
       var replicas = metadata.getReplicas('dummy', new Buffer([0]));
       assert.ok(replicas);
       //Primary replica plus the 2 next tokens
@@ -46,8 +51,17 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[2], '1');
     });
     it('should return depending on the dc rf with network topology', function () {
+      var cc = {
+        query: function (q, cb) {
+          cb(null, {rows: [{
+            'keyspace_name': 'dummy',
+            'strategy_class': 'NetworkTopologyStrategy',
+            'strategy_options': '{"dc1": "3", "dc2": "1"}'
+          }]});
+        }
+      };
       var options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options);
+      var metadata = new Metadata(options, cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0]};
@@ -61,12 +75,8 @@ describe('Metadata', function () {
         h.datacenter = 'dc' + ((i % 2) + 1);
         metadata.primaryReplicas[i.toString()] = h;
       }
-      //noinspection JSCheckFunctionSignatures
-      metadata.setKeyspaces({rows: [{
-        'keyspace_name': 'dummy',
-        'strategy_class': 'NetworkTopologyStrategy',
-        'strategy_options': '{"dc1": "3", "dc2": "1"}'
-      }]});
+      metadata.log = helper.noop;
+      metadata.refreshKeyspaces();
       var replicas = metadata.getReplicas('dummy', new Buffer([0]));
       assert.ok(replicas);
       //3 replicas from dc1 and 1 replica from dc2

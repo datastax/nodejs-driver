@@ -193,7 +193,7 @@ describe('types', function () {
           ['-199-06-30', -199, 6, 30],
           ['1201-04-03', 1201, 4, 3],
           ['-1201-04-03', -1201, 4, 3],
-          ['0-1-1', 0, 1, 1],
+          ['0-1-1', 0, 1, 1]
         ].forEach(function (item) {
             var value = LocalDate.fromString(item[0]);
             assert.strictEqual(value.year, item[1]);
@@ -466,7 +466,7 @@ describe('types', function () {
       var row = new types.Row(columns);
       row['col10'] = 'val1';
       row['col2'] = 2;
-      assert.strictEqual(util.inspect(row), util.inspect({col10: 'val1', col2: 2}));
+      helper.assertContains(util.inspect(row), util.inspect({col10: 'val1', col2: 2}));
     });
   });
   describe('uuid() backward-compatibility', function () {

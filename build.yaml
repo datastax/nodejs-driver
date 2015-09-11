@@ -1,0 +1,24 @@
+nodejs:
+  - "0.10"
+  - "0.12"
+  - "iojs-3"
+  - "4.0"
+os:
+  - ubuntu/trusty64
+cassandra:
+  - 1.2
+  - 2.0
+  - 2.1
+  - 2.2
+build:
+  - type: envinject
+    properties: |
+      TEST_CASSANDRA_VERSION=$CCM_CASSANDRA_VERSION
+      JAVA_HOME=$CCM_JAVA_HOME
+      CCM_PATH=$HOME/ccm
+      JUNIT_REPORT_STACK=1
+      JUNIT_REPORT_PATH=.
+  - npm: install
+  - npm: run-script ci
+    graceful: true
+  - xunit: "*.xml"

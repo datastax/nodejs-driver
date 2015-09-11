@@ -26,7 +26,8 @@
   },
   "devDependencies": {
     "mocha": ">= 1.14.0",
-    "rewire": ">= 2.1.0"
+    "rewire": ">= 2.1.0",
+    "mocha-jenkins-reporter": ">= 0.1.9"
   },
   "repository": {
     "type" : "git",
@@ -36,7 +37,8 @@
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
   "scripts":  {
-    "test": "mocha test/unit -R spec -t 5000"
+    "test": "mocha test/unit -R spec -t 5000",
+    "ci": "mocha test/unit test/integration/short -R mocha-jenkins-reporter"
   },
   "engines": {
     "node" : ">=0.10.0"

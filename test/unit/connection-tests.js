@@ -1,8 +1,11 @@
+"use strict";
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
+var events = require('events');
+var rewire = require('rewire');
 
-var Connection = require('../../lib/connection.js');
+var Connection = require('../../lib/connection');
 var requests = require('../../lib/requests');
 var defaultOptions = require('../../lib/client-options.js').defaultOptions();
 var types = require('../../lib/types');
@@ -168,6 +171,90 @@ describe('Connection', function () {
         done();
       });
       connection.idleTimeoutHandler();
+    });
+  });
+  describe('#close', function () {
+    it('should allow socket.close event to be emitted before calling back when connected', function (done) {
+      var ConnectionInjected = rewire('../../lib/connection');
+      function SocketMock() {
+      }
+      util.inherits(SocketMock, events.EventEmitter);
+      SocketMock.prototype.connect = function (p, a, cb) {
+        setImmediate(cb);
+      };
+      SocketMock.prototype.destroy = function () {
+        var self = this;
+        setImmediate(function () {
+          self.emit('close');
+        });
+      };
+      SocketMock.prototype.end = SocketMock.prototype.destroy;
+      SocketMock.prototype.setTimeout = helper.noop;
+      SocketMock.prototype.setKeepAlive = helper.noop;
+      SocketMock.prototype.setNoDelay = helper.noop;
+      SocketMock.prototype.pipe = function () {return this};
+      ConnectionInjected.__set__("net", { Socket: SocketMock});
+      var c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
+      c.logEmitter = helper.noop;
+      c.sendStream = function (r, o, cb) {
+        cb(null, {});
+      };
+      c.open(function (err) {
+        assert.ifError(err);
+        assert.ok(c.connected);
+        //it is now connected
+        var socket = c.netClient;
+        var closeEmitted = 0;
+        socket.on('close', function () {
+          closeEmitted++;
+        });
+        c.close(function (err) {
+          assert.ifError(err);
+          assert.strictEqual(closeEmitted, 1);
+          done();
+        });
+      });
+    });
+    it('should allow socket.close event to be emitted before calling back when disconnected', function (done) {
+      var ConnectionInjected = rewire('../../lib/connection');
+      function SocketMock() {
+      }
+      util.inherits(SocketMock, events.EventEmitter);
+      SocketMock.prototype.connect = function (p, a, cb) {
+        setImmediate(cb);
+      };
+      SocketMock.prototype.destroy = function () {
+        var self = this;
+        setImmediate(function () {
+          self.emit('close');
+        });
+      };
+      SocketMock.prototype.setTimeout = helper.noop;
+      SocketMock.prototype.setKeepAlive = helper.noop;
+      SocketMock.prototype.setNoDelay = helper.noop;
+      SocketMock.prototype.pipe = function () {return this};
+      ConnectionInjected.__set__("net", { Socket: SocketMock});
+      var c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
+      c.logEmitter = helper.noop;
+      c.sendStream = function (r, o, cb) {
+        cb(null, {});
+      };
+      c.open(function (err) {
+        assert.ifError(err);
+        assert.ok(c.connected);
+        //force destroy
+        c.connected = false;
+        var socket = c.netClient;
+        var closeEmitted = 0;
+        socket.on('close', function () {
+          closeEmitted++;
+        });
+        c.close(function (err) {
+          assert.ifError(err);
+          assert.strictEqual(closeEmitted, 1);
+          done();
+        });
+      });
     });
   });
 });

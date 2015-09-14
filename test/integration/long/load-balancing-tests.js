@@ -24,7 +24,7 @@ describe('DCAwareRoundRobinPolicy', function () {
         var client = new Client(options);
         var prevHost = null;
         async.times(120, function (n, timesNext) {
-          client.execute('SELECT * FROM system.schema_columnfamilies', function (err, result) {
+          client.execute(helper.queries.basic, function (err, result) {
             assert.ifError(err);
             assert.ok(result && result.rows);
             var hostId = result.info.queriedHost;

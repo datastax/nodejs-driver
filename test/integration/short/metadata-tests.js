@@ -177,7 +177,7 @@ describe('Metadata', function () {
       async.waterfall([
         client.connect.bind(client),
         function executeQuery(next) {
-          client.execute('SELECT * FROM system.schema_keyspaces', [], { traceQuery: true}, next);
+          client.execute(helper.queries.basic, [], { traceQuery: true}, next);
         },
         function getTrace(result, next) {
           client.metadata.getTrace(result.info.traceId, next);

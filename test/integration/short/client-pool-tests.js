@@ -322,6 +322,33 @@ describe('Client', function () {
       });
     });
   });
+  describe('#connect() with nodes failing', function () {
+    it('should connect after a failed attempt', function (done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.removeIfAny,
+        function (next) {
+          client.connect(function (err) {
+            helper.assertInstanceOf(err, errors.NoHostAvailableError);
+            next();
+          });
+        },
+        helper.ccmHelper.start(1),
+        function (next) {
+          client.connect(function (err) {
+            assert.ifError(err);
+            var hosts = client.hosts.values();
+            assert.strictEqual(1, hosts.length);
+            assert.strictEqual(typeof hosts[0].datacenter, 'string');
+            assert.notEqual(hosts[0].datacenter.length, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client),
+        helper.ccmHelper.remove
+      ], done);
+    });
+  });
   describe('#execute()', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);

@@ -281,6 +281,18 @@ describe('HostMap', function () {
       assert.notEqual(values3, values1);
     });
   });
+  describe('#set()', function () {
+    it('should modify the cached values', function () {
+      var map = new HostMap();
+      map.set('h1', 'v1');
+      var values = map.values();
+      assert.strictEqual(util.inspect(values), util.inspect(['v1']));
+      map.set('h1', 'v1a');
+      assert.strictEqual(util.inspect(map.values()), util.inspect(['v1a']));
+      assert.strictEqual(map.get('h1'), 'v1a');
+      assert.notStrictEqual(map.values(), values);
+    });
+  });
 });
 
 /**

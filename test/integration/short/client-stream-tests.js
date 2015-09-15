@@ -4,7 +4,7 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 
@@ -20,7 +20,10 @@ describe('Client', function () {
       stream
         .on('end', done)
         .on('readable', function () {
-          assert.ok(false, 'Readable event should not be fired');
+          //Node.js 0.10, readable is never called
+          //Node.js 0.12, readable is called with null
+          var chunk = stream.read();
+          assert.strictEqual(chunk, null);
         })
         .on('error', done);
     });
@@ -71,7 +74,9 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'It should not be emit readable');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ok(err, 'It should yield an error');
@@ -88,7 +93,9 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'It should not be emit readable');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ifError(err);
@@ -113,14 +120,16 @@ describe('Client', function () {
           done();
         })
         .on('readable', function () {
-          assert.ok(false, 'Readable event should not be fired');
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ifError(err);
         });
     });
     it('should prepare and emit the exact amount of rows', function (done) {
-      var client = newInstance();
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}})
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 1000;
@@ -133,16 +142,16 @@ describe('Client', function () {
           client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
         },
         function (next) {
-          async.times(length, function (n, timesNext) {
+          helper.timesLimit(length, 100, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
-            query = util.format(query, table, types.uuid(), n, new types.Long(n, 0x090807).toString());
+            query = util.format(query, table, types.Uuid.random(), n, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
         },
         function (next) {
           var query = util.format('SELECT * FROM %s LIMIT 10000', table);
           var counter = 0;
-          var stream = client.stream(query, [], {prepare: 1, consistency: types.consistencies.quorum})
+          var stream = client.stream(query, [], {prepare: 1})
             .on('end', function () {
               assert.strictEqual(counter, length);
               done();
@@ -162,7 +171,7 @@ describe('Client', function () {
       ], done);
     });
     it('should prepare and fetch paging the exact amount of rows', function (done) {
-      var client = newInstance();
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 350;
@@ -175,16 +184,16 @@ describe('Client', function () {
           client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
         },
         function (next) {
-          async.times(length, function (n, timesNext) {
+          helper.timesLimit(length, 100, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
-            query = util.format(query, table, types.uuid(), n + 1, new types.Long(n, 0x090807).toString());
+            query = util.format(query, table, types.Uuid.random(), n + 1, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
         },
         function (next) {
           var query = util.format('SELECT * FROM %s LIMIT 10000', table);
           var counter = 0;
-          var stream = client.stream(query, [], {autoPage: true, fetchSize: 100, prepare: 1, consistency: types.consistencies.quorum})
+          var stream = client.stream(query, [], {autoPage: true, fetchSize: 100, prepare: 1})
             .on('end', function () {
               assert.strictEqual(counter, length);
               done();
@@ -213,6 +222,9 @@ describe('Client', function () {
           assert.ok(err instanceof TypeError, 'Error should be an instance of TypeError');
           errCalled = true;
         })
+        .on('readable', function () {
+          assert.strictEqual(stream.read(), null);
+        })
         .on('end', function () {
           assert.strictEqual(errCalled, true);
           done();
@@ -225,7 +237,9 @@ describe('Client', function () {
       var errCalled = false;
       stream
         .on('readable', function () {
-          assert.ifError(new Error('It should not be readable'));
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
           assert.ok(err);

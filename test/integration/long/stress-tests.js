@@ -4,15 +4,14 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
-var policies = require('../../../lib/policies');
 
 describe('Client', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   afterEach(helper.ccmHelper.remove);
   it('should handle parallel insert and select', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    var client = newInstance({encoding: { copyBuffer: false}});
     //var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
@@ -41,7 +40,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(times), 200, function (i, next) {
+      async.eachLimit(new Array(Math.floor(times / 5)), 200, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one};
@@ -59,7 +58,7 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select with nodes failing', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
     var selectQuery = 'SELECT * FROM ' + table;
@@ -87,7 +86,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(times), 100, function (i, next) {
+      async.eachLimit(new Array(Math.floor(times / 5)), 100, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one};
@@ -110,15 +109,14 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select of large blobs', function (done) {
-    var client = newInstance({policies: { retry: new RetryMultipleTimes(2)}});
+    var client = newInstance();
     var keyspace = helper.getRandomName('ks');
     var table = helper.getRandomName('tbl');
-    var clientInsert = newInstance({keyspace: keyspace, policies: { retry: new RetryMultipleTimes(2)}});
-    var clientSelect = newInstance({keyspace: keyspace, policies: { retry: new RetryMultipleTimes(2)}});
+    var clientInsert = newInstance({keyspace: keyspace});
+    var clientSelect = newInstance({keyspace: keyspace});
     var selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
     var insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
     var times = 500;
-    var idArray = [];
     async.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
@@ -169,38 +167,6 @@ describe('Client', function () {
     }
   });
 });
-
-/**
- * A retry policy for testing purposes only, retries for a number of times
- * @param {Number} times
- * @constructor
- */
-function RetryMultipleTimes(times) {
-  this.times = times;
-}
-
-util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
-
-RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo, consistency, received, blockFor, isDataPresent) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
-
-RetryMultipleTimes.prototype.onUnavailable = function (requestInfo, consistency, required, alive) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
-
-RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo, consistency, received, blockFor, writeType) {
-  if (requestInfo.nbRetry > this.times) {
-    return this.rethrowResult();
-  }
-  return this.retryResult();
-};
 
 
 /**

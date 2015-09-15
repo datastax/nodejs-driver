@@ -2,8 +2,11 @@ var async = require('async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
-var types = require('../lib/types.js');
+var policies = require('../lib/policies');
+var types = require('../lib/types');
 var utils = require('../lib/utils.js');
+
+util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
   /**
@@ -28,12 +31,25 @@ var helper = {
     //do nothing
   },
   /**
+   * Uses the last parameter as callback, invokes it via setImmediate
+   */
+  callbackNoop: function () {
+    var args = Array.prototype.slice.call(arguments);
+    var cb = args[args.length-1];
+    if (typeof cb !== 'function') {
+      throw new Error('Helper method needs a callback as last parameter');
+    }
+    setImmediate(cb);
+  },
+  /**
    * @type {ClientOptions}
    */
   baseOptions: (function () {
     return {
       //required
-      contactPoints: ['127.0.0.1']
+      contactPoints: ['127.0.0.1'],
+      // retry all queries multiple times (for improved test resiliency).
+      policies: { retry: new RetryMultipleTimes(3) }
     };
   })(),
   /**
@@ -69,6 +85,12 @@ var helper = {
         if (callback) callback();
       });
     },
+    pauseNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'pause'], callback);
+    },
+    resumeNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'resume'], callback);
+    },
     /**
      * Adds a new node to the cluster
      * @param {Number} nodeIndex 1 based index of the node
@@ -91,18 +113,33 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'start'], callback);
+      new Ccm().exec(['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'], callback);
+    },
+    /**
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    stopNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'stop'], callback);
+    },
+    /**
+     * @param {Number} nodeIndex 1 based index of the node
+     * @param {Function} callback
+     */
+    decommissionNode: function (nodeIndex, callback) {
+      new Ccm().exec(['node' + nodeIndex, 'decommission'], callback);
     },
     exec: function (params, callback) {
       new Ccm().exec(params, callback);
     }
   },
   /**
-   * Creates a table containing all common types
+   * Returns a cql string with a CREATE TABLE command containing all common types
    * @param {String} tableName
+   * @returns {String}
    */
   createTableCql: function (tableName) {
-    return  util.format(' CREATE TABLE %s (' +
+    return  util.format('CREATE TABLE %s (' +
       '   id uuid primary key,' +
       '   ascii_sample ascii,' +
       '   text_sample text,' +
@@ -121,10 +158,33 @@ var helper = {
       '   list_sample2 list<int>,' +
       '   set_sample set<text>)', tableName);
   },
-  createKeyspaceCql: function (keyspace, replicationFactor) {
-    return util.format('CREATE KEYSPACE %s WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d};',
+  /**
+   * Returns a cql string with a CREATE TABLE command 1 partition key and 1 clustering key
+   * @param {String} tableName
+   * @returns {String}
+   */
+  createTableWithClusteringKeyCql: function (tableName) {
+    return  util.format('CREATE TABLE %s (' +
+    '   id1 uuid,' +
+    '   id2 timeuuid,' +
+    '   text_sample text,' +
+    '   int_sample int,' +
+    '   bigint_sample bigint,' +
+    '   float_sample float,' +
+    '   double_sample double,' +
+    '   map_sample map<uuid, int>,' +
+    '   list_sample list<timeuuid>,' +
+    '   set_sample set<int>,' +
+    '   PRIMARY KEY (id1, id2))', tableName);
+  },
+  createKeyspaceCql: function (keyspace, replicationFactor, durableWrites) {
+    return util.format('CREATE KEYSPACE %s' +
+      ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d}' +
+      ' AND durable_writes = %s;',
       keyspace,
-      replicationFactor);
+      replicationFactor || 1,
+      !!durableWrites
+    );
   },
   assertValueEqual: function (val1, val2) {
     if (val1 === null && val2 === null) {
@@ -134,12 +194,16 @@ var helper = {
       val1 = val1.toString('hex');
       val2 = val2.toString('hex');
     }
-    if (val1 instanceof types.Long && val2 instanceof types.Long ||
-      val1 instanceof Date && val2 instanceof Date) {
+    if ((val1 instanceof types.Long && val2 instanceof types.Long) ||
+        (val1 instanceof Date && val2 instanceof Date) ||
+        (val1 instanceof types.InetAddress && val2 instanceof types.InetAddress) ||
+        (val1 instanceof types.Uuid && val2 instanceof types.Uuid)) {
       val1 = val1.toString();
       val2 = val2.toString();
     }
-    if (util.isArray(val1) || (val1.constructor && val1.constructor.name === 'Object')) {
+    if (util.isArray(val1) ||
+        (val1.constructor && val1.constructor.name === 'Object') ||
+        val1 instanceof helper.Map) {
       val1 = util.inspect(val1, {depth: null});
       val2 = util.inspect(val2, {depth: null});
     }
@@ -152,6 +216,15 @@ var helper = {
   assertNotInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
+  },
+  assertContains: function (value, searchValue, caseInsensitive) {
+    assert.strictEqual(typeof value, 'string');
+    var message = 'String: "%s" does not contain "%s"';
+    if (caseInsensitive !== false) {
+      value = value.toLowerCase();
+      searchValue = searchValue.toLowerCase();
+    }
+    assert.ok(value.indexOf(searchValue) >= 0, util.format(message, value, searchValue));
   },
   /**
    * Returns a function that waits on schema agreement before executing callback
@@ -171,6 +244,16 @@ var helper = {
       setTimeout(callback, 200 * client.hosts.length);
     });
   },
+  /**
+   * @returns {Function} A function with a single callback param, applying the fn with parameters
+   */
+  toTask: function (fn, context) {
+    var params = Array.prototype.slice.call(arguments, 2);
+    return (function (next) {
+      params.push(next);
+      fn.apply(context, params);
+    });
+  },
   wait: function (ms, callback) {
     if (!ms) {
       ms = 0;
@@ -184,7 +267,7 @@ var helper = {
     //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
-      version = '2.1.0';
+      version = '2.1.4';
     }
     return version;
   },
@@ -221,6 +304,12 @@ var helper = {
     }
     return result;
   },
+  /**
+   * @param arr
+   * @param {Function|String} predicate function to compare or property name to compare
+   * @param val
+   * @returns {*}
+   */
   find: function (arr, predicate, val) {
     if (arr == null) {
       throw new TypeError('Array.prototype.find called on null or undefined');
@@ -244,6 +333,17 @@ var helper = {
     return undefined;
   },
   /**
+   * @param {Array} arr
+   * @param {Function }predicate
+   */
+  first: function (arr, predicate) {
+    var filterArr = arr.filter(predicate);
+    if (filterArr.length === 0) {
+      throw new Error('Item not found: ' + predicate);
+    }
+    return filterArr[0];
+  },
+  /**
    * Returns the values of an object
    * @param {Object} obj
    */
@@ -256,6 +356,90 @@ var helper = {
       vals.push(obj[key]);
     }
     return vals;
+  },
+  Map: MapPolyFill,
+  Set: SetPolyFill,
+  WhiteListPolicy: WhiteListPolicy,
+  /**
+   * Determines if test tracing is enabled
+   */
+  isTracing: function () {
+    return (process.env.TEST_TRACE === 'on');
+  },
+  trace: function (format) {
+    if (!helper.isTracing()) {
+      return;
+    }
+    console.log('\t...' + util.format.apply(null, arguments));
+  },
+
+  /**
+   * Version dependent it() method for mocha test case
+   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} testCase Test case name
+   * @param {Function} func
+   */
+  vit: function (testVersion, testCase, func) {
+    executeIfVersion(testVersion, it, [testCase, func]);
+  },
+
+  /**
+   * Version dependent describe() method for mocha test case
+   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} title Title of the describe section.
+   * @param {Function} func
+   */
+  vdescribe: function (testVersion, title, func) {
+    executeIfVersion(testVersion, describe, [title, func]);
+  },
+
+  /**
+   * Given a {Host} returns the last octet of its ip address.
+   * i.e. (127.0.0.247:9042) -> 247.
+   *
+   * @param {Host|string} host or host address to get ip address of.
+   * @returns {string} Last octet of the host address.
+   */
+  lastOctetOf: function(host) {
+    var address = typeof host == "string" ? host : host.address;
+    var ipAddress = address.split(':')[0].split('.');
+    return ipAddress[ipAddress.length-1];
+  },
+  /**
+   * Returns a function, that when invoked shutdowns the client and callbacks
+   * @param {Client} client
+   * @param {Function} callback
+   * @returns {Function}
+   */
+  finish: function (client, callback) {
+    return (function (err) {
+      assert.ifError(err);
+      client.shutdown(callback);
+    });
+  },
+
+  /**
+   * The same as async.times, only no more than limit iterators will be
+   * simultaneously running at any time.
+   *
+   * Note that the items are not processed in batches, so there is no guarantee
+   * that the first limit iterator functions will complete before any others
+   * are started.
+   *
+   * Taken from https://github.com/caolan/async/pull/560.
+   *
+   * @param count The number of times to run the function.
+   * @param limit The maximum number of iterators to run at any time.
+   * @param iterator The function to call n times.
+   * @param callback The function to call on completion of iterators.
+   */
+  timesLimit: function(count, limit, iterator, callback) {
+    var counter = [];
+    for (var i = 0; i < count; i++) {
+      counter.push(i);
+    }
+
+    return async.mapLimit(counter, limit, iterator, callback);
   }
 };
 
@@ -272,6 +456,8 @@ function Ccm() {
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   var self = this;
   options = options || {};
+  var version = helper.getCassandraVersion();
+  helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   async.series([
     function (next) {
       //it wont hurt to remove
@@ -281,7 +467,11 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      var create = ['create', 'test', '-v', helper.getCassandraVersion()];
+      var create = ['create', 'test', '-v', version];
+      if (process.env.TEST_CASSANDRA_DIR) {
+        create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
+        helper.trace('With', create[2]);
+      }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }
@@ -310,7 +500,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      self.exec(['start'], helper.wait(options.sleep, next));
+      var start = ['start', '--wait-for-binary-proto'];
+      if (util.isArray(options.jvmArgs)) {
+        options.jvmArgs.forEach(function (arg) {
+          start.push('--jvm_arg', arg);
+        }, this);
+        helper.trace('With jvm args', options.jvmArgs);
+      }
+      self.exec(start, helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {
@@ -408,4 +605,137 @@ Ccm.prototype.getPath = function (subPath) {
   return path.join(ccmPath, subPath);
 };
 
+/**
+ * A polyfill of Map, valid for testing. It does not support update of values
+ * @constructor
+ */
+function MapPolyFill(arr) {
+  this.arr = arr || [];
+  var self = this;
+  Object.defineProperty(this, 'size', {
+    get: function() { return self.arr.length; },
+    configurable: false
+  });
+}
+
+MapPolyFill.prototype.set = function (k, v) {
+  this.arr.push([k, v]);
+};
+
+MapPolyFill.prototype.get = function (k) {
+  return this.arr.filter(function (item) {
+    return item[0] === k;
+  })[0];
+};
+
+MapPolyFill.prototype.forEach = function (callback) {
+  this.arr.forEach(function (item) {
+    //first the value, then the key
+    callback(item[1], item[0]);
+  });
+};
+
+MapPolyFill.prototype.toString = function() {
+  return this.arr.toString();
+};
+
+function SetPolyFill(arr) {
+  this.arr = arr || [];
+}
+
+SetPolyFill.prototype.forEach = function (cb, thisArg) {
+  this.arr.forEach(cb, thisArg);
+};
+
+SetPolyFill.prototype.add = function (x) {
+  this.arr.push(x);
+};
+
+SetPolyFill.prototype.toString = function() {
+  return this.arr.toString();
+};
+
+/**
+ * A retry policy for testing purposes only, retries for a number of times
+ * @param {Number} times
+ * @constructor
+ */
+function RetryMultipleTimes(times) {
+  this.times = times;
+}
+
+RetryMultipleTimes.prototype.onReadTimeout = function (requestInfo) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onUnavailable = function (requestInfo) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo) {
+  if (requestInfo.nbRetry > this.times) {
+    return this.rethrowResult();
+  }
+  return this.retryResult();
+};
+
+/**
+ * For test purposes, filters the child policy by last octet of the ip address
+ * @param {Array} list
+ * @param [childPolicy]
+ * @constructor
+ */
+function WhiteListPolicy(list, childPolicy) {
+  this.list = list;
+  this.childPolicy = childPolicy || new policies.loadBalancing.RoundRobinPolicy();
+}
+
+util.inherits(WhiteListPolicy, policies.loadBalancing.LoadBalancingPolicy);
+
+WhiteListPolicy.prototype.init = function (client, hosts, callback) {
+  this.childPolicy.init(client, hosts, callback);
+};
+
+WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  var list = this.list;
+  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
+    callback(err, {
+      next: function () {
+        var item = iterator.next();
+        while (!item.done) {
+          //noinspection JSCheckFunctionSignatures
+          if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
+            break;
+          }
+          item = iterator.next();
+        }
+        return item;
+      }
+    });
+  });
+};
+
+/**
+ * Conditionally executes func if testVersion is <= the current cassandra version.
+ * @param {String} testVersion Minimum version of Cassandra needed.
+ * @param {Function} func The function to conditionally execute.
+ * @param {Array} args the arguments to apply to the function.
+ */
+function executeIfVersion (testVersion, func, args) {
+  var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+  var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
+  v = testVersion.split('.');
+  var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
+  if (currentVersion >= minimumVersion) {
+    func.apply(this, args);
+  }
+}
+
 module.exports = helper;
+module.exports.RetryMultipleTimes = RetryMultipleTimes;

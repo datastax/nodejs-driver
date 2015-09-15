@@ -4,13 +4,14 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
+var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#batch() @c2_0', function () {
+  describe('#batch(queries, {prepare: 0}, callback)', function () {
     var keyspace = helper.getRandomName('ks');
     var table1 = keyspace + '.' + helper.getRandomName('tblA');
     var table2 = keyspace + '.' + helper.getRandomName('tblB');
@@ -18,23 +19,17 @@ describe('Client', function () {
       var client = newInstance();
       async.series([
         helper.ccmHelper.start(1),
-        function (next) {
-          client.execute(helper.createKeyspaceCql(keyspace, 1), next);
-        },
-        function (next) {
-          client.execute(helper.createTableCql(table1), next);
-        },
-        function (next) {
-          client.execute(helper.createTableCql(table2), next);
-        }
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 1)),
+        helper.toTask(client.execute, client, helper.createTableCql(table1)),
+        helper.toTask(client.execute, client, helper.createTableCql(table2))
       ], done);
     });
     after(helper.ccmHelper.remove);
-    it('should execute a batch of queries with no params', function (done) {
+    vit('2.0', 'should execute a batch of queries with no params', function (done) {
       var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'%s\')';
       var selectQuery = 'SELECT * FROM %s WHERE id = %s';
-      var id1 = types.uuid();
-      var id2 = types.uuid();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
       var client = newInstance();
       var queries = [
         util.format(insertQuery, table1, id1, 'one'),
@@ -64,11 +59,11 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should execute a batch of queries with params', function (done) {
+    vit('2.0', 'should execute a batch of queries with params', function (done) {
       var insertQuery = 'INSERT INTO %s (id, double_sample) VALUES (?, ?)';
       var selectQuery = 'SELECT * FROM %s WHERE id = %s';
-      var id1 = types.uuid();
-      var id2 = types.uuid();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
       var client = newInstance();
       var queries = [
         {query: util.format(insertQuery, table1), params: [id1, 1000]},
@@ -99,7 +94,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should callback with error when there is a ResponseError', function (done) {
+    vit('2.0', 'should callback with error when there is a ResponseError', function (done) {
       var client = newInstance();
       client.batch(['INSERT WILL FAIL'], function (err) {
         assert.ok(err);
@@ -108,7 +103,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should validate the arguments are valid', function (done) {
+    vit('2.0', 'should validate the arguments are valid', function (done) {
       var client = newInstance();
       assert.throws(function () {
           client.batch();
@@ -133,20 +128,20 @@ describe('Client', function () {
       var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table1);
       async.series([
         function (next) {
-          client.batch([{query: query, params: [types.uuid(), null]}], next);
+          client.batch([{query: query, params: [types.Uuid.random(), null]}], next);
         },
         function (next) {
           client.batch(
-            [{query: query, params: [types.uuid(), null]}],
+            [{query: query, params: [types.Uuid.random(), null]}],
             {logged: false, consistency: types.consistencies.quorum},
             next);
         }
       ], done);
     });
-    it('should use hints when provided', function (done) {
+    vit('2.0', 'should use hints when provided', function (done) {
       var client = newInstance();
-      var id1 = types.uuid();
-      var id2 = types.uuid();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
       var queries = [
         { query: util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1),
           params: [id1, 'sample1']
@@ -166,16 +161,16 @@ describe('Client', function () {
           assert.ifError(err);
           assert.ok(result && result.rows);
           assert.strictEqual(result.rows.length, 2);
-          assert.strictEqual(helper.find(result.rows, 'id', id2)['int_sample'], -1);
+          assert.strictEqual(helper.find(result.rows, function (row) { return row.id.equals(id2); })['int_sample'], -1);
           done();
         });
       });
     });
-    it('should callback in err when wrong hints are provided', function (done) {
+    vit('2.0', 'should callback in err when wrong hints are provided', function (done) {
       var client = newInstance();
       var queries = [{
         query: util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table1),
-        params: [types.uuid(), 'what', 1]
+        params: [types.Uuid.random(), 'what', 1]
       }];
       async.series([
         client.connect.bind(client),
@@ -209,6 +204,261 @@ describe('Client', function () {
           });
         }
       ], done);
+    });
+    vit('2.1', 'should support protocol level timestamp', function (done) {
+      var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (?, ?)';
+      var selectQuery = 'SELECT id, text_sample, writetime(text_sample) FROM %s WHERE id = %s';
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
+      var client = newInstance();
+      var timestamp = types.Long.fromString('1428311323417123');
+      var queries = [
+        {query: util.format(insertQuery, table1), params: [id1, 'value 1 with timestamp']},
+        {query: util.format(insertQuery, table2), params: [id2, 'value 2 with timestamp']}
+      ];
+      async.series([
+        function (next) {
+          client.batch(queries, { timestamp: timestamp}, next);
+        },
+        function assertValue1(next) {
+          client.execute(util.format(selectQuery, table1, id1), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value 1 with timestamp');
+            helper.assertInstanceOf(result.first()['writetime(text_sample)'], types.Long);
+            assert.strictEqual(result.first()['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        },
+        function assertValue2(next) {
+          client.execute(util.format(selectQuery, table2, id2), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value 2 with timestamp');
+            assert.strictEqual(result.first()['writetime(text_sample)'].toString(), timestamp.toString());
+            next();
+          });
+        }
+      ], done);
+    });
+    vit('2.1', 'should support serial consistency', function (done) {
+      var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (?, ?)';
+      var selectQuery = 'SELECT id, text_sample, writetime(text_sample) FROM %s WHERE id = %s';
+      var id1 = types.Uuid.random();
+      var client = newInstance();
+      var queries = [
+        {query: util.format(insertQuery, table1), params: [id1, 'value with serial']}
+      ];
+      async.series([
+        function (next) {
+          client.batch(queries, { serialConsistency: types.consistencies.localSerial}, next);
+        },
+        function assertValue(next) {
+          client.execute(util.format(selectQuery, table1, id1), function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.first());
+            assert.strictEqual(result.first()['text_sample'], 'value with serial');
+            next();
+          });
+        }], done);
+    });
+  });
+  describe('#batch(queries, {prepare: 1}, callback)', function () {
+    var keyspace = helper.getRandomName('ks');
+    var table1 = keyspace + '.' + helper.getRandomName('tblA');
+    var table2 = keyspace + '.' + helper.getRandomName('tblB');
+    before(function (done) {
+      var client = newInstance();
+      var createTableCql = 'CREATE TABLE %s (' +
+        ' id uuid,' +
+        ' time timeuuid,' +
+        ' text_sample text,' +
+        ' int_sample int,' +
+        ' bigint_sample bigint,' +
+        ' float_sample float,' +
+        ' double_sample double,' +
+        ' decimal_sample decimal,' +
+        ' varint_sample decimal,' +
+        ' timestamp_sample timestamp,' +
+        ' PRIMARY KEY (id, time))';
+      async.series([
+        helper.ccmHelper.start(3),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3, false)),
+        helper.toTask(client.execute, client, util.format(createTableCql, table1)),
+        helper.toTask(client.execute, client, util.format(createTableCql, table2))
+      ], done);
+    });
+    after(helper.ccmHelper.remove);
+    vit('2.0', 'should prepare and send the request', function (done) {
+      var client = newInstance();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
+      var consistency = types.consistencies.quorum;
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, time, text_sample) VALUES (?, ?, ?)', table1),
+        params: [id1, types.timeuuid(), 'sample1']
+      },{
+        query: util.format('INSERT INTO %s (id, time, int_sample, varint_sample) VALUES (?, ?, ?, ?)', table2),
+        params: [id2, types.timeuuid(), -101, '151']
+      }];
+      client.batch(queries, {prepare: true, consistency: consistency}, function (err) {
+        assert.ifError(err);
+        var query = 'SELECT * FROM %s where id = %s';
+        async.series([
+          helper.toTask(client.execute, client, util.format(query, table1, id1), [], {consistency: consistency}),
+          helper.toTask(client.execute, client, util.format(query, table2, id2), [], {consistency: consistency})
+        ], function (err, resultArray) {
+          assert.ifError(err);
+          assert.strictEqual(resultArray.length, 2);
+          var row1 = resultArray[0].rows[0];
+          assert.strictEqual(row1['text_sample'], 'sample1');
+          var row2 = resultArray[1].rows[0];
+          assert.strictEqual(row2['int_sample'], -101);
+          assert.strictEqual(row2['varint_sample'].toString(), '151');
+          done();
+        });
+      });
+    });
+    vit('2.0', 'should callback in error when the one of the queries contains syntax error', function (done) {
+      var client = newInstance();
+      var queries1 = [{
+        query: util.format('INSERT INTO %s (id, time, text_sample) VALUES (?, ?, ?)', table2),
+        params: [types.Uuid.random(), types.timeuuid(), 'sample1']
+      },{
+        query: util.format('INSERT WILL FAIL'),
+        params: [types.Uuid.random(), types.timeuuid(), -101, -1]
+      }];
+      var queries2 = [queries1[1], queries1[1]];
+      async.times(10, function (n, next) {
+        var queries = (n % 2 === 0) ? queries1 : queries2;
+        client.batch(queries, {prepare: true}, function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+          assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
+          next();
+        });
+      }, done);
+    });
+    vit('2.0', 'should callback in error when the type does not match', function (done) {
+      var client = newInstance();
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1),
+        params: [types.Uuid.random(), types.timeuuid(), {notValid: true}]
+      }];
+      async.times(10, function (n, next) {
+        client.batch(queries, {prepare: true}, function (err) {
+          helper.assertInstanceOf(err, TypeError);
+          next();
+        });
+      }, done);
+    });
+    vit('2.0', 'should handle multiple prepares in parallel', function (done) {
+      var consistency = types.consistencies.quorum;
+      var id1Tbl1 = types.Uuid.random();
+      var id1Tbl2 = types.Uuid.random();
+      var id2Tbl1 = types.Uuid.random();
+      var id2Tbl2 = types.Uuid.random();
+      //Avoid using the same queries from test to test, include hardcoded values
+      var query1Table1 = util.format('INSERT INTO %s (id, time, decimal_sample, int_sample) VALUES (?, ?, ?, 201)', table1);
+      var query1Table2 = util.format('INSERT INTO %s (id, time, timestamp_sample, int_sample) VALUES (?, ?, ?, 202)', table2);
+      var query2Table1 = util.format('INSERT INTO %s (id, time, decimal_sample, int_sample) VALUES (?, ?, ?, 301)', table1);
+      var query2Table2 = util.format('INSERT INTO %s (id, time, float_sample, int_sample) VALUES (?, ?, ?, 302)', table2);
+      var client = newInstance();
+      async.parallel([
+        function (next) {
+          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
+            var queries = [{
+              query: query1Table1,
+              params: [id1Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
+            }, {
+              query: query1Table2,
+              params: [id1Tbl2, types.timeuuid(), new Date()]
+            }];
+            client.batch(queries, {prepare: true, consistency: consistency}, eachNext);
+          }, next);
+        },
+        function (next) {
+          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
+            var queries = [{
+              query: query2Table1,
+              params: [id2Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
+            }, {
+              query: query2Table2,
+              params: [id2Tbl2, types.timeuuid(), new Date().getTime() / 15]
+            }];
+            client.batch(queries, {prepare: true, consistency: consistency}, eachNext);
+          }, next);
+        }
+      ], function (err) {
+        assert.ifError(err);
+        //verify results in both tables
+        var query = 'SELECT * FROM %s where id IN (%s, %s)';
+        async.series([
+          helper.toTask(client.execute, client, util.format(query, table1, id1Tbl1, id2Tbl1), [], {consistency: consistency}),
+          helper.toTask(client.execute, client, util.format(query, table2, id1Tbl2, id2Tbl2), [], {consistency: consistency})
+        ], function (err, resultArray) {
+          assert.ifError(err);
+          assert.strictEqual(resultArray.length, 2);
+          var rows1 = resultArray[0].rows;
+          assert.strictEqual(rows1.length, 2000);
+          var rows2 = resultArray[0].rows;
+          assert.strictEqual(rows2.length, 2000);
+          done();
+        });
+      });
+    });
+    vit('2.0', 'should allow named parameters', function (done) {
+      var client = newInstance();
+      var id1 = types.Uuid.random();
+      var id2 = types.Uuid.random();
+      var consistency = types.consistencies.quorum;
+      var queries = [{
+        query: util.format('INSERT INTO %s (id, time, text_sample) VALUES (:paramId, :time, :text_sample)', table1),
+        params: { text_SAMPLE: 'named params', paramID: id1, time: types.TimeUuid.now()}
+      },{
+        query: util.format('INSERT INTO %s (id, time, int_sample, varint_sample) VALUES (?, ?, ?, ?)', table2),
+        params: [id2, types.TimeUuid.now(), 501, '2010']
+      }];
+      client.batch(queries, {prepare: true, consistency: consistency}, function (err) {
+        assert.ifError(err);
+        var query = 'SELECT * FROM %s where id = %s';
+        async.series([
+          helper.toTask(client.execute, client, util.format(query, table1, id1), [], {consistency: consistency}),
+          helper.toTask(client.execute, client, util.format(query, table2, id2), [], {consistency: consistency})
+        ], function (err, resultArray) {
+          assert.ifError(err);
+          assert.strictEqual(resultArray.length, 2);
+          var row1 = resultArray[0].rows[0];
+          assert.strictEqual(row1['text_sample'], 'named params');
+          var row2 = resultArray[1].rows[0];
+          assert.strictEqual(row2['int_sample'], 501);
+          assert.strictEqual(row2['varint_sample'].toString(), '2010');
+          done();
+        });
+      });
+    });
+    vit('2.0', 'should execute batch containing the same query multiple times', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var query = util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1);
+      var queries = [
+        { query: query, params: [id, types.TimeUuid.now(), 1000]},
+        { query: query, params: [id, types.TimeUuid.now(), 2000]}
+      ];
+      client.batch(queries, { prepare: true}, function (err) {
+        assert.ifError(err);
+        //Check values inserted
+        var selectQuery = util.format('SELECT int_sample FROM %s WHERE id = ?', table1);
+        client.execute(selectQuery, [id], function (err, result) {
+          assert.ifError(err);
+          assert.strictEqual(result.rows.length, 2);
+          assert.ok(helper.find(result.rows, 'int_sample', 1000));
+          assert.ok(helper.find(result.rows, 'int_sample', 2000));
+          done();
+        });
+      });
     });
   });
 });

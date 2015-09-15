@@ -1,260 +1,26 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var uuid = require('node-uuid');
 var async = require('async');
-var utils = require('../../lib/utils.js');
 
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
-var types = require('../../lib/types.js');
-var encoder = require('../../lib/encoder.js');
+var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var Encoder = require('../../lib/encoder');
+var utils = require('../../lib/utils.js');
 var helper = require('../test-helper.js');
 
-describe('encoder', function () {
-  describe('#guessDataType()', function () {
-    it('should guess the native types', function () {
-      assertGuessed(1, dataTypes.double, 'Guess type for an integer (double) number failed');
-      assertGuessed(1.01, dataTypes.double, 'Guess type for a double number failed');
-      assertGuessed(true, dataTypes.boolean, 'Guess type for a boolean value failed');
-      assertGuessed([1,2,3], dataTypes.list, 'Guess type for an Array value failed');
-      assertGuessed('a string', dataTypes.text, 'Guess type for an string value failed');
-      assertGuessed(new Buffer('bip bop'), dataTypes.blob, 'Guess type for a buffer value failed');
-      assertGuessed(new Date(), dataTypes.timestamp, 'Guess type for a Date value failed');
-      assertGuessed(new types.Long(10), dataTypes.bigint, 'Guess type for a Int 64 value failed');
-      assertGuessed(types.uuid(), dataTypes.uuid, 'Guess type for a UUID value failed');
-      assertGuessed(types.timeuuid(), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
-      assertGuessed({}, null, 'Objects must not be guessed');
-    });
-
-    function assertGuessed(value, expectedType, message) {
-      var typeInfo = encoder.guessDataType(value);
-      if (typeInfo === null) {
-        if (expectedType !== null) {
-          assert.ok(false, 'Type not guessed for value ' + value);
-        }
-        return;
-      }
-      assert.strictEqual(typeInfo.type, expectedType, message + ': ' + value);
-    }
-  });
-  describe('#encode() and #decode', function () {
-    var typeEncoder = encoder;
-    it('should encode and decode maps', function () {
-      var value = {value1: 'Surprise', value2: 'Madafaka'};
-      //Minimum info, guessed
-      var encoded = typeEncoder.encode(value, dataTypes.map);
-      var decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.text]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //Minimum info, guessed
-      value = {value1: 1.1, valueN: 1.2};
-      encoded = typeEncoder.encode(value, dataTypes.map);
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.double]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //Minimum info string, guessed
-      value = {value1: new Date(9999999), valueN: new Date(5555555)};
-      encoded = typeEncoder.encode(value, 'map');
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.timestamp]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //Minimum info string, guessed
-      value = {};
-      value[types.uuid()] = 0;
-      value[types.uuid()] = 2;
-      encoded = typeEncoder.encode(value, 'map');
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.uuid], [dataTypes.double]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //full info string
-      value = {value1: 1, valueN: -3};
-      encoded = typeEncoder.encode(value, 'map<text,int>');
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //full info typeInfo
-      value = {value1: 1, valueN: -33892};
-      encoded = typeEncoder.encode(value, {type: dataTypes.map, subtypes: [dataTypes.string, dataTypes.int]});
-      decoded = typeEncoder.decode(encoded, [dataTypes.map, [[dataTypes.text], [dataTypes.int]]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode and decode list<int>', function () {
-      var value = [1, 2, 3, 4];
-      var encoded = typeEncoder.encode(value, 'list<int>');
-      var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.int]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode and decode a guessed double', function () {
-      var value = 1111;
-      var encoded = typeEncoder.encode(value);
-      var decoded = typeEncoder.decode(encoded, [dataTypes.double]);
-      assert.strictEqual(decoded, value);
-    });
-
-    it('should encode and decode a guessed string', function () {
-      var value = 'Pennsatucky';
-      var encoded = typeEncoder.encode(value);
-      var decoded = typeEncoder.decode(encoded, [dataTypes.text]);
-      assert.strictEqual(decoded, value);
-    });
-
-    it('should encode and decode list<double>', function () {
-      var value = [1, 2, 3, 100];
-      var encoded = typeEncoder.encode(value, 'list<double>');
-      var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode and decode list<double> without hint', function () {
-      var value = [1, 2, 3, 100.1];
-      var encoded = typeEncoder.encode(value);
-      var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.double]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode and decode set<text>', function () {
-      var value = ['Alex Vause', 'Piper Chapman', '3', '4'];
-      var encoded = typeEncoder.encode(value, 'set<text>');
-      var decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-      //with type info
-      encoded = typeEncoder.encode(value, {type: dataTypes.set, subtypes: [dataTypes.text]});
-      decoded = typeEncoder.decode(encoded, [dataTypes.set, [dataTypes.text]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode and decode list<float> with typeInfo', function () {
-      var value = [1.1122000217437744, 2.212209939956665, 3.3999900817871094, 4.412120819091797, -1000, 1];
-      var encoded = typeEncoder.encode(value, {type: dataTypes.list, subtypes: [dataTypes.float]});
-      var decoded = typeEncoder.decode(encoded, [dataTypes.list, [dataTypes.float]]);
-      assert.strictEqual(util.inspect(decoded), util.inspect(value));
-    });
-
-    it('should encode undefined as null', function () {
-      var hinted = typeEncoder.encode(undefined, 'set<text>');
-      var unHinted = typeEncoder.encode();
-      assert.strictEqual(hinted, null);
-      assert.strictEqual(unHinted, null);
-    });
-
-    it('should throw on unknown types', function () {
-      assert.throws(function () {
-        typeEncoder.encode({});
-      }, TypeError);
-    });
-    it('should throw when the typeInfo and the value source type does not match', function () {
-      assert.throws(function () {
-        typeEncoder.encode('hello', 'int');
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode('1', 'bigint');
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode('1.1', 'float');
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode(100, dataTypes.uuid);
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode(200, dataTypes.timeuuid);
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode('Its anybody in there? I know that you can hear me', dataTypes.blob);
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode(100, dataTypes.blob);
-      }, TypeError);
-      assert.throws(function () {
-        typeEncoder.encode({}, dataTypes.list);
-      }, TypeError);
-    })
-  });
-  describe('#setRoutingKey', function () {
-    it('should concat Array of buffers in the correct format',function () {
-      var options = {
-        routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
-      };
-      encoder.setRoutingKey([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), '00010100000102000002030300');
-
-      options = {
-        routingKey: [new Buffer([1])]
-      };
-      encoder.setRoutingKey([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), '01');
-    });
-    it('should not affect Buffer routing keys', function () {
-      var options = {
-        routingKey: new Buffer([1, 2, 3, 4])
-      };
-      var initialRoutingKey = options.routingKey.toString('hex');
-      encoder.setRoutingKey([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
-
-      options = {
-        routingIndexes: [1],
-        routingKey: new Buffer([1, 2, 3, 4])
-      };
-      encoder.setRoutingKey([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
-    });
-    it('should build routing key based on routingIndexes', function () {
-      var options = {
-        hints: ['int'],
-        routingIndexes: [0]
-      };
-      encoder.setRoutingKey([1], options);
-      assert.strictEqual(options.routingKey.toString('hex'), '00000001');
-
-      options = {
-        hints: ['int', 'string', 'int'],
-        routingIndexes: [0, 2]
-      };
-      encoder.setRoutingKey([1, 'yeah', 2], options);
-      //length1 + buffer1 + 0 + length2 + buffer2 + 0
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '00000002' + '00');
-
-      options = {
-        //less hints
-        hints: ['int'],
-        routingIndexes: [0, 2]
-      };
-      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
-      //length1 + buffer1 + 0 + length2 + buffer2 + 0
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
-      options = {
-        //no hints
-        routingIndexes: [1, 2]
-      };
-      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
-      //length1 + buffer1 + 0 + length2 + buffer2 + 0
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + new Buffer('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
-    });
-    it('should throw if the type could not be encoded', function () {
-      assert.throws(function () {
-        var options = {
-          routingIndexes: [0]
-        };
-        encoder.setRoutingKey([{a: 1}], options);
-      }, TypeError);
-      assert.throws(function () {
-        var options = {
-          hints: ['int'],
-          routingIndexes: [0]
-        };
-        encoder.setRoutingKey(['this is text'], options);
-      }, TypeError);
-    });
-  });
-});
 
 describe('types', function () {
   describe('Long', function () {
     var Long = types.Long;
     it('should convert from and to Buffer', function () {
       [
-       //int64 decimal value    //hex value
+        //int64 decimal value    //hex value
         ['-123456789012345678', 'fe4964b459cf0cb2'],
         ['-800000000000000000', 'f4e5d43d13b00000'],
         ['-888888888888888888', 'f3aa0843dcfc71c8'],
@@ -291,7 +57,266 @@ describe('types', function () {
       });
     });
   });
+  describe('Integer', function () {
+    var Integer = types.Integer;
+    var values = [
+      //hex value                      |      string varint
+      ['02000001',                            '33554433'],
+      ['02000000',                            '33554432'],
+      ['1111111111111111',                    '1229782938247303441'],
+      ['01',                                  '1'],
+      ['0400',                                '1024'],
+      ['7fffffff',                            '2147483647'],
+      ['02000000000001',                      '562949953421313'],
+      ['ff',                                  '-1'],
+      ['ff01',                                '-255'],
+      ['faa8c4',                              '-350012'],
+      ['eb233d9f',                            '-350012001'],
+      ['f7d9c411c4',                          '-35001200188'],
+      ['f0bdc0',                              '-1000000'],
+      ['ff172b5aeff4',                        '-1000000000012'],
+      ['9c',                                  '-100'],
+      ['c31e',                                '-15586'],
+      ['00c31e',                              '49950'],
+      ['0500e3c2cef9eaaab3',                  '92297829382473034419'],
+      ['033171cbe0fac2d665b78d4e',            '988229782938247303441911118'],
+      ['fcce8e341f053d299a4872b2',            '-988229782938247303441911118'],
+      ['00b70cefb9c19c9c5112972fd01a4e676d',  '243315893003967298069149506221212854125'],
+      ['00ba0cef',                            '12193007'],
+      ['00ffffffff',                          '4294967295']
+    ];
+    it('should create from buffer', function () {
+      values.forEach(function (item) {
+        var buffer = new Buffer(item[0], 'hex');
+        var value = Integer.fromBuffer(buffer);
+        assert.strictEqual(value.toString(), item[1]);
+      });
+    });
+    it('should convert to buffer', function () {
+      values.forEach(function (item) {
+        var buffer = Integer.toBuffer(Integer.fromString(item[1]));
+        assert.strictEqual(buffer.toString('hex'), item[0]);
+      });
+    });
+  });
+  describe('Tuple', function () {
+    var Tuple = types.Tuple;
+    describe('#get()', function () {
+      it('should return the element at position', function () {
+        var t = new Tuple('first', 'second');
+        assert.strictEqual(t.get(0), 'first');
+        assert.strictEqual(t.get(1), 'second');
+        assert.strictEqual(t.get(2), undefined);
+        assert.strictEqual(t.length, 2);
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string of the elements surrounded by parenthesis', function () {
+        var id = types.Uuid.random();
+        var decimal = types.BigDecimal.fromString('1.2');
+        var t = new Tuple(id, decimal, 0);
+        assert.strictEqual(t.toString(), '(' + id.toString() + ',' + decimal.toString() + ',0)');
+      });
+    });
+    describe('#toJSON()', function () {
+      it('should return the string of the elements surrounded by square brackets', function () {
+        var id = types.TimeUuid.now();
+        var decimal = types.BigDecimal.fromString('-1');
+        var t = new Tuple(id, decimal, 1, {z: 1});
+        assert.strictEqual(JSON.stringify(t), '["' + id.toString() + '","' + decimal.toString() + '",1,{"z":1}]');
+      });
+    });
+    describe('#values()', function () {
+      it('should return the Array representation of the Tuple', function () {
+        var t = new Tuple('first2', 'second2', 'third2');
+        assert.strictEqual(t.length, 3);
+        var values = t.values();
+        assert.ok(util.isArray(values));
+        assert.strictEqual(values.length, 3);
+        assert.strictEqual(values[0], 'first2');
+        assert.strictEqual(values[1], 'second2');
+        assert.strictEqual(values[2], 'third2');
+      });
+      it('when modifying the returned Array the Tuple should not change its values', function () {
+        var t = new Tuple('first3', 'second3', 'third3');
+        var values = t.values();
+        assert.strictEqual(values.length, 3);
+        values[0] = 'whatever';
+        values.shift();
+        assert.strictEqual(t.get(0), 'first3');
+        assert.strictEqual(t.get(1), 'second3');
+        assert.strictEqual(t.get(2), 'third3');
+      });
+    });
+  });
+  describe('LocalDate', function () {
+    var LocalDate = types.LocalDate;
+    describe('new LocalDate', function (){
+      it('should refuse to create LocalDate from invalid values.', function () {
+        assert.throws(function () { new types.LocalDate() }, Error);
+        assert.throws(function () { new types.LocalDate(undefined) }, Error);
+        // Outside of ES5 Date range.
+        assert.throws(function () { new types.LocalDate(-271821, 4, 19) }, Error);
+        assert.throws(function () { new types.LocalDate(275760, 9, 14) }, Error);
+        // Outside of LocalDate range.
+        assert.throws(function () { new types.LocalDate(-2147483649) }, Error);
+        assert.throws(function () { new types.LocalDate(2147483648) }, Error);
 
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string in the form of yyyy-mm-dd', function () {
+        assert.strictEqual(new LocalDate(2015, 2, 1).toString(), '2015-02-01');
+        assert.strictEqual(new LocalDate(2015, 12, 13).toString(), '2015-12-13');
+        assert.strictEqual(new LocalDate(101, 12, 14).toString(), '0101-12-14');
+        assert.strictEqual(new LocalDate(-100, 11, 6).toString(), '-0100-11-06');
+      });
+    });
+    describe('#fromBuffer() and #toBuffer()', function () {
+      it('should encode and decode a LocalDate', function () {
+        var value = new LocalDate(2010, 8, 5);
+        var encoded = value.toBuffer();
+        var decoded = LocalDate.fromBuffer(encoded);
+        assert.strictEqual(decoded.toString(), value.toString());
+        assert.ok(decoded.equals(value));
+        assert.ok(value.equals(decoded));
+      });
+    });
+    describe('#fromString()', function () {
+      it('should parse the string representation as yyyy-mm-dd', function () {
+        [
+          ['1200-12-30', 1200, 12, 30],
+          ['1-1-1', 1, 1, 1],
+          ['21-2-1', 21, 2, 1],
+          ['-21-2-1', -21, 2, 1],
+          ['2010-4-29', 2010, 4, 29],
+          ['-199-06-30', -199, 6, 30],
+          ['1201-04-03', 1201, 4, 3],
+          ['-1201-04-03', -1201, 4, 3],
+          ['0-1-1', 0, 1, 1]
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.year, item[1]);
+            assert.strictEqual(value.month, item[2]);
+            assert.strictEqual(value.day, item[3]);
+        });
+      });
+      it('should parse the string representation as since epoch days', function () {
+        [
+          ['0', '1970-01-01'],
+          ['1', '1970-01-02'],
+          ['2147483647', '2147483647'],
+          ['-2147483648', '-2147483648'],
+          ['-719162', '0001-01-01']
+        ].forEach(function (item) {
+            var value = LocalDate.fromString(item[0]);
+            assert.strictEqual(value.toString(), item[1]);
+        });
+      });
+      it('should throw when string representation is invalid', function () {
+        [
+          '',
+          '1880-1',
+          '1880-1-z',
+          undefined,
+          null,
+          '  '
+        ].forEach(function (value) {
+            assert.throws(function () {
+              LocalDate.fromString(value);
+            }, Error, 'For value: ' + value);
+        });
+      });
+    });
+  });
+  describe('LocalTime', function () {
+    var LocalTime = types.LocalTime;
+    var Long = types.Long;
+    var values = [
+      //Long value         |     string representation  |   hour/min/sec/nanos
+      ['1000000001',             '00:00:01.000000001',      [0, 0, 1, 1]],
+      ['0',                      '00:00:00',                [0, 0, 0, 0]],
+      ['3600000006001',          '01:00:00.000006001',      [1, 0, 0, 6001]],
+      ['61000000000',            '00:01:01',                [0, 1, 1, 0]],
+      ['610000030000',           '00:10:10.00003',          [0, 10, 10, 30000]],
+      ['52171800000000',         '14:29:31.8',              [14, 29, 31, 800000000]],
+      ['52171800600000',         '14:29:31.8006',           [14, 29, 31, 800600000]]
+    ];
+    describe('new LocalTime', function () {
+      it('should refuse to create LocalTime from invalid values.', function () {
+        // Not a long.
+        assert.throws(function () { new types.LocalTime(23.0) }, Error);
+        // < 0
+        assert.throws(function () { new types.LocalTime(types.Long(-1)) }, Error);
+        // > maxNanos
+        assert.throws(function () { new types.LocalTime(Long.fromString('86400000000000')) }, Error);
+      });
+    });
+    describe('#toString()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#toJSON()', function () {
+      it('should return the string representation', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          assert.strictEqual(val.toString(), item[1]);
+        });
+      });
+    });
+    describe('#fromString()', function () {
+      it('should parse the string representation', function () {
+        values.forEach(function (item) {
+          var val = LocalTime.fromString(item[1]);
+          assert.ok(new LocalTime(Long.fromString(item[0])).equals(val));
+          assert.ok(new LocalTime(Long.fromString(item[0]))
+            .getTotalNanoseconds()
+            .equals(val.getTotalNanoseconds()));
+        });
+      });
+    });
+    describe('#toBuffer() and fromBuffer()', function () {
+      values.forEach(function (item) {
+        var val = new LocalTime(Long.fromString(item[0]));
+        var encoded = val.toBuffer();
+        var decoded = LocalTime.fromBuffer(encoded);
+        assert.ok(decoded.equals(val));
+        assert.strictEqual(val.toString(), decoded.toString());
+      });
+    });
+    describe('#hour #minute #second #nanosecond', function () {
+      it('should get the correct parts', function () {
+        values.forEach(function (item) {
+          var val = new LocalTime(Long.fromString(item[0]));
+          var parts = item[2];
+          assert.strictEqual(val.hour, parts[0]);
+          assert.strictEqual(val.minute, parts[1]);
+          assert.strictEqual(val.second, parts[2]);
+          assert.strictEqual(val.nanosecond, parts[3]);
+        });
+      });
+    });
+    describe('fromDate()', function () {
+      it('should use the local time', function () {
+        var date = new Date();
+        var time = LocalTime.fromDate(date, 1);
+        assert.strictEqual(time.hour, date.getHours());
+        assert.strictEqual(time.minute, date.getMinutes());
+        assert.strictEqual(time.second, date.getSeconds());
+        assert.strictEqual(time.nanosecond, date.getMilliseconds() * 1000000 + 1);
+      });
+    });
+    describe('fromMilliseconds', function () {
+      it('should default nanoseconds to 0 when not provided', function () {
+        var time = LocalTime.fromMilliseconds(1);
+        assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)))
+      });
+    });
+  });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       var buf = [];
@@ -307,7 +332,6 @@ describe('types', function () {
           buf.push(item);
         }
       });
-      
       stream.add(new Buffer('Jimmy'));
       stream.add(new Buffer(' '));
       stream.add(new Buffer('McNulty'));
@@ -374,30 +398,129 @@ describe('types', function () {
       });
     });
   });
-
   describe('Row', function () {
     it('should get the value by column name or index', function () {
-      var columnList = [{name: 'first'}, {name: 'second'}];
-      var row = new types.Row(columnList);
-      row['first'] = 'value1';
-      row['second'] = 'value2';
-
+      var columns = [{name: 'first', type: { code: dataTypes.varchar}}, {name: 'second', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(columns);
+      row['first'] = 'hello';
+      row['second'] = 'world';
       assert.ok(row.get, 'It should contain a get method');
+      assert.strictEqual(row['first'], 'hello');
       assert.strictEqual(row.get('first'), row['first']);
       assert.strictEqual(row.get(0), row['first']);
       assert.strictEqual(row.get('second'), row['second']);
       assert.strictEqual(row.get(1), row['second']);
     });
-
     it('should enumerate only columns defined', function () {
-      var row = new types.Row([{name: 'col1'}, {name: 'col2'}]);
+      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(columns);
       row['col1'] = 'val1';
       row['col2'] = 'val2';
-      assert.strictEqual(JSON.stringify(row), JSON.stringify({'col1': 'val1', 'col2': 'val2'}));
+      assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
     });
-  })
-});
+    it('should be serializable to json', function () {
+      var i;
+      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      var row = new types.Row(columns, [new Buffer('val1'), new Buffer('val2')]);
+      row['col1'] = 'val1';
+      row['col2'] = 'val2';
+      assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
 
+      columns = [
+        {name: 'cid', type: { code: dataTypes.uuid}},
+        {name: 'ctid', type: { code: dataTypes.timeuuid}},
+        {name: 'clong', type: { code: dataTypes.bigint}},
+        {name: 'cvarint', type: { code: dataTypes.varint}}
+      ];
+      var rowValues = [
+        types.Uuid.random(),
+        types.TimeUuid.now(),
+        types.Long.fromNumber(1000),
+        types.Integer.fromNumber(22)
+      ];
+      row = new types.Row(columns);
+      for (i = 0; i < columns.length; i++) {
+        row[columns[i].name] = rowValues[i];
+      }
+      var expected = util.format('{"cid":"%s","ctid":"%s","clong":"1000","cvarint":"22"}',
+        rowValues[0].toString(), rowValues[1].toString());
+      assert.strictEqual(JSON.stringify(row), expected);
+      rowValues = [
+        types.BigDecimal.fromString("1.762"),
+        new types.InetAddress(new Buffer([192, 168, 0, 1])),
+        null];
+      columns = [
+        {name: 'cdecimal', type: { code: dataTypes.decimal}},
+        {name: 'inet1', type: { code: dataTypes.inet}},
+        {name: 'inet2', type: { code: dataTypes.inet}}
+      ];
+      row = new types.Row(columns);
+      for (i = 0; i < columns.length; i++) {
+        row[columns[i].name] = rowValues[i];
+      }
+      expected = '{"cdecimal":"1.762","inet1":"192.168.0.1","inet2":null}';
+      assert.strictEqual(JSON.stringify(row), expected);
+    });
+    it('should have values that can be inspected', function () {
+      var columns = [{name: 'col10', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.int}}];
+      var row = new types.Row(columns);
+      row['col10'] = 'val1';
+      row['col2'] = 2;
+      helper.assertContains(util.inspect(row), util.inspect({col10: 'val1', col2: 2}));
+    });
+  });
+  describe('uuid() backward-compatibility', function () {
+    it('should generate a random string uuid', function () {
+      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      var val = types.uuid();
+      assert.strictEqual(typeof val, 'string');
+      assert.strictEqual(val.length, 36);
+      assert.ok(uuidRegex.test(val));
+      assert.notEqual(val, types.uuid());
+    });
+    it('should fill in the values in a buffer', function () {
+      var buf = new Buffer(16);
+      var val = types.uuid(null, buf);
+      assert.strictEqual(val, buf);
+    });
+  });
+  describe('timeuuid() backward-compatibility', function () {
+    it('should generate a string uuid', function () {
+      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      var val = types.timeuuid();
+      assert.strictEqual(typeof val, 'string');
+      assert.strictEqual(val.length, 36);
+      assert.ok(uuidRegex.test(val));
+      assert.notEqual(val, types.timeuuid());
+    });
+    it('should fill in the values in a buffer', function () {
+      var buf = new Buffer(16);
+      var val = types.timeuuid(null, buf);
+      assert.strictEqual(val, buf);
+    });
+  });
+  describe('generateTimestamp()', function () {
+    it('should generate using date and microseconds parts', function () {
+      var date = new Date();
+      var value = types.generateTimestamp(date, 123);
+      helper.assertInstanceOf(value, types.Long);
+      assert.strictEqual(value.toString(), types.Long
+        .fromNumber(date.getTime())
+        .multiply(types.Long.fromInt(1000))
+        .add(types.Long.fromInt(123))
+        .toString());
+
+      date = new Date('2010-04-29');
+      value = types.generateTimestamp(date, 898);
+      helper.assertInstanceOf(value, types.Long);
+      assert.strictEqual(value.toString(), types.Long
+        .fromNumber(date.getTime())
+        .multiply(types.Long.fromInt(1000))
+        .add(types.Long.fromInt(898))
+        .toString());
+    });
+  });
+});
 describe('utils', function () {
   describe('#syncEvent()', function () {
     it('should execute callback once for all emitters', function () {
@@ -417,7 +540,6 @@ describe('utils', function () {
       assert.strictEqual(callbackCounter, 1);
     });
   });
-
   describe('#parseCommonArgs()', function () {
     it('parses args and can be retrieved by name', function () {
       function testArgs(args, expectedLength) {
@@ -442,7 +564,6 @@ describe('utils', function () {
       assert.ok(args.params && args.options, 'Params and options must not be null');
     });
   });
-
   describe('#extend()', function () {
     it('should allow null sources', function () {
       var originalObject = {};
@@ -450,7 +571,6 @@ describe('utils', function () {
       assert.strictEqual(originalObject, extended);
     });
   });
-
   describe('#funcCompare()', function () {
     it('should return a compare function valid for Array#sort', function () {
       var values = [
@@ -464,7 +584,6 @@ describe('utils', function () {
       assert.strictEqual(values[2].id, 1);
     });
   });
-
   describe('#binarySearch()', function () {
     it('should return the key index if found, or the bitwise compliment of the first larger value', function () {
       var compareFunc = function (a, b) {
@@ -483,7 +602,6 @@ describe('utils', function () {
       assert.strictEqual(val, ~3);
     });
   });
-
   describe('#deepExtend', function () {
     it('should override only the most inner props', function () {
       var value;
@@ -526,7 +644,6 @@ describe('utils', function () {
     });
   });
 });
-
 describe('clientOptions', function () {
   describe('#extend', function () {
     it('should require contactPoints', function () {
@@ -586,7 +703,7 @@ describe('clientOptions', function () {
           contactPoints: ['host1'],
           policies: {
             //Use whatever object
-            loadBalancing: new Connection()
+            loadBalancing: new (function C1() {})()
           }
         });
       });
@@ -595,14 +712,40 @@ describe('clientOptions', function () {
           contactPoints: ['host1'],
           policies: {
             //Use whatever object
-            retry: new Connection()
+            retry: new (function C2() {})()
           }
+        });
+      });
+    });
+    it('should validate the encoding options', function () {
+      function DummyConstructor() {}
+      assert.doesNotThrow(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: {}
+        });
+      });
+      assert.doesNotThrow(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: helper.Map}
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: 1}
+        });
+      });
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          encoding: { map: DummyConstructor}
         });
       });
     });
   });
 });
-
 describe('exports', function () {
   it('should contain API', function () {
     //test that the exposed API is the one expected

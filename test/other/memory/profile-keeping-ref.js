@@ -17,7 +17,7 @@ var Client = cassandra.Client;
 var types = cassandra.types;
 var utils = require('../../../lib/utils.js');
 
-var client = new Client(helper.baseOptions);
+var client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
 var keyspace = helper.getRandomName('ks');
 var table = keyspace + '.' + helper.getRandomName('tbl');
 
@@ -25,6 +25,11 @@ if (!global.gc) {
   console.log('You must run this test exposing the GC');
   return
 }
+
+var totalLength = 100;
+var heapUsed = process.memoryUsage().heapUsed;
+var totalByteLength = 0;
+var values = [];
 
 async.series([
   helper.ccmHelper.removeIfAny,
@@ -42,12 +47,9 @@ async.series([
     var counter = 0;
     var callbackCounter = 0;
     global.gc();
-    var heapUsed = process.memoryUsage().heapUsed;
-    async.eachLimit(new Array(10000), 500, function (v, timesNext) {
+    async.eachLimit(new Array(totalLength), 500, function (v, timesNext) {
       var n = counter++;
-      var buf = new Buffer(1024);
-      buf.write(helper.getRandomName('fill in with pseudo-random values'));
-      client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), buf], {prepare: 1}, function (err) {
+      client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), new Buffer(generateAsciiString(1024))], {prepare: 1}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {
           console.log('Inserted', callbackCounter);
         }
@@ -55,45 +57,36 @@ async.series([
         setImmediate(timesNext);
       });
     }, function (err) {
-      if (err) return next(err);
-      global.gc();
-      var diff = process.memoryUsage().heapUsed - heapUsed;
-      console.log('Heap used difference', formatLength(diff));
-      if (diff > 2024 * 1024) {
-        //not even a 2Mb
-        return next(new Error('Difference between starting heap and finish heap used size is too large ' + formatLength(diff)));
-      }
-      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
-      setImmediate(next);
+      next(err);
     });
   },
   function selectData(next) {
     console.log('------------Retrieving data...');
     var query = util.format('SELECT id, int_sample, bigint_sample, blob_sample FROM %s', table);
-    var totalByteLength = 0;
+    //var query = util.format('SELECT blob_sample FROM %s', table);
     global.gc();
-    var heapUsed = process.memoryUsage().heapUsed;
-    var rowCount = 0;
-    var values = [];
     client.eachRow(query, [], {prepare: true, autoPage: true}, function (n, row) {
-      //Buffer + int + uuid
+      //Buffer length + uuid + int + bigint
       totalByteLength += row['blob_sample'].length + 4 + 16 + 8;
-      rowCount++;
       values.push(row.values());
-    }, function (err, result) {
-      if (err) return next(err);
+    }, function (err) {
+      next(err);
+    });
+  }
+], function (err) {
+  assert.ifError(err);
+  client.shutdown(function (err) {
+    setImmediate(function () {
+      client = null;
       global.gc();
       var diff = process.memoryUsage().heapUsed - heapUsed;
-      assert.strictEqual(rowCount, result.rowLength);
-      console.log('Heap used difference', formatLength(diff), ', should be around', formatLength(totalByteLength));
-      console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
-      setImmediate(next);
+      console.log('Byte length %s in %d values', formatLength(totalByteLength), values.length);
+      console.log('Heap used difference', formatLength(diff));
+      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      helper.ccmHelper.removeIfAny();
+      assert.ifError(err);
     });
-  },
-  client.shutdown.bind(client)
-], function (err) {
-  helper.ccmHelper.removeIfAny();
-  assert.ifError(err);
+  });
 });
 
 function formatLength(value) {
@@ -102,4 +95,13 @@ function formatLength(value) {
     return (kbValues / 1024).toFixed(2) + 'MiB';
   }
   return kbValues + 'KiB';
+}
+
+function generateAsciiString(length) {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for( var i=0; i < length; i++ ){
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

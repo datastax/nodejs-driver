@@ -4,8 +4,9 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
+var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -17,6 +18,7 @@ describe('Client', function () {
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
       //fail if its preparing
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () {throw new Error('Prepared should not be called')};
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
@@ -32,7 +34,6 @@ describe('Client', function () {
     it('should allow calls without end callback', function (done) {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
-      var counter = 0;
       client.eachRow(query, [], {}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -44,7 +45,7 @@ describe('Client', function () {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'' + helper.getRandomName() + '\'';
       var counter = 0;
-      client.eachRow(query, [], {}, function (n, row) {
+      client.eachRow(query, [], {}, function () {
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -57,7 +58,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var query = helper.createKeyspaceCql(keyspace, 1);
       var counter = 0;
-      client.eachRow(query, [], {}, function (n, row) {
+      client.eachRow(query, [], {}, function () {
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -82,7 +83,7 @@ describe('Client', function () {
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
           async.timesSeries(length, function (n, timesNext) {
-            client.eachRow(util.format(query, table, types.uuid(), n), [], noop, timesNext);
+            client.eachRow(util.format(query, table, types.Uuid.random(), n), [], noop, timesNext);
           }, next);
         },
         function select(next) {
@@ -98,8 +99,7 @@ describe('Client', function () {
           });
         }], done);
     });
-
-    it('should autoPage @c2_0', function (done) {
+    vit('2.0', 'should autoPage', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var client = newInstance();
@@ -114,14 +114,14 @@ describe('Client', function () {
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           async.times(100, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], noop, next);
+            client.eachRow(query, [types.Uuid.random(), n.toString()], noop, next);
           }, seriesNext);
         },
         function selectDataMultiplePages(seriesNext) {
           //It should fetch 3 times, a total of 100 rows (45+45+10)
           var query = util.format('SELECT * FROM %s', table);
           var rowCount = 0;
-          client.eachRow(query, [], {fetchSize: 45, autoPage: true}, function (n, row) {
+          client.eachRow(query, [], {fetchSize: 45, autoPage: true}, function () {
             rowCount++;
           }, function (err, result) {
             assert.ifError(err);
@@ -138,7 +138,7 @@ describe('Client', function () {
           //It should fetch 1 time, a total of 100 rows (even if asked more)
           var query = util.format('SELECT * FROM %s', table);
           var rowCount = 0;
-          client.eachRow(query, [], {fetchSize: 2000, autoPage: true}, function (n, row) {
+          client.eachRow(query, [], {fetchSize: 2000, autoPage: true}, function () {
             rowCount++;
           }, function (err, result) {
             assert.ifError(err);
@@ -153,7 +153,6 @@ describe('Client', function () {
       ], done);
     });
   });
-
   describe('#eachRow(query, params, {prepare: 1})', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
@@ -175,8 +174,10 @@ describe('Client', function () {
       var client = newInstance();
       var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
       var counter = 0;
+      //noinspection JSAccessibilityCheck
       var originalGetPrepared = client._getPrepared;
       var prepareCalled = false;
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () {
         prepareCalled = true;
         originalGetPrepared.apply(client, arguments);
@@ -210,7 +211,7 @@ describe('Client', function () {
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
           async.timesSeries(length, function (n, timesNext) {
-            client.eachRow(util.format(query, table, types.uuid(), n), [], {prepare: true}, noop, timesNext);
+            client.eachRow(util.format(query, table, types.Uuid.random(), n), [], {prepare: true}, noop, timesNext);
           }, next);
         },
         function select(next) {
@@ -224,7 +225,7 @@ describe('Client', function () {
           });
         }], done);
     });
-    it('should autoPage on parallel different tables @c2_0', function (done) {
+    vit('2.0', 'should autoPage on parallel different tables', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');
       var table2 = keyspace + '.' + helper.getRandomName('table');
@@ -243,14 +244,14 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
-          async.times(200, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+          helper.timesLimit(200, 100, function (n, next) {
+            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
-          async.times(135, function (n, next) {
-            client.eachRow(query, [types.uuid(), n+1], {prepare: 1}, noop, next);
+          helper.timesLimit(135, 100, function (n, next) {
+            client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function selectDataMultiplePages(seriesNext) {
@@ -289,29 +290,31 @@ describe('Client', function () {
         assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
-    it('should use pageState and fetchSize @c2_0', function (done) {
-      var client = newInstance();
-      var pageState = null;
+    vit('2.0', 'should use pageState and fetchSize', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var metaPageState;
+      var pageState;
       async.series([
         function truncate(seriesNext) {
           client.eachRow('TRUNCATE ' + table, [], noop, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(131, function (n, next) {
-            client.eachRow(query, [types.uuid(), n.toString()], {prepare: 1}, noop, next);
+          helper.timesLimit(131, 100, function (n, next) {
+            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function selectData(seriesNext) {
           //Only fetch 70
           var counter = 0;
-          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (n, row) {
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function () {
             counter++;
           }, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(counter, 70);
             assert.strictEqual(result.rowLength, counter);
-            pageState = result.meta.pageState;
+            pageState = result.pageState;
+            metaPageState = result.meta.pageState;
             seriesNext();
           });
         },
@@ -327,8 +330,93 @@ describe('Client', function () {
             assert.strictEqual(counter, result.rowLength);
             seriesNext();
           });
+        },
+        function selectDataRemainingWithMetaPageState(seriesNext) {
+          //The remaining
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: metaPageState}, function (n, row) {
+            assert.ok(row);
+            counter++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 61);
+            assert.strictEqual(counter, result.rowLength);
+            seriesNext();
+          });
         }
       ], done);
+    });
+    it('should retrieve the trace id when queryTrace flag is set', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var id = types.Uuid.random();
+      async.series([
+        client.connect.bind(client),
+        function selectNotExistent(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+          var called = 0;
+          client.eachRow(query, [types.Uuid.random()], {prepare: true, traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 0);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function insertQuery(next) {
+          var query = util.format('INSERT INTO %s (id) VALUES (?)', table);
+          var called = 0;
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 0);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        },
+        function selectSingleRow(next) {
+          var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+          var called = 0;
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
+            called++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(called, 1);
+            assert.strictEqual(result.rowLength, 1);
+            helper.assertInstanceOf(result.info.traceId, types.Uuid);
+            next();
+          });
+        }
+      ], done);
+    });
+    helper.vit('2.2', 'should include the warning in the ResultSet', function (done) {
+      var client = newInstance();
+      var loggedMessage = false;
+      client.on('log', function (level, className, message) {
+        if (loggedMessage) return;
+        if (level !== 'warning') return;
+        message = message.toLowerCase();
+        if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
+          loggedMessage = true;
+        }
+      });
+      var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (?, ?) APPLY BATCH", table);
+      var params = [types.Uuid.random(), utils.stringRepeat('c', 5 * 1025)];
+      client.eachRow(query, params, {prepare: true}, function () {
+        
+      }, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.info.warnings);
+        assert.strictEqual(result.info.warnings.length, 1);
+        helper.assertContains(result.info.warnings[0], 'batch');
+        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.ok(loggedMessage);
+        client.shutdown(done);
+      });
     });
   });
 });
@@ -336,6 +424,8 @@ describe('Client', function () {
 /**
  * @returns {Client}
  */
-function newInstance() {
-  return new Client(helper.baseOptions);
+function newInstance(options) {
+  options = options || {};
+  options = utils.extend(options, helper.baseOptions);
+  return new Client(options);
 }

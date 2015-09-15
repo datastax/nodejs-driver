@@ -1,6 +1,6 @@
-﻿# DataStax Node.js Driver for Apache Cassandra
+# DataStax Node.js Driver for Apache Cassandra
 
-Node.js driver for [Apache Cassandra][cassandra]. This driver works exclusively with the Cassandra Query Language version 3 (CQL3) and Cassandra's native protocol.
+A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra (1.2+) and DataStax Enterprise (3.1+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3.
 
 ## Installation
 
@@ -12,14 +12,14 @@ $ npm install cassandra-driver
 
 ## Features
 
-- Node discovery
-- Configurable load balancing
-- Transparent failover
-- Tunability
-- Paging
-- Client-to-node SSL support
-- Row streaming
-- Prepared statements and query batches
+- Simple, Prepared, and Batch statements
+- Asynchronous IO, parallel execution, request pipelining
+- [Connection pooling][pooling]
+- Auto node discovery
+- Automatic reconnection
+- Configurable [load balancing][load-balancing] and [retry policies][retry]
+- Works with any cluster size
+- [Row streaming and pipes](#avoid-buffering)
 
 ## Documentation
 
@@ -32,11 +32,15 @@ $ npm install cassandra-driver
 
 You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
+## Upgrading from 1.x branch
+
+If you are upgrading from the 1.x branch of the driver, be sure to have a look at the [upgrade guide][upgrade1].
+
 ## Basic usage
 
 ```javascript
 var cassandra = require('cassandra-driver');
-var client = new cassandra.Client({contactPoints: ['host1', 'h2'], keyspace: 'ks1'});
+var client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
 var query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   assert.ifError(err);
@@ -46,11 +50,15 @@ client.execute(query, ['guy'], function(err, result) {
 
 ### Prepare your queries
 
-Use prepared statements to obtain best performance. The driver will prepare the query once on each host and
- execute the statement with the bound parameters.
+Using prepared statements provides multiple benefits.
+Prepared statements are parsed and prepared on the Cassandra nodes and are ready for future execution.
+Also, when preparing, the driver retrieves information about the parameter types which
+ **allows an accurate mapping between a JavaScript type and a Cassandra type**.
+
+The driver will prepare the query once on each host and execute the statement with the bound parameters.
 
 ```javascript
-//When using parameter markers ? the prepared query will be reused
+//Use query markers (?) and parameters
 var query = 'UPDATE user_profiles SET birth=? WHERE key=?'; 
 var params = [new Date(1942, 10, 1), 'jimi-hendrix'];
 //Set the prepare flag in the query options
@@ -79,7 +87,59 @@ client.eachRow('SELECT time, val FROM temperature WHERE station_id=', ['abc'],
 ```
 
 The `#stream()` method works in the same way but instead of callback it returns a [Readable Streams2][streams2] object
- in `objectMode` that emits instances of `Row`. It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+ in `objectMode` that emits instances of `Row`.
+It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
+
+```javascript
+client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
+  .on('readable', function () {
+    //readable is emitted as soon a row is received and parsed
+    var row;
+    while (row = this.read()) {
+      console.log('time %s and value %s', row.time, row.val);
+    }
+  })
+  .on('end', function () {
+    //stream ended, there aren't any more rows
+  })
+  .on('error', function (err) {
+    //Something went wrong: err is a response error from Cassandra
+  });
+```
+
+### User defined types
+
+[User defined types (UDT)][cql-udt] are represented as Javascript objects.
+
+For example:
+Consider the following UDT and table
+```cql
+CREATE TYPE address (
+  street text,
+  city text,
+  state text,
+  zip int,
+  phones set<text>
+);
+CREATE TABLE users (
+  name text PRIMARY KEY,
+  email text,
+  address frozen<address>
+);
+```
+
+You can retrieve the user address details as a regular Javascript object.
+
+```javascript
+var query = 'SELECT name, email, address FROM users WHERE name = ?';
+client.execute(query, [name], { prepare: true}, function (err, result) {
+	var row = result.first();
+	var address = row.address;
+	console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
+});
+```
+
+Read more information  about using [UDTs with the Node.js Driver][doc-udt].
 
 ### Paging
 
@@ -110,8 +170,7 @@ var queries = [
     params: ['hendrix', 'Changed email', new Date()]
   }
 ];
-var queryOptions = { consistency: cassandra.types.consistencies.quorum };
-client.batch(queries, queryOptions, function(err) {
+client.batch(queries, { prepare: true }, function(err) {
   assert.ifError(err);
   console.log('Data updated on cluster');
 });
@@ -121,10 +180,12 @@ client.batch(queries, queryOptions, function(err) {
 
 ## Data types
 
-There are few data types defined in the ECMAScript standard, this usually represents a problem when you are trying to
- deal with data types that come from other systems in javascript. 
+There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
+ to deal with data types that come from other systems in Javascript.
 
-You should read the [documentation on CQL data types and ECMAScript types][doc-datatypes] for more information.
+The driver supports all the CQL data types in Apache Cassandra (2.2 and below) even for types that no built-in
+Javascript representation exists, like decimal, varint and bigint. Check the documentation on working with
+ [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
 ## Logging
 
@@ -136,6 +197,10 @@ client.on('log', function(level, className, message, furtherInfo) {
 ```
 The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
 
+## Feedback Requested
+
+**Help us focus our efforts!** Provide your input on the [Platform and Runtime Survey][survey] (we kept it short).
+
 ## Credits
 
 This driver is based on the original work of [Jorge Bay][jorgebay] on [node-cassandra-cql][old-driver] and adds a series of advanced features that are common across all other [DataStax drivers][drivers] for Apache Cassandra.
@@ -144,7 +209,7 @@ The development effort to provide an up to date, high performance, fully feature
 
 ## License
 
-Copyright 2014 DataStax
+Copyright 2015 DataStax
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
@@ -152,18 +217,24 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-
-[uuid]: https://github.com/broofa/node-uuid
-[long]: https://github.com/dcodeIO/Long.js
 [cassandra]: http://cassandra.apache.org/
-[doc-index]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/
-[doc-datatypes]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
-[doc-api]: http://www.datastax.com/drivers/nodejs/1.0/Client.html
-[start]: http://datastax.github.io/nodejs-driver/getting-started
-[faq]: http://www.datastax.com/documentation/developer/nodejs-driver/1.0/nodejs-driver/faq/njdFaq.html
+[doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.2/Client.html
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/
+[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/numericalValues.html
+[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/uuids-timeuuids.html
+[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/collections.html
+[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/userDefinedTypes.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/faq/njdFaq.html
+[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html
+[retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html#retry-policy
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/poolingConfiguration.html
+[upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[jira]: https://datastax-oss.atlassian.net/browse/NODEJS
+[jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
+[cql-udt]: http://cassandra.apache.org/doc/cql3/CQL.html#createTypeStmt
+[survey]: http://goo.gl/forms/f216tY3Ebr

@@ -4,13 +4,14 @@ var async = require('async');
 
 var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
-var types = require('../../../lib/types.js');
+var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');
+var vit = helper.vit;
 
 describe('Connection', function () {
-  this.timeout(30000);
+  this.timeout(120000);
   describe('#open()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
@@ -31,6 +32,33 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
+      var options = utils.extend({}, defaultOptions);
+      options.protocolOptions.maxVersion =  getProtocolVersion() - 1;
+      var localCon = newInstance(null, null, options);
+      localCon.open(function (err) {
+        assert.ifError(err);
+        assert.strictEqual(localCon.protocolVersion, options.protocolOptions.maxVersion);
+        assert.strictEqual(localCon.checkingVersion, true);
+        localCon.close(done);
+      });
+    });
+    it('should open with all the protocol versions supported', function (done) {
+      var maxProtocolVersionSupported = getProtocolVersion();
+      var protocolVersion = 0;
+      async.whilst(function condition() {
+        return (++protocolVersion) <= maxProtocolVersionSupported;
+      }, function iterator (next) {
+        var localCon = newInstance(null, protocolVersion);
+        localCon.open(function (err) {
+          assert.ifError(err);
+          assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+          localCon.close(next);
+        });
+      }, done);
+      for (var i = 1; i <= maxProtocolVersionSupported; i++) {
+      }
+    });
     it('should fail when the host does not exits', function (done) {
       var localCon = newInstance('1.1.1.1');
       localCon.open(function (err) {
@@ -46,6 +74,27 @@ describe('Connection', function () {
         assert.ok(!localCon.connected && !localCon.connecting);
         localCon.close(done);
       });
+    });
+    it('should set the timeout for the hearbeat', function (done) {
+      var options = utils.extend({}, defaultOptions);
+      options.pooling.heartBeatInterval = 200;
+      var c = newInstance(null, undefined, options);
+      var sendCounter = 0;
+      c.open(function (err) {
+        assert.ifError(err);
+        assert.ok(c.idleTimeout);
+        var originalSend = c.sendStream;
+        c.sendStream = function() {
+          sendCounter++;
+          originalSend.apply(c, Array.prototype.slice.call(arguments));
+        };
+      });
+      setTimeout(function () {
+        //wait for requests to take place
+        //at least 3 requests
+        assert.ok(sendCounter > 2, 'sendCounter ' + sendCounter);
+        done();
+      }, 1000)
     });
   });
   describe('#open with ssl', function () {
@@ -111,11 +160,15 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
-      var connection = newInstance();
+      var options = utils.extend({}, defaultOptions);
+      options.socketOptions.readTimeout = 0;
+      options.policies.retry = new helper.RetryMultipleTimes(3);
+      var connection = newInstance(null, null, options);
+      var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       async.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(connection.maxRequests * 2, function (n, next) {
+          async.times(maxRequests + 10, function (n, next) {
             var request = getRequest('SELECT * FROM system.schema_keyspaces');
             connection.sendStream(request, null, next);
           }, seriesNext);
@@ -123,18 +176,22 @@ describe('Connection', function () {
       ], done);
     });
     it('should callback the pending queue if the connection is there is a socket error', function (done) {
-      var connection = newInstance();
+      var options = utils.extend({}, defaultOptions);
+      options.socketOptions.readTimeout = 0;
+      options.policies.retry = new helper.RetryMultipleTimes(3);
+      var connection = newInstance(null, null, options);
+      var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       var killed = false;
       async.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(connection.maxRequests * 2, function (n, next) {
-            if (n === connection.maxRequests * 2 - 1) {
+          async.times(maxRequests + 10, function (n, next) {
+            if (n === maxRequests + 9) {
               connection.netClient.destroy();
               killed = true;
               return next();
             }
-            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            var request = getRequest('SELECT key FROM system.local');
             connection.sendStream(request, null, function (err) {
               if (killed && err) {
                 assert.ok(err.isServerUnhealthy);
@@ -149,7 +206,8 @@ describe('Connection', function () {
   });
 });
 
-function newInstance(address, protocolVersion){
+/** @returns {Connection} */
+function newInstance(address, protocolVersion, options){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
   }
@@ -157,9 +215,8 @@ function newInstance(address, protocolVersion){
     protocolVersion = getProtocolVersion();
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
-  var logEmitter = function () {};
-  var options = utils.extend({logEmitter: logEmitter}, defaultOptions);
-  return new Connection(address, protocolVersion, options);
+  options = utils.extend({logEmitter: helper.noop}, options || defaultOptions);
+  return new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
 }
 
 function getRequest(query) {
@@ -172,10 +229,14 @@ function getRequest(query) {
  */
 function getProtocolVersion() {
   //expected protocol version
-  var expectedVersion = 1;
-  if (helper.getCassandraVersion().indexOf('2.') === 0) {
-    expectedVersion = 2;
+  if (helper.getCassandraVersion().indexOf('2.1.') === 0) {
+    return 3;
   }
-  //protocol v3 not supported yet
-  return expectedVersion;
+  if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
+    return 2;
+  }
+  if (helper.getCassandraVersion().indexOf('1.') === 0) {
+    return 1;
+  }
+  return 4;
 }

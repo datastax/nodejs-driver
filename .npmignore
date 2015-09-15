@@ -12,10 +12,11 @@ lib-cov
 pids
 logs/
 results
-docs/
+doc/
 examples/
 support/
 test/
+out/
 testing.js
 .DS_Store
 .idea

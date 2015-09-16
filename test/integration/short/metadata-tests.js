@@ -7,6 +7,7 @@ var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
 describe('Metadata', function () {
   this.timeout(60000);
@@ -451,6 +452,50 @@ describe('Metadata', function () {
             next();
           });
         }
+      ], done);
+    });
+  });
+  vdescribe('3.0', '#getMaterializedView()', function () {
+    var keyspace = 'ks_view_meta';
+    before(function createTables(done) {
+      var client = newInstance();
+      var queries = [
+        "CREATE KEYSPACE ks_view_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
+        "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
+        "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC)"
+      ];
+      async.eachSeries(queries, client.execute.bind(client), function (err) {
+        client.shutdown();
+        if (err) {
+          return done(err);
+        }
+        setTimeout(done, 2000);
+      });
+    });
+    it('should retrieve the view and table metadata', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getMaterializedView(keyspace, 'scores', 'dailyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.name, 'dailyhigh');
+            assert.strictEqual(view.keyspaceName, keyspace);
+            assert.ok(view.table);
+            assert.strictEqual(view.table.name, 'scores');
+            assert.strictEqual(view.table.columns.length, 6);
+            assert.strictEqual(view.clusteringColumns.length, 2);
+            assert.strictEqual(view.clusteringColumns[0].name, 'score');
+            assert.strictEqual(view.clusteringColumns[1].name, 'user');
+            assert.strictEqual(view.includedColumns.length, 1);
+            assert.strictEqual(view.includedColumns[0].name, 'user');
+            assert.strictEqual(view.targetColumns.length, 4);
+            assert.strictEqual(view.targetColumns[0].name, 'game');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
       ], done);
     });
   });

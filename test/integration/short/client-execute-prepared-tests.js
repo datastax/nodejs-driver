@@ -7,7 +7,9 @@ var Client = require('../../../lib/client');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils');
 var errors = require('../../../lib/errors');
+var loadBalancing = require('../../../lib/policies/load-balancing');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 var Uuid = types.Uuid;
 
 describe('Client', function () {
@@ -706,6 +708,47 @@ describe('Client', function () {
           client1.shutdown.bind(client1),
           client2.shutdown.bind(client2)
         ], done);
+      });
+    });
+    vdescribe('3.0', 'with materialized views', function () {
+      var keyspace = 'ks_view_prepared';
+      before(function createTables(done) {
+        var client = newInstance();
+        var queries = [
+          "CREATE KEYSPACE ks_view_prepared WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}",
+          "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
+          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
+        ];
+        async.eachSeries(queries, client.execute.bind(client), function (err) {
+          client.shutdown();
+          if (err) {
+            return done(err);
+          }
+          setTimeout(done, 2000);
+        });
+      });
+      it('should choose the correct coordinator based on the partition key', function (done) {
+        var client = new Client({
+          policies: { loadBalancing: new loadBalancing.TokenAwarePolicy(new loadBalancing.RoundRobinPolicy())},
+          keyspace: keyspace,
+          contactPoints: helper.baseOptions.contactPoints
+        });
+        async.timesSeries(10, function (n, timesNext) {
+          var game = n.toString();
+          var query = 'SELECT * FROM alltimehigh WHERE game = ?';
+          client.execute(query, [game], { traceQuery: true, prepare: true}, function (err, result) {
+            assert.ifError(err);
+            var coordinator = result.info.queriedHost;
+            var traceId = result.info.traceId;
+            client.metadata.getTrace(traceId, function (err, trace) {
+              assert.ifError(err);
+              trace.events.forEach(function (event) {
+                assert.strictEqual(helper.lastOctetOf(event['source'].toString()), helper.lastOctetOf(coordinator.toString()));
+              });
+              timesNext();
+            });
+          });
+        }, helper.finish(client, done));
       });
     });
   });

@@ -8,6 +8,8 @@ var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
 var Metadata = require('../../lib/metadata');
+var TableMetadata = require('../../lib/metadata/table-metadata');
+var MaterializedView = require('../../lib/metadata/materialized-view');
 var tokenizer = require('../../lib/tokenizer');
 var types = require('../../lib/types');
 var utils = require('../../lib/utils');
@@ -1620,6 +1622,108 @@ describe('Metadata', function () {
         assert.strictEqual(aggregatesArray[1].stateFunction, 'plus');
         assert.strictEqual(typeof aggregatesArray[1].initCondition, 'number');
         assert.strictEqual(aggregatesArray[1].initCondition, 0);
+        done();
+      });
+    });
+  });
+  describe('#getMaterializedView()', function () {
+    var allTimeHighRow = {
+      "keyspace_name": "ks1", "table_name": "scores", "view_name": "alltimehigh",
+      "clustering_columns": ["score", "user", "year", "month", "day"],
+      "included_columns": ["user"], "target_columns": ["game"]};
+    var scoresTableMetadata = new TableMetadata('scores');
+    scoresTableMetadata.columnsByName = {
+      'score': { type: { code: types.dataTypes.int}, name: 'score' },
+      'user': { type: { code: types.dataTypes.text}, name: 'user' },
+      'game': { type: { code: types.dataTypes.text}, name: 'game' },
+      'year': { type: { code: types.dataTypes.int}, name: 'year'},
+      'month': { type: { code: types.dataTypes.int}, name: 'month'},
+      'day': { type: { code: types.dataTypes.int}, name: 'day'}
+    };
+    it('should call getTable() to retrieve the table metadata', function (done) {
+      var called = 0;
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            called++;
+            cb(null, {rows: [allTimeHighRow]});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.setCassandraVersion([3, 0]);
+      metadata.keyspaces['ks_mv'] = { };
+      metadata.getTable = function (ksName, name, cb) {
+        cb(null, scoresTableMetadata);
+      };
+      metadata.getMaterializedView('ks_mv', 'scores', 'alltimehigh', function (err, view) {
+        assert.ifError(err);
+        helper.assertInstanceOf(view, MaterializedView);
+        assert.strictEqual(view.name, 'alltimehigh');
+        assert.strictEqual(called, 1);
+        assert.ok(view.clusteringColumns);
+        assert.ok(view.includedColumns);
+        assert.ok(view.targetColumns);
+        assert.strictEqual(view.clusteringColumns.length, 5);
+        assert.strictEqual(view.clusteringColumns[0].name, 'score');
+        assert.strictEqual(view.clusteringColumns[1].name, 'user');
+        assert.strictEqual(view.clusteringColumns[2].name, 'year');
+        assert.strictEqual(view.clusteringColumns[3].name, 'month');
+        assert.strictEqual(view.clusteringColumns[4].name, 'day');
+        assert.strictEqual(view.includedColumns.length, 1);
+        assert.strictEqual(view.includedColumns[0].name, 'user');
+        assert.strictEqual(view.includedColumns[0].type.code, types.dataTypes.text);
+        assert.strictEqual(view.targetColumns.length, 1);
+        assert.strictEqual(view.targetColumns[0].name, 'game');
+        assert.strictEqual(view.targetColumns[0].type.code, types.dataTypes.text);
+        done();
+      });
+    });
+    it('should return null when the table is not found', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), {});
+      metadata.setCassandraVersion([3, 0]);
+      metadata.keyspaces['ks_mv'] = { };
+      metadata.getTable = function (ksName, name, cb) {
+        cb(null, null);
+      };
+      metadata.getMaterializedView('ks_mv', 'tbl_not_found', 'view1', function (err, view) {
+        assert.ifError(err);
+        assert.strictEqual(view, null);
+        done();
+      });
+    });
+    it('should return null when the view is not found', function (done) {
+      var cc = {
+        query: function (q, cb) {
+          setImmediate(function () {
+            //return an empty array
+            cb(null, {rows: []});
+          });
+        },
+        getEncoder: function () { return new Encoder(4, {}); }
+      };
+      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.setCassandraVersion([3, 0]);
+      metadata.keyspaces['ks_mv'] = { };
+      metadata.getTable = function (ksName, name, cb) {
+        cb(null, scoresTableMetadata);
+      };
+      metadata.getMaterializedView('ks_mv', 'scores', 'not_found', function (err, view) {
+        assert.ifError(err);
+        assert.strictEqual(view, null);
+        done();
+      });
+    });
+    it('should callback in error when cassandra version is lower than 3.0', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), {});
+      metadata.setCassandraVersion([2, 1]);
+      metadata.keyspaces['ks_mv'] = { };
+      metadata.getTable = function (ksName, name, cb) {
+        cb(null, scoresTableMetadata);
+      };
+      metadata.getMaterializedView('ks_mv', 'scores', 'view1', function (err) {
+        helper.assertInstanceOf(err, errors.NotSupportedError);
         done();
       });
     });

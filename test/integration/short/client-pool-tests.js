@@ -278,7 +278,7 @@ describe('Client', function () {
       var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
       var client = newInstance(options);
       async.times(100, function (n, next) {
-        client.execute('SELECT * FROM schema_keyspaces', next);
+        client.execute('SELECT * FROM local', next);
       }, function (err) {
         done(err);
       });
@@ -300,7 +300,7 @@ describe('Client', function () {
       var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
       var client = newInstance(options);
       async.times(10, function (n, next) {
-        client.execute('SELECT * FROM schema_keyspaces', function (err) {
+        client.execute('SELECT * FROM local', function (err) {
           assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           assert.ok(err.innerErrors);
@@ -358,7 +358,7 @@ describe('Client', function () {
       async.times(10, function (n, next) {
         assert.strictEqual(client.keyspace, 'system');
         //A query in the system ks
-        client.execute('SELECT * FROM schema_keyspaces', function (err, result) {
+        client.execute('SELECT * FROM local', function (err, result) {
           assert.ifError(err);
           assert.ok(result.rows);
           assert.ok(result.rows.length > 0);
@@ -371,7 +371,7 @@ describe('Client', function () {
       //on all hosts
       async.times(10, function (n, next) {
         //No matter what, the keyspace does not exists
-        client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+        client.execute(helper.queries.basic, function (err) {
           helper.assertInstanceOf(err, Error);
           next();
         });
@@ -384,7 +384,7 @@ describe('Client', function () {
         assert.strictEqual(client.keyspace, 'system');
         //all next queries, the instance should still "be" in the system keyspace
         async.times(100, function (n, next) {
-          client.execute('SELECT * FROM schema_keyspaces', [], next);
+          client.execute('SELECT * FROM local', [], next);
         }, done)
       });
     });
@@ -410,7 +410,7 @@ describe('Client', function () {
       //execute a couple of queries
       async.times(100, function (n, next) {
         setTimeout(function () {
-          client.execute('SELECT * FROM system.schema_keyspaces', next);
+          client.execute(helper.queries.basic, next);
           }, 100 + n * 2)
       }, function (err) {
         if (err) return done(err);
@@ -569,7 +569,7 @@ describe('Client', function () {
       async.series([
         function warmUpPool(seriesNext) {
           async.times(100, function (n, next) {
-            client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+            client.execute(helper.queries.basic, function (err, result) {
               assert.ifError(err);
               hosts[result.info.queriedHost] = true;
               next();
@@ -587,7 +587,7 @@ describe('Client', function () {
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
           async.times(1000, function (i, next) {
-            client.execute('SELECT * FROM system.schema_keyspaces', function (err) {
+            client.execute(helper.queries.basic, function (err) {
               counter++;
               assert.ifError(err);
               next();
@@ -623,7 +623,7 @@ describe('Client', function () {
       };
       var client = new Client(options);
       var hosts = {};
-      var query = 'SELECT * FROM system.schema_keyspaces';
+      var query = helper.queries.basic;
       async.series([
         function warmUpPool(seriesNext) {
           async.times(10, function (n, next) {
@@ -818,7 +818,7 @@ describe('Client', function () {
         function makeSomeQueries(next) {
           //to ensure that the pool is all up!
           async.times(100, function (n, timesNext) {
-            client.execute('SELECT * FROM system.schema_keyspaces', timesNext);
+            client.execute(helper.queries.basic, timesNext);
           }, next);
         },
         function shutDown(next) {

@@ -106,7 +106,7 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ifError(err);
         assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
-        localCon.sendStream(getRequest('SELECT * FROM system.schema_keyspaces'), null, function (err, result) {
+        localCon.sendStream(getRequest(helper.queries.basic), null, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
           assert.ok(result.rows.length);
@@ -169,7 +169,7 @@ describe('Connection', function () {
         connection.open.bind(connection),
         function asserting(seriesNext) {
           async.times(maxRequests + 10, function (n, next) {
-            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            var request = getRequest(helper.queries.basic);
             connection.sendStream(request, null, next);
           }, seriesNext);
         }

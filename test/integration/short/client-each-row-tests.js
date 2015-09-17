@@ -15,7 +15,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       var counter = 0;
       //fail if its preparing
       //noinspection JSAccessibilityCheck
@@ -23,7 +23,6 @@ describe('Client', function () {
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -33,17 +32,16 @@ describe('Client', function () {
     });
     it('should allow calls without end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       client.eachRow(query, [], {}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         done();
       });
     });
     it('should end callback when no rows', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'' + helper.getRandomName() + '\'';
+      var query = helper.queries.basicNoResults;
       var counter = 0;
       client.eachRow(query, [], {}, function () {
         counter++;
@@ -172,7 +170,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       var counter = 0;
       //noinspection JSAccessibilityCheck
       var originalGetPrepared = client._getPrepared;
@@ -185,7 +183,6 @@ describe('Client', function () {
       client.eachRow(query, [], {prepare: true}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         counter++;
       }, function (err) {
         assert.ifError(err);

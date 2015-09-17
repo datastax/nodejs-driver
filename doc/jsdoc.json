@@ -4,10 +4,10 @@
       "lib/types",
       "lib/auth",
       "lib/policies",
+      "lib/metadata",
       "lib/client.js",
       "lib/errors.js",
-      "lib/host.js",
-      "lib/metadata.js"
+      "lib/host.js"
     ]
   },
   "templates": {

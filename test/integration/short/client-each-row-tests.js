@@ -292,15 +292,7 @@ describe('Client', function () {
       var metaPageState;
       var pageState;
       async.series([
-        function truncate(seriesNext) {
-          client.eachRow('TRUNCATE ' + table, [], noop, seriesNext);
-        },
-        function insertData(seriesNext) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          helper.timesLimit(131, 100, function (n, next) {
-            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
-          }, seriesNext);
-        },
+        helper.toTask(insertTestData, null, client, table, 131),
         function selectData(seriesNext) {
           //Only fetch 70
           var counter = 0;
@@ -341,6 +333,77 @@ describe('Client', function () {
             seriesNext();
           });
         }
+      ], done);
+    });
+    vit('2.0', 'should expose result.nextPage() method', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var pageState;
+      var nextPageRows;
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(insertTestData, null, client, table, 110),
+        function selectData(seriesNext) {
+          //Only fetch 60 the first time, 50 the following
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 60}, function (n, row) {
+            counter++;
+            if (nextPageRows) {
+              nextPageRows.push(row);
+            }
+          }, function (err, result) {
+            assert.ifError(err);
+            if (!nextPageRows) {
+              //the first time, it should have a next page
+              assert.strictEqual(typeof result.nextPage, 'function');
+              assert.strictEqual(typeof result.pageState, 'string');
+              nextPageRows = [];
+              pageState = result.pageState;
+              //call to retrieve the following page rows.
+              result.nextPage();
+              return;
+            }
+            //the following times, there shouldn't be any additional page
+            assert.strictEqual(typeof result.nextPage, 'undefined');
+            assert.equal(result.pageState, null);
+            seriesNext();
+          });
+        },
+        function selectDataRemaining(seriesNext) {
+          //Select the remaining with pageState and compare the results.
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 100, pageState: pageState}, function (n, row) {
+            assert.ok(row);
+            counter++;
+            assert.strictEqual(row['id'].toString(), nextPageRows[n]['id'].toString());
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 50);
+            assert.strictEqual(counter, result.rowLength);
+            seriesNext();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.0', 'should not expose result.nextPage() method when no more rows', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var counter = 0;
+      var rowLength = 10;
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(insertTestData, null, client, table, rowLength),
+        function assertNextPageNull(next) {
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 1000}, function () {
+            counter++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, rowLength);
+            assert.strictEqual(counter, result.rowLength);
+            assert.strictEqual(typeof result.nextPage, 'undefined');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
       ], done);
     });
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
@@ -425,4 +488,18 @@ function newInstance(options) {
   options = options || {};
   options = utils.extend(options, helper.baseOptions);
   return new Client(options);
+}
+
+function insertTestData(client, table, length, callback) {
+  async.series([
+    function truncate(seriesNext) {
+      client.eachRow('TRUNCATE ' + table, [], helper.noop, seriesNext);
+    },
+    function insertData(seriesNext) {
+      var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      helper.timesLimit(length, 100, function (n, next) {
+        client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, helper.noop, next);
+      }, seriesNext);
+    }
+  ], callback);
 }

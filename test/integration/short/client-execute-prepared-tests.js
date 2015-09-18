@@ -2,12 +2,15 @@ var assert = require('assert');
 var async = require('async');
 var util = require('util');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
+var helper = require('../../test-helper');
+var Client = require('../../../lib/client');
 var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
-var errors = require('../../../lib/errors.js');
+var utils = require('../../../lib/utils');
+var errors = require('../../../lib/errors');
+var loadBalancing = require('../../../lib/policies/load-balancing');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
+var Uuid = types.Uuid;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -26,9 +29,9 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should execute a prepared query with parameters on all hosts', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = ?';
+      var query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
       async.timesSeries(3, function (n, next) {
-        client.execute(query, ['system'], {prepare: 1}, function (err, result) {
+        client.execute(query, [types.Uuid.random()], {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
           assert.notEqual(result, null);
@@ -49,33 +52,33 @@ describe('Client', function () {
     });
     it('should prepare and execute a query without parameters', function (done) {
       var client = newInstance();
-      client.execute('SELECT * FROM system.schema_columnfamilies', null, {prepare: 1}, function (err, result) {
+      client.execute(helper.queries.basic, null, {prepare: 1}, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
-        assert.ok(result.rows.length);
+        assert.strictEqual(typeof result.rows.length, 'number');
         done();
       });
     });
     it('should prepare and execute a queries in parallel', function (done) {
       var client = newInstance();
       var queries = [
-        'SELECT * FROM system.schema_columnfamilies',
-        'SELECT * FROM system.schema_keyspaces',
-        'SELECT * FROM system.schema_keyspaces where keyspace_name = ?',
-        'SELECT * FROM system.schema_columnfamilies where keyspace_name IN (?, ?)'
+        helper.queries.basic,
+        helper.queries.basicNoResults,
+        util.format('SELECT * FROM %s WHERE id1 = ?', commonTable),
+        util.format('SELECT * FROM %s WHERE id1 IN (?, ?)', commonTable)
       ];
       var params = [
         null,
         null,
-        ['system'],
-        ['system', 'other']
+        [types.Uuid.random()],
+        [types.Uuid.random(), types.Uuid.random()]
       ];
       async.times(100, function (n, next) {
         var index = n % 4;
         client.execute(queries[index], params[index], {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
-          assert.ok(result.rows.length);
+          assert.strictEqual(typeof result.rows.length, 'number');
           next();
         });
       }, done);
@@ -105,7 +108,7 @@ describe('Client', function () {
     });
     it('should fail if the type does not match', function (done) {
       var client = newInstance();
-      client.execute('SELECT * FROM system.schema_keyspaces where keyspace_name = ?', [1000], {prepare: 1}, function (err) {
+      client.execute(util.format('SELECT * FROM %s WHERE id1 = ?', commonTable), [1000], {prepare: 1}, function (err) {
         helper.assertInstanceOf(err, Error);
         helper.assertInstanceOf(err, TypeError);
         done();
@@ -130,10 +133,10 @@ describe('Client', function () {
     });
     vit('2.0', 'should support IN clause with 1 marker', function (done) {
       var client = newInstance();
-      client.execute('SELECT * FROM system.schema_keyspaces WHERE keyspace_name IN ?', [['system', 'another']], {prepare: 1}, function (err, result) {
+      client.execute(util.format('SELECT * FROM %s WHERE id1 IN ?', commonTable), [[Uuid.random(), Uuid.random()]], {prepare: 1}, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
-        assert.ok(result.rows.length);
+        assert.strictEqual(typeof result.rows.length, 'number');
         done();
       });
     });
@@ -257,41 +260,41 @@ describe('Client', function () {
     describe('with named parameters', function () {
       vit('2.0', 'should allow an array of parameters', function (done) {
         var client = newInstance();
-        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
-        client.execute(query, ['system'], {prepare: 1}, function (err, result) {
+        var query = util.format('SELECT * FROM %s WHERE id1 = :id1', commonTable);
+        client.execute(query, [Uuid.random()], {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result && result.rows);
-          assert.strictEqual(result.rows.length, 1);
+          assert.strictEqual(typeof result.rows.length, 'number');
           done();
         });
       });
       vit('2.0', 'should allow associative array of parameters', function (done) {
         var client = newInstance();
-        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :ksname';
-        client.execute(query, {'ksname': 'system'}, {prepare: 1}, function (err, result) {
+        var query = util.format('SELECT * FROM %s WHERE id1 = :id1', commonTable);
+        client.execute(query, {'id1': Uuid.random()}, {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result && result.rows);
-          assert.strictEqual(result.rows.length, 1);
+          assert.strictEqual(typeof result.rows.length, 'number');
           done();
         });
       });
       vit('2.0', 'should be case insensitive', function (done) {
         var client = newInstance();
-        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
-        client.execute(query, {'ksNamE': 'system'}, {prepare: 1}, function (err, result) {
+        var query = util.format('SELECT * FROM %s WHERE id1 = :ID1', commonTable);
+        client.execute(query, {'iD1': Uuid.random()}, {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result && result.rows);
-          assert.strictEqual(result.rows.length, 1);
+          assert.strictEqual(typeof result.rows.length, 'number');
           done();
         });
       });
       vit('2.0', 'should allow objects with other props as parameters', function (done) {
         var client = newInstance();
-        var query = 'SELECT * FROM system.schema_keyspaces WHERE keyspace_name = :KSNAME';
-        client.execute(query, {'KSNAME': 'system', other: 'value'}, {prepare: 1}, function (err, result) {
+        var query = util.format('SELECT * FROM %s WHERE id1 = :ID1', commonTable);
+        client.execute(query, {'ID1': Uuid.random(), other: 'value'}, {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result && result.rows);
-          assert.strictEqual(result.rows.length, 1);
+          assert.strictEqual(typeof result.rows.length, 'number');
           done();
         });
       });
@@ -304,7 +307,7 @@ describe('Client', function () {
       var values = [
         [
           //map1 to n with array of length 2 as values
-          types.Uuid.random(),
+          Uuid.random(),
           new MapPF([['k1', 'v1'], ['k2', 'v2'], ['k3', 'v33333']]),
           new MapPF([[-100, new Date(1423499543481)], [1, new Date()]]),
           new MapPF([[new Date(1413496543466), -2], [new Date(), 1.1233799457550049]]),
@@ -357,7 +360,7 @@ describe('Client', function () {
       var SetPF = helper.Set;
       var values = [
         [
-          types.Uuid.random(),
+          Uuid.random(),
           new SetPF(['k3', 'v33333122', 'z1', 'z2']),
           new SetPF([new Date(1423499543481), new Date()]),
           new SetPF([-2, 0, 1, 1.1233799457550049]),
@@ -365,7 +368,7 @@ describe('Client', function () {
           new SetPF([types.timeuuid(), types.timeuuid(), types.timeuuid()])
         ],
         [
-          types.Uuid.random(),
+          Uuid.random(),
           new SetPF(['v1']),
           new SetPF([new Date(1423199543111), new Date()]),
           new SetPF([1, 2]),
@@ -418,7 +421,7 @@ describe('Client', function () {
     });
     vit('2.1',  'should support protocol level timestamp', function (done) {
       var client = newInstance();
-      var id = types.Uuid.random();
+      var id = Uuid.random();
       var timestamp = types.generateTimestamp(new Date(), 456);
       async.series([
         function insert(next) {
@@ -446,14 +449,14 @@ describe('Client', function () {
         'id uuid PRIMARY KEY, ' +
         'map1 map<text, frozen<set<timeuuid>>>, ' +
         'list1 list<frozen<set<uuid>>>)';
-      var id = types.Uuid.random();
+      var id = Uuid.random();
       var map = {
         'key1': [types.TimeUuid.now(), types.TimeUuid.now()],
         'key2': [types.TimeUuid.now()]
       };
       var list = [
-        [types.Uuid.random()],
-        [types.Uuid.random(), types.Uuid.random()]
+        [Uuid.random()],
+        [Uuid.random(), Uuid.random()]
       ];
       async.series([
         helper.toTask(client.execute, client, createTableCql),
@@ -498,7 +501,7 @@ describe('Client', function () {
         }
       });
       var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?) APPLY BATCH", commonTable);
-      var params = [types.Uuid.random(), types.TimeUuid.now(), utils.stringRepeat('b', 5 * 1025)];
+      var params = [Uuid.random(), types.TimeUuid.now(), utils.stringRepeat('b', 5 * 1025)];
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);
@@ -524,7 +527,7 @@ describe('Client', function () {
         var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
         var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
-        var id = types.Uuid.random();
+        var id = Uuid.random();
         var phone = { alias: 'work2', number: '555 9012', country_code: 54};
         var address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
         async.series([
@@ -555,9 +558,9 @@ describe('Client', function () {
         var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
         var selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
-        var id = types.Uuid.random();
+        var id = Uuid.random();
         var tuple1 = new types.Tuple('val1', 1);
-        var tuple2 = new types.Tuple(types.Uuid.random(), types.Long.fromInt(12), true);
+        var tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
         async.series([
           function insert(next) {
             client.execute(insertQuery, [id, tuple1, tuple2], next);
@@ -594,10 +597,10 @@ describe('Client', function () {
       });
       vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
         var values = [
-          [types.Uuid.random(), 1, 1],
-          [types.Uuid.random(), 0, 0],
-          [types.Uuid.random(), -1, -2],
-          [types.Uuid.random(), -130, -128]
+          [Uuid.random(), 1, 1],
+          [Uuid.random(), 0, 0],
+          [Uuid.random(), -1, -2],
+          [Uuid.random(), -130, -128]
         ];
         var client = newInstance({ keyspace: commonKs });
         async.eachSeries(values, function (params, next) {
@@ -633,11 +636,11 @@ describe('Client', function () {
       });
       vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
         var values = [
-          [types.Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
-          [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
-          [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
-          [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
-          [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
+          [Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
+          [Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
+          [Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
+          [Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
+          [Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
         ];
         var client = newInstance({ keyspace: commonKs });
         async.eachSeries(values, function (params, next) {
@@ -664,8 +667,8 @@ describe('Client', function () {
       vit('2.2', 'should allow unset as a valid value', function (done) {
         var client1 = newInstance();
         var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
-        var id1 = types.Uuid.random();
-        var id2 = types.Uuid.random();
+        var id1 = Uuid.random();
+        var id2 = Uuid.random();
         async.series([
           client1.connect.bind(client1),
           client2.connect.bind(client2),
@@ -705,6 +708,47 @@ describe('Client', function () {
           client1.shutdown.bind(client1),
           client2.shutdown.bind(client2)
         ], done);
+      });
+    });
+    vdescribe('3.0', 'with materialized views', function () {
+      var keyspace = 'ks_view_prepared';
+      before(function createTables(done) {
+        var client = newInstance();
+        var queries = [
+          "CREATE KEYSPACE ks_view_prepared WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}",
+          "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
+          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
+        ];
+        async.eachSeries(queries, client.execute.bind(client), function (err) {
+          client.shutdown();
+          if (err) {
+            return done(err);
+          }
+          setTimeout(done, 2000);
+        });
+      });
+      it('should choose the correct coordinator based on the partition key', function (done) {
+        var client = new Client({
+          policies: { loadBalancing: new loadBalancing.TokenAwarePolicy(new loadBalancing.RoundRobinPolicy())},
+          keyspace: keyspace,
+          contactPoints: helper.baseOptions.contactPoints
+        });
+        async.timesSeries(10, function (n, timesNext) {
+          var game = n.toString();
+          var query = 'SELECT * FROM alltimehigh WHERE game = ?';
+          client.execute(query, [game], { traceQuery: true, prepare: true}, function (err, result) {
+            assert.ifError(err);
+            var coordinator = result.info.queriedHost;
+            var traceId = result.info.traceId;
+            client.metadata.getTrace(traceId, function (err, trace) {
+              assert.ifError(err);
+              trace.events.forEach(function (event) {
+                assert.strictEqual(helper.lastOctetOf(event['source'].toString()), helper.lastOctetOf(coordinator.toString()));
+              });
+              timesNext();
+            });
+          });
+        }, helper.finish(client, done));
       });
     });
   });

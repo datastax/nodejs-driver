@@ -30,7 +30,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should execute a basic query', function (done) {
       var client = newInstance();
-      client.execute('SELECT * FROM system.schema_keyspaces', function (err, result) {
+      client.execute(helper.queries.basic, function (err, result) {
         assert.equal(err, null);
         assert.notEqual(result, null);
         assert.notEqual(result.rows, null);
@@ -53,8 +53,7 @@ describe('Client', function () {
     });
     it('should callback with an empty Array instance as rows when not found', function (done) {
       var client = newInstance();
-      var query = "SELECT * FROM system.schema_keyspaces WHERE keyspace_name = '__ks_does_not_exists'";
-      client.execute(query, function (err, result) {
+      client.execute(helper.queries.basicNoResults, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(util.isArray(result.rows));
@@ -66,7 +65,7 @@ describe('Client', function () {
     it('should handle 500 parallel queries', function (done) {
       var client = newInstance();
       async.times(500, function (n, next) {
-        client.execute('SELECT * FROM system.schema_keyspaces', [], next);
+        client.execute(helper.queries.basic, [], next);
       }, done)
     });
     vit('2.0', 'should guess known types', function (done) {
@@ -313,10 +312,11 @@ describe('Client', function () {
           });
         },
         function verifyColumnsInAnEmptyResultSet(next) {
-          var query = "SELECT * from system.schema_keyspaces WHERE keyspace_name = '__ks_does_not_exists'";
+          var query = util.format('SELECT * from %s WHERE id = 00000000-0000-0000-0000-000000000000', table);
           client.execute(query, function (err, result) {
             assert.ifError(err);
             assert.ok(result.columns);
+            assert.ok(result.columns.length);
             next();
           });
         }

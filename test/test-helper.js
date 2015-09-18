@@ -440,6 +440,10 @@ var helper = {
     }
 
     return async.mapLimit(counter, limit, iterator, callback);
+  },
+  queries: {
+    basic: "SELECT key FROM system.local",
+    basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
   }
 };
 

@@ -12,8 +12,8 @@ var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
+var writers = require('../../lib/writers');
 var helper = require('../test-helper.js');
-
 
 describe('types', function () {
   describe('Long', function () {
@@ -755,6 +755,49 @@ describe('clientOptions', function () {
     });
     it('should set useUndefinedAsUnset as true', function () {
       assert.strictEqual(true, options.encoding.useUndefinedAsUnset);
+    });
+  });
+});
+describe('writers', function () {
+  describe('WriteQueue', function () {
+    it('should buffer until threshold is passed', function (done) {
+      var itemCallbackCounter = 0;
+      var buffers = [];
+      var socketMock = {
+        write: function (buf, cb) {
+          buffers.push(buf);
+          setTimeout(cb, 50);
+        }
+      };
+      var options = utils.extend({}, clientOptions.defaultOptions());
+      options.socketOptions.coalescingThreshold = 50;
+      var encoder = new Encoder(3, options);
+      //noinspection JSCheckFunctionSignatures
+      var queue = new writers.WriteQueue(socketMock, encoder, options);
+      var request = {
+        write: function () {
+          return new Buffer(10);
+        }
+      };
+      function itemCallback() {
+        itemCallbackCounter++;
+      }
+      for (var i = 0; i < 10; i++) {
+        //noinspection JSCheckFunctionSignatures
+        queue.push(request, itemCallback);
+      }
+      setTimeout(function () {
+        //10 frames
+        assert.strictEqual(itemCallbackCounter, 10);
+        assert.strictEqual(buffers.length, 3);
+        //first part is only 1 message
+        assert.strictEqual(buffers[0].length, 10);
+        //second part contains 5 messages
+        assert.strictEqual(buffers[1].length, 50);
+        //second part contains 4 messages
+        assert.strictEqual(buffers[2].length, 40);
+        done();
+      }, 500);
     });
   });
 });

@@ -477,21 +477,17 @@ describe('Metadata', function () {
       async.series([
         client.connect.bind(client),
         function checkMeta(next) {
-          client.metadata.getMaterializedView(keyspace, 'scores', 'dailyhigh', function (err, view) {
+          client.metadata.getMaterializedView(keyspace, 'dailyhigh', function (err, view) {
             assert.ifError(err);
             assert.ok(view);
             assert.strictEqual(view.name, 'dailyhigh');
-            assert.strictEqual(view.keyspaceName, keyspace);
-            assert.ok(view.table);
-            assert.strictEqual(view.table.name, 'scores');
-            assert.strictEqual(view.table.columns.length, 6);
-            assert.strictEqual(view.clusteringColumns.length, 2);
-            assert.strictEqual(view.clusteringColumns[0].name, 'score');
-            assert.strictEqual(view.clusteringColumns[1].name, 'user');
-            assert.strictEqual(view.includedColumns.length, 1);
-            assert.strictEqual(view.includedColumns[0].name, 'user');
-            assert.strictEqual(view.targetColumns.length, 4);
-            assert.strictEqual(view.targetColumns[0].name, 'game');
+            assert.strictEqual(view.tableName, 'scores');
+            assert.strictEqual(view.whereClause, 'game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL');
+            assert.strictEqual(view.clusteringKeys.length, 2);
+            assert.strictEqual(view.clusteringKeys[0].name, 'score');
+            assert.strictEqual(view.clusteringKeys[1].name, 'user');
+            assert.strictEqual(view.partitionKeys.length, 4);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month, day');
             next();
           });
         },

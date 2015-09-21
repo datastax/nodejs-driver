@@ -494,6 +494,44 @@ describe('Metadata', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should refresh the view metadata via events', function (done) {
+      var client = newInstance({ keyspace: 'ks_view_meta' });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL PRIMARY KEY ((game, year, month), score, user, day) WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
+        function checkView1(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.length, 3);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'score, user, day');
+            helper.assertContains(view.compactionClass, 'SizeTieredCompactionStrategy');
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER MATERIALIZED VIEW monthlyhigh WITH compaction = { \'class\' : \'LeveledCompactionStrategy\' }'),
+        function checkView1(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.length, 3);
+            assert.strictEqual(view.clusteringKeys.length, 3);
+            helper.assertContains(view.compactionClass, 'LeveledCompactionStrategy');
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'DROP MATERIALIZED VIEW monthlyhigh'),
+        function checkDropped(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.strictEqual(view, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
   });
 });
 

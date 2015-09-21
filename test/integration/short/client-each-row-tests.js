@@ -352,6 +352,7 @@ describe('Client', function () {
             }
           }, function (err, result) {
             assert.ifError(err);
+            helper.assertInstanceOf(result, types.ResultSet);
             if (!nextPageRows) {
               //the first time, it should have a next page
               assert.strictEqual(typeof result.nextPage, 'function');

@@ -104,7 +104,18 @@ describe('Client', function () {
     });
   });
   describe('#stream(query, params, {prepare: 1})', function () {
-    before(helper.ccmHelper.start(3));
+    var commonKs = helper.getRandomName('ks');
+    var commonTable = commonKs + '.' + helper.getRandomName('table');
+    before(function (done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.start(3),
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
+        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable)),
+        client.shutdown.bind(client)
+      ], done);
+    });
     after(helper.ccmHelper.remove);
     it('should prepare and emit end when no rows', function (done) {
       var client = newInstance();
@@ -276,6 +287,49 @@ describe('Client', function () {
             allRead = true;
           }, 2000);
         });
+    });
+    it('should not buffer more than fetchSize', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var consistency = types.consistencies.quorum;
+      var rowsLength = 1000;
+      var fetchSize = 100;
+      async.series([
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
+          helper.timesLimit(rowsLength, 50, function (n, timesNext) {
+            client.execute(query, [id, types.TimeUuid.now(), n.toString()], { prepare: true, consistency: consistency}, timesNext);
+          }, next);
+        },
+        function testBuffering(next) {
+          var query = util.format('SELECT id2, text_sample from %s WHERE id1 = ?', commonTable);
+          var stream = client.stream(query, [id], {prepare: 1, fetchSize: fetchSize, consistency: consistency});
+          var rowsRead = 0;
+          stream.
+            on('end', function () {
+              assert.strictEqual(rowsRead, rowsLength);
+              next();
+            })
+            .on('error', helper.throwop)
+            .on('readable', function () {
+              var row;
+              var self = this;
+              async.whilst(function condition() {
+                assert.ok(self.buffer.length <= fetchSize);
+                return (row = self.read());
+              }, function iterator(whilstNext) {
+                assert.ok(self.buffer.length <= fetchSize);
+                assert.ok(row);
+                rowsRead++;
+                if (rowsRead % 55 === 0) {
+                  //delay from time to time
+                  return setTimeout(whilstNext, 100);
+                }
+                whilstNext();
+              }, helper.noop);
+            });
+        }
+      ], done);
     });
   });
 });

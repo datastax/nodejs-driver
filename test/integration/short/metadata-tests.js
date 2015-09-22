@@ -454,6 +454,24 @@ describe('Metadata', function () {
         }
       ], done);
     });
+    vit('3.0', 'should retrieve the crc_check_chance value of a table', function (done) {
+      var client = newInstance();
+      var createTableCql = 'CREATE TABLE ks_tbl_meta.tbl_c30_crc ' +
+        '(id uuid PRIMARY KEY) WITH crc_check_chance = 0.6';
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, createTableCql),
+        function checkTable(next) {
+          client.metadata.getTable('ks_tbl_meta', 'tbl_c30_crc', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.strictEqual(table.columns.length, 1);
+            assert.strictEqual(table.crcCheckChance, 0.6);
+            next();
+          });
+        }
+      ], done);
+    });
   });
   vdescribe('3.0', '#getMaterializedView()', function () {
     var keyspace = 'ks_view_meta';

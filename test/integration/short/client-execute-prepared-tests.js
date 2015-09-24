@@ -517,10 +517,11 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
-          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>)')
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>)'),
+          client.shutdown.bind(client)
         ], done);
       });
-      vit('2.1', 'it should encode objects into udt', function (done) {
+      vit('2.1', 'should encode objects into udt', function (done) {
         var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
         var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
@@ -551,7 +552,30 @@ describe('Client', function () {
           }
         ], done);
       });
-      vit('2.1', 'it should encode and decode tuples', function (done) {
+      vit('2.1', 'should handle changes in table schema with udts', function (done) {
+        var client = newInstance({ keyspace: commonKs });
+        async.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TYPE phone_change (alias text, number text, country_code int)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_udt_change (id uuid PRIMARY KEY, phone_col frozen<phone_change>)'),
+          function executeFewTimesFirst(next) {
+            var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
+            async.timesSeries(10, function (n, timesNext) {
+              client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString()}], { prepare: true}, timesNext);
+            }, next)
+          },
+          helper.toTask(client.execute, client, 'ALTER TYPE phone_change ADD another text'),
+          helper.toTask(client.execute, client, 'ALTER TABLE tbl_udt_change ALTER phone_col TYPE frozen<phone_change>'),
+          function executeFewMoreTimesWithNewSchema(next) {
+            var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
+            async.timesSeries(10, function (n, timesNext) {
+              client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString(), another: 'another field'}], { prepare: true}, timesNext);
+            }, next)
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.1', 'should encode and decode tuples', function (done) {
         var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
         var selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});

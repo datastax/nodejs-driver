@@ -448,15 +448,15 @@ describe('Client', function () {
       var createTableCql = 'CREATE TABLE tbl_nested (' +
         'id uuid PRIMARY KEY, ' +
         'map1 map<text, frozen<set<timeuuid>>>, ' +
-        'list1 list<frozen<set<uuid>>>)';
+        'list1 list<frozen<set<timeuuid>>>)';
       var id = Uuid.random();
       var map = {
         'key1': [types.TimeUuid.now(), types.TimeUuid.now()],
         'key2': [types.TimeUuid.now()]
       };
       var list = [
-        [Uuid.random()],
-        [Uuid.random(), Uuid.random()]
+        [types.TimeUuid.now()],
+        [types.TimeUuid.now(), types.TimeUuid.now()]
       ];
       async.series([
         helper.toTask(client.execute, client, createTableCql),

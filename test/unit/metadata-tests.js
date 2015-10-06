@@ -705,12 +705,12 @@ describe('Metadata', function () {
         done();
       });
     });
-    describe('with C*2.0+ metadata rows', function () {
+    describe('with C*2.0 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
           column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
-          key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
+          key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 3000, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
         var columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
@@ -727,6 +727,15 @@ describe('Metadata', function () {
           assert.strictEqual(table.isCompact, false);
           assert.ok(table.caching);
           assert.strictEqual(table.caching, 'KEYS_ONLY');
+          assert.strictEqual(table.populateCacheOnFlush, false);
+          assert.strictEqual(table.speculativeRetry, '99.0PERCENTILE');
+          assert.strictEqual(table.indexInterval, 128);
+          assert.strictEqual(table.memtableFlushPeriod, 3000);
+          assert.strictEqual(table.minIndexInterval, null);
+          assert.strictEqual(table.maxIndexInterval, null);
+          assert.strictEqual(table.crcCheckChance, null);
+          assert.strictEqual(table.extensions, null);
+          assert.strictEqual(table.defaultTtl, 0);
           assert.strictEqual(table.columns.length, 5);
           assert.strictEqual(table.columns[0].name, 'apk2');
           assert.strictEqual(table.columns[0].type.code, types.dataTypes.varchar);
@@ -805,7 +814,7 @@ describe('Metadata', function () {
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '["zck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
-          key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
+          key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: true, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
         var columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.BytesType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valz1', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.Int32Type' }
@@ -822,6 +831,16 @@ describe('Metadata', function () {
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
           assert.strictEqual(table.clusteringKeys.length, 1);
           assert.strictEqual(table.clusteringKeys[0].name, 'zck');
+          assert.strictEqual(table.populateCacheOnFlush, true);
+          //default as it does not exist for C* 1.2
+          assert.strictEqual(table.speculativeRetry, 'NONE');
+          assert.strictEqual(table.indexInterval, null);
+          assert.strictEqual(table.memtableFlushPeriod, 0);
+          assert.strictEqual(table.minIndexInterval, null);
+          assert.strictEqual(table.maxIndexInterval, null);
+          assert.strictEqual(table.defaultTtl, 0);
+          assert.strictEqual(table.crcCheckChance, null);
+          assert.strictEqual(table.extensions, null);
           done();
         });
       });
@@ -956,12 +975,13 @@ describe('Metadata', function () {
           "compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},
           "dclocal_read_repair_chance":0.1,
           "default_time_to_live":0,
-          "extensions":{},
+          "extensions":{'hello': new Buffer('world')},
           "flags":["compound"],
           "gc_grace_seconds":864000,
           "id":"8008ae40-5862-11e5-b0ce-c7d0c38d1d8d",
-          "max_index_interval":2048,
-          "memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+          "max_index_interval":1024,
+          "crc_check_chance": 0.8,
+          "memtable_flush_period_in_ms":0,"min_index_interval":64,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "apk2", "clustering_order": "none", "column_name_bytes": "0x61706b32", "kind": "partition_key", "position": 1, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "pk1", "clustering_order": "none", "column_name_bytes": "0x706b31", "kind": "partition_key", "position": 0, "type": "org.apache.cassandra.db.marshal.UUIDType"},
@@ -976,6 +996,16 @@ describe('Metadata', function () {
           assert.ifError(err);
           assert.ok(table);
           assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.speculativeRetry, '99PERCENTILE');
+          assert.strictEqual(table.indexInterval, null);
+          assert.strictEqual(table.memtableFlushPeriod, 0);
+          assert.strictEqual(table.minIndexInterval, 64);
+          assert.strictEqual(table.maxIndexInterval, 1024);
+          assert.strictEqual(table.crcCheckChance, 0.8);
+          assert.ok(table.extensions);
+          assert.strictEqual(table.extensions['hello'].toString('utf8'), 'world');
+          //not present, default
+          assert.strictEqual(table.populateCacheOnFlush, false);
           assert.strictEqual(table.columns.length, 5);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');

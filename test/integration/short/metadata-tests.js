@@ -483,6 +483,7 @@ describe('Metadata', function () {
             assert.strictEqual(view.name, 'dailyhigh');
             assert.strictEqual(view.tableName, 'scores');
             assert.strictEqual(view.whereClause, 'game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL');
+            assert.strictEqual(view.includeAllColumns, false);
             assert.strictEqual(view.clusteringKeys.length, 2);
             assert.strictEqual(view.clusteringKeys[0].name, 'score');
             assert.strictEqual(view.clusteringKeys[1].name, 'user');

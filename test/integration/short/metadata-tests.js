@@ -533,6 +533,67 @@ describe('Metadata', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should refresh the view metadata as result of table change via events', function (done) {
+      var client = newInstance({ keyspace: 'ks_view_meta' });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, 'CREATE TABLE users (user TEXT PRIMARY KEY, first_name TEXT)'),
+        // create a view using 'select *'.
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first_all AS SELECT * FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        // create same view using 'select <columns>'.
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first AS SELECT user, first_name FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        function checkAllView(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            // includeAllColumns should be true since 'select *' was used.
+            assert.strictEqual(view.includeAllColumns, true);
+            next();
+          });
+        },
+        function checkView(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.strictEqual(view.includeAllColumns, false);
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER TABLE users ADD last_name text'),
+        function checkForNewColumnsInAllView(next) {
+          // ensure that the newly added column 'last_name' in 'users' was propagated to users_by_first_all.
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function(err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.ok(view.columnsByName['last_name']);
+            assert.strictEqual(view.columnsByName['last_name'].type.code, types.dataTypes.varchar);
+            assert.strictEqual(view.columns.length, 3);
+            assert.strictEqual(view.includeAllColumns, true);
+            next();
+          });
+        },
+        function checkColumnNotAddedInView(next) {
+          // since 'users_by_first' does not include all columns it should not detect the new column.
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.strictEqual(view.columnsByName['last_name'], undefined);
+            assert.strictEqual(view.columns.length, 2);
+            assert.strictEqual(view.includeAllColumns, false);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    })
   });
 });
 

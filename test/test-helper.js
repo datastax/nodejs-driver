@@ -271,6 +271,28 @@ var helper = {
     }
     return version;
   },
+  /**
+   * Determines if the current Cassandra instance version is greater than or equals to the version provided
+   * @param {String} version The version in string format, dot separated.
+   * @returns {Boolean}
+   */
+  isCassandraGreaterThan: function (version) {
+    var instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+    var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
+    for (var i = 0; i < compareVersion.length; i++) {
+      var compare = compareVersion[i] || 0;
+      if (instanceVersion[i] > compare) {
+        //is greater
+        return true;
+      }
+      else if (instanceVersion[i] < compare) {
+        //is smaller
+        return false;
+      }
+    }
+    //are equal
+    return true;
+  },
   log: function(levels) {
     if (!levels) {
       levels = ['info', 'warning', 'error'];
@@ -732,11 +754,7 @@ WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callb
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-  var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
-  v = testVersion.split('.');
-  var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
-  if (currentVersion >= minimumVersion) {
+  if (helper.isCassandraGreaterThan(testVersion)) {
     func.apply(this, args);
   }
 }

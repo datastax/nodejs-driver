@@ -964,7 +964,7 @@ describe('Metadata', function () {
       });
     });
     describe('with C*3.0+ metadata rows', function () {
-      it('should parse partition and clustering keys', function (done) {
+      it('should parse partition and clustering keys @debug', function (done) {
         var tableRow = {
           "keyspace_name":"ks_tbl_meta",
           "table_name":"tbl4",
@@ -1700,12 +1700,15 @@ describe('Metadata', function () {
   });
 });
 
-function getControlConnectionForTable(tableRow, columnRows) {
+function getControlConnectionForTable(tableRow, columnRows, indexRows) {
   return {
     query: function (q, cb) {
       setImmediate(function () {
         if (q.indexOf('system.schema_columnfamilies') >= 0 || q.indexOf('system_schema.tables') >= 0) {
-          return cb(null, {rows: [tableRow]});
+          return cb(null, { rows: [tableRow]});
+        }
+        if (q.indexOf('system_schema.indexes') >= 0) {
+          return cb(null, { rows: (indexRows || [])});
         }
         cb(null, {rows: columnRows});
       });

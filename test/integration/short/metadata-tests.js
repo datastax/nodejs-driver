@@ -225,16 +225,25 @@ describe('Metadata', function () {
       var client = newInstance();
       var queries = [
         "CREATE KEYSPACE ks_tbl_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
-        "CREATE TABLE ks_tbl_meta.tbl1 (id uuid PRIMARY KEY, text_sample text)",
-        "CREATE TABLE ks_tbl_meta.tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
-        "CREATE TABLE ks_tbl_meta.tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
-        "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
-        "CREATE TABLE ks_tbl_meta.tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
-        "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
-        "CREATE TABLE ks_tbl_meta.tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
-        "CREATE TABLE ks_tbl_meta.tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))"
+        "USE ks_tbl_meta",
+        "CREATE TABLE tbl1 (id uuid PRIMARY KEY, text_sample text)",
+        "CREATE TABLE tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
+        "CREATE TABLE tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
+        "CREATE TABLE tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
+        "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
+        "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
+        "CREATE TABLE tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
+        "CREATE TABLE tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
+        "CREATE INDEX text_index ON tbl1 (text_sample)"
       ];
-      async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
+      if (helper.isCassandraGreaterThan('2.1')) {
+        queries.push(
+          "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_sample map<text,text>, list_sample frozen<list<blob>>)",
+          "CREATE INDEX map_index ON tbl_indexes1 (keys(map_sample))",
+          "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))"
+        );
+      }
+      async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
     it('should retrieve the metadata of a single partition key table', function (done) {
       var client = newInstance({ keyspace: keyspace});
@@ -246,7 +255,6 @@ describe('Metadata', function () {
           assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
           assert.ok(table.caching);
           assert.strictEqual(typeof table.caching, 'string');
-          assert.strictEqual(table.columns.length, 2);
           var columns = table.columns
             .map(function (c) { return c.name; })
             .sort();
@@ -428,6 +436,71 @@ describe('Metadata', function () {
           });
         }
       ], done);
+    });
+    it('should retrieve a simple secondary index', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.columns.length, 2);
+          assert.ok(table.indexes);
+          assert.strictEqual(table.indexes.length, 1);
+          var index = table.indexes[0];
+          assert.strictEqual(index.name, 'text_index');
+          assert.strictEqual(index.target, 'text_sample');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary key on map key', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_index');
+          assert.strictEqual(index.target, 'keys(map_sample)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary key on frozen list', function (done) {
+      var client = newInstance({keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) {
+            return x.name === 'list_index';
+          })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'list_index');
+          assert.strictEqual(index.target, 'full(list_sample)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
     });
     vit('2.2', 'should retrieve the metadata of a table containing new 2.2 types', function (done) {
       var client = newInstance();

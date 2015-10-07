@@ -221,6 +221,8 @@ describe('Metadata', function () {
   });
   describe('#getTable()', function () {
     var keyspace = 'ks_tbl_meta';
+    var is3  = helper.isCassandraGreaterThan('3.0');
+    var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
     before(function createTables(done) {
       var client = newInstance();
       var queries = [
@@ -238,10 +240,23 @@ describe('Metadata', function () {
       ];
       if (helper.isCassandraGreaterThan('2.1')) {
         queries.push(
-          "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_sample map<text,text>, list_sample frozen<list<blob>>)",
-          "CREATE INDEX map_index ON tbl_indexes1 (keys(map_sample))",
+          "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_values map<text,int>, map_keys map<text,int>, map_entries map<text,int>, map_all map<text,int>, list_sample frozen<list<blob>>)",
+          "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
+          "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
           "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))"
         );
+      }
+      if (helper.isCassandraGreaterThan('2.2')) {
+        queries.push(
+          'CREATE INDEX map_entries_index ON tbl_indexes1 (entries(map_entries))'
+        );
+      }
+      if (is3) {
+        queries.push(
+          "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
+          "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
+          "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
+        )
       }
       async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
@@ -458,7 +473,7 @@ describe('Metadata', function () {
         });
       });
     });
-    vit('2.1', 'should retrieve a secondary key on map key', function (done) {
+    vit('2.1', 'should retrieve a secondary index on map keys', function (done) {
       var client = newInstance({ keyspace: keyspace});
       client.connect(function (err) {
         assert.ifError(err);
@@ -467,10 +482,10 @@ describe('Metadata', function () {
           assert.ok(table);
           assert.ok(table.indexes);
           assert.ok(table.indexes.length > 0);
-          var index = table.indexes.filter(function (x) { return x.name === 'map_index'; })[0];
+          var index = table.indexes.filter(function (x) { return x.name === 'map_keys_index'; })[0];
           assert.ok(index, 'Index not found');
-          assert.strictEqual(index.name, 'map_index');
-          assert.strictEqual(index.target, 'keys(map_sample)');
+          assert.strictEqual(index.name, 'map_keys_index');
+          assert.strictEqual(index.target, 'keys(map_keys)');
           assert.strictEqual(index.isCompositesKind(), true);
           assert.strictEqual(index.isCustomKind(), false);
           assert.strictEqual(index.isKeysKind(), false);
@@ -479,7 +494,79 @@ describe('Metadata', function () {
         });
       });
     });
-    vit('2.1', 'should retrieve a secondary key on frozen list', function (done) {
+    vit('2.1', 'should retrieve a secondary index on map values', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_values_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_values_index');
+          assert.strictEqual(index.target, is3 ? 'values(map_values)' : 'map_values');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.2', 'should retrieve a secondary index on map entries', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_entries_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_entries_index');
+          assert.strictEqual(index.target, 'entries(map_entries)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('3.0', 'should retrieve multiple indexes on same map column', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+
+          var indexes = [
+            {name: 'map_all_entries_index', target: 'entries(map_all)'},
+            {name: 'map_all_keys_index', target: 'keys(map_all)'},
+            {name: 'map_all_values_index', target: 'values(map_all)'}
+          ];
+
+          indexes.forEach(function(idx) {
+            var index = table.indexes.filter(function (x) { return x.name === idx.name; })[0];
+            assert.ok(index, 'Index not found');
+            assert.strictEqual(index.name, idx.name);
+            assert.strictEqual(index.target, idx.target);
+            assert.strictEqual(index.isCompositesKind(), true);
+            assert.strictEqual(index.isCustomKind(), false);
+            assert.strictEqual(index.isKeysKind(), false);
+            assert.ok(index.options);
+          });
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary index on frozen list', function (done) {
       var client = newInstance({keyspace: keyspace});
       client.connect(function (err) {
         assert.ifError(err);

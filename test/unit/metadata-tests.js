@@ -808,6 +808,86 @@ describe('Metadata', function () {
           done();
         });
       });
+      it('should parse custom index (legacy)', function (done) {
+          var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+          var columnRows = [
+            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
+            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+          ];
+          var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+          metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+          metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.ok(table.indexes);
+            assert.ok(table.indexes.length == 1);
+            var index = table.indexes[0];
+            assert.ok(index, 'Index not found');
+            assert.strictEqual(index.name, 'custom_index');
+            assert.strictEqual(index.target, 'text1');
+            assert.strictEqual(index.isCompositesKind(), false);
+            assert.strictEqual(index.isCustomKind(), true);
+            assert.strictEqual(index.isKeysKind(), false);
+            assert.ok(index.options);
+            assert.strictEqual(index.options['foo'], 'bar');
+            assert.strictEqual(index.options['class_name'], 'dummy.DummyIndex');
+            done();
+          });
+      });
+      it('should parse keys index (legacy)', function (done) {
+        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        var columnRows = [
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"index_keys": ""}',"index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length == 1);
+          var index = table.indexes[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'custom_index');
+          // target should be column name since we weren't able to parse index_keys from index_options.
+          assert.strictEqual(index.target, 'keys(text1)');
+          assert.strictEqual(index.isCompositesKind(), false);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), true);
+          assert.ok(index.options);
+          done();
+        });
+      });
+      it('should parse keys index with null string index options', function (done) {
+        // Validates a special case where a 'KEYS' index was created using thrift.  In this particular case the index
+        // lacks index_options, however the index_options value is a 'null' string rather than a null value.
+        // DSE Analytics at some point did this with its cfs tables.
+
+        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        var columnRows = [
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"b@706172656e745f70617468","component_index":null,"index_name":"cfs_archive_parent_path","index_options":"\"null\"","index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length == 1);
+          var index = table.indexes[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'cfs_archive_parent_path');
+          // target should be column name since we weren't able to parse index_keys from index_options.
+          assert.strictEqual(index.target, 'b@706172656e745f70617468');
+          assert.strictEqual(index.isCompositesKind(), false);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), true);
+          assert.ok(index.options);
+          done();
+        });
+      });
     });
     describe('with C*1.2 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
@@ -1057,6 +1137,40 @@ describe('Metadata', function () {
           assert.strictEqual(table.partitionKeys[0].name, 'id1');
           assert.strictEqual(table.clusteringKeys.length, 1);
           assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+          done();
+        });
+      });
+      it('should parse with custom index', function (done) {
+        //1 pk, 1 ck and 1 val
+        var tableRow = {
+          "keyspace_name":"ks_tbl_meta","table_name":"tbl5","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
+          "flags":["dense"],"gc_grace_seconds":864000,"id":"80fd9590-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+        var columnRows = [
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.TimeUUIDType"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"}
+        ];
+        var indexRows = [
+          {"index_name": "custom_index", "kind": "CUSTOM", "options": {"foo":"bar","class_name":"dummy.DummyIndex","target":"a, b, keys(c)"}}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows,indexRows));
+        metadata.setCassandraVersion([3, 0]);
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'tbl5', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length == 1);
+          var index = table.indexes[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'custom_index');
+          assert.strictEqual(index.target, 'a, b, keys(c)');
+          assert.strictEqual(index.isCompositesKind(), false);
+          assert.strictEqual(index.isCustomKind(), true);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          assert.strictEqual(index.options['foo'], 'bar');
+          assert.strictEqual(index.options['class_name'], 'dummy.DummyIndex');
           done();
         });
       });

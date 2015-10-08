@@ -754,6 +754,173 @@ describe('Client', function () {
         ], done);
       });
     });
+    describe('with secondary indexes', function() {
+      var keyspace = helper.getRandomName('ks');
+      before(function createSchema(done) {
+        var client = newInstance();
+        async.series([
+          helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
+          client.shutdown.bind(client),
+        ], done);
+      });
+      it('should be able to retrieve using simple index', function(done) {
+        var client = newInstance({ keyspace: keyspace });
+        var table = helper.getRandomName('tbl');
+        async.series([
+          helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v int)", table)),
+          helper.toTask(client.execute, client, util.format("CREATE INDEX simple_index ON %s (v)", table)),
+          function insertData(seriesNext) {
+            var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
+            async.times(100, function (n, next) {
+              client.execute(query, [n, n % 10], {prepare: 1}, next);
+            }, seriesNext);
+          },
+          function selectData(seriesNext) {
+            var query = util.format('SELECT * FROM %s WHERE v=?', table);
+            client.execute(query, [0], {prepare: 1}, function(err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 10);
+              // each key should be a multiple of 10.
+              var keys = result.rows.map(function(row) {
+                assert.strictEqual(row['v'], 0);
+                return row['k'];
+              }).sort();
+              assert.deepEqual(keys, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]);
+              seriesNext();
+            });
+          },
+          client.shutdown.bind(client)
+        ],done);
+      });
+      vit('2.1', 'should be able to retrieve using index on frozen list', function(done) {
+        var client = newInstance({ keyspace: keyspace });
+        var table = helper.getRandomName('tbl');
+        async.series([
+          helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v frozen<list<int>>)", table)),
+          helper.toTask(client.execute, client, util.format("CREATE INDEX frozen_index ON %s (full(v))", table)),
+          function insertData(seriesNext) {
+            var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
+            async.times(100, function (n, next) {
+              client.execute(query, [n, [n-1, n-2, n-3]], {prepare: 1}, next);
+            }, seriesNext);
+          },
+          function selectData(seriesNext) {
+            var query = util.format('SELECT * FROM %s WHERE v=?', table);
+            client.execute(query, [[20,19,18]], {prepare: 1}, function(err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var row = result.rows[0];
+              assert.strictEqual(row['k'], 21);
+              assert.deepEqual(row['v'], [20,19,18]);
+              seriesNext();
+            });
+          },
+          client.shutdown.bind(client)
+        ],done);
+      });
+      vit('2.1', 'should be able to retrieve using index on map keys', function(done) {
+        var client = newInstance({ keyspace: keyspace });
+        var table = helper.getRandomName('tbl');
+        async.series([
+          helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
+          helper.toTask(client.execute, client, util.format("CREATE INDEX keys_index on %s (keys(v))", table)),
+          function insertData(seriesNext) {
+            var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
+            async.times(100, function (n, next) {
+              v = {
+                'key1' : n + 1,
+                'keyt10' : n * 10
+              };
+              if(n % 10 == 0) {
+                v['by10'] = n / 10;
+              }
+              client.execute(query, [n, v], {prepare :1}, next);
+            }, seriesNext);
+          },
+          function selectData(seriesNext) {
+            var query = util.format('SELECT * FROM %s WHERE v CONTAINS KEY ?', table);
+            client.execute(query, ['by10'], {prepare: 1}, function(err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 10);
+              // each key should be a multiple of 10.
+              var keys = result.rows.map(function(row) {
+                var k = row['k'];
+                assert.deepEqual(row['v'], {'key1': k + 1, 'keyt10' : k * 10, 'by10' : k / 10});
+                return k;
+              }).sort();
+              assert.deepEqual(keys, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]);
+              seriesNext();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.1', 'should be able to retrieve using index on map values', function(done) {
+        var client = newInstance({ keyspace: keyspace });
+        var table = helper.getRandomName('tbl');
+        async.series([
+          helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
+          helper.toTask(client.execute, client, util.format("CREATE INDEX values_index on %s (v)", table)),
+          function insertData(seriesNext) {
+            var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
+            async.times(100, function (n, next) {
+              v = {
+                'key1' : n + 1,
+                'keyt10' : n * 10
+              };
+              client.execute(query, [n, v], {prepare :1}, next);
+            }, seriesNext);
+          },
+          function selectData(seriesNext) {
+            var query = util.format('SELECT * FROM %s WHERE v CONTAINS ?', table);
+            client.execute(query, [100], {prepare: 1}, function(err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 2);
+              var rows = result.rows.sort(function(a, b) {
+                return a['k'] - b['k'];
+              });
+
+              assert.strictEqual(rows[0]['k'], 10);
+              assert.deepEqual(rows[0]['v'], {'key1' : 11, 'keyt10' : 100});
+              assert.strictEqual(rows[1]['k'], 99);
+              assert.deepEqual(rows[1]['v'], {'key1' : 100, 'keyt10' : 990});
+              seriesNext();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+      vit('2.2', 'should be able to retrieve using index on map entries', function(done) {
+        var client = newInstance({ keyspace: keyspace });
+        var table = helper.getRandomName('tbl');
+        async.series([
+          helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
+          helper.toTask(client.execute, client, util.format("CREATE INDEX entries_index on %s (entries(v))", table)),
+          function insertData(seriesNext) {
+            var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
+            async.times(100, function (n, next) {
+              v = {
+                'key1' : n + 1,
+                'keyt10' : n * 10
+              };
+              client.execute(query, [n, v], {prepare :1}, next);
+            }, seriesNext);
+          },
+          function selectData(seriesNext) {
+            var query = util.format('SELECT * FROM %s WHERE v[?]=?', table);
+            client.execute(query, ['key1', 100], {prepare: 1}, function(err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, 1);
+              var rows = result.rows;
+              assert.strictEqual(rows[0]['k'], 99);
+              assert.deepEqual(rows[0]['v'], {'key1' : 100, 'keyt10' : 990});
+              seriesNext();
+            });
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+    });
   });
 });
 

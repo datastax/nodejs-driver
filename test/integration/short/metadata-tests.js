@@ -231,7 +231,8 @@ describe('Metadata', function () {
         "CREATE TABLE ks_tbl_meta.tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
         "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
         "CREATE TABLE ks_tbl_meta.tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
-        "CREATE TABLE ks_tbl_meta.tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))"
+        "CREATE TABLE ks_tbl_meta.tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
+        "CREATE TABLE ks_tbl_meta.tbl_collections (id uuid, ck blob, list_sample list<int>, set_sample list<text>, int_sample int, map_sample map<text,int>, PRIMARY KEY (id, ck))"
       ];
       async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
     });
@@ -427,6 +428,26 @@ describe('Metadata', function () {
           });
         }
       ], done);
+    });
+    it('should retrieve the metadata of a table with ColumnToCollectionType', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_collections', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          var columns = table.columns
+            .map(function (c) { return c.name; })
+            .sort();
+          helper.assertValueEqual(columns, ['ck', 'id', 'int_sample', 'list_sample', 'map_sample', 'set_sample']);
+          assert.strictEqual(table.isCompact, false);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.partitionKeys[0].name, 'id');
+          assert.strictEqual(table.clusteringKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys[0].name, 'ck');
+          client.shutdown(done);
+        });
+      });
     });
     vit('2.2', 'should retrieve the metadata of a table containing new 2.2 types', function (done) {
       var client = newInstance();

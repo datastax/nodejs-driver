@@ -852,4 +852,37 @@ describe('encoder', function () {
       assert.strictEqual('number', phonesSubType.info.fields[1].name);
     });
   });
+  describe('#parseKeyTypes', function () {
+    var encoder = new Encoder(1, {});
+    it('should parse single type', function () {
+      var value = 'org.apache.cassandra.db.marshal.UTF8Type';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0].code, types.dataTypes.varchar);
+      value = 'org.apache.cassandra.db.marshal.TimeUUIDType';
+      result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0].code, types.dataTypes.timeuuid);
+      assert.strictEqual(result.isComposite, false);
+      assert.strictEqual(result.hasCollections, false);
+    });
+    it('should parse composites', function () {
+      var value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.UTF8Type)';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 2);
+      assert.strictEqual(result.types[0].code, types.dataTypes.int);
+      assert.strictEqual(result.types[1].code, types.dataTypes.varchar);
+      assert.strictEqual(result.isComposite, true);
+      assert.strictEqual(result.hasCollections, false);
+    });
+    it('should parse composites with collection types', function () {
+      var value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.ColumnToCollectionType(6c6973745f73616d706c65:org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type),6d61705f73616d706c65:org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.Int32Type)))';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 4);
+      assert.strictEqual(result.types[0].code, types.dataTypes.varchar);
+      assert.strictEqual(result.types[1].code, types.dataTypes.int);
+      assert.strictEqual(result.types[2].code, types.dataTypes.list);
+      assert.strictEqual(result.types[3].code, types.dataTypes.map);
+    });
+  });
 });

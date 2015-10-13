@@ -31,6 +31,11 @@ describe('Client', function () {
         new Client();
       }, TypeError);
     });
+    it('should create Metadata instance', function () {
+      var Client = require('../../lib/client');
+      var client = new Client({ contactPoints: ['192.168.10.10'] });
+      helper.assertInstanceOf(client.metadata, Metadata);
+    });
   });
   describe('#connect()', function () {
     this.timeout(35000);

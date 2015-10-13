@@ -753,12 +753,22 @@ describe('exports', function () {
     var api = require('../../index.js');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
+    assert.ok(typeof api.errors.DriverError, 'function');
     assert.ok(api.types);
     assert.ok(api.policies);
     assert.ok(api.auth);
+    assert.ok(typeof api.auth.AuthProvider, 'function');
+    //policies modules
     assert.strictEqual(api.policies.loadBalancing, loadBalancing);
+    assert.strictEqual(typeof api.policies.loadBalancing.LoadBalancingPolicy, 'function');
     assert.strictEqual(api.policies.retry, retry);
-    assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection.js'));
+    assert.strictEqual(typeof api.policies.retry.RetryPolicy, 'function');
+    assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
+    assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
     assert.strictEqual(api.auth, require('../../lib/auth'));
+    //metadata module with classes
+    assert.ok(api.metadata);
+    assert.strictEqual(typeof api.metadata.Metadata, 'function');
+    assert.strictEqual(api.metadata.Metadata, require('../../lib/metadata'));
   });
 });

@@ -743,66 +743,66 @@ describe('encoder', function () {
       }, TypeError);
     });
   });
-  describe('#parseTypeName()', function () {
+  describe('#parseFqTypeName()', function () {
     it('should parse single type names', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.Int32Type');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.Int32Type');
       assert.strictEqual(dataTypes.int, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.UUIDType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.UUIDType');
       assert.strictEqual(dataTypes.uuid, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.UTF8Type');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.UTF8Type');
       assert.strictEqual(dataTypes.varchar, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.BytesType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.BytesType');
       assert.strictEqual(dataTypes.blob, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.FloatType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.FloatType');
       assert.strictEqual(dataTypes.float, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DoubleType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DoubleType');
       assert.strictEqual(dataTypes.double, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.BooleanType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.BooleanType');
       assert.strictEqual(dataTypes.boolean, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.InetAddressType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.InetAddressType');
       assert.strictEqual(dataTypes.inet, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DateType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DateType');
       assert.strictEqual(dataTypes.timestamp, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TimestampType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TimestampType');
       assert.strictEqual(dataTypes.timestamp, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.LongType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.LongType');
       assert.strictEqual(dataTypes.bigint, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DecimalType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DecimalType');
       assert.strictEqual(dataTypes.decimal, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.IntegerType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.IntegerType');
       assert.strictEqual(dataTypes.varint, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.CounterColumnType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.CounterColumnType');
       assert.strictEqual(dataTypes.counter, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TimeUUIDType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TimeUUIDType');
       assert.strictEqual(dataTypes.timeuuid, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.AsciiType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.AsciiType');
       assert.strictEqual(dataTypes.ascii, type.code);
     });
     it('should parse complex type names', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.list, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.int, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.UUIDType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.UUIDType)');
       assert.strictEqual(dataTypes.set, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.uuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.TimeUUIDType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.TimeUUIDType)');
       assert.strictEqual(dataTypes.set, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.timeuuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
       assert.strictEqual(dataTypes.map, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.bigint, type.info[1].code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.tuple, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
@@ -810,12 +810,12 @@ describe('encoder', function () {
     });
     it('should parse frozen types', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.TimeUUIDType))');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.TimeUUIDType))');
       assert.strictEqual(dataTypes.list, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.timeuuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
       assert.strictEqual(dataTypes.map, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
@@ -830,7 +830,7 @@ describe('encoder', function () {
         'org.apache.cassandra.db.marshal.UserType(' +
         'tester,70686f6e65,616c696173:org.apache.cassandra.db.marshal.UTF8Type,6e756d626572:org.apache.cassandra.db.marshal.UTF8Type' +
         ')';
-      var dataType = encoder.parseTypeName(typeText);
+      var dataType = encoder.parseFqTypeName(typeText);
       assert.strictEqual(dataTypes.udt, dataType.code);
       //Udt name
       assert.ok(dataType.info);
@@ -856,7 +856,7 @@ describe('encoder', function () {
         '616c696173:org.apache.cassandra.db.marshal.UTF8Type,' +
         '6e756d626572:org.apache.cassandra.db.marshal.UTF8Type))' +
         ')';
-      var dataType = encoder.parseTypeName(typeText);
+      var dataType = encoder.parseFqTypeName(typeText);
       assert.strictEqual(dataTypes.udt, dataType.code);
       assert.strictEqual('address', dataType.info.name);
       assert.strictEqual('tester', dataType.info.keyspace);
@@ -875,6 +875,70 @@ describe('encoder', function () {
       assert.strictEqual(2, phonesSubType.info.fields.length);
       assert.strictEqual('alias', phonesSubType.info.fields[0].name);
       assert.strictEqual('number', phonesSubType.info.fields[1].name);
+    });
+  });
+  describe('#parseTypeName()', function () {
+    function throwIfCalled() {
+      throw new Error('This function should not be called');
+    }
+    it('should parse single type names', function (done) {
+      var encoder = new Encoder(4, {});
+      var items = [
+        ['int',        dataTypes.int],
+        ['uuid',       dataTypes.uuid],
+        ['text',       dataTypes.text],
+        ['varchar',    dataTypes.varchar],
+        ['blob',       dataTypes.blob],
+        ['float',      dataTypes.float],
+        ['double',     dataTypes.double],
+        ['boolean',    dataTypes.boolean],
+        ['inet',       dataTypes.inet],
+        ['timestamp',  dataTypes.timestamp],
+        ['bigint',     dataTypes.bigint],
+        ['decimal',    dataTypes.decimal],
+        ['varint',     dataTypes.varint],
+        ['counter',    dataTypes.counter],
+        ['timeuuid',   dataTypes.timeuuid],
+        ['ascii',      dataTypes.ascii]
+      ];
+      async.eachSeries(items, function eachCb(item, next) {
+        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
+          assert.ifError(err);
+          assert.ok(dataType);
+          assert.strictEqual(dataType.code, item[1]);
+          next();
+        });
+      }, done);
+    });
+    it('should parse complex type names', function (done) {
+      var encoder = new Encoder(4, {});
+      var items = [
+        ['list<int>', dataTypes.list, dataTypes.int],
+        ['set<uuid>', dataTypes.set, dataTypes.uuid],
+        ['set<timeuuid>', dataTypes.set, dataTypes.timeuuid],
+        ['map<varchar,bigint>', dataTypes.map, [dataTypes.varchar, dataTypes.bigint]],
+        ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
+        ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
+        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
+      ];
+      async.eachSeries(items, function eachCb(item, next) {
+        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
+          assert.ifError(err);
+          assert.ok(dataType);
+          assert.strictEqual(dataType.code, item[1]);
+          assert.notEqual(dataType.info, null);
+          if (util.isArray(item[2])) {
+            assert.strictEqual(dataType.info.length, item[2].length);
+            dataType.info.forEach(function (childType, i) {
+              assert.strictEqual(childType.code, item[2][i]);
+            });
+          }
+          else {
+            assert.strictEqual(dataType.info.code, item[2]);
+          }
+          next();
+        });
+      }, done);
     });
   });
   describe('#parseKeyTypes', function () {

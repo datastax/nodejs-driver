@@ -12,6 +12,7 @@ var TableMetadata = require('../../lib/metadata/table-metadata');
 var MaterializedView = require('../../lib/metadata/materialized-view');
 var tokenizer = require('../../lib/tokenizer');
 var types = require('../../lib/types');
+var dataTypes = types.dataTypes;
 var utils = require('../../lib/utils');
 var errors = require('../../lib/errors');
 var Encoder = require('../../lib/encoder');
@@ -812,7 +813,7 @@ describe('Metadata', function () {
           var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
           var columnRows = [
             {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
-            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
           ];
           var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
           metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -838,7 +839,7 @@ describe('Metadata', function () {
         var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
         var columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"index_keys": ""}',"index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"index_keys": ""}',"index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -867,7 +868,7 @@ describe('Metadata', function () {
         var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
         var columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"b@706172656e745f70617468","component_index":null,"index_name":"cfs_archive_parent_path","index_options":"\"null\"","index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"b@706172656e745f70617468","component_index":null,"index_name":"cfs_archive_parent_path","index_options":"\"null\"","index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -1044,7 +1045,7 @@ describe('Metadata', function () {
       });
     });
     describe('with C*3.0+ metadata rows', function () {
-      it('should parse partition and clustering keys @debug', function (done) {
+      it('should parse partition and clustering keys', function (done) {
         var tableRow = {
           "keyspace_name":"ks_tbl_meta",
           "table_name":"tbl4",
@@ -1063,11 +1064,11 @@ describe('Metadata', function () {
           "crc_check_chance": 0.8,
           "memtable_flush_period_in_ms":0,"min_index_interval":64,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "apk2", "clustering_order": "none", "column_name_bytes": "0x61706b32", "kind": "partition_key", "position": 1, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "pk1", "clustering_order": "none", "column_name_bytes": "0x706b31", "kind": "partition_key", "position": 0, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "val2", "clustering_order": "none", "column_name_bytes": "0x76616c32", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.BytesType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "valz1", "clustering_order": "none", "column_name_bytes": "0x76616c7a31", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.Int32Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "zck", "clustering_order": "asc", "column_name_bytes": "0x7a636b", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.TimeUUIDType"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "apk2", "clustering_order": "none", "column_name_bytes": "0x61706b32", "kind": "partition_key", "position": 1, "type": "text"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "pk1", "clustering_order": "none", "column_name_bytes": "0x706b31", "kind": "partition_key", "position": 0, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "val2", "clustering_order": "none", "column_name_bytes": "0x76616c32", "kind": "regular", "position": -1, "type": "blob"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "valz1", "clustering_order": "none", "column_name_bytes": "0x76616c7a31", "kind": "regular", "position": -1, "type": "int"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "zck", "clustering_order": "asc", "column_name_bytes": "0x7a636b", "kind": "clustering", "position": 0, "type": "timeuuid"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
@@ -1087,6 +1088,8 @@ describe('Metadata', function () {
           //not present, default
           assert.strictEqual(table.populateCacheOnFlush, false);
           assert.strictEqual(table.columns.length, 5);
+          assert.deepEqual(table.columns.map(function (x) { return x.type.code; }),
+            [dataTypes.text, dataTypes.uuid, dataTypes.blob, dataTypes.int, dataTypes.timeuuid]);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
@@ -1098,20 +1101,20 @@ describe('Metadata', function () {
       it('should parse with no clustering keys', function (done) {
         var tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "text"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
-          assert.ifError(err);
-          assert.ok(table);
-          assert.strictEqual(table.columns.length, 2);
-          assert.strictEqual(table.partitionKeys.length, 1);
-          assert.strictEqual(table.partitionKeys[0].name, 'id');
-          assert.strictEqual(table.partitionKeys[0].type.code, types.dataTypes.uuid);
-          assert.strictEqual(table.clusteringKeys.length, 0);
+            assert.ifError(err);
+            assert.ok(table);
+            assert.strictEqual(table.columns.length, 2);
+            assert.strictEqual(table.partitionKeys.length, 1);
+            assert.strictEqual(table.partitionKeys[0].name, 'id');
+            assert.strictEqual(table.partitionKeys[0].type.code, types.dataTypes.uuid);
+            assert.strictEqual(table.clusteringKeys.length, 0);
           done();
         });
       });
@@ -1121,9 +1124,9 @@ describe('Metadata', function () {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl5","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":["dense"],"gc_grace_seconds":864000,"id":"80fd9590-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.TimeUUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "text"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
@@ -1146,9 +1149,9 @@ describe('Metadata', function () {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl5","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":["dense"],"gc_grace_seconds":864000,"id":"80fd9590-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.TimeUUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "text"}
         ];
         var indexRows = [
           {"index_name": "custom_index", "kind": "CUSTOM", "options": {"foo":"bar","class_name":"dummy.DummyIndex","target":"a, b, keys(c)"}}
@@ -1180,11 +1183,11 @@ describe('Metadata', function () {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl6","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":[],"gc_grace_seconds":864000,"id":"81a32460-5862-11e5-b0ce-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "column1", "clustering_order": "asc", "column_name_bytes": "0x636f6c756d6e31", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "static", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text2", "clustering_order": "none", "column_name_bytes": "0x7465787432", "kind": "static", "position": -1, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.BytesType"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "column1", "clustering_order": "asc", "column_name_bytes": "0x636f6c756d6e31", "kind": "clustering", "position": 0, "type": "text"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "static", "position": -1, "type": "text"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text2", "clustering_order": "none", "column_name_bytes": "0x7465787432", "kind": "static", "position": -1, "type": "text"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "blob"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
@@ -1206,10 +1209,10 @@ describe('Metadata', function () {
           "keyspace_name": "ks1", "table_name": "tbl10", "bloom_filter_fp_chance": 0.01, "caching": {"keys": "ALL", "rows_per_partition": "NONE"}, "comment": "", "compaction": {"min_threshold": "4", "max_threshold": "32", "class": "org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"}, "compression": {"chunk_length_in_kb": "64", "class": "org.apache.cassandra.io.compress.LZ4Compressor"}, "dclocal_read_repair_chance": 0.1, "default_time_to_live": 0, "extensions": {},
           "flags": ["compound", "dense"], "gc_grace_seconds": 864000, "id": "b4d56ea0-5881-11e5-8326-c7d0c38d1d8d", "max_index_interval": 2048, "memtable_flush_period_in_ms": 0, "min_index_interval": 128, "read_repair_chance": 0.0, "speculative_retry": "99PERCENTILE"};
         var columnRows = [
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "org.apache.cassandra.db.marshal.UUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "org.apache.cassandra.db.marshal.TimeUUIDType"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "text1", "clustering_order": "asc", "column_name_bytes": "0x7465787431", "kind": "clustering", "position": 1, "type": "org.apache.cassandra.db.marshal.UTF8Type"},
-          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "org.apache.cassandra.db.marshal.EmptyType"}
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "text1", "clustering_order": "asc", "column_name_bytes": "0x7465787431", "kind": "clustering", "position": 1, "type": "text"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "empty"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
@@ -1229,63 +1232,6 @@ describe('Metadata', function () {
     });
   });
   describe('#getFunctions()', function () {
-    it('should query once when called in parallel', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          called++;
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.times(10, function (n, next) {
-        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
-          assert.ifError(err);
-          assert.ok(funcArray);
-          next();
-        });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 1);
-        done();
-      });
-    });
-    it('should query once when called serially', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          called++;
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
-          assert.ifError(err);
-          assert.ok(funcArray);
-          assert.strictEqual(funcArray.length, 1);
-          next();
-        });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 1);
-        done();
-      });
-    });
     it('should return an empty array when not found', function (done) {
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1296,139 +1242,225 @@ describe('Metadata', function () {
         done();
       });
     });
-    it('should query the following times if was previously not found', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          if (called++ < 5) {
-            return setImmediate(function () {
-              cb(null, {rows: []});
+    describe('with C* 2.2 metadata rows', function () {
+      it('should query once when called in parallel', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            called++;
+            setImmediate(function () {
+              cb(null, {rows: rows});
             });
-          }
-          setImmediate(function () {
-            cb(null, {rows: rows});
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        async.times(10, function (n, next) {
+          metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+            assert.ifError(err);
+            assert.ok(funcArray);
+            next();
           });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+        }, function (err) {
           assert.ifError(err);
-          assert.ok(funcArray);
-          if (n < 5) {
-            assert.strictEqual(funcArray.length, 0);
-          }
-          else {
-            //there should be a row
-            assert.strictEqual(funcArray.length, 1);
-          }
-          next();
+          assert.strictEqual(called, 1);
+          done();
         });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 6);
-        done();
       });
-    });
-    it('should query the following times if there was an error previously', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          if (called++ < 5) {
-            return setImmediate(function () {
-              cb(new Error('Dummy'));
+      it('should query once when called serially', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            called++;
+            setImmediate(function () {
+              cb(null, {rows: rows});
             });
-          }
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
-          if (n < 5) {
-            assert.ok(err);
-            assert.strictEqual(err.message, 'Dummy');
-          }
-          else {
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
             assert.strictEqual(funcArray.length, 1);
-          }
-          next();
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 1);
+          done();
         });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 6);
-        done();
       });
-    });
-    it('should parse function metadata with 2 parameters', function (done) {
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"},
-        {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
-      ];
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
-        assert.ifError(err);
-        assert.ok(funcArray);
-        assert.strictEqual(funcArray.length, 2);
-        assert.strictEqual(funcArray[0].name, 'plus');
-        assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
-        assert.strictEqual(funcArray[0].signature.join(', '), ['bigint', 'bigint'].join(', '));
-        assert.strictEqual(funcArray[0].argumentNames.join(', '), ['s', 'v'].join(', '));
-        assert.ok(funcArray[0].argumentTypes[0]);
-        assert.strictEqual(funcArray[0].argumentTypes[0].code, types.dataTypes.bigint);
-        assert.ok(funcArray[0].argumentTypes[1]);
-        assert.strictEqual(funcArray[0].argumentTypes[1].code, types.dataTypes.bigint);
-        assert.strictEqual(funcArray[0].language, 'java');
-        assert.ok(funcArray[0].returnType);
-        assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.bigint);
+      it('should query the following times if was previously not found', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            if (called++ < 5) {
+              return setImmediate(function () {
+                cb(null, {rows: []});
+              });
+            }
+            setImmediate(function () {
+              cb(null, {rows: rows});
+            });
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+            assert.ifError(err);
+            assert.ok(funcArray);
+            if (n < 5) {
+              assert.strictEqual(funcArray.length, 0);
+            }
+            else {
+              //there should be a row
+              assert.strictEqual(funcArray.length, 1);
+            }
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 6);
+          done();
+        });
+      });
+      it('should query the following times if there was an error previously', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            if (called++ < 5) {
+              return setImmediate(function () {
+                cb(new Error('Dummy'));
+              });
+            }
+            setImmediate(function () {
+              cb(null, {rows: rows});
+            });
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+            if (n < 5) {
+              assert.ok(err);
+              assert.strictEqual(err.message, 'Dummy');
+            }
+            else {
+              assert.ifError(err);
+              assert.ok(funcArray);
+              assert.strictEqual(funcArray.length, 1);
+            }
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 6);
+          done();
+        });
+      });
+      it('should parse function metadata with 2 parameters', function (done) {
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"},
+          {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          assert.strictEqual(funcArray.length, 2);
+          assert.strictEqual(funcArray[0].name, 'plus');
+          assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
+          assert.strictEqual(funcArray[0].signature.join(', '), ['bigint', 'bigint'].join(', '));
+          assert.strictEqual(funcArray[0].argumentNames.join(', '), ['s', 'v'].join(', '));
+          assert.ok(funcArray[0].argumentTypes[0]);
+          assert.strictEqual(funcArray[0].argumentTypes[0].code, types.dataTypes.bigint);
+          assert.ok(funcArray[0].argumentTypes[1]);
+          assert.strictEqual(funcArray[0].argumentTypes[1].code, types.dataTypes.bigint);
+          assert.strictEqual(funcArray[0].language, 'java');
+          assert.ok(funcArray[0].returnType);
+          assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.bigint);
 
-        assert.strictEqual(funcArray[1].name, 'plus');
-        assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
-        assert.strictEqual(funcArray[1].signature.join(', '), ['int', 'int'].join(', '));
-        assert.strictEqual(funcArray[1].argumentNames.join(', '), ['arg1', 'arg2'].join(', '));
-        assert.ok(funcArray[1].argumentTypes[0]);
-        assert.strictEqual(funcArray[1].argumentTypes[0].code, types.dataTypes.int);
-        assert.ok(funcArray[1].argumentTypes[1]);
-        assert.strictEqual(funcArray[1].argumentTypes[1].code, types.dataTypes.int);
-        assert.strictEqual(funcArray[1].language, 'java');
-        assert.ok(funcArray[1].returnType);
-        assert.strictEqual(funcArray[1].returnType.code, types.dataTypes.int);
-        done();
+          assert.strictEqual(funcArray[1].name, 'plus');
+          assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
+          assert.strictEqual(funcArray[1].signature.join(', '), ['int', 'int'].join(', '));
+          assert.strictEqual(funcArray[1].argumentNames.join(', '), ['arg1', 'arg2'].join(', '));
+          assert.ok(funcArray[1].argumentTypes[0]);
+          assert.strictEqual(funcArray[1].argumentTypes[0].code, types.dataTypes.int);
+          assert.ok(funcArray[1].argumentTypes[1]);
+          assert.strictEqual(funcArray[1].argumentTypes[1].code, types.dataTypes.int);
+          assert.strictEqual(funcArray[1].language, 'java');
+          assert.ok(funcArray[1].returnType);
+          assert.strictEqual(funcArray[1].returnType.code, types.dataTypes.int);
+          done();
+        });
+      });
+      it('should parse a function metadata with no parameters', function (done) {
+        var rows = [
+          {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        metadata.getFunctions('ks_udf', 'return_one', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          assert.strictEqual(funcArray.length, 1);
+          assert.strictEqual(funcArray[0].name, 'return_one');
+          assert.strictEqual(funcArray[0].signature.length, 0);
+          assert.strictEqual(funcArray[0].argumentNames, utils.emptyArray);
+          assert.strictEqual(funcArray[0].argumentTypes.length, 0);
+          assert.strictEqual(funcArray[0].language, 'java');
+          assert.ok(funcArray[0].returnType);
+          assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.int);
+          done();
+        });
       });
     });
-    it('should parse a function metadata with no parameters', function (done) {
-      var rows = [
-        {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
-      ];
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      metadata.getFunctions('ks_udf', 'return_one', function (err, funcArray) {
-        assert.ifError(err);
-        assert.ok(funcArray);
-        assert.strictEqual(funcArray.length, 1);
-        assert.strictEqual(funcArray[0].name, 'return_one');
-        assert.strictEqual(funcArray[0].signature.length, 0);
-        assert.strictEqual(funcArray[0].argumentNames, utils.emptyArray);
-        assert.strictEqual(funcArray[0].argumentTypes.length, 0);
-        assert.strictEqual(funcArray[0].language, 'java');
-        assert.ok(funcArray[0].returnType);
-        assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.int);
-        done();
+    describe('with C* 3.0+ metadata rows', function () {
+      it('should parse function metadata with 2 parameters', function (done) {
+        var rows = [
+          {"keyspace_name": "ks_udf", "function_name": "plus", "argument_types": ["int", "int"], "argument_names": ["s", "v"], "body": "return s+v;", "called_on_null_input": false, "language": "java", "return_type": "int"}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.setCassandraVersion([3, 0]);
+        metadata.keyspaces['ks_udf'] = { functions: {}};
+        metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
+          assert.ifError(err);
+          assert.ok(funcArray);
+          assert.strictEqual(funcArray.length, 1);
+          assert.strictEqual(funcArray[0].name, 'plus');
+          assert.strictEqual(funcArray[0].keyspaceName, 'ks_udf');
+          assert.strictEqual(funcArray[0].signature.join(', '), ['int', 'int'].join(', '));
+          assert.strictEqual(funcArray[0].argumentNames.join(', '), ['s', 'v'].join(', '));
+          assert.ok(funcArray[0].argumentTypes[0]);
+          assert.strictEqual(funcArray[0].argumentTypes[0].code, types.dataTypes.int);
+          assert.ok(funcArray[0].argumentTypes[1]);
+          assert.strictEqual(funcArray[0].argumentTypes[1].code, types.dataTypes.int);
+          assert.strictEqual(funcArray[0].language, 'java');
+          assert.ok(funcArray[0].returnType);
+          assert.strictEqual(funcArray[0].returnType.code, types.dataTypes.int);
+          done();
+        });
       });
     });
   });
@@ -1578,64 +1610,6 @@ describe('Metadata', function () {
     });
   });
   describe('#getAggregates()', function () {
-    it('should query once when called in parallel', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          called++;
-          helper.assertContains(q, 'system.schema_aggregates');
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { aggregates: {}};
-      async.times(10, function (n, next) {
-        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
-          assert.ifError(err);
-          assert.ok(funcArray);
-          next();
-        });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 1);
-        done();
-      });
-    });
-    it('should query once when called serially', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          called++;
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { aggregates: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
-          assert.ifError(err);
-          assert.ok(funcArray);
-          assert.strictEqual(funcArray.length, 1);
-          next();
-        });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 1);
-        done();
-      });
-    });
     it('should return an empty array when not found', function (done) {
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { aggregates: {}};
@@ -1646,127 +1620,229 @@ describe('Metadata', function () {
         done();
       });
     });
-    it('should query the following times if was previously not found', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          if (called++ < 5) {
-            return setImmediate(function () {
-              cb(null, {rows: []});
+    describe('with C* 2.2 metadata rows', function () {
+      it('should query once when called in parallel', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            called++;
+            helper.assertContains(q, 'system.schema_aggregates');
+            setImmediate(function () {
+              cb(null, {rows: rows});
             });
-          }
-          setImmediate(function () {
-            cb(null, {rows: rows});
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        async.times(10, function (n, next) {
+          metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+            assert.ifError(err);
+            assert.ok(funcArray);
+            next();
           });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { aggregates: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+        }, function (err) {
           assert.ifError(err);
-          assert.ok(funcArray);
-          if (n < 5) {
-            assert.strictEqual(funcArray.length, 0);
-          }
-          else {
-            //there should be a row
-            assert.strictEqual(funcArray.length, 1);
-          }
-          next();
+          assert.strictEqual(called, 1);
+          done();
         });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 6);
-        done();
       });
-    });
-    it('should query the following times if there was an error previously', function (done) {
-      var called = 0;
-      var rows = [
-        {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
-      ];
-      var cc = {
-        query: function (q, cb) {
-          helper.assertContains(q, 'system.schema_aggregates');
-          if (called++ < 5) {
-            return setImmediate(function () {
-              cb(new Error('Dummy'));
+      it('should query once when called serially', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            called++;
+            setImmediate(function () {
+              cb(null, {rows: rows});
             });
-          }
-          setImmediate(function () {
-            cb(null, {rows: rows});
-          });
-        },
-        getEncoder: function () { return new Encoder(4, {}); }
-      };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.keyspaces['ks_udf'] = { aggregates: {}};
-      async.timesSeries(10, function (n, next) {
-        metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
-          if (n < 5) {
-            assert.ok(err);
-            assert.strictEqual(err.message, 'Dummy');
-          }
-          else {
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
             assert.strictEqual(funcArray.length, 1);
-          }
-          next();
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 1);
+          done();
         });
-      }, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(called, 6);
-        done();
+      });
+      it('should query the following times if was previously not found', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            if (called++ < 5) {
+              return setImmediate(function () {
+                cb(null, {rows: []});
+              });
+            }
+            setImmediate(function () {
+              cb(null, {rows: rows});
+            });
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+            assert.ifError(err);
+            assert.ok(funcArray);
+            if (n < 5) {
+              assert.strictEqual(funcArray.length, 0);
+            }
+            else {
+              //there should be a row
+              assert.strictEqual(funcArray.length, 1);
+            }
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 6);
+          done();
+        });
+      });
+      it('should query the following times if there was an error previously', function (done) {
+        var called = 0;
+        var rows = [
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+        ];
+        var cc = {
+          query: function (q, cb) {
+            helper.assertContains(q, 'system.schema_aggregates');
+            if (called++ < 5) {
+              return setImmediate(function () {
+                cb(new Error('Dummy'));
+              });
+            }
+            setImmediate(function () {
+              cb(null, {rows: rows});
+            });
+          },
+          getEncoder: function () { return new Encoder(4, {}); }
+        };
+        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        async.timesSeries(10, function (n, next) {
+          metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
+            if (n < 5) {
+              assert.ok(err);
+              assert.strictEqual(err.message, 'Dummy');
+            }
+            else {
+              assert.ifError(err);
+              assert.ok(funcArray);
+              assert.strictEqual(funcArray.length, 1);
+            }
+            next();
+          });
+        }, function (err) {
+          assert.ifError(err);
+          assert.strictEqual(called, 6);
+          done();
+        });
+      });
+      it('should parse aggregate metadata with 1 parameter', function (done) {
+        var rows = [
+          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
+          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.keyspaces['ks_udf1'] = { aggregates: {}};
+        metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
+          assert.ifError(err);
+          assert.ok(aggregatesArray);
+          assert.strictEqual(aggregatesArray.length, 2);
+          assert.strictEqual(aggregatesArray[0].name, 'sum');
+          assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
+          assert.strictEqual(aggregatesArray[0].signature.join(', '), ['bigint'].join(', '));
+          assert.strictEqual(aggregatesArray[0].argumentTypes.length, 1);
+          assert.ok(aggregatesArray[0].argumentTypes[0]);
+          assert.strictEqual(aggregatesArray[0].argumentTypes[0].code, types.dataTypes.bigint);
+          assert.ok(aggregatesArray[0].returnType);
+          assert.strictEqual(aggregatesArray[0].returnType.code, types.dataTypes.bigint);
+          assert.strictEqual(aggregatesArray[0].finalFunction, null);
+          assert.ok(aggregatesArray[0].stateType);
+          assert.strictEqual(aggregatesArray[0].stateType.code, types.dataTypes.bigint);
+          assert.strictEqual(aggregatesArray[0].stateFunction, 'plus');
+          assert.strictEqual(aggregatesArray[0].initCondition, '0');
+
+          assert.strictEqual(aggregatesArray[1].name, 'sum');
+          assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
+          assert.strictEqual(aggregatesArray[1].signature.join(', '), ['int'].join(', '));
+          assert.strictEqual(aggregatesArray[1].argumentTypes.length, 1);
+          assert.ok(aggregatesArray[1].argumentTypes[0]);
+          assert.strictEqual(aggregatesArray[1].argumentTypes[0].code, types.dataTypes.int);
+          assert.ok(aggregatesArray[1].returnType);
+          assert.strictEqual(aggregatesArray[1].returnType.code, types.dataTypes.int);
+          assert.strictEqual(aggregatesArray[1].finalFunction, null);
+          assert.ok(aggregatesArray[1].stateType);
+          assert.strictEqual(aggregatesArray[1].stateType.code, types.dataTypes.int);
+          assert.strictEqual(aggregatesArray[1].stateFunction, 'plus');
+          assert.strictEqual(aggregatesArray[1].initCondition, '0');
+          done();
+        });
       });
     });
-    it('should parse function metadata with 2 parameters', function (done) {
-      var rows = [
-        {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
-        {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
-      ];
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
-      metadata.keyspaces['ks_udf1'] = { aggregates: {}};
-      metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
-        assert.ifError(err);
-        assert.ok(aggregatesArray);
-        assert.strictEqual(aggregatesArray.length, 2);
-        assert.strictEqual(aggregatesArray[0].name, 'sum');
-        assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
-        assert.strictEqual(aggregatesArray[0].signature.join(', '), ['bigint'].join(', '));
-        assert.strictEqual(aggregatesArray[0].argumentTypes.length, 1);
-        assert.ok(aggregatesArray[0].argumentTypes[0]);
-        assert.strictEqual(aggregatesArray[0].argumentTypes[0].code, types.dataTypes.bigint);
-        assert.ok(aggregatesArray[0].returnType);
-        assert.strictEqual(aggregatesArray[0].returnType.code, types.dataTypes.bigint);
-        assert.strictEqual(aggregatesArray[0].finalFunction, null);
-        assert.ok(aggregatesArray[0].stateType);
-        assert.strictEqual(aggregatesArray[0].stateType.code, types.dataTypes.bigint);
-        assert.strictEqual(aggregatesArray[0].stateFunction, 'plus');
-        helper.assertInstanceOf(aggregatesArray[0].initConditionRaw, Buffer);
-        helper.assertInstanceOf(aggregatesArray[0].initCondition, types.Long);
-        assert.ok(aggregatesArray[0].initCondition.equals(types.Long.ZERO));
+    describe('with C* 3.0+ metadata rows', function () {
+      it('should parse aggregate metadata with 1 parameter', function (done) {
+        var rows = [
+          {"keyspace_name": "ks_udf1", "aggregate_name": "sum", "argument_types": ["bigint"], "final_func": null, "initcond": '2', "return_type": "bigint", "state_func": "plus", "state_type": "bigint"},
+          {"keyspace_name": "ks_udf1", "aggregate_name": "sum", "argument_types": ["int"], "final_func": null, "initcond": '1', "return_type": "int", "state_func": "plus", "state_type": "int"}
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.setCassandraVersion([3, 0]);
+        metadata.keyspaces['ks_udf1'] = { aggregates: {}};
+        metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
+          assert.ifError(err);
+          assert.ok(aggregatesArray);
+          assert.strictEqual(aggregatesArray.length, 2);
+          assert.strictEqual(aggregatesArray[0].name, 'sum');
+          assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
+          assert.strictEqual(aggregatesArray[0].signature.join(', '), ['bigint'].join(', '));
+          assert.strictEqual(aggregatesArray[0].argumentTypes.length, 1);
+          assert.ok(aggregatesArray[0].argumentTypes[0]);
+          assert.strictEqual(aggregatesArray[0].argumentTypes[0].code, types.dataTypes.bigint);
+          assert.ok(aggregatesArray[0].returnType);
+          assert.strictEqual(aggregatesArray[0].returnType.code, types.dataTypes.bigint);
+          assert.strictEqual(aggregatesArray[0].finalFunction, null);
+          assert.ok(aggregatesArray[0].stateType);
+          assert.strictEqual(aggregatesArray[0].stateType.code, types.dataTypes.bigint);
+          assert.strictEqual(aggregatesArray[0].stateFunction, 'plus');
+          assert.strictEqual(aggregatesArray[0].initCondition, '2');
 
-        assert.strictEqual(aggregatesArray[1].name, 'sum');
-        assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
-        assert.strictEqual(aggregatesArray[1].signature.join(', '), ['int'].join(', '));
-        assert.strictEqual(aggregatesArray[1].argumentTypes.length, 1);
-        assert.ok(aggregatesArray[1].argumentTypes[0]);
-        assert.strictEqual(aggregatesArray[1].argumentTypes[0].code, types.dataTypes.int);
-        assert.ok(aggregatesArray[1].returnType);
-        assert.strictEqual(aggregatesArray[1].returnType.code, types.dataTypes.int);
-        assert.strictEqual(aggregatesArray[1].finalFunction, null);
-        assert.ok(aggregatesArray[1].stateType);
-        assert.strictEqual(aggregatesArray[1].stateType.code, types.dataTypes.int);
-        assert.strictEqual(aggregatesArray[1].stateFunction, 'plus');
-        assert.strictEqual(typeof aggregatesArray[1].initCondition, 'number');
-        assert.strictEqual(aggregatesArray[1].initCondition, 0);
-        done();
+          assert.strictEqual(aggregatesArray[1].name, 'sum');
+          assert.strictEqual(aggregatesArray[0].keyspaceName, 'ks_udf1');
+          assert.strictEqual(aggregatesArray[1].signature.join(', '), ['int'].join(', '));
+          assert.strictEqual(aggregatesArray[1].argumentTypes.length, 1);
+          assert.ok(aggregatesArray[1].argumentTypes[0]);
+          assert.strictEqual(aggregatesArray[1].argumentTypes[0].code, types.dataTypes.int);
+          assert.ok(aggregatesArray[1].returnType);
+          assert.strictEqual(aggregatesArray[1].returnType.code, types.dataTypes.int);
+          assert.strictEqual(aggregatesArray[1].finalFunction, null);
+          assert.ok(aggregatesArray[1].stateType);
+          assert.strictEqual(aggregatesArray[1].stateType.code, types.dataTypes.int);
+          assert.strictEqual(aggregatesArray[1].stateFunction, 'plus');
+          assert.strictEqual(typeof aggregatesArray[1].initCondition, 'string');
+          assert.strictEqual(aggregatesArray[1].initCondition, '1');
+          done();
+        });
       });
     });
   });

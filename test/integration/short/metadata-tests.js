@@ -84,11 +84,13 @@ describe('Metadata', function () {
       client.connect(function (err) {
         assert.ifError(err);
         var m = client.metadata;
-        m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
-          assert.ifError(err);
-          assert.strictEqual(udtInfo, null);
-          done();
-        });
+        async.timesSeries(10, function (n, next) {
+          m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
+            assert.ifError(err);
+            assert.strictEqual(udtInfo, null);
+            next();
+          });
+        }, helper.finish(client, done));
       });
     });
     vit('2.1', 'should return the udt information', function (done) {
@@ -165,7 +167,7 @@ describe('Metadata', function () {
             assert.ok(udt);
             assert.strictEqual(udt.fields.length, 2);
             assert.strictEqual(udt.fields[1].name, 'name');
-            assert.strictEqual(udt.fields[1].type.code, types.dataTypes.varchar);
+            assert.ok(udt.fields[1].type.code === types.dataTypes.varchar || udt.fields[1].type.code === types.dataTypes.text);
             next();
           });
         }
@@ -244,7 +246,10 @@ describe('Metadata', function () {
           "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_values map<text,int>, map_keys map<text,int>, map_entries map<text,int>, map_all map<text,int>, list_sample frozen<list<blob>>)",
           "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
           "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
-          "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))"
+          "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
+          "CREATE TYPE udt1 (i int, b blob, t text)",
+          "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
+          "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)"
         );
       }
       if (helper.isCassandraGreaterThan('2.2')) {
@@ -635,6 +640,49 @@ describe('Metadata', function () {
         }
       ], done);
     });
+    vit('2.1', 'should retrieve the metadata of a table with udt column', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl_udts1', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id', 'udt_sample']);
+            var udtColumn = table.columnsByName['udt_sample'];
+            assert.ok(udtColumn);
+            assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
+            assert.ok(udtColumn.type.info);
+            assert.strictEqual(udtColumn.type.info.name, 'udt1');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.1', 'should retrieve the metadata of a table with udt partition key', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl_udts2', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id']);
+            var udtColumn = table.columns[0];
+            assert.ok(udtColumn);
+            assert.strictEqual(table.partitionKeys[0], udtColumn);
+            assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
+            assert.ok(udtColumn.type.info);
+            assert.strictEqual(udtColumn.type.info.name, 'udt1');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
   });
   vdescribe('3.0', '#getMaterializedView()', function () {
     var keyspace = 'ks_view_meta';
@@ -753,7 +801,8 @@ describe('Metadata', function () {
             assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
             assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
             assert.ok(view.columnsByName['last_name']);
-            assert.strictEqual(view.columnsByName['last_name'].type.code, types.dataTypes.varchar);
+            assert.ok(view.columnsByName['last_name'].type.code === types.dataTypes.varchar ||
+              view.columnsByName['last_name'].type.code === types.dataTypes.text);
             assert.strictEqual(view.columns.length, 3);
             assert.strictEqual(view.includeAllColumns, true);
             next();

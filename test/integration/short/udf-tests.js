@@ -260,7 +260,7 @@ vdescribe('2.2', 'Metadata', function () {
             assert.strictEqual(aggregate.argumentTypes[0].code, types.dataTypes.int);
             assert.strictEqual(aggregate.returnType.code, types.dataTypes.int);
             assert.strictEqual(aggregate.stateFunction, 'plus');
-            assert.strictEqual(aggregate.initCondition, 1);
+            assert.strictEqual(aggregate.initCondition, '1');
             next();
           });
         },
@@ -319,7 +319,7 @@ vdescribe('2.2', 'Metadata', function () {
             assert.ifError(err);
             assert.ok(func);
             assert.strictEqual(func.name, 'sum2');
-            assert.strictEqual(func.initCondition, 0);
+            assert.strictEqual(func.initCondition, '0');
             next();
           });
         },
@@ -333,7 +333,7 @@ vdescribe('2.2', 'Metadata', function () {
             assert.ok(func);
             assert.strictEqual(func.name, 'sum2');
             //changed
-            assert.strictEqual(func.initCondition, 200);
+            assert.strictEqual(func.initCondition, '200');
             next();
           });
         },

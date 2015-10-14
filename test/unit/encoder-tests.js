@@ -638,11 +638,14 @@ describe('encoder', function () {
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {
+      /** @type {QueryOptions} */
       var options = {
         //Its an array of 3 values
+        /** @type {Array|Buffer} */
         routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
       };
       encoder.setRoutingKey([1, 'text'], options);
+      assert.ok(options.routingKey);
       //The routingKey should have the form: [2-byte-length] + key + [0]
       assert.strictEqual(options.routingKey.toString('hex'), '00010100' + '00010200' + '0002030300');
 
@@ -655,6 +658,7 @@ describe('encoder', function () {
       assert.strictEqual(options.routingKey.toString('hex'), '01');
     });
     it('should not affect Buffer routing keys', function () {
+      /** @type {QueryOptions} */
       var options = {
         routingKey: new Buffer([1, 2, 3, 4])
       };
@@ -671,6 +675,7 @@ describe('encoder', function () {
       assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
     });
     it('should build routing key based on routingIndexes', function () {
+      /** @type {QueryOptions} */
       var options = {
         hints: ['int'],
         routingIndexes: [0]
@@ -702,14 +707,36 @@ describe('encoder', function () {
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
       assert.strictEqual(options.routingKey.toString('hex'), '0004' + new Buffer('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
+    it('should allow undefined routingIndexes', function () {
+      /** @type {QueryOptions} */
+      var options = {
+        hints: ['int', 'text'],
+        routingIndexes: [0, null, 2]
+      };
+      encoder.setRoutingKey([1], options);
+      assert.strictEqual(options.routingKey, null);
+    });
+    it('should allow null or undefined routingKey parts', function () {
+      /** @type {QueryOptions} */
+      var options = {
+        routingKey: [new Buffer([0]), null, new Buffer([1])]
+      };
+      encoder.setRoutingKey([], options);
+      assert.strictEqual(options.routingKey, null);
+      options.routingKey = [new Buffer([0]), undefined, new Buffer([1])];
+      encoder.setRoutingKey([], options);
+      assert.strictEqual(options.routingKey, null);
+    });
     it('should throw if the type could not be encoded', function () {
       assert.throws(function () {
+        /** @type {QueryOptions} */
         var options = {
           routingIndexes: [0]
         };
         encoder.setRoutingKey([{a: 1}], options);
       }, TypeError);
       assert.throws(function () {
+        /** @type {QueryOptions} */
         var options = {
           hints: ['int'],
           routingIndexes: [0]
@@ -850,6 +877,39 @@ describe('encoder', function () {
       assert.strictEqual(2, phonesSubType.info.fields.length);
       assert.strictEqual('alias', phonesSubType.info.fields[0].name);
       assert.strictEqual('number', phonesSubType.info.fields[1].name);
+    });
+  });
+  describe('#parseKeyTypes', function () {
+    var encoder = new Encoder(1, {});
+    it('should parse single type', function () {
+      var value = 'org.apache.cassandra.db.marshal.UTF8Type';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0].code, types.dataTypes.varchar);
+      value = 'org.apache.cassandra.db.marshal.TimeUUIDType';
+      result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0].code, types.dataTypes.timeuuid);
+      assert.strictEqual(result.isComposite, false);
+      assert.strictEqual(result.hasCollections, false);
+    });
+    it('should parse composites', function () {
+      var value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.UTF8Type)';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 2);
+      assert.strictEqual(result.types[0].code, types.dataTypes.int);
+      assert.strictEqual(result.types[1].code, types.dataTypes.varchar);
+      assert.strictEqual(result.isComposite, true);
+      assert.strictEqual(result.hasCollections, false);
+    });
+    it('should parse composites with collection types', function () {
+      var value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.ColumnToCollectionType(6c6973745f73616d706c65:org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type),6d61705f73616d706c65:org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.Int32Type)))';
+      var result = encoder.parseKeyTypes(value);
+      assert.strictEqual(result.types.length, 4);
+      assert.strictEqual(result.types[0].code, types.dataTypes.varchar);
+      assert.strictEqual(result.types[1].code, types.dataTypes.int);
+      assert.strictEqual(result.types[2].code, types.dataTypes.list);
+      assert.strictEqual(result.types[3].code, types.dataTypes.map);
     });
   });
 });

@@ -419,6 +419,7 @@ describe('Client', function () {
     vit('2.1',  'should support protocol level timestamp', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
+      //noinspection JSCheckFunctionSignatures
       var timestamp = types.generateTimestamp(new Date(), 456);
       async.series([
         function insert(next) {
@@ -572,6 +573,10 @@ describe('Client', function () {
       });
       vit('2.1', 'should handle changes in table schema with udts', function (done) {
         var client = newInstance({ keyspace: commonKs });
+        var ids = [];
+        for (var i = 0; i < 10; i++) {
+          ids.push(types.Uuid.random());
+        }
         async.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone_change (alias text, number text, country_code int)'),
@@ -585,10 +590,24 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'ALTER TYPE phone_change ADD another text'),
           helper.toTask(client.execute, client, 'ALTER TABLE tbl_udt_change ALTER phone_col TYPE frozen<phone_change>'),
           function executeFewMoreTimesWithNewSchema(next) {
+            client.metadata.clearPrepared();
             var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
-            async.timesSeries(10, function (n, timesNext) {
-              client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString(), another: 'another field'}], { prepare: true}, timesNext);
-            }, next)
+            async.eachSeries(ids, function (id, eachNext) {
+              client.execute(query, [id, { alias: id.toString(), number: 'phone number', another: 'new field'}], { prepare: true}, eachNext);
+            }, next);
+          },
+          function executeSelectOnNewFields(next) {
+            var query = 'SELECT * FROM tbl_udt_change WHERE id IN ?';
+            client.execute(query, [ids], { prepare: true}, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(10, result.rows.length);
+              result.rows.forEach(function (row) {
+                assert.ok(row['phone_col']);
+                assert.strictEqual('phone number', row['phone_col']['number']);
+                assert.strictEqual('new field', row['phone_col'].another);
+              });
+              next();
+            });
           },
           client.shutdown.bind(client)
         ], done);
@@ -778,7 +797,7 @@ describe('Client', function () {
         var client = newInstance();
         async.series([
           helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
-          client.shutdown.bind(client),
+          client.shutdown.bind(client)
         ], done);
       });
       it('should be able to retrieve using simple index', function(done) {

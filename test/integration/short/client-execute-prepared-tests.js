@@ -530,6 +530,34 @@ describe('Client', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should allow undefined value as a null or unset depending on the protocol version', function (done) {
+      var client1 = newInstance();
+      var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
+      var id = Uuid.random();
+      async.series([
+        client1.connect.bind(client1),
+        client2.connect.bind(client2),
+        function insert2(next) {
+          //use undefined
+          var query = util.format('INSERT INTO %s (id1, id2, text_sample, map_sample) VALUES (?, ?, ?, ?)', commonTable);
+          client2.execute(query, [id, types.TimeUuid.now(), 'test null or unset', undefined], { prepare: true}, next);
+        },
+        function select2(next) {
+          var query = util.format('SELECT id1, id2, text_sample, map_sample FROM %s WHERE id1 = ?', commonTable);
+          client2.execute(query, [id], { prepare: true}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 1);
+            var row = result.first();
+            assert.strictEqual(row['id1'].toString(), id.toString());
+            assert.strictEqual(row['text_sample'], 'test null or unset');
+            assert.strictEqual(row['map_sample'], null);
+            next();
+          });
+        },
+        client1.shutdown.bind(client1),
+        client2.shutdown.bind(client2)
+      ], done);
+    });
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });

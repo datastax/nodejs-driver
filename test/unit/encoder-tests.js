@@ -628,11 +628,9 @@ describe('encoder', function () {
         encoder.encode(types.unset);
       }, TypeError);
     });
-    it('should throw TypeError when value is undefined and flag set with low protocol version', function () {
+    it('should return null when value is undefined and flag set with low protocol version', function () {
       var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
-      assert.throws(function () {
-        encoder.encode(undefined);
-      }, TypeError);
+      assert.strictEqual(encoder.encode(undefined), null);
     });
   });
   describe('#setRoutingKey()', function () {

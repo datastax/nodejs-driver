@@ -645,7 +645,7 @@ describe('utils', function () {
   });
 });
 describe('clientOptions', function () {
-  describe('#extend', function () {
+  describe('#extend()', function () {
     it('should require contactPoints', function () {
       assert.doesNotThrow(function () {
         clientOptions.extend({contactPoints: ['host1', 'host2']});
@@ -743,6 +743,18 @@ describe('clientOptions', function () {
           encoding: { map: DummyConstructor}
         });
       });
+    });
+  });
+  describe('#defaultOptions()', function () {
+    var options = clientOptions.defaultOptions();
+    it('should set LOCAL_QUORUM as default consistency level', function () {
+      assert.strictEqual(types.consistencies.localQuorum, options.queryOptions.consistency);
+    });
+    it('should set 12secs as default read timeout', function () {
+      assert.strictEqual(12000, options.socketOptions.readTimeout);
+    });
+    it('should set useUndefinedAsUnset as true', function () {
+      assert.strictEqual(true, options.encoding.useUndefinedAsUnset);
     });
   });
 });

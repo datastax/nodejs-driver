@@ -558,6 +558,62 @@ describe('Client', function () {
         client2.shutdown.bind(client2)
       ], done);
     });
+    it('should not allow collections with null or unset values', function (done) {
+      var client = newInstance();
+      var tid = types.TimeUuid.now();
+      async.series([
+        client.connect.bind(client),
+        function testListWithNull(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, list_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, [tid, null]], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function testListWithUnset(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, list_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, [tid, types.unset]], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function testSetWithNull(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, set_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, [1, null]], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function testSetWithUnset(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, set_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, [1, types.unset]], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function testMapWithNull(next) {
+          var map = {};
+          map[tid] = 1;
+          map[types.TimeUuid.now()] = null;
+          var query = util.format('INSERT INTO %s (id1, id2, map_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, map], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        function testMapWithUnset(next) {
+          var map = {};
+          map[tid] = 1;
+          map[types.TimeUuid.now()] = types.unset;
+          var query = util.format('INSERT INTO %s (id1, id2, map_sample) VALUES (?, ?, ?)', commonTable);
+          client.execute(query, [Uuid.random(), tid, map], { prepare: true}, function (err) {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
@@ -651,15 +707,21 @@ describe('Client', function () {
         var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
         var selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
-        var id = Uuid.random();
+        var id1 = Uuid.random();
         var tuple1 = new types.Tuple('val1', 1);
         var tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
         async.series([
-          function insert(next) {
-            client.execute(insertQuery, [id, tuple1, tuple2], next);
+          function insert1(next) {
+            client.execute(insertQuery, [id1, tuple1, tuple2], next);
           },
-          function select(next) {
-            client.execute(selectQuery, [id], function (err, result) {
+          function insert2(next) {
+            client.execute(insertQuery, [Uuid.random(), new types.Tuple('unset pair', undefined), null], next);
+          },
+          function insert3(next) {
+            client.execute(insertQuery, [Uuid.random(), new types.Tuple('null pair', null), null], next);
+          },
+          function select1(next) {
+            client.execute(selectQuery, [id1], function (err, result) {
               assert.ifError(err);
               var row = result.first();
               var tuple1Result = row['tuple_col1'];

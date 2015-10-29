@@ -73,7 +73,7 @@ describe('Client', function () {
       var counter = 0;
       async.series([
         function createKs(next) {
-          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+          client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
         function createTable(next) {
           client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));
@@ -104,7 +104,7 @@ describe('Client', function () {
       var noop = function () {};
       async.series([
         function createKs(next) {
-          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+          client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
         function createTable(next) {
           client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));

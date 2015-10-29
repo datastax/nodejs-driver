@@ -538,7 +538,7 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udts (id uuid PRIMARY KEY, phone_col frozen<phone>, address_col frozen<address>)'),
-          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>)'),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>, tuple_col3 tuple<int,text>)'),
           client.shutdown.bind(client)
         ], done);
       });
@@ -620,15 +620,16 @@ describe('Client', function () {
         ], done);
       });
       vit('2.1', 'should encode and decode tuples', function (done) {
-        var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
+        var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2, tuple_col3) VALUES (?, ?, ?, ?)';
         var selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
         var client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
         var id = Uuid.random();
         var tuple1 = new types.Tuple('val1', 1);
         var tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
+        var tuple3 = new types.Tuple(1, undefined);
         async.series([
           function insert(next) {
-            client.execute(insertQuery, [id, tuple1, tuple2], next);
+            client.execute(insertQuery, [id, tuple1, tuple2, tuple3], next);
           },
           function select(next) {
             client.execute(selectQuery, [id], function (err, result) {
@@ -636,6 +637,7 @@ describe('Client', function () {
               var row = result.first();
               var tuple1Result = row['tuple_col1'];
               var tuple2Result = row['tuple_col2'];
+              var tuple3Result = row['tuple_col3'];
               assert.strictEqual(tuple1Result.length, 2);
               assert.strictEqual(tuple1Result.get(0), 'val1');
               assert.strictEqual(tuple1Result.get(0), tuple1.get(0));
@@ -644,6 +646,11 @@ describe('Client', function () {
               assert.strictEqual(tuple2Result.get(0).toString(), tuple2.get(0).toString());
               assert.strictEqual(tuple2Result.get(1).toString(), '12');
               assert.strictEqual(tuple2Result.get(2), tuple2.get(2));
+              assert.strictEqual(tuple3Result.length, 2);
+              assert.strictEqual(tuple3Result.get(0), 1);
+              // value should be null instead of undefined as there is no difference in tuple since its frozen.
+              assert.strictEqual(tuple3Result.get(1), null);
+              assert.strictEqual(tuple3Result.get(0), tuple3.get(0));
               next();
             });
           }

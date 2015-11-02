@@ -1,4 +1,5 @@
 exports.Client = require('./lib/client.js');
+exports.encoder = require('./lib/encoder.js');
 exports.types = require('./lib/types');
 exports.errors = require('./lib/errors.js');
 exports.policies = require('./lib/policies');

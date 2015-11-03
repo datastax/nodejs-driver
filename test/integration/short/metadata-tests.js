@@ -112,9 +112,9 @@ describe('Metadata', function () {
             assert.ok(udtInfo.fields);
             assert.strictEqual(udtInfo.fields.length, 3);
             assert.strictEqual(udtInfo.fields[0].name, 'alias');
-            assert.strictEqual(udtInfo.fields[0].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[0].type.code === types.dataTypes.varchar || udtInfo.fields[0].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[1].name, 'number');
-            assert.strictEqual(udtInfo.fields[1].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[1].type.code === types.dataTypes.varchar || udtInfo.fields[1].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[2].name, 'country_code');
             assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.int);
             next();
@@ -128,7 +128,7 @@ describe('Metadata', function () {
             assert.strictEqual(udtInfo.name, 'address');
             assert.strictEqual(udtInfo.fields.length, 3);
             assert.strictEqual(udtInfo.fields[0].name, 'street');
-            assert.strictEqual(udtInfo.fields[0].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[0].type.code === types.dataTypes.varchar || udtInfo.fields[0].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[1].name, 'ZIP');
             assert.strictEqual(udtInfo.fields[1].type.code, types.dataTypes.int);
             assert.strictEqual(udtInfo.fields[2].name, 'phones');

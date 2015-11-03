@@ -472,6 +472,10 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
         create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
         helper.trace('With', create[2]);
       }
+      else if (process.env.TEST_CASSANDRA_BRANCH) {
+        create = ['create', 'test', '-v', process.env.TEST_CASSANDRA_BRANCH];
+        helper.trace('With branch', create[3]);
+      }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }

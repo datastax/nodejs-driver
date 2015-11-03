@@ -122,7 +122,7 @@ describe('client read timeouts', function () {
       var client = newInstance({
         socketOptions: {
           readTimeout: 3000,
-          defunctReadTimeoutThreshold: 16
+          defunctReadTimeoutThreshold: 32
         },
         //1 connection per host to simply it
         poolingOptions: {
@@ -163,7 +163,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          async.times(34, function (n, timesNext) {
+          async.times(500, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) return timesNext(err);
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

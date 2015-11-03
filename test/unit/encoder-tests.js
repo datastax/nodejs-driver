@@ -940,6 +940,27 @@ describe('encoder', function () {
         });
       }, done);
     });
+    it('should parse nested subtypes', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var name = 'map<text,frozen<list<frozen<map<text,frozen<list<int>>>>>>>';
+          encoder.parseTypeName('ks1', name, 0, null, throwIfCalled, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.map);
+            assert.strictEqual(type.info[0].code, dataTypes.text);
+            assert.strictEqual(type.info[1].code, dataTypes.list);
+            var subType1 = type.info[1];
+            assert.strictEqual(subType1.info.code, dataTypes.map);
+            var subType2 = subType1.info.info[1];
+            assert.strictEqual(subType2.code, dataTypes.list);
+            assert.strictEqual(subType2.info.code, dataTypes.int);
+            next();
+          });
+        }
+      ], done);
+    });
   });
   describe('#parseKeyTypes', function () {
     var encoder = new Encoder(1, {});

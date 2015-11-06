@@ -4,6 +4,7 @@ var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
+var vit = helper.vit;
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
@@ -288,7 +289,7 @@ describe('Client', function () {
           }, 2000);
         });
     });
-    it('should not buffer more than fetchSize', function (done) {
+    vit('2.0', 'should not buffer more than fetchSize', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
       var consistency = types.consistencies.quorum;

@@ -6,8 +6,11 @@ var events = require('events');
 var rewire = require('rewire');
 
 var hostModule = rewire('../../lib/host.js');
+//noinspection JSUnresolvedVariable
 var Host = hostModule.Host;
+//noinspection JSUnresolvedVariable
 var HostConnectionPool = hostModule.HostConnectionPool;
+//noinspection JSUnresolvedVariable
 var HostMap = hostModule.HostMap;
 var types = require('../../lib/types');
 var defaultOptions = require('../../lib/client-options').defaultOptions();
@@ -105,6 +108,25 @@ describe('HostConnectionPool', function () {
         assert.notEqual(c, null);
         //its a connection or is a mock
         assert.ok(c.open instanceof Function);
+        done();
+      });
+    });
+  });
+  describe('#checkHealth()', function () {
+    it('should remove remove connection from Array and invoke close', function (done) {
+      var hostPool = newHostConnectionPoolInstance();
+      var closeInvoked = 0;
+      var c = {
+        timedOutHandlers: 1000,
+        close: function () {
+          closeInvoked++;
+        }
+      };
+      hostPool.connections = ['a', 'b', c];
+      hostPool.checkHealth(c);
+      setImmediate(function () {
+        assert.strictEqual(1, closeInvoked);
+        assert.deepEqual(hostPool.connections, ['a', 'b']);
         done();
       });
     });
@@ -298,8 +320,9 @@ describe('HostMap', function () {
 /**
  * @returns {HostConnectionPool}
  */
-function newHostConnectionPoolInstance() {
-  return new HostConnectionPool('0.0.0.1', 2, {logEmitter: function (){}});
+function newHostConnectionPoolInstance(options) {
+  options = utils.extend({ logEmitter: function () {} }, defaultOptions, options);
+  return new HostConnectionPool('0.0.0.1', 2, options);
 }
 
 /**

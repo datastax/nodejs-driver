@@ -1,5 +1,56 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.0.0-rc1
+
+2015-11-11
+
+### Notable Changes
+
+- Added support for Cassandra 3.0.0
+- _Breaking_ Changed default consistency to `LOCAL QUORUM` [#103](https://github.com/datastax/nodejs-driver/pull/103)
+- _Breaking_ `Aggregate#initCondition` now returns the string representation of the value
+[#102](https://github.com/datastax/nodejs-driver/pull/102)
+- Manual paging via `ResultSet#nextPage()` and `Client#stream()` throttling
+[#111](https://github.com/datastax/nodejs-driver/pull/111)
+
+### Features
+
+- [NODEJS-186] - Update schema type representation to CQL
+- [NODEJS-68] - Manual paging support via nextPage() and client.stream() throttling
+- [NODEJS-130] - Add buffer for non-streaming rows messages
+- [NODEJS-142] - Frame coalescing on connection
+- [NODEJS-169] - Update async dependency
+- [NODEJS-178] - Change default consistency level to LOCAL_QUORUM
+- [NODEJS-181] - Update default behavior unbound values in prepared statements
+
+### Bug Fixes
+
+- [NODEJS-164] - Defunct connection is not properly removed from pool
+- [NODEJS-190] - useUndefinedAsUnset should not apply to udt, tuple, set, list and map members.
+
+## 3.0.0-beta1
+
+2015-10-19
+
+### Notable Changes
+
+- Added support for Cassandra 3.0-rc1
+- New index metadata API [#98](https://github.com/datastax/nodejs-driver/pull/98)
+
+### Features
+
+- [NODEJS-163] - Process Modernized Schema Tables for C* 3.0
+- [NODEJS-166] - Process Materialized View Metadata
+- [NODEJS-170] - Process materialized view events
+- [NODEJS-171] - Process changes in 'columns' table in C* 3.0-rc1+
+- [NODEJS-172] - Process crc_check_chance column from 'tables' and 'views' metadata tables
+- [NODEJS-182] - Add missing options to table / view metadata
+- [NODEJS-183] - Add support for parsing Index metadata
+
+### Bug Fixes
+
+- [NODEJS-185] - Metadata fetch of table with ColumnToCollectionType fails
+
 ## 2.2.2
 
 2015-10-14

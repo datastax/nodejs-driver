@@ -961,6 +961,131 @@ describe('encoder', function () {
         }
       ], done);
     });
+    it('should parse udts', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'address');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'frozen<address>';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, true);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        },
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'address');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'address';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, false);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should parse quoted udts', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'PHONE');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'frozen<"PHONE">';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, true);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        },
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'PhoNe');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = '"PhoNe"';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, false);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should callback with TypeError when not found', function (done) {
+      var encoder = new Encoder(4, {});
+      var called = 0;
+      //noinspection JSUnusedLocalSymbols
+      function udtResolver(k, u, callback) {
+        called++;
+        setImmediate(function () {
+          callback(null, null);
+        });
+      }
+      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
+        helper.assertInstanceOf(err, TypeError);
+        assert.ok(!type);
+        assert.strictEqual(called, 1);
+        done();
+      });
+    });
+    it('should callback with the same error if udtResolver fails', function (done) {
+      var encoder = new Encoder(4, {});
+      var called = 0;
+      var testError = new Error('Test error');
+      //noinspection JSUnusedLocalSymbols
+      function udtResolver(k, u, callback) {
+        called++;
+        setImmediate(function () {
+          callback(testError);
+        });
+      }
+      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
+        assert.strictEqual(err, testError);
+        assert.ok(!type);
+        assert.strictEqual(called, 1);
+        done();
+      });
+    });
   });
   describe('#parseKeyTypes', function () {
     var encoder = new Encoder(1, {});

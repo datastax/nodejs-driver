@@ -57,6 +57,14 @@ describe('BigDecimal', function () {
         assert.ok(value.equals(BigDecimal.fromString(item[2])), 'BigDecimals not equal for value ' + item[2]);
       });
     });
+    it('should throw a TypeError when value is not valid', function () {
+      assert.throws(function () {
+        BigDecimal.fromString('');
+      }, TypeError);
+      assert.throws(function () {
+        BigDecimal.fromString(null);
+      }, TypeError);
+    });
   });
   describe('fromBuffer()', function () {
     it('should convert from buffer (scale + unscaledValue in BE)', function () {

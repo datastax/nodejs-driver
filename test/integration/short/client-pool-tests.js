@@ -9,7 +9,7 @@ var clientOptions = require('../../../lib/client-options');
 var utils = require('../../../lib/utils');
 var errors = require('../../../lib/errors');
 var types = require('../../../lib/types');
-
+var policies = require('../../../lib/policies');
 var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
 
 describe('Client', function () {
@@ -62,16 +62,6 @@ describe('Client', function () {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         done();
-      });
-    });
-    it('should fail if the keyspace does not exists', function (done) {
-      var client = newInstance({ keyspace: 'ks_does_not_exists'});
-      client.connect(function (err) {
-        helper.assertInstanceOf(err, Error);
-        client.shutdown(function (err) {
-          assert.ifError(err);
-          done();
-        });
       });
     });
     it('should select a tokenizer', function (done) {
@@ -705,6 +695,47 @@ describe('Client', function () {
             client.shutdown(next);
           });
         }
+      ], done);
+    });
+    it('should reconnect in the background', function (done) {
+      var client = newInstance({
+        pooling: { heartBeatInterval: 0, warmup: true },
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(1000) }
+      });
+      async.series([
+        client.connect.bind(client),
+        function (next) {
+          var hosts = client.hosts.values();
+          assert.strictEqual('1', helper.lastOctetOf(client.controlConnection.host));
+          assert.strictEqual(3, hosts.length);
+          hosts.forEach(function (h) {
+            assert.ok(h.pool.connections.length > 0, 'with warmup = true, it should create the core connections');
+          });
+          next();
+        },
+        helper.toTask(helper.ccmHelper.stopNode, null, 1),
+        helper.toTask(helper.ccmHelper.stopNode, null, 2),
+        helper.toTask(helper.ccmHelper.stopNode, null, 3),
+        function tryToQuery(next) {
+          async.timesSeries(10, function (n, timesNext) {
+            client.execute(helper.queries.basic, function (err) {
+              //it should fail
+              assert.ok(err);
+              timesNext();
+            });
+          }, next);
+        },
+        function startNode3(next) {
+          helper.ccmHelper.startNode(3, helper.wait(5000, next));
+        },
+        function assertReconnected(next) {
+          assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));
+          client.hosts.forEach(function (host) {
+            assert.strictEqual(host.isUp(), helper.lastOctetOf(host) === '3');
+          });
+          next();
+        },
+        client.shutdown.bind(client)
       ], done);
     });
   });

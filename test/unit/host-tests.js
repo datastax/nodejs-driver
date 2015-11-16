@@ -3,43 +3,27 @@ var assert = require('assert');
 var async = require('async');
 var util = require('util');
 var events = require('events');
-var rewire = require('rewire');
 
-var hostModule = rewire('../../lib/host.js');
-//noinspection JSUnresolvedVariable
+var hostModule = require('../../lib/host');
 var Host = hostModule.Host;
-//noinspection JSUnresolvedVariable
 var HostConnectionPool = hostModule.HostConnectionPool;
-//noinspection JSUnresolvedVariable
 var HostMap = hostModule.HostMap;
 var types = require('../../lib/types');
 var defaultOptions = require('../../lib/client-options').defaultOptions();
 var utils = require('../../lib/utils.js');
-var reconnection = require('../../lib/policies/reconnection.js');
+var reconnection = require('../../lib/policies/reconnection');
 var helper = require('../test-helper');
-//Delay before connection.open callbacks
-var openDelay = 10;
 
-before(function () {
-  //inject a mock Connection class
-  var connectionMock = events.EventEmitter;
-  connectionMock.prototype.open = function noop (cb) {
-    var self = this;
-    setTimeout(function () {
-      self.connected = true;
-      cb();
-    }, openDelay);
-  };
-  hostModule.__set__("Connection", connectionMock);
-});
 describe('HostConnectionPool', function () {
   this.timeout(5000);
   describe('#_maybeCreatePool()', function () {
-    afterEach(function () {
-      openDelay = 10;
-    });
     it('should create the pool once', function (done) {
       var hostPool = newHostConnectionPoolInstance();
+      hostPool._createConnection = function () {
+        return { open: function (cb) {
+          setTimeout(cb, 30);
+        }};
+      };
       hostPool.coreConnectionsLength = 10;
       async.times(5, function (n, next) {
         //even though it is called multiple times in parallel
@@ -52,9 +36,16 @@ describe('HostConnectionPool', function () {
       }, done);
     });
     it('should never callback with unopened connections', function (done) {
-      openDelay = 100;
       var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
+      hostPool._createConnection = function () {
+        return {
+          open: function (cb) {
+            this.connected = true;
+            setTimeout(cb, 30);
+          }
+        };
+      };
       async.times(5, function(n, next) {
         setTimeout(function () {
           hostPool._maybeCreatePool(function (err) {
@@ -73,36 +64,47 @@ describe('HostConnectionPool', function () {
       });
     });
     it('should never callback with unopened connections when resizing', function (done) {
-      openDelay = 200;
       var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 1;
+      hostPool._createConnection = function () {
+        return {
+          open: function (cb) {
+            this.connected = true;
+            setTimeout(cb, 50);
+          }
+        };
+      };
       var counter = 0;
-      async.eachLimit(new Array(10), 4, function(item, next) {
+      async.timesLimit(10, 4, function(n, next) {
         counter++;
         hostPool._maybeCreatePool(function (err) {
           setImmediate(function () {
             assert.ifError(err);
             var closedConnections = hostPool.connections.filter(function (x) {return !x.connected}).length;
-            if (closedConnections)
-            {
+            if (closedConnections) {
               return next(new Error('All connections should be opened: ' + closedConnections + ' closed'))
             }
             if (counter > 5) {
-              hostPool.coreConnectionsLength = 20;
+              hostPool.coreConnectionsLength = 15;
             }
             next();
           })
         });
-      }, function (err) {
-        assert.ifError(err);
-        done();
-      });
+      }, done);
     });
   });
   describe('#borrowConnection()', function () {
     it('should get an open connection', function (done) {
       var hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
+      hostPool._createConnection = function () {
+        return {
+          open: function (cb) {
+            this.connected = true;
+            setTimeout(cb, 30);
+          }
+        };
+      };
       hostPool.borrowConnection(function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
@@ -131,14 +133,99 @@ describe('HostConnectionPool', function () {
       });
     });
   });
+  describe('#_attemptReconnection()', function () {
+    it('should create and attempt to open a connection', function (done) {
+      var hostPool = newHostConnectionPoolInstance();
+      var openCalled = 0;
+      var c = {
+        open: function (cb) {
+          openCalled++;
+          setImmediate(cb);
+        }
+      };
+      hostPool._createConnection = function () {
+        return c;
+      };
+      hostPool._attemptReconnection();
+      setTimeout(function () {
+        assert.strictEqual(1, openCalled);
+        done();
+      }, 50);
+    });
+    describe('when open fails', function () {
+      it('should call Host#setDown() and Connection#close()', function (done) {
+        var hostPool = newHostConnectionPoolInstance();
+        var openCalled = 0;
+        var closeCalled = 0;
+        var setDownCalled = 0;
+        var c = {
+          open: function (cb) {
+            openCalled++;
+            setImmediate(function () {
+              cb(new Error('test open err'));
+            });
+          },
+          close: function () {
+            closeCalled++;
+          }
+        };
+        hostPool.host.setDown = function () {
+          setDownCalled++;
+        };
+        hostPool._createConnection = function () {
+          return c;
+        };
+        hostPool._attemptReconnection();
+        setTimeout(function () {
+          assert.strictEqual(1, openCalled);
+          assert.strictEqual(1, closeCalled);
+          assert.strictEqual(1, setDownCalled);
+          done();
+        }, 50);
+      });
+    });
+    describe('when open succeeds', function () {
+      it('should call Host#setUp()', function (done) {
+        var hostPool = newHostConnectionPoolInstance();
+        var openCalled = 0;
+        var setUpCalled = 0;
+        var c = {
+          open: function (cb) {
+            openCalled++;
+            setImmediate(cb);
+          }
+        };
+        hostPool.host.setUp = function () {
+          setUpCalled++;
+        };
+        hostPool._createConnection = function () {
+          return c;
+        };
+        hostPool._attemptReconnection();
+        setTimeout(function () {
+          assert.strictEqual(1, openCalled);
+          assert.strictEqual(1, setUpCalled);
+          assert.strictEqual(1, hostPool.connections.length);
+          assert.strictEqual(c, hostPool.connections[0]);
+          done();
+        }, 50);
+      });
+    });
+  });
 });
 describe('Host', function () {
   describe('constructor', function () {
     it('should listen for pool idleRequestError event', function (done) {
       var host = newHostInstance(defaultOptions);
-      host.pool.forceShutdown = helper.noop;
+      host.pool.scheduleReconnection = helper.noop;
       //should be marked as down
       host.on('down', done);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       host.borrowConnection(function () {
         host.pool.connections[0].emit('idleRequestError');
       });
@@ -154,7 +241,13 @@ describe('Host', function () {
       }
     };
     it('should get an open connection', function (done) {
-      var host = new Host('0.0.0.1', 2, options);
+      var host = new Host('0.0.0.1:9042', 2, options);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
@@ -168,6 +261,12 @@ describe('Host', function () {
     it('should create a pool of size determined by the relative distance local', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 5;
       var host = newHostInstance(options);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       host.setDistance(types.distance.local);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
@@ -181,6 +280,12 @@ describe('Host', function () {
     it('should create a pool of size determined by the relative distance remote', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.remote] = 2;
       var host = newHostInstance(options);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       host.setDistance(types.distance.remote);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
@@ -194,6 +299,12 @@ describe('Host', function () {
     it('should resize the pool after distance is set', function (done) {
       options.pooling.coreConnectionsPerHost[types.distance.local] = 3;
       var host = newHostInstance(options);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       async.series([
         function (next) {
           host.borrowConnection(function (err, c) {
@@ -230,6 +341,12 @@ describe('Host', function () {
       }};
     it('should reset the reconnection schedule when bring it up', function () {
       var host = newHostInstance(options);
+      var create = host.pool._createConnection.bind(host.pool);
+      host.pool._createConnection = function () {
+        var c = create();
+        c.open = helper.callbackNoop;
+        return c;
+      };
       host.setDown();
       //start at zero
       assert.strictEqual(host.reconnectionDelay, 0);
@@ -258,6 +375,7 @@ describe('Host', function () {
       host.setDown();
       //restart at zero
       assert.strictEqual(host.reconnectionDelay, 0);
+      host.shutdown(helper.noop);
     });
   });
   describe('#setDown()', function () {
@@ -269,6 +387,7 @@ describe('Host', function () {
       var host = newHostInstance(options);
       host.on('down', done);
       host.setDown();
+      host.shutdown(helper.noop);
     });
   });
   describe('#getActiveConnection()', function () {
@@ -286,6 +405,7 @@ describe('HostMap', function () {
   describe('#values()', function () {
     it('should return a frozen array', function () {
       var map = new HostMap();
+      //noinspection JSCheckFunctionSignatures
       map.set('h1', 'h1');
       var values = map.values();
       assert.strictEqual(values.length, 1);
@@ -293,10 +413,12 @@ describe('HostMap', function () {
     });
     it('should return the same instance as long as the value does not change', function () {
       var map = new HostMap();
+      //noinspection JSCheckFunctionSignatures
       map.set('h1', 'h1');
       var values1 = map.values();
       var values2 = map.values();
       assert.strictEqual(values1, values2);
+      //noinspection JSCheckFunctionSignatures
       map.set('h2', 'h2');
       var values3 = map.values();
       assert.strictEqual(values3.length, 2);
@@ -306,9 +428,11 @@ describe('HostMap', function () {
   describe('#set()', function () {
     it('should modify the cached values', function () {
       var map = new HostMap();
+      //noinspection JSCheckFunctionSignatures
       map.set('h1', 'v1');
       var values = map.values();
       assert.strictEqual(util.inspect(values), util.inspect(['v1']));
+      //noinspection JSCheckFunctionSignatures
       map.set('h1', 'v1a');
       assert.strictEqual(util.inspect(map.values()), util.inspect(['v1a']));
       assert.strictEqual(map.get('h1'), 'v1a');
@@ -322,7 +446,7 @@ describe('HostMap', function () {
  */
 function newHostConnectionPoolInstance(options) {
   options = utils.extend({ logEmitter: function () {} }, defaultOptions, options);
-  return new HostConnectionPool('0.0.0.1', 2, options);
+  return new HostConnectionPool(newHostInstance(options), 2);
 }
 
 /**
@@ -330,5 +454,5 @@ function newHostConnectionPoolInstance(options) {
  */
 function newHostInstance(options) {
   options = utils.extend({logEmitter: function () {}}, options);
-  return new Host('0.0.0.1', 2, options);
+  return new Host('0.0.0.1:9042', 2, options);
 }

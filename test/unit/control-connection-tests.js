@@ -1,5 +1,7 @@
+"use strict";
 var assert = require('assert');
 var async = require('async');
+var events = require('events');
 
 var helper = require('../test-helper.js');
 var ControlConnection = require('../../lib/control-connection.js');
@@ -134,6 +136,7 @@ describe('ControlConnection', function () {
         //should use peer address
         {'rpc_address': getInet([0, 0, 0, 0]), peer: getInet([5, 5, 5, 5])}
       ];
+      //noinspection JSCheckFunctionSignatures
       cc.setPeersInfo(true, {rows: rows}, function (err) {
         assert.ifError(err);
         assert.strictEqual(cc.hosts.length, 3);
@@ -154,6 +157,7 @@ describe('ControlConnection', function () {
         //valid rpc address
         {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1]), data_center: 'dc101', release_version: '2.1.4'}
       ];
+      //noinspection JSCheckFunctionSignatures
       cc.setPeersInfo(true, {rows: rows}, function (err) {
         assert.ifError(err);
         assert.strictEqual(cc.hosts.length, 2);
@@ -166,11 +170,11 @@ describe('ControlConnection', function () {
       });
     });
   });
-  describe('#initOnConnection()', function () {
+  describe('#refreshOnConnection()', function () {
     it('should subscribe to current host events first in case IO fails', function (done) {
       var options = clientOptions.extend({}, helper.baseOptions);
       var cc = new ControlConnection(options);
-      cc.host = new Host('18.18.18.18', 1, options);
+      cc.host = new Host('18.18.18.18:9042', 1, options);
       cc.log = helper.noop;
       var fakeError = new Error('fake error');
       var hostDownCalled;
@@ -182,9 +186,153 @@ describe('ControlConnection', function () {
         cc.host.setDown();
         cb(fakeError);
       };
-      cc.initOnConnection(false, function (err) {
+      cc.refreshOnConnection(false, function (err) {
         assert.strictEqual(err, fakeError);
         assert.strictEqual(hostDownCalled, true);
+        cc.host.shutdown(helper.noop);
+        done();
+      });
+    });
+  });
+  describe('#listenHostsForUp()', function () {
+    it('should subscribe to event up to all hosts', function () {
+      var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
+      var hosts = [new events.EventEmitter(), new events.EventEmitter()];
+      cc.hosts = {
+        values: function () {
+          return hosts;
+        }
+      };
+      cc.listenHostsForUp();
+      assert.strictEqual(hosts[0].listeners('up').length, 1);
+      assert.strictEqual(hosts[1].listeners('up').length, 1);
+    });
+    it('should unsubscribe to all hosts once up is emitted and call refresh()', function () {
+      var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
+      var hosts = [new events.EventEmitter(), new events.EventEmitter()];
+      var refreshCalled = 0;
+      cc.hosts = {
+        values: function () {
+          return hosts;
+        }
+      };
+      cc.refresh = function () {
+        refreshCalled++;
+      };
+      //add another listener
+      hosts[0].on('other', function () {});
+      cc.listenHostsForUp();
+      assert.strictEqual(hosts[0].listeners('up').length, 1);
+      assert.strictEqual(hosts[1].listeners('up').length, 1);
+      //the second node is back up
+      hosts[1].emit('up');
+      assert.strictEqual(refreshCalled, 1);
+      assert.strictEqual(hosts[0].listeners('up').length, 0);
+      assert.strictEqual(hosts[1].listeners('up').length, 0);
+      //the other listener is still there
+      assert.strictEqual(hosts[0].listeners('other').length, 1);
+    });
+  });
+  describe('#getConnectionToNewHost()', function () {
+    it('should use the iterator from the load balancing policy', function (done) {
+      var hosts = [{
+        borrowConnection: function (cb2) {
+          cb2(null, {});
+        },
+        setDistance: helper.noop,
+        isUp: function () { return true; }
+      }];
+      var options = clientOptions.extend({}, helper.baseOptions);
+      options.policies.loadBalancing = {
+        newQueryPlan: function (k, o, cb) {
+          cb(null, utils.arrayIterator(hosts));
+        },
+        getDistance: helper.noop
+      };
+      var cc = new ControlConnection(options);
+      cc.getConnectionToNewHost(function (err, c, h) {
+        assert.ifError(err);
+        assert.strictEqual(h, hosts[0]);
+        done();
+      });
+    });
+    it('should use the current hosts if the new query plan fails', function (done) {
+      var hosts = [{
+        borrowConnection: function (cb2) {
+          cb2(null, {});
+        },
+        setDistance: helper.noop,
+        isUp: function () { return true; }
+      }];
+      var options = clientOptions.extend({}, helper.baseOptions);
+      options.policies.loadBalancing = {
+        newQueryPlan: function (k, o, cb) {
+          cb(new Error('test dummy error'));
+        },
+        getDistance: helper.noop
+      };
+      var cc = new ControlConnection(options);
+      cc.hosts = { values: function () { return hosts; } };
+      cc.getConnectionToNewHost(function (err, c, h) {
+        assert.ifError(err);
+        assert.strictEqual(h, hosts[0]);
+        done();
+      });
+    });
+    it('should call listenHostsForUp() if no connection acquired', function (done) {
+      var hosts = [{
+        borrowConnection: function (cb) {
+          cb(new Error('Test dummy error'));
+        },
+        setDistance: helper.noop,
+        isUp: function () { return true; }
+      }];
+      var options = clientOptions.extend({}, helper.baseOptions);
+      options.policies.loadBalancing = {
+        newQueryPlan: function (k, o, cb) {
+          cb(null, utils.arrayIterator(hosts));
+        },
+        getDistance: helper.noop
+      };
+      var listenCalled = 0;
+      var cc = new ControlConnection(options);
+      cc.listenHostsForUp = function () {
+        listenCalled++;
+      };
+      cc.getConnectionToNewHost(function (err, c, h) {
+        assert.ifError(err);
+        assert.ok(!c);
+        assert.ok(!h);
+        assert.strictEqual(listenCalled, 1);
+        done();
+      });
+    });
+    it('should check if the host is ignored', function (done) {
+      var borrowCalled = 0;
+      var hosts = [{
+        borrowConnection: function (cb) {
+          borrowCalled++;
+          cb(null, {});
+        },
+        setDistance: helper.noop,
+        isUp: function () { return true; }
+      }];
+      var options = clientOptions.extend({}, helper.baseOptions);
+      options.policies.loadBalancing = {
+        newQueryPlan: function (k, o, cb) {
+          cb(null, utils.arrayIterator(hosts));
+        },
+        getDistance: function () {
+          return types.distance.ignored;
+        }
+      };
+      var cc = new ControlConnection(options);
+      cc.listenHostsForUp = helper.noop;
+      cc.getConnectionToNewHost(function (err, c, h) {
+        assert.ifError(err);
+        assert.ok(!c);
+        assert.ok(!h);
+        assert.strictEqual(borrowCalled, 0);
         done();
       });
     });

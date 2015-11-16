@@ -6,6 +6,7 @@ var ControlConnection = require('../../../lib/control-connection');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
 var clientOptions = require('../../../lib/client-options');
+var policies = require('../../../lib/policies');
 
 describe('ControlConnection', function () {
   this.timeout(120000);
@@ -154,6 +155,52 @@ describe('ControlConnection', function () {
         });
       });
     });
+    it('should reconnect when all hosts go down and back up', function (done) {
+      var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+      options.pooling.heartBeatInterval = 0;
+      options.pooling.coreConnectionsPerHost[types.distance.local] = 1;
+      options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
+      options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
+      var cc = new ControlConnection(options);
+      async.series([
+        cc.init.bind(cc),
+        function initLbp(next) {
+          assert.ok(cc.host);
+          assert.strictEqual(helper.lastOctetOf(cc.host), '1');
+          cc.options.policies.loadBalancing.init(null, cc.hosts, next);
+        },
+        function stop1(next) {
+          helper.ccmHelper.stopNode(1, next);
+        },
+        function stop2(next) {
+          helper.ccmHelper.stopNode(2, helper.wait(5000, next));
+        },
+        function setDownManually(next) {
+          //help in case the event didn't fired by socket disconnection
+          cc.hosts.forEach(function (h) {
+            h.setDown();
+          });
+          assert.strictEqual(cc.host, null);
+          next();
+        },
+        function restart(next) {
+          helper.ccmHelper.startNode(2, helper.wait(5000, next));
+        },
+        function checkHostConnected(next) {
+          cc.hosts.forEach(function (h) {
+            if (helper.lastOctetOf(h) === '1') {
+              assert.strictEqual(h.isUp(), false);
+            }
+            else {
+              assert.strictEqual(h.isUp(), true);
+            }
+          });
+          assert.ok(cc.host);
+          assert.strictEqual(helper.lastOctetOf(cc.host), '2');
+          next();
+        }
+      ], done);
+    });
   });
   describe('#metadata', function () {
     before(helper.ccmHelper.start(3, {vnodes: true}));
@@ -163,7 +210,7 @@ describe('ControlConnection', function () {
       cc.init(function () {
         assert.equal(cc.hosts.length, 3);
         assert.ok(cc.metadata);
-        assert.strictEqual(cc.hosts.slice(0)[0].tokens.length, 256);
+        assert.strictEqual(cc.hosts.slice(0)[0]['tokens'].length, 256);
         assert.ok(cc.metadata.keyspaces);
         assert.ok(cc.metadata.keyspaces['system']);
         assert.ok(cc.metadata.keyspaces['system'].strategy);

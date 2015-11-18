@@ -9,8 +9,7 @@ var dataTypes = types.dataTypes;
 var helper = require('../test-helper');
 
 describe('encoder', function () {
-  describe('#guessDataType()', function () {
-    var encoder = new Encoder(2, {});
+  describe('Encoder.guessDataType()', function () {
     it('should guess the native types', function () {
       assertGuessed(1, dataTypes.double, 'Guess type for an integer (double) number failed');
       assertGuessed(1.01, dataTypes.double, 'Guess type for a double number failed');
@@ -34,7 +33,7 @@ describe('encoder', function () {
       assertGuessed({}, null, 'Objects must not be guessed');
     });
     function assertGuessed(value, expectedType, message) {
-      var type = encoder.guessDataType(value);
+      var type = Encoder.guessDataType(value);
       if (type === null) {
         if (expectedType !== null) {
           assert.ok(false, 'Type not guessed for value ' + value);
@@ -74,6 +73,7 @@ describe('encoder', function () {
     });
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
+      //noinspection JSCheckFunctionSignatures
       var unHinted = typeEncoder.encode();
       assert.strictEqual(hinted, null);
       assert.strictEqual(unHinted, null);
@@ -993,6 +993,25 @@ describe('encoder', function () {
       assert.strictEqual(result.types[1].code, types.dataTypes.int);
       assert.strictEqual(result.types[2].code, types.dataTypes.list);
       assert.strictEqual(result.types[3].code, types.dataTypes.map);
+    });
+  });
+  describe('constructor', function () {
+    it('should define instance members', function () {
+      var encoder = new Encoder(4, {});
+      assert.strictEqual(typeof encoder.encodeBlob, 'function');
+      assert.strictEqual(typeof encoder.decodeBlob, 'function');
+      assert.strictEqual(typeof encoder.protocolVersion, 'number');
+    });
+  });
+  describe('prototype', function () {
+    it('should only expose encode() and decode() functions', function () {
+      //noinspection JSUnresolvedVariable
+      var keys = Object.keys(Encoder.prototype);
+      assert.deepEqual(keys, ['decode', 'encode']);
+      keys.forEach(function (k) {
+        //noinspection JSUnresolvedVariable
+        assert.strictEqual(typeof Encoder.prototype[k], 'function');
+      })
     });
   });
 });

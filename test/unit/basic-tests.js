@@ -825,5 +825,8 @@ describe('exports', function () {
     assert.ok(api.metadata);
     assert.strictEqual(typeof api.metadata.Metadata, 'function');
     assert.strictEqual(api.metadata.Metadata, require('../../lib/metadata'));
+    assert.ok(api.Encoder);
+    assert.strictEqual(typeof api.Encoder, 'function');
+    assert.strictEqual(api.Encoder, require('../../lib/encoder'));
   });
 });

@@ -102,7 +102,8 @@ describe('HostConnectionPool', function () {
           open: function (cb) {
             this.connected = true;
             setTimeout(cb, 30);
-          }
+          },
+          getInFlight: function () { return 0; }
         };
       };
       hostPool.borrowConnection(function (err, c) {
@@ -212,6 +213,20 @@ describe('HostConnectionPool', function () {
       });
     });
   });
+  describe('minInFlight()', function () {
+    it('should round robin with between connections with the same amount of in-flight requests', function () {
+      /** @type {Array.<Connection>} */
+      var connections = [];
+      for (var i = 0; i < 3; i++) {
+        //noinspection JSCheckFunctionSignatures
+        connections.push({ getInFlight: function () { return 0; }, index: i});
+      }
+      var initial = HostConnectionPool.minInFlight(connections).index;
+      for (i = 1; i < 10; i++) {
+        assert.strictEqual((initial + i) % connections.length, HostConnectionPool.minInFlight(connections).index);
+      }
+    });
+  });
 });
 describe('Host', function () {
   describe('constructor', function () {
@@ -317,6 +332,13 @@ describe('Host', function () {
         },
         function (next) {
           host.setDistance(types.distance.local);
+          host.borrowConnection(function (err) {
+            assert.ifError(err);
+            //Pool resizing can happen in the background
+            setImmediate(next);
+          });
+        },
+        function (next) {
           //Check multiple times in parallel
           async.times(10, function (n, timesNext) {
             host.borrowConnection(function (err, c) {

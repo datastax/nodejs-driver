@@ -95,7 +95,7 @@ describe('Metadata', function () {
     });
     vit('2.1', 'should return the udt information', function (done) {
       var client = newInstance();
-      var createUdtQuery1 = 'CREATE TYPE phone (alias text, number text, country_code int)';
+      var createUdtQuery1 = "CREATE TYPE phone (alias text, number text, country_code int, second_number 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')";
       var createUdtQuery2 = 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)';
       async.series([
         helper.toTask(client.connect, client),
@@ -110,13 +110,18 @@ describe('Metadata', function () {
             assert.ok(udtInfo);
             assert.strictEqual(udtInfo.name, 'phone');
             assert.ok(udtInfo.fields);
-            assert.strictEqual(udtInfo.fields.length, 3);
+            assert.strictEqual(udtInfo.fields.length, 4);
             assert.strictEqual(udtInfo.fields[0].name, 'alias');
             assert.ok(udtInfo.fields[0].type.code === types.dataTypes.varchar || udtInfo.fields[0].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[1].name, 'number');
             assert.ok(udtInfo.fields[1].type.code === types.dataTypes.varchar || udtInfo.fields[1].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[2].name, 'country_code');
             assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.int);
+            assert.strictEqual(udtInfo.fields[3].name, 'second_number');
+            assert.strictEqual(udtInfo.fields[3].type.code, types.dataTypes.custom);
+            assert.strictEqual(udtInfo.fields[3].type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
+              + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
             next();
           });
         },
@@ -135,7 +140,7 @@ describe('Metadata', function () {
             assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.set);
             assert.strictEqual(udtInfo.fields[2].type.info.code, types.dataTypes.udt);
             assert.strictEqual(udtInfo.fields[2].type.info.info.name, 'phone');
-            assert.strictEqual(udtInfo.fields[2].type.info.info.fields.length, 3);
+            assert.strictEqual(udtInfo.fields[2].type.info.info.fields.length, 4);
             assert.strictEqual(udtInfo.fields[2].type.info.info.fields[0].name, 'alias');
             next();
           });
@@ -238,6 +243,7 @@ describe('Metadata', function () {
         "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
         "CREATE TABLE tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
         "CREATE TABLE tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
+        "CREATE TABLE tbl9 (id uuid, c1 'DynamicCompositeType(s => UTF8Type, i => Int32Type)', c2 'ReversedType(CompositeType(UTF8Type, Int32Type))', c3 'Int32Type', PRIMARY KEY (id, c1, c2))",
         "CREATE TABLE ks_tbl_meta.tbl_collections (id uuid, ck blob, list_sample list<int>, set_sample list<text>, int_sample int, map_sample map<text,int>, PRIMARY KEY (id, ck))",
         "CREATE INDEX text_index ON tbl1 (text_sample)"
       ];
@@ -247,7 +253,7 @@ describe('Metadata', function () {
           "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
           "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
           "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
-          "CREATE TYPE udt1 (i int, b blob, t text)",
+          "CREATE TYPE udt1 (i int, b blob, t text, c 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')",
           "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
           "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)"
         );
@@ -654,7 +660,7 @@ describe('Metadata', function () {
             assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
             assert.ok(udtColumn.type.info);
             assert.strictEqual(udtColumn.type.info.name, 'udt1');
-            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't']);
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't', 'c']);
             next();
           });
         },
@@ -676,7 +682,46 @@ describe('Metadata', function () {
             assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
             assert.ok(udtColumn.type.info);
             assert.strictEqual(udtColumn.type.info.name, 'udt1');
-            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't']);
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't', 'c']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should retrieve the metadata of a table with custom type columns', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl9', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+
+            assert.strictEqual(table.clusteringOrder.length, 2);
+            assert.strictEqual(table.clusteringOrder[0], 'ASC');
+            // Since c2 is a reversed type, clustering order should be DESC.
+            assert.strictEqual(table.clusteringOrder[1], 'DESC');
+
+            var dynamicColumn = table.clusteringKeys[0];
+            assert.ok(dynamicColumn);
+            assert.strictEqual(dynamicColumn.name, 'c1');
+            assert.strictEqual(dynamicColumn.type.code, types.dataTypes.custom);
+            assert.strictEqual(dynamicColumn.type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
+              + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
+
+            var reversedColumn = table.clusteringKeys[1];
+            assert.ok(reversedColumn);
+            assert.strictEqual(reversedColumn.name, 'c2');
+            assert.strictEqual(reversedColumn.type.code, types.dataTypes.custom);
+            assert.strictEqual(reversedColumn.type.info, 'org.apache.cassandra.db.marshal.CompositeType('
+              + 'org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'org.apache.cassandra.db.marshal.Int32Type)');
+
+            var intColumn = table.columnsByName['c3'];
+            assert.ok(intColumn);
+            assert.strictEqual(intColumn.type.code, types.dataTypes.int);
             next();
           });
         },

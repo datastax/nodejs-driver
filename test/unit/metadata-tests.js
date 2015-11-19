@@ -219,8 +219,11 @@ describe('Metadata', function () {
           setImmediate(function () {
             cb(null, new types.ResultSet({
               rows: [ {
-                field_names: ['field1', 'field2'],
-                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type']}],
+                field_names: ['field1', 'field2', 'field3'],
+                field_types: ['org.apache.cassandra.db.marshal.UUIDType', 'org.apache.cassandra.db.marshal.UTF8Type',
+                  'org.apache.cassandra.db.marshal.DynamicCompositeType('
+                  + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
+                  + 'i=>org.apache.cassandra.db.marshal.Int32Type)']}],
               flags: utils.emptyObject
             }));
           });
@@ -234,7 +237,7 @@ describe('Metadata', function () {
         assert.ok(udtInfo);
         assert.strictEqual(udtInfo.name, 'udt1');
         assert.ok(udtInfo.fields);
-        assert.strictEqual(udtInfo.fields.length, 2);
+        assert.strictEqual(udtInfo.fields.length, 3);
         done();
       });
     });
@@ -708,6 +711,7 @@ describe('Metadata', function () {
     });
     describe('with C*2.0 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
+        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
           column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
@@ -717,7 +721,8 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val1', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.Int32Type' },
-          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.BytesType' }
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.BytesType' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: customType }
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -737,7 +742,7 @@ describe('Metadata', function () {
           assert.strictEqual(table.crcCheckChance, null);
           assert.strictEqual(table.extensions, null);
           assert.strictEqual(table.defaultTtl, 0);
-          assert.strictEqual(table.columns.length, 5);
+          assert.strictEqual(table.columns.length, 6);
           assert.strictEqual(table.columns[0].name, 'apk2');
           assert.strictEqual(table.columns[0].type.code, types.dataTypes.varchar);
           assert.strictEqual(table.columns[1].name, 'ck');
@@ -748,6 +753,9 @@ describe('Metadata', function () {
           assert.strictEqual(table.columns[3].type.code, types.dataTypes.int);
           assert.strictEqual(table.columns[4].name, 'val2');
           assert.strictEqual(table.columns[4].type.code, types.dataTypes.blob);
+          assert.strictEqual(table.columns[5].name, 'valcus3');
+          assert.strictEqual(table.columns[5].type.code, types.dataTypes.custom);
+          assert.strictEqual(table.columns[5].type.info, customType);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
@@ -892,13 +900,15 @@ describe('Metadata', function () {
     });
     describe('with C*1.2 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
+        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
         var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '["zck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
           key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: true, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
         var columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.BytesType' },
-          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valz1', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.Int32Type' }
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valz1', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.Int32Type' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, validator: customType }
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -906,12 +916,14 @@ describe('Metadata', function () {
           assert.ifError(err);
           assert.ok(table);
           assert.strictEqual(table.isCompact, false);
-          assert.strictEqual(table.columns.length, 5);
+          assert.strictEqual(table.columns.length, 6);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
           assert.strictEqual(table.clusteringKeys.length, 1);
           assert.strictEqual(table.clusteringKeys[0].name, 'zck');
+          assert.strictEqual(table.columnsByName['valcus3'].type.code, dataTypes.custom);
+          assert.strictEqual(table.columnsByName['valcus3'].type.info, customType);
           assert.strictEqual(table.populateCacheOnFlush, true);
           //default as it does not exist for C* 1.2
           assert.strictEqual(table.speculativeRetry, 'NONE');
@@ -1009,6 +1021,7 @@ describe('Metadata', function () {
     });
     describe('with C*2.2 metadata rows', function () {
       it('should parse new 2.2 types', function (done) {
+        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
         var tableRow = {
           keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', bloom_filter_fp_chance: 0.03, caching: '{"keys":"ALL", "rows_per_partition":"NONE"}',
           cf_id: types.Uuid.fromString('c05f4c40-fe05-11e4-8481-277ff03b5030'), comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}', comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, is_dense: false, key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0.1, max_compaction_threshold: 32, max_index_interval: 2048, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, min_index_interval: 128, read_repair_chance: 0, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard' };
@@ -1017,7 +1030,9 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'id', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'smallint_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.ShortType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'time_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.TimeType' },
-          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'tinyint_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.ByteType' } ];
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'tinyint_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.ByteType' },
+          { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'custom_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: customType }
+        ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl_c22', function (err, table) {
@@ -1026,7 +1041,7 @@ describe('Metadata', function () {
           assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.03);
           assert.strictEqual(table.isCompact, false);
           assert.ok(table.caching);
-          assert.strictEqual(table.columns.length, 5);
+          assert.strictEqual(table.columns.length, 6);
           assert.strictEqual(table.columns[0].name, 'date_sample');
           assert.strictEqual(table.columns[0].type.code, types.dataTypes.date);
           assert.strictEqual(table.columns[1].name, 'id');
@@ -1037,6 +1052,9 @@ describe('Metadata', function () {
           assert.strictEqual(table.columns[3].type.code, types.dataTypes.time);
           assert.strictEqual(table.columns[4].name, 'tinyint_sample');
           assert.strictEqual(table.columns[4].type.code, types.dataTypes.tinyint);
+          assert.strictEqual(table.columns[5].name, 'custom_sample');
+          assert.strictEqual(table.columns[5].type.code, types.dataTypes.custom);
+          assert.strictEqual(table.columns[5].type.info, customType);
           assert.strictEqual(table.partitionKeys.length, 1);
           assert.strictEqual(table.partitionKeys[0].name, 'id');
           assert.strictEqual(table.clusteringKeys.length, 0);
@@ -1063,11 +1081,13 @@ describe('Metadata', function () {
           "max_index_interval":1024,
           "crc_check_chance": 0.8,
           "memtable_flush_period_in_ms":0,"min_index_interval":64,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
         var columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "apk2", "clustering_order": "none", "column_name_bytes": "0x61706b32", "kind": "partition_key", "position": 1, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "pk1", "clustering_order": "none", "column_name_bytes": "0x706b31", "kind": "partition_key", "position": 0, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "val2", "clustering_order": "none", "column_name_bytes": "0x76616c32", "kind": "regular", "position": -1, "type": "blob"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "valz1", "clustering_order": "none", "column_name_bytes": "0x76616c7a31", "kind": "regular", "position": -1, "type": "int"},
+          {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "valcus3", "clustering_order": "none", "column_name_bytes": "0x76611663757333", "kind": "regular", "position": -1, "type": "'" + customType + "'"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "zck", "clustering_order": "asc", "column_name_bytes": "0x7a636b", "kind": "clustering", "position": 0, "type": "timeuuid"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
@@ -1087,14 +1107,15 @@ describe('Metadata', function () {
           assert.strictEqual(table.extensions['hello'].toString('utf8'), 'world');
           //not present, default
           assert.strictEqual(table.populateCacheOnFlush, false);
-          assert.strictEqual(table.columns.length, 5);
+          assert.strictEqual(table.columns.length, 6);
           assert.deepEqual(table.columns.map(function (x) { return x.type.code; }),
-            [dataTypes.text, dataTypes.uuid, dataTypes.blob, dataTypes.int, dataTypes.timeuuid]);
+            [dataTypes.text, dataTypes.uuid, dataTypes.blob, dataTypes.int, dataTypes.custom, dataTypes.timeuuid]);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
           assert.strictEqual(table.partitionKeys[1].name, 'apk2');
           assert.strictEqual(table.clusteringKeys.length, 1);
           assert.strictEqual(table.clusteringKeys[0].name, 'zck');
+          assert.strictEqual(table.columnsByName['valcus3'].type.info, customType);
           done();
         });
       });

@@ -17,6 +17,14 @@ var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
 describe('RoundRobinPolicy', function () {
+  it('should yield an error when the hosts are not set', function(done) {
+    var policy = new RoundRobinPolicy();
+    policy.hosts = null;
+    policy.newQueryPlan(null, null, function(err, iterator) {
+      assert(err instanceof Error);
+      done();
+    });
+  });
   it('should yield nodes in a round robin manner even in parallel', function (done) {
     var policy = new RoundRobinPolicy();
     var hosts = [];
@@ -93,6 +101,14 @@ describe('RoundRobinPolicy', function () {
   });
 });
 describe('DCAwareRoundRobinPolicy', function () {
+  it('should yield an error when the hosts are not set', function(done) {
+    var policy = new DCAwareRoundRobinPolicy('dc1');
+    policy.hosts = null;
+    policy.newQueryPlan(null, null, function(err, iterator) {
+      assert(err instanceof Error);
+      done();
+    });
+  });
   it('should yield local nodes in a round robin manner in parallel', function (done) {
     //local datacenter: dc1
     //0 host per remote datacenter

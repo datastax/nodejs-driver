@@ -748,7 +748,7 @@ describe('clientOptions', function () {
   describe('#defaultOptions()', function () {
     var options = clientOptions.defaultOptions();
     it('should set LOCAL_QUORUM as default consistency level', function () {
-      assert.strictEqual(types.consistencies.localQuorum, options.queryOptions.consistency);
+      assert.strictEqual(types.consistencies.localOne, options.queryOptions.consistency);
     });
     it('should set 12secs as default read timeout', function () {
       assert.strictEqual(12000, options.socketOptions.readTimeout);

@@ -1,5 +1,28 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.0.0
+
+2015-12-14
+
+### Notable Changes
+
+- Default consistency changed back to `LOCAL_ONE`.
+
+### Features
+
+- [NODEJS-155] - Schedule reconnections using Timers
+- [NODEJS-195] - Expose encode()/decode() functions
+- [NODEJS-204] - Change default consistency level to LOCAL_ONE
+- [NODEJS-198] - Avoid using Function.prototype.bind() for common execution path
+- [NODEJS-200] - Use Error.captureStackTrace() only when setting enabled
+
+### Bug Fixes
+
+- [NODEJS-193] - BigDecimal.fromString() should throw a TypeError if there is a conversion error
+- [NODEJS-197] - Can't parse column type if it contains UDT that is a quoted identifier
+- [NODEJS-202] - Support for "custom" types after CASSANDRA-10365
+- [NODEJS-203] - RoundRobinPolicies: Missing return statement when calling callback
+
 ## 3.0.0-rc1
 
 2015-11-11

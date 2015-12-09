@@ -218,17 +218,17 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 [cassandra]: http://cassandra.apache.org/
-[doc-api]: http://docs.datastax.com/en/drivers/nodejs/2.2/Client.html
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/
-[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/nodejs2Cql3Datatypes.html
-[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/numericalValues.html
-[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/uuids-timeuuids.html
-[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/collections.html
-[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/userDefinedTypes.html
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/faq/njdFaq.html
-[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html
-[retry]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/common/drivers/reference/tuningPolicies.html#retry-policy
-[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/poolingConfiguration.html
+[doc-api]: http://docs.datastax.com/en/drivers/nodejs/3.0/Client.html
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/
+[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/nodejs2Cql3Datatypes.html
+[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/numericalValues.html
+[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/uuids-timeuuids.html
+[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/collections.html
+[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/userDefinedTypes.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/faq/njdFaq.html
+[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/common/drivers/reference/tuningPolicies.html
+[retry]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/common/drivers/reference/tuningPolicies.html#retry-policy
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/nodejs-driver/reference/poolingConfiguration.html
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay

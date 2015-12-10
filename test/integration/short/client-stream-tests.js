@@ -1,8 +1,10 @@
+"use strict";
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
+var vit = helper.vit;
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
@@ -15,8 +17,9 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should emit end when no rows', function (done) {
       var client = newInstance();
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () { throw new Error('Query should not be prepared')};
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces where keyspace_name = \'___notexists\'', [], {prepare: false});
+      var stream = client.stream(helper.queries.basicNoResults, [], {prepare: false});
       stream
         .on('end', done)
         .on('readable', function () {
@@ -47,7 +50,7 @@ describe('Client', function () {
     });
     it('should be readable once when there is one row', function (done) {
       var client = newInstance();
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'', []);
+      var stream = client.stream(helper.queries.basic, []);
       var counter = 0;
       stream
         .on('end', function () {
@@ -58,7 +61,7 @@ describe('Client', function () {
           var row;
           while (row = this.read()) {
             assert.ok(row);
-            assert.strictEqual(row.keyspace_name, 'system');
+            assert.strictEqual(row.key, 'local');
             counter++;
           }
         })
@@ -84,10 +87,9 @@ describe('Client', function () {
           errorCalled = true;
         });
     });
-    it('should not fail with autoPage when there isnt any data', function (done) {
+    it('should not fail with autoPage when there isn\'t any data', function (done) {
       var client = newInstance({keyspace: 'system'});
-      var stream = client.stream('SELECT * from schema_keyspaces WHERE keyspace_name = \'KS_NOT_EXISTS\'', [], {autoPage: true});
-      var errorCalled = false;
+      var stream = client.stream(helper.queries.basicNoResults, [], {autoPage: true});
       stream
         .on('end', function () {
           done();
@@ -103,17 +105,30 @@ describe('Client', function () {
     });
   });
   describe('#stream(query, params, {prepare: 1})', function () {
-    before(helper.ccmHelper.start(3));
+    var commonKs = helper.getRandomName('ks');
+    var commonTable = commonKs + '.' + helper.getRandomName('table');
+    before(function (done) {
+      var client = newInstance();
+      async.series([
+        helper.ccmHelper.start(3),
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
+        helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable)),
+        client.shutdown.bind(client)
+      ], done);
+    });
     after(helper.ccmHelper.remove);
     it('should prepare and emit end when no rows', function (done) {
       var client = newInstance();
+      //noinspection JSAccessibilityCheck
       var originalGetPrepared = client._getPrepared;
       var calledPrepare = true;
+      //noinspection JSAccessibilityCheck
       client._getPrepared = function () {
         calledPrepare = true;
         originalGetPrepared.apply(client, arguments);
       };
-      var stream = client.stream('SELECT * FROM system.schema_columnfamilies where keyspace_name = \'___notexists\'', [], {prepare: 1});
+      var stream = client.stream(helper.queries.basicNoResults, [], {prepare: 1});
       stream
         .on('end', function () {
           assert.strictEqual(calledPrepare, true);
@@ -129,7 +144,7 @@ describe('Client', function () {
         });
     });
     it('should prepare and emit the exact amount of rows', function (done) {
-      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}})
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 1000;
@@ -151,10 +166,10 @@ describe('Client', function () {
         function (next) {
           var query = util.format('SELECT * FROM %s LIMIT 10000', table);
           var counter = 0;
-          var stream = client.stream(query, [], {prepare: 1})
+          client.stream(query, [], {prepare: 1})
             .on('end', function () {
               assert.strictEqual(counter, length);
-              done();
+              next();
             })
             .on('readable', function () {
               var row;
@@ -193,10 +208,10 @@ describe('Client', function () {
         function (next) {
           var query = util.format('SELECT * FROM %s LIMIT 10000', table);
           var counter = 0;
-          var stream = client.stream(query, [], {autoPage: true, fetchSize: 100, prepare: 1})
+          client.stream(query, [], {autoPage: true, fetchSize: 100, prepare: 1})
             .on('end', function () {
               assert.strictEqual(counter, length);
-              done();
+              next();
             })
             .on('readable', function () {
               var row;
@@ -214,7 +229,7 @@ describe('Client', function () {
     });
     it('should emit argument parsing errors', function (done) {
       var client = newInstance();
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces WHERE keyspace_name = ?', [{}], {prepare: 1});
+      var stream = client.stream(helper.queries.basic + ' WHERE key = ?', [{}], {prepare: 1});
       var errCalled = false;
       stream
         .on('error', function (err) {
@@ -233,7 +248,7 @@ describe('Client', function () {
     it('should emit other ResponseErrors', function (done) {
       var client = newInstance();
       //Invalid amount of parameters
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces', ['param1'], {prepare: 1});
+      var stream = client.stream(helper.queries.basic, ['param1'], {prepare: 1});
       var errCalled = false;
       stream
         .on('readable', function () {
@@ -255,7 +270,7 @@ describe('Client', function () {
     it('should wait buffer until read', function (done) {
       var client = newInstance();
       var allRead = false;
-      var stream = client.stream('SELECT * FROM system.schema_keyspaces', null, {prepare: 1});
+      var stream = client.stream(helper.queries.basic, null, {prepare: 1});
       stream.
         on('end', function () {
           assert.strictEqual(allRead, true);
@@ -263,7 +278,6 @@ describe('Client', function () {
         })
         .on('error', helper.throwop)
         .on('readable', function () {
-          var row;
           var streamContext = this;
           setTimeout(function () {
             //delay all reading
@@ -274,6 +288,49 @@ describe('Client', function () {
             allRead = true;
           }, 2000);
         });
+    });
+    vit('2.0', 'should not buffer more than fetchSize', function (done) {
+      var client = newInstance();
+      var id = types.Uuid.random();
+      var consistency = types.consistencies.quorum;
+      var rowsLength = 1000;
+      var fetchSize = 100;
+      async.series([
+        function insert(next) {
+          var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
+          helper.timesLimit(rowsLength, 50, function (n, timesNext) {
+            client.execute(query, [id, types.TimeUuid.now(), n.toString()], { prepare: true, consistency: consistency}, timesNext);
+          }, next);
+        },
+        function testBuffering(next) {
+          var query = util.format('SELECT id2, text_sample from %s WHERE id1 = ?', commonTable);
+          var stream = client.stream(query, [id], {prepare: 1, fetchSize: fetchSize, consistency: consistency});
+          var rowsRead = 0;
+          stream.
+            on('end', function () {
+              assert.strictEqual(rowsRead, rowsLength);
+              next();
+            })
+            .on('error', helper.throwop)
+            .on('readable', function () {
+              var row;
+              var self = this;
+              async.whilst(function condition() {
+                assert.ok(self.buffer.length <= fetchSize);
+                return (row = self.read());
+              }, function iterator(whilstNext) {
+                assert.ok(self.buffer.length <= fetchSize);
+                assert.ok(row);
+                rowsRead++;
+                if (rowsRead % 55 === 0) {
+                  //delay from time to time
+                  return setTimeout(whilstNext, 100);
+                }
+                whilstNext();
+              }, helper.noop);
+            });
+        }
+      ], done);
     });
   });
 });

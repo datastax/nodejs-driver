@@ -209,7 +209,7 @@ describe('reconnection', function () {
         client.connect.bind(client),
         function doSomeQueries(next) {
           async.times(30, function (n, timesNext) {
-            client.execute('SELECT * FROM system.schema_columnfamilies', timesNext);
+            client.execute(helper.queries.basic, timesNext);
           }, next);
         },
         function silentlyKillConnections(next) {
@@ -244,7 +244,7 @@ describe('reconnection', function () {
         function doSomeQueries(next) {
           // Issue some queries to get a connection attempt on node2.
           async.times(30, function (n, timesNext) {
-            client.execute('SELECT * FROM system.schema_columnfamilies', function(err, result) {
+            client.execute(helper.queries.basic, function() {
               timesNext();
             });
           });

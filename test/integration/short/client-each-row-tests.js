@@ -15,7 +15,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       var counter = 0;
       //fail if its preparing
       //noinspection JSAccessibilityCheck
@@ -23,7 +23,6 @@ describe('Client', function () {
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -33,17 +32,16 @@ describe('Client', function () {
     });
     it('should allow calls without end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       client.eachRow(query, [], {}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         done();
       });
     });
     it('should end callback when no rows', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'' + helper.getRandomName() + '\'';
+      var query = helper.queries.basicNoResults;
       var counter = 0;
       client.eachRow(query, [], {}, function () {
         counter++;
@@ -75,7 +73,7 @@ describe('Client', function () {
       var counter = 0;
       async.series([
         function createKs(next) {
-          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+          client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
         function createTable(next) {
           client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));
@@ -106,7 +104,7 @@ describe('Client', function () {
       var noop = function () {};
       async.series([
         function createKs(next) {
-          client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
+          client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
         function createTable(next) {
           client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));
@@ -172,7 +170,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {
       var client = newInstance();
-      var query = 'SELECT * FROM system.schema_keyspaces where keyspace_name = \'system\'';
+      var query = helper.queries.basic;
       var counter = 0;
       //noinspection JSAccessibilityCheck
       var originalGetPrepared = client._getPrepared;
@@ -185,7 +183,6 @@ describe('Client', function () {
       client.eachRow(query, [], {prepare: true}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
-        assert.ok(row.keyspace_name, 'system');
         counter++;
       }, function (err) {
         assert.ifError(err);
@@ -295,15 +292,7 @@ describe('Client', function () {
       var metaPageState;
       var pageState;
       async.series([
-        function truncate(seriesNext) {
-          client.eachRow('TRUNCATE ' + table, [], noop, seriesNext);
-        },
-        function insertData(seriesNext) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          helper.timesLimit(131, 100, function (n, next) {
-            client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
-          }, seriesNext);
-        },
+        helper.toTask(insertTestData, null, client, table, 131),
         function selectData(seriesNext) {
           //Only fetch 70
           var counter = 0;
@@ -344,6 +333,78 @@ describe('Client', function () {
             seriesNext();
           });
         }
+      ], done);
+    });
+    vit('2.0', 'should expose result.nextPage() method', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var pageState;
+      var nextPageRows;
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(insertTestData, null, client, table, 110),
+        function selectData(seriesNext) {
+          //Only fetch 60 the first time, 50 the following
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 60}, function (n, row) {
+            counter++;
+            if (nextPageRows) {
+              nextPageRows.push(row);
+            }
+          }, function (err, result) {
+            assert.ifError(err);
+            helper.assertInstanceOf(result, types.ResultSet);
+            if (!nextPageRows) {
+              //the first time, it should have a next page
+              assert.strictEqual(typeof result.nextPage, 'function');
+              assert.strictEqual(typeof result.pageState, 'string');
+              nextPageRows = [];
+              pageState = result.pageState;
+              //call to retrieve the following page rows.
+              result.nextPage();
+              return;
+            }
+            //the following times, there shouldn't be any additional page
+            assert.strictEqual(typeof result.nextPage, 'undefined');
+            assert.equal(result.pageState, null);
+            seriesNext();
+          });
+        },
+        function selectDataRemaining(seriesNext) {
+          //Select the remaining with pageState and compare the results.
+          var counter = 0;
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 100, pageState: pageState}, function (n, row) {
+            assert.ok(row);
+            counter++;
+            assert.strictEqual(row['id'].toString(), nextPageRows[n]['id'].toString());
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 50);
+            assert.strictEqual(counter, result.rowLength);
+            seriesNext();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.0', 'should not expose result.nextPage() method when no more rows', function (done) {
+      var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
+      var counter = 0;
+      var rowLength = 10;
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(insertTestData, null, client, table, rowLength),
+        function assertNextPageNull(next) {
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 1000}, function () {
+            counter++;
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, rowLength);
+            assert.strictEqual(counter, result.rowLength);
+            assert.strictEqual(typeof result.nextPage, 'undefined');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
       ], done);
     });
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
@@ -428,4 +489,18 @@ function newInstance(options) {
   options = options || {};
   options = utils.extend(options, helper.baseOptions);
   return new Client(options);
+}
+
+function insertTestData(client, table, length, callback) {
+  async.series([
+    function truncate(seriesNext) {
+      client.eachRow('TRUNCATE ' + table, [], helper.noop, seriesNext);
+    },
+    function insertData(seriesNext) {
+      var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      helper.timesLimit(length, 100, function (n, next) {
+        client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, helper.noop, next);
+      }, seriesNext);
+    }
+  ], callback);
 }

@@ -45,7 +45,9 @@ describe('Connection', function () {
     });
     it('should open with all the protocol versions supported', function (done) {
       var maxProtocolVersionSupported = getProtocolVersion();
-      var protocolVersion = 0;
+      var minProtocolVersionSupported = getMinProtocolVersion();
+      if(helper.getCassandraVersion())
+      var protocolVersion = minProtocolVersionSupported - 1;
       async.whilst(function condition() {
         return (++protocolVersion) <= maxProtocolVersionSupported;
       }, function iterator (next) {
@@ -56,8 +58,6 @@ describe('Connection', function () {
           localCon.close(next);
         });
       }, done);
-      for (var i = 1; i <= maxProtocolVersionSupported; i++) {
-      }
     });
     it('should fail when the host does not exits', function (done) {
       var localCon = newInstance('1.1.1.1');
@@ -106,7 +106,7 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ifError(err);
         assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
-        localCon.sendStream(getRequest('SELECT * FROM system.schema_keyspaces'), null, function (err, result) {
+        localCon.sendStream(getRequest(helper.queries.basic), null, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
           assert.ok(result.rows.length);
@@ -169,7 +169,7 @@ describe('Connection', function () {
         connection.open.bind(connection),
         function asserting(seriesNext) {
           async.times(maxRequests + 10, function (n, next) {
-            var request = getRequest('SELECT * FROM system.schema_keyspaces');
+            var request = getRequest(helper.queries.basic);
             connection.sendStream(request, null, next);
           }, seriesNext);
         }
@@ -239,4 +239,21 @@ function getProtocolVersion() {
     return 1;
   }
   return 4;
+}
+
+/**
+ * Gets the minimum supported protocol version for the current Cassandra version
+ *
+ * For < C* 3.0 returns 1.  Otherwise returns maximum supported protocol
+ * version - 1.
+ *
+ * @returns {number}
+ */
+function getMinProtocolVersion() {
+  if (helper.getCassandraVersion().indexOf('2') === 0
+    || helper.getCassandraVersion().indexOf('1') === 0) {
+    return 1;
+  } else {
+    return getProtocolVersion() - 1;
+  }
 }

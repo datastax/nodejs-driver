@@ -9,8 +9,7 @@ var dataTypes = types.dataTypes;
 var helper = require('../test-helper');
 
 describe('encoder', function () {
-  describe('#guessDataType()', function () {
-    var encoder = new Encoder(2, {});
+  describe('Encoder.guessDataType()', function () {
     it('should guess the native types', function () {
       assertGuessed(1, dataTypes.double, 'Guess type for an integer (double) number failed');
       assertGuessed(1.01, dataTypes.double, 'Guess type for a double number failed');
@@ -34,7 +33,7 @@ describe('encoder', function () {
       assertGuessed({}, null, 'Objects must not be guessed');
     });
     function assertGuessed(value, expectedType, message) {
-      var type = encoder.guessDataType(value);
+      var type = Encoder.guessDataType(value);
       if (type === null) {
         if (expectedType !== null) {
           assert.ok(false, 'Type not guessed for value ' + value);
@@ -74,6 +73,7 @@ describe('encoder', function () {
     });
     it('should encode undefined as null', function () {
       var hinted = typeEncoder.encode(undefined, 'set<text>');
+      //noinspection JSCheckFunctionSignatures
       var unHinted = typeEncoder.encode();
       assert.strictEqual(hinted, null);
       assert.strictEqual(unHinted, null);
@@ -628,11 +628,9 @@ describe('encoder', function () {
         encoder.encode(types.unset);
       }, TypeError);
     });
-    it('should throw TypeError when value is undefined and flag set with low protocol version', function () {
+    it('should return null when value is undefined and flag set with low protocol version', function () {
       var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
-      assert.throws(function () {
-        encoder.encode(undefined);
-      }, TypeError);
+      assert.strictEqual(encoder.encode(undefined), null);
     });
   });
   describe('#setRoutingKey()', function () {
@@ -745,66 +743,66 @@ describe('encoder', function () {
       }, TypeError);
     });
   });
-  describe('#parseTypeName()', function () {
+  describe('#parseFqTypeName()', function () {
     it('should parse single type names', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.Int32Type');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.Int32Type');
       assert.strictEqual(dataTypes.int, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.UUIDType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.UUIDType');
       assert.strictEqual(dataTypes.uuid, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.UTF8Type');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.UTF8Type');
       assert.strictEqual(dataTypes.varchar, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.BytesType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.BytesType');
       assert.strictEqual(dataTypes.blob, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.FloatType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.FloatType');
       assert.strictEqual(dataTypes.float, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DoubleType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DoubleType');
       assert.strictEqual(dataTypes.double, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.BooleanType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.BooleanType');
       assert.strictEqual(dataTypes.boolean, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.InetAddressType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.InetAddressType');
       assert.strictEqual(dataTypes.inet, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DateType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DateType');
       assert.strictEqual(dataTypes.timestamp, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TimestampType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TimestampType');
       assert.strictEqual(dataTypes.timestamp, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.LongType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.LongType');
       assert.strictEqual(dataTypes.bigint, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.DecimalType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.DecimalType');
       assert.strictEqual(dataTypes.decimal, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.IntegerType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.IntegerType');
       assert.strictEqual(dataTypes.varint, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.CounterColumnType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.CounterColumnType');
       assert.strictEqual(dataTypes.counter, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TimeUUIDType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TimeUUIDType');
       assert.strictEqual(dataTypes.timeuuid, type.code);
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.AsciiType');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.AsciiType');
       assert.strictEqual(dataTypes.ascii, type.code);
     });
     it('should parse complex type names', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.list, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.int, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.UUIDType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.UUIDType)');
       assert.strictEqual(dataTypes.set, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.uuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.TimeUUIDType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.SetType(org.apache.cassandra.db.marshal.TimeUUIDType)');
       assert.strictEqual(dataTypes.set, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.timeuuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
       assert.strictEqual(dataTypes.map, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.bigint, type.info[1].code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.tuple, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
@@ -812,12 +810,12 @@ describe('encoder', function () {
     });
     it('should parse frozen types', function () {
       var encoder = new Encoder(2, {});
-      var type = encoder.parseTypeName('org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.TimeUUIDType))');
+      var type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.TimeUUIDType))');
       assert.strictEqual(dataTypes.list, type.code);
       assert.ok(type.info);
       assert.strictEqual(dataTypes.timeuuid, type.info.code);
 
-      type = encoder.parseTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
       assert.strictEqual(dataTypes.map, type.code);
       assert.ok(util.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
@@ -832,7 +830,7 @@ describe('encoder', function () {
         'org.apache.cassandra.db.marshal.UserType(' +
         'tester,70686f6e65,616c696173:org.apache.cassandra.db.marshal.UTF8Type,6e756d626572:org.apache.cassandra.db.marshal.UTF8Type' +
         ')';
-      var dataType = encoder.parseTypeName(typeText);
+      var dataType = encoder.parseFqTypeName(typeText);
       assert.strictEqual(dataTypes.udt, dataType.code);
       //Udt name
       assert.ok(dataType.info);
@@ -858,7 +856,7 @@ describe('encoder', function () {
         '616c696173:org.apache.cassandra.db.marshal.UTF8Type,' +
         '6e756d626572:org.apache.cassandra.db.marshal.UTF8Type))' +
         ')';
-      var dataType = encoder.parseTypeName(typeText);
+      var dataType = encoder.parseFqTypeName(typeText);
       assert.strictEqual(dataTypes.udt, dataType.code);
       assert.strictEqual('address', dataType.info.name);
       assert.strictEqual('tester', dataType.info.keyspace);
@@ -877,6 +875,216 @@ describe('encoder', function () {
       assert.strictEqual(2, phonesSubType.info.fields.length);
       assert.strictEqual('alias', phonesSubType.info.fields[0].name);
       assert.strictEqual('number', phonesSubType.info.fields[1].name);
+    });
+  });
+  describe('#parseTypeName()', function () {
+    function throwIfCalled() {
+      throw new Error('This function should not be called');
+    }
+    it('should parse single type names', function (done) {
+      var encoder = new Encoder(4, {});
+      var items = [
+        ['int',        dataTypes.int],
+        ['uuid',       dataTypes.uuid],
+        ['text',       dataTypes.text],
+        ['varchar',    dataTypes.varchar],
+        ['blob',       dataTypes.blob],
+        ['float',      dataTypes.float],
+        ['double',     dataTypes.double],
+        ['boolean',    dataTypes.boolean],
+        ['inet',       dataTypes.inet],
+        ['timestamp',  dataTypes.timestamp],
+        ['bigint',     dataTypes.bigint],
+        ['decimal',    dataTypes.decimal],
+        ['varint',     dataTypes.varint],
+        ['counter',    dataTypes.counter],
+        ['timeuuid',   dataTypes.timeuuid],
+        ['ascii',      dataTypes.ascii]
+      ];
+      async.eachSeries(items, function eachCb(item, next) {
+        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
+          assert.ifError(err);
+          assert.ok(dataType);
+          assert.strictEqual(dataType.code, item[1]);
+          next();
+        });
+      }, done);
+    });
+    it('should parse complex type names', function (done) {
+      var encoder = new Encoder(4, {});
+      var items = [
+        ['list<int>', dataTypes.list, dataTypes.int],
+        ['set<uuid>', dataTypes.set, dataTypes.uuid],
+        ['set<timeuuid>', dataTypes.set, dataTypes.timeuuid],
+        ['map<varchar,bigint>', dataTypes.map, [dataTypes.varchar, dataTypes.bigint]],
+        ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
+        ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
+        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
+      ];
+      async.eachSeries(items, function eachCb(item, next) {
+        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
+          assert.ifError(err);
+          assert.ok(dataType);
+          assert.strictEqual(dataType.code, item[1]);
+          assert.notEqual(dataType.info, null);
+          if (util.isArray(item[2])) {
+            assert.strictEqual(dataType.info.length, item[2].length);
+            dataType.info.forEach(function (childType, i) {
+              assert.strictEqual(childType.code, item[2][i]);
+            });
+          }
+          else {
+            assert.strictEqual(dataType.info.code, item[2]);
+          }
+          next();
+        });
+      }, done);
+    });
+    it('should parse nested subtypes', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var name = 'map<text,frozen<list<frozen<map<text,frozen<list<int>>>>>>>';
+          encoder.parseTypeName('ks1', name, 0, null, throwIfCalled, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.map);
+            assert.strictEqual(type.info[0].code, dataTypes.text);
+            assert.strictEqual(type.info[1].code, dataTypes.list);
+            var subType1 = type.info[1];
+            assert.strictEqual(subType1.info.code, dataTypes.map);
+            var subType2 = subType1.info.info[1];
+            assert.strictEqual(subType2.code, dataTypes.list);
+            assert.strictEqual(subType2.info.code, dataTypes.int);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should parse udts', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'address');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'frozen<address>';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, true);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        },
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'address');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'address';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, false);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should parse quoted udts', function (done) {
+      var encoder = new Encoder(4, {});
+      async.series([
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'PHONE');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = 'frozen<"PHONE">';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, true);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        },
+        function (next) {
+          var called = 0;
+          function udtResolver(ks, udtName, callback) {
+            assert.strictEqual(ks, 'ks2');
+            assert.strictEqual(udtName, 'PhoNe');
+            called++;
+            setImmediate(function () {
+              callback(null, 'udt info dummy');
+            });
+          }
+          var name = '"PhoNe"';
+          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
+            assert.ifError(err);
+            assert.ok(type);
+            assert.strictEqual(type.code, dataTypes.udt);
+            assert.strictEqual(type.options.frozen, false);
+            assert.strictEqual(called, 1);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should callback with TypeError when not found', function (done) {
+      var encoder = new Encoder(4, {});
+      var called = 0;
+      //noinspection JSUnusedLocalSymbols
+      function udtResolver(k, u, callback) {
+        called++;
+        setImmediate(function () {
+          callback(null, null);
+        });
+      }
+      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
+        helper.assertInstanceOf(err, TypeError);
+        assert.ok(!type);
+        assert.strictEqual(called, 1);
+        done();
+      });
+    });
+    it('should callback with the same error if udtResolver fails', function (done) {
+      var encoder = new Encoder(4, {});
+      var called = 0;
+      var testError = new Error('Test error');
+      //noinspection JSUnusedLocalSymbols
+      function udtResolver(k, u, callback) {
+        called++;
+        setImmediate(function () {
+          callback(testError);
+        });
+      }
+      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
+        assert.strictEqual(err, testError);
+        assert.ok(!type);
+        assert.strictEqual(called, 1);
+        done();
+      });
     });
   });
   describe('#parseKeyTypes', function () {
@@ -910,6 +1118,25 @@ describe('encoder', function () {
       assert.strictEqual(result.types[1].code, types.dataTypes.int);
       assert.strictEqual(result.types[2].code, types.dataTypes.list);
       assert.strictEqual(result.types[3].code, types.dataTypes.map);
+    });
+  });
+  describe('constructor', function () {
+    it('should define instance members', function () {
+      var encoder = new Encoder(4, {});
+      assert.strictEqual(typeof encoder.encodeBlob, 'function');
+      assert.strictEqual(typeof encoder.decodeBlob, 'function');
+      assert.strictEqual(typeof encoder.protocolVersion, 'number');
+    });
+  });
+  describe('prototype', function () {
+    it('should only expose encode() and decode() functions', function () {
+      //noinspection JSUnresolvedVariable
+      var keys = Object.keys(Encoder.prototype);
+      assert.deepEqual(keys, ['decode', 'encode']);
+      keys.forEach(function (k) {
+        //noinspection JSUnresolvedVariable
+        assert.strictEqual(typeof Encoder.prototype[k], 'function');
+      })
     });
   });
 });

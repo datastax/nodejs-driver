@@ -431,6 +431,47 @@ describe('RequestHandler', function () {
         done();
       });
     });
+
+    var captureStackTraceOptions = [
+      {options:{}, expected:false},
+      {options:{captureStackTrace:true}, expected:true},
+      {options:{captureStackTrace:false}, expected:false}
+    ];
+
+    captureStackTraceOptions.forEach(function(test) {
+      var expect = test.expected ? '' : ' not';
+      it('should return an error' + expect + ' including calling stack trace if captureStackTrace is ' + test.options.captureStackTrace, function (done) {
+        var handler = newInstance();
+        // Capture the current stack minus the top line in the call stack (since line number is not exact).
+        var stack = {};
+        Error.captureStackTrace(stack);
+        stack = stack.stack.split('\n')
+        stack.splice(0,2);
+        stack = stack.join('\n');
+
+        handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
+        var connection1 = { sendStream: function (r, o, cb) {
+          setImmediate(function () {
+            cb(new errors.ResponseError(types.responseErrorCodes.syntaxError, 'syntax error'));
+          });
+        }};
+        handler.getNextConnection = function (o, cb) {
+          return cb(null, connection1);
+        };
+        //noinspection JSCheckFunctionSignatures
+        handler.send(new requests.QueryRequest('q'), test.options, function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+          if(test.expected) {
+            assert.ok(err.stack.indexOf('(event loop)') != -1, err.stack + '\n\tdoes not contain (event loop)');
+            assert.ok(err.stack.indexOf(stack) != -1, err.stack + '\n\tdoes not contain\n' + stack);
+          } else {
+            assert.ok(err.stack.indexOf('(event loop)') == -1, err.stack + '\n\tcontains (event loop)');
+            assert.ok(err.stack.indexOf(stack) == -1, err.stack + '\n\tcontains\n' + stack);
+          }
+          done();
+        });
+      });
+    });
   });
   describe('#onTimeout', function () {
     it('should check host health', function (done) {

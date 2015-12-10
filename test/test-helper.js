@@ -271,6 +271,28 @@ var helper = {
     }
     return version;
   },
+  /**
+   * Determines if the current Cassandra instance version is greater than or equals to the version provided
+   * @param {String} version The version in string format, dot separated.
+   * @returns {Boolean}
+   */
+  isCassandraGreaterThan: function (version) {
+    var instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+    var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
+    for (var i = 0; i < compareVersion.length; i++) {
+      var compare = compareVersion[i] || 0;
+      if (instanceVersion[i] > compare) {
+        //is greater
+        return true;
+      }
+      else if (instanceVersion[i] < compare) {
+        //is smaller
+        return false;
+      }
+    }
+    //are equal
+    return true;
+  },
   log: function(levels) {
     if (!levels) {
       levels = ['info', 'warning', 'error'];
@@ -405,6 +427,42 @@ var helper = {
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
+
+  /**
+   * Given a {Client} and a {Number} returns the host whose last octet
+   * ends with the requested number.
+   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Number} number last octet of requested host.
+   * @returns {Host}
+   */
+  findHost: function(client, number) {
+    var host = null;
+    var self = this;
+    client.hosts.forEach(function(h) {
+      if(self.lastOctetOf(h) == number) {
+        host = h;
+      }
+    });
+    return host;
+  },
+
+  /**
+   * Waits indefinitely for a specific host to emit an event after a
+   * a given function has been called and invokes a callback on completion.
+   * @param {Function} f function to call
+   * @param {Client|ControlConnection} client client to inspect hosts from.
+   * @param {Number} number last octet of requested host.
+   * @param {String} event event to wait on, i.e. 'up'.
+   * @param {Function} cb function to call when event has been received.
+   */
+  waitOnHost: function(f, client, number, event, cb) {
+    var host = this.findHost(client, number);
+    host.once(event, function () {
+      cb();
+    });
+    f();
+  },
+
   /**
    * Returns a function, that when invoked shutdowns the client and callbacks
    * @param {Client} client
@@ -440,6 +498,10 @@ var helper = {
     }
 
     return async.mapLimit(counter, limit, iterator, callback);
+  },
+  queries: {
+    basic: "SELECT key FROM system.local",
+    basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
   }
 };
 
@@ -732,11 +794,7 @@ WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callb
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  var v = helper.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-  var currentVersion = v[0] * 10000 + v[1] * 100 + v[2];
-  v = testVersion.split('.');
-  var minimumVersion = parseFloat(v[0]) * 10000 + (parseFloat(v[1]) || 0) * 100 + (parseFloat(v[2]) || 0);
-  if (currentVersion >= minimumVersion) {
+  if (helper.isCassandraGreaterThan(testVersion)) {
     func.apply(this, args);
   }
 }

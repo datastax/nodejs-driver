@@ -7,6 +7,7 @@ var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
 describe('Metadata', function () {
   this.timeout(60000);
@@ -83,16 +84,18 @@ describe('Metadata', function () {
       client.connect(function (err) {
         assert.ifError(err);
         var m = client.metadata;
-        m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
-          assert.ifError(err);
-          assert.strictEqual(udtInfo, null);
-          done();
-        });
+        async.timesSeries(10, function (n, next) {
+          m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
+            assert.ifError(err);
+            assert.strictEqual(udtInfo, null);
+            next();
+          });
+        }, helper.finish(client, done));
       });
     });
     vit('2.1', 'should return the udt information', function (done) {
       var client = newInstance();
-      var createUdtQuery1 = 'CREATE TYPE phone (alias text, number text, country_code int)';
+      var createUdtQuery1 = "CREATE TYPE phone (alias text, number text, country_code int, second_number 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')";
       var createUdtQuery2 = 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)';
       async.series([
         helper.toTask(client.connect, client),
@@ -107,13 +110,18 @@ describe('Metadata', function () {
             assert.ok(udtInfo);
             assert.strictEqual(udtInfo.name, 'phone');
             assert.ok(udtInfo.fields);
-            assert.strictEqual(udtInfo.fields.length, 3);
+            assert.strictEqual(udtInfo.fields.length, 4);
             assert.strictEqual(udtInfo.fields[0].name, 'alias');
-            assert.strictEqual(udtInfo.fields[0].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[0].type.code === types.dataTypes.varchar || udtInfo.fields[0].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[1].name, 'number');
-            assert.strictEqual(udtInfo.fields[1].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[1].type.code === types.dataTypes.varchar || udtInfo.fields[1].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[2].name, 'country_code');
             assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.int);
+            assert.strictEqual(udtInfo.fields[3].name, 'second_number');
+            assert.strictEqual(udtInfo.fields[3].type.code, types.dataTypes.custom);
+            assert.strictEqual(udtInfo.fields[3].type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
+              + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
             next();
           });
         },
@@ -125,14 +133,14 @@ describe('Metadata', function () {
             assert.strictEqual(udtInfo.name, 'address');
             assert.strictEqual(udtInfo.fields.length, 3);
             assert.strictEqual(udtInfo.fields[0].name, 'street');
-            assert.strictEqual(udtInfo.fields[0].type.code, types.dataTypes.varchar);
+            assert.ok(udtInfo.fields[0].type.code === types.dataTypes.varchar || udtInfo.fields[0].type.code === types.dataTypes.text);
             assert.strictEqual(udtInfo.fields[1].name, 'ZIP');
             assert.strictEqual(udtInfo.fields[1].type.code, types.dataTypes.int);
             assert.strictEqual(udtInfo.fields[2].name, 'phones');
             assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.set);
             assert.strictEqual(udtInfo.fields[2].type.info.code, types.dataTypes.udt);
             assert.strictEqual(udtInfo.fields[2].type.info.info.name, 'phone');
-            assert.strictEqual(udtInfo.fields[2].type.info.info.fields.length, 3);
+            assert.strictEqual(udtInfo.fields[2].type.info.info.fields.length, 4);
             assert.strictEqual(udtInfo.fields[2].type.info.info.fields[0].name, 'alias');
             next();
           });
@@ -164,7 +172,7 @@ describe('Metadata', function () {
             assert.ok(udt);
             assert.strictEqual(udt.fields.length, 2);
             assert.strictEqual(udt.fields[1].name, 'name');
-            assert.strictEqual(udt.fields[1].type.code, types.dataTypes.varchar);
+            assert.ok(udt.fields[1].type.code === types.dataTypes.varchar || udt.fields[1].type.code === types.dataTypes.text);
             next();
           });
         }
@@ -177,7 +185,7 @@ describe('Metadata', function () {
       async.waterfall([
         client.connect.bind(client),
         function executeQuery(next) {
-          client.execute('SELECT * FROM system.schema_keyspaces', [], { traceQuery: true}, next);
+          client.execute(helper.queries.basic, [], { traceQuery: true}, next);
         },
         function getTrace(result, next) {
           client.metadata.getTrace(result.info.traceId, next);
@@ -220,21 +228,51 @@ describe('Metadata', function () {
   });
   describe('#getTable()', function () {
     var keyspace = 'ks_tbl_meta';
+    var is3  = helper.isCassandraGreaterThan('3.0');
+    var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
     before(function createTables(done) {
       var client = newInstance();
       var queries = [
         "CREATE KEYSPACE ks_tbl_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
-        "CREATE TABLE ks_tbl_meta.tbl1 (id uuid PRIMARY KEY, text_sample text)",
-        "CREATE TABLE ks_tbl_meta.tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
-        "CREATE TABLE ks_tbl_meta.tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
-        "CREATE TABLE ks_tbl_meta.tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
-        "CREATE TABLE ks_tbl_meta.tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
-        "CREATE TABLE ks_tbl_meta.tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
-        "CREATE TABLE ks_tbl_meta.tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
-        "CREATE TABLE ks_tbl_meta.tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
-        "CREATE TABLE ks_tbl_meta.tbl_collections (id uuid, ck blob, list_sample list<int>, set_sample list<text>, int_sample int, map_sample map<text,int>, PRIMARY KEY (id, ck))"
+        "USE ks_tbl_meta",
+        "CREATE TABLE tbl1 (id uuid PRIMARY KEY, text_sample text)",
+        "CREATE TABLE tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
+        "CREATE TABLE tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
+        "CREATE TABLE tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
+        "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
+        "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
+        "CREATE TABLE tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
+        "CREATE TABLE tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
+        "CREATE TABLE tbl9 (id uuid, c1 'DynamicCompositeType(s => UTF8Type, i => Int32Type)', c2 'ReversedType(CompositeType(UTF8Type, Int32Type))', c3 'Int32Type', PRIMARY KEY (id, c1, c2))",
+        "CREATE TABLE ks_tbl_meta.tbl_collections (id uuid, ck blob, list_sample list<int>, set_sample list<text>, int_sample int, map_sample map<text,int>, PRIMARY KEY (id, ck))",
+        "CREATE INDEX text_index ON tbl1 (text_sample)"
       ];
-      async.eachSeries(queries, client.execute.bind(client), helper.wait(500, done));
+      if (helper.isCassandraGreaterThan('2.1')) {
+        queries.push(
+          "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_values map<text,int>, map_keys map<text,int>, map_entries map<text,int>, map_all map<text,int>, list_sample frozen<list<blob>>)",
+          "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
+          "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
+          "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
+          "CREATE TYPE udt1 (i int, b blob, t text, c 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')",
+          'CREATE TYPE "UDTq""uoted" ("I" int, "B""B" blob, t text)',
+          "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
+          "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)",
+          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
+        );
+      }
+      if (helper.isCassandraGreaterThan('2.2')) {
+        queries.push(
+          'CREATE INDEX map_entries_index ON tbl_indexes1 (entries(map_entries))'
+        );
+      }
+      if (is3) {
+        queries.push(
+          "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
+          "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
+          "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
+        )
+      }
+      async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
     it('should retrieve the metadata of a single partition key table', function (done) {
       var client = newInstance({ keyspace: keyspace});
@@ -246,7 +284,6 @@ describe('Metadata', function () {
           assert.strictEqual(table.bloomFilterFalsePositiveChance, 0.01);
           assert.ok(table.caching);
           assert.strictEqual(typeof table.caching, 'string');
-          assert.strictEqual(table.columns.length, 2);
           var columns = table.columns
             .map(function (c) { return c.name; })
             .sort();
@@ -449,6 +486,143 @@ describe('Metadata', function () {
         });
       });
     });
+    it('should retrieve a simple secondary index', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.columns.length, 2);
+          assert.ok(table.indexes);
+          assert.strictEqual(table.indexes.length, 1);
+          var index = table.indexes[0];
+          assert.strictEqual(index.name, 'text_index');
+          assert.strictEqual(index.target, 'text_sample');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary index on map keys', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_keys_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_keys_index');
+          assert.strictEqual(index.target, 'keys(map_keys)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary index on map values', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_values_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_values_index');
+          assert.strictEqual(index.target, is3 ? 'values(map_values)' : 'map_values');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.2', 'should retrieve a secondary index on map entries', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) { return x.name === 'map_entries_index'; })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'map_entries_index');
+          assert.strictEqual(index.target, 'entries(map_entries)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('3.0', 'should retrieve multiple indexes on same map column', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+
+          var indexes = [
+            {name: 'map_all_entries_index', target: 'entries(map_all)'},
+            {name: 'map_all_keys_index', target: 'keys(map_all)'},
+            {name: 'map_all_values_index', target: 'values(map_all)'}
+          ];
+
+          indexes.forEach(function(idx) {
+            var index = table.indexes.filter(function (x) { return x.name === idx.name; })[0];
+            assert.ok(index, 'Index not found');
+            assert.strictEqual(index.name, idx.name);
+            assert.strictEqual(index.target, idx.target);
+            assert.strictEqual(index.isCompositesKind(), true);
+            assert.strictEqual(index.isCustomKind(), false);
+            assert.strictEqual(index.isKeysKind(), false);
+            assert.ok(index.options);
+          });
+          client.shutdown(done);
+        });
+      });
+    });
+    vit('2.1', 'should retrieve a secondary index on frozen list', function (done) {
+      var client = newInstance({keyspace: keyspace});
+      client.connect(function (err) {
+        assert.ifError(err);
+        client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.ok(table.indexes);
+          assert.ok(table.indexes.length > 0);
+          var index = table.indexes.filter(function (x) {
+            return x.name === 'list_index';
+          })[0];
+          assert.ok(index, 'Index not found');
+          assert.strictEqual(index.name, 'list_index');
+          assert.strictEqual(index.target, 'full(list_sample)');
+          assert.strictEqual(index.isCompositesKind(), true);
+          assert.strictEqual(index.isCustomKind(), false);
+          assert.strictEqual(index.isKeysKind(), false);
+          assert.ok(index.options);
+          client.shutdown(done);
+        });
+      });
+    });
     vit('2.2', 'should retrieve the metadata of a table containing new 2.2 types', function (done) {
       var client = newInstance();
       var createTableCql = 'CREATE TABLE ks_tbl_meta.tbl_c22 ' +
@@ -474,6 +648,250 @@ describe('Metadata', function () {
         }
       ], done);
     });
+    vit('2.1', 'should retrieve the metadata of a table with udt column', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl_udts1', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id', 'udt_sample']);
+            var udtColumn = table.columnsByName['udt_sample'];
+            assert.ok(udtColumn);
+            assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
+            assert.ok(udtColumn.type.info);
+            assert.strictEqual(udtColumn.type.info.name, 'udt1');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't', 'c']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.1', 'should retrieve the metadata of a table with udt partition key', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl_udts2', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id']);
+            var udtColumn = table.columns[0];
+            assert.ok(udtColumn);
+            assert.strictEqual(table.partitionKeys[0], udtColumn);
+            assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
+            assert.ok(udtColumn.type.info);
+            assert.strictEqual(udtColumn.type.info.name, 'udt1');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['i', 'b', 't', 'c']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should retrieve the metadata of a table with custom type columns', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl9', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+
+            assert.strictEqual(table.clusteringOrder.length, 2);
+            assert.strictEqual(table.clusteringOrder[0], 'ASC');
+            // Since c2 is a reversed type, clustering order should be DESC.
+            assert.strictEqual(table.clusteringOrder[1], 'DESC');
+
+            var dynamicColumn = table.clusteringKeys[0];
+            assert.ok(dynamicColumn);
+            assert.strictEqual(dynamicColumn.name, 'c1');
+            assert.strictEqual(dynamicColumn.type.code, types.dataTypes.custom);
+            assert.strictEqual(dynamicColumn.type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
+              + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
+
+            var reversedColumn = table.clusteringKeys[1];
+            assert.ok(reversedColumn);
+            assert.strictEqual(reversedColumn.name, 'c2');
+            assert.strictEqual(reversedColumn.type.code, types.dataTypes.custom);
+            assert.strictEqual(reversedColumn.type.info, 'org.apache.cassandra.db.marshal.CompositeType('
+              + 'org.apache.cassandra.db.marshal.UTF8Type,'
+              + 'org.apache.cassandra.db.marshal.Int32Type)');
+
+            var intColumn = table.columnsByName['c3'];
+            assert.ok(intColumn);
+            assert.strictEqual(intColumn.type.code, types.dataTypes.int);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('2.1', 'should retrieve the metadata of a table with quoted udt', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMetadata(next) {
+          client.metadata.getTable(keyspace, 'tbl_udts_with_quoted', function (err, table) {
+            assert.ifError(err);
+            assert.ok(table);
+            assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id', 'udt_sample']);
+            var udtColumn = table.columnsByName['udt_sample'];
+            assert.ok(udtColumn);
+            assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
+            assert.ok(udtColumn.type.info);
+            assert.strictEqual(udtColumn.type.info.name, 'UDTq"uoted');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['I', 'B"B', 't']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+  });
+  vdescribe('3.0', '#getMaterializedView()', function () {
+    var keyspace = 'ks_view_meta';
+    before(function createTables(done) {
+      var client = newInstance();
+      var queries = [
+        "CREATE KEYSPACE ks_view_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
+        "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
+        "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC)"
+      ];
+      async.eachSeries(queries, client.execute.bind(client), function (err) {
+        client.shutdown();
+        if (err) {
+          return done(err);
+        }
+        setTimeout(done, 2000);
+      });
+    });
+    it('should retrieve the view and table metadata', function (done) {
+      var client = newInstance();
+      async.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getMaterializedView(keyspace, 'dailyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.name, 'dailyhigh');
+            assert.strictEqual(view.tableName, 'scores');
+            assert.strictEqual(view.whereClause, 'game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL');
+            assert.strictEqual(view.includeAllColumns, false);
+            assert.strictEqual(view.clusteringKeys.length, 2);
+            assert.strictEqual(view.clusteringKeys[0].name, 'score');
+            assert.strictEqual(view.clusteringKeys[1].name, 'user');
+            assert.strictEqual(view.partitionKeys.length, 4);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month, day');
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should refresh the view metadata via events', function (done) {
+      var client = newInstance({ keyspace: 'ks_view_meta' });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL PRIMARY KEY ((game, year, month), score, user, day) WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
+        function checkView1(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.length, 3);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'score, user, day');
+            helper.assertContains(view.compactionClass, 'SizeTieredCompactionStrategy');
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER MATERIALIZED VIEW monthlyhigh WITH compaction = { \'class\' : \'LeveledCompactionStrategy\' }'),
+        function checkView1(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.length, 3);
+            assert.strictEqual(view.clusteringKeys.length, 3);
+            helper.assertContains(view.compactionClass, 'LeveledCompactionStrategy');
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'DROP MATERIALIZED VIEW monthlyhigh'),
+        function checkDropped(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
+            assert.ifError(err);
+            assert.strictEqual(view, null);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should refresh the view metadata as result of table change via events', function (done) {
+      var client = newInstance({ keyspace: 'ks_view_meta' });
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, 'CREATE TABLE users (user TEXT PRIMARY KEY, first_name TEXT)'),
+        // create a view using 'select *'.
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first_all AS SELECT * FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        // create same view using 'select <columns>'.
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first AS SELECT user, first_name FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        function checkAllView(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            // includeAllColumns should be true since 'select *' was used.
+            assert.strictEqual(view.includeAllColumns, true);
+            next();
+          });
+        },
+        function checkView(next) {
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.strictEqual(view.includeAllColumns, false);
+            next();
+          });
+        },
+        helper.toTask(client.execute, client, 'ALTER TABLE users ADD last_name text'),
+        function checkForNewColumnsInAllView(next) {
+          // ensure that the newly added column 'last_name' in 'users' was propagated to users_by_first_all.
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function(err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.ok(view.columnsByName['last_name']);
+            assert.ok(view.columnsByName['last_name'].type.code === types.dataTypes.varchar ||
+              view.columnsByName['last_name'].type.code === types.dataTypes.text);
+            assert.strictEqual(view.columns.length, 3);
+            assert.strictEqual(view.includeAllColumns, true);
+            next();
+          });
+        },
+        function checkColumnNotAddedInView(next) {
+          // since 'users_by_first' does not include all columns it should not detect the new column.
+          client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
+            assert.ifError(err);
+            assert.ok(view);
+            assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
+            assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+            assert.strictEqual(view.columnsByName['last_name'], undefined);
+            assert.strictEqual(view.columns.length, 2);
+            assert.strictEqual(view.includeAllColumns, false);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    })
   });
 });
 

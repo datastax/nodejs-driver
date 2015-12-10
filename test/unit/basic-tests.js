@@ -12,8 +12,8 @@ var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
+var writers = require('../../lib/writers');
 var helper = require('../test-helper.js');
-
 
 describe('types', function () {
   describe('Long', function () {
@@ -645,7 +645,7 @@ describe('utils', function () {
   });
 });
 describe('clientOptions', function () {
-  describe('#extend', function () {
+  describe('#extend()', function () {
     it('should require contactPoints', function () {
       assert.doesNotThrow(function () {
         clientOptions.extend({contactPoints: ['host1', 'host2']});
@@ -745,6 +745,61 @@ describe('clientOptions', function () {
       });
     });
   });
+  describe('#defaultOptions()', function () {
+    var options = clientOptions.defaultOptions();
+    it('should set LOCAL_QUORUM as default consistency level', function () {
+      assert.strictEqual(types.consistencies.localOne, options.queryOptions.consistency);
+    });
+    it('should set 12secs as default read timeout', function () {
+      assert.strictEqual(12000, options.socketOptions.readTimeout);
+    });
+    it('should set useUndefinedAsUnset as true', function () {
+      assert.strictEqual(true, options.encoding.useUndefinedAsUnset);
+    });
+  });
+});
+describe('writers', function () {
+  describe('WriteQueue', function () {
+    it('should buffer until threshold is passed', function (done) {
+      var itemCallbackCounter = 0;
+      var buffers = [];
+      var socketMock = {
+        write: function (buf, cb) {
+          buffers.push(buf);
+          setTimeout(cb, 50);
+        }
+      };
+      var options = utils.extend({}, clientOptions.defaultOptions());
+      options.socketOptions.coalescingThreshold = 50;
+      var encoder = new Encoder(3, options);
+      //noinspection JSCheckFunctionSignatures
+      var queue = new writers.WriteQueue(socketMock, encoder, options);
+      var request = {
+        write: function () {
+          return new Buffer(10);
+        }
+      };
+      function itemCallback() {
+        itemCallbackCounter++;
+      }
+      for (var i = 0; i < 10; i++) {
+        //noinspection JSCheckFunctionSignatures
+        queue.push(request, itemCallback);
+      }
+      setTimeout(function () {
+        //10 frames
+        assert.strictEqual(itemCallbackCounter, 10);
+        assert.strictEqual(buffers.length, 3);
+        //first part is only 1 message
+        assert.strictEqual(buffers[0].length, 10);
+        //second part contains 5 messages
+        assert.strictEqual(buffers[1].length, 50);
+        //second part contains 4 messages
+        assert.strictEqual(buffers[2].length, 40);
+        done();
+      }, 500);
+    });
+  });
 });
 describe('exports', function () {
   it('should contain API', function () {
@@ -770,5 +825,8 @@ describe('exports', function () {
     assert.ok(api.metadata);
     assert.strictEqual(typeof api.metadata.Metadata, 'function');
     assert.strictEqual(api.metadata.Metadata, require('../../lib/metadata'));
+    assert.ok(api.Encoder);
+    assert.strictEqual(typeof api.Encoder, 'function');
+    assert.strictEqual(api.Encoder, require('../../lib/encoder'));
   });
 });

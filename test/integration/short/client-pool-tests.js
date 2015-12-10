@@ -582,7 +582,7 @@ describe('Client', function () {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
           var counter = 0;
-          async.times(1000, function (i, next) {
+          async.timesLimit(1000, 10, function (i, next) {
             client.execute(helper.queries.basic, function (err) {
               counter++;
               assert.ifError(err);
@@ -641,14 +641,14 @@ describe('Client', function () {
           var counter = 0;
           var issued = 0;
           var killed = false;
-          async.times(500, function (n, next) {
+          async.timesLimit(500, 20, function (n, next) {
             if (n === 10) {
               //kill a node when there are some outstanding requests
               helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
                 killed = true;
                 assert.ifError(err);
                 //do a couple of more queries
-                async.times(10, function (n, next2) {
+                async.timesSeries(10, function (n, next2) {
                   client.execute(query, next2);
                 }, next);
               });

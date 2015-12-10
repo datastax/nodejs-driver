@@ -73,11 +73,10 @@ describe('ControlConnection', function () {
           setTimeout(next, 5000);
         },
         function (next) {
-          helper.ccmHelper.exec(['node2', 'stop'], next);
-        },
-        function (next) {
-          //wait for the status event to be received
-          setTimeout(next, 5000);
+          helper.waitOnHost(function () {
+            //noinspection JSCheckFunctionSignatures
+            helper.ccmHelper.stopNode(2);
+          }, cc, 2, 'down', next);
         },
         function (next) {
           var hosts = cc.hosts.slice(0);
@@ -92,7 +91,12 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
-      var cc = newInstance();
+      var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+      options.pooling.heartBeatInterval = 0;
+      options.pooling.coreConnectionsPerHost[types.distance.local] = 1;
+      options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
+      options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
+      var cc = new ControlConnection(options);
       async.series([
         cc.init.bind(cc),
         function (next) {
@@ -101,19 +105,26 @@ describe('ControlConnection', function () {
         },
         function (next) {
           //start the node
-          helper.ccmHelper.startNode(3, next);
+          helper.ccmHelper.startNode(3, helper.wait(5000, next));
         },
         function (next) {
-          setTimeout(function () {
-            var hosts = cc.hosts.slice(0);
-            assert.strictEqual(hosts.length, 3);
-            var countUp = hosts.reduce(function (value, host) {
-              value += host.isUp() ? 1 : 0;
-              return value;
-            }, 0);
-            assert.strictEqual(countUp, 2);
+          // While the host is started, it's not a given that it will have been connected and marked up,
+          // wait for that to be the case.
+          var host3 = helper.findHost(cc, 3);
+          if(!host3.isUp()) {
+            helper.waitOnHost(helper.noop, cc, 3, 'up', next);
+          } else {
             next();
-          }, 3000);
+          }
+        },
+        function (next) {
+          var hosts = cc.hosts.slice(0);
+          var countUp = hosts.reduce(function (value, host) {
+            value += host.isUp() ? 1 : 0;
+            return value;
+          }, 0);
+          assert.strictEqual(countUp, 3);
+          next();
         }
       ], done);
     });
@@ -123,7 +134,7 @@ describe('ControlConnection', function () {
         cc.init.bind(cc),
         function (next) {
           //decommission node
-          helper.ccmHelper.exec(['node2', 'decommission'], helper.wait(3000, next));
+          helper.ccmHelper.exec(['node2', 'decommission'], helper.wait(5000, next));
         },
         function (next) {
           var hosts = cc.hosts.slice(0);
@@ -184,7 +195,10 @@ describe('ControlConnection', function () {
           next();
         },
         function restart(next) {
-          helper.ccmHelper.startNode(2, helper.wait(5000, next));
+          helper.waitOnHost(function () {
+            //noinspection JSCheckFunctionSignatures
+            helper.ccmHelper.startNode(2);
+          }, cc, 2, 'up', helper.wait(5000, next));
         },
         function checkHostConnected(next) {
           cc.hosts.forEach(function (h) {

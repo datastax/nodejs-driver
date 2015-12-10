@@ -553,11 +553,17 @@ describe('Client', function () {
       var client = newInstance();
       var hosts = {};
       var hostsDown = [];
-      client.on('hostDown', function (h) {
-        hostsDown.push(h);
-      });
+
       async.series([
+        function (next) {
+          // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2
+          // after we have killed it.
+          setTimeout(next, 5000);
+        },
         function warmUpPool(seriesNext) {
+          client.on('hostDown', function (h) {
+            hostsDown.push(h);
+          });
           async.times(100, function (n, next) {
             client.execute(helper.queries.basic, function (err, result) {
               assert.ifError(err);
@@ -615,6 +621,11 @@ describe('Client', function () {
       var hosts = {};
       var query = helper.queries.basic;
       async.series([
+        function (next) {
+          // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2
+          // after we have killed it.
+          setTimeout(next, 5000);
+        },
         function warmUpPool(seriesNext) {
           async.times(10, function (n, next) {
             client.execute(query, function (err, result) {
@@ -726,7 +737,10 @@ describe('Client', function () {
           }, next);
         },
         function startNode3(next) {
-          helper.ccmHelper.startNode(3, helper.wait(5000, next));
+          helper.waitOnHost(function () {
+            //noinspection JSCheckFunctionSignatures
+            helper.ccmHelper.startNode(3);
+          }, client, 3, 'up', helper.wait(5000, next));
         },
         function assertReconnected(next) {
           assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));

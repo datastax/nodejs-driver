@@ -427,6 +427,42 @@ var helper = {
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
+
+  /**
+   * Given a {Client} and a {Number} returns the host whose last octet
+   * ends with the requested number.
+   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Number} number last octet of requested host.
+   * @returns {Host}
+   */
+  findHost: function(client, number) {
+    var host = null;
+    var self = this;
+    client.hosts.forEach(function(h) {
+      if(self.lastOctetOf(h) == number) {
+        host = h;
+      }
+    });
+    return host;
+  },
+
+  /**
+   * Waits indefinitely for a specific host to emit an event after a
+   * a given function has been called and invokes a callback on completion.
+   * @param {Function} f function to call
+   * @param {Client|ControlConnection} client client to inspect hosts from.
+   * @param {Number} number last octet of requested host.
+   * @param {String} event event to wait on, i.e. 'up'.
+   * @param {Function} cb function to call when event has been received.
+   */
+  waitOnHost: function(f, client, number, event, cb) {
+    var host = this.findHost(client, number);
+    host.once(event, function () {
+      cb();
+    });
+    f();
+  },
+
   /**
    * Returns a function, that when invoked shutdowns the client and callbacks
    * @param {Client} client

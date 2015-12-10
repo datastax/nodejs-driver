@@ -254,10 +254,10 @@ describe('Metadata', function () {
           "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
           "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
           "CREATE TYPE udt1 (i int, b blob, t text, c 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')",
-          'CREATE TYPE "UDTquoted" ("I" int, "B" blob, t text)',
+          'CREATE TYPE "UDTq""uoted" ("I" int, "B""B" blob, t text)',
           "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
           "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)",
-          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTquoted">)'
+          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
         );
       }
       if (helper.isCassandraGreaterThan('2.2')) {
@@ -743,8 +743,8 @@ describe('Metadata', function () {
             assert.ok(udtColumn);
             assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
             assert.ok(udtColumn.type.info);
-            assert.strictEqual(udtColumn.type.info.name, 'UDTquoted');
-            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['I', 'B', 't']);
+            assert.strictEqual(udtColumn.type.info.name, 'UDTq"uoted');
+            assert.deepEqual(udtColumn.type.info.fields.map(function (f) {return f.name;}), ['I', 'B"B', 't']);
             next();
           });
         },

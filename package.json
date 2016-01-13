@@ -1,0 +1,40 @@
+{
+  "name": "cassandra-driver-dse",
+  "version": "0.0.1",
+  "description": "Node.js Driver Extensions for DataStax Enterprise",
+  "author": "DataStax",
+  "keywords": [
+    "cassandra",
+    "cql",
+    "cql3",
+    "connection",
+    "pool",
+    "datastax",
+    "nosql",
+    "driver",
+    "database",
+    "dse"
+  ],
+  "dependencies": {
+    "cassandra-driver": "datastax/nodejs-driver#NODEJS-211"
+  },
+  "devDependencies": {
+    "mocha": ">= 1.14.0",
+    "rewire": ">= 2.1.0",
+    "mocha-jenkins-reporter": ">= 0.1.9"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/datastax/nodejs-driver-dse.git"
+  },
+  "bugs": {
+    "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
+  },
+  "scripts":  {
+    "test": "mocha test/unit -R spec -t 5000",
+    "ci": "mocha test/unit test/integration/short -R mocha-jenkins-reporter"
+  },
+  "engines": {
+    "node" : ">=0.10.0"
+   }
+}

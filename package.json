@@ -16,7 +16,8 @@
     "dse"
   ],
   "dependencies": {
-    "cassandra-driver": "datastax/nodejs-driver#NODEJS-211"
+    "cassandra-driver": "datastax/nodejs-driver#NODEJS-211",
+    "async": "^1.5.0"
   },
   "devDependencies": {
     "mocha": ">= 1.14.0",

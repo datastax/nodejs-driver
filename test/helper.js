@@ -15,25 +15,35 @@ var helper = {
   },
   /**
    * Determines if the current DSE instance version is greater than or equals to the version provided
+   * @param {String} instanceVersionStr The version of the current instance.
    * @param {String} version The version in string format, dot separated.
    * @returns {Boolean}
    */
-  isDseGreaterThan: function (version) {
-    var instanceVersion = this.getDseVersion().split('.').map(function (x) { return parseInt(x, 10);});
+  versionCompare: function (instanceVersionStr, version) {
+    var expected = [1, 0]; //greater than or equals to
+    if (version.indexOf('<=') === 0) {
+      version = version.substr(2);
+      expected = [-1, 0]; //less than or equals to
+    }
+    else if (version.indexOf('<') === 0) {
+      version = version.substr(1);
+      expected = [-1]; //less than
+    }
+    var instanceVersion = instanceVersionStr.split('.').map(function (x) { return parseInt(x, 10);});
     var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
     for (var i = 0; i < compareVersion.length; i++) {
       var compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
-        return true;
+        return expected.indexOf(1) >= 0;
       }
       else if (instanceVersion[i] < compare) {
         //is smaller
-        return false;
+        return expected.indexOf(-1) >= 0;
       }
     }
     //are equal
-    return true;
+    return expected.indexOf(0) >= 0;
   },
   queries: {
     basic: "SELECT key FROM system.local",
@@ -106,6 +116,14 @@ var helper = {
   getOptions: function (options) {
     return helper.extend({}, helper.baseOptions, options);
   },
+  getDseKerberosOptions: function () {
+    return [
+      'kerberos_options.keytab: /Users/jorge/workspace/tests/ads-jar/dse.keytab',
+      'kerberos_options.service_principal: dse/127.0.0.1@DATASTAX.COM',
+      'kerberos_options.http_principal: dse/127.0.0.1@DATASTAX.COM',
+      'kerberos_options.qop: auth'
+    ];
+  },
   ccm: {},
   ads: {}
 };
@@ -149,14 +167,14 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      if (!options.yaml) {
+      if (!options.yaml || !options.yaml.length) {
         return next();
       }
       helper.trace('With cassandra yaml options', options.yaml);
       self.exec(['updateconf'].concat(options.yaml), next);
     },
     function (next) {
-      if (!options.dseYaml) {
+      if (!options.dseYaml || !options.dseYaml.length) {
         return next();
       }
       helper.trace('With dse yaml options', options.dseYaml);
@@ -273,7 +291,7 @@ helper.ccm.getPath = function (subPath) {
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  if (helper.isDseGreaterThan(testVersion)) {
+  if (helper.versionCompare(helper.getDseVersion(), testVersion)) {
     func.apply(this, args);
   }
 }

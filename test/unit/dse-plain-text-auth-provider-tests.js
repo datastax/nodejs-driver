@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var cassandra = require('cassandra-driver');
 var DsePlainTextAuthProvider = require('../../lib/auth/dse-plain-text-auth-provider');

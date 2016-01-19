@@ -1,6 +1,8 @@
 var async = require('async');
 var util = require('util');
 var path = require('path');
+var spawn = require('child_process').spawn;
+var temp = require('temp').track(true);
 
 //noinspection JSUnusedGlobalSymbols
 var helper = {
@@ -104,7 +106,8 @@ var helper = {
   getOptions: function (options) {
     return helper.extend({}, helper.baseOptions, options);
   },
-  ccm: {}
+  ccm: {},
+  ads: {}
 };
 
 /**
@@ -185,7 +188,6 @@ helper.ccm.spawn = function (processName, params, callback) {
   }
   params = params || [];
   var originalProcessName = processName;
-  var spawn = require('child_process').spawn;
   if (process.platform.indexOf('win') === 0) {
     params = ['/c', processName].concat(params);
     processName = 'cmd.exe';
@@ -275,5 +277,178 @@ function executeIfVersion (testVersion, func, args) {
     func.apply(this, args);
   }
 }
+
+helper.ads._execute = function(processName, params, cb) {
+  var originalProcessName = processName;
+  if (process.platform.indexOf('win') === 0) {
+    params = ['/c', processName].concat(params);
+    processName = 'cmd.exe';
+  }
+  helper.trace('Executing: ' + processName + ' ' + params.join(" "));
+
+  // If process hasn't completed in 10 seconds.
+  var timeout = undefined;
+  if(cb) {
+    timeout = setTimeout(function() {
+      cb("Timed out while waiting for " + processName + " to complete.");
+    }, 10000);
+  }
+
+  var p = spawn(processName, params, {env:{KRB5_CONFIG: path.join(this.dir, 'krb5.conf')}});
+  p.stdout.setEncoding('utf8');
+  p.stderr.setEncoding('utf8');
+  p.stdout.on('data', function (data) {
+    helper.trace("%s_out> %s", originalProcessName, data);
+  });
+
+  p.stderr.on('data', function (data) {
+    helper.trace("%s_err> %s", originalProcessName, data);
+  });
+
+  p.on('close', function (code) {
+    helper.trace("%s exited with code %d", originalProcessName, code);
+    if(cb) {
+      clearTimeout(timeout);
+      if (code === 0) {
+        cb();
+      } else {
+        cb(Error("Process exited with non-zero exit code: " + code));
+      }
+    }
+  });
+
+  return p;
+};
+
+/**
+ * Starts the embedded-ads jar with ldap (port 10389) and kerberos enabled (port 10088).  Depends on ADS_JAR
+ * environment variable to resolve the absolute file path of the embedded-ads jar.
+ *
+ * @param {Function} cb Callback to invoke when server is started and listening.
+ */
+helper.ads.start = function(cb) {
+  var self = this;
+  temp.mkdir('ads', function(err, dir) {
+    if(err) {
+      cb(err);
+    }
+    self.dir = dir;
+    var jarFile = self.getJar();
+    var processName = 'java';
+    var params = ['-jar', jarFile, '-k', '--confdir', self.dir];
+    var initialized = false;
+
+    var timeout = setTimeout(function() {
+      cb(new Error("Timed out while waiting for ADS server to start."));
+    }, 10000);
+
+    self.process = self._execute(processName, params, function() {
+      if(!initialized) {
+        cb();
+      }
+    });
+    self.process.stdout.on('data', function (data) {
+      // This is a big of a kludge, check for a particular log statement which indicates
+      // that all principals have been created before invoking the completion callback.
+      if(data.indexOf('Principal Initialization Complete.') != -1) {
+        initialized = true;
+        clearTimeout(timeout);
+        cb();
+      }
+    });
+  });
+};
+
+/**
+ * Invokes a klist to list the current registered tickets and their expiration if trace is enabled.
+ *
+ * This is really only useful for debugging.
+ *
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.listTickets = function(cb) {
+  this._execute('klist', [], cb);
+};
+
+/**
+ * Acquires a ticket for the given username and its principal.
+ * @param {String} username Username to acquire ticket for (i.e. cassandra).
+ * @param {String} principal Principal to acquire ticket for (i.e. cassandra@DATASTAX.COM).
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.acquireTicket = function(username, principal, cb) {
+  var keytab = this.getKeytabPath(username);
+
+  // Use ktutil on windows, kinit otherwise.
+  var processName = 'kinit';
+  var params = ['--verbose', '-t', keytab, principal];
+  if (process.platform.indexOf('win') === 0) {
+    // Not really sure what to do here yet...
+  }
+  this._execute(processName, params, cb);
+};
+
+/**
+ * Destroys all tickets for the given principal.
+ * @param {String} principal Principal for whom its tickets will be destroyed (i.e. dse/127.0.0.1@DATASTAX.COM).
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.destroyTicket = function(principal, cb) {
+  if (typeof principal === 'function') {
+    cb = principal;
+    principal = undefined;
+  }
+
+  // Use ktutil on windows, kdestroy otherwise.
+  var processName = 'kdestroy';
+  var params = principal === undefined ? ['--all'] : ['--principal=' + principal];
+  if (process.platform.indexOf('win') === 0) {
+    // Not really sure what to do here yet...
+  }
+  this._execute(processName, params, cb);
+};
+
+/**
+ * Stops the server process.
+ * @param {Function} cb Callback to invoke when server stopped or with an error.
+ */
+helper.ads.stop = function(cb) {
+  if(this.process !== undefined) {
+    if(this.process.exitCode) {
+      helper.trace("Server already stopped with exit code %d.", this.process.exitCode);
+      cb();
+    } else {
+      this.process.on('close', function () {
+        cb();
+      });
+      this.process.on('error', cb);
+      this.process.kill('SIGINT');
+    }
+  } else {
+    cb(Error("Process is not defined."));
+  }
+};
+
+/**
+ * Gets the path of the embedded-ads jar.  Resolved from ADS_JAR environment variable or $HOME/embedded-ads.jar.
+ */
+helper.ads.getJar = function () {
+  var adsJar = process.env.ADS_JAR;
+  if (!adsJar) {
+    helper.trace("ADS_JAR environment variable not set, using $HOME/embedded-ads.jar");
+    adsJar = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
+    adsJar = path.join(adsJar, 'embedded-ads.jar');
+  }
+  helper.trace("Using %s for embedded ADS server.", adsJar);
+  return adsJar;
+};
+
+/**
+ * Returns the file path to the keytab for the given user.
+ * @param {String} username User to resolve keytab for.
+ */
+helper.ads.getKeytabPath = function(username) {
+  return path.join(this.dir, username + ".keytab");
+};
 
 module.exports = helper;

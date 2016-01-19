@@ -142,23 +142,25 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       self.exec(create, helper.wait(options.sleep, next));
     },
     function (next) {
+      var populate = ['populate', '-n', nodeLength.toString()];
+      if (options.vnodes) {
+        populate.push('--vnodes');
+      }
+      self.exec(populate, helper.wait(options.sleep, next));
+    },
+    function (next) {
       if (!options.yaml) {
         return next();
       }
+      helper.trace('With cassandra yaml options', options.yaml);
       self.exec(['updateconf'].concat(options.yaml), next);
     },
     function (next) {
       if (!options.dseYaml) {
         return next();
       }
+      helper.trace('With dse yaml options', options.dseYaml);
       self.exec(['updatedseconf'].concat(options.dseYaml), next);
-    },
-    function (next) {
-      var populate = ['populate', '-n', nodeLength.toString()];
-      if (options.vnodes) {
-        populate.push('--vnodes');
-      }
-      self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];

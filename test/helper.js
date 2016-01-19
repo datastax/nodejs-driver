@@ -113,7 +113,8 @@ var helper = {
 /**
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
- * @param {{[vnodes]: Boolean, [yaml]: Array.<String>, [jvmArgs]: Array.<String>, [ssl]: Boolean}|null} options
+ * @param {{[vnodes]: Boolean, [yaml]: Array.<String>, [jvmArgs]: Array.<String>, [ssl]: Boolean,
+ *  [dseYaml]: Array.<String>}|null} options
  * @param {Function} callback
  */
 helper.ccm.startAll = function (nodeLength, options, callback) {
@@ -144,16 +145,13 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       if (!options.yaml) {
         return next();
       }
-      var i = 0;
-      async.whilst(
-        function condition() {
-          return i < options.yaml.length
-        },
-        function iterator(whilstNext) {
-          self.exec(['updateconf', options.yaml[i++]], whilstNext);
-        },
-        next
-      );
+      self.exec(['updateconf'].concat(options.yaml), next);
+    },
+    function (next) {
+      if (!options.dseYaml) {
+        return next();
+      }
+      self.exec(['updatedseconf'].concat(options.dseYaml), next);
     },
     function (next) {
       var populate = ['populate', '-n', nodeLength.toString()];

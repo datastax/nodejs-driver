@@ -522,6 +522,20 @@ describe('encoder', function () {
       assert.strictEqual(decoded.get(0), 'one');
       assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
     });
+    it('should encode/decode tuples as Array if encoding option for tuple = Array', function () {
+      var encoder = new Encoder(3, {
+        encoding: {
+          tuple: Array
+        }
+      });
+      var type = { code: dataTypes.tuple, info: [ { code: dataTypes.text}, { code: dataTypes.timestamp }]};
+      var encoded = encoder.encode(['one', new Date(1429259123607)], type);
+      var decoded = encoder.decode(encoded, type);
+      assert(decoded instanceof Array, true);
+      assert.strictEqual(decoded.length, 2);
+      assert.strictEqual(decoded[0], 'one');
+      assert.strictEqual(decoded[1].getTime(), 1429259123607);
+    });
     it('should encode/decode LocalDate as date', function () {
       var encoder = new Encoder(4, {});
       var type = {code: dataTypes.date};

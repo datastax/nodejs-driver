@@ -116,8 +116,25 @@ var helper = {
   getOptions: function (options) {
     return helper.extend({}, helper.baseOptions, options);
   },
+  /**
+   * Connects to the cluster, makes a few queries and shutsdown the client
+   * @param {Client} client
+   * @param {Function} callback
+   */
+  connectAndQuery: function (client, callback) {
+    var self = this;
+    async.series([
+      client.connect.bind(client),
+      function doSomeQueries(next) {
+        async.timesSeries(10, function (n, timesNext) {
+          client.execute(self.queries.basic, timesNext);
+        }, next);
+      },
+      client.shutdown.bind(client)
+    ], callback);
+  },
   ccm: {},
-  ads: {},
+  ads: {}
 };
 
 /**
@@ -480,6 +497,6 @@ helper.ads.getDseKerberosOptions = function () {
     'kerberos_options.http_principal: dse/127.0.0.1@DATASTAX.COM',
     'kerberos_options.qop: auth'
   ];
-}
+};
 
 module.exports = helper;

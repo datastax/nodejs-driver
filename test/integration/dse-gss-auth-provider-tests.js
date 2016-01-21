@@ -22,14 +22,9 @@ describe('DseGssAuthProvider', function () {
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);
-      var authProvider = new DseGssAuthProvider('127.0.0.1');
-      var clientOptions = helper.getOptions({authProvider: authProvider});
-      var client = new cassandra.Client(clientOptions);
-      client.connect(function (err) {
-        assert.ifError(err);
-        assert.notEqual(client.hosts.length, 0);
-        client.shutdown(done);
-      });
+      var authProvider = new DseGssAuthProvider();
+      var clientOptions = helper.getOptions({ authProvider: authProvider });
+      helper.connectAndQuery(new cassandra.Client(clientOptions), done);
     });
   });
 });

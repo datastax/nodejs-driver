@@ -21,7 +21,7 @@ describe('GssAuthenticator', function () {
       var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', dseAuthenticatorName);
       var initCalled = 0;
       authenticator.client = {
-        init: function (cb) {
+        init: function (h, cb) {
           initCalled++;
           cb();
         }
@@ -39,7 +39,7 @@ describe('GssAuthenticator', function () {
       var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', 'DSE4');
       var evaluateChallengeCalled = 0;
       authenticator.client = {
-        init: function (cb) {
+        init: function (h, cb) {
           cb();
         }
       };
@@ -56,6 +56,21 @@ describe('GssAuthenticator', function () {
     });
   });
   describe('#evaluateChallenge()', function () {
-    it('should call client.evaluateChallenge()');
+    it('should call client.evaluateChallenge()', function (done) {
+      var authProvider = new DseGssAuthProvider();
+      var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', dseAuthenticatorName);
+      var evaluateChallengeCalled = 0;
+      authenticator.client = {
+        evaluateChallenge: function (c, cb) {
+          evaluateChallengeCalled++;
+          cb();
+        }
+      };
+      authenticator.evaluateChallenge(new Buffer(1), function (err) {
+        assert.ifError(err);
+        assert.strictEqual(evaluateChallengeCalled, 1);
+        done();
+      });
+    });
   });
 });

@@ -3,14 +3,22 @@ var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseGssAuthProvider = require('../../lib/auth/dse-gss-auth-provider');
 var vit = helper.vit;
+var ads = helper.ads;
 
 describe('DseGssAuthProvider', function () {
   this.timeout(60000);
+  before(function (done) {
+    ads.start(function(err) {
+      assert.ifError(err);
+      ads.acquireTicket('cassandra', 'cassandra@DATASTAX.COM', done);
+    });
+  });
+  after(ads.stop.bind(ads));
   vit('<5.0', 'should authenticate against DSE v4.x instance', function (done) {
     var testClusterOptions = {
       yaml: ['authenticator: com.datastax.bdp.cassandra.auth.KerberosAuthenticator'],
-      dseYaml: helper.getDseKerberosOptions(),
-      jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0', '-Djava.security.krb5.conf=/Users/jorge/workspace/tests/ads-jar/d/krb5.conf']
+      dseYaml: ads.getDseKerberosOptions(),
+      jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0', '-Djava.security.krb5.conf=' + ads.getKrb5ConfigPath()]
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);

@@ -1,6 +1,7 @@
 var async = require('async');
 var util = require('util');
 var path = require('path');
+var assert = require('assert');
 var spawn = require('child_process').spawn;
 var temp = require('temp').track(true);
 
@@ -48,6 +49,24 @@ var helper = {
   queries: {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
+  },
+  assertInstanceOf: function (instance, constructor) {
+    assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
+    assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
+  },
+  /**
+   * @param {ResultSet} result
+   */
+  keyedById: function (result) {
+    var map = {};
+    var columnKeys = result.columns.map(function (c) { return c.name;});
+    if (columnKeys.indexOf('id') < 0 || columnKeys.indexOf('value') < 0) {
+      throw new Error('ResultSet must contain the columns id and value');
+    }
+    result.rows.forEach(function (row) {
+      map[row['id']] = row['value'];
+    });
+    return map;
   },
   /**
    * Version dependent it() method for mocha test case

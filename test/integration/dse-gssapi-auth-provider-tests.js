@@ -1,11 +1,11 @@
 var assert = require('assert');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
-var DseGssAuthProvider = require('../../lib/auth/dse-gss-auth-provider');
+var DseGssAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
 var vit = helper.vit;
 var ads = helper.ads;
 
-describe('DseGssAuthProvider', function () {
+describe('DseGssapiAuthProvider', function () {
   this.timeout(60000);
   before(function (done) {
     ads.start(function(err) {

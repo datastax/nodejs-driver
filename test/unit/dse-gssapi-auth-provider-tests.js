@@ -1,23 +1,23 @@
 'use strict';
 var assert = require('assert');
-var DseGssAuthProvider = require('../../lib/auth/dse-gss-auth-provider');
+var DseGssapiAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
 
 var dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
 
-describe('DseGssAuthProvider', function () {
+describe('DseGssapiAuthProvider', function () {
   describe('constructor', function () {
     it('should load optional kerberos module', function () {
-      var authProvider = new DseGssAuthProvider();
+      var authProvider = new DseGssapiAuthProvider();
       assert.ok(authProvider._kerberos);
     });
   });
   describe('#newAuthenticator()', function () {
   });
 });
-describe('GssAuthenticator', function () {
+describe('GssapiAuthenticator', function () {
   describe('#initialResponse()', function () {
     it('should send mechanism and call client.init()', function (done) {
-      var authProvider = new DseGssAuthProvider();
+      var authProvider = new DseGssapiAuthProvider();
       var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', dseAuthenticatorName);
       var initCalled = 0;
       authenticator.client = {
@@ -35,7 +35,7 @@ describe('GssAuthenticator', function () {
       });
     });
     it('should call evaluateChallenge() when DSE lower than v5', function (done) {
-      var authProvider = new DseGssAuthProvider();
+      var authProvider = new DseGssapiAuthProvider();
       var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', 'DSE4');
       var evaluateChallengeCalled = 0;
       authenticator.client = {
@@ -57,7 +57,7 @@ describe('GssAuthenticator', function () {
   });
   describe('#evaluateChallenge()', function () {
     it('should call client.evaluateChallenge()', function (done) {
-      var authProvider = new DseGssAuthProvider();
+      var authProvider = new DseGssapiAuthProvider();
       var authenticator = authProvider.newAuthenticator('127.0.0.1:1001', dseAuthenticatorName);
       var evaluateChallengeCalled = 0;
       authenticator.client = {

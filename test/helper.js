@@ -47,8 +47,7 @@ var helper = {
     return expected.indexOf(0) >= 0;
   },
   queries: {
-    basic: "SELECT key FROM system.local",
-    basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
+    basic: 'SELECT key FROM system.local'
   },
   assertInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
@@ -68,6 +67,8 @@ var helper = {
     });
     return map;
   },
+  noop: function () {},
+  throwOp: function (err) { if (err) throw err;},
   /**
    * Version dependent it() method for mocha test case
    * @param {String} testVersion Minimum version of Cassandra needed for this test

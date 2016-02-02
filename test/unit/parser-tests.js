@@ -4,6 +4,7 @@ var async = require('async');
 
 var Encoder = require('../../lib/encoder');
 var streams = require('../../lib/streams');
+var errors = require('../../lib/errors');
 var types = require('../../lib/types');
 var helper = require('../test-helper');
 
@@ -22,7 +23,7 @@ describe('Parser', function () {
       });
       parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: new Buffer([])}, null, doneIfError(done));
     });
-    it('should read a AUTHENTICATE opcode', function (done) {
+    it('should read a AUTHENTICATE response', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
@@ -30,7 +31,22 @@ describe('Parser', function () {
         assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
         done();
       });
-      parser._transform({header: getFrameHeader(0, types.opcodes.authenticate), chunk: new Buffer([])}, null, doneIfError(done));
+      parser._transform({ header: getFrameHeader(2, types.opcodes.authenticate), chunk: new Buffer([0, 0])}, null, doneIfError(done));
+    });
+    it('should buffer a AUTHENTICATE response until complete', function (done) {
+      var parser = newInstance();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
+        assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
+        assert.strictEqual(item.authenticatorName, 'abc');
+        //mocha will fail if done is called multiple times
+        done();
+      });
+      var header = getFrameHeader(5, types.opcodes.authenticate);
+      parser._transform({ header: header, chunk: new Buffer([0, 3])}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('a')}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('bc')}, null, doneIfError(done));
     });
     it('should read a VOID result', function (done) {
       var parser = newInstance();
@@ -359,6 +375,46 @@ describe('Parser', function () {
         chunk: new Buffer([100, 100])
       }, null, doneIfError(done));
     });
+    it('should buffer ERROR response until complete', function (done) {
+      var parser = newInstance();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.error);
+        helper.assertInstanceOf(item.error, errors.ResponseError);
+        assert.strictEqual(item.error.message, 'ERR');
+        //mocha will fail if done is called multiple times
+        assert.strictEqual(parser.read(), null);
+        done();
+      });
+      //streamId 33
+      var header = new types.FrameHeader(4, 0, 33, types.opcodes.error, 9);
+      parser.setOptions(33, { byRow: true });
+      assert.strictEqual(parser.frameState({ header: header}).byRow, true);
+      parser._transform({ header: header, chunk: new Buffer([0, 0, 0, 0])}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer([0, 3])}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('ERR')}, null, doneIfError(done));
+    });
+    it('should not buffer RESULT ROWS response when byRow is enabled', function (done) {
+      var parser = newInstance();
+      var rowLength = 2;
+      var rowCounter = 0;
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.ok(item.row);
+        rowCounter++;
+      });
+      //12 is the stream id used by the header helper by default
+      parser.setOptions(12, { byRow: true });
+      //3 columns, 2 rows
+      parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
+      parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
+      parser._transform(getBodyChunks(3, rowLength, 32, 55), null, doneIfError(done));
+      assert.strictEqual(rowCounter, 1);
+      parser._transform(getBodyChunks(3, rowLength, 55, null), null, doneIfError(done));
+      assert.strictEqual(rowCounter, 2);
+      done();
+    });
   });
 });
 
@@ -374,7 +430,7 @@ function newInstance(protocolVersion) {
 }
 
 /**
- * Test Helper method to get a frame header
+ * Test Helper method to get a frame header with stream id 12
  * @returns {exports.FrameHeader}
  */
 function getFrameHeader(bodyLength, opcode, version, trace) {

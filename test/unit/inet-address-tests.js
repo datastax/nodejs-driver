@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
@@ -11,19 +12,19 @@ describe('InetAddress', function () {
     it('should validate the Buffer length', function () {
       assert.throws(function () {
         new InetAddress(new Buffer(10));
-      });
+      }, TypeError);
       assert.throws(function () {
         new InetAddress(null);
-      });
+      }, TypeError);
       assert.throws(function () {
         new InetAddress();
-      });
+      }, TypeError);
       assert.doesNotThrow(function () {
         new InetAddress(new Buffer(16));
-      });
+      }, TypeError);
       assert.doesNotThrow(function () {
         new InetAddress(new Buffer(4));
-      });
+      }, TypeError);
     });
   });
   describe('#toString()', function () {
@@ -93,10 +94,25 @@ describe('InetAddress', function () {
       helper.assertInstanceOf(val, InetAddress);
       assert.strictEqual(val.toString(), '10.11.12.13');
     });
-    it('should throw when can not parse to 4 or 16 bytes', function () {
+    it('should throw TypeError when the string is not a valid address', function () {
       assert.throws(function () {
         InetAddress.fromString('127.0.0.1.10');
-      }, Error);
+      }, TypeError);
+      assert.throws(function () {
+        InetAddress.fromString('127.0.');
+      }, TypeError);
+      assert.throws(function () {
+        InetAddress.fromString(' 127.10.0.1');
+      }, TypeError);
+      assert.throws(function () {
+        InetAddress.fromString('z');
+      }, TypeError);
+      assert.throws(function () {
+        InetAddress.fromString('::Z:11:2233:4455:aa:bb');
+      }, TypeError);
+      assert.throws(function () {
+        InetAddress.fromString(' ::a:11');
+      }, TypeError);
     });
   });
 });

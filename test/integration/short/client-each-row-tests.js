@@ -222,6 +222,48 @@ describe('Client', function () {
           });
         }], done);
     });
+    it('should allow maps with float values NaN and infinite values', function (done) {
+      var client = newInstance({ keyspace: keyspace});
+      var values = [
+        [ 'finite', { val: 1 }],
+        [ 'NaN', { val: NaN }],
+        [ 'Infinite', { val: Number.POSITIVE_INFINITY }],
+        [ 'Negative Infinite', { val: Number.NEGATIVE_INFINITY }]
+      ];
+      var queryOptions = { prepare: true, consistency: types.consistencies.quorum };
+      var expectedValues = {};
+      async.series([
+        client.connect.bind(client),
+        function createTable(next) {
+          var query = 'CREATE TABLE tbl_map_floats (id text PRIMARY KEY, data map<text, float>)';
+          client.execute(query, next);
+        },
+        function insertData(next) {
+          var query = 'INSERT INTO tbl_map_floats (id, data) VALUES (?, ?)';
+          async.eachSeries(values, function (params, eachNext) {
+            expectedValues[params[0]] = params[1].val;
+            client.execute(query, params, queryOptions, eachNext);
+          }, next);
+        },
+        function retrieveData(next) {
+          client.eachRow('SELECT * FROM tbl_map_floats', [], queryOptions, function (n, row) {
+            var expected = expectedValues[row['id']];
+            if (isNaN(expected)) {
+              assert.ok(isNaN(row['data'].val));
+            }
+            else {
+              assert.strictEqual(row['data'].val, expected)
+            }
+          }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.rowLength, values.length);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     vit('2.0', 'should autoPage on parallel different tables', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');

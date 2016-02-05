@@ -214,14 +214,17 @@ describe('Client', function () {
       var client = newInstance();
       client.execute(util.format('CREATE INDEX list_sample_index ON %s(list_sample)', table), function (err) {
         assert.ifError(err);
-        var query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
-        //valid params
-        var params = ['val1', 'val2'];
-        client.execute(query, params, function (err) {
-          //it should not fail
-          assert.ifError(err);
-          done();
-        });
+        // Allow 1 second for index to build (otherwise an IndexNotAvailableException may be raised while index is building).
+        setTimeout(function() {
+          var query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
+          //valid params
+          var params = ['val1', 'val2'];
+          client.execute(query, params, function (err) {
+            //it should not fail
+            assert.ifError(err);
+            done();
+          });
+        }, 1000);
       });
     });
     it('should accept localOne and localQuorum consistencies', function (done) {

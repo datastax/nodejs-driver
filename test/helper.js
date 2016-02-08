@@ -274,7 +274,7 @@ helper.ccm.waitForUp = function (callback) {
   var retryCount = 0;
   var self = this;
   async.whilst(function () {
-    return !started && retryCount < 10;
+    return !started && retryCount < 60;
   }, function iterator (next) {
     self.exec(['node1', 'showlog'], function (err, info) {
       if (err) return next(err);

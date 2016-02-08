@@ -141,7 +141,7 @@ var helper = {
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
  * @param {{[vnodes]: Boolean, [yaml]: Array.<String>, [jvmArgs]: Array.<String>, [ssl]: Boolean,
- *  [dseYaml]: Array.<String>}|null} options
+ *  [dseYaml]: Array.<String>, [workloads]: Array.<String>}|null} options
  * @param {Function} callback
  */
 helper.ccm.startAll = function (nodeLength, options, callback) {
@@ -188,6 +188,15 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       }
       helper.trace('With dse yaml options', options.dseYaml);
       self.exec(['updatedseconf'].concat(options.dseYaml), next);
+    },
+    function (next) {
+      if (!options.workloads || !options.workloads.length) {
+        return next();
+      }
+      helper.trace('With workloads', options.workloads);
+      for(var i=1; i <= nodeLength; i++) {
+        self.exec(['node'+i, 'setworkload'].concat(options.workloads), next);
+      }
     },
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];
@@ -410,7 +419,7 @@ helper.ads.acquireTicket = function(username, principal, cb) {
 
   // Use ktutil on windows, kinit otherwise.
   var processName = 'kinit';
-  var params = ['--verbose', '-t', keytab, principal];
+  var params = ['-t', keytab, '-k', principal];
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
@@ -430,7 +439,7 @@ helper.ads.destroyTicket = function(principal, cb) {
 
   // Use ktutil on windows, kdestroy otherwise.
   var processName = 'kdestroy';
-  var params = principal === undefined ? ['--all'] : ['--principal=' + principal];
+  var params = [];
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
@@ -493,8 +502,8 @@ helper.ads.getKrb5ConfigPath = function() {
 helper.ads.getDseKerberosOptions = function () {
   return [
     'kerberos_options.keytab: ' + this.getKeytabPath('dse'),
-    'kerberos_options.service_principal: dse/127.0.0.1@DATASTAX.COM',
-    'kerberos_options.http_principal: dse/127.0.0.1@DATASTAX.COM',
+    'kerberos_options.service_principal: dse/_HOST@DATASTAX.COM',
+    'kerberos_options.http_principal: dse/_HOST@DATASTAX.COM',
     'kerberos_options.qop: auth'
   ];
 };

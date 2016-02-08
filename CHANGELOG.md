@@ -1,5 +1,17 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.0.1
+
+2016-02-08
+
+### Features
+
+- [NODEJS-211] - Pass the authenticator name from the server to the auth provider
+
+### Bug Fixes
+
+- [NODEJS-216] - Inet with alpha character is converting the character to 0
+
 ## 3.0.0
 
 2015-12-14

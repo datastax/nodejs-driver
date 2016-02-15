@@ -177,7 +177,13 @@ vdescribe('5.0', 'LineString', function () {
           client.shutdown.bind(client)
         ], done);
       });
-      it(util.format('should create and retrieve lines in a tuple for %s queries', name), function (done) {
+      var tupleTestCase = it;
+      if (prepare === 0) {
+        //tuples are not supported in simple statements in the core driver
+        //mark it as pending
+        tupleTestCase = xit;
+      }
+      tupleTestCase(util.format('should create and retrieve lines in a tuple for %s queries', name), function (done) {
         var client = new cassandra.Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
         var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
@@ -187,7 +193,7 @@ vdescribe('5.0', 'LineString', function () {
         async.series([
           client.connect.bind(client),
           function (next) {
-            client.execute(insertQuery, [id, tuple], {prepare: prepare, hints: [null, "tuple<int,'LineStringType'>"]}, function (err) {
+            client.execute(insertQuery, [id, tuple], {prepare: prepare}, function (err) {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);

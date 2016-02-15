@@ -10,7 +10,7 @@ describe('LineString', function () {
   describe('constructor', function () {
     it('should validate points provided', function () {
       assert.doesNotThrow(function () {
-        new LineString(new Point(1, 2.312));
+        new LineString(new Point(1, 2.312), new Point(2, 5.3));
       });
       assert.doesNotThrow(function () {
         //empty line strings are valid
@@ -19,7 +19,7 @@ describe('LineString', function () {
     });
     it('should set #points property', function () {
       [
-        [new Point(1, 3)],
+        [new Point(1, 3), new Point(3, 1)],
         [new Point(0, 1), new Point(3, 4)]
       ]
         .forEach(function (points) {
@@ -33,8 +33,8 @@ describe('LineString', function () {
       [
         [ '000000000200000002000000000000000000000000000000003ff0000000000000bff3333333333333',
           [ new Point(0, 0), new Point(1, -1.2)]],
-        [ '000000000200000001c08f4000000000004161249b3ff7ced9',
-          [ new Point(-1000, 8987865.999)]],
+        [ '000000000200000002c08f4000000000004161249b3ff7ced9401c000000000000c029b6c8b4395810',
+          [ new Point(-1000, 8987865.999), new Point(7, -12.857)]],
         [ '0102000000030000000000000000908440b5f171b7353f2040000000000000f03f0000000000000840000000000000f0bf0000000000c05b40',
           [ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111)]]
       ]
@@ -54,10 +54,10 @@ describe('LineString', function () {
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '000000000200000002000000000000000000000000000000003ff0000000000000bff3333333333333'],
-        [ [ new Point(-1000, 8987865.999)],
-          '000000000200000001c08f4000000000004161249b3ff7ced9'],
-        [ [ new Point(-123, -1)],
-          '000000000200000001c05ec00000000000bff0000000000000'],
+        [ [ new Point(-1000, 8987865.999), new Point(7, -12.857)],
+          '000000000200000002c08f4000000000004161249b3ff7ced9401c000000000000c029b6c8b4395810'],
+        [ [ new Point(-123, -1), new Point(72.0555, -42)],
+          '000000000200000002c05ec00000000000bff00000000000004052038d4fdf3b64c045000000000000'],
         [ [ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111)],
           '000000000200000003408490000000000040203f35b771f1b53ff00000000000004008000000000000bff0000000000000405bc00000000000']
       ]
@@ -74,10 +74,10 @@ describe('LineString', function () {
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '01020000000200000000000000000000000000000000000000000000000000f03f333333333333f3bf'],
-        [ [ new Point(-1000, 8987865.999)],
-          '0102000000010000000000000000408fc0d9cef73f9b246141'],
-        [ [ new Point(-123, -1)],
-          '0102000000010000000000000000c05ec0000000000000f0bf'],
+        [ [ new Point(-1000, 8987865.999), new Point(7, -12.857)],
+          '0102000000020000000000000000408fc0d9cef73f9b2461410000000000001c40105839b4c8b629c0'],
+        [ [ new Point(-123, -1), new Point(72.0555, -42)],
+          '0102000000020000000000000000c05ec0000000000000f0bf643bdf4f8d03524000000000000045c0'],
         [ [ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111)],
           '0102000000030000000000000000908440b5f171b7353f2040000000000000f03f0000000000000840000000000000f0bf0000000000c05b40']
       ]
@@ -92,7 +92,7 @@ describe('LineString', function () {
   describe('#toString()', function () {
     it('should return WKT of the object', function () {
       [
-        [[ new Point(-123, -1)], 'LINESTRING (-123 -1)'],
+        [[ new Point(-123, -1), new Point(72.0555, 42)], 'LINESTRING (-123 -1, 72.0555 42)'],
         [[ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111) ], 'LINESTRING (658 8.1234567, 1 3, -1 111)']
       ]
         .forEach(function (item) {

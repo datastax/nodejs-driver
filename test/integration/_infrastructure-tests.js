@@ -3,7 +3,7 @@ var async = require('async');
 var helper = require('../helper');
 
 describe('Test infrastructure', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   it('should be able to run ccm', function (done) {
     helper.ccm.exec(['list'], done);
   });

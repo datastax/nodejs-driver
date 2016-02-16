@@ -26,7 +26,8 @@ describe('DsePlainTextAuthProvider', function () {
   vit('5.0', 'should authenticate against DSE 5+ DseAuthenticator', function (done) {
     var testClusterOptions = {
       yaml: ['authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator'],
-      jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0']
+      jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],
+      dseYaml: ['authentication_options.default_scheme: internal']
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);

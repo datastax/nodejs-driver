@@ -2,8 +2,8 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../helper');
-var Point = require('../../lib/types/point');
-var moduleName = '../../lib/types/polygon';
+var Point = require('../../lib/geometry/point');
+var moduleName = '../../lib/geometry/polygon';
 var Polygon = require(moduleName);
 
 describe('Polygon', function () {

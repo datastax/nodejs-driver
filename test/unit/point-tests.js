@@ -2,7 +2,7 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../helper');
-var moduleName = '../../lib/types/point';
+var moduleName = '../../lib/geometry/point';
 var Point = require(moduleName);
 
 describe('Point', function () {

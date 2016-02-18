@@ -2,8 +2,8 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../helper');
-var Point = require('../../lib/types/point');
-var moduleName = '../../lib/types/line-string';
+var Point = require('../../lib/geometry/point');
+var moduleName = '../../lib/geometry/line-string';
 var LineString = require(moduleName);
 
 describe('LineString', function () {

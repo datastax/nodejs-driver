@@ -4,19 +4,18 @@ var util = require('util');
 var async = require('async');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
+var DseClient = require('../../lib/dse-client');
 var vdescribe = helper.vdescribe;
-var encoderExtensions = require('../../lib/encoder-extensions');
-var Point = require('../../lib/types/point');
-var LineString = require('../../lib/types/line-string');
+var Point = require('../../lib/geometry/point');
+var LineString = require('../../lib/geometry/line-string');
 var types = cassandra.types;
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
-encoderExtensions.register(cassandra.Encoder);
 
 vdescribe('5.0', 'LineString', function () {
   this.timeout(120000);
   before(function (done) {
-    var client = new cassandra.Client(helper.getOptions());
+    var client = new DseClient(helper.getOptions());
     async.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
@@ -42,7 +41,7 @@ vdescribe('5.0', 'LineString', function () {
     ], done);
   });
   it('should parse lines', function (done) {
-    var client = new cassandra.Client(helper.getOptions());
+    var client = new DseClient(helper.getOptions());
     async.series([
       client.connect.bind(client),
       function test(next) {
@@ -75,7 +74,7 @@ vdescribe('5.0', 'LineString', function () {
   [0, 1].forEach(function (prepare) {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode lines for %s queries', name), function (done) {
-      var client = new cassandra.Client(helper.getOptions());
+      var client = new DseClient(helper.getOptions());
       async.series([
         client.connect.bind(client),
         function test(next) {
@@ -109,7 +108,7 @@ vdescribe('5.0', 'LineString', function () {
       ], done);
     });
     it(util.format('should be able to retrieve data where line is partition key for %s queries', name), function (done) {
-      var client = new cassandra.Client(helper.getOptions());
+      var client = new DseClient(helper.getOptions());
       var id = new LineString(new Point(0, 0), new Point(1, 1));
       async.series([
         client.connect.bind(client),
@@ -131,7 +130,7 @@ vdescribe('5.0', 'LineString', function () {
     var line = new LineString(new Point(0, 0), new Point(1, 1));
     var line2 = new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9));
     before(function (done) {
-      var client = new cassandra.Client(helper.getOptions());
+      var client = new DseClient(helper.getOptions());
       async.series([
         client.connect.bind(client),
         function createAll(next) {
@@ -154,7 +153,7 @@ vdescribe('5.0', 'LineString', function () {
     [0, 1].forEach(function (prepare) {
       var name = prepare ? 'prepared' : 'simple';
       it(util.format('should create and retrieve lines in a udt for %s queries', name), function (done) {
-        var client = new cassandra.Client(helper.getOptions());
+        var client = new DseClient(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
         var selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
         var id = Uuid.random();
@@ -184,7 +183,7 @@ vdescribe('5.0', 'LineString', function () {
         tupleTestCase = xit;
       }
       tupleTestCase(util.format('should create and retrieve lines in a tuple for %s queries', name), function (done) {
-        var client = new cassandra.Client(helper.getOptions());
+        var client = new DseClient(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
         var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
         var id = Uuid.random();
@@ -209,7 +208,7 @@ vdescribe('5.0', 'LineString', function () {
       });
       ['list', 'set'].forEach(function (colType) {
         it(util.format('should create and retrieve lines in a %s for %s queries', colType, name), function (done) {
-          var client = new cassandra.Client(helper.getOptions());
+          var client = new DseClient(helper.getOptions());
           var insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
@@ -233,7 +232,7 @@ vdescribe('5.0', 'LineString', function () {
         });
       });
       it(util.format('should create and retrieve lines in a map for %s queries', name), function (done) {
-        var client = new cassandra.Client(helper.getOptions());
+        var client = new DseClient(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
         var selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
         var id = Uuid.random();

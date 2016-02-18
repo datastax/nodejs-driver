@@ -6,10 +6,10 @@ var DseClient = require('../../lib/dse-client');
 var helper = require('../helper');
 var vdescribe = helper.vdescribe;
 var schemaCounter = 0;
-var Point = require('../../lib/types/point');
-var LineString = require('../../lib/types/line-string');
-var Circle = require('../../lib/types/circle');
-var Polygon = require('../../lib/types/polygon');
+var Point = require('../../lib/geometry/point');
+var LineString = require('../../lib/geometry/line-string');
+var Circle = require('../../lib/geometry/circle');
+var Polygon = require('../../lib/geometry/polygon');
 var InetAddress = require('cassandra-driver').types.InetAddress;
 var Uuid = require('cassandra-driver').types.Uuid;
 
@@ -153,7 +153,7 @@ vdescribe('5.0', 'DseClient', function () {
             "select('a','b', 'c')." +
             "by('name')." +
             "by('lang')." +
-            "by(__.in('created').fold())"
+            "by(__.in('created').fold())";
         client.executeGraph(query, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
@@ -487,7 +487,7 @@ vdescribe('5.0', 'DseClient', function () {
               validateVertex(user, vertex);
               next(err, vertex);
             })
-          }, function (err, vertices) {
+          }, function (err) {
             assert.ifError(err);
             next();
           });

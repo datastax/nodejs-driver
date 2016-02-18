@@ -30,13 +30,22 @@ npm link dse-driver
 [CQL driver manual][core-manual]) can also be used with `DseClient`.
 
 ```javascript
-const dse = require('cassandra-driver-dse');
+const dse = require('dse-driver');
 const client = new dse.DseClient({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
 const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   assert.ifError(err);
   console.log('got user profile with email ' + result.rows[0].email);
 });
+```
+
+Additionally, the dse module exports the submodules from the CQL driver, so you just need to import one module to access
+all DSE and Cassandra types.
+
+For example:
+```javascript
+const dse = require('dse-driver');
+const Uuid = dse.types.Uuid;
 ```
 
 ## Authentication
@@ -49,7 +58,7 @@ For clients connecting to a DSE cluster secured with `DseAuthenticator`, two aut
 To configure a provider, pass it when initializing a cluster:
 
 ```javascript
-const dse = require('cassandra-driver-dse');
+const dse = require('dse-driver');
 const client = new dse.DseClient({
   contactPoints: ['h1', 'h2'], 
   keyspace: 'ks1',
@@ -74,7 +83,7 @@ The DSE driver includes encoders and representations of these types in the `geom
 as parameters in queries:
 
 ```javascript
-const dse = require('cassandra-driver-dse');
+const dse = require('dse-driver');
 const Point = dse.geometry.Point;
 const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
 const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
@@ -113,7 +122,7 @@ You can set default graph options when initializing `DseClient` which will be us
 example, to avoid needing to provide a `graphName` option in each `executeGraph` call:
 
 ```javascript
-const dse = require('cassandra-driver-dse');
+const dse = require('dse-driver');
 const client = new dse.DseClient({
   contactPoints: ['h1', 'h2'],
   graphOptions: { name: 'demo' }

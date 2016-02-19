@@ -1,0 +1,15 @@
+{
+  "source": {
+    "include": [
+      "lib/auth",
+      "lib/geometry",
+      "lib/graph",
+      "lib/dse-client.js"
+    ]
+  },
+  "templates": {
+    "default": {
+      "outputSourceFiles": false
+    }
+  }
+}

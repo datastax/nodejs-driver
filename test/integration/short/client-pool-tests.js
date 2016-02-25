@@ -227,32 +227,8 @@ describe('Client', function () {
     });
   });
   describe('#connect() with auth', function () {
-    before(function (done) {
-      utils.series([
-        function (next) {
-          //it wont hurt to remove
-          helper.ccmHelper.exec(['remove'], function () {
-            //ignore error
-            next();
-          });
-        },
-        function (next) {
-          helper.ccmHelper.exec(['create', 'test', '-v', helper.getCassandraVersion()], next);
-        },
-        function (next) {
-          helper.ccmHelper.exec(['updateconf', "authenticator: PasswordAuthenticator"], next);
-        },
-        function (next) {
-          helper.ccmHelper.exec(['populate', '-n', '2'], next);
-        },
-        function (next) {
-          helper.ccmHelper.exec(['start'], function () {
-            //It takes a while for Cassandra to create the default user account
-            setTimeout(function () {next();}, 25000);
-          });
-        }
-      ], done)
-    });
+    before(helper.ccmHelper.start(2, { yaml: ['authenticator:PasswordAuthenticator'],
+      jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'], sleep: 5000 }));
     after(helper.ccmHelper.remove);
     var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
     it('should connect using the plain text authenticator', function (done) {

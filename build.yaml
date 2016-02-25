@@ -1,8 +1,8 @@
 nodejs:
   - "0.10"
   - "0.12"
-  - "iojs-3"
-  - "4.0"
+  - "4.3"
+  - "5.6"
 os:
   - ubuntu/trusty64
 cassandra:
@@ -19,6 +19,7 @@ build:
       CCM_PATH=$HOME/ccm
       JUNIT_REPORT_STACK=1
       JUNIT_REPORT_PATH=.
+      multi=mocha-jenkins-reporter=-
   - npm: install
   - npm: run-script ci
     graceful: true

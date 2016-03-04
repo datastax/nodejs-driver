@@ -188,7 +188,7 @@ client.executeGraph('g.E()', function (err, result) {
 // Using ES6 for...of
 client.executeGraph('g.E()', function (err, result) {
   assert.ifError(err);
-  for (let value of result) {
+  for (let edge of result) {
     console.log(edge.label); // created
     // ...
   });

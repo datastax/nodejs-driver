@@ -14,11 +14,15 @@ DseAuthenticator
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.DseClient({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
-const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
+const client = new dse.DseClient({
+  contactPoints: ['h1', 'h2'],
+  keyspace: 'ks1',
+  graphOptions: { name: 'graph1' }
+});
+const query = 'SELECT email, last_name FROM users WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   assert.ifError(err);
-  console.log('got user profile with email ' + result.rows[0].email);
+  console.log('User email ' + result.rows[0].email);
 });
 ```
 
@@ -27,10 +31,21 @@ all DSE and Cassandra types.
 
 For example:
 ```javascript
-const dse = require('dse-driver');
 const Uuid = dse.types.Uuid;
+let id = Uuid.random();
 ```
 
+### Graph
+
+[`DseClient` includes a `executeGraph() method`](DseClient.html#executeGraph) to execute graph queries:
+
+```javascript
+client.executeGraph('g.V()', function (err, result) {
+  assert.ifError(err);
+  const vertex = result.first();
+  console.log(vertex.label);
+});
+```
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
 [core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/common/drivers/introduction/introArchOverview.html

@@ -65,6 +65,7 @@ describe('client read timeouts', function () {
         client.shutdown.bind(client)
       ], done);
     });
+    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 0, { readTimeout: 3000 }));
   });
   describe('when socketOptions.readTimeout is set', function () {
     it('should move to next host by default for simple queries', getMoveNextHostTest(false, false));
@@ -229,6 +230,12 @@ describe('client read timeouts', function () {
       ], done);
     });
   });
+  describe('when queryOptions.readTimeout is set', function () {
+    it('should be used instead of socketOptions.readTimeout for simple queries',
+      getMoveNextHostTest(false, false, 1 << 24, { readTimeout: 3000 }));
+    it('should be used instead of socketOptions.readTimeout for prepared queries executions',
+      getMoveNextHostTest(true, true, 1 << 24, { readTimeout: 3000 }));
+  });
 });
 
 /** @returns {Client}  */
@@ -236,9 +243,24 @@ function newInstance(options) {
   return new Client(utils.extend({}, helper.baseOptions, options));
 }
 
-function getMoveNextHostTest(prepare, prepareWarmup) {
-  return (function (done) {
-    var client = newInstance({ socketOptions: { readTimeout: 3000 } });
+/**
+ * @param {Boolean} prepare
+ * @param {Boolean} prepareWarmup
+ * @param {Number} [readTimeout]
+ * @param {{readTimeout: number}} [queryOptions]
+ * @returns {Function}
+ */
+function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) {
+  if (typeof readTimeout === 'undefined') {
+    readTimeout = 3000;
+  }
+  var testAbortTimeout = readTimeout;
+  if (queryOptions && queryOptions.readTimeout) {
+    testAbortTimeout = queryOptions.readTimeout;
+  }
+  testAbortTimeout *= 4;
+  return (function moveNextHostTest(done) {
+    var client = newInstance({ socketOptions: { readTimeout: readTimeout } });
     var coordinators = {};
     async.series([
       client.connect.bind(client),
@@ -257,13 +279,18 @@ function getMoveNextHostTest(prepare, prepareWarmup) {
         assert.strictEqual(coordinators['1'], true);
         assert.strictEqual(coordinators['2'], true);
         coordinators = {};
+        var testTimeout = setTimeout(function () {
+          throw new Error('It should have been executed in the next (not paused) host.');
+        }, testAbortTimeout);
         async.times(10, function (n, timesNext) {
-          client.execute('SELECT key FROM system.local', [], { prepare: prepare }, function (err, result) {
+          queryOptions = utils.extend({ }, queryOptions, { prepare: prepare});
+          client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
             if (err) return timesNext(err);
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
             timesNext();
           });
-        }, function (err) {
+        }, function timeFinished(err) {
+          clearTimeout(testTimeout);
           if (err) return next(err);
           assert.strictEqual(Object.keys(coordinators).length, 1);
           assert.strictEqual(coordinators['1'], true);

@@ -175,24 +175,6 @@ describe('TimeUuid', function () {
       //next should collide
       assert.strictEqual(values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()], true);
     });
-    it('should result in increasing time values if date changes every two steps', function () {
-      var timeUuidBefore = TimeUuid.fromDate(new Date(0), null, 'host01', 'AA');
-      var length = 10000;
-
-      for (var i = 1; i <= length; i++) {
-        var date = new Date(Math.ceil(i/2));
-        var timeUuid = TimeUuid.fromDate(date, null, 'host01', 'AA');
-
-        var datePrecision = timeUuid.getDatePrecision();
-        var datePrecisionBefore = timeUuidBefore.getDatePrecision();
-
-        assert.ok(datePrecisionBefore.date < datePrecision.date ||
-            (datePrecisionBefore.date.getTime() === datePrecision.date.getTime() &&
-            datePrecisionBefore.ticks < datePrecision.ticks));
-
-        timeUuidBefore = timeUuid;
-      }
-    });
   });
   describe('fromString()', function () {
     it('should parse the string representation', function () {
@@ -214,6 +196,14 @@ describe('TimeUuid', function () {
       assert.ok([date-1, date, date+1].indexOf(val) > -1,
         util.format("Expected %d to be within ± 1ms of %d.", val, date));
     });
+    it('should reset the ticks portion of the TimeUuid to zero when the time progresses', function () {
+      var firstTimeUuid = TimeUuid.now();
+      var secondTimeUuid = TimeUuid.now();
+      while(firstTimeUuid.getDate().getTime() === secondTimeUuid.getDate().getTime()) {
+        secondTimeUuid = TimeUuid.now();
+      }
+      assert.strictEqual(secondTimeUuid.getDatePrecision().ticks, 0);
+    })  
   });
   describe('min()', function () {
     it('should generate uuid with the minimum node and clock id values', function () {

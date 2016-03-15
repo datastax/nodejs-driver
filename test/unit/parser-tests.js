@@ -44,9 +44,9 @@ describe('Parser', function () {
         done();
       });
       var header = getFrameHeader(5, types.opcodes.authenticate);
-      parser._transform({ header: header, chunk: new Buffer([0, 3])}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('a')}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('bc')}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer([0, 3]), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('a'), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('bc'), offset: 0}, null, doneIfError(done));
     });
     it('should read a VOID result', function (done) {
       var parser = newInstance();
@@ -198,8 +198,8 @@ describe('Parser', function () {
       var eventData = getEventData('STATUS_CHANGE', 'DOWN');
       var chunk1 = eventData.chunk.slice(0, 5);
       var chunk2 = eventData.chunk.slice(5);
-      parser._transform({header: eventData.header, chunk: chunk1}, null, doneIfError(done));
-      parser._transform({header: eventData.header, chunk: chunk2}, null, doneIfError(done));
+      parser._transform({header: eventData.header, chunk: chunk1, offset: 0}, null, doneIfError(done));
+      parser._transform({header: eventData.header, chunk: chunk2, offset: 0}, null, doneIfError(done));
     });
     it('should read a buffer until there is enough data', function (done) {
       var parser = newInstance();
@@ -368,11 +368,13 @@ describe('Parser', function () {
       var bodyLength = 4 + 2;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
-        chunk: new Buffer([0, 0, 0, 2])
+        chunk: new Buffer([255, 254, 0, 0, 0, 2]),
+        offset: 2
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
-        chunk: new Buffer([100, 100])
+        chunk: new Buffer([100, 100]),
+        offset: 0
       }, null, doneIfError(done));
     });
     it('should buffer ERROR response until complete', function (done) {
@@ -390,9 +392,9 @@ describe('Parser', function () {
       var header = new types.FrameHeader(4, 0, 33, types.opcodes.error, 9);
       parser.setOptions(33, { byRow: true });
       assert.strictEqual(parser.frameState({ header: header}).byRow, true);
-      parser._transform({ header: header, chunk: new Buffer([0, 0, 0, 0])}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer([0, 3])}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('ERR')}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer([255, 0, 0, 0, 0]), offset: 1}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer([0, 3]), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: new Buffer('ERR'), offset: 0}, null, doneIfError(done));
     });
     it('should not buffer RESULT ROWS response when byRow is enabled', function (done) {
       var parser = newInstance();

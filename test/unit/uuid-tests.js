@@ -193,6 +193,14 @@ describe('TimeUuid', function () {
         timeUuidBefore = timeUuid;
       }
     });
+    it('should generate non-colliding timeuuids for a fixed dates when generating timeuuids with interleaved dates', function () {
+        var values = {};
+        values[TimeUuid.fromDate(new Date(0), null, 'host01', 'AA').toString()] = true;
+        values[TimeUuid.fromDate(new Date(1), null, 'host01', 'AA').toString()] = true;
+        values[TimeUuid.fromDate(new Date(0), null, 'host01', 'AA').toString()] = true;
+        
+        assert.strictEqual(Object.keys(values).length, 3);
+    });
   });
   describe('fromString()', function () {
     it('should parse the string representation', function () {

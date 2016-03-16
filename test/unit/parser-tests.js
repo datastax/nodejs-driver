@@ -82,22 +82,25 @@ describe('Parser', function () {
       var parser = newInstance();
       parser.on('readable', function () {
         var item = parser.read();
-        assert.strictEqual(item.header.bodyLength, 4);
+        assert.ok(!item.error);
+        assert.strictEqual(item.header.bodyLength, 20);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         helper.assertInstanceOf(item.flags.traceId, types.Uuid);
         assert.strictEqual(item.flags.traceId.getBuffer().slice(0, 6).toString('hex'), 'fffffffffafa');
         done();
       });
       parser._transform({
-        header: getFrameHeader(4, types.opcodes.result, 2, true),
-        chunk: new Buffer('fffffffffafa', 'hex') //first part of the uuid
+        header: getFrameHeader(20, types.opcodes.result, 2, true),
+        chunk: new Buffer('fffffffffafa', 'hex'), //first 6 bytes of the uuid
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
-        header: getFrameHeader(4, types.opcodes.result, 2, true),
+        header: getFrameHeader(20, types.opcodes.result, 2, true),
         chunk: Buffer.concat([
           new Buffer(10), //second part uuid
           new Buffer([0, 0, 0, types.resultKind.voidResult])
-        ])
+        ]),
+        offset: 0
       }, null, doneIfError(done));
     });
     it('should read a SET_KEYSPACE result', function (done) {
@@ -112,15 +115,18 @@ describe('Parser', function () {
       var bodyLength = 4 + 2 + 3;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer([0, 0, 0, types.resultKind.setKeyspace])
+        chunk: new Buffer([0, 0, 0, types.resultKind.setKeyspace]),
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer([0, 3])
+        chunk: new Buffer([0, 3]),
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer('ks1')
+        chunk: new Buffer('ks1'),
+        offset: 0
       }, null, doneIfError(done));
     });
     it('should read a PREPARE result', function (done) {
@@ -148,15 +154,18 @@ describe('Parser', function () {
       var bodyLength = body.length;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: body.slice(0, 22)
+        chunk: body.slice(0, 22),
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: body.slice(22, 41)
+        chunk: body.slice(22, 41),
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: body.slice(41)
+        chunk: body.slice(41),
+        offset: 0
       }, null, doneIfError(done));
     });
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
@@ -211,11 +220,13 @@ describe('Parser', function () {
       });
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result),
-        chunk: new Buffer([0])
+        chunk: new Buffer([ 0 ]),
+        offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result),
-        chunk: new Buffer([0, 0, types.resultKind.voidResult])
+        chunk: new Buffer([ 0, 0, types.resultKind.voidResult ]),
+        offset: 0
       }, null, doneIfError(done));
     });
     it('should emit empty result one column no rows', function (done) {
@@ -479,7 +490,8 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {
 
   return {
     header: getFrameHeader(fullChunk.length, types.opcodes.result),
-    chunk: new Buffer(fullChunk.slice(fromIndex, toIndex || undefined))
+    chunk: new Buffer(fullChunk.slice(fromIndex, toIndex || undefined)),
+    offset: 0
   };
 }
 

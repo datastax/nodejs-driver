@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
@@ -108,20 +109,17 @@ describe('Client', function () {
       assert.throws(function () {
           client.batch();
         },
-        null,
-        'It should throw an Error when executeBatch is called with less than 2 arguments'
+        null
       );
       assert.throws(function () {
           client.batch(['SELECT'], {});
         },
-        null,
-        'It should throw an Error when the callback is not specified'
+        null
       );
       assert.throws(function () {
           client.batch({}, {}, function () {});
         },
-        null,
-        'It should throw an Error when queries argument is not an Array'
+        null
       );
 
       //it should not throw an error with the following arguments
@@ -440,14 +438,16 @@ describe('Client', function () {
       });
     });
     vit('2.0', 'should execute batch containing the same query multiple times', function (done) {
-      var client = newInstance();
+      var client = newInstance({
+        queryOptions: { consistency: types.consistencies.quorum }
+      });
       var id = types.Uuid.random();
       var query = util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1);
       var queries = [
         { query: query, params: [id, types.TimeUuid.now(), 1000]},
         { query: query, params: [id, types.TimeUuid.now(), 2000]}
       ];
-      client.batch(queries, { prepare: true}, function (err) {
+      client.batch(queries, { prepare: true }, function (err) {
         assert.ifError(err);
         //Check values inserted
         var selectQuery = util.format('SELECT int_sample FROM %s WHERE id = ?', table1);

@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var async = require('async');
@@ -267,14 +268,129 @@ describe('Parser', function () {
           done();
         }
       });
+      parser.setOptions(33, { byRow: true });
       //3 columns, 2 rows
       parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
     });
+    describe('with multiple chunk lengths', function () {
+      var parser = newInstance();
+      var result;
+      parser.on('readable', function () {
+        var item;
+        while (item = parser.read()) {
+          if (!item.row && item.frameEnded) {
+            continue;
+          }
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          result[item.header.streamId] = result[item.header.streamId] || [];
+          result[item.header.streamId].push(item.row);
+        }
+      });
+      [1, 3, 5, 13].forEach(function (chunkLength) {
+        it('should emit rows chunked with chunk length of ' + chunkLength, function () {
+          result = {};
+          var expected = [
+            { columnLength: 3, rowLength: 10 },
+            { columnLength: 5, rowLength: 5 },
+            { columnLength: 6, rowLength: 15 },
+            { columnLength: 6, rowLength: 5 },
+            { columnLength: 1, rowLength: 20 }
+          ];
+          var items = expected.map(function (item, index) {
+            parser.setOptions(index, { byRow: true });
+            return getBodyChunks(item.columnLength, item.rowLength, 0, null, null, index);
+          });
+          function transformChunkedItem(i) {
+            var item = items[i];
+            var chunkedItem = {
+              header: item.header,
+              offset: 0
+            };
+            for (var j = 0; j < item.chunk.length; j = j + chunkLength) {
+              var end = j + chunkLength;
+              if (end >= item.chunk.length) {
+                end = item.chunk.length;
+                chunkedItem.frameEnded = true;
+              }
+              var start = j;
+              if (start === 0) {
+                //sum a few bytes
+                chunkedItem.chunk = Buffer.concat([ new Buffer(9), item.chunk.slice(start, end) ]);
+                chunkedItem.offset = 9;
+              }
+              else {
+                chunkedItem.chunk = item.chunk.slice(start, end);
+                chunkedItem.offset = 0;
+              }
+              parser._transform(chunkedItem, null, helper.throwop);
+            }
+          }
+          for (var i = 0; i < items.length; i++) {
+            transformChunkedItem(i);
+          }
+          //assert result
+          expected.forEach(function (expectedItem, index) {
+            assert.ok(result[index], 'Result not found for index ' + index);
+            assert.strictEqual(result[index].length, expectedItem.rowLength);
+          });
+        });
+      });
+    });
+    describe('with multiple chunk lengths piped', function () {
+      var protocol = new streams.Protocol({ objectMode: true });
+      var parser = newInstance();
+      protocol.pipe(parser);
+      var result;
+      parser.on('readable', function () {
+        var item;
+        while (item = parser.read()) {
+          if (!item.row && item.frameEnded) {
+            continue;
+          }
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          result[item.header.streamId] = result[item.header.streamId] || [];
+          result[item.header.streamId].push(item.row);
+        }
+      });
+      var expected = [
+        { columnLength: 3, rowLength: 10 },
+        { columnLength: 5, rowLength: 5 },
+        { columnLength: 6, rowLength: 15 },
+        { columnLength: 6, rowLength: 15 },
+        { columnLength: 1, rowLength: 20 }
+      ];
+      [1, 2, 7, 11].forEach(function (chunkLength) {
+        it('should emit rows chunked with chunk length of ' + chunkLength, function () {
+          result = {};
+          var buffer = Buffer.concat(expected.map(function (expectedItem, index) {
+            parser.setOptions(index, { byRow: true });
+            var item = getBodyChunks(expectedItem.columnLength, expectedItem.rowLength, 0, null, null, index);
+            return Buffer.concat([ item.header.toBuffer(), item.chunk ]);
+          }));
+
+          for (var j = 0; j < buffer.length; j = j + chunkLength) {
+            var end = j + chunkLength;
+            if (end >= buffer.length) {
+              end = buffer.length;
+            }
+            protocol._transform(buffer.slice(j, end), null, helper.throwop);
+          }
+          //assert result
+          expected.forEach(function (expectedItem, index) {
+            assert.ok(result[index], 'Result not found for index ' + index);
+            assert.strictEqual(result[index].length, expectedItem.rowLength);
+            assert.strictEqual(result[index][0].keys().length, expectedItem.columnLength);
+          });
+        });
+      });
+    });
     it('should emit row with large row values', function (done) {
-      this.timeout(5000);
+      this.timeout(20000);
       //3mb value
       var cellValue = helper.fillArray(3 * 1024 * 1024, 74);
       //Add the length 0x00300000 of the value
@@ -446,11 +562,17 @@ function newInstance(protocolVersion) {
  * Test Helper method to get a frame header with stream id 12
  * @returns {exports.FrameHeader}
  */
-function getFrameHeader(bodyLength, opcode, version, trace) {
-  return new types.FrameHeader(version || 2, trace ? 0x02 : 0, 12, opcode, bodyLength);
+function getFrameHeader(bodyLength, opcode, version, trace, streamId) {
+  if (typeof streamId === 'undefined') {
+    streamId = 12;
+  }
+  return new types.FrameHeader(version || 2, trace ? 0x02 : 0, streamId, opcode, bodyLength);
 }
 
-function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {
+/**
+ * @returns {{header: FrameHeader, chunk: Buffer, offset: number}}
+ */
+function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue, streamId) {
   var i;
   var fullChunk = [
     //kind
@@ -489,7 +611,7 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue) {
   }
 
   return {
-    header: getFrameHeader(fullChunk.length, types.opcodes.result),
+    header: getFrameHeader(fullChunk.length, types.opcodes.result, null, null, streamId),
     chunk: new Buffer(fullChunk.slice(fromIndex, toIndex || undefined)),
     offset: 0
   };
@@ -517,7 +639,7 @@ function getEventData(eventType, value) {
  * Calls done in case there is an error
  */
 function doneIfError(done) {
-  return function (err) {
+  return function doneIfErrorCallback(err) {
     if (err) done(err);
   };
 }

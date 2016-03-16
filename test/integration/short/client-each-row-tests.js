@@ -521,6 +521,39 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+    it('should retrieve large result sets in parallel', function (done) {
+      var client = newInstance({ queryOptions: {
+        consistency: types.consistencies.quorum,
+        fetchSize: 20000
+      }});
+      client.on('log', function (level, className, message, furtherInfo) {
+        if (level !== 'warning' && level !== 'error') {
+          return;
+        }
+        console.error(level, className, message, furtherInfo);
+      });
+      var query = util.format('SELECT * FROM %s LIMIT 2000', table);
+      async.series([
+        client.connect.bind(client),
+        helper.toTask(insertTestData, null, client, table, 2000),
+        function selectData(seriesNext) {
+          async.timesLimit(400, 6, function (n, timesNext) {
+            var counter = 0;
+            client.eachRow(query, [], { prepare: true }, function (n, row) {
+              assert.ok(row);
+              counter++;
+            }, function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.rowLength, counter);
+              timesNext();
+            });
+          }, seriesNext);
+        }
+      ], function (err) {
+        client.shutdown();
+        done(err);
+      });
+    });
   });
 });
 
@@ -540,7 +573,7 @@ function insertTestData(client, table, length, callback) {
     },
     function insertData(seriesNext) {
       var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      helper.timesLimit(length, 100, function (n, next) {
+      async.timesLimit(length, 100, function (n, next) {
         client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, helper.noop, next);
       }, seriesNext);
     }

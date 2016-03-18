@@ -165,41 +165,125 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[1], '0');
       assert.strictEqual(replicas[2], '1');
     });
-    it('should return depending on the dc rf with network topology', function () {
-      var cc = {
-        query: function (q, cb) {
-          cb(null, {rows: [{
-            'keyspace_name': 'dummy',
-            'strategy_class': 'NetworkTopologyStrategy',
-            'strategy_options': '{"dc1": "3", "dc2": "1"}'
-          }]});
-        }
-      };
+    it('should return depending on the dc rf with network topology', function (done) {
+      var cc = getControlConnectionForRows([{
+        'keyspace_name': 'dummy',
+        'strategy_class': 'NetworkTopologyStrategy',
+        'strategy_options': '{"dc1": "3", "dc2": "1"}'
+      }]);
       var options = clientOptions.extend({}, helper.baseOptions);
       var metadata = new Metadata(options, cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
-      //Use the value as token
-      metadata.tokenizer.hash = function (b) { return b[0]};
-      metadata.tokenizer.compare = function (a, b) {if (a > b) return 1; if (a < b) return -1; return 0};
-      metadata.datacenters = {'dc1': 4, 'dc2': 4};
+      metadata.tokenizer = getTokenizer();
+      var racks = new utils.HashSet();
+      racks.add('rack1');
+      metadata.datacenters = {
+        'dc1': { hostLength: 4, racks: racks },
+        'dc2': { hostLength: 4, racks: racks }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
-      //load even primary replicas
+      //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
         var h = new Host(i.toString(), 2, options);
         h.datacenter = 'dc' + ((i % 2) + 1);
+        h.rack = 'rack1';
         metadata.primaryReplicas[i.toString()] = h;
       }
       metadata.log = helper.noop;
-      metadata.refreshKeyspaces();
-      var replicas = metadata.getReplicas('dummy', new Buffer([0]));
-      assert.ok(replicas);
-      //3 replicas from dc1 and 1 replica from dc2
-      assert.strictEqual(replicas.length, 4);
-      assert.strictEqual(replicas[0].address, '0');
-      assert.strictEqual(replicas[1].address, '1');
-      assert.strictEqual(replicas[2].address, '2');
-      assert.strictEqual(replicas[3].address, '4');
+      metadata.refreshKeyspaces(function () {
+        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        assert.ok(replicas);
+        //3 replicas from dc1 and 1 replica from dc2
+        assert.strictEqual(replicas.length, 4);
+        assert.strictEqual(replicas[0].address, '0');
+        assert.strictEqual(replicas[1].address, '1');
+        assert.strictEqual(replicas[2].address, '2');
+        assert.strictEqual(replicas[3].address, '4');
+        done();
+      });
+    });
+    it('should return depending on the dc rf and rack with network topology', function (done) {
+      var cc = getControlConnectionForRows([{
+        'keyspace_name': 'dummy',
+        'strategy_class': 'NetworkTopologyStrategy',
+        'strategy_options': '{"dc1": "3", "dc2": "3", "non_existent_dc": "1"}'
+      }]);
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var metadata = new Metadata(options, cc);
+      metadata.tokenizer = getTokenizer();
+      var racksDc1 = new utils.HashSet();
+      racksDc1.add('dc1_r1');
+      racksDc1.add('dc1_r2');
+      var racksDc2 = new utils.HashSet();
+      racksDc2.add('dc2_r1');
+      racksDc2.add('dc2_r2');
+      metadata.datacenters = {
+        'dc1': { hostLength: 4, racks: racksDc1 },
+        'dc2': { hostLength: 4, racks: racksDc2 }};
+      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      //load primary replicas
+      metadata.primaryReplicas = {};
+      for (var i = 0; i < metadata.ring.length; i ++) {
+        // Hosts with in alternate dc and alternate rack
+        var h = new Host(i.toString(), 2, options);
+        h.datacenter = 'dc' + ((i % 2) + 1);
+        h.rack = h.datacenter + '_r' + ((i % 4) <= 1 ? 1 : 2);
+        metadata.primaryReplicas[i.toString()] = h;
+      }
+      metadata.log = helper.noop;
+      metadata.refreshKeyspaces(function () {
+        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), [ '0', '1', '2', '3', '4', '5' ]);
+        replicas = metadata.getReplicas('dummy', new Buffer([1]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), [ '1', '2', '3', '4', '5', '6' ]);
+        replicas = metadata.getReplicas('dummy', new Buffer([3]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), [ '3', '4', '5', '6', '7', '0' ]);
+        done();
+      });
+    });
+    it('should return depending on the dc rf and rack with network topology and skipping hosts', function (done) {
+      var cc = getControlConnectionForRows([{
+        'keyspace_name': 'dummy',
+        'strategy_class': 'NetworkTopologyStrategy',
+        'strategy_options': '{"dc1": "3", "dc2": "2"}'
+      }]);
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var metadata = new Metadata(options, cc);
+      metadata.tokenizer = getTokenizer();
+      var racksDc1 = new utils.HashSet();
+      racksDc1.add('dc1_r1');
+      racksDc1.add('dc1_r2');
+      var racksDc2 = new utils.HashSet();
+      racksDc2.add('dc2_r1');
+      racksDc2.add('dc2_r2');
+      metadata.datacenters = {
+        'dc1': { hostLength: 4, racks: racksDc1 },
+        'dc2': { hostLength: 4, racks: racksDc2 }};
+      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      //load primary replicas
+      metadata.primaryReplicas = {};
+      for (var i = 0; i < metadata.ring.length; i ++) {
+        // Hosts with in alternate dc and alternate rack
+        var h = new Host(i.toString(), 2, options);
+        h.datacenter = 'dc' + ((i % 2) + 1);
+        h.rack = h.datacenter + '_r' + ((i % 4) <= 1 ? 1 : 2);
+        metadata.primaryReplicas[i.toString()] = h;
+      }
+      //reorganize racks in dc1 to set contiguous tokens in the same rack
+      metadata.primaryReplicas['0'].rack = 'dc1_rack1';
+      metadata.primaryReplicas['2'].rack = 'dc1_rack1';
+      metadata.primaryReplicas['4'].rack = 'dc1_rack2';
+      metadata.primaryReplicas['6'].rack = 'dc1_rack2';
+      metadata.log = helper.noop;
+      metadata.refreshKeyspaces(function () {
+        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        assert.ok(replicas);
+        // For DC1, it should skip the replica with the same rack (node2) and add it at the end: 0, 4, 2
+        assert.deepEqual(replicas.map(getAddress), [ '0', '1', '3', '4', '2' ]);
+        done();
+      });
     });
   });
   describe('#clearPrepared()', function () {
@@ -1937,4 +2021,20 @@ function getControlConnectionForRows(rows, protocolVersion) {
     },
     getEncoder: function () { return new Encoder(protocolVersion || 4, {}); }
   };
+}
+
+function getAddress(h) {
+  return h.address;
+}
+
+/**
+ * Creates a dummy tokenizer based on the first byte of the buffer.
+ * @returns {Murmur3Tokenizer}
+ */
+function getTokenizer() {
+  var t = new tokenizer.Murmur3Tokenizer();
+  //Use the first byte as token
+  t.hash = function (b) { return b[0]};
+  t.compare = function (a, b) { if (a > b) return 1; if (a < b) return -1; return 0 };
+  return t;
 }

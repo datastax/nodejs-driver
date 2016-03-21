@@ -50,55 +50,6 @@ describe('DCAwareRoundRobinPolicy', function () {
 });
 describe('TokenAwarePolicy', function () {
   this.timeout(120000);
-  it('should use primary replica according to Murmur single dc', function (done) {
-    var keyspace = 'ks1';
-    var table = 'table1';
-    async.series([
-      helper.ccmHelper.start('3'),
-      function createKs(next) {
-        var client = new Client(helper.baseOptions);
-        client.execute(helper.createKeyspaceCql(keyspace, 1), helper.waitSchema(client, next));
-      },
-      function createTable(next) {
-        var client = new Client(helper.baseOptions);
-        var query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
-        client.execute(query, helper.waitSchema(client, next));
-      },
-      function testCase(next) {
-        //Pre-calculated based on Murmur
-        //This test can be improved using query tracing, consistency all and checking hops
-        var expectedPartition = {
-          '1': '2',
-          '2': '2',
-          '3': '1',
-          '4': '3',
-          '5': '2',
-          '6': '3',
-          '7': '3',
-          '8': '2',
-          '9': '1',
-          '10': '2'
-        };
-        var client = new Client({
-          policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy())},
-          keyspace: keyspace,
-          contactPoints: helper.baseOptions.contactPoints
-        });
-        async.times(100, function (n, timesNext) {
-          var id = (n % 10) + 1;
-          var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
-          client.execute(query, null, {routingKey: new Buffer([0, 0, 0, id])}, function (err, result) {
-            assert.ifError(err);
-            //for murmur id = 1, it go to replica 2
-            var address = result.info.queriedHost;
-            assert.strictEqual(helper.lastOctetOf(address), expectedPartition[id.toString()]);
-            timesNext();
-          });
-        }, next);
-      },
-      helper.ccmHelper.remove
-    ], done);
-  });
   it('should use primary replica according to Murmur multiple dc', function (done) {
     var keyspace = 'ks1';
     var table = 'table1';
@@ -217,66 +168,6 @@ describe('TokenAwarePolicy', function () {
       },
       helper.ccmHelper.remove
     ], done);
-  });
-  it('should target the correct partition', function (done) {
-    var keyspace = 'ks1';
-    var table = 'table1';
-    async.series([
-      helper.ccmHelper.start('3'),
-      function createKs(next) {
-        var client = new Client(helper.baseOptions);
-        client.execute(helper.createKeyspaceCql(keyspace, 1), helper.waitSchema(client, next));
-      },
-      function createTable(next) {
-        var client = new Client(helper.baseOptions);
-        var query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
-        client.execute(query, helper.waitSchema(client, next));
-      },
-      function testCase(next) {
-        var client = new Client({
-          policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy())},
-          keyspace: keyspace,
-          contactPoints: helper.baseOptions.contactPoints
-        });
-        async.timesSeries(10, function (n, timesNext) {
-          var id = (n % 10) + 1;
-          var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
-          client.execute(query, [id, id], { traceQuery: true, prepare: true}, function (err, result) {
-            assert.ifError(err);
-            var coordinator = result.info.queriedHost;
-            var traceId = result.info.traceId;
-            client.metadata.getTrace(traceId, function (err, trace) {
-              assert.ifError(err);
-              trace.events.forEach(function (event) {
-                assert.strictEqual(helper.lastOctetOf(event['source'].toString()), helper.lastOctetOf(coordinator.toString()));
-              });
-              timesNext();
-            });
-          });
-        }, next);
-      },
-      helper.ccmHelper.remove
-    ], done);
-  });
-});
-describe('WhiteListPolicy', function () {
-  this.timeout(180000);
-  before(helper.ccmHelper.start(3));
-  after(helper.ccmHelper.remove);
-  it('should use the hosts in the white list only', function (done) {
-    var policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
-    var client = newInstance(policy);
-    helper.timesLimit(100, 20, function (n, next) {
-      client.execute('SELECT * FROM system.local', function (err, result) {
-        assert.ifError(err);
-        var lastOctet = helper.lastOctetOf(result.info.queriedHost);
-        assert.ok(lastOctet === '1' || lastOctet === '2');
-        next();
-      });
-    }, function (err) {
-      assert.ifError(err);
-      client.shutdown(done);
-    });
   });
 });
 

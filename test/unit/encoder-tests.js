@@ -1,6 +1,6 @@
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
+var async = require('neo-async');
 var utils = require('../../lib/utils');
 
 var Encoder = require('../../lib/encoder');

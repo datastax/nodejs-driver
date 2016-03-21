@@ -1,6 +1,6 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
+var async = require('neo-async');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');

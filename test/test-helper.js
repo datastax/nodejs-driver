@@ -1,4 +1,4 @@
-var async = require('async');
+var async = require('neo-async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');

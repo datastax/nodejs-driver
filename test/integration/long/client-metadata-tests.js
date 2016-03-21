@@ -1,5 +1,5 @@
 var assert = require('assert');
-var async = require('async');
+var async = require('neo-async');
 var util = require('util');
 
 var helper = require('../../test-helper');

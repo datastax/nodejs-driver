@@ -1,7 +1,7 @@
 "use strict";
 //replace by    require('cassandra-driver');
 var cassandra = require('../../');
-var async = require('async');
+var async = require('neo-async');
 var assert = require('assert');
 
 var client = new cassandra.Client({ contactPoints: ['127.0.0.1']});

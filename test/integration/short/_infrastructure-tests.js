@@ -1,5 +1,5 @@
 var assert = require('assert');
-var async = require('async');
+var async = require('neo-async');
 var helper = require('../../test-helper.js');
 
 describe('Test infrastructure', function () {

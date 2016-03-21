@@ -1,5 +1,5 @@
 var assert = require('assert');
-var async = require('async');
+var async = require('neo-async');
 var util = require('util');
 //project modules
 var reconnection = require('../../lib/policies/reconnection.js');

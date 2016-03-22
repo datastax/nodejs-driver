@@ -53,6 +53,10 @@ var helper = {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+  assertBufferString: function (instance, textValue) {
+    this.assertInstanceOf(instance, Buffer);
+    assert.strictEqual(instance.toString(), textValue);
+  },
   /**
    * @param {ResultSet} result
    */
@@ -453,8 +457,9 @@ helper.ads.acquireTicket = function(username, principal, cb) {
  */
 helper.ads.destroyTicket = function(principal, cb) {
   if (typeof principal === 'function') {
+    //noinspection JSValidateTypes
     cb = principal;
-    principal = undefined;
+    principal = null;
   }
 
   // Use ktutil on windows, kdestroy otherwise.

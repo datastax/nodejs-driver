@@ -75,21 +75,116 @@ describe('DseClient', function () {
       assert.ok(optionsArray[0].customPayload);
       done();
     });
-    it('should set the default payload for the executions', function (done) {
-      var client = new DseClient({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
+    it('should set the default payload for the executions', function () {
+      var client = new DseClient({
+        contactPoints: ['host1'],
+        graphOptions: {
+          name: 'name1',
+          source: 'a',
+          readConsistency: cassandra.types.consistencies.localOne
+        }
+      });
       var optionsParameter = { anotherOption: { k: 'v'}};
+      var actualOptions = null;
       client.execute = function (query, params, options) {
-        //do not use the actual object
-        assert.notStrictEqual(optionsParameter, options);
-        //shallow copy the properties
-        assert.strictEqual(optionsParameter.anotherOption, options.anotherOption);
-        assert.ok(options.customPayload);
-        assert.deepEqual(options.customPayload['graph-language'], new Buffer('gremlin-groovy'));
-        assert.deepEqual(options.customPayload['graph-source'], new Buffer('default'));
-        assert.deepEqual(options.customPayload['graph-name'], new Buffer('name1'));
-        done();
+        actualOptions = options;
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      assert.notStrictEqual(optionsParameter, actualOptions);
+      //shallow copy the properties
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'a');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name1');
+      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_ONE');
+      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+    });
+    it('should use the default readTimeout', function () {
+      var client = new DseClient({
+        contactPoints: ['host1'],
+        graphOptions: {
+          source: 'x',
+          readTimeout: 12345,
+          writeConsistency: cassandra.types.consistencies.two
+        }
+      });
+      var actualOptions = null;
+      client.execute = function (q, p, options) {
+        actualOptions = options;
+      };
+      //with options defined
+      client.executeGraph('Q10', { c: 0}, { }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
+      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
+      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'TWO');
+      assert.strictEqual(actualOptions.readTimeout, 12345);
+      //with payload defined
+      client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': new Buffer('zValue')} }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
+      helper.assertBufferString(actualOptions.customPayload['z'], 'zValue');
+      assert.strictEqual(actualOptions.readTimeout, 12345);
+      //with timeout defined
+      client.executeGraph('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
+      assert.strictEqual(actualOptions.customPayload['z'], undefined);
+      assert.strictEqual(actualOptions.readTimeout, 9999);
+      //without options defined
+      client.executeGraph('Q10', { c: 0}, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
+      assert.strictEqual(actualOptions.readTimeout, 12345);
+    });
+    it('should set the read and write consistency levels', function () {
+      var client = new DseClient({
+        contactPoints: ['host1'],
+        graphOptions: {
+          name: 'name10'
+        }
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q5', { c: 0}, helper.throwOp);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'default');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name10');
+      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
+      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+      var optionsParameter = {
+        graphReadConsistency: cassandra.types.consistencies.localQuorum
+      };
+      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      assert.notStrictEqual(optionsParameter, actualOptions);
+      //shallow copy the properties
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_QUORUM');
+      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+      optionsParameter = {
+        graphWriteConsistency: cassandra.types.consistencies.quorum
+      };
+      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      assert.notStrictEqual(optionsParameter, actualOptions);
+      //shallow copy the properties
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
+      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
     });
     it('should reuse the default payload for the executions', function (done) {
       var client = new DseClient({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});

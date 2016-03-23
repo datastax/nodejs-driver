@@ -4,6 +4,7 @@
       "lib/auth",
       "lib/geometry",
       "lib/graph",
+      "lib/policies",
       "lib/dse-client.js"
     ]
   },

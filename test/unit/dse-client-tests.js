@@ -1,5 +1,6 @@
 'use strict';
 var assert = require('assert');
+var async = require('async');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
 var helper = require('../helper');
@@ -8,6 +9,7 @@ describe('DseClient', function () {
   describe('constructor', function () {
     it('should validate options', function () {
       assert.throws(function () {
+        //noinspection JSCheckFunctionSignatures
         new DseClient();
       }, cassandra.errors.ArgumentError);
     });
@@ -17,12 +19,19 @@ describe('DseClient', function () {
       var client = new DseClient({ contactPoints: ['host1']});
       client.execute = helper.noop;
       assert.doesNotThrow(function () {
-        client.executeGraph('Q1', [], { graphName: 'abc' }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop)
       });
       assert.throws(function () {
-        //noinspection JSCheckFunctionSignatures
-        client.executeGraph('Q1', [], { graphName: 123 }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop)
       }, TypeError);
+    });
+    it('should not allow a array query parameters', function () {
+      var client = new DseClient({ contactPoints: ['host1']});
+      client.execute = helper.noop;
+      client.executeGraph('Q1', [], {  }, function (err) {
+        helper.assertInstanceOf(err, TypeError);
+        assert.strictEqual(err.message, 'Parameters must be a Object instance as an associative array');
+      });
     });
     it('should execute with query and callback parameters', function (done) {
       var client = new DseClient({ contactPoints: ['host1']});
@@ -80,7 +89,7 @@ describe('DseClient', function () {
         contactPoints: ['host1'],
         graphOptions: {
           name: 'name1',
-          source: 'a',
+          source: 'a1',
           readConsistency: cassandra.types.consistencies.localOne
         }
       });
@@ -95,12 +104,13 @@ describe('DseClient', function () {
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'a');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'a1');
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name1');
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_ONE');
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
     });
     it('should use the default readTimeout', function () {
+      //noinspection JSCheckFunctionSignatures
       var client = new DseClient({
         contactPoints: ['host1'],
         graphOptions: {
@@ -224,6 +234,141 @@ describe('DseClient', function () {
         done();
       };
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwOp);
+    });
+    describe('with analytics queries', function () {
+      it('should query for analytics master', function (done) {
+        var client = new DseClient({ contactPoints: ['host1'], graphOptions: {
+          source: 'a',
+          name: 'name1'
+        }});
+        var actualOptions;
+        client.execute = function (q, p, options, cb) {
+          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
+            return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
+          }
+          actualOptions = options;
+          cb(null, { rows: []});
+        };
+        //noinspection JSValidateTypes
+        client.hosts = { get: function (address) {
+          return { type: 'host', address: address };
+        }};
+        client.executeGraph('g.V()', function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          assert.ok(actualOptions.preferredHost);
+          assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+          done();
+        });
+      });
+      it('should cache analytics master for until expires', function (done) {
+        this.timeout(5000);
+        //noinspection JSCheckFunctionSignatures
+        var client = new DseClient({ contactPoints: ['host1'], graphOptions: { masterCallExpiration: 1 }});
+        var rpcCounter = 0;
+        var actualOptions;
+        client.execute = function (q, p, options, cb) {
+          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
+            rpcCounter++;
+            return cb(null, { rows: [ { result: { location: '10.0.0.' + rpcCounter + ':1234' }} ]});
+          }
+          actualOptions = options;
+          cb(null, { rows: []});
+        };
+        //noinspection JSValidateTypes
+        client.hosts = { get: function (address) {
+          return { type: 'host', address: address };
+        }};
+        async.series([
+          function queryFirst(next) {
+            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
+              assert.ifError(err);
+              assert.strictEqual(rpcCounter, 1);
+              assert.ok(actualOptions);
+              assert.ok(actualOptions.preferredHost);
+              assert.ok(actualOptions.preferredHost.address, '10.0.0.1:9042');
+              next();
+            });
+          },
+          function querySecond(next) {
+            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
+              assert.ifError(err);
+              assert.strictEqual(rpcCounter, 1);
+              assert.ok(actualOptions.preferredHost.address, '10.0.0.1:9042');
+              next();
+            });
+          },
+          function passTime(next) {
+            setTimeout(next, 2000);
+          },
+          function queryThird(next) {
+            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
+              assert.ifError(err);
+              assert.strictEqual(rpcCounter, 2);
+              assert.ok(actualOptions.preferredHost.address, '10.0.0.2:9042');
+              next();
+            });
+          }
+        ], done);
+      });
+      it('should call address translator', function (done) {
+        var translatorCalled = 0;
+        var translator = new cassandra.policies.addressResolution.AddressTranslator();
+        translator.translate = function (ip, port, cb) {
+          translatorCalled++;
+          cb(ip + ':' + port);
+        };
+        var client = new DseClient({ 
+          contactPoints: ['host1'], 
+          graphOptions: { 
+            source: 'a', 
+            name: 'name1'
+          },
+          policies: {
+            addressResolution: translator
+          }
+        });
+        var actualOptions;
+        client.execute = function (q, p, options, cb) {
+          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
+            return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
+          }
+          actualOptions = options;
+          cb(null, { rows: []});
+        };
+        //noinspection JSValidateTypes
+        client.hosts = { get: function (address) {
+          return { type: 'host', address: address };
+        }};
+        client.executeGraph('g.V()', function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          assert.ok(actualOptions.preferredHost);
+          assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+          assert.strictEqual(translatorCalled, 1);
+          done();
+        });
+      });
+      it('should set preferredHost to null when RPC errors', function (done) {
+        var client = new DseClient({ contactPoints: ['host1'], graphOptions: {
+          source: 'a',
+          name: 'name1'
+        }});
+        var actualOptions;
+        client.execute = function (q, p, options, cb) {
+          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
+            return cb(new Error('Test error'));
+          }
+          actualOptions = options;
+          cb(null, { rows: []});
+        };
+        client.executeGraph('g.V()', function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          assert.strictEqual(actualOptions.preferredHost, null);
+          done();
+        });
+      });
     });
   });
 });

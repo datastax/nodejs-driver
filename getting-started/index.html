@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - Getting started</title>
+
+    <link rel="icon" href="../favicon.ico">
+    <link rel="apple-touch-icon" href="../favicon.png">
+    <link href="../css/style.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../"><img alt="Brand" src="../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.1')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.1
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li class="disabled"><a href="./">v3.1</a></li>
+                  
+                    <li><a href="../v3.0/getting-started/">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../">Home</a></li>
+              
+              
+              
+              
+              
+              <li class="active">Getting started</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#getting-started">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li><a href="#connecting-to-a-cluster">Connecting to a cluster
+</a></li>
+<li>
+<a href="#retrieving-data">Retrieving data
+</a><ul class="nav nav-pills nav-stacked"><li><a href="#using-query-parameters-and-prepared-statements">Using query parameters and prepared statements
+</a></li></ul>
+</li>
+<li>
+<a href="#inserting-data">Inserting data
+</a><ul class="nav nav-pills nav-stacked"><li><a href="#setting-the-consistency-level">Setting the consistency level
+</a></li></ul>
+</li>
+<li><a href="#authentication-optional">Authentication (optional)
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../features/">Features <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">Getting started <small>page</small></a>
+    
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="getting-started" class="target">Getting started<a class="anchor" href="#getting-started" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>Getting started with the DataStax Node.js driver for Apache Cassandra.</p>
+
+<h2 id="connecting-to-a-cluster" class="target">Connecting to a cluster<a class="anchor" href="#connecting-to-a-cluster" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>To connect to a Cassandra cluster, you need to provide at least 1 node of the cluster, if there are more nodes than
+the ones provided, the driver will discover all the nodes in the cluster after it connects to the first node.</p>
+
+<p>Typically you create only 1 <code>Client</code> instance for a given Cassandra cluster and use it across your application.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">cassandra</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'cassandra-driver'</span><span class="p">);</span>
+<span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">cassandra</span><span class="p">.</span><span class="nx">Client</span><span class="p">({</span> <span class="na">contactPoints</span><span class="p">:</span> <span class="p">[</span><span class="s1">'host1'</span><span class="p">]</span> <span class="p">});</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<p>At this point, the driver will be connected to one of the contact points and discovered the rest of the nodes in your
+cluster.  </p>
+
+<p>Even though calling <code>#connect()</code> is not required (the execute method internally calls to connect), it is recommended you
+call to <code>#connect()</code> on application startup, this way you can ensure that you start your app once your are connected to
+your Cassandra cluster.</p>
+
+<h2 id="retrieving-data" class="target">Retrieving data<a class="anchor" href="#retrieving-data" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The <code>#execute()</code> method can be used to send a CQL query to a Cassandra node, a simple way to use would be to provide a
+query and a callback.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s2">"SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger'"</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">first</span><span class="p">();</span>
+  <span class="c1">//The row is an Object with column names as property keys. </span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'My name is %s and my email is %s'</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<h3 id="using-query-parameters-and-prepared-statements" class="target">Using query parameters and prepared statements<a class="anchor" href="#using-query-parameters-and-prepared-statements" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>Instead of hard coding your parameters in your query, you can use parameter markers in your queries and provide the
+parameters as an Array.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'SELECT name, email, birthdate FROM users WHERE key = ?'</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="p">[</span><span class="s1">'mick-jagger'</span><span class="p">],</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+<p>This way you can reuse the query and forget about escaping / stringifying the parameters in your query. </p>
+
+<p>Additionally, if you plan to reuse a query within your application (it is generally the case, your parameter value
+changes but there is only a small number of different queries for a given schema), <strong>you can benefit from using prepared
+statements</strong>.</p>
+
+<p>Using prepared statements increases performance compared to plain executes, especially for repeated queries as the query
+only needs to be parsed once by the Cassandra node. It has the <strong>additional benefit of providing metadata of the
+parameters to the driver, allowing better type mapping between javascript and Cassandra</strong> without the need of
+additional info (hints) from the user.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'SELECT name, email, birthdate FROM users WHERE key = ?'</span><span class="p">;</span>
+<span class="c1">//Set the prepare flag in your queryOptions</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="p">[</span><span class="s1">'mick-jagger'</span><span class="p">],</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+<p>See the <a href="http://datastax.github.io/nodejs-driver/features/datatypes/">data types documentation to see how CQL types are mapped to javascript types</a>. </p>
+
+<h2 id="inserting-data" class="target">Inserting data<a class="anchor" href="#inserting-data" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>You can use the <code>#execute()</code> method to execute any CQL query.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)'</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'mick-jagger'</span><span class="p">,</span> <span class="s1">'Sir Mick Jagger'</span><span class="p">,</span> <span class="s1">'mick@rollingstones.com'</span><span class="p">,</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">1943</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">26</span><span class="p">)];</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="c1">//Inserted in the cluster</span>
+<span class="p">});</span>
+</code></pre>
+<h3 id="setting-the-consistency-level" class="target">Setting the consistency level<a class="anchor" href="#setting-the-consistency-level" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>To specify how consistent the data must be for a given read or write operation, you can set the
+<a href="http://docs.datastax.com/en/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html">consistency level</a> per query</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="p">{</span> <span class="na">consistency</span><span class="p">:</span> <span class="nx">types</span><span class="p">.</span><span class="nx">consistencies</span><span class="p">.</span><span class="nx">quorum</span> <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">//This callback will be called once it has been written in the number of replicas</span>
+  <span class="c1">//satisfying the consistency level specified.</span>
+<span class="p">});</span>
+</code></pre>
+<p>Or you can provide a default consistency level for all your queries when creating the <code>Client</code> instance (defaults to
+<code>one</code>).</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">({</span> <span class="na">queryOptions</span><span class="p">:</span> <span class="p">{</span> <span class="na">consistency</span><span class="p">:</span> <span class="nx">types</span><span class="p">.</span><span class="nx">consistencies</span><span class="p">.</span><span class="nx">quorum</span> <span class="p">}</span> <span class="p">});</span>
+</code></pre>
+<h2 id="authentication-optional" class="target">Authentication (optional)<a class="anchor" href="#authentication-optional" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>Using an authentication provider on an auth-enabled Cassandra cluster:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">authProvider</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">cassandra</span><span class="p">.</span><span class="nx">auth</span><span class="p">.</span><span class="nx">PlainTextAuthProvider</span><span class="p">(</span><span class="s1">'my_user'</span><span class="p">,</span> <span class="s1">'p@ssword1!'</span><span class="p">);</span>
+<span class="c1">//Set the auth provider in the clientOptions when creating the Client instance</span>
+<span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">({</span> <span class="na">authProvider</span><span class="p">:</span> <span class="nx">authProvider</span> <span class="p">});</span>
+</code></pre>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../js/jquery.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script src="../js/angular.js"></script>
+    <script src="../js/mousetrap.js"></script>
+    <script src="../js/hotkeys.js"></script>
+    <script src="../js/ZeroClipboard.js"></script>
+    <script src="../js/lunr.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - UUID and time-based UUID data types</title>
+
+    <link rel="icon" href="../../../../favicon.ico">
+    <link rel="apple-touch-icon" href="../../../../favicon.png">
+    <link href="../../../../css/style.css" rel="stylesheet">
+    <link href="../../../../css/pygments.css" rel="stylesheet">
+    <link href="../../../../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../../../"><img alt="Brand" src="../../../../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.0')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.0
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li><a href="../../../../features/datatypes/uuids/">v3.1</a></li>
+                  
+                    <li class="disabled"><a href="./">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../../../">Home</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../../">Features</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../">CQL data types to JavaScript types</a></li>
+              
+              
+              
+              
+              
+              <li class="active">UUID and time-based UUID data types</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#uuid-and-time-based-uuid-data-types">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li><a href="#uuid">Uuid
+</a></li>
+<li><a href="#time-uuid">TimeUuid
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li class="active">
+    <a href="../../">Features <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../../address-resolution/">Address resolution <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../batch/">Batch statements <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="../">CQL data types to JavaScript types <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../collections/">Collections <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../datetime/">Date and time representation <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../nulls/">Null and unset values <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../numerical/">Numerical values <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../tuples/">Tuples <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">UUID and time-based UUID data types <small>page</small></a>
+    
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../udts/">User-defined types <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../metadata/">Cluster and schema metadata <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../connection-pooling/">Connection pooling <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../paging/">Fetching large result sets <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../native-protocol/">Native protocol <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../parameterized-queries/">Parameterized queries <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../query-warnings/">Query warnings <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../tuning-policies/">Tuning policies <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../udfs/">User-defined functions and aggregates <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../../getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="uuid-and-time-based-uuid-data-types" class="target">UUID and time-based UUID data types<a class="anchor" href="#uuid-and-time-based-uuid-data-types" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>The driver provides ways to generate and decode UUIDs and time-based UUID.</p>
+
+<h2 id="uuid" class="target">Uuid<a class="anchor" href="#uuid" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The <code>Uuid</code> class provides support for representing Cassandra uuid data type. To generate a version 4 unique identifier,
+use the <code>Uuid</code> static method <code>random()</code>:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">Uuid</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'cassandra-driver'</span><span class="p">).</span><span class="nx">types</span><span class="p">.</span><span class="nx">Uuid</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">Uuid</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+</code></pre>
+<p>The driver decodes Cassandra uuid data type values as an instances of Uuid.</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">'SELECT id FROM users'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="k">instanceof</span> <span class="nx">Uuid</span><span class="p">);</span> <span class="c1">// true</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>      <span class="c1">// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span class="p">});</span>
+</code></pre>
+<p>You can also parse a string representation of a uuid into a Uuid instance:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">Uuid</span><span class="p">.</span><span class="nx">fromString</span><span class="p">(</span><span class="nx">stringValue</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">id</span> <span class="k">instanceof</span> <span class="nx">Uuid</span><span class="p">);</span>            <span class="c1">// true</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">id</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span> <span class="o">===</span> <span class="nx">stringValue</span><span class="p">);</span> <span class="c1">// true</span>
+</code></pre>
+<h2 id="time-uuid" class="target">TimeUuid<a class="anchor" href="#time-uuid" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The <code>TimeUuid</code> class provides support for representing Cassandra timeuuid data type.
+To generate a time-based identifier, you can use the <code>now()</code> and <code>fromDate()</code> static methods:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">TimeUuid</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'cassandra-driver'</span><span class="p">).</span><span class="nx">types</span><span class="p">.</span><span class="nx">TimeUuid</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">id1</span> <span class="o">=</span> <span class="nx">TimeUuid</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+<span class="kr">const</span> <span class="nx">id2</span> <span class="o">=</span> <span class="nx">TimeUuid</span><span class="p">.</span><span class="nx">fromDate</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">());</span>
+</code></pre>
+<p>The driver decodes CQL timeuuid data type values as instances of <code>TimeUuid</code>.</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">'SELECT id, timeid FROM sensor'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">timeid</span> <span class="k">instanceof</span> <span class="nx">TimeUuid</span><span class="p">);</span> <span class="c1">// true</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">timeid</span> <span class="k">instanceof</span> <span class="nx">Uuid</span><span class="p">);</span> <span class="c1">// true, it inherits from Uuid</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">timeid</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>      <span class="c1">// &lt;- xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">timeid</span><span class="p">.</span><span class="nx">getDate</span><span class="p">());</span>       <span class="c1">// &lt;- Date stored in the identifier</span>
+<span class="p">});</span>
+</code></pre>
+<p>You can specify the other parts of the identifier, such as the node and the clock sequence, or the 100-nanosecond
+precision value of the date using the optional parameters in <code>fromDate()</code> method.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">ticks</span> <span class="o">=</span> <span class="mi">9123</span><span class="p">;</span> <span class="c1">// A number from 0 to 9999</span>
+<span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">TimeUuid</span><span class="p">.</span><span class="nx">fromDate</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span> <span class="nx">ticks</span><span class="p">,</span> <span class="nx">node</span><span class="p">,</span> <span class="nx">clock</span><span class="p">);</span>
+</code></pre>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../../../../js/jquery.js"></script>
+    <script src="../../../../js/bootstrap.js"></script>
+    <script src="../../../../js/angular.js"></script>
+    <script src="../../../../js/mousetrap.js"></script>
+    <script src="../../../../js/hotkeys.js"></script>
+    <script src="../../../../js/ZeroClipboard.js"></script>
+    <script src="../../../../js/lunr.js"></script>
+    <script src="../../../../js/app.js"></script>
+  </body>
+</html>

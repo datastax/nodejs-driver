@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - Fetching large result sets</title>
+
+    <link rel="icon" href="../../../favicon.ico">
+    <link rel="apple-touch-icon" href="../../../favicon.png">
+    <link href="../../../css/style.css" rel="stylesheet">
+    <link href="../../../css/pygments.css" rel="stylesheet">
+    <link href="../../../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../../"><img alt="Brand" src="../../../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.0')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.0
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li><a href="../../../features/paging/">v3.1</a></li>
+                  
+                    <li class="disabled"><a href="./">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../../">Home</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../">Features</a></li>
+              
+              
+              
+              
+              
+              <li class="active">Fetching large result sets</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#fetching-large-result-sets">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li><a href="#automatic-paging">Automatic paging
+</a></li>
+<li><a href="#manual-paging">Manual paging
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li class="active">
+    <a href="../">Features <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../address-resolution/">Address resolution <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../batch/">Batch statements <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../datatypes/">CQL data types to JavaScript types <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../metadata/">Cluster and schema metadata <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../connection-pooling/">Connection pooling <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">Fetching large result sets <small>page</small></a>
+    
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../native-protocol/">Native protocol <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../parameterized-queries/">Parameterized queries <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../query-warnings/">Query warnings <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../tuning-policies/">Tuning policies <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../udfs/">User-defined functions and aggregates <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="fetching-large-result-sets" class="target">Fetching large result sets<a class="anchor" href="#fetching-large-result-sets" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>When dealing with a large number of rows, the single-threaded nature of Node.js should be taken into consideration
+because processing large results can take significant CPU time and can lead to higher levels of memory consumption.
+The driver addresses this by exposing the <code>eachRow()</code> and <code>stream()</code> methods, that parse the rows and yield them to the
+user as they come through the network.</p>
+
+<p>The driver only requests a limited number of rows each time (<code>5000</code> being the default <code>fetchSize</code>). To retrieve the
+rows beyond this default size, use one of the several paging mechanisms.</p>
+
+<h2 id="automatic-paging" class="target">Automatic paging<a class="anchor" href="#automatic-paging" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The <code>stream()</code> method automatically fetches the following pages, yielding the rows as they come through the network and
+retrieving the following page after the previous rows were read (throttling).</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">stream</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'readable'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// readable is emitted as soon a row is received and parsed</span>
+    <span class="kd">var</span> <span class="nx">row</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="nx">row</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">read</span><span class="p">())</span> <span class="p">{</span>
+      <span class="c1">// process row</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'end'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// emitted when all rows have been retrieved and read</span>
+  <span class="p">});</span>
+</code></pre>
+<p>With the <code>eachRow()</code> method, you can retrieve the following pages automatically by setting the <code>autoPage</code> flag to
+<code>true</code> in the queryOptions to request the following pages automatically. Because <code>eachRow()</code> does not handle back
+pressure, it is only suitable when there is minimum computation per row required and no additional I/O, otherwise it
+ends up buffering an unbounded amount of rows.</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="na">autoPage</span> <span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">// Invoked per each row in all the pages</span>
+<span class="p">},</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+<h2 id="manual-paging" class="target">Manual paging<a class="anchor" href="#manual-paging" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>If you want to retrieve the next page of results only when you ask for it (for example, in a web page or after a
+certain computation or job finished), you can use the <code>eachRow()</code> method.</p>
+
+<p>There are two ways that <code>eachRow()</code> method allows you to fetch the next page of results.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span> <span class="na">prepare</span> <span class="p">:</span> <span class="kc">true</span> <span class="p">,</span> <span class="na">fetchSize</span> <span class="p">:</span> <span class="mi">1000</span> <span class="p">};</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span> 
+     <span class="c1">// Invoked per each row in all the pages</span>
+  <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+     <span class="c1">// Called once the page has been retrieved.</span>
+     <span class="k">if</span> <span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">nextPage</span><span class="p">)</span> <span class="p">{</span>
+       <span class="c1">// Retrieve the following pages:</span>
+       <span class="c1">// the same row handler from above will be used</span>
+       <span class="nx">result</span><span class="p">.</span><span class="nx">nextPage</span><span class="p">();</span>
+     <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+</code></pre>
+<p>You can use <code>pageState</code> property, a string token made available in the result if there are additional result pages.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span> <span class="na">prepare</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="na">fetchSize</span> <span class="p">:</span> <span class="mi">200</span> <span class="p">};</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span> 
+     <span class="c1">// Row callback.</span>
+     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// End callback.</span>
+        <span class="c1">// Store the paging state.</span>
+        <span class="nx">pageState</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">pageState</span><span class="p">;</span>
+     <span class="p">}</span>
+<span class="p">);</span>
+</code></pre>
+<p>In the next request, use the <code>pageState</code> to fetch the following rows.</p>
+<pre class="highlight"><code><span class="c1">// Use the pageState in the queryOptions to continue where you left it.</span>
+<span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span> <span class="na">pageState</span> <span class="p">:</span> <span class="nx">pageState</span><span class="p">,</span> <span class="na">prepare</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="na">fetchSize</span> <span class="p">:</span>  <span class="mi">200</span> <span class="p">};</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">// Row callback.</span>
+   <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// End callback.</span>
+      <span class="c1">// Store the next paging state.</span>
+      <span class="nx">pageState</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">pageState</span><span class="p">;</span>
+   <span class="p">}</span>
+<span class="p">);</span>
+</code></pre>
+<p>Saving the paging state works well when you only let the user move from one page to the next. But it doesn’t allow
+arbitrary jumps (like “go directly to page 10”), because you can’t fetch a page unless you have the paging state of the
+previous one. Such a feature would require offset queries, which are not natively supported by Cassandra.</p>
+
+<p><strong>Note</strong>: The page state token can be manipulated to retrieve other results within the same column family, so it is not
+safe to expose it to the users in plain text.</p>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../../../js/jquery.js"></script>
+    <script src="../../../js/bootstrap.js"></script>
+    <script src="../../../js/angular.js"></script>
+    <script src="../../../js/mousetrap.js"></script>
+    <script src="../../../js/hotkeys.js"></script>
+    <script src="../../../js/ZeroClipboard.js"></script>
+    <script src="../../../js/lunr.js"></script>
+    <script src="../../../js/app.js"></script>
+  </body>
+</html>

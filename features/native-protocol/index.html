@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - Native protocol</title>
+
+    <link rel="icon" href="../../favicon.ico">
+    <link rel="apple-touch-icon" href="../../favicon.png">
+    <link href="../../css/style.css" rel="stylesheet">
+    <link href="../../css/pygments.css" rel="stylesheet">
+    <link href="../../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../../"><img alt="Brand" src="../../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.1')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.1
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li class="disabled"><a href="./">v3.1</a></li>
+                  
+                    <li><a href="../../v3.0/features/native-protocol/">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../../">Home</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../">Features</a></li>
+              
+              
+              
+              
+              
+              <li class="active">Native protocol</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#native-protocol">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li><a href="#controlling-the-protocol-version">Controlling the protocol version
+</a></li>
+<li><a href="#mixed-cluster-versions-and-rolling-upgrades">Mixed cluster versions and rolling upgrades
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li class="active">
+    <a href="../">Features <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../address-resolution/">Address resolution <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../batch/">Batch statements <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../datatypes/">CQL data types to JavaScript types <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../metadata/">Cluster and schema metadata <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../connection-pooling/">Connection pooling <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../execution-profiles/">Execution Profiles (experimental) <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../paging/">Fetching large result sets <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">Native protocol <small>page</small></a>
+    
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../parameterized-queries/">Parameterized queries <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../query-warnings/">Query warnings <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../tuning-policies/">Tuning policies <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../udfs/">User-defined functions and aggregates <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="native-protocol" class="target">Native protocol<a class="anchor" href="#native-protocol" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>The native protocol defines the format of the binary messages exchanged between the driver and Cassandra over TCP. As a
+driver user what you need to be aware of is that some Cassandra features are only available with a specific protocol
+version, but if you are interested in the technical details you can check <a href="https://git-wip-us.apache.org/repos/asf?p=cassandra.git;a=tree;f=doc;hb=HEAD">the specification in the Cassandra
+codebase</a>.</p>
+
+<h2 id="controlling-the-protocol-version" class="target">Controlling the protocol version<a class="anchor" href="#controlling-the-protocol-version" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>By default, the driver uses the highest protocol version supported by the driver and the Cassandra cluster. If you want
+to limit the protocol version to use, you do so in the protocol options.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">({</span>
+   <span class="na">contactPoints</span><span class="p">:</span> <span class="p">[</span><span class="s1">'1.2.3.4'</span><span class="p">],</span>
+   <span class="na">protocolOptions</span><span class="p">:</span> <span class="p">{</span> <span class="na">maxVersion</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="p">});</span>
+</code></pre>
+<h2 id="mixed-cluster-versions-and-rolling-upgrades" class="target">Mixed cluster versions and rolling upgrades<a class="anchor" href="#mixed-cluster-versions-and-rolling-upgrades" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The protocol version used between the client and the Cassandra cluster is negotiated upon establishing the first
+connection. For clusters with nodes running mixed versions of Cassandra and during rolling upgrades this could represent
+an issue that could lead to limited availability.</p>
+
+<p>To exemplify the above, consider a mixed cluster having nodes running either Cassandra 2.1 or 2.0.</p>
+
+<ul>
+<li>The first contact point is a 2.1 host, so the driver negotiates native protocol version 3</li>
+<li>While connecting to the rest of the cluster, the driver contacts a 2.0 host using native protocol version 3, which
+fails; an error is logged and this host will be permanently ignored.</li>
+</ul>
+
+<p>For these scenarios, mixed version clusters and rolling upgrades, it is strongly recommended to set the maximum protocol
+version when initializing the client:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">({</span>
+   <span class="na">contactPoints</span><span class="p">:</span> <span class="p">[</span><span class="s1">'1.2.3.4'</span><span class="p">],</span>
+   <span class="na">protocolOptions</span><span class="p">:</span> <span class="p">{</span> <span class="na">maxVersion</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="p">});</span>
+</code></pre>
+<p>And switching it to the highest protocol version once the upgrade is completed, by leaving the maximum protocol version
+unspecified:</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">({</span> <span class="na">contactPoints</span><span class="p">:</span> <span class="p">[</span><span class="s1">'1.2.3.4'</span><span class="p">]</span> <span class="p">});</span>
+</code></pre>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../../js/jquery.js"></script>
+    <script src="../../js/bootstrap.js"></script>
+    <script src="../../js/angular.js"></script>
+    <script src="../../js/mousetrap.js"></script>
+    <script src="../../js/hotkeys.js"></script>
+    <script src="../../js/ZeroClipboard.js"></script>
+    <script src="../../js/lunr.js"></script>
+    <script src="../../js/app.js"></script>
+  </body>
+</html>

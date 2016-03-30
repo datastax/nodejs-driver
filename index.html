@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - Home</title>
+
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/pygments.css" rel="stylesheet">
+    <link href="css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="./"><img alt="Brand" src="img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.1')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.1
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li class="disabled"><a href="./">v3.1</a></li>
+                  
+                    <li><a href="v3.0/">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li class="active">Home</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#data-stax-node-js-driver-for-apache-cassandra">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li><a href="#installation">Installation
+</a></li>
+<li><a href="#features">Features
+</a></li>
+<li><a href="#documentation">Documentation
+</a></li>
+<li><a href="#getting-help">Getting Help
+</a></li>
+<li>
+<a href="#basic-usage">Basic usage
+</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#prepare-your-queries">Prepare your queries
+</a></li>
+<li><a href="#row-streaming-and-pipes">Row streaming and pipes
+</a></li>
+<li><a href="#user-defined-types">User defined types
+</a></li>
+<li><a href="#paging">Paging
+</a></li>
+<li><a href="#batch-multiple-statements">Batch multiple statements
+</a></li>
+</ul>
+</li>
+<li><a href="#data-types">Data types
+</a></li>
+<li><a href="#logging">Logging
+</a></li>
+<li><a href="#feedback-requested">Feedback Requested
+</a></li>
+<li><a href="#credits">Credits
+</a></li>
+<li><a href="#license">License
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="features/">Features <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="data-stax-node-js-driver-for-apache-cassandra" class="target">DataStax Node.js Driver for Apache Cassandra<a class="anchor" href="#data-stax-node-js-driver-for-apache-cassandra" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>A modern, <a href="#features">feature-rich</a> and highly tunable Node.js client library for Apache Cassandra (1.2+) and DataStax
+Enterprise (3.1+) using exclusively Cassandra’s binary protocol and Cassandra Query Language v3.</p>
+
+<h2 id="installation" class="target">Installation<a class="anchor" href="#installation" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+<pre class="highlight"><code><span class="gp">$ </span>npm install cassandra-driver
+</code></pre>
+<p><a href="https://travis-ci.org/datastax/nodejs-driver"><img src="https://travis-ci.org/datastax/nodejs-driver.svg?branch=master" alt="Build Status"></a> <a href="https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master"><img src="https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true" alt="Build status"></a></p>
+
+<h2 id="features" class="target">Features<a class="anchor" href="#features" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<ul>
+<li>Simple, Prepared, and <a href="http://datastax.github.io/nodejs-driver/features/batch/">Batch</a> statements</li>
+<li>Asynchronous IO, parallel execution, request pipelining</li>
+<li><a href="http://datastax.github.io/nodejs-driver/features/connection-pooling/">Connection pooling</a></li>
+<li>Auto node discovery</li>
+<li>Automatic reconnection</li>
+<li>Configurable <a href="http://datastax.github.io/nodejs-driver/features/tuning-policies/#load-balancing-policy">load balancing</a> and <a href="http://datastax.github.io/nodejs-driver/features/tuning-policies/#retry-policy">retry policies</a>
+</li>
+<li>Works with any cluster size</li>
+<li><a href="#row-streaming-and-pipes">Row streaming and pipes</a></li>
+</ul>
+
+<h2 id="documentation" class="target">Documentation<a class="anchor" href="#documentation" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<ul>
+<li><a href="http://datastax.github.io/nodejs-driver/">Documentation index</a></li>
+<li><a href="http://datastax.github.io/nodejs-driver/features/datatypes/">CQL types to javascript types</a></li>
+<li><a href="http://docs.datastax.com/en/latest-nodejs-driver-api/">API docs</a></li>
+<li><a href="http://datastax.github.io/nodejs-driver/faq/">FAQ</a></li>
+</ul>
+
+<h2 id="getting-help" class="target">Getting Help<a class="anchor" href="#getting-help" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>You can use the <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">project mailing list</a> or create a ticket on the <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Jira issue tracker</a>.</p>
+
+<h2 id="basic-usage" class="target">Basic usage<a class="anchor" href="#basic-usage" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">cassandra</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'cassandra-driver'</span><span class="p">);</span>
+<span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">cassandra</span><span class="p">.</span><span class="nx">Client</span><span class="p">({</span> <span class="na">contactPoints</span><span class="p">:</span> <span class="p">[</span><span class="s1">'h1'</span><span class="p">,</span> <span class="s1">'h2'</span><span class="p">],</span> <span class="na">keyspace</span><span class="p">:</span> <span class="s1">'ks1'</span><span class="p">});</span>
+
+<span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'SELECT email, last_name FROM user_profiles WHERE key=?'</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="p">[</span><span class="s1">'guy'</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'got user profile with email '</span> <span class="o">+</span> <span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<h3 id="prepare-your-queries" class="target">Prepare your queries<a class="anchor" href="#prepare-your-queries" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>Using prepared statements provides multiple benefits.
+Prepared statements are parsed and prepared on the Cassandra nodes and are ready for future execution.
+Also, when preparing, the driver retrieves information about the parameter types which
+ <strong>allows an accurate mapping between a JavaScript type and a Cassandra type</strong>.</p>
+
+<p>The driver will prepare the query once on each host and execute the statement with the bound parameters.</p>
+<pre class="highlight"><code><span class="c1">//Use query markers (?) and parameters</span>
+<span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'UPDATE user_profiles SET birth=? WHERE key=?'</span><span class="p">;</span> 
+<span class="kr">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">1942</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">'jimi-hendrix'</span><span class="p">];</span>
+<span class="c1">//Set the prepare flag in the query options</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Row updated on the cluster'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<h3 id="row-streaming-and-pipes" class="target">Row streaming and pipes<a class="anchor" href="#row-streaming-and-pipes" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>When using <code>#eachRow()</code> and <code>#stream()</code> methods, the driver parses each row as soon as it is received,
+ yielding rows without buffering them.</p>
+<pre class="highlight"><code><span class="c1">//Reducing a large result</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="s1">'SELECT time, val FROM temperature WHERE station_id='</span><span class="p">,</span> <span class="p">[</span><span class="s1">'abc'</span><span class="p">],</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//the callback will be invoked per each row as soon as they are received</span>
+    <span class="nx">minTemperature</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">val</span><span class="p">,</span> <span class="nx">minTemperature</span><span class="p">);</span>
+  <span class="p">},</span>
+  <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+</code></pre>
+<p>The <code>#stream()</code> method works in the same way but instead of callback it returns a <a href="http://nodejs.org/api/stream.html#stream_class_stream_readable">Readable Streams2</a> object
+ in <code>objectMode</code> that emits instances of <code>Row</code>.
+It can be <strong>piped</strong> downstream and provides automatic pause/resume logic (it buffers when not read).</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">stream</span><span class="p">(</span><span class="s1">'SELECT time, val FROM temperature WHERE station_id='</span><span class="p">,</span> <span class="p">[</span><span class="s1">'abc'</span><span class="p">])</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'readable'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">//readable is emitted as soon a row is received and parsed</span>
+    <span class="kd">var</span> <span class="nx">row</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="nx">row</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">read</span><span class="p">())</span> <span class="p">{</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'time %s and value %s'</span><span class="p">,</span> <span class="nx">row</span><span class="p">.</span><span class="nx">time</span><span class="p">,</span> <span class="nx">row</span><span class="p">.</span><span class="nx">val</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'end'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">//stream ended, there aren't any more rows</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//Something went wrong: err is a response error from Cassandra</span>
+  <span class="p">});</span>
+</code></pre>
+<h3 id="user-defined-types" class="target">User defined types<a class="anchor" href="#user-defined-types" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p><a href="http://cassandra.apache.org/doc/cql3/CQL.html#createTypeStmt">User defined types (UDT)</a> are represented as Javascript objects.</p>
+
+<p>For example:
+Consider the following UDT and table
+<code>cql
+CREATE TYPE address (
+  street text,
+  city text,
+  state text,
+  zip int,
+  phones set&lt;text&gt;
+);
+CREATE TABLE users (
+  name text PRIMARY KEY,
+  email text,
+  address frozen&lt;address&gt;
+);
+</code></p>
+
+<p>You can retrieve the user address details as a regular Javascript object.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'SELECT name, email, address FROM users WHERE name = ?'</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="p">[</span><span class="nx">name</span><span class="p">],</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">first</span><span class="p">();</span>
+  <span class="kr">const</span> <span class="nx">address</span> <span class="o">=</span> <span class="nx">row</span><span class="p">.</span><span class="nx">address</span><span class="p">;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'User lives in %s, %s - %s'</span><span class="p">,</span> <span class="nx">address</span><span class="p">.</span><span class="nx">street</span><span class="p">,</span> <span class="nx">address</span><span class="p">.</span><span class="nx">city</span><span class="p">,</span> <span class="nx">address</span><span class="p">.</span><span class="nx">state</span><span class="p">);</span> 
+<span class="p">});</span>
+</code></pre>
+<p>Read more information  about using <a href="http://datastax.github.io/nodejs-driver/features/datatypes/udts/">UDTs with the Node.js Driver</a>.</p>
+
+<h3 id="paging" class="target">Paging<a class="anchor" href="#paging" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>All driver methods use a default <code>fetchSize</code> of 5000 rows, retrieving only first page of results up to a
+ maximum of 5000 rows to shield an application against accidentally large result sets. To retrieve the following
+ records you can use the <code>autoPage</code> flag in the query options of <code>#eachRow()</code> and <code>#stream()</code> methods.</p>
+<pre class="highlight"><code><span class="c1">//Imagine a column family with millions of rows</span>
+<span class="kr">const</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">'SELECT * FROM largetable'</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">eachRow</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="p">[],</span> <span class="p">{</span><span class="na">autoPage</span><span class="p">:</span> <span class="kc">true</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">//This function will be called per each of the rows in all the table</span>
+<span class="p">},</span> <span class="nx">endCallback</span><span class="p">);</span>
+</code></pre>
+<h3 id="batch-multiple-statements" class="target">Batch multiple statements<a class="anchor" href="#batch-multiple-statements" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>You can execute multiple statements in a batch to update/insert several rows atomically even in different column families.</p>
+<pre class="highlight"><code><span class="kr">const</span> <span class="nx">queries</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span>
+    <span class="na">query</span><span class="p">:</span> <span class="s1">'UPDATE user_profiles SET email=? WHERE key=?'</span><span class="p">,</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">[</span><span class="nx">emailAddress</span><span class="p">,</span> <span class="s1">'hendrix'</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">query</span><span class="p">:</span> <span class="s1">'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)'</span><span class="p">,</span>
+    <span class="na">params</span><span class="p">:</span> <span class="p">[</span><span class="s1">'hendrix'</span><span class="p">,</span> <span class="s1">'Changed email'</span><span class="p">,</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">()]</span>
+  <span class="p">}</span>
+<span class="p">];</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">batch</span><span class="p">(</span><span class="nx">queries</span><span class="p">,</span> <span class="p">{</span> <span class="na">prepare</span><span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ifError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Data updated on cluster'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<hr>
+
+<h2 id="data-types" class="target">Data types<a class="anchor" href="#data-types" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
+ to deal with data types that come from other systems in Javascript.</p>
+
+<p>The driver supports all the CQL data types in Apache Cassandra (2.2 and below) even for types that no built-in
+Javascript representation exists, like decimal, varint and bigint. Check the documentation on working with
+ <a href="http://datastax.github.io/nodejs-driver/features/datatypes/numerical/">numerical values</a>, <a href="http://datastax.github.io/nodejs-driver/features/datatypes/uuids/">uuids</a> and <a href="http://datastax.github.io/nodejs-driver/features/datatypes/collections/">collections</a>.</p>
+
+<h2 id="logging" class="target">Logging<a class="anchor" href="#logging" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>Instances of <code>Client()</code> are <code>EventEmitter</code> and emit <code>log</code> events:</p>
+<pre class="highlight"><code><span class="nx">client</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'log'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">level</span><span class="p">,</span> <span class="nx">className</span><span class="p">,</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">furtherInfo</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'log event: %s -- %s'</span><span class="p">,</span> <span class="nx">level</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+<p>The <code>level</code> being passed to the listener can be <code>verbose</code>, <code>info</code>, <code>warning</code> or <code>error</code>.</p>
+
+<h2 id="feedback-requested" class="target">Feedback Requested<a class="anchor" href="#feedback-requested" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p><strong>Help us focus our efforts!</strong> Provide your input on the <a href="http://goo.gl/forms/f216tY3Ebr">Platform and Runtime Survey</a> (we kept it short).</p>
+
+<h2 id="credits" class="target">Credits<a class="anchor" href="#credits" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>This driver is based on the original work of <a href="https://github.com/jorgebay">Jorge Bay</a> on <a href="https://github.com/jorgebay/node-cassandra-cql">node-cassandra-cql</a> and adds a series of advanced features that are common across all other <a href="https://github.com/datastax">DataStax drivers</a> for Apache Cassandra.</p>
+
+<p>The development effort to provide an up to date, high performance, fully featured Node.js Driver for Apache Cassandra will continue on this project, while <a href="https://github.com/jorgebay/node-cassandra-cql">node-cassandra-cql</a> will be discontinued.</p>
+
+<h2 id="license" class="target">License<a class="anchor" href="#license" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>Copyright 2016 DataStax</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may obtain a copy of the License at</p>
+
+<p><a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+
+<p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/angular.js"></script>
+    <script src="js/mousetrap.js"></script>
+    <script src="js/hotkeys.js"></script>
+    <script src="js/ZeroClipboard.js"></script>
+    <script src="js/lunr.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

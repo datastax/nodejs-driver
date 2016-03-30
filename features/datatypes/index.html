@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - CQL data types to JavaScript types</title>
+
+    <link rel="icon" href="../../favicon.ico">
+    <link rel="apple-touch-icon" href="../../favicon.png">
+    <link href="../../css/style.css" rel="stylesheet">
+    <link href="../../css/pygments.css" rel="stylesheet">
+    <link href="../../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../../"><img alt="Brand" src="../../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.1')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.1
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li class="disabled"><a href="./">v3.1</a></li>
+                  
+                    <li><a href="../../v3.0/features/datatypes/">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../../">Home</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../">Features</a></li>
+              
+              
+              
+              
+              
+              <li class="active">CQL data types to JavaScript types</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#cql-data-types-to-java-script-types">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li>
+<a href="#encoding-data">Encoding data
+</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#prepare-your-queries-recommended">Prepare your queries (recommended)
+</a></li>
+<li><a href="#hinting-the-target-data-type">Hinting the target data type
+</a></li>
+</ul>
+</li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li class="active">
+    <a href="../">Features <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../address-resolution/">Address resolution <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../batch/">Batch statements <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">CQL data types to JavaScript types <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="collections/">Collections <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="datetime/">Date and time representation <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="nulls/">Null and unset values <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="numerical/">Numerical values <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="tuples/">Tuples <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="uuids/">UUID and time-based UUID data types <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="udts/">User-defined types <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../metadata/">Cluster and schema metadata <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../connection-pooling/">Connection pooling <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../execution-profiles/">Execution Profiles (experimental) <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../paging/">Fetching large result sets <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../native-protocol/">Native protocol <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../parameterized-queries/">Parameterized queries <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../query-warnings/">Query warnings <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../tuning-policies/">Tuning policies <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../udfs/">User-defined functions and aggregates <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="cql-data-types-to-java-script-types" class="target">CQL data types to JavaScript types<a class="anchor" href="#cql-data-types-to-java-script-types" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<p>When retrieving the value of a column from a <code>Row</code> object, the value is typed according to the following table.</p>
+
+<table>
+<thead>
+<tr>
+<th>CQL data type</th>
+<th>JavaScript type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ascii</td>
+<td>String</td>
+</tr>
+<tr>
+<td>bigint</td>
+<td><a href="numerical">Long</a></td>
+</tr>
+<tr>
+<td>blob</td>
+<td><a href="https://nodejs.org/api/buffer.html">Buffer</a></td>
+</tr>
+<tr>
+<td>boolean</td>
+<td>Boolean</td>
+</tr>
+<tr>
+<td>counter</td>
+<td><a href="numerical">Long</a></td>
+</tr>
+<tr>
+<td>date</td>
+<td><a href="datetime">LocalDate</a></td>
+</tr>
+<tr>
+<td>decimal</td>
+<td><a href="numerical">BigDecimal</a></td>
+</tr>
+<tr>
+<td>double</td>
+<td><a href="numerical">Number</a></td>
+</tr>
+<tr>
+<td>float</td>
+<td><a href="numerical">Number</a></td>
+</tr>
+<tr>
+<td>inet</td>
+<td><a href="http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html">InetAddress</a></td>
+</tr>
+<tr>
+<td>int</td>
+<td><a href="numerical">Number</a></td>
+</tr>
+<tr>
+<td>list</td>
+<td><a href="collections">Array</a></td>
+</tr>
+<tr>
+<td>map</td>
+<td><a href="collections">Object / ECMAScript 6 Map</a></td>
+</tr>
+<tr>
+<td>set</td>
+<td><a href="collections">Array / ECMAScript 6 Set</a></td>
+</tr>
+<tr>
+<td>smallint</td>
+<td><a href="numerical">Number</a></td>
+</tr>
+<tr>
+<td>text</td>
+<td>String</td>
+</tr>
+<tr>
+<td>time</td>
+<td><a href="datetime">LocalTime</a></td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td><a href="datetime">Date</a></td>
+</tr>
+<tr>
+<td>timeuuid</td>
+<td><a href="uuids">TimeUuid</a></td>
+</tr>
+<tr>
+<td>tinyint</td>
+<td><a href="numerical">Number</a></td>
+</tr>
+<tr>
+<td>tuple</td>
+<td><a href="tuples">Tuple</a></td>
+</tr>
+<tr>
+<td>uuid</td>
+<td><a href="uuids">Uuid</a></td>
+</tr>
+<tr>
+<td>varchar</td>
+<td>String</td>
+</tr>
+<tr>
+<td>varint</td>
+<td><a href="numerical">Integer</a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="encoding-data" class="target">Encoding data<a class="anchor" href="#encoding-data" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>When encoding data, on a normal execute with parameters, the driver tries to guess the target type based on the input
+type. Values of type <code>Number</code> will be encoded as <code>double</code> (because <code>Number</code> is IEEE 754 double).</p>
+
+<p>Consider the following example:</p>
+<pre class="highlight"><code><span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">'SELECT * FROM table1 where key = ?'</span><span class="p">,</span> <span class="p">[</span><span class="nx">key</span><span class="p">],</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+<p>If the key column is of type <code>int</code>, the execution fails. There are two possible ways to avoid this type of problem, as
+detailed below.</p>
+
+<h3 id="prepare-your-queries-recommended" class="target">Prepare your queries (recommended)<a class="anchor" href="#prepare-your-queries-recommended" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>Using prepared statements provides multiple benefits. Prepared statements are parsed and prepared on the Cassandra nodes
+and are ready for future execution. Also, the driver retrieves information about the parameter types which allows an
+<strong>accurate mapping between a JavaScript type and a Cassandra type</strong>.</p>
+
+<p>Using the previous example, setting the <code>prepare</code> flag in the queryOptions will fix it:</p>
+<pre class="highlight"><code><span class="c1">// prepare the query before execution </span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">'SELECT * FROM table1 where key = ?'</span><span class="p">,</span> <span class="p">[</span><span class="nx">key</span><span class="p">],</span> <span class="p">{</span> <span class="na">prepare</span> <span class="p">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+<p>When using prepared statements, the driver prepares the statement once on each host to execute multiple times.</p>
+
+<h3 id="hinting-the-target-data-type" class="target">Hinting the target data type<a class="anchor" href="#hinting-the-target-data-type" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>Providing parameter hints in the query options is another way around it.</p>
+<pre class="highlight"><code><span class="c1">// Hint that the first parameter is an integer </span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">'SELECT * FROM table1 where key = ?'</span><span class="p">,</span> <span class="p">[</span><span class="nx">key</span><span class="p">],</span> <span class="p">{</span> <span class="na">hints</span> <span class="p">:</span> <span class="p">[</span><span class="s1">'int'</span><span class="p">]</span> <span class="p">},</span> <span class="nx">callback</span><span class="p">);</span>
+</code></pre>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../../js/jquery.js"></script>
+    <script src="../../js/bootstrap.js"></script>
+    <script src="../../js/angular.js"></script>
+    <script src="../../js/mousetrap.js"></script>
+    <script src="../../js/hotkeys.js"></script>
+    <script src="../../js/ZeroClipboard.js"></script>
+    <script src="../../js/lunr.js"></script>
+    <script src="../../js/app.js"></script>
+  </body>
+</html>

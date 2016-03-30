@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="DataStax Nodejs Driver for Apache Cassandra">
+    <meta name="author" content="DataStax">
+
+    <title>DataStax Nodejs Driver - Tuning policies</title>
+
+    <link rel="icon" href="../../../favicon.ico">
+    <link rel="apple-touch-icon" href="../../../favicon.png">
+    <link href="../../../css/style.css" rel="stylesheet">
+    <link href="../../../css/pygments.css" rel="stylesheet">
+    <link href="../../../css/hotkeys.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body ng-app="docs" data-spy="scroll" data-target="#table-of-contents" data-offset="69">
+    <header class="container-fluid navbar">
+      <div class="row">
+        <div class="col-sm-4">
+          <a class="navbar-brand" href="../../"><img alt="Brand" src="../../../img/logo.png">DataStax Nodejs Driver</a>
+        </div>
+        <div class="col-md-4 col-md-offset-4">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="list-inline" role="nav">
+                <li><a href="https://academy.datastax.com/" class="navbar-link">DataStax Academy</a></li>
+                <li><a href="http://www.datastax.com/dev/blog" class="navbar-link">Tech Blog</a></li>
+                <li><a href="http://www.datastax.com/what-we-offer/products-services/support" class="navbar-link">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <form id="search" class="form-search dropdown visible-lg-block" ng-controller="search" ng-class="{open: hasResults}" role="search" ng-submit="submit()" data-spy="affix" data-offset-top="130">
+                <div class="form-group has-feedback">
+                  <input type="search" class="form-control input-sm mousetrap" placeholder="Search..." ng-model="q" ng-change="search('v3.0')" ng-disabled="!searchReady" disabled data-hotkey="{down: moveDown, up: moveUp, esc: reset}" data-search>
+                </div>
+                <ul class="dropdown-menu search-results" role="menu">
+                  <li ng-repeat="result in results" ng-class="{'bg-warning': $index == current}"><a ng-href="{{basePath}}{{result.path}}"><span ng-bind-html="summary(result)"></span></a></li>
+                </ul>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.datastax.com/download" class="btn btn-primary btn-sm">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row crumbs-wrapper">
+        <div class="col-md-12">
+          <nav id="crumbs" data-spy="affix" data-offset-top="130">
+            <ol class="breadcrumb">
+              
+              <li>
+                <div class="btn-group">
+                  <button id="current-version" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    v3.0
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="current-version">
+                  
+                    <li><a href="../../../features/tuning-policies/">v3.1</a></li>
+                  
+                    <li class="disabled"><a href="./">v3.0</a></li>
+                  
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+              
+              <li><a href="../../">Home</a></li>
+              
+              
+              
+              
+              
+              <li><a href="../">Features</a></li>
+              
+              
+              
+              
+              
+              <li class="active">Tuning policies</li>
+              <li class="dropdown" id="table-of-contents">
+                <div class="btn-group">
+                  <button id="current-section" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Jump to&#8230; <span class="caret"></span><span class="sr-only">Table of Contents</span>
+                  </button>
+                  <ul class="dropdown-menu nav nav-pills nav-stacked">
+                    <li><a href="#tuning-policies">Page Top <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></a></li>
+<li>
+<a href="#load-balancing-policy">Load balancing policy
+</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#default-load-balancing-policy">Default load-balancing policy
+</a></li>
+<li><a href="#setting-the-load-balancing-policy">Setting the load-balancing policy
+</a></li>
+<li><a href="#implementing-a-custom-load-balancing-policy">Implementing a custom load-balancing policy
+</a></li>
+</ul>
+</li>
+<li><a href="#reconnection-policy">Reconnection policy
+</a></li>
+<li><a href="#retry-policy">Retry policy
+</a></li>
+                  </ul>
+                </div>
+              </li>
+              
+              
+              
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid" id="content">
+      <div class="row">
+        <div class="col-md-3">
+          <div id="navigation" class="side-nav" role="tablist" aria-multiselectable="true">
+            <h3>Contents</h3>
+            <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li class="active">
+    <a href="../">Features <small>page</small></a>
+    <ul class="nav nav-pills nav-stacked">
+  
+  
+  
+  <li>
+    <a href="../address-resolution/">Address resolution <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../batch/">Batch statements <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../datatypes/">CQL data types to JavaScript types <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../metadata/">Cluster and schema metadata <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../connection-pooling/">Connection pooling <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../paging/">Fetching large result sets <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../native-protocol/">Native protocol <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../parameterized-queries/">Parameterized queries <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../query-warnings/">Query warnings <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li class="active">
+    <a href="./" class="current">Tuning policies <small>page</small></a>
+    
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../udfs/">User-defined functions and aggregates <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../faq/">Frequently Asked Questions <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../getting-started/">Getting started <small>page</small></a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a href="../../coding-rules/">Three simple rules for coding with the driver <small>page</small></a>
+  </li>
+  
+  
+</ul>
+
+          </div>
+        </div>
+        <div class="col-md-9 content">
+          
+
+<h1 id="tuning-policies" class="target">Tuning policies<a class="anchor" href="#tuning-policies" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h1>
+
+<h2 id="load-balancing-policy" class="target">Load balancing policy<a class="anchor" href="#load-balancing-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The load balancing policy interface consists of three methods:</p>
+
+<ul>
+<li>
+<code>#distance(Host host)</code>: determines the distance to the specified host. The values are <code>distance.ignored</code>, 
+<code>distance.local</code>, and <code>distance.remote</code>.</li>
+<li>
+<code>#init(client, hosts, callback)</code>: initializes the policy. The driver calls this method only once and before any other
+method calls are made.</li>
+<li>
+<code>#newQueryPlan(keyspace, queryOptions, callback)</code>: executes a callback with the iterator of hosts to use for a query.
+Each new query calls this method.</li>
+</ul>
+
+<p>The policies are responsible for yielding a group of nodes in an specific order for the driver to use (if the first
+node fails, it uses the next one). There are three load-balancing policies implemented in the driver: </p>
+
+<ul>
+<li>
+<code>DCAwareRoundRobinPolicy</code>: a datacenter-aware, round-robin, load-balancing policy. This policy provides round-robin
+queries over the node of the local datacenter. It also includes in the query plans returned a configurable number of
+hosts in the remote data centers, but those are always tried after the local nodes.</li>
+<li>
+<code>RoundRobinPolicy</code>: a policy that yields nodes in a round-robin fashion.</li>
+<li>
+<code>TokenAwarePolicy</code>: a policy that yields replica nodes for a given partition key and keyspace. The token-aware policy
+uses a child policy to retrieve the next nodes in case the replicas for a partition key are not available.</li>
+</ul>
+
+<h3 id="default-load-balancing-policy" class="target">Default load-balancing policy<a class="anchor" href="#default-load-balancing-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>The default load-balancing policy is the <code>TokenAwarePolicy</code> with <code>DCAwareRoundRobinPolicy</code> as a child policy. It may
+seem complex but it actually isn’t: The policy yields local replicas for a given key and, if not available, it yields
+nodes of the local datacenter in a round-robin manner.</p>
+
+<h3 id="setting-the-load-balancing-policy" class="target">Setting the load-balancing policy<a class="anchor" href="#setting-the-load-balancing-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>To use a load-balancing policy, you pass it in as a clientOptions object to the <code>Client</code> constructor.</p>
+<pre class="highlight"><code><span class="c1">// You can specify the local dc relatively to the node.js app</span>
+<span class="kr">const</span> <span class="nx">localDatacenter</span> <span class="o">=</span> <span class="s1">'us-east'</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">loadBalancingPolicy</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">cassandra</span><span class="p">.</span><span class="nx">policies</span><span class="p">.</span><span class="nx">loadBalancing</span><span class="p">.</span><span class="nx">DCAwareRoundRobinPolicy</span><span class="p">(</span><span class="nx">localDatacenter</span><span class="p">);</span> 
+<span class="kr">const</span> <span class="nx">clientOptions</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="na">policies</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="na">loadBalancing</span> <span class="p">:</span> <span class="nx">loadBalancingPolicy</span>
+   <span class="p">}</span>
+<span class="p">};</span> 
+<span class="kr">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">cassandra</span><span class="p">.</span><span class="nx">Client</span><span class="p">(</span><span class="nx">clientOptions</span><span class="p">);</span>
+</code></pre>
+<h3 id="implementing-a-custom-load-balancing-policy" class="target">Implementing a custom load-balancing policy<a class="anchor" href="#implementing-a-custom-load-balancing-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h3>
+
+<p>The built-in policies in the Node.js driver cover most common use cases. In the rare case that you need to implement
+you own policy you can do it by inheriting from one of the existent policies or the abstract <code>LoadBalancingPolicy</code> class.</p>
+
+<p>You have to take into account that the same policy is used for all queries in order to yield the hosts in correct order.</p>
+
+<p>The load-balancing policies are implemented using the <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols#iterator">Iterator
+Protocol</a>, a convention for
+lazy iteration allowing to produce only the next value in the series without producing a full Array of values. Under
+ECMAScript 6, it enables you to use the new generators.</p>
+
+<p><strong>Example</strong>: A policy that selects every node except an specific one.</p>
+
+<p>Note that this policy is a sample and it is not intended for production use. Use datacenter-based policies instead.</p>
+<pre class="highlight"><code><span class="kd">function</span> <span class="nx">BlackListPolicy</span><span class="p">(</span><span class="nx">blackListedHost</span><span class="p">,</span> <span class="nx">childPolicy</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">blackListedHost</span> <span class="o">=</span> <span class="nx">blackListedHost</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">childPolicy</span> <span class="o">=</span> <span class="nx">childPolicy</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">util</span><span class="p">.</span><span class="nx">inherits</span><span class="p">(</span><span class="nx">BlackListPolicy</span><span class="p">,</span> <span class="nx">LoadBalancingPolicy</span><span class="p">);</span>
+
+<span class="nx">BlackListPolicy</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">client</span><span class="p">,</span> <span class="nx">hosts</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">client</span> <span class="o">=</span> <span class="nx">client</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">hosts</span> <span class="o">=</span> <span class="nx">hosts</span><span class="p">;</span>
+  <span class="c1">//initialize the child policy</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">childPolicy</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">client</span><span class="p">,</span> <span class="nx">hosts</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">BlackListPolicy</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">getDistance</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">host</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">childPolicy</span><span class="p">.</span><span class="nx">getDistance</span><span class="p">(</span><span class="nx">host</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">BlackListPolicy</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">newQueryPlan</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">keyspace</span><span class="p">,</span> <span class="nx">queryOptions</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">childPolicy</span><span class="p">.</span><span class="nx">newQueryPlan</span><span class="p">(</span><span class="nx">keyspace</span><span class="p">,</span> <span class="nx">queryOptions</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">iterator</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">iterator</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">BlackListPolicy</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">filter</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">childIterator</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="na">next</span><span class="p">:</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span> <span class="nx">childIterator</span><span class="p">.</span><span class="nx">next</span><span class="p">();</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">address</span> <span class="o">===</span> <span class="nx">self</span><span class="p">.</span><span class="nx">blackListedHost</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//use the next one</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">next</span><span class="p">();</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="nx">item</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+<h2 id="reconnection-policy" class="target">Reconnection policy<a class="anchor" href="#reconnection-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>The reconnection policy consists of one method:</p>
+
+<ul>
+<li>
+<code>#newSchedule()</code>: creates a new schedule to use in reconnection attempts.</li>
+</ul>
+
+<p>By default, the driver uses an exponential reconnection policy. The driver includes these two policy classes:</p>
+
+<ul>
+<li><code>ConstantReconnectionPolicy</code></li>
+<li><code>ExponentialReconnectionPolicy</code></li>
+</ul>
+
+<h2 id="retry-policy" class="target">Retry policy<a class="anchor" href="#retry-policy" aria-hidden="true"><span class="glyphicon glyphicon-link"></span></a>
+</h2>
+
+<p>A client may send requests to any node in a cluster whether or not it is a replica of the data being queried.
+This node is placed into the coordinator role temporarily. Which node is the coordinator is determined by the load
+balancing policy for the cluster. The coordinator is responsible for routing the request to the appropriate replicas.
+If a coordinator fails during a request, the driver connects to a different node and retries the request.
+If the coordinator knows before a request that a replica is down, it can throw an <code>UnavailableException</code>, but if the
+replica fails after the request is made, it throws a <code>TimeoutException</code>. Of course, this all depends on the consistency
+level set for the query before executing it.</p>
+
+<p>A retry policy centralizes the handling of query retries, minimizing the need for catching and handling of exceptions in your business code.</p>
+
+<p>The retry policy interface consists of three methods:</p>
+
+<ul>
+<li><code>#onReadTimeout(requestInfo, consistency, received, blockFor, isDataPresent)</code></li>
+<li><code>#onUnavailable(requestInfo, consistency, required, alive)</code></li>
+<li><code>#onWriteTimeout(requestInfo, consistency, received, blockFor, writeType)</code></li>
+</ul>
+
+<p>A default and base retry policy is included.</p>
+
+
+        </div>
+      </div>
+    </div>
+
+    
+    <footer class="container text-muted">
+      <ul class="list-inline">
+      
+        
+        <li>
+          <a href="https://github.com/datastax/nodejs-driver/">Code</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="http://datastax.github.io/nodejs-driver/">Docs</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://datastax-oss.atlassian.net/projects/NODEJS/issues">Issues</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user">Mailing List</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="irc://irc.freenode.net/datastax-drivers">IRC Channel</a>
+        </li>
+      
+        <li>·</li>
+        <li>
+          <a href="https://www.npmjs.org/package/cassandra-driver">Npm</a>
+        </li>
+      
+      </ul>
+    </footer>
+    
+
+    <script src="../../../js/jquery.js"></script>
+    <script src="../../../js/bootstrap.js"></script>
+    <script src="../../../js/angular.js"></script>
+    <script src="../../../js/mousetrap.js"></script>
+    <script src="../../../js/hotkeys.js"></script>
+    <script src="../../../js/ZeroClipboard.js"></script>
+    <script src="../../../js/lunr.js"></script>
+    <script src="../../../js/app.js"></script>
+  </body>
+</html>

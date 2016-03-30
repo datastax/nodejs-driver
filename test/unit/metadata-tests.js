@@ -285,6 +285,111 @@ describe('Metadata', function () {
         done();
       });
     });
+    it('should return quickly with many replicas and 0 nodes in one DC.', function (done) {
+      this.timeout(2000);
+      var cc = getControlConnectionForRows([{
+        'keyspace_name': 'dummy',
+        'strategy_class': 'NetworkTopologyStrategy',
+        'strategy_options': '{"dc1": "3", "dc2": "2"}'
+      }]);
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var metadata = new Metadata(options, cc);
+      metadata.tokenizer = getTokenizer();
+      var racksDc1 = new utils.HashSet();
+      racksDc1.add('dc1_r1');
+      var racksDc2 = new utils.HashSet();
+      racksDc2.add('dc2_r1');
+      metadata.datacenters = {
+        'dc1': {hostLength: 100, racks: racksDc1},
+        'dc2': {hostLength: 0, racks: racksDc2}
+      };
+
+      metadata.ring = [];
+      // create ring with 100 replicas and 256 vnodes each.  place every replica in DC1.
+      metadata.primaryReplicas = {};
+      for (var r = 0; r < 100; r++) {
+        var h = new Host(r.toString(), 2, options);
+        h.datacenter = 'dc1';
+        h.rack = 'dc1_r1';
+        // 256 vnodes per replica.
+        for (var v = 0; v < 256; v++) {
+          var token = (v * 256) + r;
+          metadata.ring.push(token);
+          metadata.primaryReplicas[token.toString()] = h;
+        }
+      }
+      metadata.ring.sort(function (a, b) {
+        return a - b
+      });
+
+      metadata.log = helper.noop;
+      // Get the replicas of 5.  Since DC2 has 0 replicas, we only expect 3 replicas (the number of DC1).
+      metadata.refreshKeyspaces(function () {
+        var replicas = metadata.getReplicas('dummy', new Buffer([5]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), ['5', '6', '7']);
+        done();
+      });
+    });
+    it('should return quickly with many replicas and not enough nodes in a DC to satisfy RF.', function (done) {
+      this.timeout(2000);
+      var cc = getControlConnectionForRows([{
+        'keyspace_name': 'dummy',
+        'strategy_class': 'NetworkTopologyStrategy',
+        'strategy_options': '{"dc1": "3", "dc2": "2"}'
+      }]);
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var metadata = new Metadata(options, cc);
+      metadata.tokenizer = getTokenizer();
+      var racksDc1 = new utils.HashSet();
+      racksDc1.add('dc1_r1');
+      var racksDc2 = new utils.HashSet();
+      racksDc2.add('dc2_r1');
+      metadata.datacenters = {
+        'dc1': {hostLength: 100, racks: racksDc1},
+        'dc2': {hostLength: 1, racks: racksDc2}
+      };
+
+      metadata.ring = [];
+      // create ring with 100 replicas and 256 vnodes each.  place every replica in DC1 except replica 0.
+      metadata.primaryReplicas = {};
+      for (var r = 0; r < 100; r++) {
+        var h = new Host(r.toString(), 2, options);
+        h.datacenter = 'dc1';
+        h.rack = 'dc1_r1';
+        // Place replica 0 in DC2.
+        if (r == 0) {
+          h.datacenter = 'dc2';
+          h.rack = 'dc2_r1';
+        }
+        // 256 vnodes per replica.
+        for (var v = 0; v < 256; v++) {
+          var token = (v * 256) + r;
+          metadata.ring.push(token);
+          metadata.primaryReplicas[token.toString()] = h;
+        }
+      }
+      // sort the ring so the tokens are in order (this is done in metadata buildTokens, but it accounts for
+      // partitioner which we don't need to use here).
+      metadata.ring.sort(function (a, b) {
+        return a - b
+      });
+
+      metadata.log = helper.noop;
+      // Get the replicas of 0.  Since token 0 is a replica in DC2 and DC2 only has 1, it should return 1 replica
+      // in addition to the next 3 replicas from DC1.
+      metadata.refreshKeyspaces(function () {
+        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), ['0', '1', '2', '3']);
+        // Get the replicas for token 51752 which should resolve to primary replica 40 (202nd vnode, 212 * 256 + 40),
+        // its next two subsequent replicas for DC1, and then 0 for DC2 since it only has that one replica.
+        replicas = metadata.getReplicas('dummy', new Buffer([51752]));
+        assert.ok(replicas);
+        assert.deepEqual(replicas.map(getAddress), ['40', '41', '42', '0']);
+        done();
+      });
+    });
   });
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {

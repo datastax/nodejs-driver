@@ -2,14 +2,13 @@
 var assert = require('assert');
 var async = require('async');
 var util = require('util');
+var rewire = require('rewire');
 
 var helper = require('../test-helper.js');
-var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
 var Metadata = require('../../lib/metadata');
 var TableMetadata = require('../../lib/metadata/table-metadata');
-var MaterializedView = require('../../lib/metadata/materialized-view');
 var tokenizer = require('../../lib/tokenizer');
 var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
@@ -30,6 +29,7 @@ describe('Metadata', function () {
           }]});
         }
       };
+      //noinspection JSCheckFunctionSignatures
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.ring = [0, 1, 2, 3, 4, 5];
@@ -2096,6 +2096,36 @@ describe('Metadata', function () {
         helper.assertInstanceOf(err, errors.NotSupportedError);
         done();
       });
+    });
+  });
+});
+describe('SchemaParser', function () {
+  var isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
+  describe('isDoneForToken()', function () {
+    it('should skip if dc not included in topology', function () {
+      var replicationFactors = { 'dc1': 3, 'dc2': 1 };
+      //dc2 does not exist
+      var datacenters = {
+        'dc1': { hostLength: 6 }
+      };
+      assert.strictEqual(false, isDoneForToken(replicationFactors, datacenters, {}));
+    });
+    it('should skip if rf equals to 0', function () {
+      //rf 0 for dc2
+      var replicationFactors = { 'dc1': 4, 'dc2': 0 };
+      var datacenters = {
+        'dc1': { hostLength: 6 },
+        'dc2': { hostLength: 6 }
+      };
+      assert.strictEqual(true, isDoneForToken(replicationFactors, datacenters, { 'dc1': 4 }));
+    });
+    it('should return false for undefined replicasByDc[dcName]', function () {
+      var replicationFactors = { 'dc1': 3, 'dc2': 1 };
+      //dc2 does not exist
+      var datacenters = {
+        'dc1': { hostLength: 6 }
+      };
+      assert.strictEqual(false, isDoneForToken(replicationFactors, datacenters, {}));
     });
   });
 });

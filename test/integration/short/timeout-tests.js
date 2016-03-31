@@ -14,57 +14,7 @@ describe('client read timeouts', function () {
   beforeEach(helper.ccmHelper.start(2));
   afterEach(helper.ccmHelper.remove);
   describe('when socketOptions.readTimeout is not set', function () {
-    it('should do nothing else than waiting', function (done) {
-      //set readTimeout to 0
-      var client = newInstance({ socketOptions: { readTimeout: 0 } });
-      var coordinators = {};
-      async.series([
-        client.connect.bind(client),
-        function warmup(next) {
-          async.timesSeries(10, function (n, timesNext) {
-            client.execute('SELECT key FROM system.local', function (err, result) {
-              if (err) return timesNext(err);
-              coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-              timesNext();
-            });
-          }, next);
-        },
-        helper.toTask(helper.ccmHelper.pauseNode, null, 2),
-        function checkTimeouts(next) {
-          assert.strictEqual(Object.keys(coordinators).length, 2);
-          assert.strictEqual(coordinators['1'], true);
-          assert.strictEqual(coordinators['2'], true);
-          coordinators = {};
-          //execute 2 queries without waiting for the response
-          for (var i = 0; i < 2; i++) {
-            client.execute('SELECT key FROM system.local', function (err, result) {
-              assert.ifError(err);
-              coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-            });
-          }
-          //wait for the node that is healthy to respond
-          setTimeout(next, 2000);
-        },
-        function checkWhenPaused(next) {
-          //the other callback is still waiting
-          assert.strictEqual(Object.keys(coordinators).length, 1);
-          assert.strictEqual(coordinators['1'], true);
-          next();
-        },
-        helper.toTask(helper.ccmHelper.resumeNode, null, 2),
-        function waitForResponse(next) {
-          // Wait for 2 seconds after resume for node to respond.
-          setTimeout(next, 2000);
-        },
-        function checkAfterResuming(next) {
-          assert.strictEqual(Object.keys(coordinators).length, 2);
-          assert.strictEqual(coordinators['1'], true);
-          assert.strictEqual(coordinators['2'], true);
-          next();
-        },
-        client.shutdown.bind(client)
-      ], done);
-    });
+    it('should do nothing else than waiting', getTimeoutErrorExpectedTest(false, false));
     it('should use readTimeout when defined', getMoveNextHostTest(false, false, 0, { readTimeout: 3000 }));
   });
   describe('when socketOptions.readTimeout is set', function () {
@@ -235,6 +185,10 @@ describe('client read timeouts', function () {
       getMoveNextHostTest(false, false, 1 << 24, { readTimeout: 3000 }));
     it('should be used instead of socketOptions.readTimeout for prepared queries executions',
       getMoveNextHostTest(true, true, 1 << 24, { readTimeout: 3000 }));
+    it('should suppress socketOptions.readTimeout when set to 0 for simple queries',
+      getTimeoutErrorExpectedTest(false, false, 3000, { readTimeout: 0}));
+    it('should suppress socketOptions.readTimeout when set to 0 for prepared queries executions',
+      getTimeoutErrorExpectedTest(true, true, 3000, { readTimeout: 0}));
   });
 });
 
@@ -298,6 +252,64 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
         });
       },
       helper.toTask(helper.ccmHelper.resumeNode, null, 2),
+      client.shutdown.bind(client)
+    ], done);
+  });
+}
+
+function getTimeoutErrorExpectedTest(prepare, prepareWarmup, readTimeout, queryOptions) {
+  if (typeof readTimeout === 'undefined') {
+    readTimeout = 0;
+  }
+
+  return (function timeoutErrorExpectedTest(done) {
+    var client = newInstance({ socketOptions: { readTimeout: readTimeout } });
+    var coordinators = {};
+    async.series([
+      client.connect.bind(client),
+      function warmup(next) {
+        async.timesSeries(10, function (n, timesNext) {
+          client.execute('SELECT key FROM system.local', [], { prepare: prepareWarmup }, function (err, result) {
+            if (err) return timesNext(err);
+            coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+            timesNext();
+          });
+        }, next);
+      },
+      helper.toTask(helper.ccmHelper.pauseNode, null, 2),
+      function checkTimeouts(next) {
+        assert.strictEqual(Object.keys(coordinators).length, 2);
+        assert.strictEqual(coordinators['1'], true);
+        assert.strictEqual(coordinators['2'], true);
+        coordinators = {};
+        //execute 2 queries without waiting for the response
+        for (var i = 0; i < 2; i++) {
+          queryOptions = utils.extend({ }, queryOptions, { prepare: prepare });
+          client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
+            assert.ifError(err);
+            coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+          });
+        }
+        //wait for the node that is healthy to respond
+        setTimeout(next, 2000);
+      },
+      function checkWhenPaused(next) {
+        //the other callback is still waiting
+        assert.strictEqual(Object.keys(coordinators).length, 1);
+        assert.strictEqual(coordinators['1'], true);
+        next();
+      },
+      helper.toTask(helper.ccmHelper.resumeNode, null, 2),
+      function waitForResponse(next) {
+        // Wait for 2 seconds after resume for node to respond.
+        setTimeout(next, 2000);
+      },
+      function checkAfterResuming(next) {
+        assert.strictEqual(Object.keys(coordinators).length, 2);
+        assert.strictEqual(coordinators['1'], true);
+        assert.strictEqual(coordinators['2'], true);
+        next();
+      },
       client.shutdown.bind(client)
     ], done);
   });

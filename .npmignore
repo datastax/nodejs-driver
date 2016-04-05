@@ -13,13 +13,14 @@ pids
 logs/
 results
 doc/
+docs/
 examples/
 support/
 test/
 out/
+docs.yaml
 testing.js
 .DS_Store
 .idea
-
 npm-debug.log
 node_modules

@@ -1,5 +1,20 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.0.2
+
+2016-04-05
+
+### Features
+
+- [NODEJS-228] - Allow setting read timeout at statement level
+
+### Bug Fixes
+
+- [NODEJS-159] - Metadata.getTokenToReplicaNetworkMapper does not account for multiple racks in a DC
+- [NODEJS-235] - Decoding error can result in callback not executed
+- [NODEJS-237] - Timeuuid generation sub-millisecond portion is not guaranteed to be increasing
+- [NODEJS-238] - eachRow() retry attempts after read timeout don't execute rowCallback
+
 ## 3.0.1
 
 2016-02-08

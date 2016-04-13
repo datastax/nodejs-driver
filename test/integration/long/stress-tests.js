@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -18,7 +18,7 @@ describe('Client', function () {
     var selectQuery = 'SELECT * FROM ' + table;
     var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
     var times = 2000;
-    async.series([
+    utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
         client.execute(helper.createKeyspaceCql(keyspace, 3), [], helper.waitSchema(client, next));
@@ -27,11 +27,11 @@ describe('Client', function () {
         client.execute(helper.createTableCql(table), [], helper.waitSchema(client, next));
       },
       function testCase(next) {
-        async.parallel([insert, select], next);
+        utils.parallel([insert, select], next);
       }
     ], done);
     function insert(callback) {
-      async.eachLimit(new Array(times), 500, function (i, next) {
+      utils.timesLimit(times, 500, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
@@ -40,7 +40,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(Math.floor(times / 5)), 200, function (i, next) {
+      utils.timesLimit(Math.floor(times / 5), 200, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one};
@@ -64,7 +64,7 @@ describe('Client', function () {
     var selectQuery = 'SELECT * FROM ' + table;
     var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
     var times = 2000;
-    async.series([
+    utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
         client.execute(helper.createKeyspaceCql(keyspace, 3), [], helper.waitSchema(client, next));
@@ -73,11 +73,11 @@ describe('Client', function () {
         client.execute(helper.createTableCql(table), [], helper.waitSchema(client, next));
       },
       function testCase(next) {
-        async.parallel([insert, select, killANode], next);
+        utils.parallel([insert, select, killANode], next);
       }
     ], done);
     function insert(callback) {
-      async.eachLimit(new Array(times), 500, function (i, next) {
+      utils.timesLimit(times, 500, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
@@ -86,7 +86,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(Math.floor(times / 5)), 100, function (i, next) {
+      utils.timesLimit(Math.floor(times / 5), 100, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one};
@@ -117,7 +117,7 @@ describe('Client', function () {
     var selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
     var insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
     var times = 500;
-    async.series([
+    utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
         client.execute(helper.createKeyspaceCql(keyspace, 3), [], helper.waitSchema(client, next));
@@ -126,12 +126,12 @@ describe('Client', function () {
         client.execute(helper.createTableCql(keyspace + '.' + table), [], helper.waitSchema(client, next));
       },
       function testCase(next) {
-        async.parallel([insert, select], next);
+        utils.parallel([insert, select], next);
       }
     ], done);
     function insert(callback) {
       var n = 0;
-      async.eachLimit(new Array(times), 100, function (i, next) {
+      utils.timesLimit(times, 100, function (i, next) {
         i = ++n;
         var options = {
           prepare: 1,
@@ -143,7 +143,7 @@ describe('Client', function () {
     }
     function select(callback) {
       var resultCount = 0;
-      async.eachLimit(new Array(times*10), 2, function (i, next) {
+      utils.timesLimit(times*10, 2, function (i, next) {
         var options = {
           prepare: 1,
           consistency: types.consistencies.one,

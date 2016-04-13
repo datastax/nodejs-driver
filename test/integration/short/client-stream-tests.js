@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -109,7 +108,7 @@ describe('Client', function () {
     var commonTable = commonKs + '.' + helper.getRandomName('table');
     before(function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.start(3),
         client.connect.bind(client),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
@@ -148,7 +147,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 1000;
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
@@ -157,7 +156,7 @@ describe('Client', function () {
           client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
         },
         function (next) {
-          helper.timesLimit(length, 100, function (n, timesNext) {
+          utils.timesLimit(length, 100, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
             query = util.format(query, table, types.Uuid.random(), n, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
@@ -190,7 +189,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var length = 350;
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           client.execute(helper.createKeyspaceCql(keyspace, 3), helper.waitSchema(client, next));
@@ -199,7 +198,7 @@ describe('Client', function () {
           client.execute(helper.createTableCql(table), helper.waitSchema(client, next));
         },
         function (next) {
-          helper.timesLimit(length, 100, function (n, timesNext) {
+          utils.timesLimit(length, 100, function (n, timesNext) {
             var query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
             query = util.format(query, table, types.Uuid.random(), n + 1, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
@@ -295,27 +294,29 @@ describe('Client', function () {
       var consistency = types.consistencies.quorum;
       var rowsLength = 1000;
       var fetchSize = 100;
-      async.series([
+      utils.series([
         function insert(next) {
           var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
-          helper.timesLimit(rowsLength, 50, function (n, timesNext) {
+          utils.timesLimit(rowsLength, 50, function (n, timesNext) {
             client.execute(query, [id, types.TimeUuid.now(), n.toString()], { prepare: true, consistency: consistency}, timesNext);
           }, next);
         },
         function testBuffering(next) {
           var query = util.format('SELECT id2, text_sample from %s WHERE id1 = ?', commonTable);
-          var stream = client.stream(query, [id], {prepare: 1, fetchSize: fetchSize, consistency: consistency});
+          var stream = client.stream(query, [id], { prepare: true, fetchSize: fetchSize, consistency: consistency});
           var rowsRead = 0;
           stream.
             on('end', function () {
-              assert.strictEqual(rowsRead, rowsLength);
-              next();
+              setTimeout(function onEndTimeout() {
+                assert.strictEqual(rowsRead, rowsLength);
+                next();
+              }, 400);
             })
             .on('error', helper.throwop)
             .on('readable', function () {
               var row;
               var self = this;
-              async.whilst(function condition() {
+              utils.whilst(function condition() {
                 assert.ok(self.buffer.length <= fetchSize);
                 return (row = self.read());
               }, function iterator(whilstNext) {

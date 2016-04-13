@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper');
@@ -19,7 +18,7 @@ describe('Client', function () {
     var commonTable = commonKs + '.' + helper.getRandomName('table');
     before(function (done) {
       var client = newInstance({ pooling: { heartBeatInterval: 0}});
-      async.series([
+      utils.series([
         helper.ccmHelper.start(3),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(commonKs, 3)),
         helper.toTask(client.execute, client, helper.createTableWithClusteringKeyCql(commonTable)),
@@ -30,7 +29,7 @@ describe('Client', function () {
     it('should execute a prepared query with parameters on all hosts', function (done) {
       var client = newInstance();
       var query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
-      async.timesSeries(3, function (n, next) {
+      utils.timesSeries(3, function (n, next) {
         client.execute(query, [types.Uuid.random()], {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
@@ -73,7 +72,7 @@ describe('Client', function () {
         [types.Uuid.random()],
         [types.Uuid.random(), types.Uuid.random()]
       ];
-      async.times(100, function (n, next) {
+      utils.times(100, function (n, next) {
         var index = n % 4;
         client.execute(queries[index], params[index], {prepare: 1}, function (err, result) {
           assert.ifError(err);
@@ -85,9 +84,9 @@ describe('Client', function () {
     });
     it('should fail following times if it fails to prepare', function (done) {
       var client = newInstance();
-      async.series([function (seriesNext) {
+      utils.series([function (seriesNext) {
         //parallel
-        async.times(10, function (n, next) {
+        utils.times(10, function (n, next) {
           client.execute('SELECT * FROM system.table1', ['val'], {prepare: 1}, function (err) {
             helper.assertInstanceOf(err, Error);
             helper.assertInstanceOf(err, errors.ResponseError);
@@ -96,7 +95,7 @@ describe('Client', function () {
           });
         }, seriesNext);
       }, function (seriesNext) {
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           client.execute('SELECT * FROM system.table2', ['val'], {prepare: 1}, function (err) {
             helper.assertInstanceOf(err, Error);
             helper.assertInstanceOf(err, errors.ResponseError);
@@ -146,12 +145,12 @@ describe('Client', function () {
       var metaPageState;
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, helper.createTableCql(table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             client.execute(query, [types.uuid(), n.toString()], {prepare: 1}, next);
           }, seriesNext);
         },
@@ -188,12 +187,12 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var expectedRows = {};
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
-          helper.timesLimit(150, 100, function (n, next) {
+          utils.timesLimit(150, 100, function (n, next) {
             var id = types.uuid();
             var value = types.Integer.fromNumber(n * 999);
             value = value.multiply(types.Integer.fromString('9999901443'));
@@ -224,12 +223,12 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
       var expectedRows = {};
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
-          helper.timesLimit(150, 100, function (n, next) {
+          utils.timesLimit(150, 100, function (n, next) {
             var id = types.Uuid.random();
             var value = (n * 999).toString() + '.' + (100 + n * 7).toString();
             if (n % 10 === 0) {
@@ -322,13 +321,13 @@ describe('Client', function () {
       'map_date_float map<timestamp,float>, ' +
       'map_varint_boolean map<varint,boolean>, ' +
       'map_timeuuid_text map<timeuuid,decimal>)', table);
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, map_text_text, map_int_date, map_date_float, map_varint_boolean, map_timeuuid_text) ' +
           'VALUES (?, ?, ?, ?, ?, ?)', table);
-          async.each(values, function (params, next) {
+          utils.each(values, function (params, next) {
             client.execute(query, params, {prepare: true}, next);
           }, seriesNext);
         },
@@ -383,13 +382,13 @@ describe('Client', function () {
       'set_float set<float>, ' +
       'set_bigint set<bigint>, ' +
       'set_timeuuid set<timeuuid>)', table);
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, set_text, set_timestamp, set_float, set_bigint, set_timeuuid) ' +
           'VALUES (?, ?, ?, ?, ?, ?)', table);
-          async.each(values, function (params, next) {
+          utils.each(values, function (params, next) {
             client.execute(query, params, {prepare: true}, next);
           }, seriesNext);
         },
@@ -424,7 +423,7 @@ describe('Client', function () {
       var id = Uuid.random();
       //noinspection JSCheckFunctionSignatures
       var timestamp = types.generateTimestamp(new Date(), 456);
-      async.series([
+      utils.series([
         function insert(next) {
           var query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
           var params = [id, types.TimeUuid.now(), 'hello sample timestamp'];
@@ -459,7 +458,7 @@ describe('Client', function () {
         [types.TimeUuid.now()],
         [types.TimeUuid.now(), types.TimeUuid.now()]
       ];
-      async.series([
+      utils.series([
         helper.toTask(client.execute, client, createTableCql),
         function insert(next) {
           var query = 'INSERT INTO tbl_nested (id, map1, list1) VALUES (?, ?, ?)';
@@ -518,7 +517,7 @@ describe('Client', function () {
       var table = helper.getRandomName('tbl');
       var createQuery = util.format('CREATE TABLE %s (a int, b int, c int, d int, ' +
         'PRIMARY KEY ((a, b, c)))', table);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, createQuery),
         function (next) {
@@ -535,7 +534,7 @@ describe('Client', function () {
       var client1 = newInstance();
       var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
       var id = Uuid.random();
-      async.series([
+      utils.series([
         client1.connect.bind(client1),
         client2.connect.bind(client2),
         function insert2(next) {
@@ -562,7 +561,7 @@ describe('Client', function () {
     it('should not allow collections with null or unset values', function (done) {
       var client = newInstance();
       var tid = types.TimeUuid.now();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function testListWithNull(next) {
           var query = util.format('INSERT INTO %s (id1, id2, list_sample) VALUES (?, ?, ?)', commonTable);
@@ -618,7 +617,7 @@ describe('Client', function () {
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
@@ -634,7 +633,7 @@ describe('Client', function () {
         var id = Uuid.random();
         var phone = { alias: 'work2', number: '555 9012', country_code: 54};
         var address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
-        async.series([
+        utils.series([
           function insert(next) {
             client.execute(insertQuery, [id, phone, address], next);
           },
@@ -664,13 +663,13 @@ describe('Client', function () {
         for (var i = 0; i < 10; i++) {
           ids.push(types.Uuid.random());
         }
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone_change (alias text, number text, country_code int)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udt_change (id uuid PRIMARY KEY, phone_col frozen<phone_change>)'),
           function executeFewTimesFirst(next) {
             var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
-            async.timesSeries(10, function (n, timesNext) {
+            utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString()}], { prepare: true}, timesNext);
             }, next)
           },
@@ -679,7 +678,7 @@ describe('Client', function () {
           function executeFewMoreTimesWithNewSchema(next) {
             client.metadata.clearPrepared();
             var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
-            async.eachSeries(ids, function (id, eachNext) {
+            utils.eachSeries(ids, function (id, eachNext) {
               client.execute(query, [id, { alias: id.toString(), number: 'phone number', another: 'new field'}], { prepare: true}, eachNext);
             }, next);
           },
@@ -701,13 +700,13 @@ describe('Client', function () {
       });
       vit('2.1', 'should handle select on table after udt field added', function (done) {
         var client = newInstance({ keyspace: commonKs });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone_change2 (alias text, number text, country_code int)'),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_udt_change2 (id uuid PRIMARY KEY, phone_col2 frozen<phone_change2>)'),
           function executeFewTimesFirst(next) {
             var query = 'INSERT INTO tbl_udt_change2 (id, phone_col2) VALUES (?, ?)';
-            async.timesSeries(10, function (n, timesNext) {
+            utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString()}], { prepare: true}, timesNext);
             }, next)
           },
@@ -715,7 +714,7 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'ALTER TABLE tbl_udt_change2 ALTER phone_col2 TYPE frozen<phone_change2>'),
           function executeFewMoreTimesWithNewSchema(next) {
             var query = 'SELECT * FROM tbl_udt_change2';
-            async.timesSeries(10, function (n, timesNext) {
+            utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [], { prepare: true}, timesNext);
             }, next)
           },
@@ -729,7 +728,7 @@ describe('Client', function () {
         var id1 = Uuid.random();
         var tuple1 = new types.Tuple('val1', 1);
         var tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
-        async.series([
+        utils.series([
           function insert1(next) {
             client.execute(insertQuery, [id1, tuple1, tuple2], next);
           },
@@ -764,7 +763,7 @@ describe('Client', function () {
       var selectQuery = 'SELECT id, smallint_sample, tinyint_sample FROM tbl_smallints WHERE id = ?';
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)')
         ], done);
@@ -777,7 +776,7 @@ describe('Client', function () {
           [Uuid.random(), -130, -128]
         ];
         var client = newInstance({ keyspace: commonKs });
-        async.eachSeries(values, function (params, next) {
+        utils.eachSeries(values, function (params, next) {
           client.execute(insertQuery, params, { prepare: true}, function (err) {
             assert.ifError(err);
             client.execute(selectQuery, [params[0]], { prepare: true}, function (err, result) {
@@ -802,7 +801,7 @@ describe('Client', function () {
       var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
       before(function (done) {
         var client = newInstance({ keyspace: commonKs });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_datetimes (id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)'),
           client.shutdown.bind(client)
@@ -817,7 +816,7 @@ describe('Client', function () {
           [Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
         ];
         var client = newInstance({ keyspace: commonKs });
-        async.eachSeries(values, function (params, next) {
+        utils.eachSeries(values, function (params, next) {
           client.execute(insertQuery, params, { prepare: true}, function (err) {
             assert.ifError(err);
             client.execute(selectQuery, [params[0]], { prepare: true}, function (err, result) {
@@ -843,7 +842,7 @@ describe('Client', function () {
         var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
         var id1 = Uuid.random();
         var id2 = Uuid.random();
-        async.series([
+        utils.series([
           client1.connect.bind(client1),
           client2.connect.bind(client2),
           function insert1(next) {
@@ -888,7 +887,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       before(function createSchema(done) {
         var client = newInstance();
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
           client.shutdown.bind(client)
         ], done);
@@ -896,12 +895,12 @@ describe('Client', function () {
       it('should be able to retrieve using simple index', function(done) {
         var client = newInstance({ keyspace: keyspace });
         var table = helper.getRandomName('tbl');
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v int)", table)),
           helper.toTask(client.execute, client, util.format("CREATE INDEX simple_index ON %s (v)", table)),
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
-            async.times(100, function (n, next) {
+            utils.times(100, function (n, next) {
               client.execute(query, [n, n % 10], {prepare: 1}, next);
             }, seriesNext);
           },
@@ -925,12 +924,12 @@ describe('Client', function () {
       vit('2.1', 'should be able to retrieve using index on frozen list', function(done) {
         var client = newInstance({ keyspace: keyspace });
         var table = helper.getRandomName('tbl');
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v frozen<list<int>>)", table)),
           helper.toTask(client.execute, client, util.format("CREATE INDEX frozen_index ON %s (full(v))", table)),
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
-            async.times(100, function (n, next) {
+            utils.times(100, function (n, next) {
               client.execute(query, [n, [n-1, n-2, n-3]], {prepare: 1}, next);
             }, seriesNext);
           },
@@ -951,12 +950,12 @@ describe('Client', function () {
       vit('2.1', 'should be able to retrieve using index on map keys', function(done) {
         var client = newInstance({ keyspace: keyspace });
         var table = helper.getRandomName('tbl');
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
           helper.toTask(client.execute, client, util.format("CREATE INDEX keys_index on %s (keys(v))", table)),
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
-            async.times(100, function (n, next) {
+            utils.times(100, function (n, next) {
               v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
@@ -988,12 +987,12 @@ describe('Client', function () {
       vit('2.1', 'should be able to retrieve using index on map values', function(done) {
         var client = newInstance({ keyspace: keyspace });
         var table = helper.getRandomName('tbl');
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
           helper.toTask(client.execute, client, util.format("CREATE INDEX values_index on %s (v)", table)),
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
-            async.times(100, function (n, next) {
+            utils.times(100, function (n, next) {
               v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
@@ -1023,12 +1022,12 @@ describe('Client', function () {
       vit('2.2', 'should be able to retrieve using index on map entries', function(done) {
         var client = newInstance({ keyspace: keyspace });
         var table = helper.getRandomName('tbl');
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, util.format("CREATE TABLE %s (k int PRIMARY KEY, v map<text,int>)", table)),
           helper.toTask(client.execute, client, util.format("CREATE INDEX entries_index on %s (entries(v))", table)),
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
-            async.times(100, function (n, next) {
+            utils.times(100, function (n, next) {
               v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
@@ -1060,7 +1059,7 @@ describe('Client', function () {
           "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
           "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
         ];
-        async.eachSeries(queries, client.execute.bind(client), function (err) {
+        utils.eachSeries(queries, client.execute.bind(client), function (err) {
           client.shutdown();
           if (err) {
             return done(err);
@@ -1074,7 +1073,7 @@ describe('Client', function () {
           keyspace: keyspace,
           contactPoints: helper.baseOptions.contactPoints
         });
-        async.timesSeries(10, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           var game = n.toString();
           var query = 'SELECT * FROM alltimehigh WHERE game = ?';
           client.execute(query, [game], { traceQuery: true, prepare: true}, function (err, result) {
@@ -1110,7 +1109,7 @@ function serializationTest(values, columns, done) {
   var client = newInstance();
   var keyspace = helper.getRandomName('ks');
   var table = keyspace + '.' + helper.getRandomName('table');
-  async.series([
+  utils.series([
     helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
     helper.toTask(client.execute, client, helper.createTableCql(table)),
     function (next) {

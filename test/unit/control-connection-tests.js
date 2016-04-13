@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var events = require('events');
 
 var helper = require('../test-helper.js');
@@ -74,7 +73,7 @@ describe('ControlConnection', function () {
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var peer = getInet([100, 100, 100, 100]);
-      async.series([
+      utils.series([
         function (next) {
           var row = {'rpc_address': getInet([1, 2, 3, 4]), peer: peer};
           cc.getAddressForPeerHost(row, 9042, function (endPoint) {

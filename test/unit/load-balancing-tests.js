@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../test-helper.js');
@@ -31,7 +30,7 @@ describe('RoundRobinPolicy', function () {
     var originalHosts = createHostMap(['A', 'B', 'C', 'E']);
     var times = 100;
     policy.init(null, originalHosts, function () {
-      async.times(times, function (n, next) {
+      utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           var item = iterator.next();
@@ -79,7 +78,7 @@ describe('RoundRobinPolicy', function () {
     var originalHosts = createHostMap(['A', 'B', 'C']);
     var times = 10;
     policy.init(null, originalHosts, function () {
-      async.times(times, function (n, next) {
+      utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           var item;
           for (var i = 0; i < originalHosts.length; i++) {
@@ -125,7 +124,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     var times = 1;
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
-      async.times(times, function (n, next) {
+      utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
@@ -221,7 +220,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
       assert.strictEqual(policy.localDc, 'dc1');
-      async.times(times, function (n, next) {
+      utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
           for (var i = 0; i < originalHosts.length; i++) {
@@ -308,11 +307,13 @@ describe('DCAwareRoundRobinPolicy', function () {
 
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
-      async.times(times, function (n, next) {
+      var plans = [];
+      utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function(err, iterator) {
           assert.ifError(err);
+          var planHosts = [];
           // Iterate through plan local hosts + (remoteHosts * remoteDcs) + 1.
-          async.timesSeries(localHosts.length + (3 * 2) + 1, function (planN, iteratorNext) {
+          utils.timesSeries(localHosts.length + (3 * 2) + 1, function (planN, iteratorNext) {
             var item = iterator.next();
             assert.strictEqual(item.done, (planN >= localHosts.length + (3 * 2)));
             // Wait a random amount of time between executions to ensure
@@ -320,9 +321,10 @@ describe('DCAwareRoundRobinPolicy', function () {
             // query plans.
             var randomWait = Math.floor((Math.random() * 5) + 1);
             setTimeout(function () {
-              iteratorNext(null, item.value);
+              planHosts.push(item.value);
+              iteratorNext();
             }, randomWait);
-          }, function (err, planHosts) {
+          }, function (err) {
             assert.ifError(err);
 
             // Ensure each host appears only once and at the beginning of the
@@ -370,10 +372,11 @@ describe('DCAwareRoundRobinPolicy', function () {
               " from dc2 in plan.");
             assert.strictEqual(foundDc3Hosts.length, 3, "Expected 3 hosts" +
               " from dc3 in plan.");
-            next(err, {number: n, plan: planHosts});
+            plans.push({number: n, plan: planHosts});
+            next(err);
           });
         });
-      }, function (err, plans) {
+      }, function (err) {
         assert.equal(err, null);
         // Sort plans in order of creation (they are emitted by completion
         // which is random).
@@ -418,7 +421,7 @@ describe('TokenAwarePolicy', function () {
     var options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
     var policy = new TokenAwarePolicy(childPolicy);
-    async.series([
+    utils.series([
       function (next) {
         policy.init(new Client(options), new HostMap(), next);
       },
@@ -442,7 +445,7 @@ describe('TokenAwarePolicy', function () {
     client.getReplicas = function () {
       return [new Host('repl1', 2, options), new Host('repl2', 2, options), new Host('repl3', 2, options), new Host('repl4', 2, options)];
     };
-    async.series([
+    utils.series([
       function (next) {
         policy.init(client, new HostMap(), next);
       },
@@ -508,10 +511,15 @@ function testRoundRobinPlan(times, policy, options, allHosts, expectedHosts, per
 
   policy.init(client, allHosts, function (err) {
     assert.ifError(err);
-    async.times(times, function (n, next) {
+    var i = 0;
+    utils.map(new Array(times), function (n, next) {
+      n = i++;
       policy.newQueryPlan(null, null, function(err, iterator) {
         assert.ifError(err);
-        async.timesSeries(expectedHosts.length, function (planN, iteratorNext) {
+        if (expectedHosts instanceof HostMap) {
+          expectedHosts = expectedHosts.values();
+        }
+        utils.mapSeries(expectedHosts, function (planN, iteratorNext) {
           var item = iterator.next();
           assert.strictEqual(item.done, false);
           // Wait a random amount of time between executions to ensure

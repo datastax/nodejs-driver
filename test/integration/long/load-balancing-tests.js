@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -7,23 +7,21 @@ var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var loadBalancing = require('../../../lib/policies/load-balancing.js');
-var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
 var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
-var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
 describe('DCAwareRoundRobinPolicy', function () {
   this.timeout(180000);
   it('should never hit remote dc if not set', function (done) {
     var countByHost = {};
-    async.series([
+    utils.series([
       //1 cluster with 3 dcs with 2 nodes each
       helper.ccmHelper.start('2:2:2') ,
       function testCase(next) {
         var options = utils.deepExtend({}, helper.baseOptions, {policies: {loadBalancing: new DCAwareRoundRobinPolicy()}});
         var client = new Client(options);
         var prevHost = null;
-        async.times(120, function (n, timesNext) {
+        utils.times(120, function (n, timesNext) {
           client.execute(helper.queries.basic, function (err, result) {
             assert.ifError(err);
             assert.ok(result && result.rows);
@@ -53,7 +51,7 @@ describe('TokenAwarePolicy', function () {
   it('should use primary replica according to Murmur multiple dc', function (done) {
     var keyspace = 'ks1';
     var table = 'table1';
-    async.series([
+    utils.series([
       helper.ccmHelper.start('3:3'),
       function createKs(next) {
         var client = new Client(helper.baseOptions);
@@ -85,7 +83,7 @@ describe('TokenAwarePolicy', function () {
           keyspace: keyspace,
           contactPoints: helper.baseOptions.contactPoints
         });
-        async.times(100, function (n, timesNext) {
+        utils.times(100, function (n, timesNext) {
           var id = (n % 10) + 1;
           var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
           client.execute(query, null, {routingKey: new Buffer([0, 0, 0, id])}, function (err, result) {
@@ -110,7 +108,7 @@ describe('TokenAwarePolicy', function () {
     /** @type {LoadBalancingPolicy} */
     var policy = client.options.policies.loadBalancing;
     var localDc = 'dc1';
-    async.series([
+    utils.series([
       helper.ccmHelper.start('4:4'),
       function createKs1(next) {
         var localClient = new Client(helper.baseOptions);
@@ -122,7 +120,7 @@ describe('TokenAwarePolicy', function () {
       },
       client.connect.bind(client),
       function testCase1(next) {
-        async.times(20, function (n, timesNext) {
+        utils.times(20, function (n, timesNext) {
           //keyspace 1
           policy.newQueryPlan(keyspace1, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
             var hosts = helper.iteratorToArray(iterator);
@@ -137,7 +135,7 @@ describe('TokenAwarePolicy', function () {
         }, next);
       },
       function testCase2(next) {
-        async.times(20, function (n, timesNext) {
+        utils.times(20, function (n, timesNext) {
           //keyspace 2
           policy.newQueryPlan(keyspace2, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
             var hosts = helper.iteratorToArray(iterator);
@@ -152,7 +150,7 @@ describe('TokenAwarePolicy', function () {
         }, next);
       },
       function testCase3(next) {
-        async.times(20, function (n, timesNext) {
+        utils.times(20, function (n, timesNext) {
           //no keyspace
           policy.newQueryPlan(null, {routingKey: new Buffer([0, 0, 0, 1])}, function (err, iterator) {
             var hosts = helper.iteratorToArray(iterator);
@@ -170,8 +168,3 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
 });
-
-function newInstance(policy) {
-  var options = utils.extend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
-  return new Client(options);
-}

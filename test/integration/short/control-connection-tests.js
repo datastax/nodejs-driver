@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 
 var helper = require('../../test-helper');
 var ControlConnection = require('../../../lib/control-connection');
@@ -29,7 +29,7 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to SCHEMA_CHANGE events and refresh keyspace information', function (done) {
       var cc = newInstance();
-      async.series([
+      utils.series([
         cc.init.bind(cc),
         function createKeyspace(next) {
           var query = "CREATE KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}";
@@ -66,7 +66,7 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to STATUS_CHANGE events', function (done) {
       var cc = newInstance();
-      async.series([
+      utils.series([
         cc.init.bind(cc),
         function (next) {
           //wait for all initial events
@@ -97,7 +97,7 @@ describe('ControlConnection', function () {
       options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
       var cc = new ControlConnection(options);
-      async.series([
+      utils.series([
         cc.init.bind(cc),
         function (next) {
           //add a node
@@ -130,7 +130,7 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to TOPOLOGY_CHANGE remove events and refresh ring info', function (done) {
       var cc = newInstance();
-      async.series([
+      utils.series([
         cc.init.bind(cc),
         function (next) {
           //decommission node
@@ -173,7 +173,7 @@ describe('ControlConnection', function () {
       options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
       var cc = new ControlConnection(options);
-      async.series([
+      utils.series([
         cc.init.bind(cc),
         function initLbp(next) {
           assert.ok(cc.host);

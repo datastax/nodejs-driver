@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var domain = require('domain');
 
 var helper = require('../../test-helper');
@@ -74,7 +74,7 @@ describe('Client', function () {
     });
     it('should allow multiple parallel calls to connect', function (done) {
       var client = newInstance();
-      async.times(100, function (n, next) {
+      utils.times(100, function (n, next) {
         client.connect(next);
       }, function (err) {
         assert.ifError(err);
@@ -94,7 +94,7 @@ describe('Client', function () {
     });
     it('should fail if the keyspace does not exists', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'not-existent-ks'}));
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
           //Not very nice way to check but here it is
@@ -136,7 +136,7 @@ describe('Client', function () {
         else {
           helper.assertValueEqual(client.options.pooling.coreConnectionsPerHost, clientOptions.coreConnectionsPerHostV3);
         }
-        async.times(10, function (n, next) {
+        utils.times(10, function (n, next) {
           client.execute('SELECT key FROM system.local', next);
         }, function (err) {
           if (err) return done(err);
@@ -158,7 +158,7 @@ describe('Client', function () {
         }
         assert.ok(client.options.pooling.coreConnectionsPerHost[types.distance.local], 4);
         assert.ok(client.options.pooling.coreConnectionsPerHost[types.distance.remote], defaults[types.distance.remote]);
-        async.times(50, function (n, next) {
+        utils.times(50, function (n, next) {
           client.execute('SELECT key FROM system.local', next);
         }, function (err) {
           if (err) return done(err);
@@ -228,7 +228,7 @@ describe('Client', function () {
   });
   describe('#connect() with auth', function () {
     before(function (done) {
-      async.series([
+      utils.series([
         function (next) {
           //it wont hurt to remove
           helper.ccmHelper.exec(['remove'], function () {
@@ -258,7 +258,7 @@ describe('Client', function () {
     it('should connect using the plain text authenticator', function (done) {
       var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')};
       var client = newInstance(options);
-      async.times(100, function (n, next) {
+      utils.times(100, function (n, next) {
         client.connect(next);
       }, function (err) {
         done(err);
@@ -267,7 +267,7 @@ describe('Client', function () {
     it('should connect using the plain text authenticator when calling execute', function (done) {
       var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
       var client = newInstance(options);
-      async.times(100, function (n, next) {
+      utils.times(100, function (n, next) {
         client.execute('SELECT * FROM local', next);
       }, function (err) {
         done(err);
@@ -276,7 +276,7 @@ describe('Client', function () {
     it('should return an AuthenticationError', function (done) {
       var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
       var client = newInstance(options);
-      async.timesSeries(10, function (n, next) {
+      utils.timesSeries(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -289,7 +289,7 @@ describe('Client', function () {
     it('should return an AuthenticationError when calling execute', function (done) {
       var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
       var client = newInstance(options);
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         client.execute('SELECT * FROM local', function (err) {
           assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -315,7 +315,7 @@ describe('Client', function () {
   describe('#connect() with nodes failing', function () {
     it('should connect after a failed attempt', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.removeIfAny,
         function (next) {
           client.connect(function (err) {
@@ -345,7 +345,7 @@ describe('Client', function () {
     it('should use the keyspace provided', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
       //on all hosts
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         assert.strictEqual(client.keyspace, 'system');
         //A query in the system ks
         client.execute('SELECT * FROM local', function (err, result) {
@@ -359,7 +359,7 @@ describe('Client', function () {
     it('should fail to execute if the keyspace does not exists', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
       //on all hosts
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         //No matter what, the keyspace does not exists
         client.execute(helper.queries.basic, function (err) {
           helper.assertInstanceOf(err, Error);
@@ -373,7 +373,7 @@ describe('Client', function () {
         if (err) return done(err);
         assert.strictEqual(client.keyspace, 'system');
         //all next queries, the instance should still "be" in the system keyspace
-        async.times(100, function (n, next) {
+        utils.times(100, function (n, next) {
           client.execute('SELECT * FROM local', [], next);
         }, done)
       });
@@ -398,7 +398,7 @@ describe('Client', function () {
       };
       var client = new Client(utils.extend({}, helper.baseOptions, options));
       //execute a couple of queries
-      async.times(100, function (n, next) {
+      utils.times(100, function (n, next) {
         setTimeout(function () {
           client.execute(helper.queries.basic, next);
           }, 100 + n * 2)
@@ -427,22 +427,22 @@ describe('Client', function () {
       var childDomain = domain.create();
       var client1 = new Client(helper.baseOptions);
       var client2 = new Client(helper.baseOptions);
-      async.series([
+      utils.series([
         client1.connect.bind(client1),
         client2.connect.bind(client1),
         function executeABunchOfTimes1(next) {
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             client1.execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
         function executeABunchOfTimes2(next) {
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             client2.execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
         function blowUpSingleDomain(next) {
           var EventEmitter = require('events').EventEmitter;
-          async.timesSeries(domains.length, function (n, timesNext) {
+          utils.timesSeries(domains.length, function (n, timesNext) {
             var waiting = 1;
             var d = domains[n];
             d.add(new EventEmitter());
@@ -536,11 +536,11 @@ describe('Client', function () {
       ];
       var client = newInstance();
       //warmup first
-      async.timesSeries(10, function (n, next) {
+      utils.timesSeries(10, function (n, next) {
         client.execute('SELECT key FROM system.local', next);
       }, function (err) {
         assert.ifError(err);
-        async.eachSeries(queries, function (query, next) {
+        utils.eachSeries(queries, function (query, next) {
           client.execute(query, next);
         }, done);
       });
@@ -554,7 +554,7 @@ describe('Client', function () {
       var hosts = {};
       var hostsDown = [];
 
-      async.series([
+      utils.series([
         function (next) {
           // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2
           // after we have killed it.
@@ -564,7 +564,7 @@ describe('Client', function () {
           client.on('hostDown', function (h) {
             hostsDown.push(h);
           });
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             client.execute(helper.queries.basic, function (err, result) {
               assert.ifError(err);
               hosts[result.info.queriedHost] = true;
@@ -573,38 +573,41 @@ describe('Client', function () {
           }, seriesNext);
         },
         function killNode(seriesNext) {
-          setTimeout(function () {
+          assert.strictEqual(Object.keys(hosts).length, 3);
+          setImmediate(function () {
             helper.ccmHelper.exec(['node1', 'stop', '--not-gently']);
             seriesNext();
-          }, 0);
+          });
         },
-        function testCase(seriesNext) {
-          //3 hosts alive
-          assert.strictEqual(Object.keys(hosts).length, 3);
-          var counter = 0;
-          async.timesLimit(1000, 10, function (i, next) {
-            client.execute(helper.queries.basic, function (err) {
-              counter++;
-              assert.ifError(err);
-              next();
-            });
+        function executeWhileNodeGoingDown(seriesNext) {
+          utils.timesLimit(1000, 10, function (i, next) {
+            client.execute(helper.queries.basic, next);
           }, function (err) {
             assert.ifError(err);
-            //Only 2 hosts alive at the end
-            assert.strictEqual(
-              client.hosts.slice(0).reduce(function (val, h) {
-                return val + (h.isUp() ? 1 : 0);
-              }, 0),
-              2);
-            assert.ok(hostsDown.length >= 1, "Expected at least 1 host down" +
-              " event.");
-            //Ensure each down event is for the stopped host.  We may get
-            //multiple down events for the same host on a control connection.
-            hostsDown.forEach(function (downHost) {
-              assert.strictEqual(helper.lastOctetOf(downHost), '1');
-            });
-            seriesNext();
+            //delay the next queries
+            setTimeout(seriesNext, 10000);
           });
+        },
+        function executeAfterNodeWentDown(seriesNext) {
+          utils.timesSeries(20, function (i, next) {
+            client.execute(helper.queries.basic, next);
+          }, seriesNext);
+        },
+        function assertions(seriesNext) {
+          //Only 2 hosts alive at the end
+          assert.strictEqual(
+            client.hosts.values().reduce(function (val, h) {
+              return val + (h.isUp() ? 1 : 0);
+            }, 0),
+            2);
+          assert.ok(hostsDown.length >= 1, "Expected at least 1 host down" +
+            " event.");
+          //Ensure each down event is for the stopped host.  We may get
+          //multiple down events for the same host on a control connection.
+          hostsDown.forEach(function (downHost) {
+            assert.strictEqual(helper.lastOctetOf(downHost), '1');
+          });
+          seriesNext();
         }
       ], done);
     });
@@ -620,14 +623,14 @@ describe('Client', function () {
       var client = new Client(options);
       var hosts = {};
       var query = helper.queries.basic;
-      async.series([
+      utils.series([
         function (next) {
           // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2
           // after we have killed it.
           setTimeout(next, 5000);
         },
         function warmUpPool(seriesNext) {
-          async.times(10, function (n, next) {
+          utils.times(10, function (n, next) {
             client.execute(query, function (err, result) {
               assert.ifError(err);
               hosts[result.info.queriedHost] = true;
@@ -641,14 +644,14 @@ describe('Client', function () {
           var counter = 0;
           var issued = 0;
           var killed = false;
-          async.timesLimit(500, 20, function (n, next) {
+          utils.timesLimit(500, 20, function (n, next) {
             if (n === 10) {
               //kill a node when there are some outstanding requests
               helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
                 killed = true;
                 assert.ifError(err);
                 //do a couple of more queries
-                async.timesSeries(10, function (n, next2) {
+                utils.timesSeries(10, function (n, next2) {
                   client.execute(query, next2);
                 }, next);
               });
@@ -678,7 +681,7 @@ describe('Client', function () {
       ], done);
     });
     it('should warn but not fail when warmup is enable and a node is down', function (done) {
-      async.series([
+      utils.series([
         helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
         function (next) {
           var warnings = [];
@@ -697,7 +700,7 @@ describe('Client', function () {
       ], done);
     });
     it('should connect when first contact point is down', function (done) {
-      async.series([
+      utils.series([
         helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
         function (next) {
           var client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
@@ -713,7 +716,7 @@ describe('Client', function () {
         pooling: { heartBeatInterval: 0, warmup: true },
         policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(1000) }
       });
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           var hosts = client.hosts.values();
@@ -728,10 +731,14 @@ describe('Client', function () {
         helper.toTask(helper.ccmHelper.stopNode, null, 2),
         helper.toTask(helper.ccmHelper.stopNode, null, 3),
         function tryToQuery(next) {
-          async.timesSeries(10, function (n, timesNext) {
+          utils.timesSeries(20, function (n, timesNext) {
             client.execute(helper.queries.basic, function (err) {
               //it should fail
-              assert.ok(err);
+              helper.assertInstanceOf(err, errors.NoHostAvailableError);
+              if (n % 5 === 0) {
+                //wait for failed reconnection attempts to happen
+                return setTimeout(timesNext, 1500);
+              }
               timesNext();
             });
           }, next);
@@ -763,7 +770,7 @@ describe('Client', function () {
       var client = newInstance();
       var hostsWentUp = [];
       var hostsWentDown = [];
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function addListeners(next) {
           client.on('hostUp', hostsWentUp.push.bind(hostsWentUp));
@@ -824,7 +831,7 @@ describe('Client', function () {
           next();
         });
       }
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function addListeners(next) {
           client.on('hostAdd', hostsAdded.push.bind(hostsAdded));
@@ -858,11 +865,11 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should close all connections to all hosts', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function makeSomeQueries(next) {
           //to ensure that the pool is all up!
-          async.times(100, function (n, timesNext) {
+          utils.times(100, function (n, timesNext) {
             client.execute(helper.queries.basic, timesNext);
           }, next);
         },

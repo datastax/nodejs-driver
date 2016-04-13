@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var events = require('events');
 
@@ -25,7 +24,7 @@ describe('HostConnectionPool', function () {
         }};
       };
       hostPool.coreConnectionsLength = 10;
-      async.times(5, function (n, next) {
+      utils.times(5, function (n, next) {
         //even though it is called multiple times in parallel
         //it should only create a pool with 10 connections
         hostPool._maybeCreatePool(function (err) {
@@ -46,7 +45,7 @@ describe('HostConnectionPool', function () {
           }
         };
       };
-      async.times(5, function(n, next) {
+      utils.times(5, function(n, next) {
         setTimeout(function () {
           hostPool._maybeCreatePool(function (err) {
             assert.ifError(err);
@@ -75,7 +74,7 @@ describe('HostConnectionPool', function () {
         };
       };
       var counter = 0;
-      async.timesLimit(10, 4, function(n, next) {
+      utils.timesLimit(10, 4, function(n, next) {
         counter++;
         hostPool._maybeCreatePool(function (err) {
           setImmediate(function () {
@@ -320,7 +319,7 @@ describe('Host', function () {
         c.open = helper.callbackNoop;
         return c;
       };
-      async.series([
+      utils.series([
         function (next) {
           host.borrowConnection(function (err, c) {
             assert.equal(err, null);
@@ -340,7 +339,7 @@ describe('Host', function () {
         },
         function (next) {
           //Check multiple times in parallel
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             host.borrowConnection(function (err, c) {
               assert.equal(err, null);
               assert.notEqual(c, null);

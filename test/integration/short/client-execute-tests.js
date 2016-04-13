@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -17,7 +17,7 @@ describe('Client', function () {
     var selectAllQuery = 'SELECT * FROM ' + table;
     before(function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.start(1),
         function (next) {
           client.execute(helper.createKeyspaceCql(keyspace, 1), next);
@@ -64,7 +64,7 @@ describe('Client', function () {
     });
     it('should handle 500 parallel queries', function (done) {
       var client = newInstance();
-      async.times(500, function (n, next) {
+      utils.times(500, function (n, next) {
         client.execute(helper.queries.basic, [], next);
       }, done)
     });
@@ -120,13 +120,13 @@ describe('Client', function () {
     vit('2.0', 'should use pageState and fetchSize', function (done) {
       var client = newInstance();
       var pageState = null;
-      async.series([
+      utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
         },
@@ -154,13 +154,13 @@ describe('Client', function () {
     vit('2.0', 'should not autoPage', function (done) {
       var client = newInstance({keyspace: keyspace});
       var pageState = null;
-      async.series([
+      utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
         },
@@ -180,7 +180,7 @@ describe('Client', function () {
       var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
       //valid params
       var params = [types.Uuid.random(), types.Uuid.random(), types.Uuid.random()];
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function hintsArrayAsObject(next) {
           client.execute(query, params, {hints: {}}, function (err) {
@@ -229,7 +229,7 @@ describe('Client', function () {
     });
     it('should accept localOne and localQuorum consistencies', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         function (next) {
           client.execute(selectAllQuery, [], {consistency: types.consistencies.localOne}, next);
         },
@@ -241,7 +241,7 @@ describe('Client', function () {
     vit('2.2', 'should accept unset as a valid value', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function insert(next) {
           var query = util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table);
@@ -272,12 +272,12 @@ describe('Client', function () {
       var execute = function (next) {
         client.execute(selectAllQuery, next);
       };
-      async.parallel([
+      utils.parallel([
         function (parallelNext) {
-          async.parallel(helper.fillArray(400, execute), parallelNext);
+          utils.parallel(helper.fillArray(400, execute), parallelNext);
         },
         function (parallelNext) {
-          async.times(200, function (n, next) {
+          utils.times(200, function (n, next) {
             setTimeout(function () {
               execute(next);
             }, n * 5 + 50);
@@ -289,7 +289,7 @@ describe('Client', function () {
       var client = newInstance();
       //insert at least 1 row
       var insertQuery = util.format('INSERT INTO %s (id) VALUES (%s)', table, types.Uuid.random());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, insertQuery),
         function verifyColumns(next) {
@@ -329,7 +329,7 @@ describe('Client', function () {
       var client = newInstance();
       var id = types.Uuid.random();
       var timeId = types.TimeUuid.now();
-      async.series([
+      utils.series([
         function insert(next) {
           var query = util.format(
             'INSERT INTO %s (id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample) VALUES (%s, %s, \'%s\', %s, %s)',
@@ -357,7 +357,7 @@ describe('Client', function () {
     vit('2.0', 'should support serial consistency', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
-      async.series([
+      utils.series([
         function insert(next) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
           client.execute(query, [id, 'hello serial'], { serialConsistency: types.consistencies.localSerial}, next);
@@ -377,7 +377,7 @@ describe('Client', function () {
       var client = newInstance();
       var id = types.Uuid.random();
       var timestamp = types.generateTimestamp(new Date(), 777);
-      async.series([
+      utils.series([
         function insert(next) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           client.execute(query, [id, 'hello timestamp'], { timestamp: timestamp}, next);
@@ -397,7 +397,7 @@ describe('Client', function () {
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function selectNotExistent(next) {
           var query = util.format('SELECT * FROM %s WHERE id = %s', table, types.Uuid.random());
@@ -470,7 +470,7 @@ describe('Client', function () {
       var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
       before(function (done) {
         var client = newInstance({ keyspace: keyspace });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
           helper.toTask(client.execute, client, 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)'),
@@ -549,7 +549,7 @@ describe('Client', function () {
         var address = {street: 'NightMan2', ZIP: 90987, phones: [{ 'alias': 'personal2', 'number': '555 0001'}, {alias: 'work2'}]};
         var id = types.Uuid.random();
         var client = newInstance({ keyspace: keyspace});
-        async.series([
+        utils.series([
           function insert(next) {
             var query = util.format(insertQuery, '?', '?', '?');
             client.execute(query, [id, phone, address], { hints: [null, 'udt<phone>', 'udt<address>']}, next);
@@ -579,7 +579,7 @@ describe('Client', function () {
         var client = newInstance({ keyspace: keyspace});
         var id = types.Uuid.random();
         var tuple = new types.Tuple('Surf Rider', 110, new Buffer('0f0f', 'hex'));
-        async.series([
+        utils.series([
           function insert(next) {
             var query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
             client.execute(query, [id, tuple], { hints: [null, 'tuple<text, int,blob>']}, next);
@@ -609,7 +609,7 @@ describe('Client', function () {
               { 'alias': 'main', 'number': '0000212123'}
             ]}
         };
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function insert(next) {
             var query = 'INSERT INTO tbl_udts JSON ?';
@@ -666,7 +666,7 @@ describe('Client', function () {
       var selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
       before(function (done) {
         var client = newInstance({ keyspace: keyspace });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)'),
           helper.toTask(client.execute, client, util.format(
@@ -715,7 +715,7 @@ describe('Client', function () {
       var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
       before(function (done) {
         var client = newInstance({ keyspace: keyspace });
-        async.series([
+        utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_datetimes (id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)'),
           client.shutdown.bind(client)
@@ -730,7 +730,7 @@ describe('Client', function () {
           [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
         ];
         var client = newInstance({ keyspace: keyspace });
-        async.eachSeries(values, function (params, next) {
+        utils.eachSeries(values, function (params, next) {
           client.execute(insertQuery, params, function (err) {
             assert.ifError(err);
             client.execute(selectQuery, [params[0]], function (err, result) {
@@ -784,7 +784,7 @@ describe('Client', function () {
           list_sample2: [100, 100, 1, 2],
           set_sample: ['a', 'b', 'x', 'zzzz']
         };
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function insert(next) {
             var query = util.format('INSERT INTO %s JSON ?', table);
@@ -827,7 +827,7 @@ describe('Client', function () {
           d:    new types.LocalDate(2015, 6, 1),
           t:    new types.LocalTime.fromMilliseconds(10160088, 123)
         };
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function insert(next) {
             var query = 'INSERT INTO tbl_json JSON ?';
@@ -861,7 +861,7 @@ describe('Client', function () {
 
 function insertSelectTest(client, table, columns, values, hints, done) {
   var columnsSplit = columns.split(',');
-  async.series([
+  utils.series([
     function (next) {
       var markers = '?';
       for (var i = 1; i < columnsSplit.length; i++) {

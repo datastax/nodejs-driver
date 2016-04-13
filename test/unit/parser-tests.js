@@ -1,12 +1,12 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 
 var Encoder = require('../../lib/encoder');
 var streams = require('../../lib/streams');
 var errors = require('../../lib/errors');
 var types = require('../../lib/types');
+var utils = require('../../lib/utils');
 var helper = require('../test-helper');
 
 /**
@@ -396,7 +396,7 @@ describe('Parser', function () {
       //Add the length 0x00300000 of the value
       cellValue = [0, 30, 0, 0].concat(cellValue);
       var rowLength = 1;
-      async.series([function (next) {
+      utils.series([function (next) {
         var parser = newInstance();
         var rowCounter = 0;
         parser.on('readable', function () {

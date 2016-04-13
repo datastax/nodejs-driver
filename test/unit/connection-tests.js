@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var events = require('events');
 var rewire = require('rewire');
@@ -31,7 +30,7 @@ describe('Connection', function () {
           cb(null, r.query);
         });
       };
-      async.parallel([
+      utils.parallel([
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY2'),
         prepareAndAssert(connection, 'QUERY3')
@@ -49,7 +48,7 @@ describe('Connection', function () {
           cb(null, r.query);
         });
       };
-      async.parallel([
+      utils.parallel([
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY2'),
         prepareAndAssert(connection, 'QUERY3')
@@ -68,7 +67,7 @@ describe('Connection', function () {
           cb(null, r.query);
         });
       };
-      async.parallel([
+      utils.parallel([
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY1')
@@ -89,7 +88,7 @@ describe('Connection', function () {
           cb(null, r.query);
         });
       };
-      async.parallel([
+      utils.parallel([
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY1'),
         prepareAndAssert(connection, 'QUERY1')

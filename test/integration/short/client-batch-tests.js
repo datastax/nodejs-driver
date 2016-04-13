@@ -1,6 +1,5 @@
 'use strict';
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -18,7 +17,7 @@ describe('Client', function () {
     var table2 = keyspace + '.' + helper.getRandomName('tblB');
     before(function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.start(1),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 1)),
         helper.toTask(client.execute, client, helper.createTableCql(table1)),
@@ -36,7 +35,7 @@ describe('Client', function () {
         util.format(insertQuery, table1, id1, 'one'),
         util.format(insertQuery, table2, id2, 'two')
       ];
-      async.series([
+      utils.series([
         function (next) {
           client.batch(queries, next);
         },
@@ -70,7 +69,7 @@ describe('Client', function () {
         {query: util.format(insertQuery, table1), params: [id1, 1000]},
         {query: util.format(insertQuery, table2), params: [id2, 2000.2]}
       ];
-      async.series([
+      utils.series([
         function (next) {
           client.batch(queries, next);
         },
@@ -124,7 +123,7 @@ describe('Client', function () {
 
       //it should not throw an error with the following arguments
       var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table1);
-      async.series([
+      utils.series([
         function (next) {
           client.batch([{query: query, params: [types.Uuid.random(), null]}], next);
         },
@@ -170,7 +169,7 @@ describe('Client', function () {
         query: util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table1),
         params: [types.Uuid.random(), 'what', 1]
       }];
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function hintsArrayAsObject(next) {
           client.batch(queries, {hints: {}}, function (err) {
@@ -214,7 +213,7 @@ describe('Client', function () {
         {query: util.format(insertQuery, table1), params: [id1, 'value 1 with timestamp']},
         {query: util.format(insertQuery, table2), params: [id2, 'value 2 with timestamp']}
       ];
-      async.series([
+      utils.series([
         function (next) {
           client.batch(queries, { timestamp: timestamp}, next);
         },
@@ -249,7 +248,7 @@ describe('Client', function () {
       var queries = [
         {query: util.format(insertQuery, table1), params: [id1, 'value with serial']}
       ];
-      async.series([
+      utils.series([
         function (next) {
           client.batch(queries, { serialConsistency: types.consistencies.localSerial}, next);
         },
@@ -282,7 +281,7 @@ describe('Client', function () {
         ' varint_sample decimal,' +
         ' timestamp_sample timestamp,' +
         ' PRIMARY KEY (id, time))';
-      async.series([
+      utils.series([
         helper.ccmHelper.start(3),
         helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3, false)),
         helper.toTask(client.execute, client, util.format(createTableCql, table1)),
@@ -305,19 +304,25 @@ describe('Client', function () {
       client.batch(queries, {prepare: true, consistency: consistency}, function (err) {
         assert.ifError(err);
         var query = 'SELECT * FROM %s where id = %s';
-        async.series([
-          helper.toTask(client.execute, client, util.format(query, table1, id1), [], {consistency: consistency}),
-          helper.toTask(client.execute, client, util.format(query, table2, id2), [], {consistency: consistency})
-        ], function (err, resultArray) {
-          assert.ifError(err);
-          assert.strictEqual(resultArray.length, 2);
-          var row1 = resultArray[0].rows[0];
-          assert.strictEqual(row1['text_sample'], 'sample1');
-          var row2 = resultArray[1].rows[0];
-          assert.strictEqual(row2['int_sample'], -101);
-          assert.strictEqual(row2['varint_sample'].toString(), '151');
-          done();
-        });
+        utils.series([
+          function (next) {
+            client.execute(util.format(query, table1, id1), [], {consistency: consistency}, function (err, result) {
+              assert.ifError(err);
+              var row1 = result.first();
+              assert.strictEqual(row1['text_sample'], 'sample1');
+              next();
+            });
+          },
+          function (next) {
+            client.execute(util.format(query, table2, id2), [], {consistency: consistency}, function (err, result) {
+              assert.ifError(err);
+              var row2 = result.first();
+              assert.strictEqual(row2['int_sample'], -101);
+              assert.strictEqual(row2['varint_sample'].toString(), '151');
+              next();
+            });
+          }
+        ], done);
       });
     });
     vit('2.0', 'should callback in error when the one of the queries contains syntax error', function (done) {
@@ -330,7 +335,7 @@ describe('Client', function () {
         params: [types.Uuid.random(), types.timeuuid(), -101, -1]
       }];
       var queries2 = [queries1[1], queries1[1]];
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         var queries = (n % 2 === 0) ? queries1 : queries2;
         client.batch(queries, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, errors.ResponseError);
@@ -345,7 +350,7 @@ describe('Client', function () {
         query: util.format('INSERT INTO %s (id, time, int_sample) VALUES (?, ?, ?)', table1),
         params: [types.Uuid.random(), types.timeuuid(), {notValid: true}]
       }];
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         client.batch(queries, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, TypeError);
           next();
@@ -364,9 +369,9 @@ describe('Client', function () {
       var query2Table1 = util.format('INSERT INTO %s (id, time, decimal_sample, int_sample) VALUES (?, ?, ?, 301)', table1);
       var query2Table2 = util.format('INSERT INTO %s (id, time, float_sample, int_sample) VALUES (?, ?, ?, 302)', table2);
       var client = newInstance();
-      async.parallel([
+      utils.parallel([
         function (next) {
-          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
+          utils.timesLimit(1000, 100, function (n, eachNext) {
             var queries = [{
               query: query1Table1,
               params: [id1Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
@@ -378,7 +383,7 @@ describe('Client', function () {
           }, next);
         },
         function (next) {
-          async.eachLimit(new Array(1000), 100, function (n, eachNext) {
+          utils.timesLimit(1000, 100, function (n, eachNext) {
             var queries = [{
               query: query2Table1,
               params: [id2Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
@@ -392,19 +397,27 @@ describe('Client', function () {
       ], function (err) {
         assert.ifError(err);
         //verify results in both tables
-        var query = 'SELECT * FROM %s where id IN (%s, %s)';
-        async.series([
-          helper.toTask(client.execute, client, util.format(query, table1, id1Tbl1, id2Tbl1), [], {consistency: consistency}),
-          helper.toTask(client.execute, client, util.format(query, table2, id1Tbl2, id2Tbl2), [], {consistency: consistency})
-        ], function (err, resultArray) {
-          assert.ifError(err);
-          assert.strictEqual(resultArray.length, 2);
-          var rows1 = resultArray[0].rows;
-          assert.strictEqual(rows1.length, 2000);
-          var rows2 = resultArray[0].rows;
-          assert.strictEqual(rows2.length, 2000);
-          done();
-        });
+        var q = 'SELECT * FROM %s where id IN (%s, %s)';
+        utils.series([
+          function (next) {
+            var query = util.format(q, table1, id1Tbl1, id2Tbl1);
+            client.execute(query, [], { consistency: consistency }, function (err, result) {
+              assert.ifError(err);
+              var rows1 = result.rows;
+              assert.strictEqual(rows1.length, 2000);
+              next();
+            });
+          },
+          function (next) {
+            var query = util.format(q, table2, id1Tbl2, id2Tbl2);
+            client.execute(query, [], { consistency: consistency }, function (err, result) {
+              assert.ifError(err);
+              var rows2 = result.rows;
+              assert.strictEqual(rows2.length, 2000);
+              next();
+            });
+          }
+        ], done);
       });
     });
     vit('2.0', 'should allow named parameters', function (done) {
@@ -422,19 +435,25 @@ describe('Client', function () {
       client.batch(queries, {prepare: true, consistency: consistency}, function (err) {
         assert.ifError(err);
         var query = 'SELECT * FROM %s where id = %s';
-        async.series([
-          helper.toTask(client.execute, client, util.format(query, table1, id1), [], {consistency: consistency}),
-          helper.toTask(client.execute, client, util.format(query, table2, id2), [], {consistency: consistency})
-        ], function (err, resultArray) {
-          assert.ifError(err);
-          assert.strictEqual(resultArray.length, 2);
-          var row1 = resultArray[0].rows[0];
-          assert.strictEqual(row1['text_sample'], 'named params');
-          var row2 = resultArray[1].rows[0];
-          assert.strictEqual(row2['int_sample'], 501);
-          assert.strictEqual(row2['varint_sample'].toString(), '2010');
-          done();
-        });
+        utils.series([
+          function (next) {
+            client.execute(util.format(query, table1, id1), [], {consistency: consistency}, function (err, result) {
+              assert.ifError(err);
+              var row1 = result.first();
+              assert.strictEqual(row1['text_sample'], 'named params');
+              next();
+            });
+          },
+          function (next) {
+            client.execute(util.format(query, table2, id2), [], {consistency: consistency}, function (err, result) {
+              assert.ifError(err);
+              var row2 = result.first();
+              assert.strictEqual(row2['int_sample'], 501);
+              assert.strictEqual(row2['varint_sample'].toString(), '2010');
+              next();
+            });
+          }
+        ], done);
       });
     });
     vit('2.0', 'should execute batch containing the same query multiple times', function (done) {

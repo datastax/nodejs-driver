@@ -1,7 +1,6 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 
 var Protocol = require('../../lib/streams').Protocol;
 var types = require('../../lib/types');

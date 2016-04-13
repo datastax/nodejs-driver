@@ -1,6 +1,6 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 
 var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
@@ -48,7 +48,7 @@ describe('Connection', function () {
       var minProtocolVersionSupported = getMinProtocolVersion();
       if(helper.getCassandraVersion())
       var protocolVersion = minProtocolVersionSupported - 1;
-      async.whilst(function condition() {
+      utils.whilst(function condition() {
         return (++protocolVersion) <= maxProtocolVersionSupported;
       }, function iterator (next) {
         var localCon = newInstance(null, protocolVersion);
@@ -121,7 +121,7 @@ describe('Connection', function () {
     it('should change active keyspace', function (done) {
       var localCon = newInstance();
       var keyspace = helper.getRandomName();
-      async.series([
+      utils.series([
         localCon.open.bind(localCon),
         function creating(next) {
           var query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
@@ -140,7 +140,7 @@ describe('Connection', function () {
       var localCon = newInstance();
       var keyspace = helper.getRandomName().toUpperCase();
       assert.notStrictEqual(keyspace, keyspace.toLowerCase());
-      async.series([
+      utils.series([
         localCon.open.bind(localCon),
         function creating(next) {
           var query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
@@ -165,10 +165,10 @@ describe('Connection', function () {
       options.policies.retry = new helper.RetryMultipleTimes(3);
       var connection = newInstance(null, null, options);
       var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
-      async.series([
+      utils.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(maxRequests + 10, function (n, next) {
+          utils.times(maxRequests + 10, function (n, next) {
             var request = getRequest(helper.queries.basic);
             connection.sendStream(request, null, next);
           }, seriesNext);
@@ -182,10 +182,10 @@ describe('Connection', function () {
       var connection = newInstance(null, null, options);
       var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
       var killed = false;
-      async.series([
+      utils.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {
-          async.times(maxRequests + 10, function (n, next) {
+          utils.times(maxRequests + 10, function (n, next) {
             if (n === maxRequests + 9) {
               connection.netClient.destroy();
               killed = true;

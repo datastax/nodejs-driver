@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -23,7 +23,7 @@ describe('reconnection', function () {
         contactPoints: helper.baseOptions.contactPoints,
         policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)}
       }));
-      async.series([
+      utils.series([
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
@@ -41,7 +41,7 @@ describe('reconnection', function () {
         client.connect.bind(client),
         function insert1(next) {
           //execute a couple of times to ensure it is prepared on all hosts
-          async.times(15, function (n, timesNext) {
+          utils.times(15, function (n, timesNext) {
             client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
           }, next);
         },
@@ -51,7 +51,7 @@ describe('reconnection', function () {
         function insert2(next) {
           //Prepare and execute a new Query, that it is NOT prepared on the stopped node :)
           //execute a couple of times to ensure it is prepared on the remaining hosts
-          async.times(3, function (n, timesNext) {
+          utils.times(3, function (n, timesNext) {
             client.execute(insertQuery2, [types.uuid(), n], {prepare: 1}, timesNext);
           }, next);
         },
@@ -62,12 +62,12 @@ describe('reconnection', function () {
           helper.ccmHelper.exec(['node2', 'stop'], next);
         },
         function insert1_plus (next) {
-          async.times(15, function (n, timesNext) {
+          utils.times(15, function (n, timesNext) {
             client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
           }, next);
         },
         function insert2_plus (next) {
-          async.times(1, function (n, timesNext) {
+          utils.times(1, function (n, timesNext) {
             client.execute(insertQuery2, [types.uuid(), n], {prepare: 1}, timesNext);
           }, next);
         }
@@ -83,7 +83,7 @@ describe('reconnection', function () {
         contactPoints: helper.baseOptions.contactPoints,
         policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)}
       });
-      async.series([
+      utils.series([
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
@@ -101,7 +101,7 @@ describe('reconnection', function () {
         client.connect.bind(client),
         function insert1(next) {
           //execute a couple of times to ensure it is prepared on all hosts
-          async.times(15, function (n, timesNext) {
+          utils.times(15, function (n, timesNext) {
             client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
           }, next);
         },
@@ -110,7 +110,7 @@ describe('reconnection', function () {
         },
         function insert2(next) {
           //execute a couple of times to even though the cluster is DOWN
-          async.timesSeries(20, function (n, timesNext) {
+          utils.timesSeries(20, function (n, timesNext) {
             client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, function (err) {
               //It should callback in error
               helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -126,7 +126,7 @@ describe('reconnection', function () {
           client.execute(util.format('SELECT * from %s', table), function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 15);
-            async.times(25, function (n, timesNext) {
+            utils.times(25, function (n, timesNext) {
               client.execute(insertQuery1, [types.uuid(), n.toString()], {prepare: 1}, timesNext);
             }, next);
           });
@@ -156,7 +156,7 @@ describe('reconnection', function () {
         //disable heartbeat
         pooling: { heartBeatInterval: 0}
       }));
-      async.series([
+      utils.series([
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
@@ -174,7 +174,7 @@ describe('reconnection', function () {
           setTimeout(next, 5000);
         },
         function insert1(next) {
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             var queries = [
               { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
               { query: insertQuery2, params: [types.Uuid.random(), n]}
@@ -185,7 +185,7 @@ describe('reconnection', function () {
         //restart node1
         helper.toTask(helper.ccmHelper.exec, null, ['node2', 'start']),
         function insertAfterRestart(next) {
-          async.times(15, function (n, timesNext) {
+          utils.times(15, function (n, timesNext) {
             var queries = [
               { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
               { query: insertQuery2, params: [types.Uuid.random(), n]}
@@ -204,11 +204,11 @@ describe('reconnection', function () {
     it('should callback in err the next request', function (done) {
       //never reconnect
       var client = new Client(utils.extend({}, helper.baseOptions, {policies: {reconnection: new reconnection.ConstantReconnectionPolicy(Number.MAX_VALUE)}}));
-      async.series([
+      utils.series([
         helper.ccmHelper.start(1),
         client.connect.bind(client),
         function doSomeQueries(next) {
-          async.times(30, function (n, timesNext) {
+          utils.times(30, function (n, timesNext) {
             client.execute(helper.queries.basic, timesNext);
           }, next);
         },
@@ -234,7 +234,7 @@ describe('reconnection', function () {
   describe('when a node is killed during connection initialization', function() {
     it('should properly abort the connection and retry', function(done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.start(2),
         function pauseNode2(next) {
           // Pause node2 so establishing connection to it hangs.
@@ -243,7 +243,7 @@ describe('reconnection', function () {
         client.connect.bind(client),
         function doSomeQueries(next) {
           // Issue some queries to get a connection attempt on node2.
-          async.times(30, function (n, timesNext) {
+          utils.times(30, function (n, timesNext) {
             client.execute(helper.queries.basic, function() {
               timesNext();
             });

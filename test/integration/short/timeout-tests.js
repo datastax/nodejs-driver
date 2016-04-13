@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -26,10 +25,10 @@ describe('client read timeouts', function () {
       var client = newInstance({ socketOptions: { readTimeout: 3000 } });
       var coordinators = {};
       var errorsReceived = [];
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function warmup(next) {
-          async.timesSeries(10, function (n, timesNext) {
+          utils.timesSeries(10, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) return timesNext(err);
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
@@ -43,7 +42,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', [], { retryOnTimeout: false }, function (err, result) {
               if (err) {
                 errorsReceived.push(err);
@@ -86,10 +85,10 @@ describe('client read timeouts', function () {
       });
       var coordinators = {};
       var connection;
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function warmup(next) {
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) return timesNext(err);
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
@@ -114,7 +113,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          async.times(500, function (n, timesNext) {
+          utils.times(500, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) return timesNext(err);
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
@@ -137,10 +136,10 @@ describe('client read timeouts', function () {
     it('should move to next host for eachRow() executions', function (done) {
       var client = newInstance({ socketOptions: { readTimeout: 3000 } });
       var coordinators = {};
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function warmup(next) {
-          async.timesSeries(10, function (n, timesNext) {
+          utils.timesSeries(10, function (n, timesNext) {
             var counter = 0;
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
@@ -158,7 +157,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          async.times(10, function (n, timesNext) {
+          utils.times(10, function (n, timesNext) {
             var counter = 0;
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
@@ -222,10 +221,10 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
       timeoutLogs.push(info);
     });
     var coordinators = {};
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function warmup(next) {
-        async.timesSeries(10, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           client.execute('SELECT key FROM system.local', [], { prepare: prepareWarmup }, function (err, result) {
             if (err) return timesNext(err);
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
@@ -242,7 +241,7 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
         var testAbortTimeout = setTimeout(function () {
           throw new Error('It should have been executed in the next (not paused) host.');
         }, testTimeoutMillis * 4);
-        async.times(10, function (n, timesNext) {
+        utils.times(10, function (n, timesNext) {
           queryOptions = utils.extend({ }, queryOptions, { prepare: prepare});
           client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
             if (err) return timesNext(err);
@@ -276,10 +275,10 @@ function getTimeoutErrorExpectedTest(prepare, prepareWarmup, readTimeout, queryO
   return (function timeoutErrorExpectedTest(done) {
     var client = newInstance({ socketOptions: { readTimeout: readTimeout } });
     var coordinators = {};
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function warmup(next) {
-        async.timesSeries(10, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           client.execute('SELECT key FROM system.local', [], { prepare: prepareWarmup }, function (err, result) {
             if (err) return timesNext(err);
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

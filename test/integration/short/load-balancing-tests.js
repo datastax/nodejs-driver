@@ -1,6 +1,5 @@
-'use strict';
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -9,7 +8,6 @@ var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var loadBalancing = require('../../../lib/policies/load-balancing.js');
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
@@ -20,7 +18,7 @@ describe('TokenAwarePolicy', function () {
     var keyspace = 'ks1';
     var table = 'table1';
     var testClient = new Client(helper.baseOptions);
-    async.series([
+    utils.series([
       helper.ccmHelper.start('3'),
       testClient.connect.bind(testClient),
       function createKs(next) {
@@ -51,7 +49,7 @@ describe('TokenAwarePolicy', function () {
           keyspace: keyspace,
           contactPoints: helper.baseOptions.contactPoints
         });
-        async.times(100, function (n, timesNext) {
+        utils.times(100, function (n, timesNext) {
           var id = (n % 10) + 1;
           var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
           client.execute(query, null, { routingKey: new Buffer([0, 0, 0, id])}, function (err, result) {
@@ -77,7 +75,7 @@ describe('TokenAwarePolicy', function () {
         keyspace: ks,
         contactPoints: helper.baseOptions.contactPoints
       });
-      async.timesSeries(10, function (n, timesNext) {
+      utils.timesSeries(10, function (n, timesNext) {
         var id = (n % 10) + 1;
         var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
         client.execute(query, [id, id], { traceQuery: true, prepare: true}, function (err, result) {
@@ -99,7 +97,7 @@ describe('TokenAwarePolicy', function () {
     }
 
     var testClient = new Client(helper.baseOptions);
-    async.series([
+    utils.series([
       helper.ccmHelper.start('3'),
       testClient.connect.bind(testClient),
       function createKs1(next) {
@@ -137,7 +135,7 @@ describe('WhiteListPolicy', function () {
   it('should use the hosts in the white list only', function (done) {
     var policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
     var client = newInstance(policy);
-    helper.timesLimit(100, 20, function (n, next) {
+    utils.timesLimit(100, 20, function (n, next) {
       client.execute('SELECT * FROM system.local', function (err, result) {
         assert.ifError(err);
         var lastOctet = helper.lastOctetOf(result.info.queriedHost);

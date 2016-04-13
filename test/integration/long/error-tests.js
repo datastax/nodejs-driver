@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper');
@@ -16,14 +16,14 @@ describe('Client', function () {
       contactPoints: ['127.0.0.2'],
       policies: { loadBalancing: new helper.WhiteListPolicy(['2'])}
     });
-    async.series([
+    utils.series([
       helper.ccmHelper.start(2, { yaml: ['tombstone_failure_threshold: 1000']}),
       client.connect.bind(client),
       helper.toTask(client.execute, client, "CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"),
       helper.toTask(client.execute, client, "CREATE TABLE test.foo(pk int, cc int, v int, primary key (pk, cc))"),
       function generateTombstones(next) {
         // The rest of the test relies on the fact that the PK '1' will be placed on node1 with MurmurPartitioner
-        async.timesSeries(2000, function (n, timesNext) {
+        utils.timesSeries(2000, function (n, timesNext) {
           client.execute('INSERT INTO test.foo (pk, cc, v) VALUES (1, ?, null)', [n], {prepare: true}, function (err, result) {
             if (err) return next(err);
             assert.strictEqual(helper.lastOctetOf(result.info.queriedHost), '2');
@@ -48,7 +48,7 @@ describe('Client', function () {
     var client = newInstance();
     var keyspace = 'ks_wfail';
     var table = keyspace + '.tbl1';
-    async.series([
+    utils.series([
       helper.ccmHelper.removeIfAny,
       helper.toTask(helper.ccmHelper.exec, null, ['create', 'test', '-v', helper.getCassandraVersion()]),
       helper.toTask(helper.ccmHelper.exec, null, ['populate', '-n', 2]),
@@ -73,7 +73,7 @@ describe('Client', function () {
   });
   vit('2.2', 'should callback with functionFailure error when the cql function throws an error', function (done) {
     var client = newInstance({});
-    async.series([
+    utils.series([
       helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions: true']}),
       client.connect.bind(client),
       helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_func')),

@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper.js');
@@ -71,7 +70,7 @@ describe('Client', function () {
       var length = 300;
       var noop = function () {};
       var counter = 0;
-      async.series([
+      utils.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
@@ -80,7 +79,7 @@ describe('Client', function () {
         },
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
-          async.timesSeries(length, function (n, timesNext) {
+          utils.timesSeries(length, function (n, timesNext) {
             client.eachRow(util.format(query, table, types.Uuid.random(), n), [], noop, timesNext);
           }, next);
         },
@@ -102,7 +101,7 @@ describe('Client', function () {
       var table = keyspace + '.' + helper.getRandomName('table');
       var client = newInstance();
       var noop = function () {};
-      async.series([
+      utils.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 1), [], noop, helper.waitSchema(client, next));
         },
@@ -111,7 +110,7 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], noop, next);
           }, seriesNext);
         },
@@ -157,7 +156,7 @@ describe('Client', function () {
     var noop = function () {};
     before(function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         helper.ccmHelper.start(3),
         function (next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, next);
@@ -198,7 +197,7 @@ describe('Client', function () {
       var length = 500;
       var noop = function () {};
       var counter = 0;
-      async.series([
+      utils.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], {prepare: true}, noop, helper.waitSchema(client, next));
         },
@@ -207,7 +206,7 @@ describe('Client', function () {
         },
         function insert(next) {
           var query = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'text%s\')';
-          async.timesSeries(length, function (n, timesNext) {
+          utils.timesSeries(length, function (n, timesNext) {
             client.eachRow(util.format(query, table, types.Uuid.random(), n), [], {prepare: true}, noop, timesNext);
           }, next);
         },
@@ -232,7 +231,7 @@ describe('Client', function () {
       ];
       var queryOptions = { prepare: true, consistency: types.consistencies.quorum };
       var expectedValues = {};
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function createTable(next) {
           var query = 'CREATE TABLE tbl_map_floats (id text PRIMARY KEY, data map<text, float>)';
@@ -240,7 +239,7 @@ describe('Client', function () {
         },
         function insertData(next) {
           var query = 'INSERT INTO tbl_map_floats (id, data) VALUES (?, ?)';
-          async.eachSeries(values, function (params, eachNext) {
+          utils.eachSeries(values, function (params, eachNext) {
             expectedValues[params[0]] = params[1].val;
             client.execute(query, params, queryOptions, eachNext);
           }, next);
@@ -271,7 +270,7 @@ describe('Client', function () {
       var client = newInstance();
       //client.on('log', helper.log());
       var noop = function () {};
-      async.series([
+      utils.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
         },
@@ -283,18 +282,18 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
-          helper.timesLimit(200, 100, function (n, next) {
+          utils.timesLimit(200, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
-          helper.timesLimit(135, 100, function (n, next) {
+          utils.timesLimit(135, 100, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function selectDataMultiplePages(seriesNext) {
-          async.parallel([
+          utils.parallel([
             function (parallelNext) {
               var query = util.format('SELECT * FROM %s', table1);
               var rowCount = 0;
@@ -333,7 +332,7 @@ describe('Client', function () {
       var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var metaPageState;
       var pageState;
-      async.series([
+      utils.series([
         helper.toTask(insertTestData, null, client, table, 131),
         function selectData(seriesNext) {
           //Only fetch 70
@@ -381,7 +380,7 @@ describe('Client', function () {
       var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var pageState;
       var nextPageRows;
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(insertTestData, null, client, table, 110),
         function selectData(seriesNext) {
@@ -432,7 +431,7 @@ describe('Client', function () {
       var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var counter = 0;
       var rowLength = 10;
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(insertTestData, null, client, table, rowLength),
         function assertNextPageNull(next) {
@@ -452,7 +451,7 @@ describe('Client', function () {
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
       var client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       var id = types.Uuid.random();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function selectNotExistent(next) {
           var query = util.format('SELECT * FROM %s WHERE id = ?', table);
@@ -533,11 +532,11 @@ describe('Client', function () {
         console.error(level, className, message, furtherInfo);
       });
       var query = util.format('SELECT * FROM %s LIMIT 2000', table);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(insertTestData, null, client, table, 2000),
         function selectData(seriesNext) {
-          async.timesLimit(400, 6, function (n, timesNext) {
+          utils.timesLimit(400, 6, function (n, timesNext) {
             var counter = 0;
             client.eachRow(query, [], { prepare: true }, function (n, row) {
               assert.ok(row);
@@ -567,13 +566,13 @@ function newInstance(options) {
 }
 
 function insertTestData(client, table, length, callback) {
-  async.series([
+  utils.series([
     function truncate(seriesNext) {
       client.eachRow('TRUNCATE ' + table, [], helper.noop, seriesNext);
     },
     function insertData(seriesNext) {
       var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      async.timesLimit(length, 100, function (n, next) {
+      utils.timesLimit(length, 100, function (n, next) {
         client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, helper.noop, next);
       }, seriesNext);
     }

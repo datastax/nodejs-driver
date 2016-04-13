@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
@@ -506,7 +505,7 @@ describe('Metadata', function () {
       //no keyspace named ks1 in metadata
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
-      async.times(50, function (n, next) {
+      utils.times(50, function (n, next) {
         metadata.getUdt('ks1', 'udt5', function (err, udtInfo) {
           if (err) return next(err);
           assert.ok(udtInfo);
@@ -539,7 +538,7 @@ describe('Metadata', function () {
       //no keyspace named ks1 in metadata
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
-      async.timesSeries(50, function (n, next) {
+      utils.timesSeries(50, function (n, next) {
         metadata.getUdt('ks1', 'udt10', function (err, udtInfo) {
           if (err) return next(err);
           assert.ok(udtInfo);
@@ -565,7 +564,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
-      async.timesSeries(20, function (n, next) {
+      utils.timesSeries(20, function (n, next) {
         metadata.getUdt('ks1', 'udt20', function (err, udtInfo) {
           if (err) return next(err);
           assert.strictEqual(udtInfo, null);
@@ -814,7 +813,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
-      async.times(100, function (n, next) {
+      utils.map(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
       }, function (err, results) {
         assert.ifError(err);
@@ -854,7 +853,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
-      async.timesSeries(100, function (n, next) {
+      utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
       }, function (err, results) {
         assert.ifError(err);
@@ -885,7 +884,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
-      async.timesSeries(100, function (n, next) {
+      utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
       }, function (err, results) {
         assert.ifError(err);
@@ -1469,7 +1468,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
-        async.times(10, function (n, next) {
+        utils.times(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1497,7 +1496,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1530,7 +1529,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1569,7 +1568,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
             if (n < 5) {
               assert.ok(err);
@@ -1725,7 +1724,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.times(10, function (n, next) {
+      utils.times(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
           assert.ifError(err);
           assert.ok(func);
@@ -1754,7 +1753,7 @@ describe('Metadata', function () {
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
-      async.timesSeries(10, function (n, next) {
+      utils.timesSeries(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
           assert.ifError(err);
           assert.ok(func);
@@ -1848,7 +1847,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
-        async.times(10, function (n, next) {
+        utils.times(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1876,7 +1875,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1909,7 +1908,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
             assert.ok(funcArray);
@@ -1949,7 +1948,7 @@ describe('Metadata', function () {
         };
         var metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             if (n < 5) {
               assert.ok(err);

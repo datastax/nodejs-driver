@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -23,7 +22,7 @@ describe('Metadata', function () {
         assert.ok(m.keyspaces);
         assert.ok(m.keyspaces['system']);
         assert.ok(m.keyspaces['system'].strategy);
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks3 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"),
@@ -58,7 +57,7 @@ describe('Metadata', function () {
         assert.ifError(err);
         var m = client.metadata;
         assert.ok(m);
-        async.series([
+        utils.series([
           helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_todelete', 1)),
           function checkKeyspaceExists(next) {
             var ks = m.keyspaces['ks_todelete'];
@@ -84,7 +83,7 @@ describe('Metadata', function () {
       client.connect(function (err) {
         assert.ifError(err);
         var m = client.metadata;
-        async.timesSeries(10, function (n, next) {
+        utils.timesSeries(10, function (n, next) {
           m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
             assert.ifError(err);
             assert.strictEqual(udtInfo, null);
@@ -97,7 +96,7 @@ describe('Metadata', function () {
       var client = newInstance();
       var createUdtQuery1 = "CREATE TYPE phone (alias text, number text, country_code int, second_number 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')";
       var createUdtQuery2 = 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)';
-      async.series([
+      utils.series([
         helper.toTask(client.connect, client),
         helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt1', 3)),
         helper.toTask(client.execute, client, 'USE ks_udt1'),
@@ -149,7 +148,7 @@ describe('Metadata', function () {
     });
     vit('2.1', 'should retrieve the updated metadata after a schema change', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt_meta', 3)),
         helper.toTask(client.execute, client, 'USE ks_udt_meta'),
@@ -182,46 +181,54 @@ describe('Metadata', function () {
   describe('#getTrace()', function () {
     it('should retrieve the trace immediately after', function (done) {
       var client = newInstance();
-      async.waterfall([
+      var traceId;
+      utils.series([
         client.connect.bind(client),
         function executeQuery(next) {
-          client.execute(helper.queries.basic, [], { traceQuery: true}, next);
+          client.execute(helper.queries.basic, [], { traceQuery: true}, function (err, result) {
+            assert.ifError(err);
+            traceId = result.info.traceId;
+            next();
+          });
         },
-        function getTrace(result, next) {
-          client.metadata.getTrace(result.info.traceId, next);
-        },
-        function checkTrace(trace, next) {
-          assert.ok(trace);
-          assert.strictEqual(typeof trace.duration, 'number');
-          if (client.controlConnection.protocolVersion >= 4) {
-            //Check the new field added in C* 2.2
-            helper.assertInstanceOf(trace.clientAddress, types.InetAddress);
-          }
-          assert.ok(trace.events.length);
-          next();
+        function getTrace(next) {
+          client.metadata.getTrace(traceId, function (err, trace) {
+            assert.ifError(err);
+            assert.ok(trace);
+            assert.strictEqual(typeof trace.duration, 'number');
+            if (client.controlConnection.protocolVersion >= 4) {
+              //Check the new field added in C* 2.2
+              helper.assertInstanceOf(trace.clientAddress, types.InetAddress);
+            }
+            assert.ok(trace.events.length);
+            next();
+          });
         },
         client.shutdown.bind(client)
       ], done);
     });
     it('should retrieve the trace a few seconds after', function (done) {
       var client = newInstance();
-      async.waterfall([
+      var traceId;
+      utils.series([
         client.connect.bind(client),
         function executeQuery(next) {
-          client.execute('SELECT * FROM system.local', [], { traceQuery: true}, next);
-        },
-        function getTrace(result, next) {
-          client.metadata.getTrace(result.info.traceId, function (err, trace) {
-            setTimeout(function () {
-              next(err, trace);
-            }, 1500);
+          client.execute('SELECT * FROM system.local', [], { traceQuery: true}, function (err, result) {
+            traceId = result.info.traceId;
+            if (err) {
+              return next(err);
+            }
+            setTimeout(next, 1500);
           });
         },
-        function checkTrace(trace, next) {
-          assert.ok(trace);
-          assert.strictEqual(typeof trace.duration, 'number');
-          assert.ok(trace.events.length);
-          next();
+        function getTrace(next) {
+          client.metadata.getTrace(traceId, function (err, trace) {
+            assert.ifError(err);
+            assert.ok(trace);
+            assert.strictEqual(typeof trace.duration, 'number');
+            assert.ok(trace.events.length);
+            next();
+          });
         }
       ], done);
     });
@@ -272,7 +279,7 @@ describe('Metadata', function () {
           "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
         )
       }
-      async.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
+      utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
     it('should retrieve the metadata of a single partition key table', function (done) {
       var client = newInstance({ keyspace: keyspace});
@@ -439,7 +446,7 @@ describe('Metadata', function () {
     });
     it('should retrieve the updated metadata after a schema change', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, 'CREATE TABLE ks_tbl_meta.tbl_changing (id uuid PRIMARY KEY, text_sample text)'),
         function checkTable1(next) {
@@ -627,7 +634,7 @@ describe('Metadata', function () {
       var client = newInstance();
       var createTableCql = 'CREATE TABLE ks_tbl_meta.tbl_c22 ' +
         '(id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, date_sample date, time_sample time)';
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, createTableCql),
         function checkTable(next) {
@@ -650,7 +657,7 @@ describe('Metadata', function () {
     });
     vit('2.1', 'should retrieve the metadata of a table with udt column', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function checkMetadata(next) {
           client.metadata.getTable(keyspace, 'tbl_udts1', function (err, table) {
@@ -671,7 +678,7 @@ describe('Metadata', function () {
     });
     vit('2.1', 'should retrieve the metadata of a table with udt partition key', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function checkMetadata(next) {
           client.metadata.getTable(keyspace, 'tbl_udts2', function (err, table) {
@@ -693,7 +700,7 @@ describe('Metadata', function () {
     });
     it('should retrieve the metadata of a table with custom type columns', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function checkMetadata(next) {
           client.metadata.getTable(keyspace, 'tbl9', function (err, table) {
@@ -732,7 +739,7 @@ describe('Metadata', function () {
     });
     vit('2.1', 'should retrieve the metadata of a table with quoted udt', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function checkMetadata(next) {
           client.metadata.getTable(keyspace, 'tbl_udts_with_quoted', function (err, table) {
@@ -761,7 +768,7 @@ describe('Metadata', function () {
         "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
         "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC)"
       ];
-      async.eachSeries(queries, client.execute.bind(client), function (err) {
+      utils.eachSeries(queries, client.execute.bind(client), function (err) {
         client.shutdown();
         if (err) {
           return done(err);
@@ -771,7 +778,7 @@ describe('Metadata', function () {
     });
     it('should retrieve the view and table metadata', function (done) {
       var client = newInstance();
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
           client.metadata.getMaterializedView(keyspace, 'dailyhigh', function (err, view) {
@@ -794,7 +801,7 @@ describe('Metadata', function () {
     });
     it('should refresh the view metadata via events', function (done) {
       var client = newInstance({ keyspace: 'ks_view_meta' });
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL PRIMARY KEY ((game, year, month), score, user, day) WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
         function checkView1(next) {
@@ -832,7 +839,7 @@ describe('Metadata', function () {
     });
     it('should refresh the view metadata as result of table change via events', function (done) {
       var client = newInstance({ keyspace: 'ks_view_meta' });
-      async.series([
+      utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, 'CREATE TABLE users (user TEXT PRIMARY KEY, first_name TEXT)'),
         // create a view using 'select *'.

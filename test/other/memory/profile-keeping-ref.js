@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var fs = require('fs');
 var heapdump;
@@ -31,7 +30,7 @@ var heapUsed = process.memoryUsage().heapUsed;
 var totalByteLength = 0;
 var values = [];
 
-async.series([
+utils.series([
   helper.ccmHelper.removeIfAny,
   helper.ccmHelper.start(2),
   client.connect.bind(client),
@@ -47,7 +46,7 @@ async.series([
     var counter = 0;
     var callbackCounter = 0;
     global.gc();
-    async.eachLimit(new Array(totalLength), 500, function (v, timesNext) {
+    utils.timesLimit(totalLength, 500, function (v, timesNext) {
       var n = counter++;
       client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), new Buffer(generateAsciiString(1024))], {prepare: 1}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {

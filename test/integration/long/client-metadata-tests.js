@@ -1,5 +1,5 @@
+"use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper');
@@ -7,10 +7,6 @@ var Client = require('../../../lib/client');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils');
 var tokenizer = require('../../../lib/tokenizer');
-var loadBalancing = require('../../../lib/policies/load-balancing');
-var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
-var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 
 describe('Client', function () {
   this.timeout(240000);
@@ -18,7 +14,7 @@ describe('Client', function () {
     before(function (done) {
       var client = new Client(helper.baseOptions);
       var createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";
-      async.series([
+      utils.series([
         helper.ccmHelper.start('4:4', {sleep: 1000}),
         function (next) {
           client.execute(util.format(createQuery, 'sampleks1', 2, 2), next);

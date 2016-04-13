@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var rewire = require('rewire');
 
@@ -73,7 +72,7 @@ describe('Client', function () {
       });
       var client = new Client(options);
       client.on('connected', function () {emitCounter++;});
-      async.times(1000, function (n, next) {
+      utils.times(1000, function (n, next) {
         client.connect(function (err) {
           assert.ifError(err);
           next();
@@ -98,7 +97,7 @@ describe('Client', function () {
         init: helper.callbackNoop,
         hosts: new HostMap()
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         client.shutdown.bind(client)
       ], function (err) {
@@ -113,7 +112,7 @@ describe('Client', function () {
   });
   describe('#_getPrepared()', function () {
     var Client = rewire('../../lib/client.js');
-    var requestHandlerMock = function () {this.counter = 0;};
+    var requestHandlerMock = function () {};
     var prepareCounter;
     requestHandlerMock.prototype.send = function noop (query, options, cb) {
       //make it async
@@ -132,6 +131,7 @@ describe('Client', function () {
         assert.equal(err, null);
         assert.notEqual(id, null);
         assert.notEqual(meta, null);
+        //noinspection JSUnresolvedVariable
         assert.strictEqual(id.constructor.name, 'Buffer');
         assert.strictEqual(prepareCounter, 1);
         done();
@@ -141,28 +141,22 @@ describe('Client', function () {
       var client = new Client({contactPoints: ['host']});
       client.metadata = new Metadata(client.options);
       prepareCounter = 0;
-      async.parallel([
+      utils.parallel([
         function (nextParallel) {
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
             client._getPrepared('QUERY ONE', next);
           }, function (err, results) {
-            assert.equal(err, null);
-            assert.ok(results);
-            var id = results[0];
-            assert.notEqual(id, null);
+            assert.ifError(err);
             nextParallel();
           });
         },
         function (nextParallel) {
-          async.times(100, function (n, next) {
+          utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
             client._getPrepared('QUERY TWO', next);
-          }, function (err, results) {
-            assert.equal(err, null);
-            assert.ok(results);
-            var id = results[0];
-            assert.notEqual(id, null);
+          }, function (err) {
+            assert.ifError(err);
             nextParallel();
           });
         }
@@ -176,7 +170,7 @@ describe('Client', function () {
       var maxPrepared = 10;
       var client = new Client({contactPoints: ['host'], maxPrepared: maxPrepared});
       client.metadata = new Metadata(client.options);
-      async.timesSeries(maxPrepared + 2, function (n, next) {
+      utils.timesSeries(maxPrepared + 2, function (n, next) {
         //noinspection JSAccessibilityCheck
         client._getPrepared('QUERY ' + n.toString(), next);
       }, function (err) {
@@ -252,7 +246,7 @@ describe('Client', function () {
       client.connect = helper.callbackNoop;
       //noinspection JSAccessibilityCheck
       client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
-      async.series([function (next) {
+      utils.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {prepare: true}, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
@@ -383,7 +377,7 @@ describe('Client', function () {
         cb();
       };
       var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
-      async.series([
+      utils.series([
         function (next) {
           client.execute(query, [], { hints: ['int2']}, function (err) {
             helper.assertInstanceOf(err, TypeError);
@@ -407,7 +401,7 @@ describe('Client', function () {
   });
   describe('#batch()', function () {
     var Client = rewire('../../lib/client.js');
-    var requestHandlerMock = function () {this.counter = 0;};
+    var requestHandlerMock = function () {};
     requestHandlerMock.prototype.send = function noop (query, options, cb) {
       //make it async
       setTimeout(function () {
@@ -579,10 +573,10 @@ describe('Client', function () {
       };
       Client.__set__("ControlConnection", controlConnectionMock);
       var client = new Client(options);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function shutDownMultiple(seriesNext) {
-          async.timesSeries(10, function(n, next) {
+          utils.timesSeries(10, function(n, next) {
             client.shutdown(next);
           }, seriesNext);
         }
@@ -606,10 +600,10 @@ describe('Client', function () {
       };
       Client.__set__("ControlConnection", controlConnectionMock);
       var client = new Client(options);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function shutDownMultiple(seriesNext) {
-          async.times(10, function(n, next) {
+          utils.times(100, function(n, next) {
             client.shutdown(next);
           }, seriesNext);
         }
@@ -867,7 +861,7 @@ describe('Client', function () {
         }
       };
       var options = { prepare: true};
-      async.timesSeries(20, function (n, next) {
+      utils.timesSeries(20, function (n, next) {
         //noinspection JSAccessibilityCheck
         client._setQueryOptions(options, [types.Uuid.random(), 'hello', types.TimeUuid.now()], meta, function (err) {
           assert.ifError(err);

@@ -1,6 +1,5 @@
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 var utils = require('../../lib/utils');
 
 var Encoder = require('../../lib/encoder');
@@ -901,7 +900,7 @@ describe('encoder', function () {
         ['timeuuid',   dataTypes.timeuuid],
         ['ascii',      dataTypes.ascii]
       ];
-      async.eachSeries(items, function eachCb(item, next) {
+      utils.eachSeries(items, function eachCb(item, next) {
         encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
           assert.ifError(err);
           assert.ok(dataType);
@@ -921,7 +920,7 @@ describe('encoder', function () {
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
         ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
       ];
-      async.eachSeries(items, function eachCb(item, next) {
+      utils.eachSeries(items, function eachCb(item, next) {
         encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
           assert.ifError(err);
           assert.ok(dataType);
@@ -942,7 +941,7 @@ describe('encoder', function () {
     });
     it('should parse nested subtypes', function (done) {
       var encoder = new Encoder(4, {});
-      async.series([
+      utils.series([
         function (next) {
           var name = 'map<text,frozen<list<frozen<map<text,frozen<list<int>>>>>>>';
           encoder.parseTypeName('ks1', name, 0, null, throwIfCalled, function (err, type) {
@@ -963,7 +962,7 @@ describe('encoder', function () {
     });
     it('should parse udts', function (done) {
       var encoder = new Encoder(4, {});
-      async.series([
+      utils.series([
         function (next) {
           var called = 0;
           function udtResolver(ks, udtName, callback) {
@@ -1008,7 +1007,7 @@ describe('encoder', function () {
     });
     it('should parse quoted udts', function (done) {
       var encoder = new Encoder(4, {});
-      async.series([
+      utils.series([
         function (next) {
           var called = 0;
           function udtResolver(ks, udtName, callback) {

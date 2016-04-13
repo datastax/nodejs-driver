@@ -2,7 +2,6 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var async = require('async');
 
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
@@ -522,24 +521,6 @@ describe('types', function () {
   });
 });
 describe('utils', function () {
-  describe('#syncEvent()', function () {
-    it('should execute callback once for all emitters', function () {
-      var emitter1 = new events.EventEmitter();
-      var emitter2 = new events.EventEmitter(); 
-      var emitter3 = new events.EventEmitter(); 
-      var callbackCounter = 0;
-      utils.syncEvent([emitter1, emitter2, emitter3], 'dummy', this, function (text){
-        assert.strictEqual(text, 'bop');
-        callbackCounter = callbackCounter + 1;
-      });
-      assert.ok(emitter1.emit('dummy', 'bip'));
-      emitter1.emit('dummy', 'bop');
-      emitter2.emit('dummy', 'bip');
-      emitter2.emit('dummy', 'bop');
-      emitter3.emit('dummy', 'bop');
-      assert.strictEqual(callbackCounter, 1);
-    });
-  });
   describe('#parseCommonArgs()', function () {
     it('parses args and can be retrieved by name', function () {
       function testArgs(args, expectedLength) {

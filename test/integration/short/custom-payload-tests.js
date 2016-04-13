@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 
 var helper = require('../../test-helper');
@@ -18,7 +17,7 @@ describe('custom payload', function () {
   }));
   before(function (done) {
     var client = newInstance();
-    async.series([
+    utils.series([
       client.connect.bind(client),
       helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace)),
       helper.toTask(client.execute, client, helper.createTableCql(table)),
@@ -32,7 +31,7 @@ describe('custom payload', function () {
       var payload = {
         'key1': new Buffer('val1')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function execute(next) {
           client.execute('SELECT key FROM system.local', [], { customPayload: payload}, function (err, result) {
@@ -52,7 +51,7 @@ describe('custom payload', function () {
       var payload = {
         'key2': new Buffer('val2')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function insert(next) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -73,7 +72,7 @@ describe('custom payload', function () {
       var payload = {
         'key3': new Buffer('val3')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function insert(next) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -98,7 +97,7 @@ describe('custom payload', function () {
         'key-prep1': new Buffer('val-prep1'),
         'key-prep2': new Buffer('val-prep2')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function execute(next) {
           client.execute('SELECT key FROM system.local', [], { prepare: 1, customPayload: payload}, function (err, result) {
@@ -122,7 +121,7 @@ describe('custom payload', function () {
       var payload = {
         'key-batch1': new Buffer('val-batch1')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
           var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -147,7 +146,7 @@ describe('custom payload', function () {
       var payload = {
         'key-batch2': new Buffer('val-batch2')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
           var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -177,7 +176,7 @@ describe('custom payload', function () {
       var payload = {
         'key-batch-prep1': new Buffer('val-batch-prep1')
       };
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
           var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);

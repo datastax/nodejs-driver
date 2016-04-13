@@ -1,5 +1,4 @@
 var assert = require('assert');
-var async = require('async');
 var util = require('util');
 var fs = require('fs');
 var heapdump;
@@ -29,7 +28,7 @@ if (!global.gc) {
 var insertOnly = process.argv.indexOf('--insert-only') > 0;
 var heapUsed = process.memoryUsage().heapUsed;
 
-async.series([
+utils.series([
   helper.ccmHelper.removeIfAny,
   helper.ccmHelper.start(2),
   client.connect.bind(client),
@@ -45,7 +44,7 @@ async.series([
     var counter = 0;
     var callbackCounter = 0;
     global.gc();
-    async.eachLimit(new Array(10000), 500, function (v, timesNext) {
+    utils.timesLimit(10000, 500, function (v, timesNext) {
       var n = counter++;
       client.execute(query, [types.Uuid.random(), n, new Buffer(generateAsciiString(1024), 'utf8')], {prepare: true}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {

@@ -1,4 +1,3 @@
-var async = require('async');
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
@@ -9,18 +8,6 @@ var utils = require('../lib/utils.js');
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
-  /**
-   * Execute the query per each parameter array into paramsArray
-   * @param {Connection|Client} con
-   * @param {String} query
-   * @param {Array} paramsArray Array of arrays of params
-   * @param {Function} callback
-   */
-  batchInsert: function (con, query, paramsArray, callback) {
-    async.mapSeries(paramsArray, function (params, next) {
-      con.execute(query, params, {consistency: types.consistencies.one}, next);
-    }, callback);
-  },
   /**
    * Sync throws the error
    */
@@ -475,30 +462,6 @@ var helper = {
       client.shutdown(callback);
     });
   },
-
-  /**
-   * The same as async.times, only no more than limit iterators will be
-   * simultaneously running at any time.
-   *
-   * Note that the items are not processed in batches, so there is no guarantee
-   * that the first limit iterator functions will complete before any others
-   * are started.
-   *
-   * Taken from https://github.com/caolan/async/pull/560.
-   *
-   * @param count The number of times to run the function.
-   * @param limit The maximum number of iterators to run at any time.
-   * @param iterator The function to call n times.
-   * @param callback The function to call on completion of iterators.
-   */
-  timesLimit: function(count, limit, iterator, callback) {
-    var counter = [];
-    for (var i = 0; i < count; i++) {
-      counter.push(i);
-    }
-
-    return async.mapLimit(counter, limit, iterator, callback);
-  },
   queries: {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
@@ -512,7 +475,7 @@ function Ccm() {
 /**
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
- * @param {{vnodes: Boolean, yaml: Array}} options
+ * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number}} options
  * @param {Function} callback
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
@@ -520,7 +483,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
   options = options || {};
   var version = helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
-  async.series([
+  utils.series([
     function (next) {
       //it wont hurt to remove
       self.exec(['remove'], function () {
@@ -548,7 +511,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
         return next();
       }
       var i = 0;
-      async.whilst(
+      utils.whilst(
         function condition() {
           return i < options.yaml.length
         },
@@ -641,7 +604,7 @@ Ccm.prototype.waitForUp = function (callback) {
   var started = false;
   var retryCount = 0;
   var self = this;
-  async.whilst(function () {
+  utils.whilst(function () {
     return !started && retryCount < 10;
   }, function iterator (next) {
     self.exec(['node1', 'showlog'], function (err, info) {

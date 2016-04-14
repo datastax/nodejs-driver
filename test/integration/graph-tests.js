@@ -26,7 +26,10 @@ vdescribe('5.0', 'DseClient', function () {
         client.execute(helper.queries.basic, next);
       },
       function createGraph(next) {
-        client.executeGraph('system.createGraph("name1").ifNotExist().build()', null, { graphName: null}, next);
+        client.executeGraph('system.graph("name1").ifNotExists().create()', null, { graphName: null}, next);
+      },
+      function makeStrict(next) {
+        client.executeGraph('schema.config().option("graph.schema_mode").set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)', null, { graphName: 'name1'}, next);
       },
       client.shutdown.bind(client)
     ], done);
@@ -47,20 +50,32 @@ vdescribe('5.0', 'DseClient', function () {
       //See reference graph here
       //http://www.tinkerpop.com/docs/3.0.0.M1/
       before(wrapClient(function (client, done) {
-        var query =
-          'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
-          'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
-          'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
-          'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
-          'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
-          'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
-          'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
-          'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
-          'marko.addEdge("created", lop, "weight", 0.4f);\n' +
-          'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
-          'josh.addEdge("created", lop, "weight", 0.4f);\n' +
-          'peter.addEdge("created", lop, "weight", 0.2f);';
-        client.executeGraph(query, done);
+        var createSchema =
+            'schema.propertyKey("name").Text().ifNotExists().create();\n' +
+            'schema.propertyKey("age").Int().ifNotExists().create();\n' +
+            'schema.propertyKey("lang").Text().ifNotExists().create();\n' +
+            'schema.propertyKey("weight").Float().ifNotExists().create();\n' +
+            'schema.vertexLabel("person").properties("name", "age").ifNotExists().create();\n' +
+            'schema.vertexLabel("software").properties("name", "lang").ifNotExists().create();\n' +
+            'schema.edgeLabel("created").properties("weight").connection("person", "software").ifNotExists().create();\n' +
+            'schema.edgeLabel("knows").properties("weight").connection("person", "person").ifNotExists().create();';
+        client.executeGraph(createSchema, function (err) {
+          assert.ifError(err);
+          var loadGraph =
+            'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
+            'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
+            'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
+            'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
+            'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
+            'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
+            'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
+            'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
+            'marko.addEdge("created", lop, "weight", 0.4f);\n' +
+            'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
+            'josh.addEdge("created", lop, "weight", 0.4f);\n' +
+            'peter.addEdge("created", lop, "weight", 0.2f);';
+          client.executeGraph(loadGraph, done);
+        });
       }));
       it('should retrieve graph vertices', wrapClient(function (client, done) {
         var query = 'g.V().has("name", "marko").out("knows")';
@@ -271,13 +286,6 @@ vdescribe('5.0', 'DseClient', function () {
           done();
         });
       }));
-      it('should use set graph alias', wrapClient(function (client, done) {
-        client.executeGraph('zz.V()', null, { graphAlias: 'zz'}, function (err, result) {
-          assert.ifError(err);
-          assert.ok(result);
-          done();
-        });
-      }));
       it('should return zero results', wrapClient(function (client, done) {
         client.executeGraph("g.V().hasLabel('notALabel')", function(err, result) {
           assert.ifError(err);
@@ -289,26 +297,34 @@ vdescribe('5.0', 'DseClient', function () {
     });
     it('should use list as a parameter', wrapClient(function(client, done) {
       var characters = ['Mario', "Luigi", "Toad", "Bowser", "Peach", "Wario", "Waluigi"];
-      var query =  '' +
-          "characters.each { character -> \n" +
-          "    graph.addVertex(label, 'character', 'name', character);\n" +
-          "}";
 
-      client.executeGraph(query, {characters:characters}, null, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result);
-
-        client.executeGraph("g.V().hasLabel('character').values('name')", function (err, result) {
-          assert.ifError(err);
-          assert.ok(result);
-          var results = result.toArray();
-          assert.strictEqual(results.length, characters.length);
-          characters.forEach(function (c) {
-            assert.ok(results.indexOf(c) != -1);
+      async.waterfall([
+        function createSchema (seriesNext) {
+          var schemaQuery = '' +
+              'schema.propertyKey("characterName").Text().create();\n' +
+              'schema.vertexLabel("character").properties("characterName").create();';
+          client.executeGraph(schemaQuery, seriesNext);
+        },
+        function loadGraph (result, seriesNext) {
+          var query =  '' +
+            "characters.each { character -> \n" +
+            "    graph.addVertex(label, 'character', 'characterName', character);\n" +
+            "}";
+          client.executeGraph(query, {characters:characters}, null, seriesNext);
+        },
+        function retrieveCharacters (result, seriesNext) {
+          client.executeGraph("g.V().hasLabel('character').values('characterName')", function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            var results = result.toArray();
+            assert.strictEqual(results.length, characters.length);
+            characters.forEach(function (c) {
+              assert.ok(results.indexOf(c) != -1);
+            });
+            seriesNext();
           });
-          done();
-        });
-      });
+        }
+      ], done);
     }));
     it('should use map as a parameter', wrapClient(function(client, done) {
       var name = 'Albert Einstein';
@@ -318,13 +334,24 @@ vdescribe('5.0', 'DseClient', function () {
 
 
       async.waterfall([
-        function createEinstein (next) {
+        function createSchema (next) {
+          var schemaQuery = '' +
+              'schema.propertyKey("year_born").Int().create()\n' +
+              'schema.propertyKey("field").Text().create()\n' +
+              'schema.propertyKey("scientist_name").Text().create()\n' +
+              'schema.propertyKey("country_name").Text().create()\n' +
+              'schema.vertexLabel("scientist").properties("scientist_name", "year_born", "field").create()\n' +
+              'schema.vertexLabel("country").properties("country_name").create()\n' +
+              'schema.edgeLabel("had_citizenship").connection("scientist", "country").create()';
+          client.executeGraph(schemaQuery, next);
+        },
+        function createEinstein (result, next) {
           // Create a vertex for Einstein and then add a vertex for each country of citizenship and an outgoing
           // edge from Einstein to country he had citizenship in.
           var query =
-            "Vertex scientist = graph.addVertex(label, 'scientist', 'name', m.name, 'year_born', m.year_born, 'field', m.field)\n" +
+            "Vertex scientist = graph.addVertex(label, 'scientist', 'scientist_name', m.name, 'year_born', m.year_born, 'field', m.field)\n" +
             "m.citizenship.each { c -> \n" +
-            "    Vertex country = graph.addVertex(label, 'country', 'name', c);\n" +
+            "    Vertex country = graph.addVertex(label, 'country', 'country_name', c);\n" +
             "    scientist.addEdge('had_citizenship', country);\n" +
             "}";
 
@@ -334,7 +361,7 @@ vdescribe('5.0', 'DseClient', function () {
           assert.ok(result);
 
           // Ensure Einstein was properly added.
-          client.executeGraph("g.V().hasLabel('scientist').has('name', name)", {name: name}, null, next);
+          client.executeGraph("g.V().hasLabel('scientist').has('scientist_name', name)", {name: name}, null, next);
         },
         function lookupEdgesWithVertexId (result, next) {
           assert.ok(result);
@@ -343,11 +370,11 @@ vdescribe('5.0', 'DseClient', function () {
           assert.ok(vertex);
           assert.equal(vertex.type, "vertex");
           assert.equal(vertex.label, "scientist");
-          assert.equal(vertex.properties.name[0].value, name);
+          assert.equal(vertex.properties.scientist_name[0].value, name);
           assert.equal(vertex.properties.field[0].value, field);
           assert.equal(vertex.properties.year_born[0].value, year);
           // Ensure edges are retrievable by vertex id.
-          client.executeGraph("g.V(vId).outE('had_citizenship').inV().values('name')", {vId: vertex.id}, null, next);
+          client.executeGraph("g.V(vId).outE('had_citizenship').inV().values('country_name')", {vId: vertex.id}, null, next);
         },
         function validateEdges (result, next) {
           assert.ok(result);
@@ -362,9 +389,8 @@ vdescribe('5.0', 'DseClient', function () {
     it('should be able to create and retrieve a multi-cardinality vertex property', wrapClient(function(client, done) {
       async.waterfall([
         function createSchema (next) {
-          var schemaQuery = "Schema schema = graph.schema()\n" +
-            "schema.buildVertexLabel('multi_v').add()\n" +
-            "schema.buildPropertyKey('multi_prop', String.class).cardinality(Cardinality.Multiple).add()";
+          var schemaQuery = 'schema.propertyKey("multi_prop").Text().multiple().create()\n' +
+            'schema.vertexLabel("multi_v").properties("multi_prop").create()';
           client.executeGraph(schemaQuery, next);
         },
         function createVertex (result, next) {
@@ -399,7 +425,16 @@ vdescribe('5.0', 'DseClient', function () {
     it('should be able to create and retrieve vertex property with meta properties', wrapClient(function(client, done) {
       var vertex;
       async.waterfall([
-        function createVertex (next) {
+        function createSchema (next) {
+          var schemaQuery = '' +
+              'schema.propertyKey("sub_prop").Text().create()\n' +
+              'schema.propertyKey("sub_prop2").Text().create()\n' +
+              'schema.propertyKey("meta_prop").Text().properties("sub_prop", "sub_prop2").create()\n' +
+              'schema.vertexLabel("meta_v").properties("meta_prop").create()';
+          client.executeGraph(schemaQuery, next);
+        },
+        function createVertex (result, next) {
+          assert.ok(result);
           client.executeGraph("g.addV(label, 'meta_v', 'meta_prop', 'hello')", next);
         },
         function extendProperty (result, next) {
@@ -453,11 +488,11 @@ vdescribe('5.0', 'DseClient', function () {
 
       async.waterfall([
         function createSchema (next) {
-          var schemaQuery = "Schema schema = graph.schema()\n" +
-              "schema.buildVertexLabel('simu').add()\n" +
-              "schema.buildPropertyKey('username', String.class).add()\n" +
-              "schema.buildPropertyKey('uuid', UUID.class).add()\n" +
-              "schema.buildPropertyKey('number', Double.class).add()";
+          var schemaQuery = '' +
+              'schema.propertyKey("username").Text().create()\n' +
+              'schema.propertyKey("uuid").Uuid().create()\n' +
+              'schema.propertyKey("number").Double().create()\n' +
+              'schema.vertexLabel("simu").properties("username", "uuid", "number").create()';
           client.executeGraph(schemaQuery, next);
         },
         function createInitialVertex (result, next) {
@@ -519,45 +554,40 @@ vdescribe('5.0', 'DseClient', function () {
     }));
     [
       // Validate that all supported property types by DSE graph are properly encoded / decoded.
-      ["java.math.BigDecimal", ["8675309.9998"]],
-      ["java.math.BigInteger", ["8675309"]],
-      ["String", ["", "75", "Lorem Ipsum"]],
-      ["Long", [9007199254740991, -9007199254740991, 0]], // MAX_SAFE_INTEGER / MIN_SAFE_INTEGER
-      ["Integer", [2147483647, -2147483648, 0, 42]],
-      ["Short", [-32768, 32767, 0, 42]],
-      ["Double", [Math.PI]],
-      ["Boolean", [true, false]],
+      ['Boolean()', [true, false]],
+      ['Int()', [2147483647, -2147483648, 0, 42]],
+      ['Smallint()', [-32768, 32767, 0, 42]],
+      ['Bigint()', [9007199254740991, -9007199254740991, 0]], // MAX_SAFE_INTEGER / MIN_SAFE_INTEGER
+      ['Float()', [3.1415927]],
+      ['Double()', [Math.PI]],
+      ['Decimal()', ["8675309.9998"]],
+      ['Varint()', ["8675309"]],
+      ['Timestamp()', ["2016-02-04T02:26:31.657Z"]],
+      ['Duration()', ['P2DT3H4M'], ['PT51H4M']],
+      // TODO: Reenable when DSP-9208 addressed.
+      //['Blob()', ['0xCAFE']],
+      ['Text()', ["", "75", "Lorem Ipsum"]],
+      ['Uuid()', [Uuid.random()]],
+      ['Inet()', [InetAddress.fromString("127.0.0.1"), InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["127.0.0.1", "0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
       // TODO: Should driver support encoding geo types to WKT when encoding parameters?  At the moment it uses geojson
       // which DSE Graph does not support.
-      ["org.apache.cassandra.db.marshal.geometry.Point", [new Point(0, 1).toString(), new Point(-5, 20).toString()]],
-      ["org.apache.cassandra.db.marshal.geometry.LineString", [new LineString(new Point(30, 10), new Point(10, 30), new Point(40, 40)).toString()]],
-      ["org.apache.cassandra.db.marshal.geometry.Polygon", [new Polygon(
+      ['Point()', [new Point(0, 1).toString(), new Point(-5, 20).toString()]],
+      ['Linestring()', [new LineString(new Point(30, 10), new Point(10, 30), new Point(40, 40)).toString()]],
+      ['Polygon()', [new Polygon(
         [new Point(35, 10), new Point(45, 45), new Point(15, 40), new Point(10, 20), new Point(35, 10)],
         [new Point(20, 30), new Point(35, 35), new Point(30, 20), new Point(20, 30)]
       ).toString()]],
-      // TODO: The format of circle returned by server is that which is returned by Circle.toString()
-      // TODO: should we make consistent?
-      ["org.apache.cassandra.db.marshal.geometry.Circle", ['CIRCLE((1.0 2.0) 3.0)']],
-      ["java.net.InetAddress", [InetAddress.fromString("127.0.0.1"), InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["127.0.0.1", "0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
-      ["java.net.Inet4Address", [InetAddress.fromString("127.0.0.1")]],
-      ["java.net.Inet6Address", [InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
-      ["java.util.UUID", [Uuid.random()]]
-      // TODO: While Instant is supported, it returns back a JSON object,
-      // TODO: i.e.: {prop1:{"nano":657000000,"epochSecond":1454552791}} instead of a parsable data string.
-      // ["Instant", ["2016-02-04T02:26:31.657Z"]]
     ].forEach(function (args) {
       var id = schemaCounter++;
-      var javaClass = args[0];
+      var propType = args[0];
       var input = args[1];
       var expected = args.length >= 3 ? args[2] : input;
-      it(util.format('should create and retrieve vertex with property of type %s', javaClass), wrapClient(function(client, done) {
+      it(util.format('should create and retrieve vertex with property of type %s', propType), wrapClient(function(client, done) {
         var vertexLabel = "vertex" + id;
         var propertyName = "prop" + id;
-        var importStatement = javaClass.indexOf('.') != -1 ? "import " + javaClass + "\n" : "";
-        var schemaQuery = importStatement +
-          "Schema schema = graph.schema()\n" +
-          "schema.buildVertexLabel(vertexLabel).add()\n" +
-          "schema.buildPropertyKey(propertyName, " + javaClass + ".class).add()";
+        var schemaQuery = '' +
+          'schema.propertyKey(propertyName).' + propType + '.create()\n' +
+          'schema.vertexLabel(vertexLabel).properties(propertyName).create()';
 
         async.waterfall([
           function createSchema(next) {

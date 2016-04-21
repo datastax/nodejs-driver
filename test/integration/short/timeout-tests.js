@@ -15,7 +15,7 @@ describe('client read timeouts', function () {
   afterEach(helper.ccmHelper.remove);
   describe('when socketOptions.readTimeout is not set', function () {
     it('should do nothing else than waiting', getTimeoutErrorExpectedTest(false, false));
-    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 0, { readTimeout: 3000 }));
+    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 0, { readTimeout: 3123 }));
   });
   describe('when socketOptions.readTimeout is set', function () {
     it('should move to next host by default for simple queries', getMoveNextHostTest(false, false));
@@ -182,9 +182,9 @@ describe('client read timeouts', function () {
   });
   describe('when queryOptions.readTimeout is set', function () {
     it('should be used instead of socketOptions.readTimeout for simple queries',
-      getMoveNextHostTest(false, false, 1 << 24, { readTimeout: 3000 }));
+      getMoveNextHostTest(false, false, 1 << 24, { readTimeout: 3123 }));
     it('should be used instead of socketOptions.readTimeout for prepared queries executions',
-      getMoveNextHostTest(true, true, 1 << 24, { readTimeout: 3000 }));
+      getMoveNextHostTest(true, true, 1 << 24, { readTimeout: 3123 }));
     it('should suppress socketOptions.readTimeout when set to 0 for simple queries',
       getTimeoutErrorExpectedTest(false, false, 3000, { readTimeout: 0}));
     it('should suppress socketOptions.readTimeout when set to 0 for prepared queries executions',
@@ -208,13 +208,19 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
   if (typeof readTimeout === 'undefined') {
     readTimeout = 3000;
   }
-  var testAbortTimeout = readTimeout;
+  var testTimeoutMillis = readTimeout;
   if (queryOptions && queryOptions.readTimeout) {
-    testAbortTimeout = queryOptions.readTimeout;
+    testTimeoutMillis = queryOptions.readTimeout;
   }
-  testAbortTimeout *= 4;
   return (function moveNextHostTest(done) {
     var client = newInstance({ socketOptions: { readTimeout: readTimeout } });
+    var timeoutLogs = [];
+    client.on('log', function (level, constructorName, info) {
+      if (level !== 'warning' || info.indexOf('timeout') === -1) {
+        return;
+      }
+      timeoutLogs.push(info);
+    });
     var coordinators = {};
     async.series([
       client.connect.bind(client),
@@ -233,9 +239,9 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
         assert.strictEqual(coordinators['1'], true);
         assert.strictEqual(coordinators['2'], true);
         coordinators = {};
-        var testTimeout = setTimeout(function () {
+        var testAbortTimeout = setTimeout(function () {
           throw new Error('It should have been executed in the next (not paused) host.');
-        }, testAbortTimeout);
+        }, testTimeoutMillis * 4);
         async.times(10, function (n, timesNext) {
           queryOptions = utils.extend({ }, queryOptions, { prepare: prepare});
           client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
@@ -244,10 +250,15 @@ function getMoveNextHostTest(prepare, prepareWarmup, readTimeout, queryOptions) 
             timesNext();
           });
         }, function timeFinished(err) {
-          clearTimeout(testTimeout);
+          clearTimeout(testAbortTimeout);
           if (err) return next(err);
           assert.strictEqual(Object.keys(coordinators).length, 1);
           assert.strictEqual(coordinators['1'], true);
+          assert.ok(timeoutLogs.length);
+          //check that the logs messages contains the actual millis value
+          assert.ok(timeoutLogs.reduce(function (val, current) {
+            return val || current.indexOf(testTimeoutMillis.toString()) >= 0;
+          }, false), 'Timeout millis not found');
           next();
         });
       },

@@ -1,6 +1,6 @@
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
+var async = require('neo-async');
 
 var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();

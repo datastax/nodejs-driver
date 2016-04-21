@@ -1,7 +1,7 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
+var async = require('neo-async');
 
 var Encoder = require('../../lib/encoder');
 var streams = require('../../lib/streams');

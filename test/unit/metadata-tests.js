@@ -1,6 +1,6 @@
 "use strict";
 var assert = require('assert');
-var async = require('async');
+var async = require('neo-async');
 var util = require('util');
 var rewire = require('rewire');
 

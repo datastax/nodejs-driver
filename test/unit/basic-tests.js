@@ -2,7 +2,7 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var async = require('async');
+var async = require('neo-async');
 
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');

@@ -1,7 +1,7 @@
 var assert = require('assert');
 var util = require('util');
 var events = require('events');
-var async = require('async');
+var async = require('neo-async');
 var utils = require('../../lib/utils.js');
 
 var types = require('../../lib/types');

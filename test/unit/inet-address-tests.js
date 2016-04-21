@@ -94,6 +94,19 @@ describe('InetAddress', function () {
       helper.assertInstanceOf(val, InetAddress);
       assert.strictEqual(val.toString(), '10.11.12.13');
     });
+    it('should parse IPv6 Addresses with Embedded IPv4 Addresses', function () {
+      [
+        ['0:0:0:0:0:FFFF:129.144.52.38',    '00000000000000000000ffff81903426'],
+        ['0:0:0:0:0:0:129.144.52.38',       '00000000000000000000000081903426'],
+        ['::ffff:129.144.52.38',            '00000000000000000000ffff81903426'],
+        ['::ffff:254.255.52.32',            '00000000000000000000fffffeff3420'],
+        ['::13.1.68.3',                     '0000000000000000000000000d014403'],
+        ['fe::13.1.68.3',                   '00fe000000000000000000000d014403']
+      ].forEach(function (item) {
+        var ip = InetAddress.fromString(item[0]);
+        assert.strictEqual(ip.toString('hex'), item[1]);
+      });
+    });
     it('should throw TypeError when the string is not a valid address', function () {
       assert.throws(function () {
         InetAddress.fromString('127.0.0.1.10');

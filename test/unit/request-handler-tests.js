@@ -290,6 +290,7 @@ describe('RequestHandler', function () {
           cb(null, connection);
         });
       };
+      //noinspection JSCheckFunctionSignatures
       handler.send(new requests.QueryRequest('Dummy QUERY'), {}, function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
@@ -444,7 +445,7 @@ describe('RequestHandler', function () {
         // Capture the current stack minus the top line in the call stack (since line number is not exact).
         var stack = {};
         Error.captureStackTrace(stack);
-        stack = stack.stack.split('\n')
+        stack = stack.stack.split('\n');
         stack.splice(0,2);
         stack = stack.join('\n');
 
@@ -472,7 +473,7 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#onTimeout', function () {
+  describe('#onTimeout()', function () {
     it('should check host health', function (done) {
       var checkHealth = 0;
       var handler = newInstance();
@@ -486,6 +487,72 @@ describe('RequestHandler', function () {
         assert.strictEqual(checkHealth, 1);
         done();
       });
+    });
+  });
+  describe('#iterateThroughHosts()', function () {
+    var getHost = function (address, isUp) {
+      return {
+        isUp: function () { return isUp !== false; },
+        setDistance: helper.noop,
+        address: address,
+        setDown: function () {
+          //noinspection JSPotentiallyInvalidUsageOfThis
+          this.isDown = true;
+        }
+      }
+    };
+    it('should synchronously get next connection when pool warmed', function (done) {
+      var handler = newInstance();
+      var hosts = utils.arrayIterator([ getHost() ]);
+      handler.getPooledConnection = function (h, cb) {
+        cb(null, {});
+      };
+      var sync = true;
+      handler.iterateThroughHosts(hosts, function (err, c) {
+        assert.ifError(err);
+        assert.ok(c);
+        assert.ok(sync);
+        done();
+      });
+      sync = false;
+    });
+    it('should set the host down when calling getPooledConnection() returns an error', function (done) {
+      var handler = newInstance();
+      var hosts = [ getHost(), getHost() ];
+      var counter = 0;
+      handler.getPooledConnection = function (h, cb) {
+        //For the second host, it returns a valid connection
+        if (++counter === 2) {
+          return cb(null, {});
+        }
+        cb(new Error('Test error'));
+      };
+      var sync = true;
+      handler.iterateThroughHosts(utils.arrayIterator(hosts), function (err, c) {
+        assert.ifError(err);
+        assert.ok(c);
+        assert.ok(sync);
+        assert.ok(hosts[0].isDown);
+        assert.ok(!hosts[1].isDown);
+        done();
+      });
+      sync = false;
+    });
+    it('should callback with NoHostAvailableError when all host down', function (done) {
+      var handler = newInstance();
+      var hosts = utils.arrayIterator([ getHost('2001::1', false), getHost('2001::2', false) ]);
+      var sync = true;
+      handler.iterateThroughHosts(hosts, function (err, c) {
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.ok(err.innerErrors);
+        assert.deepEqual(Object.keys(err.innerErrors), ['2001::1', '2001::2']);
+        assert.strictEqual(typeof err.innerErrors['2001::1'], 'string');
+        assert.strictEqual(typeof err.innerErrors['2001::2'], 'string');
+        assert.ok(!c);
+        assert.ok(sync);
+        done();
+      });
+      sync = false;
     });
   });
 });

@@ -146,7 +146,7 @@ describe('Client', function () {
           utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
             client._getPrepared('QUERY ONE', next);
-          }, function (err, results) {
+          }, function (err) {
             assert.ifError(err);
             nextParallel();
           });
@@ -479,8 +479,8 @@ describe('Client', function () {
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
       //q2 and q4 are prepared
-      client.metadata.getPreparedInfo('q2').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo('q4').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q2').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q4').queryId = new Buffer(3);
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);
         assert.ok(called);
@@ -505,10 +505,10 @@ describe('Client', function () {
       client.connect = helper.callbackNoop;
       client.metadata = new Metadata(client.options);
       //q3 and q4 are prepared
-      client.metadata.getPreparedInfo('q3').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo('q4').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q3').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q4').queryId = new Buffer(3);
       //q2 is being prepared
-      var q2Info = client.metadata.getPreparedInfo('q2');
+      var q2Info = client.metadata.getPreparedInfo(null, 'q2');
       q2Info.preparing = true;
       q2Info.once = function (name, cb) {
         q2Info.dummyCb = cb;

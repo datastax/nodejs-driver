@@ -1,6 +1,7 @@
 "use strict";
 var assert = require('assert');
 var util = require('util');
+var events = require('events');
 var rewire = require('rewire');
 
 var helper = require('../test-helper.js');
@@ -392,12 +393,38 @@ describe('Metadata', function () {
   });
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions());
-      metadata.getPreparedInfo('QUERY1');
-      metadata.getPreparedInfo('QUERY2');
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getPreparedInfo(null, 'QUERY1');
+      metadata.getPreparedInfo(null, 'QUERY2');
       assert.strictEqual(metadata.preparedQueries['__length'], 2);
       metadata.clearPrepared();
       assert.strictEqual(metadata.preparedQueries['__length'], 0);
+    });
+  });
+  describe('#getPreparedInfo()', function () {
+    it('should create a new EventEmitter when the query has not been prepared', function () {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var info = metadata.getPreparedInfo(null, 'query1');
+      helper.assertInstanceOf(info, events.EventEmitter);
+      info = metadata.getPreparedInfo(null, 'query2');
+      helper.assertInstanceOf(info, events.EventEmitter);
+    });
+    it('should get the same EventEmitter when the query is the same', function () {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var info1 = metadata.getPreparedInfo(null, 'query1');
+      helper.assertInstanceOf(info1, events.EventEmitter);
+      var info2 = metadata.getPreparedInfo(null, 'query1');
+      helper.assertInstanceOf(info2, events.EventEmitter);
+      assert.strictEqual(info1, info2);
+    });
+    it('should create a new EventEmitter when the query is the same but the keyspace is different', function () {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var info0 = metadata.getPreparedInfo(null, 'query1');
+      var info1 = metadata.getPreparedInfo('ks1', 'query1');
+      var info2 = metadata.getPreparedInfo('ks2', 'query1');
+      assert.notStrictEqual(info0, info1);
+      assert.notStrictEqual(info0, info2);
+      assert.notStrictEqual(info1, info2);
     });
   });
   describe('#getUdt()', function () {

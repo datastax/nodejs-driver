@@ -60,8 +60,9 @@ describe('RequestHandler', function () {
       responseError.code = types.responseErrorCodes.overloaded;
 
       var retryCalled = false;
-      handler.retry = function (cb) {
+      handler.retry = function (c, useCurrentHost, cb) {
         retryCalled = true;
+        assert.strictEqual(useCurrentHost, false);
         cb();
       };
 
@@ -77,15 +78,16 @@ describe('RequestHandler', function () {
       policy.onWriteTimeout = function (info) {
         assert.notEqual(info, null);
         policyCalled = true;
-        return {decision: retry.RetryPolicy.retryDecision.retry}
+        return { decision: retry.RetryPolicy.retryDecision.retry };
       };
       var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.writeTimeout;
       var retryCalled = false;
-      handler.retry = function (cb) {
+      handler.retry = function (c, useCurrentHost, cb) {
         retryCalled = true;
+        assert.strictEqual(useCurrentHost, undefined);
         cb();
       };
 
@@ -102,7 +104,7 @@ describe('RequestHandler', function () {
       policy.onUnavailable = function (info) {
         assert.notEqual(info, null);
         policyCalled = true;
-        return {decision: retry.RetryPolicy.retryDecision.retrow};
+        return { decision: retry.RetryPolicy.retryDecision.rethrow };
       };
       var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
       handler.host = { address: '1'};
@@ -174,7 +176,7 @@ describe('RequestHandler', function () {
       handler.getNextConnection = function (o, cb) {
         cb(null, connection);
       };
-      handler.retry = function (cb) {
+      handler.retry = function (c, uh, cb) {
         retryCounter++;
         setImmediate(cb);
       };
@@ -264,6 +266,39 @@ describe('RequestHandler', function () {
         //Only 1 query
         assert.strictEqual(queriesPrepared.length, 1);
         assert.strictEqual(queriesPrepared.join(','), 'SAME QUERY');
+        done();
+      });
+    });
+  });
+  describe('#retry()', function () {
+    it('should set consistency level when provided', function (done) {
+      var handler = newInstance();
+      handler.request = { consistency: types.consistencies.localQuorum };
+      var request;
+      handler.sendOnConnection = function (r, options, cb) {
+        request = r;
+        cb();
+      };
+      var retryConsistency = types.consistencies.three;
+      handler.retry(retryConsistency, true, function (err) {
+        assert.ifError(err);
+        assert.ok(request);
+        assert.strictEqual(request.consistency, retryConsistency);
+        done();
+      });
+    });
+    it('should use the next host when specified', function (done) {
+      var handler = newInstance();
+      handler.request = { consistency: types.consistencies.localQuorum };
+      var sendCalled = 0;
+      handler.send = function (r, options, cb) {
+        sendCalled++;
+        cb();
+      };
+      handler.retry(null, false, function (err) {
+        assert.ifError(err);
+        //RequestHandler#send() uses next host reusing hosts iterator from the previous query plan
+        assert.strictEqual(sendCalled, 1);
         done();
       });
     });

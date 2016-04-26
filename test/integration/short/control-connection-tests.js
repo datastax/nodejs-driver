@@ -1,5 +1,6 @@
 "use strict";
 var assert = require('assert');
+var util = require('util');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client.js');
@@ -68,7 +69,14 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should subscribe to STATUS_CHANGE events', function (done) {
-      var cc = newInstance();
+      // Only ignored hosts are marked as DOWN when receiving the event
+      // Use an specific load balancing policy, to set the node2 as ignored
+      function TestLoadBalancing() {}
+      util.inherits(TestLoadBalancing, policies.loadBalancing.RoundRobinPolicy);
+      TestLoadBalancing.prototype.getDistance = function (h) {
+        return (helper.lastOctetOf(h) === '2' ? types.distance.ignored : types.distance.local);
+      };
+      var cc = newInstance({ policies: { loadBalancing: new TestLoadBalancing() } });
       utils.series([
         cc.init.bind(cc),
         function (next) {
@@ -148,26 +156,43 @@ describe('ControlConnection', function () {
     });
     it('should reconnect when host used goes down', function (done) {
       var cc = newInstance();
-      cc.init(function () {
-        //initialize the load balancing policy
-        cc.options.policies.loadBalancing.init(null, cc.hosts, function () {});
-        //it should be using the first node: kill it
-        helper.ccmHelper.exec(['node1', 'stop'], function (err) {
-          if (err) return done(err);
-          //A little help here
-          cc.hosts.slice(0)[0].setDown();
-          setTimeout(function () {
-            var hosts = cc.hosts.slice(0);
-            assert.strictEqual(hosts.length, 2);
-            var countUp = hosts.reduce(function (value, host) {
-              value += host.isUp() ? 1 : 0;
-              return value;
-            }, 0);
-            assert.strictEqual(countUp, 1);
-            done();
-          }, 3000);
-        });
-      });
+      var host1;
+      utils.series([
+        cc.init.bind(cc),
+        function initLbp(next) {
+          cc.options.policies.loadBalancing.init(null, cc.hosts, next);
+        },
+        function ensureConnected(next) {
+          // there should be a single connection to the first host
+          var hosts = cc.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          assert.strictEqual(hosts[0].pool.connections.length, 1);
+          assert.strictEqual(hosts[1].pool.connections.length, 0);
+          host1 = hosts[0];
+          next();
+        },
+        helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
+        function ensureDown(next) {
+          // connections to host1 could be down or not
+          if (host1.pool.connections.length === 0) {
+            return next();
+          }
+          // close the connection
+          host1.setDown();
+          setTimeout(next, 5000);
+        },
+        function assertions(next) {
+          var hosts = cc.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          var countUp = hosts.reduce(function (value, host) {
+            value += host.isUp() ? 1 : 0;
+            return value;
+          }, 0);
+          assert.strictEqual(countUp, 1);
+          assert.strictEqual(host1.isUp(), false);
+          next();
+        }
+      ], done);
     });
     it('should reconnect when all hosts go down and back up', function (done) {
       var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
@@ -183,6 +208,11 @@ describe('ControlConnection', function () {
           assert.strictEqual(helper.lastOctetOf(cc.host), '1');
           cc.options.policies.loadBalancing.init(null, cc.hosts, next);
         },
+        function setHostDistance(next) {
+          // the control connection host should be local or remote to trigger DOWN events
+          cc.host.getDistance(options.policies.loadBalancing);
+          next();
+        },
         function stop1(next) {
           helper.ccmHelper.stopNode(1, next);
         },
@@ -192,7 +222,9 @@ describe('ControlConnection', function () {
         function setDownManually(next) {
           //help in case the event didn't fired by socket disconnection
           cc.hosts.forEach(function (h) {
-            h.setDown();
+            if (h.pool.connections.length === 1) {
+              h.removeFromPool(h.pool.connections[0]);
+            }
           });
           assert.strictEqual(cc.host, null);
           next();
@@ -239,8 +271,8 @@ describe('ControlConnection', function () {
 });
 
 /** @returns {ControlConnection} */
-function newInstance() {
-  var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+function newInstance(options) {
+  options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions, options));
   //disable the heartbeat
   options.pooling.heartBeatInterval = 0;
   options.pooling.coreConnectionsPerHost[types.distance.local] = 2;

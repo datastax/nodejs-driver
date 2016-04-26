@@ -194,7 +194,7 @@ describe('Connection', function () {
             var request = getRequest('SELECT key FROM system.local');
             connection.sendStream(request, null, function (err) {
               if (killed && err) {
-                assert.ok(err.isServerUnhealthy);
+                assert.ok(err.isSocketError);
                 err = null;
               }
               next(err);

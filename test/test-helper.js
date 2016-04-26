@@ -1,3 +1,4 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
@@ -100,7 +101,7 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+      var args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
       if (process.platform.indexOf('win') === 0 && helper.isCassandraGreaterThan('2.2.4')) {
         args.push('--quiet-windows')
       }
@@ -258,7 +259,7 @@ var helper = {
     //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
-      version = '2.1.4';
+      version = '3.0.5';
     }
     return version;
   },
@@ -465,6 +466,29 @@ var helper = {
       assert.ifError(err);
       client.shutdown(callback);
     });
+  },
+
+  /**
+   * Executes a function at regular intervals while the condition is false or the amount of attempts >= maxAttempts.
+   * @param {Function} condition
+   * @param {Number} delay
+   * @param {Number} maxAttempts
+   * @param {Function} done
+   */
+  setIntervalUntil: function (condition, delay, maxAttempts, done) {
+    var attempts = 0;
+    utils.whilst(
+      function whilstCondition() {
+        return !condition();
+      },
+      function whilstItem(next) {
+        if (attempts++ >= maxAttempts) {
+          return next(new Error(util.format('Condition still false after %d attempts: %s', maxAttempts, condition)));
+        }
+
+        setTimeout(next, delay);
+      },
+      done);
   },
   queries: {
     basic: "SELECT key FROM system.local",

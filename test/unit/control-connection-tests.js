@@ -56,14 +56,29 @@ describe('ControlConnection', function () {
       assert.strictEqual(toStringCalled, true);
       assert.strictEqual(hostsGetCalled, true);
     });
-    it('should set the node down', function () {
-      var downSet = false;
+    it('should set the node down when distance is ignored', function () {
+      var downSet = 0;
       var options = clientOptions.extend({}, helper.baseOptions);
       var cc = new ControlConnection(options);
-      cc.hosts = { get : function () { return { setDown: function () { downSet = true;}} }};
+      cc.hosts = { get : function () { return {
+        setDown: function () { downSet++; },
+        getDistance: function () { return types.distance.ignored; }
+      }}};
       var event = { inet: { address: { toString: function () { return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
-      assert.strictEqual(downSet, true);
+      assert.strictEqual(downSet, 1);
+    });
+    it('should not set the node down when distance is not ignored', function () {
+      var downSet = 0;
+      var options = clientOptions.extend({}, helper.baseOptions);
+      var cc = new ControlConnection(options);
+      cc.hosts = { get : function () { return {
+        setDown: function () { downSet++;},
+        getDistance: helper.noop
+      } }};
+      var event = { inet: { address: { toString: function () { return 'host1';}}}};
+      cc.nodeStatusChangeHandler(event);
+      assert.strictEqual(downSet, 0);
     });
   });
   describe('#getAddressForPeerHost()', function() {
@@ -238,7 +253,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb2) {
           cb2(null, {});
         },
-        setDistance: helper.noop,
+        getDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -260,7 +275,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb2) {
           cb2(null, {});
         },
-        setDistance: helper.noop,
+        getDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -283,7 +298,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb) {
           cb(new Error('Test dummy error'));
         },
-        setDistance: helper.noop,
+        getDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -313,7 +328,7 @@ describe('ControlConnection', function () {
           borrowCalled++;
           cb(null, {});
         },
-        setDistance: helper.noop,
+        getDistance: function (lbp) { return lbp.getDistance(this); },
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);

@@ -493,7 +493,7 @@ describe('RequestHandler', function () {
     var getHost = function (address, isUp) {
       return {
         isUp: function () { return isUp !== false; },
-        setDistance: helper.noop,
+        getDistance: helper.noop,
         address: address,
         setDown: function () {
           //noinspection JSPotentiallyInvalidUsageOfThis
@@ -512,28 +512,6 @@ describe('RequestHandler', function () {
         assert.ifError(err);
         assert.ok(c);
         assert.ok(sync);
-        done();
-      });
-      sync = false;
-    });
-    it('should set the host down when calling getPooledConnection() returns an error', function (done) {
-      var handler = newInstance();
-      var hosts = [ getHost(), getHost() ];
-      var counter = 0;
-      handler.getPooledConnection = function (h, cb) {
-        //For the second host, it returns a valid connection
-        if (++counter === 2) {
-          return cb(null, {});
-        }
-        cb(new Error('Test error'));
-      };
-      var sync = true;
-      handler.iterateThroughHosts(utils.arrayIterator(hosts), function (err, c) {
-        assert.ifError(err);
-        assert.ok(c);
-        assert.ok(sync);
-        assert.ok(hosts[0].isDown);
-        assert.ok(!hosts[1].isDown);
         done();
       });
       sync = false;

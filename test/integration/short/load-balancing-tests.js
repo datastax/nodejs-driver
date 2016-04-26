@@ -59,7 +59,7 @@ describe('TokenAwarePolicy', function () {
             assert.strictEqual(helper.lastOctetOf(address), expectedPartition[id.toString()]);
             timesNext();
           });
-        }, next);
+        }, helper.finish(client, next));
       },
       helper.ccmHelper.remove
     ], done);

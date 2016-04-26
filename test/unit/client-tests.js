@@ -12,6 +12,7 @@ var HostMap = require('../../lib/host').HostMap;
 var Host = require('../../lib/host').Host;
 var Metadata = require('../../lib/metadata');
 var Encoder = require('../../lib/encoder');
+var clientOptions = require('../../lib/client-options');
 
 describe('Client', function () {
   describe('constructor', function () {
@@ -57,6 +58,8 @@ describe('Client', function () {
       var controlConnectionMock = function () {
         this.hosts = new HostMap();
         this.metadata = new Metadata();
+        //noinspection JSUnresolvedVariable
+        this.host = { getDistance: utils.noop };
         this.init = function (cb) {
           initCounter++;
           //Async
@@ -95,7 +98,8 @@ describe('Client', function () {
       var client = new Client(options);
       client.controlConnection = {
         init: helper.callbackNoop,
-        hosts: new HostMap()
+        hosts: new HostMap(),
+        host: { getDistance: utils.noop }
       };
       utils.series([
         client.connect.bind(client),
@@ -528,7 +532,7 @@ describe('Client', function () {
     });
   });
   describe('#shutdown()', function () {
-    var options = utils.extend({}, helper.baseOptions, {
+    var options = clientOptions.extend({}, helper.baseOptions, {
       policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
       logEmitter: helper.noop
     });
@@ -543,12 +547,7 @@ describe('Client', function () {
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       var Client = rewire('../../lib/client.js');
-      var controlConnectionMock = function () {
-        this.hosts = hosts;
-        this.metadata = new Metadata();
-        this.init = setImmediate;
-      };
-      Client.__set__("ControlConnection", controlConnectionMock);
+      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
       var client = new Client(options);
       client.shutdown(function(){
         assert.equal(client.connected, false);
@@ -566,12 +565,7 @@ describe('Client', function () {
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       var Client = rewire('../../lib/client.js');
-      var controlConnectionMock = function () {
-        this.hosts = hosts;
-        this.metadata = new Metadata();
-        this.init = setImmediate;
-      };
-      Client.__set__("ControlConnection", controlConnectionMock);
+      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
       var client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -593,12 +587,7 @@ describe('Client', function () {
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       var Client = rewire('../../lib/client.js');
-      var controlConnectionMock = function () {
-        this.hosts = hosts;
-        this.metadata = new Metadata();
-        this.init = setImmediate;
-      };
-      Client.__set__("ControlConnection", controlConnectionMock);
+      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
       var client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -880,3 +869,13 @@ describe('Client', function () {
     });
   });
 });
+
+function getControlConnectionMock(hosts) {
+  return (function ControlConnectionMock() {
+    this.hosts = hosts;
+    this.metadata = new Metadata();
+    this.init = setImmediate;
+    //noinspection JSUnresolvedVariable
+    this.host = { getDistance: utils.noop };
+  });
+}

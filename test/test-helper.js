@@ -100,7 +100,11 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'], callback);
+      args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+      if (process.platform.indexOf('win') === 0 && helper.isCassandraGreaterThan('2.2.4')) {
+        args.push('--quiet-windows')
+      }
+      new Ccm().exec(args, callback);
     },
     /**
      * @param {Number} nodeIndex 1 based index of the node
@@ -510,6 +514,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       if (!options.yaml) {
         return next();
       }
+      helper.trace('With conf', options.yaml);
       var i = 0;
       utils.whilst(
         function condition() {
@@ -530,9 +535,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];
+      if (process.platform.indexOf('win') === 0 && helper.isCassandraGreaterThan('2.2.4')) {
+        start.push('--quiet-windows')
+      }
       if (util.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
-          start.push('--jvm_arg', arg);
+          // Windows requires jvm arguments to be quoted, while *nix requires unquoted.
+          var jvmArg = process.platform.indexOf('win') === 0 ? '"' + arg + '"' : arg;
+          start.push('--jvm_arg', jvmArg);
         }, this);
         helper.trace('With jvm args', options.jvmArgs);
       }
@@ -556,8 +566,8 @@ Ccm.prototype.spawn = function (processName, params, callback) {
   var originalProcessName = processName;
   var spawn = require('child_process').spawn;
   if (process.platform.indexOf('win') === 0) {
-    params = ['/c', processName].concat(params);
-    processName = 'cmd.exe';
+    params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
+    processName = 'powershell.exe';
   }
   var p = spawn(processName, params);
   var stdoutArray= [];

@@ -9,7 +9,7 @@ var vdescribe = helper.vdescribe;
 
 vdescribe('2.2', 'Metadata', function () {
   this.timeout(60000);
-  before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions: true']}));
+  before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions:true']}));
   var keyspace = 'ks_udf';
   before(function createSchema(done) {
     var client = newInstance();

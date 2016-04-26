@@ -17,7 +17,7 @@ describe('Client', function () {
       policies: { loadBalancing: new helper.WhiteListPolicy(['2'])}
     });
     utils.series([
-      helper.ccmHelper.start(2, { yaml: ['tombstone_failure_threshold: 1000']}),
+      helper.ccmHelper.start(2, { yaml: ['tombstone_failure_threshold:1000']}),
       client.connect.bind(client),
       helper.toTask(client.execute, client, "CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"),
       helper.toTask(client.execute, client, "CREATE TABLE test.foo(pk int, cc int, v int, primary key (pk, cc))"),
@@ -74,7 +74,7 @@ describe('Client', function () {
   vit('2.2', 'should callback with functionFailure error when the cql function throws an error', function (done) {
     var client = newInstance({});
     utils.series([
-      helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions: true']}),
+      helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions:true']}),
       client.connect.bind(client),
       helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_func')),
       helper.toTask(client.execute, client, 'CREATE TABLE ks_func.tbl1 (id int PRIMARY KEY, v1 int, v2 int)'),

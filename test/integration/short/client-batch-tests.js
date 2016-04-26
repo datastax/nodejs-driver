@@ -371,7 +371,7 @@ describe('Client', function () {
       var client = newInstance();
       utils.parallel([
         function (next) {
-          utils.timesLimit(1000, 100, function (n, eachNext) {
+          utils.timesLimit(120, 100, function (n, eachNext) {
             var queries = [{
               query: query1Table1,
               params: [id1Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
@@ -383,7 +383,7 @@ describe('Client', function () {
           }, next);
         },
         function (next) {
-          utils.timesLimit(1000, 100, function (n, eachNext) {
+          utils.timesLimit(120, 100, function (n, eachNext) {
             var queries = [{
               query: query2Table1,
               params: [id2Tbl1, types.timeuuid(), types.BigDecimal.fromNumber(new Date().getTime())]
@@ -395,7 +395,9 @@ describe('Client', function () {
           }, next);
         }
       ], function (err) {
-        assert.ifError(err);
+        if(err) {
+          return done(err);
+        }
         //verify results in both tables
         var q = 'SELECT * FROM %s where id IN (%s, %s)';
         utils.series([
@@ -404,7 +406,7 @@ describe('Client', function () {
             client.execute(query, [], { consistency: consistency }, function (err, result) {
               assert.ifError(err);
               var rows1 = result.rows;
-              assert.strictEqual(rows1.length, 2000);
+              assert.strictEqual(rows1.length, 240);
               next();
             });
           },
@@ -413,7 +415,7 @@ describe('Client', function () {
             client.execute(query, [], { consistency: consistency }, function (err, result) {
               assert.ifError(err);
               var rows2 = result.rows;
-              assert.strictEqual(rows2.length, 2000);
+              assert.strictEqual(rows2.length, 240);
               next();
             });
           }

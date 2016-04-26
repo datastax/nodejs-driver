@@ -282,13 +282,13 @@ describe('Client', function () {
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table1);
-          utils.timesLimit(200, 100, function (n, next) {
+          utils.timesLimit(200, 25, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, noop, next);
           }, seriesNext);
         },
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table2);
-          utils.timesLimit(135, 100, function (n, next) {
+          utils.timesLimit(135, 25, function (n, next) {
             client.eachRow(query, [types.Uuid.random(), n+1], {prepare: 1}, noop, next);
           }, seriesNext);
         },

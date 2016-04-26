@@ -1,0 +1,24 @@
+environment:
+  ci_type: ci_unit
+  matrix:
+    - nodejs_version: 5
+      TEST_CASSANDRA_VERSION: 3.0.5
+      ci_type: ci
+    - nodejs_version: 4
+    - nodejs_version: 0.12
+    - nodejs_version: 0.10
+platform:
+  - x64
+install:
+  - ps: .\appveyor.ps1
+  - npm install
+build: off
+test_script:
+  - "npm run %ci_type%"
+cache:
+  - node_modules -> package.json
+  - C:\ProgramData\chocolatey\bin
+  - C:\ProgramData\chocolatey\lib
+  - C:\Users\appveyor\jce_policy-8.zip
+  - C:\Users\appveyor\.ccm\repository
+  - C:\Users\appveyor\ccm

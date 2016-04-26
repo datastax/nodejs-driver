@@ -2,6 +2,7 @@
 var assert = require('assert');
 
 var helper = require('../../test-helper');
+var Client = require('../../../lib/client.js');
 var ControlConnection = require('../../../lib/control-connection');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
@@ -29,11 +30,12 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to SCHEMA_CHANGE events and refresh keyspace information', function (done) {
       var cc = newInstance();
+      var otherClient = new Client(helper.baseOptions);
       utils.series([
         cc.init.bind(cc),
-        function createKeyspace(next) {
-          var query = "CREATE KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}";
-          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        helper.toTask(otherClient.execute, otherClient, "CREATE KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
+        function (next) {
+          setTimeout(next, 500);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
@@ -43,9 +45,9 @@ describe('ControlConnection', function () {
           assert.ok(keyspaceInfo.strategy.indexOf('SimpleStrategy') > 0);
           next();
         },
-        function alterKeyspace(next) {
-          var query = "ALTER KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}";
-          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        helper.toTask(otherClient.execute, otherClient, "ALTER KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
+        function (next) {
+          setTimeout(next, 500);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
@@ -53,15 +55,16 @@ describe('ControlConnection', function () {
           assert.equal(keyspaceInfo.strategyOptions.replication_factor, 2);
           next();
         },
-        function alterKeyspace(next) {
-          var query = "DROP keyspace sample_change_1";
-          helper.ccmHelper.exec(['node1', 'cqlsh', '--exec', query], helper.wait(500, next));
+        helper.toTask(otherClient.execute, otherClient, "DROP keyspace sample_change_1"),
+        function (next) {
+          setTimeout(next, 500);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(!keyspaceInfo);
           next();
-        }
+        },
+        otherClient.shutdown.bind(otherClient)
       ], done);
     });
     it('should subscribe to STATUS_CHANGE events', function (done) {

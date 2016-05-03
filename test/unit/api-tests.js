@@ -12,7 +12,6 @@ describe('API', function () {
   });
   it('should expose geometry module', function () {
     assert.ok(api.geometry);
-    checkConstructor(api.geometry, 'Circle');
     checkConstructor(api.geometry, 'LineString');
     checkConstructor(api.geometry, 'Point');
     checkConstructor(api.geometry, 'Polygon');

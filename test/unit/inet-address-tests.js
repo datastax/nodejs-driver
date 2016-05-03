@@ -76,9 +76,12 @@ describe('InetAddress', function () {
         '::1:11:2233:4455:aa:bb',
         '::2233:0:0:bb',
         '::1234',
-        '10fa::1'
+        '10fa::1',
+        '3ffe:b00::1:0:0:a', // ensure furthest group is not truncated when preceding groups are longest segment of 0-bytes (NODEJS-255)
+        '3ffe:0:0:1::a', // ensure furthest groups of 0-bytes are compressed when longest, but last non-0 bytes group is not truncated.
+        '3ffe:0:0:1::' // ensure final groups of 0-bytes are compressed when longest and last group is also 0-bytes.
       ].forEach(function (item) {
-          var val = InetAddress.fromString(item, 'hex');
+          var val = InetAddress.fromString(item);
           helper.assertInstanceOf(val, InetAddress);
           assert.strictEqual(val.toString(), item);
       });

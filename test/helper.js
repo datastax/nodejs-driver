@@ -1,5 +1,6 @@
 var async = require('async');
 var util = require('util');
+var net = require('net');
 var path = require('path');
 var assert = require('assert');
 var spawn = require('child_process').spawn;
@@ -157,6 +158,22 @@ var helper = {
       client.shutdown.bind(client)
     ], callback);
   },
+  /**
+   * Identifies the host that is the spark master (the one that is listening on port 7077)
+   * and returns it.
+   * @param {Client} client instance that contains host metadata.
+   * @param {Function} callback invoked with the host that is the spark master or error.
+   */
+  findSparkMaster: function (client, callback) {
+    client.execute('call DseClientTool.getAnalyticsGraphServer();', function(err, result) {
+      if(err) {
+        callback(err);
+      }
+      var row = result.first();
+      var host = row.result.ip;
+      callback(null, host);
+    });
+  },
   ccm: {},
   ads: {}
 };
@@ -218,9 +235,11 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         return next();
       }
       helper.trace('With workloads', options.workloads);
-      for(var i=1; i <= nodeLength; i++) {
-        self.exec(['node'+i, 'setworkload'].concat(options.workloads), next);
-      }
+      async.times(nodeLength, function(n, timesNext) {
+        self.exec(['node'+ (n+1), 'setworkload', options.workloads.join(',')], timesNext);
+      }, function(err) {
+        next(err);
+      });
     },
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];
@@ -236,6 +255,22 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
   ], function (err) {
     callback(err);
   });
+};
+
+/**
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Function} callback
+ */
+helper.ccm.startNode = function (nodeIndex, callback) {
+  helper.ccm.exec(['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'], callback);
+};
+
+/**
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Function} callback
+ */
+helper.ccm.stopNode = function (nodeIndex, callback) {
+  helper.ccm.exec(['node' + nodeIndex, 'stop'], callback);
 };
 
 helper.ccm.exec = function (params, callback) {

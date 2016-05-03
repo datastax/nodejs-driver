@@ -8,10 +8,43 @@ var vdescribe = helper.vdescribe;
 var schemaCounter = 0;
 var Point = require('../../lib/geometry/point');
 var LineString = require('../../lib/geometry/line-string');
-var Circle = require('../../lib/geometry/circle');
 var Polygon = require('../../lib/geometry/polygon');
-var InetAddress = require('cassandra-driver').types.InetAddress;
-var Uuid = require('cassandra-driver').types.Uuid;
+var cassandra = require('cassandra-driver');
+var InetAddress = cassandra.types.InetAddress;
+var Uuid = cassandra.types.Uuid;
+var cl = cassandra.types.consistencies;
+var loadBalancing = require('../../lib/policies/load-balancing');
+var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
+
+var makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
+
+var allowScans = 'schema.config().option("graph.allow_scan").set("true")';
+
+var modernSchema =
+  makeStrict + '\n' +
+  allowScans + '\n' +
+  'schema.propertyKey("name").Text().ifNotExists().create();\n' +
+  'schema.propertyKey("age").Int().ifNotExists().create();\n' +
+  'schema.propertyKey("lang").Text().ifNotExists().create();\n' +
+  'schema.propertyKey("weight").Float().ifNotExists().create();\n' +
+  'schema.vertexLabel("person").properties("name", "age").ifNotExists().create();\n' +
+  'schema.vertexLabel("software").properties("name", "lang").ifNotExists().create();\n' +
+  'schema.edgeLabel("created").properties("weight").connection("person", "software").ifNotExists().create();\n' +
+  'schema.edgeLabel("knows").properties("weight").connection("person", "person").ifNotExists().create();';
+
+var modernGraph =
+  'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
+  'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
+  'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
+  'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
+  'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
+  'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
+  'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
+  'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
+  'marko.addEdge("created", lop, "weight", 0.4f);\n' +
+  'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
+  'josh.addEdge("created", lop, "weight", 0.4f);\n' +
+  'peter.addEdge("created", lop, "weight", 0.2f);';
 
 vdescribe('5.0', 'DseClient', function () {
   this.timeout(60000);
@@ -28,8 +61,11 @@ vdescribe('5.0', 'DseClient', function () {
       function createGraph(next) {
         client.executeGraph('system.graph("name1").ifNotExists().create()', null, { graphName: null}, next);
       },
-      function makeStrict(next) {
-        client.executeGraph('schema.config().option("graph.schema_mode").set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)', null, { graphName: 'name1'}, next);
+      function _makeStrict(next) {
+        client.executeGraph(makeStrict, null, { graphName: 'name1'}, next);
+      },
+      function _allowScans(next) {
+        client.executeGraph(allowScans, null, { graphName: 'name1'}, next);
       },
       client.shutdown.bind(client)
     ], done);
@@ -50,31 +86,9 @@ vdescribe('5.0', 'DseClient', function () {
       //See reference graph here
       //http://www.tinkerpop.com/docs/3.0.0.M1/
       before(wrapClient(function (client, done) {
-        var createSchema =
-            'schema.propertyKey("name").Text().ifNotExists().create();\n' +
-            'schema.propertyKey("age").Int().ifNotExists().create();\n' +
-            'schema.propertyKey("lang").Text().ifNotExists().create();\n' +
-            'schema.propertyKey("weight").Float().ifNotExists().create();\n' +
-            'schema.vertexLabel("person").properties("name", "age").ifNotExists().create();\n' +
-            'schema.vertexLabel("software").properties("name", "lang").ifNotExists().create();\n' +
-            'schema.edgeLabel("created").properties("weight").connection("person", "software").ifNotExists().create();\n' +
-            'schema.edgeLabel("knows").properties("weight").connection("person", "person").ifNotExists().create();';
-        client.executeGraph(createSchema, function (err) {
+        client.executeGraph(modernSchema, function (err) {
           assert.ifError(err);
-          var loadGraph =
-            'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
-            'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
-            'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
-            'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
-            'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
-            'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
-            'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
-            'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
-            'marko.addEdge("created", lop, "weight", 0.4f);\n' +
-            'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
-            'josh.addEdge("created", lop, "weight", 0.4f);\n' +
-            'peter.addEdge("created", lop, "weight", 0.2f);';
-          client.executeGraph(loadGraph, done);
+          client.executeGraph(modernGraph, done);
         });
       }));
       it('should retrieve graph vertices', wrapClient(function (client, done) {
@@ -563,9 +577,8 @@ vdescribe('5.0', 'DseClient', function () {
       ['Decimal()', ["8675309.9998"]],
       ['Varint()', ["8675309"]],
       ['Timestamp()', ["2016-02-04T02:26:31.657Z"]],
-      ['Duration()', ['P2DT3H4M'], ['PT51H4M']],
-      // TODO: Reenable when DSP-9208 addressed.
-      //['Blob()', ['0xCAFE']],
+      ['Duration()', ['P2DT3H4M', '5 s', '5 seconds', '1 minute', '1 hour'], ['PT51H4M', 'PT5S', 'PT5S', 'PT1M', 'PT1H']],
+      ['Blob()', ['0x48656c6c6f20576f726c64'], ['SGVsbG8gV29ybGQ=']], // 'Hello World'.  TODO: Test with base64 input when supported.
       ['Text()', ["", "75", "Lorem Ipsum"]],
       ['Uuid()', [Uuid.random()]],
       ['Inet()', [InetAddress.fromString("127.0.0.1"), InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["127.0.0.1", "0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
@@ -623,6 +636,140 @@ vdescribe('5.0', 'DseClient', function () {
   });
 });
 
+vdescribe('5.0', 'DseClient with down node', function () {
+  this.timeout(240000);
+  before(function (done) {
+    var client = new DseClient(helper.getOptions());
+    async.series([
+      function startCcm(next) {
+        helper.ccm.startAll(3, {workloads: ['graph']}, next);
+      },
+      client.connect.bind(client),
+      function createGraph(next) {
+        var replicationConfig = "{'class' : 'SimpleStrategy', 'replication_factor' : 3}";
+        var query = 'system.graph("name1")\n' +
+          '.option("graph.replication_config").set(replicationConfig)' +
+          '.option("graph.system_replication_config").set(replicationConfig)' +
+          '.ifNotExists().create()';
+        client.executeGraph(query, {replicationConfig: replicationConfig}, { graphName: null}, next);
+      },
+      function createSchema(next) {
+        client.executeGraph(modernSchema, null, { graphName: "name1" }, next);
+      },
+      function loadGraph(next) {
+        client.executeGraph(modernGraph, null, { graphName: "name1" }, next);
+      },
+      function simpleQuery(next) {
+        // execute a graph traversal, which triggers some schema operations.
+        client.executeGraph('g.V().limit(1)', null, { graphName: "name1" }, next);
+      },
+      function stopNode(next) {
+        helper.ccm.stopNode(2, next);
+      },
+      client.shutdown.bind(client)
+    ], done);
+  });
+  after(helper.ccm.remove.bind(helper.ccm));
+  describe('#executeGraph()', function () {
+    it('should be able to make a read query with ONE read consistency, ALL write consistency', wrapClient(function (client, done) {
+      client.executeGraph('g.V().limit(1)', null, {readTimeout: 5000, graphReadConsistency: cl.one, graphWriteConsistency: cl.all}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.first());
+        done();
+      });
+    }));
+    it('should fail to make a read query with ALL read consistency', wrapClient(function (client, done) {
+      client.executeGraph('g.V().limit(1)', null, {graphReadConsistency: cl.all}, function (err, result) {
+        assert.ok(err);
+        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
+        assert.strictEqual(result, undefined);
+        done();
+      });
+    }));
+    it('should be able to make a write query with ALL read consistency, TWO write consistency', wrapClient(function (client, done) {
+      client.executeGraph('graph.addVertex(label, "person", "name", "don", "age", 37);', null, {readTimeout: 5000, graphReadConsistency: cl.all, graphWriteConsistency: cl.two}, function (err, result) {
+        assert.ifError(err);
+        assert.ok(result.first());
+        done();
+      });
+    }));
+    it('should fail to make a write query with ALL write consistency', wrapClient(function (client, done) {
+      client.executeGraph('graph.addVertex(label, "person", "name", "joe", "age", 42);', null, {graphWriteConsistency: cl.all}, function (err, result) {
+        assert.ok(err);
+        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
+        assert.strictEqual(result, undefined);
+        done();
+      });
+    }));
+  });
+});
+
+vdescribe('5.0', 'DseClient with spark workload', function () {
+  this.timeout(300000);
+  before(function (done) {
+    var client = new DseClient(helper.getOptions());
+    async.series([
+      function startCcm(next) {
+        helper.ccm.startAll(3, {workloads: ['graph', 'spark']}, next);
+      },
+      client.connect.bind(client),
+      function createGraph(next) {
+        var query = 'system.graph("name1")' +
+          '.option("graph.schema_mode").set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)' +
+          '.ifNotExists().create()';
+        client.executeGraph(query, null, {graphName: null}, function(err, result) {
+          // sleep 2 seconds to allow graph to propagate to all nodes (DSP-9376).
+          assert.ifError(err);
+          setTimeout(next, 3000);
+        });
+      },
+      function createSchema(next) {
+        client.executeGraph(modernSchema, null, {graphName: "name1"}, next);
+      },
+      function loadGraph(next) {
+        client.executeGraph(modernGraph, null, {graphName: "name1"}, next);
+      },
+      client.shutdown.bind(client)
+    ], done);
+  });
+  after(helper.ccm.remove.bind(helper.ccm));
+  describe('#executeGraph()', function () {
+    it('should make an OLAP query using \'a\' traversal source', wrapClient(function (client, done) {
+        async.timesLimit(10, 1, function (n, timesNext) {
+          client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.info);
+            assert.strictEqual(6, result.first());
+            timesNext(err, result.info.queriedHost);
+          });
+        }, function () {
+          done();
+        });
+    }));
+    it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy', wrapClient(function (client, done) {
+      helper.findSparkMaster(client, function (serr, sparkMaster) {
+        assert.ifError(serr);
+        async.timesLimit(10, 1, function (n, timesNext) {
+          client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.ok(result.info);
+            var queriedHost = result.info.queriedHost;
+            var portSep = queriedHost.lastIndexOf(":");
+            queriedHost = portSep != -1 ? queriedHost.substr(0, portSep) : queriedHost;
+            assert.strictEqual(queriedHost, sparkMaster);
+            assert.strictEqual(6, result.first());
+            timesNext(err, result.info.queriedHost);
+          });
+        }, function () {
+          done();
+        });
+      });
+    }, {policies: {loadBalancing: DseLoadBalancingPolicy.createDefault()}}));
+  });
+});
+
 function validateVertexResult(result, expectedResult, vertexLabel, propertyName) {
   assert.strictEqual(result.length, 1);
   var vertex = result.first();
@@ -630,9 +777,10 @@ function validateVertexResult(result, expectedResult, vertexLabel, propertyName)
   assert.equal(vertex.properties[propertyName][0].value, expectedResult);
 }
 
-function wrapClient(handler) {
+function wrapClient(handler, options) {
   return (function wrappedTestCase(done) {
-    var client = new DseClient(helper.getOptions({ graphOptions: { name: 'name1' }}));
+    var opts = helper.getOptions(helper.extend(options || {}, {graphOptions : { name: 'name1' }}));
+    var client = new DseClient(opts);
     async.series([
       client.connect.bind(client),
       function testItem(next) {

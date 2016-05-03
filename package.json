@@ -1,6 +1,6 @@
 {
   "name": "dse-driver",
-  "version": "1.0.0-eap1",
+  "version": "1.0.0-eap2",
   "description": "Node.js Driver Extensions for DataStax Enterprise",
   "author": "DataStax",
   "keywords": [

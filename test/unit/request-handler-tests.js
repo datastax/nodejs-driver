@@ -26,6 +26,23 @@ var options = (function () {
   };
 })();
 describe('RequestHandler', function () {
+  describe('#getDecision()', function () {
+    it('should retry when there was a socket error and mutation was not applied', function () {
+      var handler = new RequestHandler(null, options);
+      var result = handler.getDecision({ isSocketError: true });
+      assert.strictEqual(result.decision, retry.RetryPolicy.retryDecision.retry);
+    });
+    it('should use the retry policy when there was a socket error and mutation was applied', function () {
+      var handler = new RequestHandler(null, options);
+      handler.request = {};
+      var requestErrorCalled = 0;
+      handler.retryPolicy = { onRequestError: function () {
+        requestErrorCalled++;
+      }};
+      handler.getDecision({ isSocketError: true, wasRequestWritten: true });
+      assert.strictEqual(requestErrorCalled, 1);
+    });
+  });
   describe('#handleError()', function () {
     it('should retrow on syntax error', function (done) {
       var handler = new RequestHandler(null, options);
@@ -56,9 +73,9 @@ describe('RequestHandler', function () {
     it('should retry on overloaded error', function (done) {
       var handler = new RequestHandler(null, options);
       handler.host = { address: '1'};
+      handler.request = {};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.overloaded;
-
       var retryCalled = false;
       handler.retry = function (c, useCurrentHost, cb) {
         retryCalled = true;
@@ -132,7 +149,20 @@ describe('RequestHandler', function () {
         done();
       });
     });
-
+    it('should return an empty ResultSet when retry decision is ignore', function (done) {
+      var handler = new RequestHandler(null, options);
+      handler.host = { address: '1'};
+      handler.request = { };
+      handler.getDecision = function () {
+        return { decision: retry.RetryPolicy.retryDecision.ignore };
+      };
+      handler.handleError({}, function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        assert.ok(!result.rowLength);
+        done();
+      });
+    });
   });
   describe('#prepareMultiple()', function () {
     it('should prepare each query serially and callback with the response', function (done) {
@@ -160,6 +190,7 @@ describe('RequestHandler', function () {
     });
     it('should retry with a handler when there is an error', function (done) {
       var handler = new RequestHandler(null, options);
+      handler.request = {};
       handler.host = { address: '1'};
       var retryCounter = 0;
       var connection = {

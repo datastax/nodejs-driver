@@ -479,7 +479,7 @@ function Ccm() {
 /**
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
- * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number}} options
+ * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number, ipFormat: String}} options
  * @param {Function} callback
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
@@ -530,6 +530,9 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       var populate = ['populate', '-n', nodeLength.toString()];
       if (options.vnodes) {
         populate.push('--vnodes');
+      }
+      if (options.ipFormat) {
+        populate.push('--ip-format='+ options.ipFormat);
       }
       self.exec(populate, helper.wait(options.sleep, next));
     },

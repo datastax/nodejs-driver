@@ -1,6 +1,7 @@
 "use strict";
 var assert = require('assert');
 var domain = require('domain');
+var dns = require('dns');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -14,7 +15,14 @@ var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundR
 describe('Client', function () {
   this.timeout(120000);
   describe('#connect()', function () {
+    var useLocalhost;
     before(helper.ccmHelper.start(3));
+    before(function (done) {
+      dns.resolve('localhost', function (err) {
+        useLocalhost = !err;
+        done();
+      });
+    });
     after(helper.ccmHelper.remove);
     it('should discover all hosts in the ring and hosts object can be serializable', function (done) {
       var client = newInstance();
@@ -81,6 +89,9 @@ describe('Client', function () {
       });
     });
     it('should resolve host names', function (done) {
+      if (!useLocalhost) {
+        return done();
+      }
       var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
       client.connect(function (err) {
         assert.ifError(err);

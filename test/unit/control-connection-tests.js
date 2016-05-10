@@ -1,20 +1,71 @@
 "use strict";
 var assert = require('assert');
 var events = require('events');
+var rewire = require('rewire');
+var dns = require('dns');
 
 var helper = require('../test-helper.js');
-var ControlConnection = require('../../lib/control-connection.js');
+var ControlConnection = require('../../lib/control-connection');
 var Host = require('../../lib/host').Host;
 var utils = require('../../lib/utils');
 var Metadata = require('../../lib/metadata');
 var types = require('../../lib/types');
-var clientOptions = require('../../lib/client-options.js');
+var clientOptions = require('../../lib/client-options');
 
 describe('ControlConnection', function () {
   describe('constructor', function () {
     it('should create a new metadata instance', function () {
       var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
       helper.assertInstanceOf(cc.metadata, Metadata);
+    });
+  });
+  describe('#init()', function () {
+    var useLocalhost;
+    before(function (done) {
+      dns.resolve('localhost', function (err) {
+        if (err) {
+          helper.trace('localhost can not be resolved');
+        }
+        useLocalhost = !err;
+        done();
+      });
+    });
+    it('should resolve IPv4 and IPv6 addresses', function (done) {
+      if (!useLocalhost) {
+        return done();
+      }
+      var cc = new ControlConnection(clientOptions.extend({ contactPoints: ['localhost'] }));
+      cc.getConnection = helper.callbackNoop;
+      cc.refreshOnConnection = helper.callbackNoop;
+      cc.init(function (err) {
+        assert.ifError(err);
+        var hosts = cc.hosts.values();
+        assert.strictEqual(hosts.length, 2);
+        assert.deepEqual(hosts.map(function (h) { return h.address; }), [ '127.0.0.1:9042', '::1:9042' ]);
+        done();
+      });
+    });
+    it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', function (done) {
+      var ControlConnectionMock = rewire('../../lib/control-connection');
+      ControlConnectionMock.__set__('dns', {
+        resolve4: function (name, cb) {
+          cb(null, ['1', '2']);
+        },
+        resolve6: function (name, cb) {
+          cb(null, ['10', '20']);
+        }
+      });
+      var cc = new ControlConnectionMock(clientOptions.extend({ contactPoints: ['my-host-name'] }));
+      cc.getConnection = helper.callbackNoop;
+      cc.refreshOnConnection = helper.callbackNoop;
+      cc.init(function (err) {
+        assert.ifError(err);
+        //noinspection JSUnresolvedVariable
+        var hosts = cc.hosts.values();
+        assert.strictEqual(hosts.length, 4);
+        assert.deepEqual(hosts.map(function (h) { return h.address; }), [ '1:9042', '2:9042', '10:9042', '20:9042' ]);
+        done();
+      });
     });
   });
   describe('#nodeSchemaChangeHandler()', function () {

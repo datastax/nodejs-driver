@@ -287,6 +287,38 @@ describe('Client', function () {
       });
     });
   });
+  describe('#connect() with ipv6', function () {
+    before(helper.ccmHelper.start(1, { ipFormat: '::%d' }));
+    after(helper.ccmHelper.remove);
+    it('should connect to ipv6 host', function (done) {
+      utils.series([
+        function testWithShortNotation(seriesNext) {
+          testConnect('::1', seriesNext);
+        },
+        function testFullAddress(seriesNext) {
+          testConnect('0:0:0:0:0:0:0:1', seriesNext);
+        },
+        function testFullAddress(seriesNext) {
+          testConnect('[0:0:0:0:0:0:0:1]:9042', seriesNext);
+        }
+      ], done);
+      function testConnect(contactPoint, testDone) {
+        var client = newInstance({ contactPoints: [ contactPoint ] });
+        client.connect(function (err) {
+          assert.ifError(err);
+          assert.strictEqual(client.hosts.length, 1);
+          var expected = contactPoint + ':9042';
+          if (contactPoint.indexOf('[') === 0) {
+            expected = contactPoint.replace(/[\[\]]/g, '');
+          }
+          assert.strictEqual(client.hosts.values()[0].address, expected);
+          utils.times(10, function (n, next) {
+            client.execute(helper.queries.basic, next);
+          }, testDone);
+        });
+      }
+    });
+  });
   describe('#connect() with nodes failing', function () {
     it('should connect after a failed attempt', function (done) {
       var client = newInstance();

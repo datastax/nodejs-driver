@@ -30,13 +30,16 @@ describe('ControlConnection', function () {
       });
     });
     it('should subscribe to SCHEMA_CHANGE events and refresh keyspace information', function (done) {
-      var cc = newInstance();
+      var cc = newInstance({ refreshSchemaDelay: 100 });
       var otherClient = new Client(helper.baseOptions);
       utils.series([
         cc.init.bind(cc),
-        helper.toTask(otherClient.execute, otherClient, "CREATE KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
+        helper.toTask(otherClient.execute, otherClient, "CREATE KEYSPACE sample_change_1 WITH replication = " +
+          "{'class': 'SimpleStrategy', 'replication_factor' : 3}"),
         function (next) {
-          setTimeout(next, 500);
+          helper.setIntervalUntil(function () {
+            return cc.metadata.keyspaces['sample_change_1'];
+          }, 200, 10, next);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
@@ -46,9 +49,12 @@ describe('ControlConnection', function () {
           assert.ok(keyspaceInfo.strategy.indexOf('SimpleStrategy') > 0);
           next();
         },
-        helper.toTask(otherClient.execute, otherClient, "ALTER KEYSPACE sample_change_1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
+        helper.toTask(otherClient.execute, otherClient, "ALTER KEYSPACE sample_change_1 WITH replication = " +
+          "{'class': 'SimpleStrategy', 'replication_factor' : 2}"),
         function (next) {
-          setTimeout(next, 500);
+          helper.setIntervalUntil(function () {
+            return cc.metadata.keyspaces['sample_change_1'].strategyOptions.replication_factor == 2;
+          }, 200, 10, next);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
@@ -58,11 +64,17 @@ describe('ControlConnection', function () {
         },
         helper.toTask(otherClient.execute, otherClient, "DROP keyspace sample_change_1"),
         function (next) {
-          setTimeout(next, 500);
+          helper.setIntervalUntil(function () {
+            return !cc.metadata.keyspaces['sample_change_1'];
+          }, 200, 10, next);
         },
         function (next) {
           var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(!keyspaceInfo);
+          next();
+        },
+        function ccShutDown(next) {
+          cc.shutdown();
           next();
         },
         otherClient.shutdown.bind(otherClient)
@@ -97,6 +109,7 @@ describe('ControlConnection', function () {
             return value;
           }, 0);
           assert.strictEqual(countUp, 1);
+          cc.shutdown();
           next();
         }
       ], done);

@@ -99,7 +99,8 @@ describe('Client', function () {
       client.controlConnection = {
         init: helper.callbackNoop,
         hosts: new HostMap(),
-        host: { getDistance: utils.noop }
+        host: { getDistance: utils.noop },
+        shutdown: utils.noop
       };
       utils.series([
         client.connect.bind(client),
@@ -599,7 +600,7 @@ describe('Client', function () {
       ], done);
     });
   });
-  describe('#waitForSchemaAgreement()', function () {
+  describe('#_waitForSchemaAgreement()', function () {
     var Client = require('../../lib/client.js');
     it('should use the control connection to retrieve schema information', function (done) {
       var client = new Client(helper.baseOptions);
@@ -616,7 +617,7 @@ describe('Client', function () {
           setImmediate(function () { cb(null, ['1', '1']); })
         }
       };
-      client.waitForSchemaAgreement(null, function (err) {
+      client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.strictEqual(localCalls, 1);
         assert.strictEqual(peerCalls, 1);
@@ -639,7 +640,7 @@ describe('Client', function () {
           setImmediate(function () { cb(null, [peerCalls]); })
         }
       };
-      client.waitForSchemaAgreement(null, function (err) {
+      client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.strictEqual(localCalls, 3);
         assert.strictEqual(peerCalls, 3);
@@ -662,7 +663,7 @@ describe('Client', function () {
           setImmediate(function () { cb(null, ['2']); })
         }
       };
-      client.waitForSchemaAgreement(null, function (err) {
+      client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.ok(localCalls > 0);
         assert.ok(peerCalls > 0);
@@ -681,7 +682,7 @@ describe('Client', function () {
           setImmediate(function () { cb(dummyError); });
         }
       };
-      client.waitForSchemaAgreement(null, function (err) {
+      client._waitForSchemaAgreement(null, function (err) {
         assert.strictEqual(err, dummyError);
         done();
       });
@@ -877,5 +878,6 @@ function getControlConnectionMock(hosts) {
     this.init = setImmediate;
     //noinspection JSUnresolvedVariable
     this.host = { getDistance: utils.noop };
+    this.shutdown = utils.noop;
   });
 }

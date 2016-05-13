@@ -11,12 +11,18 @@ util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 var helper = {
   /**
    * Sync throws the error
+   * @type Function
    */
   throwop: function (err) {
     if (err) throw err;
   },
+  /** @type Function */
   noop: function () {
     //do nothing
+  },
+  /** @type Function */
+  failop: function () {
+    throw new Error('Method should not be called');
   },
   /**
    * Uses the last parameter as callback, invokes it via setImmediate
@@ -489,6 +495,27 @@ var helper = {
         setTimeout(next, delay);
       },
       done);
+  },
+  /**
+   * Returns a method that executes a function at regular intervals while the condition is false or the amount of
+   * attempts >= maxAttempts.
+   * @param {Function} condition
+   * @param {Number} delay
+   * @param {Number} maxAttempts
+   */
+  setIntervalUntilTask: function (condition, delay, maxAttempts) {
+    var self = this;
+    return (function setIntervalUntilHandler(done) {
+      self.setIntervalUntil(condition, delay, maxAttempts, done);
+    });
+  },
+  /**
+   * Returns a method that delays invoking the callback
+   */
+  delay: function (delayMs) {
+    return (function delayedHandler(next) {
+      setTimeout(next, delayMs);
+    });
   },
   queries: {
     basic: "SELECT key FROM system.local",

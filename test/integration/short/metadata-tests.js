@@ -26,7 +26,10 @@ describe('Metadata', function () {
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks3 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"),
-          helper.toTask(client.execute, client, "CREATE KEYSPACE ks4 WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1' : 1}")
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ks4 WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1' : 1}"),
+          helper.setIntervalUntilTask(function () {
+            return m.keyspaces['ks1'] && m.keyspaces['ks2'] && m.keyspaces['ks3'] && m.keyspaces['ks4'];
+          }, 200, 10)
         ], function (err) {
           function checkKeyspace(name, strategy, optionName, optionValue) {
             var ks = m.keyspaces[name];
@@ -52,25 +55,21 @@ describe('Metadata', function () {
       });
     });
     it('should delete keyspace information on drop', function (done) {
-      var client = newInstance();
+      var client = newInstance({ refreshSchemaDelay: 50 });
       client.connect(function (err) {
         assert.ifError(err);
         var m = client.metadata;
         assert.ok(m);
+        assert.ok(!m.keyspaces['ks_todelete']);
         utils.series([
           helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_todelete', 1)),
-          function checkKeyspaceExists(next) {
-            var ks = m.keyspaces['ks_todelete'];
-            assert.ok(ks);
+          function assertions1(next) {
+            assert.ok(m.keyspaces['ks_todelete']);
             next();
           },
-          helper.toTask(client.execute, client, 'DROP KEYSPACE ks_todelete;'),
-          function (next) {
-            setTimeout(next, 2000);
-          },
-          function checkKeyspaceDropped(next) {
-            var ks = m.keyspaces['ks_todelete'];
-            assert.strictEqual(ks, undefined);
+          helper.toTask(client.execute, client, 'DROP KEYSPACE ks_todelete'),
+          function assertions2(next) {
+            assert.ok(!m.keyspaces['ks_todelete']);
             next();
           }
         ], done);
@@ -147,12 +146,13 @@ describe('Metadata', function () {
       ], done);
     });
     vit('2.1', 'should retrieve the updated metadata after a schema change', function (done) {
-      var client = newInstance();
+      var client = newInstance({ refreshSchemaDelay: 50 });
       utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt_meta', 3)),
         helper.toTask(client.execute, client, 'USE ks_udt_meta'),
         helper.toTask(client.execute, client, 'CREATE TYPE type_changing (id uuid, name ascii)'),
+        helper.delay(1000),
         function checkType1(next) {
           client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
             assert.ifError(err);
@@ -162,9 +162,7 @@ describe('Metadata', function () {
           });
         },
         helper.toTask(client.execute, client, 'ALTER TYPE type_changing ALTER name TYPE varchar'),
-        function (next) {
-          setTimeout(next, 2000);
-        },
+        helper.delay(1000),
         function checkType2(next) {
           client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
             assert.ifError(err);
@@ -800,10 +798,15 @@ describe('Metadata', function () {
       ], done);
     });
     it('should refresh the view metadata via events', function (done) {
-      var client = newInstance({ keyspace: 'ks_view_meta' });
+      var client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
       utils.series([
         client.connect.bind(client),
-        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL PRIMARY KEY ((game, year, month), score, user, day) WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS ' +
+          'SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND' +
+          ' score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL' +
+          ' PRIMARY KEY ((game, year, month), score, user, day)' +
+          ' WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
+        helper.delay(1000),
         function checkView1(next) {
           client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
             assert.ifError(err);
@@ -815,7 +818,9 @@ describe('Metadata', function () {
             next();
           });
         },
-        helper.toTask(client.execute, client, 'ALTER MATERIALIZED VIEW monthlyhigh WITH compaction = { \'class\' : \'LeveledCompactionStrategy\' }'),
+        helper.toTask(client.execute, client, 'ALTER MATERIALIZED VIEW monthlyhigh' +
+          ' WITH compaction = { \'class\' : \'LeveledCompactionStrategy\' }'),
+        helper.delay(1000),
         function checkView1(next) {
           client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
             assert.ifError(err);
@@ -838,14 +843,18 @@ describe('Metadata', function () {
       ], done);
     });
     it('should refresh the view metadata as result of table change via events', function (done) {
-      var client = newInstance({ keyspace: 'ks_view_meta' });
+      var client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
       utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, 'CREATE TABLE users (user TEXT PRIMARY KEY, first_name TEXT)'),
         // create a view using 'select *'.
-        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first_all AS SELECT * FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first_all AS SELECT * FROM users' +
+          ' WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
         // create same view using 'select <columns>'.
-        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first AS SELECT user, first_name FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL PRIMARY KEY (first_name, user)'),
+        helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW users_by_first AS' +
+          ' SELECT user, first_name FROM users WHERE user IS NOT NULL AND first_name IS NOT NULL' +
+          ' PRIMARY KEY (first_name, user)'),
+        helper.delay(1000),
         function checkAllView(next) {
           client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function (err, view) {
             assert.ifError(err);
@@ -868,6 +877,7 @@ describe('Metadata', function () {
           });
         },
         helper.toTask(client.execute, client, 'ALTER TABLE users ADD last_name text'),
+        helper.delay(1000),
         function checkForNewColumnsInAllView(next) {
           // ensure that the newly added column 'last_name' in 'users' was propagated to users_by_first_all.
           client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function(err, view) {

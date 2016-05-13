@@ -72,27 +72,32 @@ describe('ControlConnection', function () {
     it('should update keyspace metadata information', function () {
       var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
       cc.log = helper.noop;
-      var ksName = 'dummy';
-      //mock connection
-      cc.connection = {
-        sendStream: function (a, b, c) {
-          c(null, {rows: [{'keyspace_name': ksName, 'strategy_options': null}]});
-        }
+      var ksName = 'ks1';
+      var refreshedKeyspaces = [];
+      var refreshedObjects = [];
+      cc.scheduleKeyspaceRefresh = function (name, b, cb) {
+        refreshedKeyspaces.push(name);
+        if (cb) cb();
       };
-      assert.strictEqual(Object.keys(cc.metadata.keyspaces).length, 0);
-      cc.nodeSchemaChangeHandler({schemaChangeType: 'CREATED', keyspace: ksName});
-      assert.ok(cc.metadata.keyspaces[ksName]);
-      cc.nodeSchemaChangeHandler({schemaChangeType: 'DROPPED', keyspace: ksName});
-      assert.strictEqual(typeof cc.metadata.keyspaces[ksName], 'undefined');
-      //check that the callback error does not throw
-      cc.connection.sendStream =  function (a, b, c) {
-        c(new Error('Fake error'));
+      cc.scheduleObjectRefresh = function (h, ks, cqlObject) {
+        h();
+        refreshedObjects.push(ks + '-' + (cqlObject || ''));
       };
-      assert.doesNotThrow(function () {
-        cc.nodeSchemaChangeHandler({schemaChangeType: 'CREATED', keyspace: ksName});
-      });
-      //and the keyspace was not added
-      assert.strictEqual(typeof cc.metadata.keyspaces[ksName], 'undefined');
+      cc.metadata.keyspaces = {};
+      cc.metadata.keyspaces[ksName] = { tables: { 'tbl1': {} }, views: {} };
+      cc.nodeSchemaChangeHandler({schemaChangeType: 'DROPPED', keyspace: ksName, isKeyspace: true});
+      assert.strictEqual(refreshedKeyspaces.length, 0);
+      assert.deepEqual(refreshedObjects, [ ksName + '-' ]);
+      cc.nodeSchemaChangeHandler({ schemaChangeType: 'CREATED', keyspace: ksName, isKeyspace: true});
+      assert.deepEqual(refreshedKeyspaces, [ ksName ]);
+      cc.nodeSchemaChangeHandler({ schemaChangeType: 'UPDATED', keyspace: ksName, isKeyspace: true});
+      assert.deepEqual(refreshedKeyspaces, [ ksName, ksName ]);
+      cc.nodeSchemaChangeHandler({ schemaChangeType: 'UPDATED', keyspace: ksName, isKeyspace: true});
+      assert.deepEqual(refreshedKeyspaces, [ ksName, ksName, ksName ]);
+      cc.metadata.keyspaces[ksName] = { tables: { 'tbl1': {} }, views: {} };
+      cc.nodeSchemaChangeHandler({ schemaChangeType: 'UPDATED', keyspace: ksName, table: 'tbl1'});
+      // clears the internal state
+      assert.ok(!cc.metadata.keyspaces[ksName].tables['tbl1']);
     });
   });
   describe('#nodeStatusChangeHandler()', function () {

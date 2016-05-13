@@ -924,6 +924,31 @@ describe('Metadata', function () {
         done();
       });
     });
+    it('should query each time if metadata retrieval flag is false', function (done) {
+      var tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+      var columnRows = [
+        {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
+        {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "text"}
+      ];
+      var options = utils.extend({}, clientOptions.defaultOptions());
+      options.isMetadataSyncEnabled = false;
+      var cc = getControlConnectionForTable(tableRow, columnRows);
+      var metadata = new Metadata(options, cc);
+      metadata.keyspaces = { };
+      metadata.setCassandraVersion([3, 0]);
+      utils.mapSeries(new Array(100), function (n, next) {
+        metadata.getTable('ks_tbl_meta', 'tbl1', next);
+      }, function (err, results) {
+        assert.ifError(err);
+        assert.strictEqual(cc.queriedTable, 100);
+        assert.strictEqual(cc.queriedRows, 100);
+        assert.strictEqual(results.length, 100);
+        helper.assertInstanceOf(results[0], TableMetadata);
+        helper.assertInstanceOf(results[1], TableMetadata);
+        helper.assertInstanceOf(results[99], TableMetadata);
+        done();
+      });
+    });
     describe('with C*2.0 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
         var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
@@ -2158,14 +2183,21 @@ describe('SchemaParser', function () {
 
 function getControlConnectionForTable(tableRow, columnRows, indexRows) {
   return {
+    queriedTable: 0,
+    queriedRows: 0,
+    queriedIndexes: 0,
     query: function (q, cb) {
+      var self = this;
       setImmediate(function () {
         if (q.indexOf('system.schema_columnfamilies') >= 0 || q.indexOf('system_schema.tables') >= 0) {
+          self.queriedTable++;
           return cb(null, { rows: [tableRow]});
         }
         if (q.indexOf('system_schema.indexes') >= 0) {
+          self.queriedIndexes++;
           return cb(null, { rows: (indexRows || [])});
         }
+        self.queriedRows++;
         cb(null, {rows: columnRows});
       });
     },

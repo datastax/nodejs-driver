@@ -631,6 +631,15 @@ describe('encoder', function () {
       var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
       assert.strictEqual(encoder.encode(undefined), null);
     });
+    it('should decode 0-length map values', function () {
+      var encoder = new Encoder(2, {});
+      var buffer = new Buffer('000100046b6579310000', 'hex');
+      var value = encoder.decode(buffer,
+        { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
+      assert.ok(value);
+      assert.deepEqual(Object.keys(value), ['key1']);
+      assert.strictEqual(value['key1'], null);
+    });
   });
   describe('#setRoutingKey()', function () {
     var encoder = new Encoder(2, {});

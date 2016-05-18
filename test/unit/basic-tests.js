@@ -797,10 +797,13 @@ describe('exports', function () {
     //policies modules
     assert.strictEqual(api.policies.loadBalancing, loadBalancing);
     assert.strictEqual(typeof api.policies.loadBalancing.LoadBalancingPolicy, 'function');
+    helper.assertInstanceOf(api.policies.defaultLoadBalancingPolicy(), api.policies.loadBalancing.LoadBalancingPolicy);
     assert.strictEqual(api.policies.retry, retry);
     assert.strictEqual(typeof api.policies.retry.RetryPolicy, 'function');
+    helper.assertInstanceOf(api.policies.defaultRetryPolicy(), api.policies.retry.RetryPolicy);
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
+    helper.assertInstanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
     assert.strictEqual(api.auth, require('../../lib/auth'));
     //metadata module with classes
     assert.ok(api.metadata);
@@ -809,5 +812,6 @@ describe('exports', function () {
     assert.ok(api.Encoder);
     assert.strictEqual(typeof api.Encoder, 'function');
     assert.strictEqual(api.Encoder, require('../../lib/encoder'));
+    assert.ok(api.defaultOptions());
   });
 });

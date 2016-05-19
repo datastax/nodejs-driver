@@ -1,3 +1,4 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 
@@ -263,7 +264,7 @@ describe('Client', function () {
         client.shutdown.bind(client)
       ], done);
     });
-    vit('2.0', 'should autoPage on parallel different tables ' + i, function (done) {
+    vit('2.0', 'should autoPage on parallel different tables', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');
       var table2 = keyspace + '.' + helper.getRandomName('table');

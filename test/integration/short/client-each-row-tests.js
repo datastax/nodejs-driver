@@ -263,7 +263,6 @@ describe('Client', function () {
         client.shutdown.bind(client)
       ], done);
     });
-    for (var i = 0; i < 50; i++)
     vit('2.0', 'should autoPage on parallel different tables ' + i, function (done) {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');

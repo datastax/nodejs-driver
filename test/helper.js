@@ -556,16 +556,4 @@ helper.ads.getKrb5ConfigPath = function() {
   return path.join(this.dir, 'krb5.conf');
 };
 
-/**
- * Returns an array of options to be used in dse.yaml to configure DSE to speak with the ads server.
- */
-helper.ads.getDseKerberosOptions = function () {
-  return [
-    'kerberos_options.keytab: ' + this.getKeytabPath('dse'),
-    'kerberos_options.service_principal: dse/_HOST@DATASTAX.COM',
-    'kerberos_options.http_principal: dse/_HOST@DATASTAX.COM',
-    'kerberos_options.qop: auth'
-  ];
-};
-
 module.exports = helper;

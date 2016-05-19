@@ -1,3 +1,4 @@
+"use strict";
 var assert = require('assert');
 var util = require('util');
 
@@ -267,8 +268,7 @@ describe('Client', function () {
       var keyspace = helper.getRandomName('ks');
       var table1 = keyspace + '.' + helper.getRandomName('table');
       var table2 = keyspace + '.' + helper.getRandomName('table');
-      var client = newInstance();
-      //client.on('log', helper.log());
+      var client = newInstance({ queryOptions: { consistency: types.consistencies.quorum }});
       var noop = function () {};
       utils.series([
         function createKs(next) {
@@ -308,7 +308,7 @@ describe('Client', function () {
             function (parallelNext) {
               var query = util.format('SELECT * FROM %s', table2);
               var rowCount = 0;
-              client.eachRow(query, [], {fetchSize: 23, autoPage: true, prepare: true}, function (n, row) {
+              client.eachRow(query, [], { fetchSize: 23, autoPage: true, prepare: true }, function (n, row) {
                 rowCount++;
                 assert.ok(row['int_sample']);
               }, function (err, result) {

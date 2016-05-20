@@ -168,32 +168,37 @@ vdescribe('2.2', 'Metadata', function () {
     });
     it('should retrieve the most up to date metadata', function (done) {
       var client = newInstance({ keyspace: keyspace });
+      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      var clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
+        nonSyncClient.connect.bind(nonSyncClient),
         helper.toTask(client.execute, client, "CREATE FUNCTION stringify(i int) RETURNS NULL ON NULL INPUT RETURNS text LANGUAGE java AS 'return Integer.toString(i);'"),
         function checkMetaInit(next) {
-          client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
-            assert.ifError(err);
-            assert.ok(func);
-            assert.strictEqual(func.name, 'stringify');
-            assert.strictEqual(func.body, 'return Integer.toString(i);');
-            next();
-          });
+          utils.each(clients, function(client, eachNext) {
+            client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
+              assert.ifError(err);
+              assert.ok(func);
+              assert.strictEqual(func.name, 'stringify');
+              assert.strictEqual(func.body, 'return Integer.toString(i);');
+              eachNext();
+            });
+          }, next);
         },
         helper.toTask(client.execute, client, "CREATE OR REPLACE FUNCTION stringify(i int) RETURNS NULL ON NULL INPUT RETURNS text LANGUAGE java AS 'return Integer.toString(i) + \"hello\";'"),
-        function (next) {
-          setTimeout(next, 5000);
-        },
         function checkMetaAfter(next) {
-          client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
-            assert.ifError(err);
-            assert.ok(func);
-            assert.strictEqual(func.name, 'stringify');
-            assert.strictEqual(func.body, 'return Integer.toString(i) + \"hello\";');
-            next();
-          });
+          utils.each(clients, function(client, eachNext) {
+            client.metadata.getFunction(keyspace, 'stringify', ['int'], function (err, func) {
+              assert.ifError(err);
+              assert.ok(func);
+              assert.strictEqual(func.name, 'stringify');
+              assert.strictEqual(func.body, 'return Integer.toString(i) + \"hello\";');
+              eachNext();
+            });
+          }, next);
         },
-        client.shutdown.bind(client)
+        client.shutdown.bind(client),
+        nonSyncClient.shutdown.bind(nonSyncClient)
       ], done);
     });
   });
@@ -310,33 +315,38 @@ vdescribe('2.2', 'Metadata', function () {
     });
     it('should retrieve the most up to date metadata', function (done) {
       var client = newInstance({ keyspace: keyspace });
+      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      var clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
+        nonSyncClient.connect.bind(nonSyncClient),
         helper.toTask(client.execute, client, "CREATE AGGREGATE ks_udf.sum2(int) SFUNC plus STYPE int INITCOND 0"),
         function checkMetaInit(next) {
-          client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
-            assert.ifError(err);
-            assert.ok(func);
-            assert.strictEqual(func.name, 'sum2');
-            assert.strictEqual(func.initCondition, '0');
-            next();
-          });
+          utils.each(clients, function(client, eachNext) {
+            client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
+              assert.ifError(err);
+              assert.ok(func);
+              assert.strictEqual(func.name, 'sum2');
+              assert.strictEqual(func.initCondition, '0');
+              eachNext();
+            });
+          }, next);
         },
         helper.toTask(client.execute, client, "CREATE OR REPLACE AGGREGATE ks_udf.sum2(int) SFUNC plus STYPE int INITCOND 200"),
-        function (next) {
-          setTimeout(next, 5000);
-        },
         function checkMetaAfter(next) {
-          client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
-            assert.ifError(err);
-            assert.ok(func);
-            assert.strictEqual(func.name, 'sum2');
-            //changed
-            assert.strictEqual(func.initCondition, '200');
-            next();
-          });
+          utils.each(clients, function(client, eachNext) {
+            client.metadata.getAggregate(keyspace, 'sum2', ['int'], function (err, func) {
+              assert.ifError(err);
+              assert.ok(func);
+              assert.strictEqual(func.name, 'sum2');
+              //changed
+              assert.strictEqual(func.initCondition, '200');
+              eachNext();
+            });
+          }, next);
         },
-        client.shutdown.bind(client)
+        client.shutdown.bind(client),
+        nonSyncClient.shutdown.bind(nonSyncClient)
       ], done);
     });
   });

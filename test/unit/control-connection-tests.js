@@ -11,6 +11,7 @@ var utils = require('../../lib/utils');
 var Metadata = require('../../lib/metadata');
 var types = require('../../lib/types');
 var clientOptions = require('../../lib/client-options');
+var ProfileManager = require('../../lib/execution-profile').ProfileManager;
 
 describe('ControlConnection', function () {
   describe('constructor', function () {
@@ -105,7 +106,7 @@ describe('ControlConnection', function () {
       var options = clientOptions.extend({}, helper.baseOptions);
       var toStringCalled = false;
       var hostsGetCalled = false;
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.hosts = { get : function () { hostsGetCalled = true;}};
       var event = { inet: { address: { toString: function () { toStringCalled = true; return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
@@ -115,10 +116,10 @@ describe('ControlConnection', function () {
     it('should set the node down when distance is ignored', function () {
       var downSet = 0;
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.hosts = { get : function () { return {
         setDown: function () { downSet++; },
-        getDistance: function () { return types.distance.ignored; }
+        setDistance: function () { return types.distance.ignored; }
       }}};
       var event = { inet: { address: { toString: function () { return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
@@ -127,10 +128,11 @@ describe('ControlConnection', function () {
     it('should not set the node down when distance is not ignored', function () {
       var downSet = 0;
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.hosts = { get : function () { return {
         setDown: function () { downSet++;},
-        getDistance: helper.noop
+        datacenter: 'dc1',
+        setDistance: helper.noop
       } }};
       var event = { inet: { address: { toString: function () { return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
@@ -140,7 +142,7 @@ describe('ControlConnection', function () {
   describe('#getAddressForPeerHost()', function() {
     it('should handle null, 0.0.0.0 and valid addresses', function (done) {
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var peer = getInet([100, 100, 100, 100]);
@@ -179,7 +181,7 @@ describe('ControlConnection', function () {
         port = p;
         cb(addr + ':' + p);
       }};
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var row = {'rpc_address': getInet([5, 2, 3, 4]), peer: null};
@@ -193,7 +195,7 @@ describe('ControlConnection', function () {
   describe('#setPeersInfo()', function () {
     it('should use not add invalid addresses', function () {
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.host = new Host('18.18.18.18', 1, options);
       cc.log = helper.noop;
       var rows = [
@@ -217,7 +219,7 @@ describe('ControlConnection', function () {
     });
     it('should set the host datacenter and cassandra version', function () {
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       //dummy
       cc.host = new Host('18.18.18.18', 1, options);
       cc.log = helper.noop;
@@ -243,7 +245,7 @@ describe('ControlConnection', function () {
   describe('#refreshOnConnection()', function () {
     it('should subscribe to current host events first in case IO fails', function (done) {
       var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.host = new Host('18.18.18.18:9042', 1, options);
       cc.log = helper.noop;
       var fakeError = new Error('fake error');
@@ -309,7 +311,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb2) {
           cb2(null, {});
         },
-        getDistance: helper.noop,
+        setDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -317,9 +319,9 @@ describe('ControlConnection', function () {
         newQueryPlan: function (k, o, cb) {
           cb(null, utils.arrayIterator(hosts));
         },
-        getDistance: helper.noop
+        getDistance: function () {return types.distance.local; }
       };
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.getConnectionToNewHost(function (err, c, h) {
         assert.ifError(err);
         assert.strictEqual(h, hosts[0]);
@@ -331,7 +333,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb2) {
           cb2(null, {});
         },
-        getDistance: helper.noop,
+        setDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -339,9 +341,9 @@ describe('ControlConnection', function () {
         newQueryPlan: function (k, o, cb) {
           cb(new Error('test dummy error'));
         },
-        getDistance: helper.noop
+        getDistance: function () {return types.distance.local; }
       };
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.hosts = { values: function () { return hosts; } };
       cc.getConnectionToNewHost(function (err, c, h) {
         assert.ifError(err);
@@ -354,7 +356,7 @@ describe('ControlConnection', function () {
         borrowConnection: function (cb) {
           cb(new Error('Test dummy error'));
         },
-        getDistance: helper.noop,
+        setDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -362,10 +364,10 @@ describe('ControlConnection', function () {
         newQueryPlan: function (k, o, cb) {
           cb(null, utils.arrayIterator(hosts));
         },
-        getDistance: helper.noop
+        getDistance: function () {return types.distance.local; }
       };
       var listenCalled = 0;
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.listenHostsForUp = function () {
         listenCalled++;
       };
@@ -384,7 +386,7 @@ describe('ControlConnection', function () {
           borrowCalled++;
           cb(null, {});
         },
-        getDistance: function (lbp) { return lbp.getDistance(this); },
+        setDistance: helper.noop,
         isUp: function () { return true; }
       }];
       var options = clientOptions.extend({}, helper.baseOptions);
@@ -392,11 +394,9 @@ describe('ControlConnection', function () {
         newQueryPlan: function (k, o, cb) {
           cb(null, utils.arrayIterator(hosts));
         },
-        getDistance: function () {
-          return types.distance.ignored;
-        }
+        getDistance: function () {return types.distance.ignored; }
       };
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options);
       cc.listenHostsForUp = helper.noop;
       cc.getConnectionToNewHost(function (err, c, h) {
         assert.ifError(err);
@@ -415,4 +415,8 @@ describe('ControlConnection', function () {
  */
 function getInet(bytes) {
   return new types.InetAddress(new Buffer(bytes));
+}
+
+function newInstance(options) {
+  return new ControlConnection(options, new ProfileManager(options))
 }

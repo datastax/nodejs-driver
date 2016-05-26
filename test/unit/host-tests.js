@@ -249,7 +249,7 @@ describe('Host', function () {
         return c;
       };
       // setup the distance and expected connections for the host
-      host.getDistance(new policies.loadBalancing.RoundRobinPolicy());
+      host.setDistance(types.distance.local);
       host.borrowConnection(function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
@@ -284,7 +284,7 @@ describe('Host', function () {
           });
         },
         function (next) {
-          host.getDistance(new policies.loadBalancing.RoundRobinPolicy());
+          host.setDistance(types.distance.local);
           host.borrowConnection(function (err) {
             assert.ifError(err);
             //Pool resizing happen in the background
@@ -348,8 +348,7 @@ describe('Host', function () {
       host.setDownAt = 1;
       var checkIsUpCalled = 0;
       host.checkIsUp = function () { checkIsUpCalled++; };
-      //noinspection JSCheckFunctionSignatures
-      host.getDistance(new TestDistanceLbp(types.distance.local));
+      host.setDistance(types.distance.local);
       assert.strictEqual(checkIsUpCalled, 1);
     });
     it('should call drainAndShutdown() when the new distance is ignored', function () {
@@ -357,8 +356,7 @@ describe('Host', function () {
       host._distance = types.distance.local;
       var drainAndShutdownCalled = 0;
       host.pool.drainAndShutdown = function () { drainAndShutdownCalled++; };
-      //noinspection JSCheckFunctionSignatures
-      host.getDistance(new TestDistanceLbp(types.distance.ignored));
+      host.setDistance(types.distance.ignored);
       assert.strictEqual(drainAndShutdownCalled, 1);
       assert.strictEqual(host.pool.coreConnectionsLength, 0);
     });
@@ -367,8 +365,7 @@ describe('Host', function () {
       host._distance = types.distance.ignored;
       var drainAndShutdownCalled = 0;
       host.pool.drainAndShutdown = function () { drainAndShutdownCalled++; };
-      //noinspection JSCheckFunctionSignatures
-      host.getDistance(new TestDistanceLbp(types.distance.ignored));
+      host.setDistance(types.distance.ignored);
       assert.strictEqual(drainAndShutdownCalled, 0);
     });
   });
@@ -612,9 +609,6 @@ describe('HostMap', function () {
     });
   });
 });
-
-function TestDistanceLbp(d) { this._d = d; }
-TestDistanceLbp.prototype.getDistance = function () { return this._d; };
 
 /**
  * @returns {HostConnectionPool}

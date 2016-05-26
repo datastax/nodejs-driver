@@ -9,6 +9,7 @@ var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
 var clientOptions = require('../../../lib/client-options');
 var policies = require('../../../lib/policies');
+var ProfileManager = require('../../../lib/execution-profile').ProfileManager;
 
 describe('ControlConnection', function () {
   this.timeout(120000);
@@ -116,11 +117,8 @@ describe('ControlConnection', function () {
     });
     it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
       var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
-      options.pooling.heartBeatInterval = 0;
-      options.pooling.coreConnectionsPerHost[types.distance.local] = 1;
-      options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
         function (next) {
@@ -209,11 +207,8 @@ describe('ControlConnection', function () {
     });
     it('should reconnect when all hosts go down and back up', function (done) {
       var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
-      options.pooling.heartBeatInterval = 0;
-      options.pooling.coreConnectionsPerHost[types.distance.local] = 1;
-      options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
-      var cc = new ControlConnection(options);
+      var cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
         function initLbp(next) {
@@ -223,7 +218,8 @@ describe('ControlConnection', function () {
         },
         function setHostDistance(next) {
           // the control connection host should be local or remote to trigger DOWN events
-          cc.host.getDistance(options.policies.loadBalancing);
+          var distance = options.policies.loadBalancing.getDistance(cc.host);
+          cc.host.setDistance(distance);
           next();
         },
         function stop1(next) {
@@ -284,11 +280,11 @@ describe('ControlConnection', function () {
 });
 
 /** @returns {ControlConnection} */
-function newInstance(options) {
+function newInstance(options, localConnections, remoteConnections) {
   options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions, options));
   //disable the heartbeat
   options.pooling.heartBeatInterval = 0;
-  options.pooling.coreConnectionsPerHost[types.distance.local] = 2;
-  options.pooling.coreConnectionsPerHost[types.distance.remote] = 1;
-  return new ControlConnection(options);
+  options.pooling.coreConnectionsPerHost[types.distance.local] = localConnections || 2;
+  options.pooling.coreConnectionsPerHost[types.distance.remote] = remoteConnections || 1;
+  return new ControlConnection(options, new ProfileManager(options));
 }

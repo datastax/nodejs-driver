@@ -49,7 +49,7 @@ const client = new cassandra.Client(clientOptions);
 ### Implementing a custom load-balancing policy
 
 The built-in policies in the Node.js driver cover most common use cases. In the rare case that you need to implement
-you own policy you can do it by inheriting from one of the existent policies or the abstract `LoadBalancingPolicy`
+your own policy you can do it by inheriting from one of the existent policies or the abstract `LoadBalancingPolicy`
 class.
 
 You have to take into account that the same policy is used for all queries in order to yield the hosts in correct order.

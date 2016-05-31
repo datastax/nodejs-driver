@@ -358,6 +358,31 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should throw argument error when last parameter is not a function', function () {
+      var client = newConnectedInstance();
+      assert.throws(function () {
+        client.execute('QUERY', [], {});
+      }, errors.ArgumentError);
+      assert.throws(function () {
+        client.execute('QUERY', []);
+      }, errors.ArgumentError);
+      assert.throws(function () {
+        client.execute('QUERY');
+      }, errors.ArgumentError);
+    });
+    it('should pass optional parameters as null when not defined', function () {
+      var client = newConnectedInstance();
+      var params = null;
+      client._innerExecute = function (q, p, o, c) {
+        params = [q, p, o, c];
+      };
+      client.execute('Q1', [], utils.noop);
+      assert.deepEqual(params, ['Q1', [], clientOptions.createQueryOptions(client, null), utils.noop]);
+      client.execute('Q2', utils.noop);
+      assert.deepEqual(params, ['Q2', null, clientOptions.createQueryOptions(client, null), utils.noop]);
+      client.execute('Q3', null, { fetchSize: 20 }, utils.noop);
+      assert.deepEqual(params, ['Q3', null, clientOptions.createQueryOptions(client, { fetchSize: 20 }), utils.noop]);
+    });
     it('should use the default execution profile options', function () {
       var Client = require('../../lib/client');
       var profile = new ExecutionProfile({
@@ -373,7 +398,7 @@ describe('Client', function () {
         queryOptions = o;
       };
       client.execute('Q', [], { }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile));
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing']);
     });
     it('should use the provided execution profile options', function () {
       var Client = require('../../lib/client');
@@ -391,7 +416,7 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile));
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing']);
       var previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { executionProfile: profile }, utils.noop);
@@ -413,12 +438,32 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing']);
       assert.strictEqual(queryOptions.consistency, types.consistencies.all);
       var previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
+    });
+  });
+  describe('#eachRow()', function () {
+    it('should pass optional parameters as null when not defined', function () {
+      var createQueryOptions = clientOptions.createQueryOptions;
+      var client = newConnectedInstance();
+      var params = null;
+      client._innerExecute = function (q, p, o, c) {
+        params = [q, p, o, c];
+      };
+      client.eachRow('Q 2p', utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 2p', null, createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 3p', [], utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 3p', [], createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 4p', [1], utils.noop, helper.callbackNoop);
+      assert.deepEqual(params.slice(0, 3), ['Q 4p', [1], createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 4p 2', [2], { fetchSize: 1}, utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 4p 2', [2], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
+      client.eachRow('Q 5p', [3], { fetchSize: 1}, utils.noop, helper.callbackNoop);
+      assert.deepEqual(params.slice(0, 3), ['Q 5p', [3], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
     });
   });
   describe('#batch()', function () {

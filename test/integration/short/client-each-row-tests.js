@@ -125,10 +125,6 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(rowCount, 100);
             assert.strictEqual(rowCount, result.rowLength);
-            assert.ok(result.rowLengthArray);
-            assert.strictEqual(result.rowLengthArray[0], 45);
-            assert.strictEqual(result.rowLengthArray[1], 45);
-            assert.strictEqual(result.rowLengthArray[2], 10);
             seriesNext();
           });
         },
@@ -142,9 +138,6 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(rowCount, 100);
             assert.strictEqual(rowCount, result.rowLength);
-            assert.ok(result.rowLengthArray);
-            assert.strictEqual(result.rowLengthArray.length, 1);
-            assert.strictEqual(result.rowLengthArray[0], 100);
             seriesNext();
           });
         }
@@ -319,13 +312,10 @@ describe('Client', function () {
           ], seriesNext);
         }
       ], done);
-      function validateResult(err, result, rowCount, expectedLength, fetchSize){
+      function validateResult(err, result, rowCount, expectedLength){
         assert.ifError(err);
         assert.strictEqual(rowCount, expectedLength);
         assert.strictEqual(rowCount, result.rowLength);
-        assert.ok(result.rowLengthArray);
-        assert.strictEqual(result.rowLengthArray[0], fetchSize);
-        assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {

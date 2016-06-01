@@ -9,6 +9,7 @@ var errors = require('../../lib/errors');
 var types = require('../../lib/types');
 var utils = require('../../lib/utils');
 var retry = require('../../lib/policies/retry');
+var ProfileManager = require('../../lib/execution-profile').ProfileManager;
 
 var options = (function () {
   var loadBalancing = require('../../lib/policies/load-balancing.js');
@@ -28,12 +29,12 @@ var options = (function () {
 describe('RequestHandler', function () {
   describe('#getDecision()', function () {
     it('should retry when there was a socket error and mutation was not applied', function () {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       var result = handler.getDecision({ isSocketError: true });
       assert.strictEqual(result.decision, retry.RetryPolicy.retryDecision.retry);
     });
     it('should use the retry policy when there was a socket error and mutation was applied', function () {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.request = {};
       var requestErrorCalled = 0;
       handler.retryPolicy = { onRequestError: function () {
@@ -45,33 +46,35 @@ describe('RequestHandler', function () {
   });
   describe('#handleError()', function () {
     it('should retrow on syntax error', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.syntaxError;
       handler.retry = function () {
         assert.fail();
       };
+      handler.requestOptions = {};
       handler.handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         done();
       });
     });
     it('should retrow on unauthorized error', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.unauthorized;
       handler.retry = function () {
         assert.fail();
       };
+      handler.requestOptions = {};
       handler.handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         done();
       });
     });
     it('should retry on overloaded error', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       handler.request = {};
       var responseError = new errors.ResponseError();
@@ -82,7 +85,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(useCurrentHost, false);
         cb();
       };
-
+      handler.requestOptions = {};
       handler.handleError(responseError, function (err) {
         assert.equal(err, null);
         assert.strictEqual(retryCalled, true);
@@ -97,9 +100,9 @@ describe('RequestHandler', function () {
         policyCalled = true;
         return { decision: retry.RetryPolicy.retryDecision.retry };
       };
-      var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
+      var handler = newInstance({ policies: { retry: policy }});
       handler.host = { address: '1'};
-      var responseError = new errors.ResponseError();
+      var responseError = new errors.ResponseError(0, 'Test error');
       responseError.code = types.responseErrorCodes.writeTimeout;
       var retryCalled = false;
       handler.retry = function (c, useCurrentHost, cb) {
@@ -107,7 +110,9 @@ describe('RequestHandler', function () {
         assert.strictEqual(useCurrentHost, undefined);
         cb();
       };
-
+      handler.requestOptions = {};
+      assert.strictEqual(handler.client.profileManager.getDefault().retry, policy);
+      assert.strictEqual(handler.retryPolicy, policy);
       handler.handleError(responseError, function (err) {
         assert.equal(err, null);
         assert.strictEqual(retryCalled, true);
@@ -123,13 +128,13 @@ describe('RequestHandler', function () {
         policyCalled = true;
         return { decision: retry.RetryPolicy.retryDecision.rethrow };
       };
-      var handler = new RequestHandler(null, utils.extend({}, options, { policies: { retry: policy }}));
+      var handler = newInstance({ policies: { retry: policy }});
       handler.host = { address: '1'};
-      var responseError = new errors.ResponseError();
-      responseError.code = types.responseErrorCodes.unavailableException;
+      var responseError = new errors.ResponseError(types.responseErrorCodes.unavailableException, 'Test error');
       handler.retry = function () {
         assert.fail();
       };
+      handler.requestOptions = {};
       handler.handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         assert.strictEqual(policyCalled, true);
@@ -137,25 +142,27 @@ describe('RequestHandler', function () {
       });
     });
     it('should include the coordinator in the error object', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.readTimeout;
       handler.retry = function () {
         assert.fail();
       };
+      handler.requestOptions = {};
       handler.handleError(responseError, function (err) {
         assert.strictEqual(err.coordinator, handler.host.address);
         done();
       });
     });
     it('should return an empty ResultSet when retry decision is ignore', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       handler.request = { };
       handler.getDecision = function () {
         return { decision: retry.RetryPolicy.retryDecision.ignore };
       };
+      handler.requestOptions = {};
       handler.handleError({}, function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
@@ -166,7 +173,7 @@ describe('RequestHandler', function () {
   });
   describe('#prepareMultiple()', function () {
     it('should prepare each query serially and callback with the response', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       var prepareCounter = 0;
       var eachCounter = 0;
       var connection = {
@@ -189,7 +196,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should retry with a handler when there is an error', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.request = {};
       handler.host = { address: '1'};
       var retryCounter = 0;
@@ -219,7 +226,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should not retry when there is an query error', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.host = { address: '1'};
       var connection = {
         prepareOnce: function (q, cb) {
@@ -240,7 +247,7 @@ describe('RequestHandler', function () {
   });
   describe('#prepareAndRetry()', function () {
     it('should only re-prepare of ExecuteRequest and BatchRequest', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.request = {};
       handler.host = {};
       handler.prepareAndRetry(new Buffer(0), function (err) {
@@ -249,7 +256,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should prepare all BatchRequest queries and send request again on the same connection', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.request = {};
       handler.host = {};
       handler.request = new requests.BatchRequest([
@@ -274,7 +281,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should prepare distinct BatchRequest queries', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       handler.request = {};
       handler.host = {};
       handler.request = new requests.BatchRequest([
@@ -336,7 +343,7 @@ describe('RequestHandler', function () {
   });
   describe('#send()', function () {
     it('should return a ResultSet with valid columns', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
           cb(null, {
@@ -374,7 +381,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should return a ResultSet with null columns when there is no metadata', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
           cb(null, { flags: utils.emptyObject });
@@ -394,7 +401,7 @@ describe('RequestHandler', function () {
       });
     });
     it('should use the retry policy defined in the QueryOptions', function (done) {
-      var handler = new RequestHandler(null, options);
+      var handler = newInstance();
       var connectionCalled = 0;
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
@@ -559,7 +566,7 @@ describe('RequestHandler', function () {
     var getHost = function (address, isUp) {
       return {
         isUp: function () { return isUp !== false; },
-        getDistance: helper.noop,
+        setDistance: helper.noop,
         address: address,
         setDown: function () {
           //noinspection JSPotentiallyInvalidUsageOfThis
@@ -602,6 +609,14 @@ describe('RequestHandler', function () {
 });
 
 /** @returns {RequestHandler} */
-function newInstance(customOptions) {
-  return new RequestHandler(null, utils.extend({}, options, customOptions));
+function newInstance(customOptions, client) {
+  var o = utils.extend({}, options, customOptions);
+  return new RequestHandler(client || newClient(o), o);
+}
+
+function newClient(o) {
+  //noinspection JSCheckFunctionSignatures
+  return {
+    profileManager: new ProfileManager(o)
+  };
 }

@@ -6,6 +6,7 @@
       "lib/policies",
       "lib/metadata",
       "lib/client.js",
+      "lib/execution-profile.js",
       "lib/encoder.js",
       "lib/errors.js",
       "lib/host.js"

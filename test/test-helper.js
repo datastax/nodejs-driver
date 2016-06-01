@@ -520,6 +520,27 @@ var helper = {
   queries: {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
+  },
+  /**
+   * @param {Object} o1
+   * @param {Object} o2
+   * @param {Array.<string>} props
+   * @param {Array.<string>} [except]
+   */
+  compareProps: function (o1, o2, props, except) {
+    assert.ok(o1);
+    if (except) {
+      props = props.slice(0);
+      except.forEach(function (p) {
+        var index = props.indexOf(p);
+        if (index >= 0) {
+          props.splice(index, 1);
+        }
+      });
+    }
+    props.forEach(function comparePropItem(p) {
+      assert.strictEqual(o1[p], o2[p]);
+    });
   }
 };
 

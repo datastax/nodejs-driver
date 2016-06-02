@@ -169,7 +169,7 @@ describe('DseClient', function () {
       };
       client.executeGraph('Q5', { c: 0}, helper.throwOp);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'default');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'g');
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name10');
       assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);

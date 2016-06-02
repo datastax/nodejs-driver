@@ -72,7 +72,7 @@ describe('Client', function () {
       Client.__set__("ControlConnection", ccMock);
       var client = new Client(options);
       client.on('connected', function () {emitCounter++;});
-      utils.timesSeries(1, function (n, next) {
+      utils.times(1000, function (n, next) {
         client.connect(function (err) {
           assert.ifError(err);
           next();
@@ -125,12 +125,17 @@ describe('Client', function () {
       }, 50);
     };
     Client.__set__("RequestHandler", requestHandlerMock);
+    var options = clientOptions.defaultOptions();
+    var queryOptions = {
+      loadBalancing: options.policies.loadBalancing,
+      retry: options.policies.retry
+    };
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client._getPrepared('QUERY1', queryOptions, function (err, id, meta) {
         assert.equal(err, null);
         assert.notEqual(id, null);
         assert.notEqual(meta, null);
@@ -142,13 +147,13 @@ describe('Client', function () {
     });
     it('should prepare make the same request once and queue the rest', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       prepareCounter = 0;
       utils.parallel([
         function (nextParallel) {
           utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY ONE', next);
+            client._getPrepared('QUERY ONE', queryOptions, next);
           }, function (err) {
             assert.ifError(err);
             nextParallel();
@@ -157,7 +162,7 @@ describe('Client', function () {
         function (nextParallel) {
           utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY TWO', next);
+            client._getPrepared('QUERY TWO', queryOptions, next);
           }, function (err) {
             assert.ifError(err);
             nextParallel();
@@ -175,7 +180,7 @@ describe('Client', function () {
       client.metadata = new Metadata(client.options);
       utils.timesSeries(maxPrepared + 2, function (n, next) {
         //noinspection JSAccessibilityCheck
-        client._getPrepared('QUERY ' + n.toString(), next);
+        client._getPrepared('QUERY ' + n.toString(), queryOptions, next);
       }, function (err) {
         if (err) return done(err);
         assert.strictEqual(client.metadata.preparedQueries.__length, maxPrepared);
@@ -189,9 +194,9 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client._getPrepared('QUERY1', queryOptions, function (err, id, meta) {
         assert.ok(err, 'It should callback with error');
         assert.equal(id, null);
         assert.equal(meta, null);
@@ -203,7 +208,7 @@ describe('Client', function () {
     it('should adapt the parameters into array', function (done) {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, cb) { cb (null,
+      client._getPrepared = function (q, o, cb) { cb (null,
         new Buffer(0), { columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});
       };
       requestHandlerMock.prototype.send = function (req) {
@@ -216,7 +221,7 @@ describe('Client', function () {
     it('should keep the parameters if an array is provided', function (done) {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
@@ -228,7 +233,7 @@ describe('Client', function () {
       var requestHandlerMock = function () {};
       requestHandlerMock.prototype.send = helper.callbackNoop;
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       utils.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {prepare: true}, function (err) {
@@ -264,7 +269,7 @@ describe('Client', function () {
     it('should build the routingKey based on routingNames', function (done) {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, cb) {
+      client._getPrepared = function (q, o, cb) {
         cb(null, new Buffer([1]), { columns: [
           { name: 'key1', type: { code: types.dataTypes.int} },
           { name: 'key2', type: { code: types.dataTypes.int} }

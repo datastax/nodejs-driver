@@ -400,8 +400,14 @@ describe('RequestHandler', function () {
         done();
       });
     });
-    it('should use the retry policy defined in the QueryOptions', function (done) {
-      var handler = newInstance();
+    it('should use the retry policy defined in the constructor', function (done) {
+      var policy = new retry.RetryPolicy();
+      var policyCalled = 0;
+      policy.onReadTimeout = function () {
+        policyCalled++;
+        return {decision: retry.RetryPolicy.retryDecision.retry};
+      };
+      var handler = newInstance(null, null, null, policy);
       var connectionCalled = 0;
       var connection = { sendStream: function (r, o, cb) {
         setImmediate(function () {
@@ -423,14 +429,7 @@ describe('RequestHandler', function () {
           cb(null, connection);
         });
       };
-      var policy = new retry.RetryPolicy();
-      var policyCalled = 0;
-      policy.onReadTimeout = function () {
-        policyCalled++;
-        return {decision: retry.RetryPolicy.retryDecision.retry};
-      };
-      //noinspection JSCheckFunctionSignatures
-      handler.send(new requests.QueryRequest('Dummy QUERY'), { retry: policy}, function (err, result) {
+      handler.send(new requests.QueryRequest('Dummy QUERY'), { }, function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
         //2 error responses, 2 retry decisions
@@ -609,14 +608,16 @@ describe('RequestHandler', function () {
 });
 
 /** @returns {RequestHandler} */
-function newInstance(customOptions, client) {
+function newInstance(customOptions, client, loadBalancingPolicy, retryPolicy) {
   var o = utils.extend({}, options, customOptions);
-  return new RequestHandler(client || newClient(o), o);
+  return new RequestHandler(
+    client || newClient(o), loadBalancingPolicy || o.policies.loadBalancing, retryPolicy || o.policies.retry);
 }
 
 function newClient(o) {
   //noinspection JSCheckFunctionSignatures
   return {
-    profileManager: new ProfileManager(o)
+    profileManager: new ProfileManager(o),
+    options: o
   };
 }

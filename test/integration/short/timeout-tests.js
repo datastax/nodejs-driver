@@ -11,11 +11,16 @@ var ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfil
 
 describe('client read timeouts', function () {
   this.timeout(120000);
-  beforeEach(helper.ccmHelper.start(2));
-  afterEach(helper.ccmHelper.remove);
+  before(helper.ccmHelper.start(2));
+  after(helper.ccmHelper.remove);
+  afterEach(function (done) {
+    // Tests will pause node 2 and should resume it in the general case, but if for whatever reason they fail
+    // resuming the node here to be safe.
+    helper.ccmHelper.resumeNode(2, done);
+  });
   describe('when socketOptions.readTimeout is not set', function () {
     it('should do nothing else than waiting', getTimeoutErrorExpectedTest(false, false));
-    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 0, { readTimeout: 3123 }));
+    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 3123, 0, { readTimeout: 3123 }));
   });
   describe('when socketOptions.readTimeout is set', function () {
     it('should move to next host by default for simple queries', getMoveNextHostTest(false, false));
@@ -222,14 +227,17 @@ function newInstance(options) {
 /**
  * @param {Boolean} prepare
  * @param {Boolean} prepareWarmup
- * @param {Number} expectedTimeoutMillis
+ * @param {Number} [expectedTimeoutMillis]
  * @param {Number} [readTimeout]
  * @param {QueryOptions} [queryOptions]
  * @param {Object.<string, ExecutionProfile>} [profiles]
  * @returns {Function}
  */
 function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, readTimeout, queryOptions, profiles) {
-  if (typeof readTimeout === 'undefined') {
+  if (!expectedTimeoutMillis) {
+    expectedTimeoutMillis = 3000;
+  }
+  if (!readTimeout) {
     readTimeout = 3000;
   }
   profiles = profiles || {};

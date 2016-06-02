@@ -128,7 +128,8 @@ describe('Client', function () {
     var options = clientOptions.defaultOptions();
     var queryOptions = {
       loadBalancing: options.policies.loadBalancing,
-      retry: options.policies.retry
+      retry: options.policies.retry,
+      executionProfile: new ExecutionProfile()
     };
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
@@ -205,6 +206,10 @@ describe('Client', function () {
     });
   });
   describe('#_executeAsPrepared()', function () {
+    var queryOptions = {
+      prepare: true,
+      executionProfile: new ExecutionProfile()
+    };
     it('should adapt the parameters into array', function (done) {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
@@ -216,7 +221,7 @@ describe('Client', function () {
         assert.strictEqual(util.inspect(req.params), util.inspect([100, 101]));
         done();
       };
-      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, { prepare: true }, helper.throwop);
+      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, queryOptions, helper.throwop);
     });
     it('should keep the parameters if an array is provided', function (done) {
       var requestHandlerMock = function () {};
@@ -227,7 +232,7 @@ describe('Client', function () {
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
         done();
       };
-      client._executeAsPrepared('SELECT ...', [101], {}, helper.throwop);
+      client._executeAsPrepared('SELECT ...', [101], queryOptions, helper.throwop);
     });
     it('should callback with error if named parameters are not provided', function (done) {
       var requestHandlerMock = function () {};
@@ -236,14 +241,14 @@ describe('Client', function () {
       client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       utils.series([function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, queryOptions, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
       }, function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {}, queryOptions, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
@@ -251,7 +256,7 @@ describe('Client', function () {
       }, function (next) {
         //different casing
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {ABC: 100}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {ABC: 100}, queryOptions, function (err) {
           assert.ifError(err);
           next();
         });

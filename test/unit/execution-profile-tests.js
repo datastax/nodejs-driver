@@ -20,27 +20,27 @@ describe('ProfileManager', function () {
     });
     it('should set the default profile required options', function () {
       var options = clientOptions.defaultOptions();
-      options.profiles = {
-        'default': new ExecutionProfile()
-      };
+      options.profiles = [
+        new ExecutionProfile('default')
+      ];
       var manager = new ProfileManager(options);
       var profile = manager.getDefault();
       assert.ok(profile);
-      assert.strictEqual(profile, options.profiles['default']);
+      assert.strictEqual(profile, options.profiles[0]);
       assert.strictEqual(profile.loadBalancing, options.policies.loadBalancing);
       assert.strictEqual(profile.retry, options.policies.retry);
     });
   });
   describe('#getProfile()', function () {
-    it('should get the profile by name', function () {
+    it('should get the profile by name @debug', function () {
       var options = clientOptions.defaultOptions();
-      options.profiles = {
-        'metrics': new ExecutionProfile({ consistency: types.consistencies.localQuorum })
-      };
+      options.profiles = [
+        new ExecutionProfile('metrics', { consistency: types.consistencies.localQuorum })
+      ];
       var manager = new ProfileManager(options);
       var profile = manager.getProfile('metrics');
       assert.ok(profile);
-      assert.strictEqual(profile, options.profiles['metrics']);
+      assert.strictEqual(profile, options.profiles[0]);
       assert.strictEqual(profile.consistency, types.consistencies.localQuorum);
       assert.ok(manager.getDefault());
       assert.notStrictEqual(manager.getDefault(), profile);
@@ -56,12 +56,11 @@ describe('ProfileManager', function () {
     it('should return same the execution profile if provided', function () {
       var options = clientOptions.defaultOptions();
       var manager = new ProfileManager(options);
-      options.profiles = {
-        'metrics': new ExecutionProfile()
-      };
-      var profile = manager.getProfile(options.profiles['metrics']);
+      var metricsProfile = new ExecutionProfile('metrics');
+      options.profiles = [ metricsProfile ];
+      var profile = manager.getProfile(metricsProfile);
       assert.ok(profile);
-      assert.strictEqual(profile, options.profiles['metrics']);
+      assert.strictEqual(profile, metricsProfile);
     });
   });
 });

@@ -129,7 +129,7 @@ describe('Client', function () {
     var queryOptions = {
       loadBalancing: options.policies.loadBalancing,
       retry: options.policies.retry,
-      executionProfile: new ExecutionProfile()
+      executionProfile: new ExecutionProfile('p1')
     };
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
@@ -208,7 +208,7 @@ describe('Client', function () {
   describe('#_executeAsPrepared()', function () {
     var queryOptions = {
       prepare: true,
-      executionProfile: new ExecutionProfile()
+      executionProfile: new ExecutionProfile('p2')
     };
     it('should adapt the parameters into array', function (done) {
       var requestHandlerMock = function () {};
@@ -395,30 +395,30 @@ describe('Client', function () {
     });
     it('should use the default execution profile options', function () {
       var Client = require('../../lib/client');
-      var profile = new ExecutionProfile({
+      var profile = new ExecutionProfile('default', {
         consistency: types.consistencies.three,
         readTimeout: 12345,
         retry: new policies.retry.RetryPolicy(),
         serialConsistency: types.consistencies.localSerial
       });
-      var options = getOptions({ profiles: { 'default': profile } });
+      var options = getOptions({ profiles: [ profile ] });
       var client = new Client(options);
       var queryOptions = null;
       client._innerExecute = function (q, p, o) {
         queryOptions = o;
       };
       client.execute('Q', [], { }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
     });
     it('should use the provided execution profile options', function () {
       var Client = require('../../lib/client');
-      var profile = new ExecutionProfile({
+      var profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
         serialConsistency: types.consistencies.localSerial
       });
-      var options = getOptions({ profiles: { 'profile1': profile } });
+      var options = getOptions({ profiles: [ profile ] });
       var client = new Client(options);
       var queryOptions = null;
       client._innerExecute = function (q, p, o) {
@@ -426,7 +426,7 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
       var previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { executionProfile: profile }, utils.noop);
@@ -434,13 +434,13 @@ describe('Client', function () {
     });
     it('should override the provided execution profile options with provided options', function () {
       var Client = require('../../lib/client');
-      var profile = new ExecutionProfile({
+      var profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
         serialConsistency: types.consistencies.localSerial
       });
-      var options = getOptions({ profiles: { 'profile1': profile } });
+      var options = getOptions({ profiles: [ profile ] });
       var client = new Client(options);
       var queryOptions = null;
       client._innerExecute = function (q, p, o) {
@@ -448,7 +448,7 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing', 'name']);
       assert.strictEqual(queryOptions.consistency, types.consistencies.all);
       var previousQueryOptions = queryOptions;
       // profile by instance

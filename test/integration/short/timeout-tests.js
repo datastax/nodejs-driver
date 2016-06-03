@@ -187,9 +187,9 @@ describe('client read timeouts', function () {
   });
   describe('when queryOptions.readTimeout is set', function () {
     function profiles() {
-      return {
-        'aProfile': new ExecutionProfile({readTimeout: 8675})
-      };
+      return [
+        new ExecutionProfile('aProfile', {readTimeout: 8675})
+      ];
     }
     it('should be used instead of socketOptions.readTimeout and profile.readTimeout for simple queries',
       getMoveNextHostTest(false, false, 3123, 1 << 24, { executionProfile: 'aProfile', readTimeout: 3123 }, profiles()));
@@ -202,10 +202,10 @@ describe('client read timeouts', function () {
   });
   describe('when executionProfile.readTimeout is set', function() {
     function timeoutProfiles() {
-      return {
-        'indefiniteTimeout' : new ExecutionProfile({readTimeout: 0}),
-        'definedTimeout' : new ExecutionProfile({readTimeout: 3123})
-      };
+      return [
+        new ExecutionProfile('indefiniteTimeout', {readTimeout: 0}),
+        new ExecutionProfile('definedTimeout', {readTimeout: 3123})
+      ];
     }
     it('should be used instead of socketOptions.readTimeout for simple queries',
       getMoveNextHostTest(false, false, 3123, 1 << 24, { executionProfile: 'definedTimeout' }, timeoutProfiles()));
@@ -230,7 +230,7 @@ function newInstance(options) {
  * @param {Number} [expectedTimeoutMillis]
  * @param {Number} [readTimeout]
  * @param {QueryOptions} [queryOptions]
- * @param {Object.<string, ExecutionProfile>} [profiles]
+ * @param {Array.<ExecutionProfile>} [profiles]
  * @returns {Function}
  */
 function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, readTimeout, queryOptions, profiles) {
@@ -240,7 +240,7 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
   if (!readTimeout) {
     readTimeout = 3000;
   }
-  profiles = profiles || {};
+  profiles = profiles || [];
   return (function moveNextHostTest(done) {
     var client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
     var timeoutLogs = [];
@@ -302,7 +302,7 @@ function getTimeoutErrorExpectedTest(prepare, prepareWarmup, readTimeout, queryO
     readTimeout = 0;
   }
 
-  profiles = profiles || {};
+  profiles = profiles || [];
 
   return (function timeoutErrorExpectedTest(done) {
     var client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });

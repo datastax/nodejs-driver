@@ -32,7 +32,7 @@ describe('ProfileManager', function () {
     });
   });
   describe('#getProfile()', function () {
-    it('should get the profile by name @debug', function () {
+    it('should get the profile by name', function () {
       var options = clientOptions.defaultOptions();
       options.profiles = [
         new ExecutionProfile('metrics', { consistency: types.consistencies.localQuorum })

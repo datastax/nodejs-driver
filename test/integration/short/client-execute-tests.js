@@ -4,6 +4,7 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
+var ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
@@ -67,6 +68,19 @@ describe('Client', function () {
       utils.times(500, function (n, next) {
         client.execute(helper.queries.basic, [], next);
       }, done)
+    });
+    it('should fail if non-existent profile provided', function (done) {
+      var client = newInstance();
+      utils.series([
+        function queryWithBadProfile(next) {
+          client.execute(helper.queries.basicNoResults, [], {executionProfile: 'none'}, function(err) {
+            assert.ok(err);
+            helper.assertInstanceOf(err, errors.ArgumentError);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
     });
     vit('2.0', 'should guess known types', function (done) {
       var client = newInstance();
@@ -238,6 +252,25 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should use consistency level from profile and override profile when provided in query options', function (done) {
+      var client = newInstance({profiles: [new ExecutionProfile('cl', {consistency: types.consistencies.quorum})]});
+      utils.series([
+        function ensureProfileCLUsed (next) {
+          client.execute(selectAllQuery, [], {executionProfile: 'cl'}, function(err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.info.achievedConsistency, types.consistencies.quorum);
+            next();
+          });
+        },
+        function ensureQueryCLUsed (next) {
+          client.execute(selectAllQuery, [], {executionProfile: 'cl', consistency: types.consistencies.one}, function(err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.info.achievedConsistency, types.consistencies.one);
+            next();
+          });
+        }
+      ], done);
+    });
     vit('2.2', 'should accept unset as a valid value', function (done) {
       var client = newInstance();
       var id = types.Uuid.random();
@@ -354,13 +387,24 @@ describe('Client', function () {
         }
       ], done);
     });
-    vit('2.0', 'should support serial consistency', function (done) {
-      var client = newInstance();
+    vit('2.0', 'should use serial consistency level from profile and override profile when provided in query options', function (done) {
+      // This is a bit crude, but sets an invalid serial CL (ONE) and ensures an error is thrown when using the
+      // profile serial CL.  This establishes a way to differentiate between when the profile cl is used and not.
+      var client = newInstance({profiles: [new ExecutionProfile('cl', {serialConsistency: types.consistencies.one})]});
       var id = types.Uuid.random();
       utils.series([
-        function insert(next) {
+        function insertWithProfileSerialCL(next) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
-          client.execute(query, [id, 'hello serial'], { serialConsistency: types.consistencies.localSerial}, next);
+          client.execute(query, [id, 'hello serial'], { executionProfile: 'cl'}, function(err) {
+            // expect an error as we used an invalid serial CL.
+            assert.ok(err);
+            assert.strictEqual(err.code, 0x2200); // should be an invalid query.
+            next();
+          });
+        },
+        function insertWithQueryCL(next) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
+          client.execute(query, [id, 'hello serial'], { executionProfile: 'cl', serialConsistency: types.consistencies.localSerial}, next);
         },
         function select(next) {
           var query = util.format('SELECT id, text_sample from %s WHERE id = ?', table);

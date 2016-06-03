@@ -6,6 +6,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
+var errors = require('../../../lib/errors.js');
 var vit = helper.vit;
 
 describe('Client', function () {
@@ -96,6 +97,23 @@ describe('Client', function () {
             next();
           });
         }], done);
+    });
+    it('should fail if non-existent profile provided', function (done) {
+      var client = newInstance();
+      utils.series([
+        function queryWithBadProfile(next) {
+          var counter = 0;
+          client.eachRow(helper.queries.basicNoResults, [], {executionProfile: 'none'}, function() {
+            counter++;
+          }, function (err) {
+            assert.ok(err);
+            helper.assertInstanceOf(err, errors.ArgumentError);
+            assert.strictEqual(counter, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
     });
     vit('2.0', 'should autoPage', function (done) {
       var keyspace = helper.getRandomName('ks');

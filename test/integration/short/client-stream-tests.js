@@ -117,7 +117,6 @@ describe('Client', function () {
           assert.strictEqual(stream.read(), null);
         })
         .on('error', function (err) {
-          console.log(err);
           assert.ok(err);
           helper.assertInstanceOf(err, errors.ArgumentError);
           errorCalled = true;

@@ -15,3 +15,4 @@ exports.Encoder = require('./lib/encoder');
 exports.defaultOptions = function () {
   return clientOptions.defaultOptions();
 };
+exports.version = require('./package.json').version;

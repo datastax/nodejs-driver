@@ -521,30 +521,6 @@ describe('types', function () {
   });
 });
 describe('utils', function () {
-  describe('#parseCommonArgs()', function () {
-    it('parses args and can be retrieved by name', function () {
-      function testArgs(args, expectedLength) {
-        assert.strictEqual(args.length, expectedLength, 'The arguments length do not match');
-        assert.ok(args.query, 'Query must be defined');
-        assert.strictEqual(typeof args.callback, 'function', 'Callback must be a function ');
-        if (args && args.length > 2) {
-          assert.ok(util.isArray(args.params) || args.params === null, 'params must be an array or null');
-        }
-      }
-      var args = utils.parseCommonArgs('A QUERY 1', function (){});
-      assert.ok(args && args.query && args.callback);
-      assert.throws(utils.parseCommonArgs, Error, 'It must contain at least 2 arguments.');
-      args = utils.parseCommonArgs('A QUERY 2', [1, 2, 3], function (){});
-      testArgs(args, 3);
-      assert.ok(util.isArray(args.params) && args.params.length === 3);
-      args = utils.parseCommonArgs('A QUERY 3', [], function (){});
-      testArgs(args, 3);
-      assert.ok(util.isArray(args.params), 'Params should be set');
-      args = utils.parseCommonArgs('A QUERY', [1, 2, 3], {}, function (){});
-      testArgs(args, 4);
-      assert.ok(args.params && args.options, 'Params and options must not be null');
-    });
-  });
   describe('#extend()', function () {
     it('should allow null sources', function () {
       var originalObject = {};

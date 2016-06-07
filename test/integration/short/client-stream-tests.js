@@ -102,6 +102,26 @@ describe('Client', function () {
           assert.ifError(err);
         });
     });
+    it('should emit error if non-existent profile provided', function (done) {
+      var client = newInstance();
+      var stream = client.stream(helper.queries.basicNoResults, [], {executionProfile: 'none'});
+      var errorCalled = false;
+      stream
+        .on('end', function () {
+          assert.strictEqual(errorCalled, true);
+          done();
+        })
+        .on('readable', function () {
+          //Node.js 0.10, never emits readable
+          //Node.js 0.12, it emits a null value, causing the rest of the events to chain
+          assert.strictEqual(stream.read(), null);
+        })
+        .on('error', function (err) {
+          assert.ok(err);
+          helper.assertInstanceOf(err, errors.ArgumentError);
+          errorCalled = true;
+        });
+    });
   });
   describe('#stream(query, params, {prepare: 1})', function () {
     var commonKs = helper.getRandomName('ks');

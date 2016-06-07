@@ -103,6 +103,14 @@ describe('Client', function () {
         done();
       });
     });
+    vit('2.0', 'should fail if non-existent profile provided', function (done) {
+      var client = newInstance();
+      client.batch(['INSERT WILL FAIL'], {executionProfile: 'none'}, function (err) {
+        assert.ok(err);
+        assert.ok(err instanceof errors.ArgumentError);
+        done();
+      });
+    });
     vit('2.0', 'should validate the arguments are valid', function (done) {
       var client = newInstance();
       assert.throws(function () {

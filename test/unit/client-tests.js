@@ -12,6 +12,8 @@ var HostMap = require('../../lib/host').HostMap;
 var Host = require('../../lib/host').Host;
 var Metadata = require('../../lib/metadata');
 var Encoder = require('../../lib/encoder');
+var ProfileManager = require('../../lib/execution-profile').ProfileManager;
+var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 var clientOptions = require('../../lib/client-options');
 
 describe('Client', function () {
@@ -55,24 +57,19 @@ describe('Client', function () {
       var Client = rewire('../../lib/client.js');
       var initCounter = 0;
       var emitCounter = 0;
-      var controlConnectionMock = function () {
-        this.hosts = new HostMap();
-        this.metadata = new Metadata();
-        //noinspection JSUnresolvedVariable
-        this.host = { getDistance: utils.noop };
-        this.init = function (cb) {
-          initCounter++;
-          //Async
-          setTimeout(cb, 100);
-        }
-      };
-      Client.__set__("ControlConnection", controlConnectionMock);
       var options = utils.extend({
         contactPoints: helper.baseOptions.contactPoints,
         policies: {
           loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
         }
       });
+      var ccMock = getControlConnectionMock(null, options);
+      ccMock.prototype.init = function (cb) {
+        initCounter++;
+        //Async
+        setTimeout(cb, 100);
+      };
+      Client.__set__("ControlConnection", ccMock);
       var client = new Client(options);
       client.on('connected', function () {emitCounter++;});
       utils.times(1000, function (n, next) {
@@ -99,7 +96,8 @@ describe('Client', function () {
       client.controlConnection = {
         init: helper.callbackNoop,
         hosts: new HostMap(),
-        host: { getDistance: utils.noop },
+        host: { setDistance: utils.noop },
+        profileManager: new ProfileManager(options),
         shutdown: utils.noop
       };
       utils.series([
@@ -127,12 +125,18 @@ describe('Client', function () {
       }, 50);
     };
     Client.__set__("RequestHandler", requestHandlerMock);
+    var options = clientOptions.defaultOptions();
+    var queryOptions = {
+      loadBalancing: options.policies.loadBalancing,
+      retry: options.policies.retry,
+      executionProfile: new ExecutionProfile('p1')
+    };
     it('should prepare making request if not exist', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       prepareCounter = 0;
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client._getPrepared('QUERY1', queryOptions, function (err, id, meta) {
         assert.equal(err, null);
         assert.notEqual(id, null);
         assert.notEqual(meta, null);
@@ -144,13 +148,13 @@ describe('Client', function () {
     });
     it('should prepare make the same request once and queue the rest', function (done) {
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       prepareCounter = 0;
       utils.parallel([
         function (nextParallel) {
           utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY ONE', next);
+            client._getPrepared('QUERY ONE', queryOptions, next);
           }, function (err) {
             assert.ifError(err);
             nextParallel();
@@ -159,7 +163,7 @@ describe('Client', function () {
         function (nextParallel) {
           utils.times(100, function (n, next) {
             //noinspection JSAccessibilityCheck
-            client._getPrepared('QUERY TWO', next);
+            client._getPrepared('QUERY TWO', queryOptions, next);
           }, function (err) {
             assert.ifError(err);
             nextParallel();
@@ -177,7 +181,7 @@ describe('Client', function () {
       client.metadata = new Metadata(client.options);
       utils.timesSeries(maxPrepared + 2, function (n, next) {
         //noinspection JSAccessibilityCheck
-        client._getPrepared('QUERY ' + n.toString(), next);
+        client._getPrepared('QUERY ' + n.toString(), queryOptions, next);
       }, function (err) {
         if (err) return done(err);
         assert.strictEqual(client.metadata.preparedQueries.__length, maxPrepared);
@@ -191,9 +195,9 @@ describe('Client', function () {
         }, 50);
       };
       var client = new Client({contactPoints: ['host']});
-      client.metadata = new Metadata(client.options);
+      client.metadata = new Metadata(options);
       //noinspection JSAccessibilityCheck
-      client._getPrepared('QUERY1', function (err, id, meta) {
+      client._getPrepared('QUERY1', queryOptions, function (err, id, meta) {
         assert.ok(err, 'It should callback with error');
         assert.equal(id, null);
         assert.equal(meta, null);
@@ -202,65 +206,49 @@ describe('Client', function () {
     });
   });
   describe('#_executeAsPrepared()', function () {
+    var queryOptions = {
+      prepare: true,
+      executionProfile: new ExecutionProfile('p2')
+    };
     it('should adapt the parameters into array', function (done) {
-      var Client = rewire('../../lib/client.js');
       var requestHandlerMock = function () {};
-      requestHandlerMock.prototype.send = function () { };
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      //noinspection JSAccessibilityCheck
-      client._getEncoder = function () { return new Encoder(2, {})};
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});};
+      var client = newConnectedInstance(requestHandlerMock);
+      client._getPrepared = function (q, o, cb) { cb (null,
+        new Buffer(0), { columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});
+      };
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([100, 101]));
         done();
       };
-      //noinspection JSAccessibilityCheck
-      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, { prepare: true }, helper.throwop);
+      client._executeAsPrepared('SELECT ...', {def: 101, abc: 100}, queryOptions, helper.throwop);
     });
     it('should keep the parameters if an array is provided', function (done) {
-      var Client = rewire('../../lib/client.js');
       var requestHandlerMock = function () {};
-      requestHandlerMock.prototype.send = function () { };
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      //noinspection JSAccessibilityCheck
-      client._getEncoder = function () { return new Encoder(2, {})};
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      var client = newConnectedInstance(requestHandlerMock);
+      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
         done();
       };
-      //noinspection JSAccessibilityCheck
-      client._executeAsPrepared('SELECT ...', [101], {}, helper.throwop);
+      client._executeAsPrepared('SELECT ...', [101], queryOptions, helper.throwop);
     });
     it('should callback with error if named parameters are not provided', function (done) {
-      var Client = rewire('../../lib/client.js');
       var requestHandlerMock = function () {};
       requestHandlerMock.prototype.send = helper.callbackNoop;
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      //noinspection JSAccessibilityCheck
-      client._getEncoder = function () { return new Encoder(2, {})};
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      var client = newConnectedInstance(requestHandlerMock);
+      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
       utils.series([function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, queryOptions, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
         });
       }, function (next) {
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {}, queryOptions, function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
           assert.ok(err.message.indexOf('Parameter') >= 0);
           next();
@@ -268,7 +256,7 @@ describe('Client', function () {
       }, function (next) {
         //different casing
         //noinspection JSAccessibilityCheck
-        client._executeAsPrepared('SELECT ...', {ABC: 100}, {prepare: true}, function (err) {
+        client._executeAsPrepared('SELECT ...', {ABC: 100}, queryOptions, function (err) {
           assert.ifError(err);
           next();
         });
@@ -277,25 +265,16 @@ describe('Client', function () {
   });
   describe('#execute()', function () {
     it('should not support named parameters for simple statements', function (done) {
-      var Client = require('../../lib/client');
-      //when supported with protocol v3, replace test to use protocol versions
-      var client = new Client(helper.baseOptions);
-      //fake connected
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance();
       client.execute('QUERY', {named: 'parameter'}, function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
         done();
       });
     });
     it('should build the routingKey based on routingNames', function (done) {
-      var Client = rewire('../../lib/client');
       var requestHandlerMock = function () {};
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      //fake connected
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function (q, cb) {
+      var client = newConnectedInstance(requestHandlerMock);
+      client._getPrepared = function (q, o, cb) {
         cb(null, new Buffer([1]), { columns: [
           { name: 'key1', type: { code: types.dataTypes.int} },
           { name: 'key2', type: { code: types.dataTypes.int} }
@@ -317,16 +296,9 @@ describe('Client', function () {
       client.execute(query, {key2: 2, key1: 1}, queryOptions, helper.throwop);
     });
     it('should fill parameter information for string hints', function (done) {
-      var Client = rewire('../../lib/client');
       var options;
       var requestHandlerMock = function () {};
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getEncoder = function () {
-        return new Encoder(2, client.options);
-      };
+      var client = newConnectedInstance(requestHandlerMock);
       client.metadata.getUdt = function (ks, n, cb) {
         cb(null, {keyspace: ks, name: n});
       };
@@ -367,16 +339,9 @@ describe('Client', function () {
       });
     });
     it('should callback with an argument error when the hints are not valid strings', function (done) {
-      var Client = rewire('../../lib/client');
       var options;
       var requestHandlerMock = function () {};
-      Client.__set__("RequestHandler", requestHandlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
-      //noinspection JSAccessibilityCheck
-      client._getEncoder = function () {
-        return new Encoder(2, client.options);
-      };
+      var client = newConnectedInstance(requestHandlerMock);
       requestHandlerMock.prototype.send = function (q, o, cb) {
         options = o;
         cb();
@@ -403,6 +368,113 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should throw argument error when last parameter is not a function', function () {
+      var client = newConnectedInstance();
+      assert.throws(function () {
+        client.execute('QUERY', [], {});
+      }, errors.ArgumentError);
+      assert.throws(function () {
+        client.execute('QUERY', []);
+      }, errors.ArgumentError);
+      assert.throws(function () {
+        client.execute('QUERY');
+      }, errors.ArgumentError);
+    });
+    it('should pass optional parameters as null when not defined', function () {
+      var client = newConnectedInstance();
+      var params = null;
+      client._innerExecute = function (q, p, o, c) {
+        params = [q, p, o, c];
+      };
+      client.execute('Q1', [], utils.noop);
+      assert.deepEqual(params, ['Q1', [], clientOptions.createQueryOptions(client, null), utils.noop]);
+      client.execute('Q2', utils.noop);
+      assert.deepEqual(params, ['Q2', null, clientOptions.createQueryOptions(client, null), utils.noop]);
+      client.execute('Q3', null, { fetchSize: 20 }, utils.noop);
+      assert.deepEqual(params, ['Q3', null, clientOptions.createQueryOptions(client, { fetchSize: 20 }), utils.noop]);
+    });
+    it('should use the default execution profile options', function () {
+      var Client = require('../../lib/client');
+      var profile = new ExecutionProfile('default', {
+        consistency: types.consistencies.three,
+        readTimeout: 12345,
+        retry: new policies.retry.RetryPolicy(),
+        serialConsistency: types.consistencies.localSerial
+      });
+      var options = getOptions({ profiles: [ profile ] });
+      var client = new Client(options);
+      var queryOptions = null;
+      client._innerExecute = function (q, p, o) {
+        queryOptions = o;
+      };
+      client.execute('Q', [], { }, utils.noop);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
+    });
+    it('should use the provided execution profile options', function () {
+      var Client = require('../../lib/client');
+      var profile = new ExecutionProfile('profile1', {
+        consistency: types.consistencies.three,
+        readTimeout: 54321,
+        retry: new policies.retry.RetryPolicy(),
+        serialConsistency: types.consistencies.localSerial
+      });
+      var options = getOptions({ profiles: [ profile ] });
+      var client = new Client(options);
+      var queryOptions = null;
+      client._innerExecute = function (q, p, o) {
+        queryOptions = o;
+      };
+      // profile by name
+      client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
+      var previousQueryOptions = queryOptions;
+      // profile by instance
+      client.execute('Q1', [], { executionProfile: profile }, utils.noop);
+      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
+    });
+    it('should override the provided execution profile options with provided options', function () {
+      var Client = require('../../lib/client');
+      var profile = new ExecutionProfile('profile1', {
+        consistency: types.consistencies.three,
+        readTimeout: 54321,
+        retry: new policies.retry.RetryPolicy(),
+        serialConsistency: types.consistencies.localSerial
+      });
+      var options = getOptions({ profiles: [ profile ] });
+      var client = new Client(options);
+      var queryOptions = null;
+      client._innerExecute = function (q, p, o) {
+        queryOptions = o;
+      };
+      // profile by name
+      client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing', 'name']);
+      assert.strictEqual(queryOptions.consistency, types.consistencies.all);
+      var previousQueryOptions = queryOptions;
+      // profile by instance
+      client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
+      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
+    });
+  });
+  describe('#eachRow()', function () {
+    it('should pass optional parameters as null when not defined', function () {
+      var createQueryOptions = clientOptions.createQueryOptions;
+      var client = newConnectedInstance();
+      var params = null;
+      client._innerExecute = function (q, p, o, c) {
+        params = [q, p, o, c];
+      };
+      client.eachRow('Q 2p', utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 2p', null, createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 3p', [], utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 3p', [], createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 4p', [1], utils.noop, helper.callbackNoop);
+      assert.deepEqual(params.slice(0, 3), ['Q 4p', [1], createQueryOptions(client, null, utils.noop)]);
+      client.eachRow('Q 4p 2', [2], { fetchSize: 1}, utils.noop);
+      assert.deepEqual(params.slice(0, 3), ['Q 4p 2', [2], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
+      client.eachRow('Q 5p', [3], { fetchSize: 1}, utils.noop, helper.callbackNoop);
+      assert.deepEqual(params.slice(0, 3), ['Q 5p', [3], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
+    });
   });
   describe('#batch()', function () {
     var Client = rewire('../../lib/client.js');
@@ -419,6 +491,7 @@ describe('Client', function () {
       var connectCalled = false;
       client.connect = function (cb) {
         connectCalled = true;
+        client.profileManager = newProfileManager();
         cb();
       };
       client.batch(['q1'], function (err) {
@@ -430,23 +503,18 @@ describe('Client', function () {
   });
   describe('#batch(queries, {prepare: 1}, callback)', function () {
     it('should callback with error if the queries are not string', function () {
-      var Client = rewire('../../lib/client.js');
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance();
       assert.throws(function () {
         client.batch([{noQuery: true}], {prepare: true}, helper.throwop);
       }, errors.ArgumentError);
     });
     it('should callback with error if the queries are undefined', function () {
-      var Client = rewire('../../lib/client.js');
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance();
       assert.throws(function () {
         client.batch([undefined, undefined, 'q3'], {prepare: true}, helper.throwop);
       }, errors.ArgumentError);
     });
     it('should prepare for the first time', function (done) {
-      var Client = rewire('../../lib/client.js');
       var called;
       var handlerMock = function () {};
       handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
@@ -457,9 +525,7 @@ describe('Client', function () {
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;
-      Client.__set__("RequestHandler", handlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance(handlerMock);
       client.metadata = new Metadata(client.options);
       client.batch(['q1', 'q2', 'q3'], {prepare: 1}, function (err) {
         assert.ifError(err);
@@ -468,7 +534,6 @@ describe('Client', function () {
       });
     });
     it('should only prepare the ones that are not', function (done) {
-      var Client = rewire('../../lib/client.js');
       var called;
       var handlerMock = function () {};
       handlerMock.prototype.prepareMultiple = function (queries, cbs, o, callback) {
@@ -479,9 +544,7 @@ describe('Client', function () {
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;
-      Client.__set__("RequestHandler", handlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance(handlerMock);
       client.metadata = new Metadata(client.options);
       //q2 and q4 are prepared
       client.metadata.getPreparedInfo(null, 'q2').queryId = new Buffer(3);
@@ -493,7 +556,6 @@ describe('Client', function () {
       });
     });
     it('should only prepare the ones that are not and wait for the ones preparing', function (done) {
-      var Client = rewire('../../lib/client.js');
       var sendMultipleCalled;
       var preparingCallbackCalled;
       var handlerMock = function () {};
@@ -505,9 +567,7 @@ describe('Client', function () {
         callback();
       };
       handlerMock.prototype.send = helper.callbackNoop;
-      Client.__set__("RequestHandler", handlerMock);
-      var client = new Client(helper.baseOptions);
-      client.connect = helper.callbackNoop;
+      var client = newConnectedInstance(handlerMock);
       client.metadata = new Metadata(client.options);
       //q3 and q4 are prepared
       client.metadata.getPreparedInfo(null, 'q3').queryId = new Buffer(3);
@@ -741,6 +801,7 @@ describe('Client', function () {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
       client.controlConnection = { protocolVersion: 2};
+      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions({ prepare: false}, { named: 'val'}, null, function (err) {
         assert.ok(err);
@@ -763,6 +824,7 @@ describe('Client', function () {
         }
       };
       var options = { prepare: false, hints: [null, 'text']};
+      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, ['one', 'two'], null, function (err) {
         assert.ifError(err);
@@ -784,6 +846,7 @@ describe('Client', function () {
         ]
       };
       var options = { prepare: true, routingKey: new Buffer(2)};
+      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [1, 'two'], meta, function (err) {
         assert.ifError(err);
@@ -806,6 +869,7 @@ describe('Client', function () {
         partitionKeys: [1, 0]
       };
       var options = { prepare: true};
+      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [types.Uuid.random(), 'another'], meta, function (err) {
         assert.ifError(err);
@@ -851,9 +915,11 @@ describe('Client', function () {
         }
       };
       var options = { prepare: true};
+      client.profileManager = newProfileManager();
       utils.timesSeries(20, function (n, next) {
+        var params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
         //noinspection JSAccessibilityCheck
-        client._setQueryOptions(options, [types.Uuid.random(), 'hello', types.TimeUuid.now()], meta, function (err) {
+        client._setQueryOptions(options, params, meta, function (err) {
           assert.ifError(err);
           assert.strictEqual(metaCalled, 1);
           assert.strictEqual(options.hints.length, 3);
@@ -871,13 +937,33 @@ describe('Client', function () {
   });
 });
 
-function getControlConnectionMock(hosts) {
-  return (function ControlConnectionMock() {
-    this.hosts = hosts;
+function getControlConnectionMock(hosts, options) {
+  function ControlConnectionMock() {
+    this.hosts = hosts || new HostMap();
     this.metadata = new Metadata();
-    this.init = setImmediate;
+    this.profileManager = newProfileManager(options);
     //noinspection JSUnresolvedVariable
-    this.host = { getDistance: utils.noop };
+    this.host = { setDistance: utils.noop };
     this.shutdown = utils.noop;
-  });
+  }
+  ControlConnectionMock.prototype.init = setImmediate;
+
+  return ControlConnectionMock;
+}
+
+function getOptions(options) {
+  return clientOptions.extend({ contactPoints: ['hostip1']}, options);
+}
+
+function newProfileManager(options) {
+  return new ProfileManager(getOptions(options));
+}
+
+function newConnectedInstance(requestHandlerMock) {
+  var Client = rewire('../../lib/client.js');
+  Client.__set__("RequestHandler", requestHandlerMock || function () {});
+  var client = new Client(helper.baseOptions);
+  client._getEncoder = function () { return new Encoder(2, {})};
+  client.connect = helper.callbackNoop;
+  return client;
 }

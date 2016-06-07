@@ -6,6 +6,7 @@ var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
+var errors = require('../../../lib/errors.js');
 var vit = helper.vit;
 
 describe('Client', function () {
@@ -97,6 +98,23 @@ describe('Client', function () {
           });
         }], done);
     });
+    it('should fail if non-existent profile provided', function (done) {
+      var client = newInstance();
+      utils.series([
+        function queryWithBadProfile(next) {
+          var counter = 0;
+          client.eachRow(helper.queries.basicNoResults, [], {executionProfile: 'none'}, function() {
+            counter++;
+          }, function (err) {
+            assert.ok(err);
+            helper.assertInstanceOf(err, errors.ArgumentError);
+            assert.strictEqual(counter, 0);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
     vit('2.0', 'should autoPage', function (done) {
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -125,10 +143,6 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(rowCount, 100);
             assert.strictEqual(rowCount, result.rowLength);
-            assert.ok(result.rowLengthArray);
-            assert.strictEqual(result.rowLengthArray[0], 45);
-            assert.strictEqual(result.rowLengthArray[1], 45);
-            assert.strictEqual(result.rowLengthArray[2], 10);
             seriesNext();
           });
         },
@@ -142,9 +156,6 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(rowCount, 100);
             assert.strictEqual(rowCount, result.rowLength);
-            assert.ok(result.rowLengthArray);
-            assert.strictEqual(result.rowLengthArray.length, 1);
-            assert.strictEqual(result.rowLengthArray[0], 100);
             seriesNext();
           });
         }
@@ -319,13 +330,10 @@ describe('Client', function () {
           ], seriesNext);
         }
       ], done);
-      function validateResult(err, result, rowCount, expectedLength, fetchSize){
+      function validateResult(err, result, rowCount, expectedLength){
         assert.ifError(err);
         assert.strictEqual(rowCount, expectedLength);
         assert.strictEqual(rowCount, result.rowLength);
-        assert.ok(result.rowLengthArray);
-        assert.strictEqual(result.rowLengthArray[0], fetchSize);
-        assert.strictEqual(result.rowLengthArray[1], fetchSize);
       }
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {

@@ -710,18 +710,38 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
     var client = new DseClient(helper.getOptions());
     async.series([
       function startCcm(next) {
-        helper.ccm.startAll(3, {workloads: ['graph', 'spark']}, next);
+        helper.ccm.startAll(1, {workloads: ['graph', 'spark']}, next);
       },
       client.connect.bind(client),
       function createGraph(next) {
-        var query = 'system.graph("name1")' +
-          '.option("graph.schema_mode").set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)' +
+        var replicationConfig = "{'class' : 'SimpleStrategy', 'replication_factor' : 1}";
+        var query = 'system.graph("name1")\n' +
+          '.option("graph.replication_config").set(replicationConfig)' +
+          '.option("graph.system_replication_config").set(replicationConfig)' +
           '.ifNotExists().create()';
-        client.executeGraph(query, null, {graphName: null}, function(err, result) {
-          // sleep 2 seconds to allow graph to propagate to all nodes (DSP-9376).
+        client.executeGraph(query, {replicationConfig: replicationConfig}, {graphName: null}, function(err, result) {
           assert.ifError(err);
-          setTimeout(next, 3000);
+          next();
         });
+      },
+      function updateDseLeases(next) {
+        // Set the dse_leases keyspace to RF of 2, this will prevent election of new job tracker until all nodes
+        // are available, preventing weird cases where 1 node thinks the wrong node is a master.
+        client.execute(
+          "ALTER KEYSPACE dse_leases WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'GraphAnalytics': '2'}",
+          next);
+      },
+      function addNode(next) {
+        helper.ccm.bootstrapNode(2, next);
+      },
+      function setNodeWorkload(next) {
+        helper.ccm.setWorkload(2, ['graph', 'spark'], next);
+      },
+      function startNode(next) {
+        helper.ccm.startNode(2, next);
+      },
+      function waitForWorkers(next) {
+        helper.waitForWorkers(2, next);
       },
       function createSchema(next) {
         client.executeGraph(modernSchema, null, {graphName: "name1"}, next);

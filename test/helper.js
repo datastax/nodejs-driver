@@ -1,4 +1,5 @@
 var async = require('async');
+var http = require('http');
 var util = require('util');
 var net = require('net');
 var path = require('path');
@@ -50,6 +51,7 @@ var helper = {
   queries: {
     basic: 'SELECT key FROM system.local'
   },
+  ipPrefix: '127.0.0.',
   assertInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
@@ -174,6 +176,54 @@ var helper = {
       callback(null, host);
     });
   },
+  /**
+   * Checks the spark cluster until there are the number of desired expected workers.  This
+   * is required as by the time a node is up and listening on the CQL interface it is not a given
+   * that it is partaking as a spark worker.
+   *
+   * Unfortunately there isn't a very good way to check that workers are listening as spark will choose an arbitrary
+   * port for the worker and there is no other interface that exposes how many workers are active.  The best
+   * alternative is to do a GET on http://master:7080/ and do a regular expression match to resolve the number of
+   * active workers.  This could be somewhat fragile and break easily in future releases.
+   *
+   * @param {Number} expectedWorkers The number of workers expected.
+   * @param {Function} callback Invoked after expectedWorkers found or at least 100 seconds have passed.
+   */
+  waitForWorkers: function(expectedWorkers, callback) {
+    helper.trace("Waiting for %d spark workers", expectedWorkers);
+    var workerRE = /Alive Workers:.*(\d+)\<\/li\>/;
+    var numWorkers = 0;
+    var attempts = 0;
+    async.doWhilst(
+      function(callback) {
+        setTimeout(function() {
+          http.get({host: 'localhost', port: 7080, path: '/'}, function(response) {
+            var body = '';
+            response.on('data', function (data) {
+              body += data;
+            });
+            response.on('end', function () {
+              var match = body.match(workerRE);
+              if (match) {
+                numWorkers = parseInt(match[1]);
+                helper.trace("Found workers: %d/%d", numWorkers, expectedWorkers);
+              } else {
+                helper.trace("Found no workers in body");
+              }
+              callback();
+            });
+          });
+        }, 100);
+      }, function checkWorkers() {
+        return numWorkers < expectedWorkers && ++attempts < 1000;
+      }, function complete() {
+        if(numWorkers < expectedWorkers) {
+          helper.trace('WARNING: After 1000 attempts only %d/%d workers were active.', numWorkers, expectedWorkers);
+        }
+        callback();
+      }
+    );
+  },
   ccm: {},
   ads: {}
 };
@@ -255,6 +305,41 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
   ], function (err) {
     callback(err);
   });
+};
+
+/**
+ * Adds a new node to the cluster
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Function} callback
+ */
+helper.ccm.bootstrapNode = function (nodeIndex, callback) {
+  var ipPrefix = helper.ipPrefix;
+  helper.trace('bootstrapping node', nodeIndex);
+  helper.ccm.exec([
+    'add',
+    'node' + nodeIndex,
+    '-i',
+    ipPrefix + nodeIndex,
+    '-j',
+    (7000 + 100 * nodeIndex).toString(),
+    '-b',
+    '--dse'
+  ], callback);
+};
+
+/**
+ * Sets the workload(s) for a given node.
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Array<String>} workloads workloads to set.
+ * @param {Function} callback
+ */
+helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
+  helper.trace('node', nodeIndex, 'with workloads', workloads);
+  helper.ccm.exec([
+    'node' + nodeIndex,
+    'setworkload',
+    workloads.join(',')
+  ], callback)
 };
 
 /**

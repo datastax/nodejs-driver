@@ -21,6 +21,30 @@ describe('DseClient', function () {
     });
   });
   describe('#executeGraph()', function () {
+    it('should allow optional parameters', function () {
+      var client = new DseClient({ contactPoints: ['host1']});
+      var parameters = {};
+      client.execute = function (query, params, options, callback) {
+        parameters = {
+          query: query,
+          params: params,
+          options: options,
+          callback: callback
+        };
+      };
+      client.executeGraph('QUERY1', { a: 1 }, helper.noop);
+      assert.strictEqual(parameters.query, 'QUERY1');
+      assert.deepEqual(parameters.params, ['{"a":1}']);
+      assert.ok(parameters.options);
+      assert.ok(parameters.options.customPayload);
+      assert.strictEqual(typeof parameters.callback, 'function');
+      client.executeGraph('QUERY2', helper.noop);
+      assert.strictEqual(parameters.query, 'QUERY2');
+      assert.strictEqual(parameters.params, null);
+      assert.ok(parameters.options);
+      assert.ok(parameters.options.customPayload);
+      assert.strictEqual(typeof parameters.callback, 'function');
+    });
     it('should not allow a namespace of type different than string', function () {
       var client = new DseClient({ contactPoints: ['host1']});
       client.execute = helper.noop;
@@ -267,56 +291,6 @@ describe('DseClient', function () {
           done();
         });
       });
-      it('should cache analytics master for until expires', function (done) {
-        this.timeout(5000);
-        //noinspection JSCheckFunctionSignatures
-        var client = new DseClient({ contactPoints: ['host1'], graphOptions: { masterCallExpiration: 1 }});
-        var rpcCounter = 0;
-        var actualOptions;
-        client.execute = function (q, p, options, cb) {
-          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
-            rpcCounter++;
-            return cb(null, { rows: [ { result: { location: '10.0.0.' + rpcCounter + ':1234' }} ]});
-          }
-          actualOptions = options;
-          cb(null, { rows: []});
-        };
-        //noinspection JSValidateTypes
-        client.hosts = { get: function (address) {
-          return { type: 'host', address: address };
-        }};
-        async.series([
-          function queryFirst(next) {
-            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
-              assert.ifError(err);
-              assert.strictEqual(rpcCounter, 1);
-              assert.ok(actualOptions);
-              assert.ok(actualOptions.preferredHost);
-              assert.ok(actualOptions.preferredHost.address, '10.0.0.1:9042');
-              next();
-            });
-          },
-          function querySecond(next) {
-            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
-              assert.ifError(err);
-              assert.strictEqual(rpcCounter, 1);
-              assert.ok(actualOptions.preferredHost.address, '10.0.0.1:9042');
-              next();
-            });
-          },
-          function passTime(next) {
-            setTimeout(next, 2000);
-          },
-          function queryThird(next) {
-            client.executeGraph('g.V()', null, { graphSource: 'a'}, function (err) {
-              assert.ifError(err);
-              assert.strictEqual(rpcCounter, 2);
-              assert.ok(actualOptions.preferredHost.address, '10.0.0.2:9042');
-              next();
-            });
-          }
-        ], done);
-      });
       it('should call address translator', function (done) {
         var translatorCalled = 0;
         var translator = new cassandra.policies.addressResolution.AddressTranslator();
@@ -350,7 +324,7 @@ describe('DseClient', function () {
           assert.ifError(err);
           assert.ok(actualOptions);
           assert.ok(actualOptions.preferredHost);
-          assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+          assert.strictEqual(actualOptions.preferredHost.address, '10.10.10.10:9042');
           assert.strictEqual(translatorCalled, 1);
           done();
         });

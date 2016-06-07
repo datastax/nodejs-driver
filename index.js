@@ -12,5 +12,6 @@ module.exports = {
   errors: cassandra.errors,
   metadata: cassandra.metadata,
   policies: cassandra.policies,
-  types: cassandra.types
+  types: cassandra.types,
+  version: require('./package.json').version
 };

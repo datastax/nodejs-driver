@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2016 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
 var assert = require('assert');
 var async = require('async');
 var helper = require('../helper');

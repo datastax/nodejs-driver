@@ -1,26 +1,19 @@
-# Node.js Driver Extensions for DataStax Enterprise
+# Node.js DataStax Enterprise Driver
 
 This driver is built on top of [Node.js CQL driver for Apache Cassandra][cassandra-driver] and provides the following
-extensions for DataStax Enterprise:
+additions for DataStax Enterprise:
 
 * `Authenticator` implementations that use the authentication scheme negotiation in the server-side `DseAuthenticator`;
 * encoders for geospatial types which integrate seamlessly with the driver;
 * DSE graph integration.
 
+The Node.js DataStax Enterprise Driver can be used solely with DataStax Enterprise. Please consult
+[the license](#license).
 
 ## Installation
 
-The driver is distributed as a binary tarball, to make this module available to other projects run the following
-command in the extracted directory:
-
 ```bash
-npm link
-```
-
-The module may then be used in another project by using the following:
-
-```bash
-npm link dse-driver
+npm install dse-driver
 ```
 
 
@@ -244,6 +237,12 @@ client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (e
 ### Prepared statements
 
 Prepared graph statements are not supported by DSE yet (they will be added in the near future).
+
+## License
+
+Copyright 2016 DataStax
+
+http://www.datastax.com/terms/datastax-dse-driver-license-terms
 
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver

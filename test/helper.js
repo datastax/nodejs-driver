@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2016 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
 var async = require('async');
 var http = require('http');
 var util = require('util');

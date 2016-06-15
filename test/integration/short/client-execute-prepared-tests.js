@@ -500,8 +500,13 @@ describe('Client', function () {
           loggedMessage = true;
         }
       });
-      var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?) APPLY BATCH", commonTable);
-      var params = [Uuid.random(), types.TimeUuid.now(), utils.stringRepeat('b', 5 * 1025)];
+      var query = util.format(
+        "BEGIN UNLOGGED BATCH INSERT INTO %s (id1, id2, text_sample) VALUES (:id0, :id2, :sample)\n" +
+        "INSERT INTO %s (id1, id2, text_sample) VALUES (:id1, :id2, :sample) APPLY BATCH",
+        commonTable,
+        commonTable
+      );
+      var params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 2562) };
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

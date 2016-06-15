@@ -7,7 +7,6 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
@@ -16,12 +15,13 @@ var types = cassandra.types;
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
 var Point = require('../../lib/geometry/point');
+var utils = require('../../lib/utils');
 
 vdescribe('5.0', 'Point', function () {
   this.timeout(120000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
       },
@@ -37,7 +37,7 @@ vdescribe('5.0', 'Point', function () {
           "CREATE TABLE keyed (id 'PointType', value text, PRIMARY KEY (id))",
           "INSERT INTO keyed (id, value) VALUES ('POINT(1 0)', 'hello')"
         ];
-        async.eachSeries(queries, function (q, eachNext) {
+        utils.eachSeries(queries, function (q, eachNext) {
           client.execute(q, eachNext);
         }, next);
       },
@@ -46,7 +46,7 @@ vdescribe('5.0', 'Point', function () {
   });
   it('should parse points', function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function test(next) {
         client.execute('SELECT * FROM ks1.points', function (err, result) {
@@ -73,7 +73,7 @@ vdescribe('5.0', 'Point', function () {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode points for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function test(next) {
           var values = [
@@ -84,7 +84,7 @@ vdescribe('5.0', 'Point', function () {
           var insertQuery = 'INSERT INTO ks1.points (id, value) VALUES (?, ?)';
           var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.points WHERE id = ?';
           var counter = 0;
-          async.each(values, function (p, eachNext) {
+          utils.each(values, function (p, eachNext) {
             var id = util.format('%s-%d', name, ++counter);
             client.execute(insertQuery, [id, p], { prepare: prepare}, function (err) {
               assert.ifError(err);
@@ -106,7 +106,7 @@ vdescribe('5.0', 'Point', function () {
     it(util.format('should be able to retrieve data where point is partition key for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
       var id = new Point(1, 0);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           var selectQuery = 'SELECT value FROM ks1.keyed WHERE id = ?';
@@ -127,7 +127,7 @@ vdescribe('5.0', 'Point', function () {
     var point2 = new Point(1, 1);
     before(function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function createAll(next) {
           var queries = [
@@ -139,7 +139,7 @@ vdescribe('5.0', 'Point', function () {
             "CREATE TABLE tbl_set (id uuid PRIMARY KEY, set_col set<'PointType'>)",
             "CREATE TABLE tbl_map (id uuid PRIMARY KEY, map_col map<text, 'PointType'>)"
           ];
-          async.eachSeries(queries, function (q, eachNext) {
+          utils.eachSeries(queries, function (q, eachNext) {
             client.execute(q, eachNext);
           }, next);
         },
@@ -155,7 +155,7 @@ vdescribe('5.0', 'Point', function () {
         var id = Uuid.random();
         var udt = { f: 'hello', v: point};
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, udt], {prepare: prepare, hints: [null, 'udt<ks1.pointt>']}, function (err) {
@@ -185,7 +185,7 @@ vdescribe('5.0', 'Point', function () {
         var id = Uuid.random();
         var tuple = new Tuple(0, point);
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, tuple], { prepare: prepare }, function (err) {
@@ -209,7 +209,7 @@ vdescribe('5.0', 'Point', function () {
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
           var data = [point, point2];
-          async.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               client.execute(insertQuery, [id, data], {prepare: prepare}, function (err) {
@@ -234,7 +234,7 @@ vdescribe('5.0', 'Point', function () {
         var id = Uuid.random();
         var map = { point : point };
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, map], {prepare: prepare, hints: [null, types.dataTypes.map]}, function (err) {

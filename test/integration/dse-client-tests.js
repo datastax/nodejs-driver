@@ -6,11 +6,11 @@
  */
 'use strict';
 var assert = require('assert');
-var async = require('async');
 var version = require('../../index.js').version;
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
+var utils = require('../../lib/utils');
 
 describe('DseClient', function() {
   this.timeout(60000);
@@ -30,7 +30,7 @@ describe('DseClient', function() {
       }
     });
 
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function ensureLogged(next) {
         assert.ok(versionMessage);

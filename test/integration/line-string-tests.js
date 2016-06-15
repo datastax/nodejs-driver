@@ -7,7 +7,6 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
@@ -17,12 +16,13 @@ var LineString = require('../../lib/geometry/line-string');
 var types = cassandra.types;
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
+var utils = require('../../lib/utils');
 
 vdescribe('5.0', 'LineString', function () {
   this.timeout(120000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
       },
@@ -39,7 +39,7 @@ vdescribe('5.0', 'LineString', function () {
           "CREATE TABLE keyed (id 'LineStringType', value text, PRIMARY KEY (id))",
           "INSERT INTO keyed (id, value) VALUES ('LINESTRING (0 0, 1 1)', 'hello')"
         ];
-        async.eachSeries(queries, function (q, eachNext) {
+        utils.eachSeries(queries, function (q, eachNext) {
           client.execute(q, eachNext);
         }, next);
       },
@@ -48,7 +48,7 @@ vdescribe('5.0', 'LineString', function () {
   });
   it('should parse lines', function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function test(next) {
         client.execute('SELECT * FROM ks1.lines', function (err, result) {
@@ -81,7 +81,7 @@ vdescribe('5.0', 'LineString', function () {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode lines for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function test(next) {
           var values = [
@@ -92,7 +92,7 @@ vdescribe('5.0', 'LineString', function () {
           var insertQuery = 'INSERT INTO ks1.lines (id, value) VALUES (?, ?)';
           var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.lines WHERE id = ?';
           var counter = 0;
-          async.each(values, function (line, eachNext) {
+          utils.each(values, function (line, eachNext) {
             var id = util.format('%s-%d', name, ++counter);
             client.execute(insertQuery, [id, line], { prepare: prepare }, function (err) {
               assert.ifError(err);
@@ -116,7 +116,7 @@ vdescribe('5.0', 'LineString', function () {
     it(util.format('should be able to retrieve data where line is partition key for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
       var id = new LineString(new Point(0, 0), new Point(1, 1));
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           var selectQuery = 'SELECT value FROM ks1.keyed WHERE id = ?';
@@ -137,7 +137,7 @@ vdescribe('5.0', 'LineString', function () {
     var line2 = new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9));
     before(function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function createAll(next) {
           var queries = [
@@ -149,7 +149,7 @@ vdescribe('5.0', 'LineString', function () {
             "CREATE TABLE tbl_set (id uuid PRIMARY KEY, set_col set<'LineStringType'>)",
             "CREATE TABLE tbl_map (id uuid PRIMARY KEY, map_col map<text, 'LineStringType'>)"
           ];
-          async.eachSeries(queries, function (q, eachNext) {
+          utils.eachSeries(queries, function (q, eachNext) {
             client.execute(q, eachNext);
           }, next);
         },
@@ -165,7 +165,7 @@ vdescribe('5.0', 'LineString', function () {
         var id = Uuid.random();
         var udt = { f: 'hello', v: line};
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, udt], {prepare: prepare, hints: [null, 'udt<ks1.linet>']}, function (err) {
@@ -195,7 +195,7 @@ vdescribe('5.0', 'LineString', function () {
         var id = Uuid.random();
         var tuple = new Tuple(0, line);
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, tuple], {prepare: prepare}, function (err) {
@@ -219,7 +219,7 @@ vdescribe('5.0', 'LineString', function () {
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
           var data = [line, line2];
-          async.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               client.execute(insertQuery, [id, data], {prepare: prepare}, function (err) {
@@ -244,7 +244,7 @@ vdescribe('5.0', 'LineString', function () {
         var id = Uuid.random();
         var map = { line : line };
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, map], {prepare: prepare, hints: [null, types.dataTypes.map]}, function (err) {

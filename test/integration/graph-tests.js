@@ -5,7 +5,6 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var async = require('async');
 var util = require('util');
 var assert = require('assert');
 var DseClient = require('../../lib/dse-client');
@@ -21,6 +20,7 @@ var Uuid = cassandra.types.Uuid;
 var cl = cassandra.types.consistencies;
 var loadBalancing = require('../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
+var utils = require('../../lib/utils');
 
 var makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
 
@@ -56,7 +56,7 @@ vdescribe('5.0', 'DseClient', function () {
   this.timeout(60000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function startCcm(next) {
         helper.ccm.startAll(1, {workloads: ['graph']}, next);
       },
@@ -318,21 +318,21 @@ vdescribe('5.0', 'DseClient', function () {
     it('should use list as a parameter', wrapClient(function(client, done) {
       var characters = ['Mario', "Luigi", "Toad", "Bowser", "Peach", "Wario", "Waluigi"];
 
-      async.waterfall([
+      utils.series([
         function createSchema (seriesNext) {
           var schemaQuery = '' +
               'schema.propertyKey("characterName").Text().create();\n' +
               'schema.vertexLabel("character").properties("characterName").create();';
           client.executeGraph(schemaQuery, seriesNext);
         },
-        function loadGraph (result, seriesNext) {
+        function loadGraph (seriesNext) {
           var query =  '' +
             "characters.each { character -> \n" +
             "    graph.addVertex(label, 'character', 'characterName', character);\n" +
             "}";
           client.executeGraph(query, {characters:characters}, null, seriesNext);
         },
-        function retrieveCharacters (result, seriesNext) {
+        function retrieveCharacters (seriesNext) {
           client.executeGraph("g.V().hasLabel('character').values('characterName')", function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -351,9 +351,9 @@ vdescribe('5.0', 'DseClient', function () {
       var year = 1879;
       var field = "Physics";
       var citizenship = ['Kingdom of Württemberg', 'Switzerland', 'Austria', 'Germany', 'United States'];
+      var id;
 
-
-      async.waterfall([
+      utils.series([
         function createSchema (next) {
           var schemaQuery = '' +
               'schema.propertyKey("year_born").Int().create()\n' +
@@ -365,7 +365,7 @@ vdescribe('5.0', 'DseClient', function () {
               'schema.edgeLabel("had_citizenship").connection("scientist", "country").create()';
           client.executeGraph(schemaQuery, next);
         },
-        function createEinstein (result, next) {
+        function createEinstein (next) {
           // Create a vertex for Einstein and then add a vertex for each country of citizenship and an outgoing
           // edge from Einstein to country he had citizenship in.
           var query =
@@ -377,74 +377,72 @@ vdescribe('5.0', 'DseClient', function () {
 
           client.executeGraph(query, {m: {name: name, year_born: year, citizenship: citizenship, field: field}}, null, next);
         },
-        function lookupVertex (result, next) {
-          assert.ok(result);
-
+        function lookupVertex (next) {
           // Ensure Einstein was properly added.
-          client.executeGraph("g.V().hasLabel('scientist').has('scientist_name', name)", {name: name}, null, next);
+          client.executeGraph("g.V().hasLabel('scientist').has('scientist_name', name)", {name: name}, null, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            var vertex = result.first();
+            assert.ok(vertex);
+            assert.equal(vertex.type, "vertex");
+            assert.equal(vertex.label, "scientist");
+            assert.equal(vertex.properties.scientist_name[0].value, name);
+            assert.equal(vertex.properties.field[0].value, field);
+            assert.equal(vertex.properties.year_born[0].value, year);
+            // Ensure edges are retrievable by vertex id.
+            id = vertex.id;
+            next();
+          });
         },
-        function lookupEdgesWithVertexId (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          var vertex = result.first();
-          assert.ok(vertex);
-          assert.equal(vertex.type, "vertex");
-          assert.equal(vertex.label, "scientist");
-          assert.equal(vertex.properties.scientist_name[0].value, name);
-          assert.equal(vertex.properties.field[0].value, field);
-          assert.equal(vertex.properties.year_born[0].value, year);
-          // Ensure edges are retrievable by vertex id.
-          client.executeGraph("g.V(vId).outE('had_citizenship').inV().values('country_name')", {vId: vertex.id}, null, next);
-        },
-        function validateEdges (result, next) {
-          assert.ok(result);
-          assert.deepEqual(result.toArray(), citizenship);
-          next();
+        function validateEdges (next) {
+          client.executeGraph("g.V(vId).outE('had_citizenship').inV().values('country_name')", {vId: id}, null, function (err, result) {
+            assert.ok(result);
+            assert.deepEqual(result.toArray(), citizenship);
+            next();
+          });
         }
-      ], function(err) {
-        assert.ifError(err);
-        done();
-      });
+      ], done);
     }));
     it('should be able to create and retrieve a multi-cardinality vertex property', wrapClient(function(client, done) {
-      async.waterfall([
+      var id;
+      utils.series([
         function createSchema (next) {
           var schemaQuery = 'schema.propertyKey("multi_prop").Text().multiple().create()\n' +
             'schema.vertexLabel("multi_v").properties("multi_prop").create()';
           client.executeGraph(schemaQuery, next);
         },
-        function createVertex (result, next) {
-          client.executeGraph("g.addV(label, 'multi_v', 'multi_prop', 'Hello', 'multi_prop', 'Sweet', 'multi_prop', 'World')", next);
-        },
-        function retrievePropertyOnly (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          var vertex = result.first();
-          var props = vertex.properties.multi_prop.map(function (v) {
-            return v.value;
+        function createVertex (next) {
+          var query = "g.addV(label, 'multi_v', 'multi_prop', 'Hello', 'multi_prop', 'Sweet', 'multi_prop', 'World')";
+          client.executeGraph(query, function (err, result) {
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            var vertex = result.first();
+            var props = vertex.properties.multi_prop.map(function (v) {
+              return v.value;
+            });
+            assert.deepEqual(props, ['Hello', 'Sweet', 'World']);
+            id = vertex.id;
+            next();
           });
-          assert.deepEqual(props, ['Hello', 'Sweet', 'World']);
-
-          client.executeGraph("g.V(vId).properties('multi_prop')", {vId:vertex.id}, next);
         },
-        function validateProperty (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 3);
-          var results = result.toArray();
-          var props = results.map(function (v) {
-            return v.value;
+        function retrievePropertyOnly (next) {
+          client.executeGraph("g.V(vId).properties('multi_prop')", {vId:id}, function (err, result) {
+            assert.ok(result);
+            assert.strictEqual(result.length, 3);
+            var results = result.toArray();
+            var props = results.map(function (v) {
+              return v.value;
+            });
+            assert.deepEqual(props, ['Hello', 'Sweet', 'World']);
+            next();
           });
-          assert.deepEqual(props, ['Hello', 'Sweet', 'World']);
-          next();
         }
-      ], function(err) {
-        assert.ifError(err);
-        done();
-      });
+      ], done);
     }));
     it('should be able to create and retrieve vertex property with meta properties', wrapClient(function(client, done) {
       var vertex;
-      async.waterfall([
+      utils.series([
         function createSchema (next) {
           var schemaQuery = '' +
               'schema.propertyKey("sub_prop").Text().create()\n' +
@@ -453,39 +451,44 @@ vdescribe('5.0', 'DseClient', function () {
               'schema.vertexLabel("meta_v").properties("meta_prop").create()';
           client.executeGraph(schemaQuery, next);
         },
-        function createVertex (result, next) {
-          assert.ok(result);
-          client.executeGraph("g.addV(label, 'meta_v', 'meta_prop', 'hello')", next);
+        function createVertex (next) {
+          client.executeGraph("g.addV(label, 'meta_v', 'meta_prop', 'hello')", function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            vertex = result.first();
+            next();
+          });
         },
-        function extendProperty (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          vertex = result.first();
-          client.executeGraph("g.V(vId).next().property('meta_prop').property('sub_prop', 'hi')", {vId:vertex.id}, next);
+        function extendProperty (next) {
+          client.executeGraph("g.V(vId).next().property('meta_prop').property('sub_prop', 'hi')", {vId:vertex.id}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            assert.deepEqual(result.first(), {key: 'sub_prop', value: 'hi'});
+            next();
+          });
         },
-        function extendProperty2 (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          assert.deepEqual(result.first(), {key: 'sub_prop', value: 'hi'});
-          client.executeGraph("g.V(vId).next().property('meta_prop').property('sub_prop2', 'hi2')", {vId:vertex.id}, next);
+        function extendProperty2 (next) {
+          client.executeGraph("g.V(vId).next().property('meta_prop').property('sub_prop2', 'hi2')", {vId:vertex.id}, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            assert.deepEqual(result.first(), {key: 'sub_prop2', value: 'hi2'});
+            next();
+          });
         },
-        function validateProperty2 (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          assert.deepEqual(result.first(), {key: 'sub_prop2', value: 'hi2'});
-          client.executeGraph("g.V(vId)", {vId: vertex.id}, next);
-        },
-        function validateVertex (result, next) {
-          var nVertex = result.first();
-          var meta_prop = nVertex.properties.meta_prop[0];
-          assert.strictEqual(meta_prop.value, 'hello');
-          assert.deepEqual(meta_prop.properties, {sub_prop: 'hi', sub_prop2: 'hi2'});
-          next();
+        function validateVertex (next) {
+          client.executeGraph("g.V(vId)", {vId: vertex.id}, function (err, result) {
+            assert.ifError(err);
+            var nVertex = result.first();
+            var meta_prop = nVertex.properties.meta_prop[0];
+            assert.strictEqual(meta_prop.value, 'hello');
+            assert.deepEqual(meta_prop.properties, {sub_prop: 'hi', sub_prop2: 'hi2'});
+            next();
+          });
         }
-      ], function(err) {
-        assert.ifError(err);
-        done();
-      });
+      ], done);
     }));
     it('should handle multiple vertex creation queries simultaneously', wrapClient(function(client, done) {
       var addQuery = "g.addV(label, 'simu', 'username', username, 'uuid', uuid, 'number', number)";
@@ -506,7 +509,7 @@ vdescribe('5.0', 'DseClient', function () {
         assert.deepEqual(flattenProperties(vertex), user);
       };
 
-      async.waterfall([
+      utils.series([
         function createSchema (next) {
           var schemaQuery = '' +
               'schema.propertyKey("username").Text().create()\n' +
@@ -515,23 +518,24 @@ vdescribe('5.0', 'DseClient', function () {
               'schema.vertexLabel("simu").properties("username", "uuid", "number").create()';
           client.executeGraph(schemaQuery, next);
         },
-        function createInitialVertex (result, next) {
+        function createInitialVertex (next) {
           // This is needed as DSE Graph doesn't currently support making concurrent schema changes at a time and there
           // is no way to express vertex property relationship without first creating a vertex with those properties.
           var uid = -1;
           var user = {username: 'User' + uid, uuid: Uuid.random().toString(), number: uid};
           users.push(user);
           client.executeGraph(addQuery, user, function(err, result) {
-            next(err, user, result);
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, 1);
+            var vertex = result.first();
+            validateVertex(user, vertex);
+            next();
           });
         },
-        function createVerticesConcurrently (user, result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, 1);
-          var vertex = result.first();
-          validateVertex(user, vertex);
+        function createVerticesConcurrently (next) {
           // Concurrently create 'vertexCount' vertices and ensure the vertex returned is as expected.
-          async.times(vertexCount, function(n, next) {
+          utils.times(vertexCount, function(n, next) {
             var user = {username: 'User' + n, uuid: Uuid.random().toString(), number: n};
             users.push(user);
             client.executeGraph(addQuery, user, function(err, result) {
@@ -542,35 +546,29 @@ vdescribe('5.0', 'DseClient', function () {
               validateVertex(user, vertex);
               next(err, vertex);
             })
-          }, function (err) {
-            assert.ifError(err);
-            next();
-          });
+          }, next);
         },
         function retrieveAllVertices (next) {
           // Retrieve all vertices in one query.
-          client.executeGraph("g.V().hasLabel('simu')", next);
-        },
-        function validateVertices (result, next) {
-          assert.ok(result);
-          assert.strictEqual(result.length, vertexCount+1);
-          // Sort returned vertices and tracked users and compare them 1 at a time.
-          var results = result.toArray().sort(function(a, b) {
-            return a.properties.number[0].value - b.properties.number[0].value;
-          });
-          var sortedUsers = users.sort(function(a, b) {
-            return a.number - b.number;
-          });
+          client.executeGraph("g.V().hasLabel('simu')", function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.strictEqual(result.length, vertexCount+1);
+            // Sort returned vertices and tracked users and compare them 1 at a time.
+            var results = result.toArray().sort(function(a, b) {
+              return a.properties.number[0].value - b.properties.number[0].value;
+            });
+            var sortedUsers = users.sort(function(a, b) {
+              return a.number - b.number;
+            });
 
-          results.forEach(function(vertex, index) {
-            validateVertex(sortedUsers[index], vertex);
+            results.forEach(function(vertex, index) {
+              validateVertex(sortedUsers[index], vertex);
+            });
+            next();
           });
-          next();
         }
-      ], function(err) {
-        assert.ifError(err);
-        done();
-      })
+      ], done)
     }));
     [
       // Validate that all supported property types by DSE graph are properly encoded / decoded.
@@ -595,7 +593,7 @@ vdescribe('5.0', 'DseClient', function () {
       ['Polygon()', [new Polygon(
         [new Point(35, 10), new Point(45, 45), new Point(15, 40), new Point(10, 20), new Point(35, 10)],
         [new Point(20, 30), new Point(35, 35), new Point(30, 20), new Point(20, 30)]
-      ).toString()]],
+      ).toString()]]
     ].forEach(function (args) {
       var id = schemaCounter++;
       var propType = args[0];
@@ -608,13 +606,13 @@ vdescribe('5.0', 'DseClient', function () {
           'schema.propertyKey(propertyName).' + propType + '.create()\n' +
           'schema.vertexLabel(vertexLabel).properties(propertyName).create()';
 
-        async.waterfall([
+        utils.series([
           function createSchema(next) {
             client.executeGraph(schemaQuery, {vertexLabel: vertexLabel, propertyName: propertyName}, null, next);
           },
-          function addVertex(result, next) {
-            assert.ok(result);
-            async.forEachOfLimit(input, 1, function(value, index, callback) {
+          function addVertex(next) {
+            utils.timesSeries(input.length, function(index, callback) {
+              var value = input[index];
               var params = {vertexLabel: vertexLabel, propertyName: propertyName, val: value};
               // Add vertex and ensure it is properly decoded.
               client.executeGraph("g.addV(label, vertexLabel, propertyName, val)", params, null, function (err, result) {
@@ -628,15 +626,9 @@ vdescribe('5.0', 'DseClient', function () {
                   callback();
                 })
               });
-            }, function(err) {
-              assert.ifError(err);
-              next();
-            });
+            }, next);
           }
-        ], function(err) {
-          assert.ifError(err);
-          done();
-        });
+        ], done);
       }));
     });
   });
@@ -646,7 +638,7 @@ vdescribe('5.0', 'DseClient with down node', function () {
   this.timeout(240000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function startCcm(next) {
         helper.ccm.startAll(3, {workloads: ['graph']}, next);
       },
@@ -714,7 +706,7 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
   this.timeout(300000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function startCcm(next) {
         helper.ccm.startAll(1, {workloads: ['graph', 'spark']}, next);
       },
@@ -725,7 +717,7 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
           '.option("graph.replication_config").set(replicationConfig)' +
           '.option("graph.system_replication_config").set(replicationConfig)' +
           '.ifNotExists().create()';
-        client.executeGraph(query, {replicationConfig: replicationConfig}, {graphName: null}, function(err, result) {
+        client.executeGraph(query, {replicationConfig: replicationConfig}, {graphName: null}, function(err) {
           assert.ifError(err);
           next();
         });
@@ -761,7 +753,7 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
   after(helper.ccm.remove.bind(helper.ccm));
   describe('#executeGraph()', function () {
     it('should make an OLAP query using \'a\' traversal source', wrapClient(function (client, done) {
-        async.timesLimit(10, 1, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -769,14 +761,12 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
             assert.strictEqual(6, result.first());
             timesNext(err, result.info.queriedHost);
           });
-        }, function () {
-          done();
-        });
+        }, done);
     }));
     it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy', wrapClient(function (client, done) {
       helper.findSparkMaster(client, function (serr, sparkMaster) {
         assert.ifError(serr);
-        async.timesLimit(10, 1, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -788,9 +778,7 @@ vdescribe('5.0', 'DseClient with spark workload', function () {
             assert.strictEqual(6, result.first());
             timesNext(err, result.info.queriedHost);
           });
-        }, function () {
-          done();
-        });
+        }, done);
       });
     }, {policies: {loadBalancing: DseLoadBalancingPolicy.createDefault()}}));
   });
@@ -807,7 +795,7 @@ function wrapClient(handler, options) {
   return (function wrappedTestCase(done) {
     var opts = helper.getOptions(helper.extend(options || {}, {graphOptions : { name: 'name1' }}));
     var client = new DseClient(opts);
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function testItem(next) {
         handler(client, next);

@@ -6,10 +6,10 @@
  */
 'use strict';
 var assert = require('assert');
-var async = require('async');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
 var helper = require('../helper');
+var utils = require('../../lib/utils');
 
 describe('DseClient', function () {
   describe('constructor', function () {

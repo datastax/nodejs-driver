@@ -5,8 +5,8 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 var assert = require('assert');
-var async = require('async');
 var helper = require('../helper');
+var utils = require('../../lib/utils');
 
 describe('Test infrastructure', function () {
   this.timeout(180000);
@@ -14,7 +14,7 @@ describe('Test infrastructure', function () {
     helper.ccm.exec(['list'], done);
   });
   it('should be able to create and destroy a DSE cluster', function (done) {
-    async.timesSeries(2, function (n, next) {
+    utils.timesSeries(2, function (n, next) {
       helper.ccm.startAll(2, null, function (err) {
         assert.ifError(err);
         helper.ccm.remove(next);

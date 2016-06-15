@@ -7,7 +7,6 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var async = require('async');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseClient = require('../../lib/dse-client');
@@ -15,6 +14,7 @@ var vdescribe = helper.vdescribe;
 var Point = require('../../lib/geometry/point');
 var Polygon = require('../../lib/geometry/polygon');
 var types = cassandra.types;
+var utils = require('../../lib/utils');
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
 
@@ -22,7 +22,7 @@ vdescribe('5.0', 'Polygon', function () {
   this.timeout(120000);
   before(function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
       },
@@ -38,7 +38,7 @@ vdescribe('5.0', 'Polygon', function () {
           "CREATE TABLE keyed (id 'PolygonType', value text, PRIMARY KEY (id))",
           "INSERT INTO keyed (id, value) VALUES ('POLYGON ((1 3, 3 1, 3 6, 1 3))', 'hello')"
         ];
-        async.eachSeries(queries, function (q, eachNext) {
+        utils.eachSeries(queries, function (q, eachNext) {
           client.execute(q, eachNext);
         }, next);
       },
@@ -47,7 +47,7 @@ vdescribe('5.0', 'Polygon', function () {
   });
   it('should parse polygons', function (done) {
     var client = new DseClient(helper.getOptions());
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function test(next) {
         client.execute('SELECT * FROM ks1.polygons', function (err, result) {
@@ -84,7 +84,7 @@ vdescribe('5.0', 'Polygon', function () {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode polygons for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function test(next) {
           var values = [
@@ -98,7 +98,7 @@ vdescribe('5.0', 'Polygon', function () {
           var insertQuery = 'INSERT INTO ks1.polygons (id, value) VALUES (?, ?)';
           var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.polygons WHERE id = ?';
           var counter = 0;
-          async.each(values, function (polygon, eachNext) {
+          utils.each(values, function (polygon, eachNext) {
             var id = util.format('%s-%d', name, ++counter);
             client.execute(insertQuery, [id, polygon], { prepare: prepare }, function (err) {
               assert.ifError(err);
@@ -120,7 +120,7 @@ vdescribe('5.0', 'Polygon', function () {
     it(util.format('should be able to retrieve data where polygon is partition key for %s queries', name), function (done) {
       var client = new DseClient(helper.getOptions());
       var id = new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]);
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function (next) {
           var selectQuery = 'SELECT value FROM ks1.keyed WHERE id = ?';
@@ -141,7 +141,7 @@ vdescribe('5.0', 'Polygon', function () {
     var polygon2 = new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]);
     before(function (done) {
       var client = new DseClient(helper.getOptions());
-      async.series([
+      utils.series([
         client.connect.bind(client),
         function createAll(next) {
           var queries = [
@@ -153,7 +153,7 @@ vdescribe('5.0', 'Polygon', function () {
             "CREATE TABLE tbl_set (id uuid PRIMARY KEY, set_col set<'PolygonType'>)",
             "CREATE TABLE tbl_map (id uuid PRIMARY KEY, map_col map<text, 'PolygonType'>)"
           ];
-          async.eachSeries(queries, function (q, eachNext) {
+          utils.eachSeries(queries, function (q, eachNext) {
             client.execute(q, eachNext);
           }, next);
         },
@@ -169,7 +169,7 @@ vdescribe('5.0', 'Polygon', function () {
         var id = Uuid.random();
         var udt = { f: 'hello', v: polygon};
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, udt], {prepare: prepare, hints: [null, 'udt<ks1.polygont>']}, function (err) {
@@ -199,7 +199,7 @@ vdescribe('5.0', 'Polygon', function () {
         var id = Uuid.random();
         var tuple = new Tuple(0, polygon);
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, tuple], { prepare: prepare }, function (err) {
@@ -223,7 +223,7 @@ vdescribe('5.0', 'Polygon', function () {
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
           var data = [polygon, polygon2];
-          async.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               client.execute(insertQuery, [id, data], {prepare: prepare}, function (err) {
@@ -248,7 +248,7 @@ vdescribe('5.0', 'Polygon', function () {
         var id = Uuid.random();
         var map = { polygon : polygon };
 
-        async.series([
+        utils.series([
           client.connect.bind(client),
           function (next) {
             client.execute(insertQuery, [id, map], {prepare: prepare, hints: [null, types.dataTypes.map]}, function (err) {

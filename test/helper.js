@@ -4,7 +4,6 @@
  * Please see the license for details:
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
-var async = require('async');
 var http = require('http');
 var util = require('util');
 var net = require('net');
@@ -12,6 +11,7 @@ var path = require('path');
 var assert = require('assert');
 var spawn = require('child_process').spawn;
 var temp = require('temp').track(true);
+var utils = require('../lib/utils');
 
 //noinspection JSUnusedGlobalSymbols
 var helper = {
@@ -81,7 +81,11 @@ var helper = {
     return map;
   },
   noop: function () {},
-  throwOp: function (err) { if (err) throw err;},
+  throwOp: function (err) {
+    if (err) {
+      throw err;
+    }
+  },
   /**
    * Version dependent it() method for mocha test case
    * @param {String} testVersion Minimum version of Cassandra needed for this test
@@ -131,7 +135,9 @@ var helper = {
       ms = 0;
     }
     return (function (err) {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
       setTimeout(callback, ms);
     });
   },
@@ -156,10 +162,10 @@ var helper = {
    */
   connectAndQuery: function (client, callback) {
     var self = this;
-    async.series([
+    utils.series([
       client.connect.bind(client),
       function doSomeQueries(next) {
-        async.timesSeries(10, function (n, timesNext) {
+        utils.timesSeries(10, function (n, timesNext) {
           client.execute(self.queries.basic, timesNext);
         }, next);
       },
@@ -200,7 +206,10 @@ var helper = {
     var workerRE = /Alive Workers:.*(\d+)\<\/li\>/;
     var numWorkers = 0;
     var attempts = 0;
-    async.doWhilst(
+    utils.whilst(
+      function checkWorkers() {
+        return numWorkers < expectedWorkers && attempts++ < 1000;
+      },
       function(callback) {
         setTimeout(function() {
           http.get({host: 'localhost', port: 7080, path: '/'}, function(response) {
@@ -220,8 +229,6 @@ var helper = {
             });
           });
         }, 100);
-      }, function checkWorkers() {
-        return numWorkers < expectedWorkers && ++attempts < 1000;
       }, function complete() {
         if(numWorkers < expectedWorkers) {
           helper.trace('WARNING: After 1000 attempts only %d/%d workers were active.', numWorkers, expectedWorkers);
@@ -246,7 +253,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
   options = options || {};
   var version = helper.getDseVersion();
   helper.trace('Starting test DSE cluster v%s with %s node(s)', version, nodeLength);
-  async.series([
+  utils.series([
     function (next) {
       //it wont hurt to remove
       self.exec(['remove'], function () {
@@ -291,7 +298,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         return next();
       }
       helper.trace('With workloads', options.workloads);
-      async.times(nodeLength, function(n, timesNext) {
+      utils.times(nodeLength, function(n, timesNext) {
         self.exec(['node'+ (n+1), 'setworkload', options.workloads.join(',')], timesNext);
       }, function(err) {
         next(err);
@@ -423,11 +430,13 @@ helper.ccm.waitForUp = function (callback) {
   var started = false;
   var retryCount = 0;
   var self = this;
-  async.whilst(function () {
+  utils.whilst(function () {
     return !started && retryCount < 60;
   }, function iterator (next) {
     self.exec(['node1', 'showlog'], function (err, info) {
-      if (err) return next(err);
+      if (err) {
+        return next(err);
+      }
       var regex = /Starting listening for CQL clients/mi;
       started = regex.test(info.stdout.join(''));
       retryCount++;

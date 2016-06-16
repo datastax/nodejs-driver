@@ -216,7 +216,9 @@ describe('Metadata', function () {
   });
   describe('#getTrace()', function () {
     it('should retrieve the trace immediately after', function (done) {
-      var client = newInstance();
+      // use a single node
+      var lbp = new helper.WhiteListPolicy(['1']);
+      var client = newInstance({ policies: { loadBalancing: lbp }});
       var traceId;
       utils.series([
         client.connect.bind(client),
@@ -244,12 +246,14 @@ describe('Metadata', function () {
       ], done);
     });
     it('should retrieve the trace a few seconds after', function (done) {
-      var client = newInstance();
+      // use a single node
+      var lbp = new helper.WhiteListPolicy(['2']);
+      var client = newInstance({ policies: { loadBalancing: lbp }});
       var traceId;
       utils.series([
         client.connect.bind(client),
         function executeQuery(next) {
-          client.execute('SELECT * FROM system.local', [], { traceQuery: true}, function (err, result) {
+          client.execute(helper.queries.basic, [], { traceQuery: true}, function (err, result) {
             traceId = result.info.traceId;
             if (err) {
               return next(err);

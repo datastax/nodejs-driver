@@ -514,8 +514,13 @@ describe('Client', function () {
           loggedMessage = true;
         }
       });
-      var query = util.format("BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (?, ?) APPLY BATCH", table);
-      var params = [types.Uuid.random(), utils.stringRepeat('c', 5 * 1025)];
+      var query = util.format(
+        "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (:id1, :sample)\n" +
+        "INSERT INTO %s (id, text_sample) VALUES (:id2, :sample) APPLY BATCH",
+        table,
+        table
+      );
+      var params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 2562) };
       client.eachRow(query, params, {prepare: true}, function () {
         
       }, function (err, result) {

@@ -581,13 +581,11 @@ vdescribe('5.0', 'DseClient', function () {
       ['Decimal()', ["8675309.9998"]],
       ['Varint()', ["8675309"]],
       ['Timestamp()', ["2016-02-04T02:26:31.657Z"]],
-      ['Duration()', ['P2DT3H4M', '5 s', '5 seconds', '1 minute', '1 hour'], ['PT51H4M', 'PT5S', 'PT5S', 'PT1M', 'PT1H']],
-      ['Blob()', ['0x48656c6c6f20576f726c64'], ['SGVsbG8gV29ybGQ=']], // 'Hello World'.  TODO: Test with base64 input when supported.
+      ['Duration()', ['P2DT3H4M', '5 s', '6 seconds', '1 minute', '1 hour'], ['PT51H4M', 'PT5S', 'PT6S', 'PT1M', 'PT1H']],
+      ['Blob()', ['SGVsbG8gV29ybGQ=']], // 'Hello World'.
       ['Text()', ["", "75", "Lorem Ipsum"]],
       ['Uuid()', [Uuid.random()]],
       ['Inet()', [InetAddress.fromString("127.0.0.1"), InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["127.0.0.1", "0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
-      // TODO: Should driver support encoding geo types to WKT when encoding parameters?  At the moment it uses geojson
-      // which DSE Graph does not support.
       ['Point()', [new Point(0, 1).toString(), new Point(-5, 20).toString()]],
       ['Linestring()', [new LineString(new Point(30, 10), new Point(10, 30), new Point(40, 40)).toString()]],
       ['Polygon()', [new Polygon(
@@ -620,7 +618,12 @@ vdescribe('5.0', 'DseClient', function () {
                 validateVertexResult(result, expected[index], vertexLabel, propertyName);
 
                 // Ensure the vertex is retrievable.
-                client.executeGraph("g.V().hasLabel(vertexLabel).has(propertyName, val).next()", params, null, function (err, result) {
+                // make an exception for Blob type as retrieval by property value does not currently work (DSP-10145).
+                // TODO: Fix when DSP-10145 is fixed.
+                var query = propType === 'Blob()' ?
+                    "g.V().hasLabel(vertexLabel).has(propertyName)" :
+                    "g.V().hasLabel(vertexLabel).has(propertyName, val)";
+                client.executeGraph(query, params, null, function (err, result) {
                   assert.ifError(err);
                   validateVertexResult(result, expected[index], vertexLabel, propertyName);
                   callback();

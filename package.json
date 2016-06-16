@@ -22,8 +22,7 @@
     "mocha": ">= 1.14.0",
     "rewire": ">= 2.1.0",
     "mocha-jenkins-reporter": ">= 0.1.9",
-    "temp": ">= 0.8.3",
-    "kerberos": ">= 0.0.18"
+    "temp": ">= 0.8.3"
   },
   "repository": {
     "type" : "git",

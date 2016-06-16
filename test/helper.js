@@ -237,6 +237,25 @@ var helper = {
       }
     );
   },
+  requireOptional: function (moduleName) {
+    try {
+      return require(moduleName);
+    }
+    catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        return null;
+      }
+      throw err;
+    }
+  },
+  conditionalDescribe: function (condition, text) {
+    if (condition) {
+      return describe;
+    }
+    return (function xdescribeWithText(name, fn) {
+      return xdescribe(util.format('%s [%s]', name, text), fn);
+    })
+  },
   ccm: {},
   ads: {}
 };

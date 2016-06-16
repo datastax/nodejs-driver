@@ -6,11 +6,14 @@
  */
 'use strict';
 var assert = require('assert');
+var util = require('util');
 var DseGssapiAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
+var helper = require('../helper');
+var cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 var dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
 
-describe('DseGssapiAuthProvider', function () {
+cDescribe('DseGssapiAuthProvider', function () {
   describe('constructor', function () {
     it('should load optional kerberos module', function () {
       var authProvider = new DseGssapiAuthProvider();
@@ -20,7 +23,7 @@ describe('DseGssapiAuthProvider', function () {
   describe('#newAuthenticator()', function () {
   });
 });
-describe('GssapiAuthenticator', function () {
+cDescribe('GssapiAuthenticator', function () {
   describe('#initialResponse()', function () {
     it('should send mechanism and call client.init()', function (done) {
       var authProvider = new DseGssapiAuthProvider();

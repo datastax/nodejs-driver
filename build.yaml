@@ -18,5 +18,6 @@ build:
       export CCM_PATH=$HOME/ccm
       export JUNIT_REPORT_STACK=1
       export JUNIT_REPORT_PATH=.
+      npm install kerberos
       npm run-script ci || true
   - xunit: "*.xml"

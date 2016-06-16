@@ -9,8 +9,9 @@ var helper = require('../helper');
 var cassandra = require('cassandra-driver');
 var DseGssAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
 var ads = helper.ads;
+var cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
-describe('DseGssapiAuthProvider', function () {
+cDescribe('DseGssapiAuthProvider', function () {
   this.timeout(60000);
   before(function (done) {
     ads.start(function(err) {

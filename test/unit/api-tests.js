@@ -25,8 +25,8 @@ describe('API', function () {
     checkConstructor(api.geometry, 'Point');
     checkConstructor(api.geometry, 'Polygon');
   });
-  it('should expose DseClient constructor', function () {
-    checkConstructor(api, 'DseClient');
+  it('should expose Client constructor', function () {
+    checkConstructor(api, 'Client');
   });
   it('should expose GraphResultSet constructor', function () {
     checkConstructor(api.graph, 'GraphResultSet');

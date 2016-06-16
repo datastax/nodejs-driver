@@ -7,22 +7,22 @@
 'use strict';
 var assert = require('assert');
 var cassandra = require('cassandra-driver');
-var DseClient = require('../../lib/dse-client');
+var Client = require('../../lib/dse-client');
 var helper = require('../helper');
 var utils = require('../../lib/utils');
 
-describe('DseClient', function () {
+describe('Client', function () {
   describe('constructor', function () {
     it('should validate options', function () {
       assert.throws(function () {
         //noinspection JSCheckFunctionSignatures
-        new DseClient();
+        new Client();
       }, cassandra.errors.ArgumentError);
     });
   });
   describe('#executeGraph()', function () {
     it('should allow optional parameters', function () {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       var parameters = {};
       client.execute = function (query, params, options, callback) {
         parameters = {
@@ -46,7 +46,7 @@ describe('DseClient', function () {
       assert.strictEqual(typeof parameters.callback, 'function');
     });
     it('should not allow a namespace of type different than string', function () {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       assert.doesNotThrow(function () {
         client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop)
@@ -56,7 +56,7 @@ describe('DseClient', function () {
       }, TypeError);
     });
     it('should not allow a array query parameters', function () {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       client.executeGraph('Q1', [], {  }, function (err) {
         helper.assertInstanceOf(err, TypeError);
@@ -64,7 +64,7 @@ describe('DseClient', function () {
       });
     });
     it('should execute with query and callback parameters', function (done) {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q2');
         assert.strictEqual(params, null);
@@ -75,7 +75,7 @@ describe('DseClient', function () {
       client.executeGraph('Q2', helper.noop);
     });
     it('should execute with query, parameters and callback parameters', function (done) {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q3');
         assert.deepEqual(params, [JSON.stringify({ a: 1})]);
@@ -86,7 +86,7 @@ describe('DseClient', function () {
       client.executeGraph('Q3', { a: 1}, helper.throwOp);
     });
     it('should execute with all parameters defined', function (done) {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       var optionsParameter = { k: { } };
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q4');
@@ -99,7 +99,7 @@ describe('DseClient', function () {
       client.executeGraph('Q4', { a: 2}, optionsParameter, helper.throwOp);
     });
     it('should set the same default options when not set', function (done) {
-      var client = new DseClient({ contactPoints: ['host1']});
+      var client = new Client({ contactPoints: ['host1']});
       var optionsArray = [];
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q5');
@@ -115,7 +115,7 @@ describe('DseClient', function () {
       done();
     });
     it('should set the default payload for the executions', function () {
-      var client = new DseClient({
+      var client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           name: 'name1',
@@ -141,7 +141,7 @@ describe('DseClient', function () {
     });
     it('should use the default readTimeout', function () {
       //noinspection JSCheckFunctionSignatures
-      var client = new DseClient({
+      var client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           source: 'x',
@@ -187,7 +187,7 @@ describe('DseClient', function () {
       assert.strictEqual(actualOptions.readTimeout, 12345);
     });
     it('should set the read and write consistency levels', function () {
-      var client = new DseClient({
+      var client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           name: 'name10'
@@ -227,7 +227,7 @@ describe('DseClient', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
     });
     it('should reuse the default payload for the executions', function (done) {
-      var client = new DseClient({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
+      var client = new Client({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
       var optionsParameter = { anotherOption: { k: 'v2'}};
       var actualOptions = [];
       client.execute = function (query, params, options) {
@@ -246,7 +246,7 @@ describe('DseClient', function () {
       done();
     });
     it('should set the payload with the options provided', function (done) {
-      var client = new DseClient({ contactPoints: ['host1'], graphOptions: {
+      var client = new Client({ contactPoints: ['host1'], graphOptions: {
         language: 'groovy2',
         source: 'another-source',
         name: 'namespace2'
@@ -267,7 +267,7 @@ describe('DseClient', function () {
     });
     describe('with analytics queries', function () {
       it('should query for analytics master', function (done) {
-        var client = new DseClient({ contactPoints: ['host1'], graphOptions: {
+        var client = new Client({ contactPoints: ['host1'], graphOptions: {
           source: 'a',
           name: 'name1'
         }});
@@ -298,7 +298,7 @@ describe('DseClient', function () {
           translatorCalled++;
           cb(ip + ':' + port);
         };
-        var client = new DseClient({ 
+        var client = new Client({
           contactPoints: ['host1'], 
           graphOptions: { 
             source: 'a', 
@@ -330,7 +330,7 @@ describe('DseClient', function () {
         });
       });
       it('should set preferredHost to null when RPC errors', function (done) {
-        var client = new DseClient({ contactPoints: ['host1'], graphOptions: {
+        var client = new Client({ contactPoints: ['host1'], graphOptions: {
           source: 'a',
           name: 'name1'
         }});

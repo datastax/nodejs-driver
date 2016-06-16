@@ -19,12 +19,12 @@ npm install dse-driver
 
 ## Getting Started
 
-`DseClient` inherits from the CQL driver counterpart `Client`.  All CQL features available to  `Client` (see the
-[CQL driver manual][core-manual]) can also be used with `DseClient`.
+`Client` inherits from the CQL driver counterpart `Client`.  All CQL features available to  `Client` (see the
+[CQL driver manual][core-manual]) can also be used with `Client`.
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.DseClient({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
+const client = new dse.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
 const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
 client.execute(query, ['guy'], function(err, result) {
   assert.ifError(err);
@@ -52,7 +52,7 @@ To configure a provider, pass it when initializing a cluster:
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.DseClient({
+const client = new dse.Client({
   contactPoints: ['h1', 'h2'], 
   keyspace: 'ks1',
   authProvider: new dse.auth.DseGssapiAuthProvider()
@@ -95,10 +95,10 @@ client.execute(insertQuery, ['Eiffel Tower', new Point(48.8582, 2.2945)], functi
 
 ## Graph
 
-`DseClient` includes a `executeGraph` to execute graph queries:
+`Client` includes a `executeGraph` to execute graph queries:
 
 ```javascript
-const client = new dse.DseClient({
+const client = new dse.Client({
   contactPoints: ['h1', 'h2'],
   graphOptions: { name: 'demo' }
 });
@@ -111,12 +111,12 @@ client.executeGraph('g.V()', function (err, result) {
 
 ### Graph Options
 
-You can set default graph options when initializing `DseClient` which will be used for all graph statements.  For
+You can set default graph options when initializing `Client` which will be used for all graph statements.  For
 example, to avoid needing to provide a `graphName` option in each `executeGraph` call:
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.DseClient({
+const client = new dse.Client({
   contactPoints: ['h1', 'h2'],
   graphOptions: { name: 'demo' }
 });

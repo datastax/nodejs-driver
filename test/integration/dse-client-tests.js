@@ -9,17 +9,17 @@ var assert = require('assert');
 var version = require('../../index.js').version;
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
-var DseClient = require('../../lib/dse-client');
+var Client = require('../../lib/dse-client');
 var utils = require('../../lib/utils');
 
-describe('DseClient', function() {
+describe('Client', function() {
   this.timeout(60000);
   before(function(done) {
     helper.ccm.startAll(1, {}, done);
   });
   after(helper.ccm.remove.bind(helper.ccm));
   it('should log the module versions on first connect only', function(done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     var versionLogRE = /Using DSE driver v(.*) with core driver v(.*)/;
     var versionMessage = undefined;
 

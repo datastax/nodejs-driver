@@ -9,7 +9,7 @@ var assert = require('assert');
 var util = require('util');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
-var DseClient = require('../../lib/dse-client');
+var Client = require('../../lib/dse-client');
 var vdescribe = helper.vdescribe;
 var types = cassandra.types;
 var Uuid = types.Uuid;
@@ -20,7 +20,7 @@ var utils = require('../../lib/utils');
 vdescribe('5.0', 'Point', function () {
   this.timeout(120000);
   before(function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
@@ -45,7 +45,7 @@ vdescribe('5.0', 'Point', function () {
     ], done);
   });
   it('should parse points', function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       client.connect.bind(client),
       function test(next) {
@@ -72,7 +72,7 @@ vdescribe('5.0', 'Point', function () {
   [0, 1].forEach(function (prepare) {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode points for %s queries', name), function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function test(next) {
@@ -104,7 +104,7 @@ vdescribe('5.0', 'Point', function () {
       ], done);
     });
     it(util.format('should be able to retrieve data where point is partition key for %s queries', name), function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       var id = new Point(1, 0);
       utils.series([
         client.connect.bind(client),
@@ -126,7 +126,7 @@ vdescribe('5.0', 'Point', function () {
     var point = new Point(0, 0);
     var point2 = new Point(1, 1);
     before(function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function createAll(next) {
@@ -149,7 +149,7 @@ vdescribe('5.0', 'Point', function () {
     [0, 1].forEach(function (prepare) {
       var name = prepare ? 'prepared' : 'simple';
       it(util.format('should create and retrieve points in a udt for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
         var selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
         var id = Uuid.random();
@@ -179,7 +179,7 @@ vdescribe('5.0', 'Point', function () {
         tupleTestCase = xit;
       }
       tupleTestCase(util.format('should create and retrieve points in a tuple for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
         var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
         var id = Uuid.random();
@@ -204,7 +204,7 @@ vdescribe('5.0', 'Point', function () {
       });
       ['list', 'set'].forEach(function (colType) {
         it(util.format('should create and retrieve points in a %s for %s queries', colType, name), function (done) {
-          var client = new DseClient(helper.getOptions());
+          var client = new Client(helper.getOptions());
           var insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
@@ -228,7 +228,7 @@ vdescribe('5.0', 'Point', function () {
         });
       });
       it(util.format('should create and retrieve points in a map for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
         var selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
         var id = Uuid.random();

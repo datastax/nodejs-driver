@@ -9,7 +9,7 @@ var assert = require('assert');
 var util = require('util');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');
-var DseClient = require('../../lib/dse-client');
+var Client = require('../../lib/dse-client');
 var vdescribe = helper.vdescribe;
 var Point = require('../../lib/geometry/point');
 var Polygon = require('../../lib/geometry/polygon');
@@ -21,7 +21,7 @@ var Tuple = types.Tuple;
 vdescribe('5.0', 'Polygon', function () {
   this.timeout(120000);
   before(function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
@@ -46,7 +46,7 @@ vdescribe('5.0', 'Polygon', function () {
     ], done);
   });
   it('should parse polygons', function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       client.connect.bind(client),
       function test(next) {
@@ -83,7 +83,7 @@ vdescribe('5.0', 'Polygon', function () {
   [0, 1].forEach(function (prepare) {
     var name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode polygons for %s queries', name), function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function test(next) {
@@ -118,7 +118,7 @@ vdescribe('5.0', 'Polygon', function () {
       ], done);
     });
     it(util.format('should be able to retrieve data where polygon is partition key for %s queries', name), function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       var id = new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]);
       utils.series([
         client.connect.bind(client),
@@ -140,7 +140,7 @@ vdescribe('5.0', 'Polygon', function () {
     var polygon = new Polygon();
     var polygon2 = new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]);
     before(function (done) {
-      var client = new DseClient(helper.getOptions());
+      var client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function createAll(next) {
@@ -163,7 +163,7 @@ vdescribe('5.0', 'Polygon', function () {
     [0, 1].forEach(function (prepare) {
       var name = prepare ? 'prepared' : 'simple';
       it(util.format('should create and retrieve polygons in a udt for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
         var selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
         var id = Uuid.random();
@@ -193,7 +193,7 @@ vdescribe('5.0', 'Polygon', function () {
         tupleTestCase = xit;
       }
       tupleTestCase(util.format('should create and retrieve polygons in a tuple for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
         var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
         var id = Uuid.random();
@@ -218,7 +218,7 @@ vdescribe('5.0', 'Polygon', function () {
       });
       ['list', 'set'].forEach(function (colType) {
         it(util.format('should create and retrieve polygons in a %s for %s queries', colType, name), function (done) {
-          var client = new DseClient(helper.getOptions());
+          var client = new Client(helper.getOptions());
           var insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
@@ -242,7 +242,7 @@ vdescribe('5.0', 'Polygon', function () {
         });
       });
       it(util.format('should create and retrieve polygons in a map for %s queries', name), function (done) {
-        var client = new DseClient(helper.getOptions());
+        var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
         var selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
         var id = Uuid.random();

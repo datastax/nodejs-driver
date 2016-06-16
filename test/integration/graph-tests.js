@@ -7,7 +7,7 @@
 'use strict';
 var util = require('util');
 var assert = require('assert');
-var DseClient = require('../../lib/dse-client');
+var Client = require('../../lib/dse-client');
 var helper = require('../helper');
 var vdescribe = helper.vdescribe;
 var schemaCounter = 0;
@@ -52,10 +52,10 @@ var modernGraph =
   'josh.addEdge("created", lop, "weight", 0.4f);\n' +
   'peter.addEdge("created", lop, "weight", 0.2f);';
 
-vdescribe('5.0', 'DseClient', function () {
+vdescribe('5.0', 'Client', function () {
   this.timeout(60000);
   before(function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       function startCcm(next) {
         helper.ccm.startAll(1, {workloads: ['graph']}, next);
@@ -637,10 +637,10 @@ vdescribe('5.0', 'DseClient', function () {
   });
 });
 
-vdescribe('5.0', 'DseClient with down node', function () {
+vdescribe('5.0', 'Client with down node', function () {
   this.timeout(240000);
   before(function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       function startCcm(next) {
         helper.ccm.startAll(3, {workloads: ['graph']}, next);
@@ -705,10 +705,10 @@ vdescribe('5.0', 'DseClient with down node', function () {
   });
 });
 
-vdescribe('5.0', 'DseClient with spark workload', function () {
+vdescribe('5.0', 'Client with spark workload', function () {
   this.timeout(300000);
   before(function (done) {
-    var client = new DseClient(helper.getOptions());
+    var client = new Client(helper.getOptions());
     utils.series([
       function startCcm(next) {
         helper.ccm.startAll(1, {workloads: ['graph', 'spark']}, next);
@@ -797,7 +797,7 @@ function validateVertexResult(result, expectedResult, vertexLabel, propertyName)
 function wrapClient(handler, options) {
   return (function wrappedTestCase(done) {
     var opts = helper.getOptions(helper.extend(options || {}, {graphOptions : { name: 'name1' }}));
-    var client = new DseClient(opts);
+    var client = new Client(opts);
     utils.series([
       client.connect.bind(client),
       function testItem(next) {

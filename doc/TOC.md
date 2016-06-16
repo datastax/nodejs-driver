@@ -9,12 +9,12 @@ DseAuthenticator
 
 ## Getting Started
 
-`DseClient` inherits from the CQL driver counterpart `Client`.  All CQL features available to  `Client` (see the
-[CQL driver manual][core-manual]) can also be used with `DseClient`.
+`Client` inherits from the CQL driver counterpart `Client`.  All CQL features available to `Client` (see the
+[CQL driver manual][core-manual]) can also be used with the `Client` of the DSE module.
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.DseClient({
+const client = new dse.Client({
   contactPoints: ['h1', 'h2'],
   keyspace: 'ks1',
   graphOptions: { name: 'graph1' }
@@ -26,7 +26,7 @@ client.execute(query, ['guy'], function(err, result) {
 });
 ```
 
-Additionally, the dse module exports the submodules from the CQL driver, so you just need to import one module to access
+Additionally, the DSE module exports the submodules from the CQL driver, so you just need to import one module to access
 all DSE and Cassandra types.
 
 For example:
@@ -37,7 +37,7 @@ let id = Uuid.random();
 
 ### Graph
 
-[`DseClient` includes a `executeGraph() method`](DseClient.html#executeGraph) to execute graph queries:
+[`Client` includes a `executeGraph() method`](Client.html#executeGraph) to execute graph queries:
 
 ```javascript
 client.executeGraph('g.V()', function (err, result) {

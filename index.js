@@ -16,6 +16,7 @@ module.exports = {
   //export cassandra driver modules
   Encoder: cassandra.Encoder,
   errors: cassandra.errors,
+  ExecutionProfile: require('./lib/execution-profile'),
   metadata: cassandra.metadata,
   policies: cassandra.policies,
   types: cassandra.types,

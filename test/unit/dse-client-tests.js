@@ -7,8 +7,12 @@
 'use strict';
 var assert = require('assert');
 var cassandra = require('cassandra-driver');
+
 var Client = require('../../lib/dse-client');
+var ExecutionProfile = require('../../lib/execution-profile');
 var helper = require('../helper');
+var types = cassandra.types;
+var Long = types.Long;
 var utils = require('../../lib/utils');
 
 describe('Client', function () {
@@ -139,20 +143,19 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_ONE');
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
     });
-    it('should use the default readTimeout', function () {
+    it('should set the default readTimeout in the payload', function () {
       //noinspection JSCheckFunctionSignatures
       var client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           source: 'x',
-          readTimeout: 12345,
           writeConsistency: cassandra.types.consistencies.two
         }
       });
       var actualOptions = null;
       client.execute = function (q, p, options) {
         actualOptions = options;
-      };
+      };  
       //with options defined
       client.executeGraph('Q10', { c: 0}, { }, helper.throwOp);
       assert.ok(actualOptions);
@@ -161,7 +164,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
       assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'TWO');
-      assert.strictEqual(actualOptions.readTimeout, 12345);
+      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
       //with payload defined
       client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': new Buffer('zValue')} }, helper.throwOp);
       assert.ok(actualOptions);
@@ -169,7 +172,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
       helper.assertBufferString(actualOptions.customPayload['z'], 'zValue');
-      assert.strictEqual(actualOptions.readTimeout, 12345);
+      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
       //with timeout defined
       client.executeGraph('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwOp);
       assert.ok(actualOptions);
@@ -177,6 +180,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
       assert.strictEqual(actualOptions.customPayload['z'], undefined);
+      assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(9999)));
       assert.strictEqual(actualOptions.readTimeout, 9999);
       //without options defined
       client.executeGraph('Q10', { c: 0}, helper.throwOp);
@@ -184,7 +188,7 @@ describe('Client', function () {
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
-      assert.strictEqual(actualOptions.readTimeout, 12345);
+      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
     });
     it('should set the read and write consistency levels', function () {
       var client = new Client({
@@ -265,6 +269,102 @@ describe('Client', function () {
       };
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwOp);
     });
+    it('should set the options according to default profile', function () {
+      var client = new Client({
+        contactPoints: ['host1'],
+        graphOptions: {
+          language: 'groovy1',
+          source: 'source1',
+          name: 'name1'
+        },
+        profiles: [
+          new ExecutionProfile('default', {
+            graphOptions: {
+              name: 'nameZ',
+              readConsistency: types.consistencies.two
+            }
+          })
+        ]
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', { 'x': 1 }, null, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'groovy1');
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'source1');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'nameZ');
+      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'TWO');
+    });
+    it('should set the options according to specified profile', function () {
+      var client = new Client({
+        contactPoints: ['host1'],
+        graphOptions: {
+          source: 'source1',
+          name: 'name1'
+        },
+        profiles: [
+          new ExecutionProfile('default', {
+            graphOptions: {
+              name: 'nameZ',
+              readConsistency: types.consistencies.two
+            }
+          }),
+          new ExecutionProfile('graph-olap', {
+            graphOptions: {
+              source: 'aaa',
+              readConsistency: types.consistencies.three,
+              writeConsistency: types.consistencies.quorum
+            },
+            readTimeout: 99000
+          })
+        ]
+      });
+      var optionsParameter = { executionProfile: 'graph-olap' };
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'aaa');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'nameZ');
+      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'THREE');
+      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
+      assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(99000)));
+      var lastOptions = actualOptions;
+      client.executeGraph('Q2', { 'x': 2 }, optionsParameter, helper.throwOp);
+      assert.notStrictEqual(actualOptions, lastOptions);
+      // Reusing same customPayload instance
+      assert.strictEqual(actualOptions.customPayload, lastOptions.customPayload);
+    });
+    it('should let the core driver deal with profile specified not found', function () {
+      var client = new Client({
+        contactPoints: ['host1'],
+        graphOptions: {
+          source: 'source1'
+        },
+        profiles: [
+          new ExecutionProfile('default', {
+            graphOptions: {
+              name: 'name-default'
+            }
+          })
+        ]
+      });
+      var optionsParameter = { executionProfile: 'profile-x' };
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.ok(!actualOptions.customPayload);
+      assert.strictEqual(actualOptions.executionProfile, 'profile-x');
+    });
     describe('with analytics queries', function () {
       it('should query for analytics master', function (done) {
         var client = new Client({ contactPoints: ['host1'], graphOptions: {
@@ -283,7 +383,51 @@ describe('Client', function () {
         client.hosts = { get: function (address) {
           return { type: 'host', address: address };
         }};
-        client.executeGraph('g.V()', function (err) {
+        utils.series([
+          function withUndefinedOptions(next) {
+            client.executeGraph('g.V()', function (err) {
+              assert.ifError(err);
+              assert.ok(actualOptions);
+              assert.ok(actualOptions.preferredHost);
+              assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+              next();
+            });
+          },
+          function withEmptyOptions(next) {
+            client.executeGraph('g.V()', null, {}, function (err) {
+              assert.ifError(err);
+              assert.ok(actualOptions);
+              assert.ok(actualOptions.preferredHost);
+              assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+              next();
+            });
+          }
+        ], done);
+      });
+      it('should query for analytics master when using execution profile', function (done) {
+        var client = new Client({
+          contactPoints: ['host1'],
+          profiles: [
+            new ExecutionProfile('analytics', {
+              graphOptions: {
+                source: 'a'
+              }
+            })
+          ]
+        });
+        var actualOptions;
+        client.execute = function (q, p, options, cb) {
+          if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
+            return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
+          }
+          actualOptions = options;
+          cb(null, { rows: []});
+        };
+        //noinspection JSValidateTypes
+        client.hosts = { get: function (address) {
+          return { type: 'host', address: address };
+        }};
+        client.executeGraph('g.V()', null, { executionProfile: 'analytics' }, function (err) {
           assert.ifError(err);
           assert.ok(actualOptions);
           assert.ok(actualOptions.preferredHost);

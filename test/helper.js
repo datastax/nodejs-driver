@@ -206,13 +206,15 @@ var helper = {
     var workerRE = /Alive Workers:.*(\d+)\<\/li\>/;
     var numWorkers = 0;
     var attempts = 0;
+    var maxAttempts = 1000;
     utils.whilst(
       function checkWorkers() {
-        return numWorkers < expectedWorkers && attempts++ < 1000;
+        return numWorkers < expectedWorkers && attempts++ < maxAttempts;
       },
-      function(callback) {
+      function(cb) {
         setTimeout(function() {
-          http.get({host: 'localhost', port: 7080, path: '/'}, function(response) {
+          var errored = false;
+          var req = http.get({host: 'localhost', port: 7080, path: '/'}, function(response) {
             var body = '';
             response.on('data', function (data) {
               body += data;
@@ -221,17 +223,24 @@ var helper = {
               var match = body.match(workerRE);
               if (match) {
                 numWorkers = parseInt(match[1]);
-                helper.trace("Found workers: %d/%d", numWorkers, expectedWorkers);
+                helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
               } else {
-                helper.trace("Found no workers in body");
+                helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
               }
-              callback();
+              if (!errored) {
+                cb();
+              }
             });
+          });
+          req.on('error', function (err) {
+            errored = true;
+            helper.trace("(%d/%d) Got error while fetching workers.", attempts+1, maxAttempts, err);
+            cb();
           });
         }, 100);
       }, function complete() {
         if(numWorkers < expectedWorkers) {
-          helper.trace('WARNING: After 1000 attempts only %d/%d workers were active.', numWorkers, expectedWorkers);
+          helper.trace('WARNING: After %d attempts only %d/%d workers were active.', maxAttempts, numWorkers, expectedWorkers);
         }
         callback();
       }

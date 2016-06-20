@@ -20,6 +20,7 @@ var Uuid = cassandra.types.Uuid;
 var cl = cassandra.types.consistencies;
 var loadBalancing = require('../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
+var ExecutionProfile = require('../../lib/execution-profile.js');
 var utils = require('../../lib/utils');
 
 var makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
@@ -672,36 +673,58 @@ vdescribe('5.0', 'Client with down node', function () {
   });
   after(helper.ccm.remove.bind(helper.ccm));
   describe('#executeGraph()', function () {
+
+    var addVertexQuery = 'graph.addVertex(label, "person", "name", "joe", "age", 42);';
+    var getVertexQuery = 'g.V().limit(1)';
+
+    function expectFailAtAll(done) {
+      return function(err, result) {
+        assert.ok(err);
+        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
+        assert.strictEqual(result, undefined);
+        done();
+      }
+    }
+
     it('should be able to make a read query with ONE read consistency, ALL write consistency', wrapClient(function (client, done) {
-      client.executeGraph('g.V().limit(1)', null, {readTimeout: 5000, graphReadConsistency: cl.one, graphWriteConsistency: cl.all}, function (err, result) {
+      client.executeGraph(getVertexQuery, null, {readTimeout: 5000, graphReadConsistency: cl.one, graphWriteConsistency: cl.all}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.first());
         done();
       });
     }));
+
     it('should fail to make a read query with ALL read consistency', wrapClient(function (client, done) {
-      client.executeGraph('g.V().limit(1)', null, {graphReadConsistency: cl.all}, function (err, result) {
-        assert.ok(err);
-        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
-        assert.strictEqual(result, undefined);
-        done();
-      });
+      client.executeGraph(getVertexQuery, null, {graphReadConsistency: cl.all}, expectFailAtAll(done));
     }));
+
     it('should be able to make a write query with ALL read consistency, TWO write consistency', wrapClient(function (client, done) {
-      client.executeGraph('graph.addVertex(label, "person", "name", "don", "age", 37);', null, {readTimeout: 5000, graphReadConsistency: cl.all, graphWriteConsistency: cl.two}, function (err, result) {
+      client.executeGraph(addVertexQuery, null, {readTimeout: 5000, graphReadConsistency: cl.all, graphWriteConsistency: cl.two}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.first());
         done();
       });
     }));
+
     it('should fail to make a write query with ALL write consistency', wrapClient(function (client, done) {
-      client.executeGraph('graph.addVertex(label, "person", "name", "joe", "age", 42);', null, {graphWriteConsistency: cl.all}, function (err, result) {
-        assert.ok(err);
-        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
-        assert.strictEqual(result, undefined);
-        done();
-      });
+      client.executeGraph(addVertexQuery, null, {graphWriteConsistency: cl.all}, expectFailAtAll(done));
     }));
+
+    it('should use read consistency from profile', wrapClient(function (client, done) {
+      client.executeGraph(getVertexQuery, null, {executionProfile: 'readALL'}, expectFailAtAll(done));
+    }, {profiles: [new ExecutionProfile('readALL', {graphOptions: {readConsistency: cl.all}})]}));
+
+    it('should use write consistency from profile', wrapClient(function (client, done) {
+      client.executeGraph(addVertexQuery, null, {executionProfile: 'writeALL'}, expectFailAtAll(done));
+    }, {profiles: [new ExecutionProfile('writeALL', {graphOptions: {writeConsistency: cl.all}})]}));
+
+    it('should use read consistency from default profile', wrapClient(function (client, done) {
+      client.executeGraph(getVertexQuery, expectFailAtAll(done));
+    }, {profiles: [new ExecutionProfile('default', {graphOptions: {readConsistency: cl.all}})]}));
+
+    it('should use write consistency from default profile', wrapClient(function (client, done) {
+      client.executeGraph(addVertexQuery, expectFailAtAll(done));
+    }, {profiles: [new ExecutionProfile('default', {graphOptions: {writeConsistency: cl.all}})]}));
   });
 });
 
@@ -724,6 +747,11 @@ vdescribe('5.0', 'Client with spark workload', function () {
           assert.ifError(err);
           next();
         });
+      },
+      function waitForWorkers(next) {
+        // Wait for master to come online before altering keyspace as it needs to meet LOCAL_QUORUM CL to start, and
+        // that can't be met with 1/NUM_NODES available.
+        helper.waitForWorkers(1, next);
       },
       function updateDseLeases(next) {
         // Set the dse_leases keyspace to RF of 2, this will prevent election of new job tracker until all nodes
@@ -755,35 +783,44 @@ vdescribe('5.0', 'Client with spark workload', function () {
   });
   after(helper.ccm.remove.bind(helper.ccm));
   describe('#executeGraph()', function () {
-    it('should make an OLAP query using \'a\' traversal source', wrapClient(function (client, done) {
-        utils.timesSeries(10, function (n, timesNext) {
-          client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
-            assert.ifError(err);
-            assert.ok(result);
-            assert.ok(result.info);
-            assert.strictEqual(6, result.first());
-            timesNext(err, result.info.queriedHost);
+
+    function executeAnalyticsQueries(queryOptions, options, shouldQueryMasterOnly) {
+      return wrapClient(function(client, done) {
+        helper.findSparkMaster(client, function (serr, sparkMaster) {
+          assert.ifError(serr);
+          utils.timesSeries(5, function (n, timesNext) {
+            client.executeGraph('g.V().count()', null, queryOptions, function (err, result) {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.info);
+              assert.strictEqual(6, result.first());
+              if(shouldQueryMasterOnly) {
+                // Ensure the master was the queried host.
+                var queriedHost = result.info.queriedHost;
+                var portSep = queriedHost.lastIndexOf(":");
+                queriedHost = portSep != -1 ? queriedHost.substr(0, portSep) : queriedHost;
+                assert.strictEqual(queriedHost, sparkMaster);
+              }
+              timesNext(err, result.info.queriedHost);
+            });
+          }, function () {
+            done();
           });
-        }, done);
-    }));
-    it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy', wrapClient(function (client, done) {
-      helper.findSparkMaster(client, function (serr, sparkMaster) {
-        assert.ifError(serr);
-        utils.timesSeries(10, function (n, timesNext) {
-          client.executeGraph('g.V().count()', null, {readTimeout: 120000, graphSource: 'a'}, function (err, result) {
-            assert.ifError(err);
-            assert.ok(result);
-            assert.ok(result.info);
-            var queriedHost = result.info.queriedHost;
-            var portSep = queriedHost.lastIndexOf(":");
-            queriedHost = portSep != -1 ? queriedHost.substr(0, portSep) : queriedHost;
-            assert.strictEqual(queriedHost, sparkMaster);
-            assert.strictEqual(6, result.first());
-            timesNext(err, result.info.queriedHost);
-          });
-        }, done);
-      });
-    }, {policies: {loadBalancing: DseLoadBalancingPolicy.createDefault()}}));
+        });
+      }, options);
+    }
+
+    it('should make an OLAP query using \'a\' traversal source', executeAnalyticsQueries({graphSource: 'a'}));
+    it('should make an OLAP query using profile with \'a\' traversal source',
+      executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics', {graphOptions: {source: 'a'}})]}));
+    it('should make an OLAP query with default profile using \'a\' traversal source',
+      executeAnalyticsQueries({}, {profiles: [new ExecutionProfile('default', {graphOptions: {source: 'a'}})]}));
+    it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy',
+      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: DseLoadBalancingPolicy.createDefault()}}, true));
+    it('should contact spark master directly to make an OLAP query when using profile with DseLoadBalancingPolicy',
+      executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics',
+        {loadBalancing: DseLoadBalancingPolicy.createDefault(), graphOptions: {source: 'a'}})]}, true)
+    )
   });
 });
 

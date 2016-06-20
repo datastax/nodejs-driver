@@ -5,7 +5,8 @@
       "lib/geometry",
       "lib/graph",
       "lib/policies",
-      "lib/dse-client.js"
+      "lib/dse-client.js",
+      "lib/execution-profile.js"
     ]
   },
   "templates": {

@@ -816,10 +816,10 @@ vdescribe('5.0', 'Client with spark workload', function () {
     it('should make an OLAP query with default profile using \'a\' traversal source',
       executeAnalyticsQueries({}, {profiles: [new ExecutionProfile('default', {graphOptions: {source: 'a'}})]}));
     it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy',
-      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: DseLoadBalancingPolicy.createDefault()}}, true));
+      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: new DseLoadBalancingPolicy()}}, true));
     it('should contact spark master directly to make an OLAP query when using profile with DseLoadBalancingPolicy',
       executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics',
-        {loadBalancing: DseLoadBalancingPolicy.createDefault(), graphOptions: {source: 'a'}})]}, true)
+        {loadBalancing: new DseLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
     )
   });
 });

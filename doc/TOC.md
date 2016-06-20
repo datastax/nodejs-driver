@@ -9,7 +9,7 @@ DseAuthenticator
 
 ## Getting Started
 
-`Client` inherits from the CQL driver counterpart `Client`.  All CQL features available to `Client` (see the
+[`Client`](Client.html) inherits from the CQL driver counterpart. All CQL features available to `Client` (see the 
 [CQL driver manual][core-manual]) can also be used with the `Client` of the DSE module.
 
 ```javascript
@@ -48,4 +48,4 @@ client.executeGraph('g.V()', function (err, result) {
 ```
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
-[core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/common/drivers/introduction/introArchOverview.html
+[core-manual]: http://docs.datastax.com/en/latest-nodejs-driver/common/drivers/introduction/introArchOverview.html

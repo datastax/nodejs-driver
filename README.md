@@ -246,6 +246,6 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
-[core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/3.0/common/drivers/introduction/introArchOverview.html
+[core-manual]: http://docs.datastax.com/en/latest-nodejs-driver/common/drivers/introduction/introArchOverview.html
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
 [modern]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure

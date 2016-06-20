@@ -14,6 +14,8 @@ var helper = require('../helper');
 var types = cassandra.types;
 var Long = types.Long;
 var utils = require('../../lib/utils');
+var policies = require('../../lib/policies');
+var DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
 
 describe('Client', function () {
   describe('constructor', function () {
@@ -22,6 +24,18 @@ describe('Client', function () {
         //noinspection JSCheckFunctionSignatures
         new Client();
       }, cassandra.errors.ArgumentError);
+    });
+    it('should set DseLoadBalancingPolicy as default', function () {
+      var client = new Client({ contactPoints: ['host1'] });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, DseLoadBalancingPolicy);
+      var retryPolicy = new policies.retry.RetryPolicy();
+      client = new Client({
+        contactPoints: ['host1'],
+        // with some of the policies specified
+        policies: { retry: retryPolicy }
+      });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, DseLoadBalancingPolicy);
+      assert.strictEqual(client.options.policies.retry, retryPolicy);
     });
   });
   describe('#executeGraph()', function () {

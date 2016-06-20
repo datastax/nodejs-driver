@@ -7,15 +7,22 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
+var cassandra = require('cassandra-driver');
 var loadBalancing = require('../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
-var LoadBalancingPolicy = loadBalancing.LoadBalancingPolicy;
+var helper = require('../helper');
 
 describe('DseLoadBalancingPolicy', function () {
+  describe('constructor', function () {
+    it('should set token aware as child policy', function () {
+      var lbp = new DseLoadBalancingPolicy('us-east', 2);
+      helper.assertInstanceOf(lbp._childPolicy, loadBalancing.TokenAwarePolicy);
+    });
+  });
   describe('#newQueryPlan()', function () {
     it('should return the preferred host first', function (done) {
       var hosts = [ 'h1', 'h2', 'h3'];
-      var lbp = new DseLoadBalancingPolicy(new TestLoadBalancingPolicy(hosts));
+      var lbp = DseLoadBalancingPolicy.createAsWrapper(new TestLoadBalancingPolicy(hosts));
       lbp.newQueryPlan('ks1', { preferredHost: 'h0' }, function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
@@ -26,12 +33,28 @@ describe('DseLoadBalancingPolicy', function () {
     });
     it('should return the child policy plan when preferred is not defined', function (done) {
       var hosts = [ 'h1', 'h2', 'h3'];
-      var lbp = new DseLoadBalancingPolicy(new TestLoadBalancingPolicy(hosts));
+      var lbp = DseLoadBalancingPolicy.createAsWrapper(new TestLoadBalancingPolicy(hosts));
       lbp.newQueryPlan('ks1', { }, function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
         var hostArray = iteratorToArray(iterator);
         assert.deepEqual(hostArray, hosts);
+        done();
+      });
+    });
+    it('should mark the preferred host as local', function (done) {
+      var hosts = [ 'h1', 'h2', 'h3'];
+      var childPolicy = new TestLoadBalancingPolicy(hosts);
+      childPolicy.getDistance = function () {
+        return cassandra.types.distance.ignored;
+      };
+      var lbp = DseLoadBalancingPolicy.createAsWrapper(childPolicy);
+      lbp.newQueryPlan('ks1', { preferredHost: 'h0' }, function (err, iterator) {
+        assert.ifError(err);
+        assert.ok(iterator);
+        iteratorToArray(iterator);
+        assert.strictEqual(lbp.getDistance('h0'), cassandra.types.distance.local);
+        assert.strictEqual(lbp.getDistance('h_not_exist'), cassandra.types.distance.ignored);
         done();
       });
     });
@@ -43,7 +66,7 @@ describe('DseLoadBalancingPolicy', function () {
       childPolicy.getDistance = function () {
         return (++childPolicyCalled);
       };
-      var lbp = new DseLoadBalancingPolicy(childPolicy);
+      var lbp = DseLoadBalancingPolicy.createAsWrapper(childPolicy);
       //noinspection JSCheckFunctionSignatures
       assert.strictEqual(1, lbp.getDistance('h1'));
       //noinspection JSCheckFunctionSignatures
@@ -56,12 +79,13 @@ describe('DseLoadBalancingPolicy', function () {
 
 /**
  * A load balancing policy that uses a fixed list of hosts suitable for testing.
+ * @extends {LoadBalancingPolicy}
  */
 function TestLoadBalancingPolicy(arr) {
   this.arr = arr;
 }
 
-util.inherits(TestLoadBalancingPolicy, loadBalancing.DseLoadBalancingPolicy);
+util.inherits(TestLoadBalancingPolicy, loadBalancing.LoadBalancingPolicy);
 
 TestLoadBalancingPolicy.prototype.newQueryPlan = function (q, o, callback) {
   return callback(null, arrayIterator(this.arr));

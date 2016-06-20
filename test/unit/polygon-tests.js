@@ -62,7 +62,6 @@ describe('Polygon', function () {
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
       var BEPolygon = rewire(moduleName);
-      BEPolygon.__set__('os', { endianness: function() { return 'BE';} });
       [
         [ [new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)],
           '00000000030000000100000004' +
@@ -77,6 +76,9 @@ describe('Polygon', function () {
       ]
         .forEach(function (item) {
           var polygon = new BEPolygon(item[0]);
+          polygon.useBESerialization = function () {
+            return true;
+          };
           var buffer = polygon.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
@@ -84,7 +86,6 @@ describe('Polygon', function () {
     });
     it('should return WKB in a little-endian OS', function () {
       var LEPolygon = rewire(moduleName);
-      LEPolygon.__set__('os', { endianness: function() { return 'LE';} });
       [
         [ [ new Point(0, 3), new Point(3, 1), new Point(3, 6), new Point(0, 3)],
           '01030000000100000004000000000000000000000000000000000008400000000000000840000000000000f03f0000000000000840000000000000184000000000000000000000000000000840'
@@ -92,6 +93,9 @@ describe('Polygon', function () {
       ]
         .forEach(function (item) {
           var polygon = new LEPolygon(item[0]);
+          polygon.useBESerialization = function () {
+            return false;
+          };
           var buffer = polygon.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);

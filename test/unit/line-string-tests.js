@@ -56,7 +56,6 @@ describe('LineString', function () {
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
       var BELineString = rewire(moduleName);
-      BELineString.__set__('os', { endianness: function() { return 'BE';} });
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '000000000200000002000000000000000000000000000000003ff0000000000000bff3333333333333'],
@@ -69,6 +68,9 @@ describe('LineString', function () {
       ]
         .forEach(function (item) {
           var line = new BELineString(item[0]);
+          line.useBESerialization = function () {
+            return true;
+          };
           var buffer = line.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
@@ -76,7 +78,6 @@ describe('LineString', function () {
     });
     it('should return WKB in a little-endian OS', function () {
       var LELineString = rewire(moduleName);
-      LELineString.__set__('os', { endianness: function() { return 'LE';} });
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '01020000000200000000000000000000000000000000000000000000000000f03f333333333333f3bf'],
@@ -89,6 +90,9 @@ describe('LineString', function () {
       ]
         .forEach(function (item) {
           var line = new LELineString(item[0]);
+          line.useBESerialization = function () {
+            return false;
+          };
           var buffer = line.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);

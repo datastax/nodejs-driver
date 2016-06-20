@@ -49,7 +49,6 @@ describe('Point', function () {
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
       var BEPoint = rewire(moduleName);
-      BEPoint.__set__('os', { endianness: function() { return 'BE';} });
       [
         [2, 4, '000000000140000000000000004010000000000000'],
         [2.2, 4.2, '0000000001400199999999999a4010cccccccccccd'],
@@ -58,6 +57,9 @@ describe('Point', function () {
       ]
         .forEach(function (item) {
           var p = new BEPoint(item[0], item[1]);
+          p.useBESerialization = function () {
+            return true;
+          };
           var buffer = p.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[2]);
@@ -65,7 +67,6 @@ describe('Point', function () {
     });
     it('should return WKB in a little-endian OS', function () {
       var LEPoint = rewire(moduleName);
-      LEPoint.__set__('os', { endianness: function() { return 'LE';} });
       [
         [2, 4, '010100000000000000000000400000000000001040'],
         [2.2, 4.2, '01010000009a99999999990140cdcccccccccc1040'],
@@ -74,6 +75,9 @@ describe('Point', function () {
       ]
         .forEach(function (item) {
           var p = new LEPoint(item[0], item[1]);
+          p.useBESerialization = function () {
+            return false;
+          };
           var buffer = p.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[2]);

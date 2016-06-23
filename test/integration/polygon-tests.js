@@ -88,10 +88,10 @@ vdescribe('5.0', 'Polygon', function () {
         client.connect.bind(client),
         function test(next) {
           var values = [
-            new Polygon([new Point(1, 3), new Point(3, 6.2), new Point(3, -11.2), new Point(1, 3)]),
+            new Polygon([new Point(1, 3), new Point(3, -11.2), new Point(3, 6.2), new Point(1, 3)]),
             new Polygon(
-              [new Point(-10, 10), new Point(10, 10), new Point(10, 0), new Point(-10, 10)],
-              [new Point(6, 7), new Point(9, 9), new Point(3, 9), new Point(6, 7)]
+              [new Point(-10, 10), new Point(10, 0), new Point(10, 10), new Point(-10, 10)],
+              [new Point(6, 7), new Point(3, 9), new Point(9, 9), new Point(6, 7)]
             ),
             new Polygon()
           ];
@@ -108,7 +108,20 @@ vdescribe('5.0', 'Polygon', function () {
                 assert.ok(row);
                 //use json value to avoid decoding client side in this test
                 var value = JSON.parse(row['json_value']);
-                assert.deepEqual(value.coordinates || [], polygon.toJSON().coordinates);
+
+                // The OGC spec requires that external rings be organized counter clockwise, interior clockwise,
+                // but GeoJSON does not require this and in fact the C* json representation returns the opposite.
+                // Therefore we normalize the coordinates returned to match our expectation and compare against that.
+                // DSP-10257 proposes that C* normalizes the GeoJSON.
+                var normalizedCoordinates = [];
+                if(value.coordinates) {
+                  // We assume that all rings are exactly 4 points based on the input.
+                  for(var i = 0; i < value.coordinates.length; i++) {
+                    var c = value.coordinates[i];
+                    normalizedCoordinates.push([c[0], c[2], c[1], c[3]]);
+                  }
+                }
+                assert.deepEqual(normalizedCoordinates, polygon.toJSON().coordinates);
                 eachNext();
               });
             });

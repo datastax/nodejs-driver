@@ -1,73 +1,10 @@
-# DataStax Enterprise Node.js Driver
-
-This driver is built on top of [Node.js CQL driver for Apache Cassandra][cassandra-driver] and provides the following
-additions for [DataStax Enterprise][dse]:
-
-* `Authenticator` implementations that use the authentication scheme negotiation in the server-side `DseAuthenticator`;
-* encoders for geospatial types which integrate seamlessly with the driver;
-* DSE graph integration.
-
-The DataStax Enterprise Node.js Driver can be used solely with DataStax Enterprise. Please consult
-[the license](#license).
-
-## Installation
-
-```bash
-npm install dse-driver
-```
-
-
-## Getting Started
-
-`Client` inherits from the CQL driver counterpart `Client`.  All CQL features available to  `Client` (see the
-[CQL driver manual][core-manual]) can also be used with `Client`.
-
-```javascript
-const dse = require('dse-driver');
-const client = new dse.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
-const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
-client.execute(query, ['guy'], function(err, result) {
-  assert.ifError(err);
-  console.log('got user profile with email ' + result.rows[0].email);
-});
-```
-
-Additionally, the dse module exports the submodules from the CQL driver, so you just need to import one module to access
-all DSE and Cassandra types.
-
-For example:
-```javascript
-const dse = require('dse-driver');
-const Uuid = dse.types.Uuid;
-```
-
-## Authentication
-
-For clients connecting to a DSE cluster secured with `DseAuthenticator`, two authentication providers are included:
-
-* `DsePlainTextAuthProvider`: Plain-text authentication;
-* `DseGSSAPIAuthProvider`: GSSAPI authentication;
-
-To configure a provider, pass it when initializing a cluster:
-
-```javascript
-const dse = require('dse-driver');
-const client = new dse.Client({
-  contactPoints: ['h1', 'h2'], 
-  keyspace: 'ks1',
-  authProvider: new dse.auth.DseGssapiAuthProvider()
-});
-```
-
-See the jsdoc of each implementation for more details.
-
-## Graph
+# Graph support
 
 `Client` includes the `executeGraph()` method to execute graph queries:
 
 ```javascript
 const client = new dse.Client({
-  contactPoints: ['h1', 'h2'],
+  contactPoints: ['host1', 'host2'],
   graphOptions: { name: 'demo' }
 });
 client.executeGraph('g.V()', function (err, result) {
@@ -77,7 +14,7 @@ client.executeGraph('g.V()', function (err, result) {
 });
 ```
 
-### Graph Options
+## Graph Options
 
 You can set default graph options when initializing `Client` which will be used for all graph statements.  For
 example, to avoid providing a `graphName` option in each `executeGraph()` call:
@@ -85,23 +22,25 @@ example, to avoid providing a `graphName` option in each `executeGraph()` call:
 ```javascript
 const dse = require('dse-driver');
 const client = new dse.Client({
-  contactPoints: ['h1', 'h2'],
+  contactPoints: ['host1', 'host2'],
   graphOptions: { name: 'demo' }
 });
 ```
 
-These options may be overridden by providing them in the `options` parameter of `executeGraph`:
+These options may be overridden by specifying the [execution profile](../execution-profiles) when calling `executeGraph()`:
 
 ```javascript
 // Use a different graph name than the one provided when creating the client instance
-client.executeGraph(query, params, { graphName: 'demo2'}, function (err, result) {
+client.executeGraph(query, params, { executionProfile: 'graph-oltp'}, function (err, result) {
   assert.ifError(err);
   const vertex = result.first();
   console.log(vertex.label);
 });
 ```
 
-### Handling Results
+You can check out more info on [Execution Profiles](../execution-profiles).
+
+## Handling Results
 
 Graph queries return a `GraphResultSet`, which is an [iterable][iterable] of rows. The format of the data returned is
 dependent on the data requested.  For example, the payload representing edges will be different than those that
@@ -202,50 +141,9 @@ client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (e
 });
 ```
 
-### Prepared graph statements
+### Prepared statements
 
 Prepared graph statements are not supported by DSE yet (they will be added in the near future).
 
-## Geospatial types
-
-DSE 5.0 comes with a set of additional CQL types to represent geospatial data: `PointType`, `LineStringType` and
-`PolygonType`.
-
-```
-cqlsh> CREATE TABLE points_of_interest(name text PRIMARY KEY, coords 'PointType');
-cqlsh> INSERT INTO points_of_interest (name, coords) VALUES ('Eiffel Tower', 'POINT(48.8582 2.2945)');
-```
-
-The DSE driver includes encoders and representations of these types in the `geometry` module that can be used directly
-as parameters in queries:
-
-```javascript
-const dse = require('dse-driver');
-const Point = dse.geometry.Point;
-const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
-const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
-
-client.execute(insertQuery, ['Eiffel Tower', new Point(48.8582, 2.2945)], function (err, result) {
-  assert.ifError(err);
-  client.execute(selectQuery, ['Eiffel Tower'], function (err, result) {
-    assert.ifError(err);
-    const row = result.first();
-    const point = row['coords'];
-    console.log(point instanceof Point); // true
-    console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
-  });
-});
-```
-
-## License
-
-Copyright 2016 DataStax
-
-http://www.datastax.com/terms/datastax-dse-driver-license-terms
-
-
-[dse]: http://www.datastax.com/products/datastax-enterprise
-[cassandra-driver]: https://github.com/datastax/nodejs-driver
-[core-manual]: http://docs.datastax.com/en/latest-nodejs-driver/common/drivers/introduction/introArchOverview.html
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
 [modern-graph]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure

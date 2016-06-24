@@ -311,6 +311,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'source1');
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'nameZ');
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'TWO');
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
     });
     it('should set the options according to specified profile', function () {
       var client = new Client({
@@ -354,6 +355,10 @@ describe('Client', function () {
       assert.notStrictEqual(actualOptions, lastOptions);
       // Reusing same customPayload instance
       assert.strictEqual(actualOptions.customPayload, lastOptions.customPayload);
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      optionsParameter.retry = new policies.retry.RetryPolicy();
+      client.executeGraph('Q2', { 'x': 3 }, optionsParameter, helper.throwOp);
+      assert.strictEqual(actualOptions.retry, optionsParameter.retry);
     });
     it('should let the core driver deal with profile specified not found', function () {
       var client = new Client({
@@ -378,6 +383,101 @@ describe('Client', function () {
       assert.ok(actualOptions);
       assert.ok(!actualOptions.customPayload);
       assert.strictEqual(actualOptions.executionProfile, 'profile-x');
+    });
+    it('should use the retry policy from the default profile when specified', function () {
+      var retryPolicy1 = new policies.retry.RetryPolicy();
+      var retryPolicy2 = new policies.retry.FallthroughRetryPolicy();
+      var retryPolicy3 = new policies.retry.FallthroughRetryPolicy();
+      var client = new Client({
+        contactPoints: ['host1'],
+        profiles: [
+          new ExecutionProfile('default', {
+            retry: retryPolicy1
+          }),
+          new ExecutionProfile('graph-olap', {
+            retry: retryPolicy2
+          })
+        ]
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', null, null, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy3);
+      client.executeGraph('Q', null, { retry: retryPolicy3 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy3);
+    });
+    it('should use specific retry policy when not specified in the default profile', function () {
+      var retryPolicy1 = new policies.retry.RetryPolicy();
+      var retryPolicy2 = new policies.retry.RetryPolicy();
+      var client = new Client({
+        contactPoints: ['host1'],
+        profiles: [
+          new ExecutionProfile('default'),
+          new ExecutionProfile('graph-olap', {
+            retry: retryPolicy1
+          })
+        ]
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', null, null, helper.throwOp);
+      assert.ok(actualOptions);
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwOp);
+      assert.ok(actualOptions);
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy2);
+    });
+    it('should use specific retry policy when no default profile specified', function () {
+      var retryPolicy1 = new policies.retry.RetryPolicy();
+      var retryPolicy2 = new policies.retry.RetryPolicy();
+      var client = new Client({
+        contactPoints: ['host1'],
+        profiles: [
+          new ExecutionProfile('graph-olap', {
+            retry: retryPolicy1
+          })
+        ]
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', null, null, helper.throwOp);
+      assert.ok(actualOptions);
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwOp);
+      assert.ok(actualOptions);
+      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwOp);
+      assert.ok(actualOptions);
+      assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
     describe('with analytics queries', function () {
       it('should query for analytics master', function (done) {

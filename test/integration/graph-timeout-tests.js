@@ -12,13 +12,15 @@ var vdescribe = helper.vdescribe;
 var utils = require('../../lib/utils.js');
 var Client = require('../../lib/dse-client');
 var ExecutionProfile = require('../../lib/execution-profile');
+var DefaultRetryPolicy = require('cassandra-driver').policies.retry.RetryPolicy;
 
 vdescribe('5.0', 'graph query client timeouts', function () {
   this.timeout(120000);
   function profiles() {
     return [
       new ExecutionProfile('123Profile', {readTimeout: 123}),
-      new ExecutionProfile('default', {readTimeout: 112})
+      new ExecutionProfile('default', {readTimeout: 112}),
+      new ExecutionProfile('withRetryPolicy', {readTimeout: 114, retry: new DefaultRetryPolicy() })
     ];
   }
   before(function (done) {
@@ -84,6 +86,54 @@ vdescribe('5.0', 'graph query client timeouts', function () {
       ], done);
     });
   });
+  describe('when readTimeout elapses', function () {
+    it('should not retry and callback with OperationTimedOutError', function (done) {
+      var client = newInstance({ graphOptions: {name: 'name1'}});
+      utils.series([
+        client.connect.bind(client),
+        function executeQuery (next) {
+          // use a ridiculously small client readTimeout to ensure it elapses client side
+          client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);", null, { readTimeout: 1}, function(err) {
+            assert.ok(err);
+            // A NoHostAvailableError would indicate that retry policy is attempting to retry
+            helper.assertInstanceOf(err, errors.OperationTimedOutError);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should retry on timeout when using profile with DefaultRetryPolicy', function(done) {
+      var client = newInstance({ graphOptions: {name: 'name1'} , profiles: profiles()});
+      utils.series([
+        client.connect.bind(client),
+        function executeQuery (next) {
+          client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);", null,
+            { executionProfile: 'withRetryPolicy'}, function(err) {
+              assert.ok(err);
+              helper.assertInstanceOf(err, errors.NoHostAvailableError);
+              next();
+            });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should retry on timeout when default profile uses DefaultRetryPolicy', function(done) {
+      var client = newInstance({ graphOptions: {name: 'name1'} , profiles: [ new ExecutionProfile('default',
+        {readTimeout: 100, retry: new DefaultRetryPolicy() })]});
+      utils.series([
+        client.connect.bind(client),
+        function executeQuery (next) {
+          client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);", function(err) {
+            assert.ok(err);
+            helper.assertInstanceOf(err, errors.NoHostAvailableError);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+  });
 });
 
 /** @returns {Client}  */
@@ -109,6 +159,9 @@ function getTimeoutTest(expectedTimeoutMillis, queryOptions, clientOptions) {
         client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(10000L);", {}, queryOptions, function(err, result) {
           assert.ok(err);
           assert.ifError(result);
+          // Having a NoHostAvailableError means that the retry policy insisted on retrying (but there is just 1 node)
+          // Graph statements should not be retried
+          assert.ok(!(err instanceof errors.NoHostAvailableError), 'Error should be rethrown by the retry policy');
           var match = err.message.match(operationTimeoutRE);
           assert.ok(match[1]);
           assert.strictEqual(parseInt(match[1]), expectedTimeoutMillis);

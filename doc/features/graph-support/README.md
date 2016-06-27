@@ -143,7 +143,7 @@ client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (e
 
 ### Prepared statements
 
-Prepared graph statements are not supported by DSE yet (they will be added in the near future).
+Prepared graph statements are not supported by DSE Graph yet (they will be added in the near future).
 
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
 [modern-graph]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure

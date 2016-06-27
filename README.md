@@ -204,7 +204,7 @@ client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (e
 
 ### Prepared graph statements
 
-Prepared graph statements are not supported by DSE yet (they will be added in the near future).
+Prepared graph statements are not supported by DSE Graph yet (they will be added in the near future).
 
 ## Geospatial types
 

@@ -29,22 +29,37 @@ function getJsFiles(dir, fileArray) {
 
 var runnerFileName = path.basename(module.filename);
 var counter = 0;
+var failures = 0;
 async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
   if (file.indexOf(runnerFileName) >= 0 || file.indexOf('node_modules') >= 0) {
     return next();
   }
-  exec('node ' + file, function (err) {
+
+  var timedOut = false;
+  var timeout = setTimeout(function() {
+    console.log("%s timed out after 10s", file);
     counter++;
+    failures++;
+    next();
+  }, 10000);
+  exec('node ' + file, function (err) {
+    if(timedOut) {
+      return;
+    }
+    counter++;
+    clearTimeout(timeout);
     process.stdout.write('.');
     if (err) {
       console.log('Failed %s', file);
+      console.error(err);
+      failures++;
     }
-    next(err);
+    next();
   });
 }, function (err) {
   if (err) {
     console.error(err);
-    return;
   }
-  console.log('\n%d examples executed successfully', counter);
+  console.log('\n%d/%d examples executed successfully', (counter-failures), counter);
+  process.exit(failures);
 });

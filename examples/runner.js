@@ -30,10 +30,15 @@ function getJsFiles(dir, fileArray) {
 var runnerFileName = path.basename(module.filename);
 var counter = 0;
 async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
-  if (file.indexOf(runnerFileName) >= 0) return next();
+  if (file.indexOf(runnerFileName) >= 0 || file.indexOf('node_modules') >= 0) {
+    return next();
+  }
   exec('node ' + file, function (err) {
     counter++;
     process.stdout.write('.');
+    if (err) {
+      console.log('Failed %s', file);
+    }
     next(err);
   });
 }, function (err) {

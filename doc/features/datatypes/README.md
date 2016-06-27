@@ -68,5 +68,5 @@ Providing parameter hints in the query options is another way around it.
 client.execute('SELECT * FROM table1 where key = ?', [key], { hints : ['int'] }, callback);
 ```
 
-[inetaddress-api]: http://docs.datastax.com/en/drivers/nodejs/3.0/module-types-InetAddress.html
+[inetaddress-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html
 [buffer]: https://nodejs.org/api/buffer.html

@@ -22,4 +22,4 @@ client.metadata.getFunction('ks1', 'iif', ['boolean', 'int'], function (err, udf
 });
 ```
 
-[metadata-api]: http://docs.datastax.com/en/drivers/nodejs/3.0/Metadata.html
+[metadata-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/module-metadata-Metadata.html

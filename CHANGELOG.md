@@ -1,5 +1,42 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.0
+
+2016-06-28
+
+### Notable Changes
+
+- Introduced experimental Execution Profiles API ([#156](https://github.com/datastax/nodejs-driver/pull/156))
+- Removed dependency to [async](https://github.com/caolan/async) package (
+[#138](https://github.com/datastax/nodejs-driver/pull/138)).
+- Enhanced retry policies: handle client timeouts, connection closed and other errors. New retry decision: try next
+host ([#143](https://github.com/datastax/nodejs-driver/pull/143)).
+
+### Features
+
+- [NODEJS-261] - Execution profiles
+- [NODEJS-105] - New Retry Policy Decision - try next host
+- [NODEJS-106] - Don't mark host down while one connection is active
+- [NODEJS-107] - Prevent duplicate metadata fetches from control connection and allow disabling schema metadata fetching
+- [NODEJS-247] - Schedule idleTimeout before descheduling the previous
+- [NODEJS-177] - Use A-record with multiple IPs for contact points
+- [NODEJS-201] - Avoid dynamically copying query options properties into users query options
+- [NODEJS-236] - Handle empty map values gracefully
+- [NODEJS-240] - Replace async dependency
+- [NODEJS-242] - Expose default policies and default options
+- [NODEJS-248] - Optimize query plan hosts iteration
+- [NODEJS-249] - Avoid using Object.defineProperty() in ResultSet constructor
+- [NODEJS-251] - Expose onRequestError() method in the RetryPolicy prototype
+
+### Bug Fixes
+
+- [NODEJS-246] - InetAddress validation improperly flags IPv4-mapped IPv6
+- [NODEJS-250] - Timeout duration reported in OperationTimedOutError does not consider statement-level options.
+- [NODEJS-252] - Prepared statement metadata does not use logged keyspace
+- [NODEJS-255] - InetAddress.toString() improperly truncates last group if preceding bytes are 0 for ipv6 addresses
+- [NODEJS-257] - Connection wrongly parses IPv6 from Host address
+- [NODEJS-273] - readTimeout set to 0 in queryOptions is not used.
+
 ## 3.0.2
 
 2016-04-05

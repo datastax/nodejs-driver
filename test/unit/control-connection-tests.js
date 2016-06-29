@@ -21,6 +21,7 @@ describe('ControlConnection', function () {
     });
   });
   describe('#init()', function () {
+    this.timeout(20000);
     var useLocalhost;
     before(function (done) {
       dns.resolve('localhost', function (err) {
@@ -31,6 +32,17 @@ describe('ControlConnection', function () {
         done();
       });
     });
+    function testResolution(CcMock, expectedHosts, done) {
+      var cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }));
+      cc.getConnection = helper.callbackNoop;
+      cc.refreshOnConnection = helper.callbackNoop;
+      cc.init(function (err) {
+        assert.ifError(err);
+        var hosts = cc.hosts.values();
+        assert.deepEqual(hosts.map(function (h) { return h.address; }), expectedHosts);
+        done();
+      });
+    }
     it('should resolve IPv4 and IPv6 addresses', function (done) {
       if (!useLocalhost) {
         return done();
@@ -42,7 +54,7 @@ describe('ControlConnection', function () {
         assert.ifError(err);
         var hosts = cc.hosts.values();
         assert.strictEqual(hosts.length, 2);
-        assert.deepEqual(hosts.map(function (h) { return h.address; }), [ '127.0.0.1:9042', '::1:9042' ]);
+        assert.deepEqual(hosts.map(function (h) { return h.address; }).sort(), [ '127.0.0.1:9042', '::1:9042' ]);
         done();
       });
     });
@@ -54,19 +66,57 @@ describe('ControlConnection', function () {
         },
         resolve6: function (name, cb) {
           cb(null, ['10', '20']);
+        },
+        lookup: function () {
+          throw new Error('dns.lookup() should not be used');
         }
       });
-      var cc = new ControlConnectionMock(clientOptions.extend({ contactPoints: ['my-host-name'] }));
-      cc.getConnection = helper.callbackNoop;
-      cc.refreshOnConnection = helper.callbackNoop;
-      cc.init(function (err) {
-        assert.ifError(err);
-        //noinspection JSUnresolvedVariable
-        var hosts = cc.hosts.values();
-        assert.strictEqual(hosts.length, 4);
-        assert.deepEqual(hosts.map(function (h) { return h.address; }), [ '1:9042', '2:9042', '10:9042', '20:9042' ]);
-        done();
+      testResolution(ControlConnectionMock, [ '1:9042', '2:9042', '10:9042', '20:9042' ], done);
+    });
+    it('should ignore IPv4 or IPv6 resolution errors', function (done) {
+      var ControlConnectionMock = rewire('../../lib/control-connection');
+      ControlConnectionMock.__set__('dns', {
+        resolve4: function (name, cb) {
+          cb(null, ['1', '2']);
+        },
+        resolve6: function (name, cb) {
+          cb(new Error('Test error'));
+        },
+        lookup: function () {
+          throw new Error('dns.lookup() should not be used');
+        }
       });
+      testResolution(ControlConnectionMock, [ '1:9042', '2:9042'], done);
+    });
+    it('should use dns.lookup() as failover', function (done) {
+      var ControlConnectionMock = rewire('../../lib/control-connection');
+      ControlConnectionMock.__set__('dns', {
+        resolve4: function (name, cb) {
+          cb(new Error('Test error'));
+        },
+        resolve6: function (name, cb) {
+          cb(new Error('Test error'));
+        },
+        lookup: function (name, cb) {
+          cb(null, '123');
+        }
+      });
+      testResolution(ControlConnectionMock, [ '123:9042' ], done);
+    });
+    it('should use dns.lookup() when no address was resolved', function (done) {
+      var ControlConnectionMock = rewire('../../lib/control-connection');
+      ControlConnectionMock.__set__('dns', {
+        resolve4: function (name, cb) {
+          cb(null);
+        },
+        resolve6: function (name, cb) {
+          cb(null, []);
+        },
+        lookup: function (name, cb) {
+          cb(null, '123');
+        }
+      });
+      testResolution(ControlConnectionMock, [ '123:9042' ], done);
     });
   });
   describe('#nodeSchemaChangeHandler()', function () {

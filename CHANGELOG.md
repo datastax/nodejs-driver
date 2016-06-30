@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.1
+
+2016-06-30
+
+### Bug Fixes
+
+- [NODEJS-284] - Driver fails to resolve host names in the local hosts file
+
 ## 3.1.0
 
 2016-06-28

@@ -825,6 +825,39 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should not leak any connection when connection pool is still growing', function (done) {
+      var client = newInstance({ pooling: { coreConnectionsPerHost: { '0': 4 }}});
+      utils.series([
+        client.connect.bind(client),
+        function makeSomeQueries(next) {
+          utils.times(10, function (n, timesNext) {
+            client.execute(helper.queries.basic, timesNext);
+          }, next);
+        },
+        function shutDown(next) {
+          var hosts = client.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          assert.ok(hosts[0].pool.connections.length > 0);
+          assert.ok(!hosts[0].pool.shuttingDown);
+          assert.ok(!hosts[1].pool.shuttingDown);
+          client.shutdown(next);
+        },
+        function checkPoolDelayed(next) {
+          var hosts = client.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          function checkNoConnections() {
+            assert.strictEqual(hosts[0].pool.connections.length, 0);
+            assert.strictEqual(hosts[1].pool.connections.length, 0);
+          }
+          checkNoConnections();
+          // Wait some time and check again to see if there is a new connection created in the background
+          setTimeout(function checkNoConnectionsDelayed() {
+            checkNoConnections();
+            next();
+          }, 1000);
+        }
+      ], done);
+    });
   });
 });
 

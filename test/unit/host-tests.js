@@ -94,6 +94,22 @@ describe('HostConnectionPool', function () {
         });
       }, done);
     });
+    it('should remove connections and callback in error if state changed to closing', function (done) {
+      var hostPool = newHostConnectionPoolInstance();
+      hostPool._createConnection = function () {
+        return { open: helper.callbackNoop, close: helper.noop };
+      };
+      process.nextTick(function () {
+        // Set the state to shutdown
+        hostPool.shutdown(helper.noop);
+      });
+      hostPool.create(false, function (err) {
+        helper.assertInstanceOf(err, Error);
+        assert.strictEqual(err.message, 'Pool is being closed');
+        assert.strictEqual(0, hostPool.connections.length);
+        done();
+      });
+    });
   });
   describe('#borrowConnection()', function () {
     it('should get an open connection', function (done) {
@@ -105,7 +121,7 @@ describe('HostConnectionPool', function () {
             this.connected = true;
             setTimeout(cb, 30);
           },
-          getInFlight: function () { return 0; }
+          getInFlight: helper.functionOf(0)
         };
       };
       hostPool.borrowConnection(function (err, c) {
@@ -113,6 +129,73 @@ describe('HostConnectionPool', function () {
         assert.notEqual(c, null);
         //its a connection or is a mock
         assert.ok(c.open instanceof Function);
+        done();
+      });
+    });
+  });
+  describe('#drainAndShutdown()', function () {
+    it('should wait for connections to drain before shutting down', function (done) {
+      var hostPool = newHostConnectionPoolInstance();
+      var c = new events.EventEmitter();
+      c.getInFlight = helper.functionOf(100);
+      hostPool.connections = [
+        c,
+        { close: helper.noop, getInFlight: helper.functionOf(0) }
+      ];
+      hostPool.drainAndShutdown();
+      var drained, closed;
+      hostPool.once('close', function () {
+        assert.ok(drained);
+        assert.ok(closed);
+        done();
+      });
+      c.close = function () {
+        closed = true;
+      };
+      setImmediate(function () {
+        drained = true;
+        c.emit('drain');
+      });
+    });
+    it('should timeout when draining connections takes longer than expected', function (done) {
+      var hostPool = newHostConnectionPoolInstance({ socketOptions: { readTimeout: 20 } });
+      var c = new events.EventEmitter();
+      c.getInFlight = helper.functionOf(100);
+      hostPool.connections = [ c ];
+      hostPool.drainAndShutdown();
+      var closed;
+      hostPool.once('close', function () {
+        assert.ok(closed);
+      });
+      c.close = function () {
+        closed = true;
+      };
+      setTimeout(function () {
+        // Its not closed immediately
+        assert.ok(!closed);
+      }, 10);
+      setTimeout(function () {
+        // Drain was never emitted but the pool is closed
+        assert.ok(closed);
+        assert.strictEqual(hostPool.connections.length, 0);
+        done();
+      }, 140);
+    });
+    it('should wait for creation before setting state to init', function (done) {
+      var hostPool = newHostConnectionPoolInstance();
+      hostPool._createConnection = function () {
+        return { open: helper.callbackNoop, close: helper.noop };
+      };
+      var created;
+      var sync = true;
+      hostPool.create(false, function (err) {
+        assert.ok(err);
+        created = sync !== true;
+      });
+      sync = false;
+      hostPool.drainAndShutdown();
+      hostPool.once('close', function () {
+        assert.ok(created);
         done();
       });
     });
@@ -185,7 +268,7 @@ describe('HostConnectionPool', function () {
       var connections = [];
       for (var i = 0; i < 3; i++) {
         //noinspection JSCheckFunctionSignatures
-        connections.push({ getInFlight: function () { return 0; }, index: i});
+        connections.push({ getInFlight: helper.functionOf(0), index: i});
       }
       var initial = HostConnectionPool.minInFlight(connections).index;
       for (i = 1; i < 10; i++) {
@@ -341,7 +424,7 @@ describe('Host', function () {
       assert.strictEqual(h.getActiveConnection(), null);
     });
   });
-  describe('#getDistance()', function () {
+  describe('#setDistance()', function () {
     it('should call checkIsUp() when the new distance is local and was down', function () {
       var host = newHostInstance(defaultOptions);
       host._distance = types.distance.ignored;
@@ -351,22 +434,32 @@ describe('Host', function () {
       host.setDistance(types.distance.local);
       assert.strictEqual(checkIsUpCalled, 1);
     });
-    it('should call drainAndShutdown() when the new distance is ignored', function () {
+    it('should call drainAndShutdown() and emit when the new distance is ignored', function () {
       var host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       var drainAndShutdownCalled = 0;
+      var ignoreEventCalled = 0;
       host.pool.drainAndShutdown = function () { drainAndShutdownCalled++; };
+      host.once('ignore', function () {
+        ignoreEventCalled++;
+      });
       host.setDistance(types.distance.ignored);
       assert.strictEqual(drainAndShutdownCalled, 1);
+      assert.strictEqual(ignoreEventCalled, 1);
       assert.strictEqual(host.pool.coreConnectionsLength, 0);
     });
     it('should not call drainAndShutdown() when the new distance is ignored and was previously ignored', function () {
       var host = newHostInstance(defaultOptions);
       host._distance = types.distance.ignored;
       var drainAndShutdownCalled = 0;
+      var ignoreEventCalled = 0;
       host.pool.drainAndShutdown = function () { drainAndShutdownCalled++; };
+      host.once('ignore', function () {
+        ignoreEventCalled++;
+      });
       host.setDistance(types.distance.ignored);
       assert.strictEqual(drainAndShutdownCalled, 0);
+      assert.strictEqual(ignoreEventCalled, 0);
     });
   });
   describe('#removeFromPool()', function () {
@@ -478,19 +571,6 @@ describe('Host', function () {
       assert.ok(!host.pool.hasScheduledNewConnection());
       host.checkIsUp();
       assert.ok(!host.pool.hasScheduledNewConnection());
-    });
-    it('should schedule new connection attempt after previous shutdown finished', function () {
-      var host = newHostInstance(defaultOptions);
-      host.setDownAt = 1;
-      assert.ok(!host.pool.hasScheduledNewConnection());
-      host.pool.shuttingDown = true;
-      host.checkIsUp();
-      assert.ok(!host.pool.hasScheduledNewConnection());
-      // emit the pool has been shutdown
-      host.pool.shuttingDown = false;
-      host.pool.emit('shutdown');
-      assert.ok(host.pool.hasScheduledNewConnection());
-      host.shutdown(false);
     });
   });
   describe('#warmupPool()', function () {

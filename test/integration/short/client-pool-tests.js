@@ -579,6 +579,76 @@ describe('Client', function () {
         }, done);
       });
     });
+    it('should handle distance changing load balancing policies', changingDistancesTest('2'));
+    it('should handle distance changing load balancing policies for control connection host', changingDistancesTest('1'));
+    function changingDistancesTest(address) {
+      return (function doTest(done) {
+        var lbp = new RoundRobinPolicy();
+        var ignoredHost;
+        var cc;
+        lbp.getDistance = function (h) {
+          return helper.lastOctetOf(h) === ignoredHost ? types.distance.ignored : types.distance.local;
+        };
+        var connectionsPerHost = 5;
+        var client = newInstance({
+          policies: { loadBalancing: lbp },
+          pooling: { coreConnectionsPerHost: { '0': connectionsPerHost } }
+        });
+        function queryAndCheckPool(limit, assertions) {
+          return (function executeSomeQueries(next) {
+            var coordinators = {};
+            utils.timesLimit(limit, 3, function (n, timesNext) {
+              client.execute(helper.queries.basic, function (err, result) {
+                if (!err) {
+                  coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+                }
+                timesNext(err);
+              });
+            }, function (err) {
+              assert.ifError(err);
+              assertions(Object.keys(coordinators).sort());
+              next();
+            });
+          });
+        }
+        utils.series([
+          client.connect.bind(client),
+          queryAndCheckPool(12, function (coordinators) {
+            utils.objectValues(getPoolInfo(client)).forEach(function (poolSize) {
+              assert.notStrictEqual(poolSize, 0);
+            });
+            assert.deepEqual(coordinators, [ '1', '2', '3']);
+            cc = client.controlConnection.connection;
+            // Set as the ignored host for the next queries
+            ignoredHost = address;
+          }),
+          queryAndCheckPool(500, function (coordinators) {
+            // The pool for 1st and 3rd host should have the appropriate size by now.
+            var expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
+            expectedPoolInfo[ignoredHost] = 0;
+            assert.deepEqual(getPoolInfo(client), expectedPoolInfo );
+            assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost}));
+          }),
+          client.shutdown.bind(client),
+          function checkPoolState(next) {
+            var expectedState = { '1': 0, '2': 0, '3': 0};
+            assert.deepEqual(getPoolInfo(client), expectedState);
+            setTimeout(function checkPoolStateDelayed() {
+              assert.deepEqual(getPoolInfo(client), expectedState);
+              if (ignoredHost === '1') {
+                // The control connection should have changed
+                assert.ok(cc.isClosed);
+                assert.notStrictEqual(helper.lastOctetOf(client.controlConnection.host), '1');
+              }
+              else {
+                assert.strictEqual(helper.lastOctetOf(client.controlConnection.host), '1');
+              }
+              next();
+            }, 300);
+          }
+        ], done);
+      });
+    }
   });
   describe('failover', function () {
     beforeEach(helper.ccmHelper.start(3));
@@ -825,10 +895,51 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should not leak any connection when connection pool is still growing', function (done) {
+      var client = newInstance({ pooling: { coreConnectionsPerHost: { '0': 4 }}});
+      utils.series([
+        client.connect.bind(client),
+        function makeSomeQueries(next) {
+          utils.times(10, function (n, timesNext) {
+            client.execute(helper.queries.basic, timesNext);
+          }, next);
+        },
+        function shutDown(next) {
+          var hosts = client.hosts.values();
+          assert.strictEqual(hosts.length, 2);
+          assert.ok(hosts[0].pool.connections.length > 0);
+          assert.ok(!hosts[0].pool.shuttingDown);
+          assert.ok(!hosts[1].pool.shuttingDown);
+          client.shutdown(next);
+        },
+        function checkPoolDelayed(next) {
+          function checkNoConnections() {
+            assert.deepEqual(getPoolInfo(client), { '1': 0, '2': 0 });
+          }
+          checkNoConnections();
+          // Wait some time and check again to see if there is a new connection created in the background
+          setTimeout(function checkNoConnectionsDelayed() {
+            checkNoConnections();
+            next();
+          }, 1000);
+        }
+      ], done);
+    });
   });
 });
 
 /** @returns {Client}  */
 function newInstance(options) {
   return new Client(utils.extend({}, helper.baseOptions, options));
+}
+
+/**
+ * Returns a dictionary containing the last octet of the address as keys and the pool size as values.
+ */
+function getPoolInfo(client) {
+  var info = {};
+  client.hosts.forEach(function (h, address) {
+    info[helper.lastOctetOf(address)] = h.pool.connections.length;
+  });
+  return info;
 }

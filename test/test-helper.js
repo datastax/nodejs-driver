@@ -36,6 +36,15 @@ var helper = {
     setImmediate(cb);
   },
   /**
+   * Returns a function that returns the provided value
+   * @param value
+   */
+  functionOf: function (value) {
+    return (function fnOfFixedValue() {
+      return value;
+    });
+  },
+  /**
    * @type {ClientOptions}
    */
   baseOptions: (function () {

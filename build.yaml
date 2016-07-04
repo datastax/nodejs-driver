@@ -27,7 +27,6 @@ build:
   - script: |
       cd examples
       npm install
-      npm install ../
       ccm create test_samples -n 1 -b -s -v $TEST_CASSANDRA_VERSION
       node runner.js
       run_rc=$?

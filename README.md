@@ -16,6 +16,15 @@ The DataStax Enterprise Node.js Driver can be used solely with DataStax Enterpri
 npm install dse-driver
 ```
 
+## Documentation
+
+- [Documentation index][doc-index]
+- [API docs][api-docs]
+- [FAQ][faq]
+
+## Getting Help
+
+You can use the [project mailing list][mailing-list] or create a ticket on the [Jira issue tracker][jira]. 
 
 ## Getting Started
 
@@ -249,3 +258,8 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 [core-manual]: http://docs.datastax.com/en/latest-nodejs-driver/common/drivers/introduction/introArchOverview.html
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
 [modern-graph]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure
+[jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
+[mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
+[doc-index]: http://docs.datastax.com/en/latest-dse-nodejs-driver/
+[api-docs]: http://docs.datastax.com/en/latest-dse-nodejs-driver-api
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/1.0/supplemental/faq/

@@ -1,6 +1,5 @@
 "use strict";
-//replace by    require('cassandra-driver');
-var cassandra = require('../../');
+var cassandra = require('cassandra-driver');
 var async = require('async');
 var assert = require('assert');
 

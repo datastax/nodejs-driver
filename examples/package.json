@@ -1,0 +1,11 @@
+{
+  "name": "cassandra-driver-examples",
+  "description": "Examples for the DataStax Node.js Driver for Apache Cassandra",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "cassandra-driver": "file:../",
+    "async": "^1.5.2"
+  }
+}

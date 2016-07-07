@@ -11,12 +11,15 @@ environment:
 platform:
   - x64
 install:
-  - ps: .\appveyor.ps1
+  - ps: .\ci\hardwareinfo.ps1
+  - ps: .\ci\appveyor.ps1
   - npm install
 build: off
 test_script:
   - "npm run %ci_type%"
+on_finish:
+  - ps: .\ci\hardwareinfo.ps1
 cache:
   - node_modules -> package.json
   - C:\Users\appveyor\.ccm\repository
-  - C:\Users\appveyor\deps -> appveyor.ps1
+  - C:\Users\appveyor\deps -> .\ci\appveyor.ps1

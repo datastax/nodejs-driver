@@ -18,6 +18,7 @@ examples/
 support/
 test/
 out/
+ci/
 docs.yaml
 testing.js
 .DS_Store

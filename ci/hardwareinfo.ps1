@@ -6,6 +6,7 @@ $computerSystem = Get-CimInstance CIM_ComputerSystem
 $computerOS = Get-CimInstance CIM_OperatingSystem
 $computerCPU = Get-CimInstance CIM_Processor
 $computerHDD = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID = 'C:'"
+$javaVersion = (java.exe -version 2>&1)
 
 Write-Host "System Information for: " $computerSystem.Name -BackgroundColor DarkCyan
 "CPU: " + $computerCPU.Name
@@ -13,3 +14,5 @@ Write-Host "System Information for: " $computerSystem.Name -BackgroundColor Dark
 "HDD Space: " + "{0:P2}" -f ($computerHDD.FreeSpace/$computerHDD.Size) + " Free (" + "{0:N2}" -f ($computerHDD.FreeSpace/1GB) + "GB)"
 "RAM: " + "{0:N2}" -f ($computerSystem.TotalPhysicalMemory/1GB) + "GB"
 "Operating System: " + $computerOS.caption + ", Service Pack: " + $computerOS.ServicePackMajorVersion
+
+Write-Host "Java Version: " $javaVersion

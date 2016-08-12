@@ -19,7 +19,7 @@ describe('Connection', function () {
       var localCon = newInstance();
       localCon.open(function (err) {
         assert.ifError(err);
-        assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+        assert.ok(localCon.connected, 'Must be status connected');
         localCon.close(done);
       });
     });
@@ -54,7 +54,7 @@ describe('Connection', function () {
         var localCon = newInstance(null, protocolVersion);
         localCon.open(function (err) {
           assert.ifError(err);
-          assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+          assert.ok(localCon.connected, 'Must be status connected');
           localCon.close(next);
         });
       }, done);
@@ -63,7 +63,7 @@ describe('Connection', function () {
       var localCon = newInstance('1.1.1.1');
       localCon.open(function (err) {
         assert.ok(err, 'Must return a connection error');
-        assert.ok(!localCon.connected && !localCon.connecting);
+        assert.ok(!localCon.connected);
         localCon.close(done);
       });
     });
@@ -71,7 +71,7 @@ describe('Connection', function () {
       var localCon = newInstance('127.0.0.1:8090');
       localCon.open(function (err) {
         assert.ok(err, 'Must return a connection error');
-        assert.ok(!localCon.connected && !localCon.connecting);
+        assert.ok(!localCon.connected);
         localCon.close(done);
       });
     });
@@ -105,7 +105,7 @@ describe('Connection', function () {
       localCon.options.sslOptions = {};
       localCon.open(function (err) {
         assert.ifError(err);
-        assert.ok(localCon.connected && !localCon.connecting, 'Must be status connected');
+        assert.ok(localCon.connected, 'Must be status connected');
         localCon.sendStream(getRequest(helper.queries.basic), null, function (err, result) {
           assert.ifError(err);
           assert.ok(result);

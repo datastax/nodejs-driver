@@ -637,7 +637,7 @@ describe('Client', function () {
               assert.deepEqual(getPoolInfo(client), expectedState);
               if (ignoredHost === '1') {
                 // The control connection should have changed
-                assert.ok(cc.isClosed);
+                assert.ok(!cc.connected);
                 assert.notStrictEqual(helper.lastOctetOf(client.controlConnection.host), '1');
               }
               else {

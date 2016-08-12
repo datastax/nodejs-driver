@@ -239,7 +239,7 @@ describe('Connection', function () {
       SocketMock.prototype.connect = function (p, a, cb) {
         setImmediate(cb);
       };
-      SocketMock.prototype.destroy = function () {
+      SocketMock.prototype.end = function () {
         var self = this;
         setImmediate(function () {
           self.emit('close');

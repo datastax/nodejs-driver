@@ -369,6 +369,45 @@ describe('Client', function () {
         helper.ccmHelper.remove
       ], done);
     });
+    function getReceiveNotificationTest(nodeNumber) {
+      return (function receiveNotificationTest(done) {
+        // Should receive notification when a node gracefully closes connections
+        var client = newInstance({
+          pooling: {
+            warmup: true,
+            heartBeatInterval: 0,
+            // Use just 1 connection per host for all protocol versions in this test
+            coreConnectionsPerHost: clientOptions.coreConnectionsPerHostV3
+          }
+        });
+        utils.series([
+          helper.ccmHelper.removeIfAny,
+          helper.ccmHelper.start(2),
+          client.connect.bind(client),
+          function checkInitialState(next) {
+            var hosts = client.hosts.values();
+            assert.ok(hosts[0].isUp());
+            assert.ok(hosts[1].isUp());
+            next();
+          },
+          function stopNode(next) {
+            helper.ccmHelper.stopNode(nodeNumber, next);
+          },
+          helper.delay(300),
+          function checkThatStateChanged(next) {
+            // Only 1 node should be UP
+            assert.strictEqual(client.hosts.values().filter(function (h) {
+              return h.isUp();
+            }).length, 1);
+            next();
+          },
+          client.shutdown.bind(client),
+          helper.ccmHelper.remove
+        ], done);
+      });
+    }
+    it('should receive socket closed event and set node as down', getReceiveNotificationTest(2));
+    it('should receive socket closed event and set node as down (control connection node)', getReceiveNotificationTest(1));
   });
   describe('#execute()', function () {
     before(helper.ccmHelper.start(3));

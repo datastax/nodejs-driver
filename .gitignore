@@ -18,3 +18,4 @@ testing.js
 test/localConfig.json
 .DS_Store
 out/
+/docs

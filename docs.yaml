@@ -31,8 +31,11 @@ links:
     href:  irc://irc.freenode.net/datastax-drivers
   - title: Npm
     href:  https://www.npmjs.org/package/cassandra-driver
+api_docs:
+  v3.1: http://docs.datastax.com/en/drivers/nodejs/3.1/
+  v3.0: http://docs.datastax.com/en/drivers/nodejs/3.0/
 versions:
   - name: v3.1
     ref: HEAD
   - name: v3.0
-    ref: 3.0
+    ref: v3.0.2

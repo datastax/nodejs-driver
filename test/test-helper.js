@@ -550,6 +550,16 @@ var helper = {
     props.forEach(function comparePropItem(p) {
       assert.strictEqual(o1[p], o2[p]);
     });
+  },
+  getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
+    var pooling = {
+      heartBeatInterval: heartBeatInterval || 0,
+      coreConnectionsPerHost: {}
+    };
+    pooling.coreConnectionsPerHost[types.distance.local] = localLength || 1;
+    pooling.coreConnectionsPerHost[types.distance.remote] = remoteLength || 1;
+    pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
+    return pooling;
   }
 };
 

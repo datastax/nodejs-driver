@@ -422,7 +422,7 @@ describe('ControlConnection', function () {
         listenCalled++;
       };
       cc.getConnectionToNewHost(function (err, c, h) {
-        assert.ifError(err);
+        helper.assertInstanceOf(err, Error);
         assert.ok(!c);
         assert.ok(!h);
         assert.strictEqual(listenCalled, 1);
@@ -449,7 +449,7 @@ describe('ControlConnection', function () {
       var cc = newInstance(options);
       cc.listenHostsForUp = helper.noop;
       cc.getConnectionToNewHost(function (err, c, h) {
-        assert.ifError(err);
+        helper.assertInstanceOf(err, Error);
         assert.ok(!c);
         assert.ok(!h);
         assert.strictEqual(borrowCalled, 0);

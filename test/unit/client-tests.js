@@ -659,6 +659,25 @@ describe('Client', function () {
         }
       ], done);
     });
+    it('should not attempt reconnection and log after shutdown', function (done) {
+      var rp = new policies.reconnection.ConstantReconnectionPolicy(50);
+      var Client = require('../../lib/client');
+      var client = new Client(utils.extend({}, helper.baseOptions, { policies: { reconnection: rp } }));
+      var logEvents = [];
+      client.on('log', logEvents.push.bind(logEvents));
+      client.connect(function (err) {
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        client.shutdown(function clientShutdownCallback(err) {
+          assert.ifError(err);
+          logEvents.length = 0;
+          setTimeout(function assertAfterSomeTime() {
+            assert.strictEqual(
+              logEvents.length, 0, 'Expected no log events after shutdown but was: ' + util.inspect(logEvents));
+            done();
+          }, 400);
+        });
+      })
+    });
   });
   describe('#_waitForSchemaAgreement()', function () {
     var Client = require('../../lib/client.js');

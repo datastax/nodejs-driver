@@ -389,8 +389,8 @@ describe('Client', function () {
     });
     it('should fail to execute if the keyspace does not exists', function (done) {
       var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
-      //on all hosts
-      utils.times(10, function (n, next) {
+      // Execute on all hosts, some executions in parallel and some serial
+      utils.timesLimit(12, 6, function (n, next) {
         //No matter what, the keyspace does not exists
         client.execute(helper.queries.basic, function (err) {
           helper.assertInstanceOf(err, Error);

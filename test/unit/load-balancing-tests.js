@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
@@ -19,7 +20,7 @@ describe('RoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
     var policy = new RoundRobinPolicy();
     policy.hosts = null;
-    policy.newQueryPlan(null, null, function(err, iterator) {
+    policy.newQueryPlan(null, null, function(err) {
       assert(err instanceof Error);
       done();
     });
@@ -103,7 +104,7 @@ describe('DCAwareRoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
     var policy = new DCAwareRoundRobinPolicy('dc1');
     policy.hosts = null;
-    policy.newQueryPlan(null, null, function(err, iterator) {
+    policy.newQueryPlan(null, null, function(err) {
       assert(err instanceof Error);
       done();
     });
@@ -169,7 +170,8 @@ describe('DCAwareRoundRobinPolicy', function () {
     var policy = new DCAwareRoundRobinPolicy('dc1');
     var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var originalHosts = new HostMap();
-    for (var i = 0; i < 50; i++) {
+    var i;
+    for (i = 0; i < 50; i++) {
       var h = new Host(i, 2, options);
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
       originalHosts.set(i.toString(), h);
@@ -181,7 +183,7 @@ describe('DCAwareRoundRobinPolicy', function () {
 
     var localPermutations = [];
     // Capture the various permutations of plans.
-    for (var i = 0; i < localHosts.length; i++) {
+    for (i = 0; i < localHosts.length; i++) {
       var permutation = [];
       for(var j = i; j < localHosts.length + i; j++) {
         permutation.push(localHosts[j % localHosts.length]);
@@ -260,12 +262,12 @@ describe('DCAwareRoundRobinPolicy', function () {
       });
     });
   });
-  it('should yield local + remote hosts in a round robin manner when' +
-    ' consuming', function (done) {
+  it('should yield local + remote hosts in a round robin manner when consuming', function (done) {
     var policy = new DCAwareRoundRobinPolicy(null, 3);
     var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var originalHosts = new HostMap();
-    for (var i = 0; i < 60; i++) {
+    var i;
+    for (i = 0; i < 60; i++) {
       var h = new Host(i, 2, options);
       switch (i % 3) {
         case 0:
@@ -297,7 +299,7 @@ describe('DCAwareRoundRobinPolicy', function () {
 
     var localPermutations = [];
     // Capture the various permutations of plans.
-    for (var i = 0; i < localHosts.length; i++) {
+    for (i = 0; i < localHosts.length; i++) {
       var permutation = [];
       for(var j = i; j < localHosts.length + i; j++) {
         permutation.push(localHosts[j % localHosts.length]);
@@ -414,6 +416,39 @@ describe('DCAwareRoundRobinPolicy', function () {
         done();
       });
     });
+  });
+  it('should handle cache being cleared and next iterations', function (done) {
+    var policy = new DCAwareRoundRobinPolicy('dc1');
+    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    var hosts = new HostMap();
+    hosts.set('1', createHost('1', options));
+    hosts.set('2', createHost('2', options));
+    utils.series([
+      function initPolicy(next) {
+        policy.init(null, hosts, next);
+      },
+      function checkQueryPlanWithNewNodesBeingAdded(next) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
+          assert.ifError(err);
+          var item = iterator.next();
+          assert.ok(!item.done);
+          // Add an item to clear the LBP cache
+          hosts.set('3', createHost('2', options));
+          assert.ok(!iterator.next().done);
+          // It should be done now, as the LBP had a reference to the previous array of hosts.
+          assert.ok(iterator.next().done);
+          next();
+        });
+      },
+      function checkNewQueryPlan(next) {
+        policy.newQueryPlan(null, null, function (err, iterator) {
+          assert.ifError(err);
+          assert.strictEqual(utils.iteratorToArray(iterator).length, 3);
+          next();
+        });
+      }
+    ], done);
+
   });
 });
 describe('TokenAwarePolicy', function () {
@@ -609,4 +644,16 @@ function createHostMap(hosts) {
     map.set(hosts[i], hosts[i]);
   }
   return map;
+}
+
+/**
+ *
+ * @param {String} address
+ * @param {Object} options
+ * @param {String} [dc]
+ */
+function createHost(address, options, dc) {
+  var h = new Host(address, 4, options);
+  h.datacenter = dc || 'dc1';
+  return h;
 }

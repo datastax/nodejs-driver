@@ -10,6 +10,7 @@ var types = require('../../../lib/types');
 var errors = require('../../../lib/errors');
 var ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
 var loadBalancing = require('../../../lib/policies').loadBalancing;
+var vit = helper.vit;
 
 describe('client read timeouts', function () {
   this.timeout(120000);
@@ -222,7 +223,7 @@ describe('client read timeouts', function () {
       getTimeoutErrorNotExpectedTest(true, true, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
   });
   describe('with prepared batches', function () {
-    it('should retry when preparing multiple queries', function (done) {
+    vit('2.0', 'should retry when preparing multiple queries', function (done) {
       var client = newInstance({
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },

@@ -20,7 +20,7 @@ describe('Metadata', function () {
   describe('#refreshKeyspaces()', function () {
     it('should parse C*2 keyspace metadata for simple strategy', function (done) {
       var cc = {
-        query: function (q, cb) {
+        query: function (q, w, cb) {
           cb(null, { rows: [{
             'keyspace_name': 'ks1',
             'strategy_class': 'org.apache.cassandra.locator.SimpleStrategy',
@@ -49,7 +49,7 @@ describe('Metadata', function () {
     });
     it('should parse C*2 keyspace metadata for network strategy', function (done) {
       var cc = {
-        query: function (q, cb) {
+        query: function (q, w, cb) {
           cb(null, { rows: [{
             'keyspace_name': 'ks2',
             'strategy_class': 'org.apache.cassandra.locator.NetworkTopologyStrategy',
@@ -76,7 +76,7 @@ describe('Metadata', function () {
     });
     it('should parse C*3 keyspace metadata for simple strategy', function (done) {
       var cc = {
-        query: function (q, cb) {
+        query: function (q, w, cb) {
           cb(null, { rows: [{
             'keyspace_name': 'ks1',
             'replication': {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '3'},
@@ -104,7 +104,7 @@ describe('Metadata', function () {
     });
     it('should parse C*3 keyspace metadata for network strategy', function (done) {
       var cc = {
-        query: function (q, cb) {
+        query: function (q, w, cb) {
           cb(null, { rows: [{
             'keyspace_name': 'ks2',
             'replication': {'class': 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1': '2'},
@@ -133,7 +133,7 @@ describe('Metadata', function () {
   describe('#getReplicas()', function () {
     it('should return depending on the rf and ring size with simple strategy', function () {
       var cc = {
-        query: function (q, cb) {
+        query: function (q, w, cb) {
           cb(null, { rows: [{
             'keyspace_name': 'dummy',
             'strategy_class': 'SimpleStrategy',
@@ -2207,7 +2207,10 @@ function getControlConnectionForTable(tableRow, columnRows, indexRows) {
 
 function getControlConnectionForRows(rows, protocolVersion) {
   return {
-    query: function (q, cb) {
+    query: function (q, w, cb) {
+      if (typeof w === 'function') {
+        cb = w;
+      }
       setImmediate(function () {
         cb(null, {rows: rows});
       });

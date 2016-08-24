@@ -166,41 +166,44 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should reconnect when host used goes down', function (done) {
-      var cc = newInstance();
+      var options = clientOptions.extend(
+        utils.extend({ pooling: helper.getPoolingOptions(1, 1, 500) }, helper.baseOptions));
+      var cc = new ControlConnection(options, new ProfileManager(options));
       var host1;
+      var host2;
+      var lbp;
       utils.series([
         cc.init.bind(cc),
         function initLbp(next) {
-          cc.options.policies.loadBalancing.init(null, cc.hosts, next);
+          lbp = cc.options.policies.loadBalancing;
+          lbp.init(null, cc.hosts, next);
         },
         function ensureConnected(next) {
-          // there should be a single connection to the first host
           var hosts = cc.hosts.values();
+          hosts.forEach(function (h) {
+            h.setDistance(lbp.getDistance(h));
+          });
           assert.strictEqual(hosts.length, 2);
-          assert.strictEqual(hosts[0].pool.connections.length, 1);
-          assert.strictEqual(hosts[1].pool.connections.length, 0);
           host1 = hosts[0];
+          host2 = hosts[1];
+          // there should be a single connection to the first host
+          assert.strictEqual(host1.pool.connections.length, 1);
+          assert.strictEqual(host2.pool.connections.length, 0);
           next();
         },
         helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
-        function ensureDown(next) {
-          // connections to host1 could be down or not
-          if (host1.pool.connections.length === 0) {
-            return next();
-          }
-          // close the connection
-          host1.setDown();
-          setTimeout(next, 5000);
-        },
+        helper.delay(5000),
         function assertions(next) {
-          var hosts = cc.hosts.values();
-          assert.strictEqual(hosts.length, 2);
-          var countUp = hosts.reduce(function (value, host) {
-            value += host.isUp() ? 1 : 0;
-            return value;
-          }, 0);
-          assert.strictEqual(countUp, 1);
+          assert.strictEqual(host1.pool.connections.length, 0,
+            'Host1 should be DOWN and connections closed (heartbeat enabled)');
           assert.strictEqual(host1.isUp(), false);
+          assert.strictEqual(host2.isUp(), true);
+          assert.strictEqual(host1.pool.connections.length, 0);
+          assert.strictEqual(host2.pool.connections.length, 1);
+          next();
+        },
+        function shutdown(next) {
+          cc.shutdown();
           next();
         }
       ], done);

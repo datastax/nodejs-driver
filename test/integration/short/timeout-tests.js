@@ -10,7 +10,7 @@ var types = require('../../../lib/types');
 var errors = require('../../../lib/errors');
 var ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
 var loadBalancing = require('../../../lib/policies').loadBalancing;
-var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
 describe('client read timeouts', function () {
   this.timeout(120000);
@@ -222,8 +222,8 @@ describe('client read timeouts', function () {
     it('should suppress socketOptions.readTimeout when set to 0 for prepared queries executions',
       getTimeoutErrorNotExpectedTest(true, true, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
   });
-  describe('with prepared batches', function () {
-    vit('2.0', 'should retry when preparing multiple queries', function (done) {
+  vdescribe('2.0', 'with prepared batches', function () {
+    it('should retry when preparing multiple queries', function (done) {
       var client = newInstance({
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
@@ -254,6 +254,44 @@ describe('client read timeouts', function () {
           });
         },
         helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should produce a NoHostAvailableError when prepare tried and timed out on all hosts', function (done) {
+      var client = newInstance({
+        // Use a lbp that always yields the hosts in the same order
+        policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
+        pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
+        socketOptions: { readTimeout: 1000 },
+        queryOptions: { consistency: types.consistencies.one }
+      });
+      var ksName = 'ks_batch_test2';
+      var tableName = ksName + '.table1';
+      utils.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(ksName, 2)),
+        helper.toTask(client.execute, client, helper.createTableCql(tableName)),
+        helper.toTask(helper.ccmHelper.pauseNode, null, 1),
+        helper.toTask(helper.ccmHelper.pauseNode, null, 2),
+        function checkPreparing(next) {
+          var queries = [{
+            query: util.format("INSERT INTO %s (id, text_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 'one']
+          }, {
+            query: util.format("INSERT INTO %s (id, int_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 2]
+          }];
+          // It should be tried on all nodes and produce a NoHostAvailableError.
+          client.batch(queries, { prepare: true, logged: false }, function (err) {
+            helper.assertInstanceOf(err, errors.NoHostAvailableError);
+            //noinspection JSUnresolvedVariable
+            var numErrors = Object.keys(err.innerErrors).length;
+            assert.strictEqual(numErrors, 2);
+            next();
+          });
+        },
+        helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+        helper.toTask(helper.ccmHelper.resumeNode, null, 2),
         client.shutdown.bind(client)
       ], done);
     });

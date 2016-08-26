@@ -443,7 +443,7 @@ var helper = {
    * @returns {Host}
    */
   findHost: function(client, number) {
-    var host = null;
+    var host = undefined;
     var self = this;
     client.hosts.forEach(function(h) {
       if(self.lastOctetOf(h) == number) {
@@ -454,20 +454,51 @@ var helper = {
   },
 
   /**
-   * Waits indefinitely for a specific host to emit an event after a
-   * a given function has been called and invokes a callback on completion.
-   * @param {Function} f function to call
-   * @param {Client|ControlConnection} client client to inspect hosts from.
+   * Returns a method that repeatedly checks every second until the given host is present in the client's host
+   * map and is up.  This is attempted up to 20 times and an error is thrown if the condition is not met.
+   * @param {Client|ControlConnection} client Client to lookup hosts from.
    * @param {Number} number last octet of requested host.
-   * @param {String} event event to wait on, i.e. 'up'.
-   * @param {Function} cb function to call when event has been received.
    */
-  waitOnHost: function(f, client, number, event, cb) {
-    var host = this.findHost(client, number);
-    host.once(event, function () {
-      cb();
-    });
-    f();
+  waitOnHostUp: function(client, number) {
+    var self = this;
+    var hostIsUp = function() {
+      var host = self.findHost(client, number);
+      return host === undefined ? false : host.isUp();
+    };
+
+    return self.setIntervalUntilTask(hostIsUp, 1000, 20);
+  },
+
+  /**
+   * Returns a method that repeatedly checks every second until the given host is present in the client's host
+   * map and is down.  This is attempted up to 20 times and an error is thrown if the condition is not met.
+   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Number} number last octet of requested host.
+   */
+  waitOnHostDown: function(client, number) {
+    var self = this;
+    var hostIsDown = function() {
+      var host = self.findHost(client, number);
+      return host === undefined ? false : !host.isUp();
+    };
+
+    return self.setIntervalUntilTask(hostIsDown, 1000, 20);
+  },
+
+  /**
+   * Returns a method that repeatedly checks every second until the given host is not present in the client's host
+   * map. This is attempted up to 20 times and an error is thrown if the condition is not met.
+   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Number} number last octet of requested host.
+   */
+  waitOnHostGone: function(client, number) {
+    var self = this;
+    var hostIsGone = function() {
+      var host = self.findHost(client, number);
+      return host === undefined;
+    };
+
+    return self.setIntervalUntilTask(hostIsGone, 1000, 20);
   },
 
   /**

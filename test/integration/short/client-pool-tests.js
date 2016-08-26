@@ -887,11 +887,8 @@ describe('Client', function () {
             });
           }, next);
         },
-        function startNode3(next) {
-          helper.waitOnHost(function () {
-            helper.ccmHelper.startNode(3);
-          }, client, 3, 'up', helper.wait(5000, next));
-        },
+        helper.toTask(helper.ccmHelper.startNode, null, 3),
+        helper.waitOnHostUp(client, 3),
         function assertReconnected(next) {
           assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));
           client.hosts.forEach(function (host) {

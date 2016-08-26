@@ -303,6 +303,6 @@ function killConnections(client, destroy) {
  */
 function newInstance(options) {
   options = options || {};
-  options = utils.extend(options, helper.baseOptions);
+  options = utils.deepExtend(options, helper.baseOptions);
   return new Client(options);
 }

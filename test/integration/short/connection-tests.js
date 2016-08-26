@@ -215,7 +215,7 @@ function newInstance(address, protocolVersion, options){
     protocolVersion = getProtocolVersion();
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
-  options = utils.extend({logEmitter: helper.noop}, options || defaultOptions);
+  options = utils.deepExtend({logEmitter: helper.noop}, options || defaultOptions);
   return new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
 }
 

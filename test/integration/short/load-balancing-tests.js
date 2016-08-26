@@ -150,6 +150,6 @@ describe('WhiteListPolicy', function () {
 });
 
 function newInstance(policy) {
-  var options = utils.extend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
+  var options = utils.deepExtend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
   return new Client(options);
 }

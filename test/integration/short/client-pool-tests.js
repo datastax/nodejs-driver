@@ -966,7 +966,7 @@ describe('Client', function () {
 
 /** @returns {Client}  */
 function newInstance(options) {
-  return new Client(utils.extend({}, helper.baseOptions, options));
+  return new Client(utils.deepExtend({}, helper.baseOptions, options));
 }
 
 /**

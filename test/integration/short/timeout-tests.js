@@ -1,5 +1,6 @@
 "use strict";
 var assert = require('assert');
+var util = require('util');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -8,15 +9,20 @@ var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
 var errors = require('../../../lib/errors');
 var ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
+var loadBalancing = require('../../../lib/policies').loadBalancing;
+var vdescribe = helper.vdescribe;
 
 describe('client read timeouts', function () {
   this.timeout(120000);
   before(helper.ccmHelper.start(2));
   after(helper.ccmHelper.remove);
   afterEach(function (done) {
-    // Tests will pause node 2 and should resume it in the general case, but if for whatever reason they fail
-    // resuming the node here to be safe.
-    helper.ccmHelper.resumeNode(2, done);
+    // Tests will pause any of the nodes and should resume it in the general case, but if for whatever reason they fail
+    // resuming the nodes should be safe.
+    utils.series([
+      helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+      helper.toTask(helper.ccmHelper.resumeNode, null, 2)
+    ], done);
   });
   describe('when socketOptions.readTimeout is not set', function () {
     it('should do nothing else than waiting', getTimeoutErrorNotExpectedTest(false, false));
@@ -215,7 +221,81 @@ describe('client read timeouts', function () {
       getTimeoutErrorNotExpectedTest(false, false, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
     it('should suppress socketOptions.readTimeout when set to 0 for prepared queries executions',
       getTimeoutErrorNotExpectedTest(true, true, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
-  })
+  });
+  vdescribe('2.0', 'with prepared batches', function () {
+    it('should retry when preparing multiple queries', function (done) {
+      var client = newInstance({
+        // Use a lbp that always yields the hosts in the same order
+        policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
+        pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
+        socketOptions: { readTimeout: 1000 },
+        queryOptions: { consistency: types.consistencies.one }
+      });
+      var ksName = 'ks_batch_test1';
+      var tableName = ksName + '.table1';
+      utils.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(ksName, 2)),
+        helper.toTask(client.execute, client, helper.createTableCql(tableName)),
+        helper.toTask(helper.ccmHelper.pauseNode, null, 1),
+        function checkPreparing(next) {
+          var queries = [{
+            query: util.format("INSERT INTO %s (id, text_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 'one']
+          }, {
+            query: util.format("INSERT INTO %s (id, int_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 2]
+          }];
+          // It should be retried on the next node
+          client.batch(queries, { prepare: true, logged: false }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(helper.lastOctetOf(result.info.queriedHost), '2');
+            next();
+          });
+        },
+        helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+        client.shutdown.bind(client)
+      ], done);
+    });
+    it('should produce a NoHostAvailableError when prepare tried and timed out on all hosts', function (done) {
+      var client = newInstance({
+        // Use a lbp that always yields the hosts in the same order
+        policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
+        pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
+        socketOptions: { readTimeout: 1000 },
+        queryOptions: { consistency: types.consistencies.one }
+      });
+      var ksName = 'ks_batch_test2';
+      var tableName = ksName + '.table1';
+      utils.series([
+        client.connect.bind(client),
+        helper.toTask(client.execute, client, helper.createKeyspaceCql(ksName, 2)),
+        helper.toTask(client.execute, client, helper.createTableCql(tableName)),
+        helper.toTask(helper.ccmHelper.pauseNode, null, 1),
+        helper.toTask(helper.ccmHelper.pauseNode, null, 2),
+        function checkPreparing(next) {
+          var queries = [{
+            query: util.format("INSERT INTO %s (id, text_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 'one']
+          }, {
+            query: util.format("INSERT INTO %s (id, int_sample) VALUES (?, ?)", tableName),
+            params: [types.Uuid.random(), 2]
+          }];
+          // It should be tried on all nodes and produce a NoHostAvailableError.
+          client.batch(queries, { prepare: true, logged: false }, function (err) {
+            helper.assertInstanceOf(err, errors.NoHostAvailableError);
+            //noinspection JSUnresolvedVariable
+            var numErrors = Object.keys(err.innerErrors).length;
+            assert.strictEqual(numErrors, 2);
+            next();
+          });
+        },
+        helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+        helper.toTask(helper.ccmHelper.resumeNode, null, 2),
+        client.shutdown.bind(client)
+      ], done);
+    });
+  });
 });
 
 
@@ -357,3 +437,16 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
     ], done);
   });
 }
+
+/**
+ * Represents a LoadBalancingPolicy that always yields the hosts in the same order, only suitable for testing.
+ * @constructor
+ */
+function FixedOrderLoadBalancingPolicy() {
+}
+
+util.inherits(FixedOrderLoadBalancingPolicy, loadBalancing.RoundRobinPolicy);
+
+FixedOrderLoadBalancingPolicy.prototype.newQueryPlan = function (ks, q, callback) {
+  callback(null, utils.arrayIterator(this.hosts.values()));
+};

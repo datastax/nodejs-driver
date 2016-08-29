@@ -92,6 +92,7 @@ describe('ControlConnection', function () {
       var cc = newInstance({ policies: { loadBalancing: new TestLoadBalancing() } });
       utils.series([
         cc.init.bind(cc),
+        helper.delay(2000 + (helper.isWin() ? 13000 : 0)),
         // Don't stop the node until we know it's up.
         helper.waitOnHostUp(cc, 2),
         // Stop the node and ensure it gets marked down.

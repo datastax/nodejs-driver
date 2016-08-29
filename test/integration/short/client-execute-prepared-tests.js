@@ -1104,7 +1104,7 @@ describe('Client', function () {
  */
 function newInstance(options) {
   options = options || {};
-  options = utils.extend({
+  options = utils.deepExtend({
     queryOptions: {consistency: types.consistencies.quorum}
   }, options, helper.baseOptions);
   return new Client(options);

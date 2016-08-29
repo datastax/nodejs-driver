@@ -204,5 +204,5 @@ describe('custom payload', function () {
  * @returns {Client}
  */
 function newInstance(options) {
-  return new Client(utils.extend({ pooling: { heartBeatInterval: 0 }}, helper.baseOptions, options));
+  return new Client(utils.deepExtend({ pooling: { heartBeatInterval: 0 }}, helper.baseOptions, options));
 }

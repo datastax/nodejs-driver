@@ -251,7 +251,7 @@ describe('ControlConnection', function () {
 
 /** @returns {ControlConnection} */
 function newInstance(options, localConnections, remoteConnections) {
-  options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions, options));
+  options = clientOptions.extend(utils.deepExtend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions, options));
   //disable the heartbeat
   options.pooling.heartBeatInterval = 0;
   options.pooling.coreConnectionsPerHost[types.distance.local] = localConnections || 2;

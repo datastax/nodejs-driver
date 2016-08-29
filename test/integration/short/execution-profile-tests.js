@@ -48,7 +48,7 @@ describe('ProfileManager', function() {
 
   function newInstance(options, profiles) {
     options = options || {};
-    options = utils.extend({
+    options = utils.deepExtend({
       profiles: profiles || createProfiles()
     }, helper.baseOptions, options);
     return new Client(options);

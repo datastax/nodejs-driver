@@ -104,6 +104,35 @@ describe('Parser', function () {
         offset: 0
       }, null, doneIfError(done));
     });
+    it('should read a VOID result with warnings and custom payload', function (done) {
+      var parser = newInstance();
+
+      var body = Buffer.concat([
+        new Buffer('0002000548656c6c6f0005576f726c64', 'hex'),    // 2 string list of warnings containing 'Hello', 'World'
+        new Buffer('000200016100000001010001620000000102', 'hex'), // Custom payload byte map of {a: 1, b: 2}
+        new Buffer([0, 0, 0, types.resultKind.voidResult]) // void result indicator
+      ]);
+
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.ok(!item.error);
+        assert.strictEqual(item.header.bodyLength, body.length);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        assert.ok(item.flags);
+        assert.ok(item.flags.warnings);
+        assert.deepEqual(item.flags.warnings, ['Hello', 'World']);
+        assert.ok(item.flags.customPayload);
+        assert.deepEqual(item.flags.customPayload, {a: new Buffer([0x01]), b: new Buffer([0x02])});
+        done();
+      });
+
+      var header = getFrameHeader(body.length, types.opcodes.result, 4, false, 12, true, true);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
     it('should read a SET_KEYSPACE result', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -210,6 +239,40 @@ describe('Parser', function () {
       var chunk2 = eventData.chunk.slice(5);
       parser._transform({header: eventData.header, chunk: chunk1, offset: 0}, null, doneIfError(done));
       parser._transform({header: eventData.header, chunk: chunk2, offset: 0}, null, doneIfError(done));
+    });
+    it('should read an ERROR response that includes warnings', function (done) {
+      var parser = newInstance();
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.error);
+        assert.ok(item.error);
+        helper.assertInstanceOf(item.error, errors.ResponseError);
+        assert.strictEqual(item.error.message, "Fail");
+        assert.strictEqual(item.error.code, 0); // Server Error
+        done();
+      });
+
+      var body = Buffer.concat([
+        new Buffer('0002000548656c6c6f0005576f726c64', 'hex'), // 2 string list of warnings containing 'Hello', 'World'
+        new Buffer('0000000000044661696c', 'hex') // Server Error Code (0x0000) with 4 length message 'Fail'
+      ]);
+      var bodyLength = body.length;
+      var header = getFrameHeader(bodyLength, types.opcodes.error, 4, false, 12, true);
+      parser._transform({
+        header: header,
+        chunk: body.slice(0, 4),
+        offset: 0
+      }, null, doneIfError(done));
+      parser._transform({
+        header: header,
+        chunk: body.slice(4, 10),
+        offset: 0
+      }, null, doneIfError(done));
+      parser._transform({
+        header: header,
+        chunk: body.slice(10),
+        offset: 0
+      }, null, doneIfError(done));
     });
     it('should read a buffer until there is enough data', function (done) {
       var parser = newInstance();
@@ -562,11 +625,15 @@ function newInstance(protocolVersion) {
  * Test Helper method to get a frame header with stream id 12
  * @returns {exports.FrameHeader}
  */
-function getFrameHeader(bodyLength, opcode, version, trace, streamId) {
+function getFrameHeader(bodyLength, opcode, version, trace, streamId, warnings, customPayload) {
   if (typeof streamId === 'undefined') {
     streamId = 12;
   }
-  return new types.FrameHeader(version || 2, trace ? 0x02 : 0, streamId, opcode, bodyLength);
+  var flags = 0;
+  flags += (trace ? 0x2 : 0x0);
+  flags += (customPayload ? 0x4 : 0x0);
+  flags += (warnings ? 0x8 : 0x0);
+  return new types.FrameHeader(version || 2, flags, streamId, opcode, bodyLength);
 }
 
 /**

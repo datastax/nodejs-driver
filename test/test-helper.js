@@ -117,7 +117,7 @@ var helper = {
      */
     startNode: function (nodeIndex, callback) {
       var args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
-      if (process.platform.indexOf('win') === 0 && helper.isCassandraGreaterThan('2.2.4')) {
+      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         args.push('--quiet-windows')
       }
       new Ccm().exec(args, callback);
@@ -591,6 +591,13 @@ var helper = {
     pooling.coreConnectionsPerHost[types.distance.remote] = remoteLength || 1;
     pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
     return pooling;
+  },
+  /**
+   * Returns true if the tests are being run on Windows
+   * @returns {boolean}
+   */
+  isWin: function () {
+    return process.platform.indexOf('win') === 0;
   }
 };
 
@@ -660,13 +667,13 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];
-      if (process.platform.indexOf('win') === 0 && helper.isCassandraGreaterThan('2.2.4')) {
+      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         start.push('--quiet-windows')
       }
       if (util.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
           // Windows requires jvm arguments to be quoted, while *nix requires unquoted.
-          var jvmArg = process.platform.indexOf('win') === 0 ? '"' + arg + '"' : arg;
+          var jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
           start.push('--jvm_arg', jvmArg);
         }, this);
         helper.trace('With jvm args', options.jvmArgs);
@@ -690,7 +697,7 @@ Ccm.prototype.spawn = function (processName, params, callback) {
   params = params || [];
   var originalProcessName = processName;
   var spawn = require('child_process').spawn;
-  if (process.platform.indexOf('win') === 0) {
+  if (helper.isWin()) {
     params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
     processName = 'powershell.exe';
   }

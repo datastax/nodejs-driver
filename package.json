@@ -1,6 +1,6 @@
 {
   "name": "dse-driver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DataStax Enterprise Node.js Driver",
   "author": "DataStax",
   "keywords": [
@@ -18,7 +18,7 @@
     "graphdb"
   ],
   "dependencies": {
-    "cassandra-driver": "^3.1.0"
+    "cassandra-driver": "^3.1.2"
   },
   "devDependencies": {
     "mocha": ">= 1.14.0",

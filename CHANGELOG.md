@@ -1,5 +1,21 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.2
+
+2016-08-30
+
+### Bug Fixes
+
+- [NODEJS-283] - Possible connection leak if pool is shutting down while core connections are being created.
+- [NODEJS-288] - Callback never executed in error on subsequent Client.execute with Client configured with keyspace
+that doesn't exist.
+- [NODEJS-293] - When client.connect() return error - client.shutdown() not work properly.
+- [NODEJS-296] - Cannot read property 'consistency' of null, TypeError: Cannot read property 'consistency' of null
+- [NODEJS-297] - DCAwareRoundRobinPolicy should make a local reference to host arrays
+- [NODEJS-301] - 'Trying to access beyond buffer length' error if Warnings, Custom Payload, or Trace Id present in
+non-RESULT response Improvement
+- [NODEJS-265] - Remove connection from host pool when closed by server side
+
 ## 3.1.1
 
 2016-06-30

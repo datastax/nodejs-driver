@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.3
+
+2016-08-31
+
+### Bug Fixes
+
+- [NODEJS-303] - Protocol version downgrade fails on OSX and Windows.
+
 ## 3.1.2
 
 2016-08-30

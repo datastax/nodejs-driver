@@ -8,7 +8,7 @@ var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
 
 describe('Smoke Tests', function () {
-  this.timeout(12000);
+  this.timeout(120000);
   describe('with single node cluster', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');

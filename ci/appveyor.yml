@@ -1,13 +1,17 @@
 environment:
-  ci_type: ci_unit
+  ci_type: ci_smoke
   matrix:
     - nodejs_version: 6
       TEST_CASSANDRA_VERSION: 3.0.9
       ci_type: ci
     - nodejs_version: 5
+      TEST_CASSANDRA_VERSION: 2.2.6
     - nodejs_version: 4
+      TEST_CASSANDRA_VERSION: 2.1.15
     - nodejs_version: 0.12
+      TEST_CASSANDRA_VERSION: 2.0.17
     - nodejs_version: 0.10
+      TEST_CASSANDRA_VERSION: 1.2.19
 os: Previous Visual Studio 2015
 platform:
   - x64

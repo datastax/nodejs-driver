@@ -1,12 +1,65 @@
 language: node_js
-node_js:
-  - "6"
-  - "5"
-  - "4"
-  - "0.12"
-  - "0.10"
-  - "iojs"
-sudo: false
+matrix:
+  fast_finish: true
+  include:
+  - node_js: "6"
+    env:  TEST_CASSANDRA_VERSION="3.7"
+    os: linux
+    dist: trusty
+  - node_js: "5"
+    env: TEST_CASSANDRA_VERSION="3.0.8"
+    os: linux
+    dist: trusty
+  - node_js: "4"
+    env: TEST_CASSANDRA_VERSION="2.2.6"
+    os: linux
+    dist: trusty
+  - node_js: "0.12"
+    env: TEST_CASSANDRA_VERSION="2.1.15"
+    os: linux
+    dist: trusty
+  - node_js: "0.10"
+    env: TEST_CASSANDRA_VERSION="1.2.19"
+    os: linux
+    dist: trusty
+  - node_js: "6"
+    env:  TEST_CASSANDRA_VERSION="3.7"
+    os: osx
+    osx_image: xcode8
+  - node_js: "0.10"
+    env: TEST_CASSANDRA_VERSION="1.2.19"
+    os: osx
+    osx_image: xcode8
+sudo: required
+before_install:
+  # Install cassandra cluster manager (ccm) and its dependencies.
+  - pip install PyYAML six
+  - git clone https://github.com/pcmanus/ccm.git
+  - pushd ccm
+  - ./setup.py install
+  - popd
+  # Add ip aliases for 127.0.0.x for ccm nodes, needed for OS X only.
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo ifconfig lo0 alias 127.0.0.2; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo ifconfig lo0 alias 127.0.0.3; fi
+  # Extract Unlimited JCE Policy for SSL.
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        export JAVA_HOME=$(/usr/libexec/java_home);
+        mkdir -p jce_policy;
+        if [[ ! -f "jce_policy/policy.zip" ]]; then
+            curl -L --cookie 'oraclelicense=accept-securebackup-cookie;' http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -o jce_policy/policy.zip;
+        fi;
+        sudo unzip -o jce_policy/policy.zip -d $JAVA_HOME/jre/lib/security/;
+        sudo mv -v $JAVA_HOME/jre/lib/security/UnlimitedJCEPolicyJDK8/* $JAVA_HOME/jre/lib/security/;
+    fi
+before_script:
+  # Set CCM_PATH for ssl tests so they can resolve key/truststore.
+  - export CCM_PATH="$PWD/ccm"
+  - export PATH="$CCM_PATH:$PATH"
+  - export multi="spec=-"
+script: 
+  - npm run ci_smoke
 cache:
   directories:
     - node_modules
+    - jce_policy
+    - $HOME/.ccm/repository

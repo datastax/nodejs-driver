@@ -11,7 +11,7 @@ var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#batch(queries, {prepare: 0}, callback)', function () {
+  describe('#batch(queries, {prepare: 0}, callback) |smoke|', function () {
     var keyspace = helper.getRandomName('ks');
     var table1 = keyspace + '.' + helper.getRandomName('tblA');
     var table2 = keyspace + '.' + helper.getRandomName('tblB');

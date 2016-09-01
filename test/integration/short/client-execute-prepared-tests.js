@@ -26,7 +26,7 @@ describe('Client', function () {
       ], done);
     });
     after(helper.ccmHelper.remove);
-    it('should execute a prepared query with parameters on all hosts', function (done) {
+    it('should execute a prepared query with parameters on all hosts |smoke|', function (done) {
       var client = newInstance();
       var query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
       utils.timesSeries(3, function (n, next) {
@@ -39,7 +39,7 @@ describe('Client', function () {
         });
       }, done);
     });
-    it('should callback with error when query is invalid', function (done) {
+    it('should callback with error when query is invalid |smoke|', function (done) {
       var client = newInstance();
       var query = 'SELECT WILL FAIL';
       client.execute(query, ['system'], {prepare: 1}, function (err) {
@@ -49,7 +49,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should prepare and execute a query without parameters', function (done) {
+    it('should prepare and execute a query without parameters |smoke|', function (done) {
       var client = newInstance();
       client.execute(helper.queries.basic, null, {prepare: 1}, function (err, result) {
         assert.ifError(err);
@@ -58,7 +58,7 @@ describe('Client', function () {
         done();
       });
     });
-    it('should prepare and execute a queries in parallel', function (done) {
+    it('should prepare and execute a queries in parallel |smoke|', function (done) {
       var client = newInstance();
       var queries = [
         helper.queries.basic,
@@ -82,7 +82,7 @@ describe('Client', function () {
         });
       }, done);
     });
-    it('should fail following times if it fails to prepare', function (done) {
+    it('should fail following times if it fails to prepare |smoke|', function (done) {
       var client = newInstance();
       utils.series([function (seriesNext) {
         //parallel
@@ -113,14 +113,14 @@ describe('Client', function () {
         done();
       });
     });
-    it('should serialize all guessed types', function (done) {
+    it('should serialize all guessed types |smoke|', function (done) {
       var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]),
         true, new Date(1221111111), types.InetAddress.fromString('10.12.0.1'), null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
         'boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(values, columnNames, done);
     });
-    it('should serialize all null values', function (done) {
+    it('should serialize all null values |smoke|', function (done) {
       var values = [types.Uuid.random(), null, null, null, null, null, null, null, null, null, null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(values, columnNames, done);
@@ -139,7 +139,7 @@ describe('Client', function () {
         done();
       });
     });
-    vit('2.0', 'should use pageState and fetchSize', function (done) {
+    vit('2.0', 'should use pageState and fetchSize |smoke|', function (done) {
       var client = newInstance();
       var pageState;
       var metaPageState;
@@ -256,7 +256,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    describe('with named parameters', function () {
+    describe('with named parameters |smoke|', function () {
       vit('2.0', 'should allow an array of parameters', function (done) {
         var client = newInstance();
         var query = util.format('SELECT * FROM %s WHERE id1 = :id1', commonTable);
@@ -298,7 +298,7 @@ describe('Client', function () {
         });
       });
     });
-    it('should encode and decode maps using Map polyfills', function (done) {
+    it('should encode and decode maps using Map polyfills |smoke|', function (done) {
       var client = newInstance({ encoding: { map: helper.Map}});
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -352,7 +352,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should encode and decode sets using Set polyfills', function (done) {
+    it('should encode and decode sets using Set polyfills |smoke|', function (done) {
       var client = newInstance({ encoding: { set: helper.Set}});
       var keyspace = helper.getRandomName('ks');
       var table = keyspace + '.' + helper.getRandomName('table');
@@ -418,7 +418,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    vit('2.1',  'should support protocol level timestamp', function (done) {
+    vit('2.1',  'should support protocol level timestamp |smoke|', function (done) {
       var client = newInstance();
       var id = Uuid.random();
       //noinspection JSCheckFunctionSignatures
@@ -535,7 +535,7 @@ describe('Client', function () {
         client.shutdown.bind(client)
       ], done);
     });
-    it('should allow undefined value as a null or unset depending on the protocol version', function (done) {
+    it('should allow undefined value as a null or unset depending on the protocol version |smoke|', function (done) {
       var client1 = newInstance();
       var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
       var id = Uuid.random();
@@ -841,7 +841,7 @@ describe('Client', function () {
         }, helper.finish(client, done));
       });
     });
-    describe('with unset', function () {
+    describe('with unset |smoke|', function () {
       vit('2.2', 'should allow unset as a valid value', function (done) {
         var client1 = newInstance();
         var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
@@ -1055,7 +1055,7 @@ describe('Client', function () {
         ], done);
       });
     });
-    vdescribe('3.0', 'with materialized views', function () {
+    vdescribe('3.0', 'with materialized views |smoke|', function () {
       var keyspace = 'ks_view_prepared';
       before(function createTables(done) {
         var client = newInstance();

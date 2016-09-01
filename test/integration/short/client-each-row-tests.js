@@ -11,7 +11,7 @@ var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#eachRow(query, params, {prepare: 0})', function () {
+  describe('#eachRow(query, params, {prepare: 0}) |smoke|', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should callback per row and the end callback', function (done) {

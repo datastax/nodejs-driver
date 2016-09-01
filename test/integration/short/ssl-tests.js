@@ -9,7 +9,7 @@ var types = require('../../../lib/types');
 
 describe('Client', function () {
   this.timeout(60000);
-  context('with ssl enabled', function () {
+  context('with ssl enabled |smoke|', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
     var setupQueries = [

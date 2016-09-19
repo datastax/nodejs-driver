@@ -534,10 +534,10 @@ describe('Client', function () {
       });
     });
     it('should retrieve large result sets in parallel', function (done) {
-      insertSelectTest(table, 50000, 50, 50000, { prepare: true}, done);
+      insertSelectTest(table, 50000, 20, 50000, { prepare: true }, done);
     });
     it('should query multiple times in parallel with query tracing enabled', function (done) {
-      insertSelectTest(table, 50000, 10000, 10, { prepare: true, traceQuery: true }, done);
+      insertSelectTest(table, 50000, 2000, 10, { prepare: true, traceQuery: true }, done);
     });
   });
 });
@@ -567,10 +567,15 @@ function insertTestData(client, table, length, callback) {
 }
 
 function insertSelectTest(table, rowLength, times, selectLimit, selectOptions, done) {
-  var client = newInstance({ queryOptions: {
-    consistency: types.consistencies.quorum,
-    fetchSize: rowLength
-  }});
+  var client = newInstance({
+    queryOptions: {
+      consistency: types.consistencies.quorum,
+      fetchSize: rowLength
+    },
+    socketOptions: {
+      readTimeout: 100000
+    }
+  });
   client.on('log', helper.log(['warning', 'error']));
   var query = util.format('SELECT * FROM %s LIMIT %d', table, selectLimit);
   utils.series([
@@ -588,7 +593,6 @@ function insertSelectTest(table, rowLength, times, selectLimit, selectOptions, d
           timesNext();
         });
       }, seriesNext);
-    },
-    client.shutdown.bind(client)
-  ], done);
+    }
+  ], helper.finish(client, done));
 }

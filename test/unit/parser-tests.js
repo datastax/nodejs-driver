@@ -79,30 +79,64 @@ describe('Parser', function () {
         ])
       }, null, doneIfError(done));
     });
-    it('should read a VOID result with trace id in chunks', function (done) {
+    it('should read a VOID result with trace id chunked', function (done) {
       var parser = newInstance();
+      var responseCounter = 0;
       parser.on('readable', function () {
         var item = parser.read();
-        assert.ok(!item.error);
-        assert.strictEqual(item.header.bodyLength, 20);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
-        helper.assertInstanceOf(item.flags.traceId, types.Uuid);
-        assert.strictEqual(item.flags.traceId.getBuffer().slice(0, 6).toString('hex'), 'fffffffffafa');
-        done();
+        responseCounter++;
       });
+
+      var body = Buffer.concat([
+        new Buffer(16), //uuid
+        new Buffer([0, 0, 0, types.resultKind.voidResult])
+      ]);
       parser._transform({
-        header: getFrameHeader(20, types.opcodes.result, 2, true),
-        chunk: new Buffer('fffffffffafa', 'hex'), //first 6 bytes of the uuid
+        header: getFrameHeader(4, types.opcodes.result, 2, true),
+        chunk: body
+      }, null, doneIfError(done));
+      assert.strictEqual(responseCounter, 1);
+      parser.setOptions(88, { byRow: true });
+      for (var i = 0; i < body.length; i++) {
+        parser._transform({
+          header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
+          chunk: body.slice(i, i + 1),
+          offset: 0
+        }, null, doneIfError(done));
+      }
+      assert.strictEqual(responseCounter, 2);
+      done();
+    });
+    it('should read a RESULT result with trace id chunked', function (done) {
+      var parser = newInstance();
+      var responseCounter = 0;
+      parser.on('readable', function () {
+        var item = parser.read();
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        responseCounter++;
+      });
+
+      var body = Buffer.concat([
+        new Buffer(16), //uuid
+        getBodyChunks(3, 1, 0, undefined, null).chunk
+      ]);
+      parser._transform({
+        header: getFrameHeader(body.length, types.opcodes.result, 2, true),
+        chunk: body,
         offset: 0
       }, null, doneIfError(done));
-      parser._transform({
-        header: getFrameHeader(20, types.opcodes.result, 2, true),
-        chunk: Buffer.concat([
-          new Buffer(10), //second part uuid
-          new Buffer([0, 0, 0, types.resultKind.voidResult])
-        ]),
-        offset: 0
-      }, null, doneIfError(done));
+      assert.strictEqual(responseCounter, 1);
+      parser.setOptions(88, { byRow: true });
+      for (var i = 0; i < body.length; i++) {
+        parser._transform({
+          header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
+          chunk: body.slice(i, i + 1),
+          offset: 0
+        }, null, doneIfError(done));
+      }
+      assert.strictEqual(responseCounter, 2);
+      done();
     });
     it('should read a VOID result with warnings and custom payload', function (done) {
       var parser = newInstance();

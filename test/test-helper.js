@@ -508,9 +508,11 @@ var helper = {
    * @returns {Function}
    */
   finish: function (client, callback) {
-    return (function (err) {
-      assert.ifError(err);
-      client.shutdown(callback);
+    return (function onFinish(err) {
+      client.shutdown(function () {
+        assert.ifError(err);
+        callback();
+      });
     });
   },
 

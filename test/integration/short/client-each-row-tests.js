@@ -533,39 +533,14 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
-    it('should retrieve large result sets in parallel', function (done) {
-      var client = newInstance({ queryOptions: {
-        consistency: types.consistencies.quorum,
-        fetchSize: 20000
-      }});
-      client.on('log', function (level, className, message, furtherInfo) {
-        if (level !== 'warning' && level !== 'error') {
-          return;
-        }
-        console.error(level, className, message, furtherInfo);
+    if (!helper.isWin()) {
+      vit('2.0', 'should retrieve large result sets in parallel', function (done) {
+        insertSelectTest(table, 50000, 20, 50000, { prepare: true }, done);
       });
-      var query = util.format('SELECT * FROM %s LIMIT 2000', table);
-      utils.series([
-        client.connect.bind(client),
-        helper.toTask(insertTestData, null, client, table, 2000),
-        function selectData(seriesNext) {
-          utils.timesLimit(400, 6, function (n, timesNext) {
-            var counter = 0;
-            client.eachRow(query, [], { prepare: true }, function (n, row) {
-              assert.ok(row);
-              counter++;
-            }, function (err, result) {
-              assert.ifError(err);
-              assert.strictEqual(result.rowLength, counter);
-              timesNext();
-            });
-          }, seriesNext);
-        }
-      ], function (err) {
-        client.shutdown();
-        done(err);
+      vit('2.0', 'should query multiple times in parallel with query tracing enabled', function (done) {
+        insertSelectTest(table, 50000, 2000, 10, { prepare: true, traceQuery: true }, done);
       });
-    });
+    }
   });
 });
 
@@ -585,9 +560,41 @@ function insertTestData(client, table, length, callback) {
     },
     function insertData(seriesNext) {
       var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      var value = utils.stringRepeat('abcdefghij', 10);
       utils.timesLimit(length, 100, function (n, next) {
-        client.eachRow(query, [types.Uuid.random(), n.toString()], {prepare: 1}, helper.noop, next);
+        client.eachRow(query, [types.Uuid.random(), value], {prepare: 1}, helper.noop, next);
       }, seriesNext);
     }
   ], callback);
+}
+
+function insertSelectTest(table, rowLength, times, selectLimit, selectOptions, done) {
+  var client = newInstance({
+    queryOptions: {
+      consistency: types.consistencies.quorum,
+      fetchSize: rowLength
+    },
+    socketOptions: {
+      readTimeout: 100000
+    }
+  });
+  client.on('log', helper.log(['warning', 'error']));
+  var query = util.format('SELECT * FROM %s LIMIT %d', table, selectLimit);
+  utils.series([
+    client.connect.bind(client),
+    helper.toTask(insertTestData, null, client, table, rowLength),
+    function selectData(seriesNext) {
+      utils.timesLimit(times, 5, function (n, timesNext) {
+        var counter = 0;
+        client.eachRow(query, [], selectOptions, function (n, row) {
+          assert.ok(row);
+          counter++;
+        }, function (err, result) {
+          assert.ifError(err);
+          assert.strictEqual(result.rowLength, counter);
+          timesNext();
+        });
+      }, seriesNext);
+    }
+  ], helper.finish(client, done));
 }

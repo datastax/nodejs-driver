@@ -533,10 +533,10 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
-    it('should retrieve large result sets in parallel', function (done) {
+    vit('2.0', 'should retrieve large result sets in parallel', function (done) {
       insertSelectTest(table, 50000, 20, 50000, { prepare: true }, done);
     });
-    it('should query multiple times in parallel with query tracing enabled', function (done) {
+    vit('2.0', 'should query multiple times in parallel with query tracing enabled', function (done) {
       insertSelectTest(table, 50000, 2000, 10, { prepare: true, traceQuery: true }, done);
     });
   });

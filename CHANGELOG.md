@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.4
+
+2016-09-21
+
+### Bug Fixes
+
+- [NODEJS-310] - Reading streaming frames with flags can result in uncaught error
+
 ## 3.1.3
 
 2016-08-31

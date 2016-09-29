@@ -30,7 +30,7 @@ describe('RequestHandler', function () {
   describe('#getDecision()', function () {
     it('should retry when there was a socket error and mutation was not applied', function () {
       var handler = newInstance();
-      var result = handler.getDecision({ isSocketError: true });
+      var result = handler.getDecision({ isSocketError: true, requestNotWritten: true });
       assert.strictEqual(result.decision, retry.RetryPolicy.retryDecision.retry);
     });
     it('should use the retry policy when there was a socket error and mutation was applied', function () {
@@ -40,7 +40,7 @@ describe('RequestHandler', function () {
       handler.retryPolicy = { onRequestError: function () {
         requestErrorCalled++;
       }};
-      handler.getDecision({ isSocketError: true, wasRequestWritten: true });
+      handler.getDecision({ isSocketError: true });
       assert.strictEqual(requestErrorCalled, 1);
     });
   });

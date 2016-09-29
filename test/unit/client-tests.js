@@ -669,12 +669,14 @@ describe('Client', function () {
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         client.shutdown(function clientShutdownCallback(err) {
           assert.ifError(err);
-          logEvents.length = 0;
-          setTimeout(function assertAfterSomeTime() {
-            assert.strictEqual(
-              logEvents.length, 0, 'Expected no log events after shutdown but was: ' + util.inspect(logEvents));
-            done();
-          }, 400);
+          setTimeout(function () {
+            logEvents.length = 0;
+            setTimeout(function assertAfterSomeTime() {
+              assert.strictEqual(
+                logEvents.length, 0, 'Expected no log events after shutdown but was: ' + util.inspect(logEvents));
+              done();
+            }, 100);
+          }, 20);
         });
       })
     });

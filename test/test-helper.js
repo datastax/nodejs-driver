@@ -515,6 +515,23 @@ var helper = {
       });
     });
   },
+  /**
+   * Returns a handler that executes multiple queries
+   * @param {Client} client
+   * @param {Array<string>} queries
+   */
+  executeTask: function (client, queries) {
+    return (function (done) {
+      utils.series([
+        client.connect.bind(client),
+        function executeQueries(next) {
+          utils.eachSeries(queries, function (query, eachNext) {
+            client.execute(query, eachNext);
+          }, next);
+        }
+      ], helper.finish(client, done));
+    });
+  },
 
   /**
    * Executes a function at regular intervals while the condition is false or the amount of attempts >= maxAttempts.

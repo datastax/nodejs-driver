@@ -200,7 +200,8 @@ describe('Connection', function () {
               next(err);
             });
           }, seriesNext);
-        }
+        },
+        connection.close.bind(connection)
       ], done);
     });
   });

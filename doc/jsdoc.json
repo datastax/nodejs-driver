@@ -15,5 +15,6 @@
     "default": {
       "outputSourceFiles": false
     }
-  }
+  },
+  "plugins": ["doc/doc-plugin"]
 }

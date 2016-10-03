@@ -237,5 +237,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
-[cql-udt]: http://cassandra.apache.org/doc/cql3/CQL.html#createTypeStmt
+[cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#user-defined-types
 [survey]: http://goo.gl/forms/f216tY3Ebr

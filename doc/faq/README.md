@@ -6,7 +6,7 @@ The latest version of the driver supports any Cassandra version greater than 1.2
 
 ### Which versions of CQL does the driver support?
 
-It supports [CQL version 3](http://cassandra.apache.org/doc/cql3/CQL.html).
+It supports [CQL version 3](http://cassandra.apache.org/doc/latest/cql/index.html).
 
 ### How do I generate a random uuid or a time-based uuid?
 

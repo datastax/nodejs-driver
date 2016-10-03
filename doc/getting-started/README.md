@@ -110,4 +110,4 @@ const client = new Client({ authProvider: authProvider });
 ```
 
 [consistency]: http://docs.datastax.com/en/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html
-[datatypes]: http://datastax.github.io/nodejs-driver/features/datatypes/
+[datatypes]: /features/datatypes/

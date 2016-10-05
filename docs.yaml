@@ -18,11 +18,13 @@ sections:
     prefix:   /coding-rules
     type:     markdown
     files:    'doc/coding-rules/**/*.md'
+  - title:    API docs
+    prefix:   /api
+    type:     jsdoc
+    config:   doc/jsdoc.json
 links:
   - title: Code
     href:  https://github.com/datastax/nodejs-driver/
-  - title: Docs
-    href:  http://datastax.github.io/nodejs-driver/
   - title: Issues
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
   - title: Mailing List
@@ -32,5 +34,5 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/cassandra-driver
 versions:
-  - name: 3.0
-    ref: HEAD
+  - name: '3.0'
+    ref: '3.0'

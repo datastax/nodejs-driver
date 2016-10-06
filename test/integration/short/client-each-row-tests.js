@@ -169,7 +169,9 @@ describe('Client', function () {
     before(function (done) {
       var client = newInstance();
       utils.series([
-        helper.ccmHelper.start(3),
+        helper.ccmHelper.start(3, {
+          jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1']
+        }),
         function (next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, next);
         },

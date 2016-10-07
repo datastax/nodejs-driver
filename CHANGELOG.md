@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.5
+
+2016-10-07
+
+### Bug Fixes
+
+- [NODEJS-313] - Client-to-node encryption: mark request as written before invoking socket.write()
+
 ## 3.1.4
 
 2016-09-21

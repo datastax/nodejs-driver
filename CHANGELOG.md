@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Enterprise Node.js Driver
 
+## 1.0.4
+
+2016-10-07
+
+### Improvements
+
+- [NODEJS-315] - Update core driver dependency to v3.1.5.
+
 ## 1.0.3
 
 2016-09-21

@@ -260,6 +260,6 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 [modern-graph]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[doc-index]: http://docs.datastax.com/en/latest-dse-nodejs-driver/
-[api-docs]: http://docs.datastax.com/en/latest-dse-nodejs-driver-api
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/1.0/supplemental/faq/
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
+[api-docs]: http://docs.datastax.com/en/latest-dse-nodejs-driver-api/
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/1.0/faq/

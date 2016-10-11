@@ -98,4 +98,34 @@ describe('Point', function () {
         });
     });
   });
+  describe('#fromString()', function () {
+    it('should parse WKT representation', function () {
+      [
+        ['POINT(10 20)', 10, 20],
+        ['POINT(10.1 20)', 10.1, 20],
+        ['POINT (1.2234 .3)', 1.2234, 0.3],
+        ['POINT(10 -20.5)', 10, -20.5],
+        ['POINT(-10 -20)', -10, -20],
+        ['POINT (-10 -20)', -10, -20]
+      ].forEach(function (item) {
+        var p = Point.fromString(item[0]);
+        helper.assertInstanceOf(p, Point);
+        assert.strictEqual(p.x, item[1]);
+        assert.strictEqual(p.y, item[2]);
+      });
+    });
+    it('should throw TypeError when WKT representation is invalid', function () {
+      [
+        'POINT  (10 20)',
+        'POINT (zz 20)',
+        'POINT (1,2234 13)',
+        'POINT (10 20 30)',
+        'POINT (10 20 30 40)'
+      ].forEach(function (item) {
+        assert.throws(function () {
+          Point.fromString(item);
+        }, TypeError);
+      });
+    });
+  });
 });

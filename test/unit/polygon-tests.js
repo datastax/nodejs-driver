@@ -138,4 +138,40 @@ describe('Polygon', function () {
         });
     });
   });
+  describe('#fromString()', function () {
+    it('should parse WKT representation', function () {
+      [
+        ['POLYGON ((10 20, 30 40, 30 -40, 10 20))', [[10, 20, 30, 40, 30, -40, 10, 20]]],
+        ['POLYGON((11.9 20, 30 40, 30 -40, 11.9 20))', [[11.9, 20, 30, 40, 30, -40, 11.9, 20]]],
+        [
+          'POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30.1, 35 35, 30.1 20, 20 30.1))',
+          [[35, 10, 45, 45, 15, 40, 10, 20, 35, 10], [20, 30.1, 35, 35, 30.1, 20, 20, 30.1]]
+        ]
+      ].forEach(function (item) {
+        var shape = Polygon.fromString(item[0]);
+        var rings = item[1];
+        assert.strictEqual(shape.rings.length, rings.length);
+        rings.forEach(function (ringPoints, ringIndex) {
+          var shapeRing = shape.rings[ringIndex];
+          assert.strictEqual(shapeRing.length, ringPoints.length / 2);
+          for (var i = 0; i < ringPoints.length / 2; i++) {
+            var p = shapeRing[i];
+            assert.strictEqual(p.x, ringPoints[i*2]);
+            assert.strictEqual(p.y, ringPoints[i*2+1]);
+          }
+        });
+      });
+    });
+    it('should throw TypeError when WKT representation is invalid', function () {
+      [
+        'POLYGON (10 20, 30 40, -30 -10, 10 20)',
+        'POLYGON ((10 20, 30 40, 30 -40, 10))',
+        'POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),|(20 30.1, 35 35, 30.1 20, 20 30.1))'
+      ].forEach(function (item) {
+        assert.throws(function () {
+          Polygon.fromString(item);
+        }, TypeError);
+      });
+    });
+  });
 });

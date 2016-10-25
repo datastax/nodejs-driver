@@ -10,9 +10,7 @@ module.exports = {
   auth: require('./lib/auth'),
   Client: require('./lib/dse-client'),
   geometry: require('./lib/geometry'),
-  graph: {
-    GraphResultSet: require('./lib/graph/result-set')
-  },
+  graph: require('./lib/graph'),
   //export cassandra driver modules
   Encoder: cassandra.Encoder,
   errors: cassandra.errors,

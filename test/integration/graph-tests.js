@@ -22,6 +22,7 @@ var loadBalancing = require('../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
 var ExecutionProfile = require('../../lib/execution-profile.js');
 var utils = require('../../lib/utils');
+var graphModule = require('../../lib/graph');
 
 var makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
 
@@ -315,6 +316,62 @@ vdescribe('5.0', 'Client', function () {
           done();
         });
       }));
+      context('with bytecode-json as graph language', function () {
+        it('should retrieve Vertex instances', wrapClient(function (client, done) {
+          var query = JSON.stringify({
+            '@type': 'g:Bytecode',
+            '@value': {
+              'step': [["V"]]
+            }
+          });
+          client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+            assert.ifError(err);
+            helper.assertInstanceOf(result, graphModule.GraphResultSet);
+            var arr = result.toArray();
+            arr.forEach(function (v) {
+              helper.assertInstanceOf(v, graphModule.Vertex);
+              assert.ok(v.label);
+            });
+            done();
+          });
+        }));
+        it('should retrieve Edge instances', wrapClient(function (client, done) {
+          var query = JSON.stringify({
+            '@type': 'g:Bytecode',
+            '@value': {
+              'step': [["E"]]
+            }
+          });
+          client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+            assert.ifError(err);
+            helper.assertInstanceOf(result, graphModule.GraphResultSet);
+            var arr = result.toArray();
+            arr.forEach(function (e) {
+              helper.assertInstanceOf(e, graphModule.Edge);
+              assert.ok(e.outV);
+              assert.ok(e.outVLabel);
+              assert.ok(e.inV);
+              assert.ok(e.inVLabel);
+            });
+            done();
+          });
+        }));
+        it('should retrieve a Int64 scalar', wrapClient(function (client, done) {
+          var query = JSON.stringify({
+            '@type': 'g:Bytecode',
+            '@value': {
+              'step': [["V"], ["count"]]
+            }
+          });
+          client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+            assert.ifError(err);
+            helper.assertInstanceOf(result, graphModule.GraphResultSet);
+            var count = result.first();
+            helper.assertInstanceOf(count, cassandra.types.Long);
+            done();
+          });
+        }));
+      });
     });
     it('should use list as a parameter', wrapClient(function(client, done) {
       var characters = ['Mario', "Luigi", "Toad", "Bowser", "Peach", "Wario", "Waluigi"];

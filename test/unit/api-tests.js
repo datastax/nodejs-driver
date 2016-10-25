@@ -31,6 +31,14 @@ describe('API', function () {
   it('should expose GraphResultSet constructor', function () {
     checkConstructor(api.graph, 'GraphResultSet');
   });
+  it('should expose graph types constructor', function () {
+    checkConstructor(api.graph, 'Edge');
+    checkConstructor(api.graph, 'Element');
+    checkConstructor(api.graph, 'Path');
+    checkConstructor(api.graph, 'Property');
+    checkConstructor(api.graph, 'Vertex');
+    checkConstructor(api.graph, 'VertexProperty');
+  });
   it('should expose cassandra driver modules', function () {
     assert.ok(api.errors);
     assert.ok(api.policies);

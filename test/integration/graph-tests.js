@@ -371,6 +371,23 @@ vdescribe('5.0', 'Client', function () {
             done();
           });
         }));
+        it('should allow graph language to be set from the execution profile', wrapClient(function (client, done) {
+          var query = JSON.stringify({
+            '@type': 'g:Bytecode',
+            '@value': {
+              'step': [["V"]]
+            }
+          });
+          client.executeGraph(query, null, { executionProfile: 'graph-profile1' }, function (err, result) {
+            assert.ifError(err);
+            helper.assertInstanceOf(result, graphModule.GraphResultSet);
+            var arr = result.toArray();
+            arr.forEach(function (v) {
+              helper.assertInstanceOf(v, graphModule.Vertex);
+            });
+            done();
+          });
+        }, { profiles: [ new ExecutionProfile('graph-profile1', { graphOptions: { language: 'bytecode-json' } }) ]}));
       });
     });
     it('should use list as a parameter', wrapClient(function(client, done) {

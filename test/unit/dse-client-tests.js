@@ -479,6 +479,26 @@ describe('Client', function () {
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
+    it('should use the graph language provided in the profile', function () {
+      var client = new Client({
+        contactPoints: ['host1'],
+        profiles: [
+          new ExecutionProfile('graph-olap', {
+            graphOptions: { language: 'lolcode' }
+          })
+        ]
+      });
+      var actualOptions = null;
+      client.execute = function (query, params, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      assert.ok(actualOptions && actualOptions.customPayload);
+      assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'lolcode');
+      client.executeGraph('Q', null, null, helper.throwOp);
+      assert.ok(actualOptions && actualOptions.customPayload);
+      assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'gremlin-groovy');
+    });
     describe('with analytics queries', function () {
       it('should query for analytics master', function (done) {
         var client = new Client({ contactPoints: ['host1'], graphOptions: {

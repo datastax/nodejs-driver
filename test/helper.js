@@ -684,29 +684,4 @@ helper.ads.getKrb5ConfigPath = function() {
   return path.join(this.dir, 'krb5.conf');
 };
 
-/**
- * Adds a polyfill for Buffer.equals if it is not currently present.
- * This should only be required for nodejs runtimes < 0.12.
- *
- * It is needed as some tests use this (not the library itself).
- */
-Buffer.prototype.equals = Buffer.prototype.equals ||
-  function (that) {
-    if (this === that) {
-      return true;
-    }
-
-    if(!Buffer.isBuffer(that) || this.length !== that.length) {
-      return false;
-    } else {
-      // find first unmatched element.
-      for(var i = 0; i < this.length; i++) {
-        if(this[i] !== that[i]) {
-          return false;
-        }
-      }
-      return true;
-    }
-  };
-
 module.exports = helper;

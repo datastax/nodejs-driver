@@ -37,7 +37,11 @@ describe('GraphSONReader', function () {
           };
           var result = reader.read(obj);
           helper.assertInstanceOf(result, item[1]);
-          assert.ok(result.equals(item[2]));
+          if (result.equals) {
+            assert.ok(result.equals(item[2]));
+          } else {
+            assert.deepEqual(result, item[2]);
+          }
         });
       });
     })();

@@ -477,30 +477,94 @@ describe('TokenAwarePolicy', function () {
     var childPolicy = createDummyPolicy(options);
     var policy = new TokenAwarePolicy(childPolicy);
     var client = new Client(options);
-    client.getReplicas = function () {
-      return [new Host('repl1', 2, options), new Host('repl2', 2, options), new Host('repl3', 2, options), new Host('repl4', 2, options)];
-    };
+    client.getReplicas = toFunc([ 'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local' ].map(toHost));
     utils.series([
-      function (next) {
-        policy.init(client, new HostMap(), next);
-      },
+      helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         policy.newQueryPlan(null, {routingKey: new Buffer(16)}, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
-          assert.strictEqual(hosts.length, 6);
+          assert.strictEqual(hosts.length, 4);
           assert.strictEqual(childPolicy.initCalled, 1);
           assert.strictEqual(childPolicy.newQueryPlanCalled, 1);
-          assert.strictEqual(hosts[0].address, 'repl2');
-          assert.strictEqual(hosts[1].address, 'repl4');
-          //Child load balancing policy nodes, do not repeat repl2
-          assert.strictEqual(hosts[2].address, 'child1');
-          assert.strictEqual(hosts[3].address, 'child2');
-          //Remote replicas
-          assert.strictEqual(hosts[4].address, 'repl1');
-          assert.strictEqual(hosts[5].address, 'repl3');
+          // local replicas in the first 2 positions (unordered)
+          assert.deepEqual(hosts.map(toAddress).slice(0, 2).sort(), ['repl2_local', 'repl4_local']);
+          // Child load balancing policy nodes, do not repeat repl2
+          assert.deepEqual(hosts.map(toAddress).slice(2, 4), [ 'child1', 'child2' ]);
           next();
         });
+      }
+    ], done);
+  });
+  it('should retrieve local and remote replicas in a pseudo random order', function (done) {
+    var options = clientOptions.extend({}, helper.baseOptions);
+    var childPolicy = createDummyPolicy(options);
+    var policy = new TokenAwarePolicy(childPolicy);
+    var client = new Client(options);
+    client.getReplicas = toFunc(
+      [ 'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local', 'repl5_local'].map(toHost));
+    var localReplicas = {};
+    utils.series([
+      helper.toTask(policy.init, policy, client, new HostMap()),
+      function (next) {
+        utils.timesLimit(100, 32, function (n, timesNext) {
+          policy.newQueryPlan(null, { routingKey: new Buffer(16) }, function (err, iterator) {
+            var hosts = helper.iteratorToArray(iterator);
+            assert.strictEqual(hosts.length, 5);
+            assert.deepEqual(hosts.map(toAddress).slice(0, 3).sort(), ['repl2_local', 'repl4_local', 'repl5_local']);
+            localReplicas[hosts[0].address] = true;
+            // Child load balancing policy nodes, do not repeat repl2
+            assert.deepEqual(hosts.map(toAddress).slice(3, 5), [ 'child1', 'child2' ]);
+            timesNext();
+          });
+        }, next);
+      },
+      function checkFirstReplicas(next) {
+        assert.strictEqual(Object.keys(localReplicas).length, 3);
+        next();
+      }
+    ], done);
+  });
+  it('should fairly distribute between replicas', function (done) {
+    this.timeout(10000);
+    var options = clientOptions.extend({}, helper.baseOptions);
+    var childPolicy = createDummyPolicy(options);
+    var policy = new TokenAwarePolicy(childPolicy);
+    var client = new Client(options);
+    client.getReplicas = toFunc([
+      'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local', 'repl5_remote', 'repl6_local', 'repl7_local'
+    ].map(toHost));
+    // An array containing the amount of times it host appeared at a determined position
+    var replicaPositions = [ {}, {}, {}, {} ];
+    var routingKey = types.Uuid.random().buffer;
+    var iterations = 100000;
+    utils.series([
+      helper.toTask(policy.init, policy, client, new HostMap()),
+      function (next) {
+        utils.timesLimit(iterations, 128, function (n, timesNext) {
+          policy.newQueryPlan(null, { routingKey: routingKey }, function (err, iterator) {
+            var hosts = helper.iteratorToArray(iterator);
+            assert.strictEqual(hosts.length, 6);
+            hosts.map(toAddress).slice(0, 4).forEach(function (address, i) {
+              replicaPositions[i][address] = (replicaPositions[i][address] || 0) + 1;
+            });
+            process.nextTick(timesNext);
+          });
+        }, next);
+      },
+      function checkReplicas(next) {
+        var totalHosts = replicaPositions.length;
+        var expected = iterations / totalHosts;
+        for (var i = 0; i < totalHosts; i++) {
+          var hostsAtPosition = replicaPositions[i];
+          Object.keys(hostsAtPosition).forEach(function (address) {
+            var timesSelected = hostsAtPosition[address];
+            // Check that the times that the value is selected is close to the expected
+            assert.ok(timesSelected > expected * 0.97);
+            assert.ok(timesSelected < expected * 1.03);
+          });
+        }
+        next();
       }
     ], done);
   });
@@ -617,18 +681,20 @@ function createDummyPolicy(options) {
   var childPolicy = new LoadBalancingPolicy();
   childPolicy.initCalled = 0;
   childPolicy.newQueryPlanCalled = 0;
-  childPolicy.remoteCounter = 0;
   childPolicy.init = function (c, hs, cb) {
     childPolicy.initCalled++;
     cb();
   };
-  childPolicy.getDistance = function () {
-    return childPolicy.remoteCounter++ % 2 === 0 ? types.distance.remote : types.distance.local;
+  childPolicy.getDistance = function (h) {
+    if (h.address.lastIndexOf('_remote') > 0) {
+      return types.distance.remote;
+    }
+    return types.distance.local;
   };
   childPolicy.newQueryPlan = function (k, o, cb) {
     childPolicy.newQueryPlanCalled++;
 
-    var hosts = [new Host('repl2', 2, options), new Host('child1', 2, options), new Host('child2', 2, options)];
+    var hosts = [ new Host('repl2_local', 2, options), new Host('child1', 2, options), new Host('child2', 2, options) ];
     cb(null, utils.arrayIterator(hosts));
   };
   return childPolicy;
@@ -656,4 +722,25 @@ function createHost(address, options, dc) {
   var h = new Host(address, 4, options);
   h.datacenter = dc || 'dc1';
   return h;
+}
+
+/**
+ * @param {Host} h
+ * @returns {String}
+ */
+function toAddress(h) {
+  return h.address;
+}
+
+/**
+ * @param {String} address
+ * @returns {Host}
+ */
+function toHost(address) {
+  var options = clientOptions.extend({}, helper.baseOptions);
+  return new Host(address, 4, options);
+}
+
+function toFunc(val) {
+  return (function () { return val; });
 }

@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.1.6
+
+2016-11-14
+
+### Bug Fixes
+
+- [NODEJS-294] - TokenAwarePolicy: Avoid yielding the primary replica first
+
 ## 3.1.5
 
 2016-10-07

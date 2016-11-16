@@ -16,6 +16,8 @@ The DataStax Enterprise Node.js Driver can be used solely with DataStax Enterpri
 npm install dse-driver
 ```
 
+[![Build Status](https://travis-ci.org/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver)
+
 ## Documentation
 
 - [Documentation index][doc-index]

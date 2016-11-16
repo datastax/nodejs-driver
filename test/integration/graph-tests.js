@@ -321,25 +321,77 @@ vdescribe('5.0', 'Client', function () {
           var query = JSON.stringify({
             '@type': 'g:Bytecode',
             '@value': {
-              'step': [["V"]]
+              'step': [['V'], ['hasLabel', 'person']]
             }
           });
           client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
             assert.ifError(err);
             helper.assertInstanceOf(result, graphModule.GraphResultSet);
             var arr = result.toArray();
+            assert.ok(arr.length > 0);
             arr.forEach(function (v) {
               helper.assertInstanceOf(v, graphModule.Vertex);
               assert.ok(v.label);
+              helper.assertInstanceOf(v.properties['age'], Array);
+              assert.strictEqual(v.properties['age'].length, 1);
+              helper.assertInstanceOf(v.properties['age'][0], graphModule.VertexProperty);
+              assert.strictEqual(typeof v.properties['age'][0].value, 'number');
             });
             done();
           });
+        }));
+        it('should parse nested VertexProperties', wrapClient(function (client, done) {
+          var vertex;
+          utils.series([
+            function createSchema (next) {
+              var schemaQuery = '' +
+                'schema.propertyKey("graphson2_sub_prop").Text().create()\n' +
+                'schema.propertyKey("graphson2_meta_prop").Text().properties("graphson2_sub_prop").create()\n' +
+                'schema.vertexLabel("graphson2_meta_v").properties("graphson2_meta_prop").create()';
+              client.executeGraph(schemaQuery, next);
+            },
+            function createVertex (next) {
+              var query = "g.addV(label, 'graphson2_meta_v', 'graphson2_meta_prop', 'hello')";
+              client.executeGraph(query, function (err, result) {
+                assert.ifError(err);
+                assert.ok(result);
+                assert.strictEqual(result.length, 1);
+                vertex = result.first();
+                next();
+              });
+            },
+            function extendProperty (next) {
+              var query = "g.V(vId).next().property('graphson2_meta_prop').property('graphson2_sub_prop', 'hi')";
+              client.executeGraph(query, {vId:vertex.id}, function (err, result) {
+                assert.ifError(err);
+                assert.ok(result);
+                assert.strictEqual(result.length, 1);
+                next();
+              });
+            },
+            function validateVertex (next) {
+              var query = JSON.stringify({
+                '@type': 'g:Bytecode',
+                '@value': {
+                  'step': [['V', vertex.id]]
+                }
+              });
+              client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+                assert.ifError(err);
+                var nVertex = result.first();
+                var meta_prop = nVertex.properties.graphson2_meta_prop[0];
+                assert.strictEqual(meta_prop.value, 'hello');
+                assert.deepEqual(meta_prop.properties, { graphson2_sub_prop: 'hi' });
+                next();
+              });
+            }
+          ], done);
         }));
         it('should retrieve Edge instances', wrapClient(function (client, done) {
           var query = JSON.stringify({
             '@type': 'g:Bytecode',
             '@value': {
-              'step': [["E"]]
+              'step': [['E'], ['hasLabel', 'created']]
             }
           });
           client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
@@ -352,6 +404,8 @@ vdescribe('5.0', 'Client', function () {
               assert.ok(e.outVLabel);
               assert.ok(e.inV);
               assert.ok(e.inVLabel);
+              assert.ok(e.properties);
+              assert.strictEqual(typeof e.properties.weight, 'number');
             });
             done();
           });

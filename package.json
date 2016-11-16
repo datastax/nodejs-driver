@@ -18,7 +18,7 @@
     "graphdb"
   ],
   "dependencies": {
-    "cassandra-driver": "^3.1.5"
+    "cassandra-driver": "^3.1.6"
   },
   "devDependencies": {
     "mocha": ">= 1.14.0",

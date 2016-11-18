@@ -1,5 +1,15 @@
 # ChangeLog - DataStax Enterprise Node.js Driver
 
+## 1.1.0
+
+2016-11-18
+
+### Improvements
+
+- [NODEJS-316] - Implement fromString() method for geotypes
+- [NODEJS-317] - Support bytecode-json decoding in the DSE Driver
+- [NODEJS-318] - Include graph language in the Execution Profiles
+
 ## 1.0.4
 
 2016-10-07

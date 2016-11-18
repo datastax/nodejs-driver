@@ -38,10 +38,10 @@ You can use the [project mailing list][mailinglist] or create a ticket on the [J
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
+const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1' });
 
-const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
-client.execute(query, ['guy'], function(err, result) {
+const query = 'SELECT name, age, email FROM users WHERE key = ?';
+client.execute(query, [ 'guy' ], function(err, result) {
   assert.ifError(err);
   console.log('got user profile with email ' + result.rows[0].email);
 });
@@ -57,10 +57,10 @@ Also, when preparing, the driver retrieves information about the parameter types
 The driver will prepare the query once on each host and execute the statement with the bound parameters.
 
 ```javascript
-//Use query markers (?) and parameters
-const query = 'UPDATE user_profiles SET birth=? WHERE key=?'; 
-const params = [new Date(1942, 10, 1), 'jimi-hendrix'];
-//Set the prepare flag in the query options
+// Use query markers (?) and parameters
+const query = 'UPDATE users SET birth = ? WHERE key=?'; 
+const params = [ new Date(1942, 10, 1), 'jimi-hendrix' ];
+// Set the prepare flag in the query options
 client.execute(query, params, { prepare: true }, function(err) {
   assert.ifError(err);
   console.log('Row updated on the cluster');
@@ -73,10 +73,10 @@ When using `#eachRow()` and `#stream()` methods, the driver parses each row as s
  yielding rows without buffering them.
 
 ```javascript
-//Reducing a large result
+// Reducing a large result
 client.eachRow('SELECT time, val FROM temperature WHERE station_id=', ['abc'],
   function(n, row) {
-    //the callback will be invoked per each row as soon as they are received
+    // The callback will be invoked per each row as soon as they are received
     minTemperature = Math.min(row.val, minTemperature);
   },
   function (err) {
@@ -92,17 +92,17 @@ It can be **piped** downstream and provides automatic pause/resume logic (it buf
 ```javascript
 client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
   .on('readable', function () {
-    //readable is emitted as soon a row is received and parsed
+    // 'readable' is emitted as soon a row is received and parsed
     var row;
     while (row = this.read()) {
       console.log('time %s and value %s', row.time, row.val);
     }
   })
   .on('end', function () {
-    //stream ended, there aren't any more rows
+    // Stream ended, there aren't any more rows
   })
   .on('error', function (err) {
-    //Something went wrong: err is a response error from Cassandra
+    // Something went wrong: err is a response error from Cassandra
   });
 ```
 
@@ -112,6 +112,7 @@ client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
 
 For example:
 Consider the following UDT and table
+
 ```cql
 CREATE TYPE address (
   street text,
@@ -131,7 +132,7 @@ You can retrieve the user address details as a regular Javascript object.
 
 ```javascript
 const query = 'SELECT name, email, address FROM users WHERE name = ?';
-client.execute(query, [name], { prepare: true}, function (err, result) {
+client.execute(query, [ name ], { prepare: true }, function (err, result) {
   const row = result.first();
   const address = row.address;
   console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
@@ -149,8 +150,8 @@ All driver methods use a default `fetchSize` of 5000 rows, retrieving only first
 ```javascript
 //Imagine a column family with millions of rows
 const query = 'SELECT * FROM largetable';
-client.eachRow(query, [], {autoPage: true}, function (n, row) {
-  //This function will be called per each of the rows in all the table
+client.eachRow(query, [], { autoPage: true }, function (n, row) {
+  // This function will be invoked per each of the rows in all the table
 }, endCallback);
 ```
 
@@ -162,11 +163,11 @@ You can execute multiple statements in a batch to update/insert several rows ato
 const queries = [
   {
     query: 'UPDATE user_profiles SET email=? WHERE key=?',
-    params: [emailAddress, 'hendrix']
+    params: [ emailAddress, 'hendrix' ]
   },
   {
     query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
-    params: ['hendrix', 'Changed email', new Date()]
+    params: [ 'hendrix', 'Changed email', new Date() ]
   }
 ];
 client.batch(queries, { prepare: true }, function(err) {
@@ -219,18 +220,18 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 [cassandra]: http://cassandra.apache.org/
-[doc-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/
-[doc-index]: http://datastax.github.io/nodejs-driver/
-[doc-datatypes]: http://datastax.github.io/nodejs-driver/features/datatypes/
-[doc-numerical]: http://datastax.github.io/nodejs-driver/features/datatypes/numerical/
-[doc-uuid]: http://datastax.github.io/nodejs-driver/features/datatypes/uuids/
-[doc-collections]: http://datastax.github.io/nodejs-driver/features/datatypes/collections/
-[doc-udt]: http://datastax.github.io/nodejs-driver/features/datatypes/udts/
-[faq]: http://datastax.github.io/nodejs-driver/faq/
-[load-balancing]: http://datastax.github.io/nodejs-driver/features/tuning-policies/#load-balancing-policy
-[retry]: http://datastax.github.io/nodejs-driver/features/tuning-policies/#retry-policy
-[pooling]: http://datastax.github.io/nodejs-driver/features/connection-pooling/
-[batch]: http://datastax.github.io/nodejs-driver/features/batch/
+[doc-api]: http://docs.datastax.com/en/developer/nodejs-driver/latest/api/
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
+[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/
+[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/numerical/
+[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
+[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
+[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
+[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
+[retry]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
+[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
+[batch]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay

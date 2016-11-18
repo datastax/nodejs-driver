@@ -111,4 +111,34 @@ describe('LineString', function () {
         });
     });
   });
+  describe('#fromString()', function () {
+    it('should parse WKT representation', function () {
+      [
+        ['LINESTRING (10 20, 30 40)', [10, 20, 30, 40]],
+        ['LINESTRING(10 20, 30 40)', [10, 20, 30, 40]],
+        ['LINESTRING (-10 20.9,30  40)', [-10, 20.9, 30, 40]],
+        ['LINESTRING (10 20, 30 40, -50.1 -60.1)', [10, 20, 30, 40, -50.1, -60.1]]
+      ].forEach(function (item) {
+        var l = LineString.fromString(item[0]);
+        var coordinates = item[1];
+        assert.strictEqual(l.points.length, coordinates.length / 2);
+        for (var i = 0; i < coordinates.length / 2; i++) {
+          var p = l.points[i];
+          assert.strictEqual(p.x, coordinates[i*2]);
+          assert.strictEqual(p.y, coordinates[i*2+1]);
+        }
+      });
+    });
+    it('should throw TypeError when WKT representation is invalid', function () {
+      [
+        'LINESTRING (10 20, 30 40 40)',
+        'LINESTRING (10 20)',
+        'LINESTRING (10 20,,30 40)'
+      ].forEach(function (item) {
+        assert.throws(function () {
+          LineString.fromString(item);
+        }, TypeError);
+      });
+    });
+  });
 });

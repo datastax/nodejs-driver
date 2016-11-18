@@ -10,42 +10,36 @@ var cassandra = require('cassandra-driver');
 var helper = require('../helper');
 var GraphResultSet = require('../../lib/graph/result-set');
 
-var resultVertex = {
-  rows: [ {
-    "gremlin": JSON.stringify({
-      "result": {
-        "id":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2},
-        "label":"vertex",
-        "type":"vertex",
-        "properties":{
-          "name":[{"id":{"local_id":"00000000-0000-8007-0000-000000000000","~type":"name","out_vertex":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2}},"value":"j"}],
-          "age":[{"id":{"local_id":"00000000-0000-8008-0000-000000000000","~type":"age","out_vertex":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2}},"value":34}]}
-      }})
-  }]
-};
-var resultEdge = {
-  rows: [ {
-    "gremlin": JSON.stringify({
-      "result":{
-        "id":{
-          "out_vertex":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":3},
-          "local_id":"4e78f871-c5c8-11e5-a449-130aecf8e504","in_vertex":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":5},"~type":"knows"},
-        "label":"knows",
-        "type":"edge",
-        "inVLabel":"vertex",
-        "outVLabel":"vertex",
-        "inV":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":5},
-        "outV":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":3},
-        "properties":{"weight":1.0}
-      }})
-  }]
-};
-var resultScalars = {
-  rows: [
-    { gremlin: JSON.stringify({ result: 'a'})},
-    { gremlin: JSON.stringify({ result: 'b'})}
-  ]
-};
+var resultVertex = getResultSet([ {
+  "gremlin": JSON.stringify({
+    "result": {
+      "id":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2},
+      "label":"vertex",
+      "type":"vertex",
+      "properties":{
+        "name":[{"id":{"local_id":"00000000-0000-8007-0000-000000000000","~type":"name","out_vertex":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2}},"value":"j"}],
+        "age":[{"id":{"local_id":"00000000-0000-8008-0000-000000000000","~type":"age","out_vertex":{"member_id":0,"community_id":586910,"~label":"vertex","group_id":2}},"value":34}]}
+    }})
+}]);
+var resultEdge = getResultSet([ {
+  "gremlin": JSON.stringify({
+    "result":{
+      "id":{
+        "out_vertex":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":3},
+        "local_id":"4e78f871-c5c8-11e5-a449-130aecf8e504","in_vertex":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":5},"~type":"knows"},
+      "label":"knows",
+      "type":"edge",
+      "inVLabel":"vertex",
+      "outVLabel":"vertex",
+      "inV":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":5},
+      "outV":{"member_id":0,"community_id":680148,"~label":"vertex","group_id":3},
+      "properties":{"weight":1.0}
+    }})
+}]);
+var resultScalars = getResultSet([
+  { gremlin: JSON.stringify({ result: 'a'})},
+  { gremlin: JSON.stringify({ result: 'b'})}
+]);
 
 describe('GraphResultSet', function () {
   describe('#toArray()', function () {
@@ -83,6 +77,13 @@ describe('GraphResultSet', function () {
       assert.strictEqual(typeof item.value, 'undefined');
       assert.strictEqual(item.done, true);
     });
+    it('should return a iterator with no items when result set is empty', function () {
+      var result = new GraphResultSet(getResultSet([]));
+      var iterator = result.values();
+      var item = iterator.next();
+      assert.strictEqual(typeof item.value, 'undefined');
+      assert.strictEqual(item.done, true);
+    });
   });
   //noinspection JSUnresolvedVariable
   if (typeof Symbol !== 'undefined' && typeof Symbol.iterator === 'symbol') {
@@ -105,3 +106,11 @@ describe('GraphResultSet', function () {
     });
   }
 });
+
+/**
+ * @param {Array} rows
+ * @returns {ResultSet}
+ */
+function getResultSet(rows) {
+  return new cassandra.types.ResultSet({ rows: rows }, null, null, null);
+}

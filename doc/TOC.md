@@ -48,4 +48,4 @@ client.executeGraph('g.V()', function (err, result) {
 ```
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
-[core-manual]: http://docs.datastax.com/en/latest-nodejs-driver/common/drivers/introduction/introArchOverview.html
+[core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/latest/

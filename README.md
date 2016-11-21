@@ -27,7 +27,7 @@ $ npm install cassandra-driver
 ## Documentation
 
 - [Documentation index][doc-index]
-- [CQL types to javascript types][doc-datatypes]
+- [CQL types to JavaScript types][doc-datatypes]
 - [API docs][doc-api]
 - [FAQ][faq]
 
@@ -114,7 +114,7 @@ client.stream('SELECT time, val FROM temperature WHERE station_id=', [ 'abc' ])
 
 ### User defined types
 
-[User defined types (UDT)][cql-udt] are represented as Javascript objects.
+[User defined types (UDT)][cql-udt] are represented as JavaScript objects.
 
 For example:
 Consider the following UDT and table
@@ -134,7 +134,7 @@ CREATE TABLE users (
 );
 ```
 
-You can retrieve the user address details as a regular Javascript object.
+You can retrieve the user address details as a regular JavaScript object.
 
 ```javascript
 const query = 'SELECT name, address FROM users WHERE key = ?';
@@ -186,7 +186,7 @@ client.batch(queries, { prepare: true })
 ## Data types
 
 There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
- to deal with data types that come from other systems in Javascript.
+ to deal with data types that come from other systems in JavaScript.
 
 The driver supports all the CQL data types in Apache Cassandra (3.0 and below) even for types with no built-in
 JavaScript representation, like decimal, varint and bigint. Check the documentation on working with

@@ -10,7 +10,7 @@ var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');
 var vit = helper.vit;
 
-describe('Connection', function () {
+describe('Connection |smoke|', function () {
   this.timeout(120000);
   describe('#open()', function () {
     before(helper.ccmHelper.start(1));
@@ -59,7 +59,7 @@ describe('Connection', function () {
         });
       }, done);
     });
-    it('should fail when the host does not exits', function (done) {
+    it('should fail when the host does not exist', function (done) {
       var localCon = newInstance('1.1.1.1');
       localCon.open(function (err) {
         assert.ok(err, 'Must return a connection error');

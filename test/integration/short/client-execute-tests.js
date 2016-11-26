@@ -12,7 +12,7 @@ var vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#execute(query, params, {prepare: 0}, callback)', function () {
+  describe('#execute(query, params, {prepare: 0}, callback) |smoke|', function () {
     var keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
     var selectAllQuery = 'SELECT * FROM ' + table;

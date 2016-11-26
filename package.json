@@ -35,7 +35,8 @@
   "scripts":  {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
     "ci": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-multi",
-    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi"
+    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
+    "ci_smoke": "./node_modules/.bin/mocha test/unit test/integration/short/smoke-tests.js -R mocha-multi"
   },
   "engines": {
     "node" : ">=0.10.0"

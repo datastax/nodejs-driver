@@ -11,7 +11,7 @@ var errors = require('../../../lib/errors.js');
 
 describe('Client', function () {
   this.timeout(120000);
-  describe('#stream(query, params, {prepare: 0})', function () {
+  describe('#stream(query, params, {prepare: 0}) |smoke|', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should emit end when no rows', function (done) {

@@ -112,6 +112,28 @@ describe('Client', function () {
         });
       });
     });
+    context('with no callback specified', function () {
+      if (typeof Promise !== 'function') {
+        it('should throw an ArgumentError', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.connect();
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.connect();
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+    });
   });
   describe('#_getPrepared()', function () {
     var Client = rewire('../../lib/client.js');
@@ -368,18 +390,6 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should throw argument error when last parameter is not a function', function () {
-      var client = newConnectedInstance();
-      assert.throws(function () {
-        client.execute('QUERY', [], {});
-      }, errors.ArgumentError);
-      assert.throws(function () {
-        client.execute('QUERY', []);
-      }, errors.ArgumentError);
-      assert.throws(function () {
-        client.execute('QUERY');
-      }, errors.ArgumentError);
-    });
     it('should pass optional parameters as null when not defined', function () {
       var client = newConnectedInstance();
       var params = null;
@@ -455,6 +465,38 @@ describe('Client', function () {
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
+    context('with no callback specified', function () {
+      if (typeof Promise !== 'function') {
+        it('should throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.execute('Q', [ 1, 2 ], { prepare: true });
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.execute('Q', [ 1, 2 ], { prepare: true });
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+      it('should reject the promise when an ExecutionProfile is not found', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.ArgumentError);
+          done();
+        });
+      });
+    });
   });
   describe('#eachRow()', function () {
     it('should pass optional parameters as null when not defined', function () {
@@ -498,6 +540,38 @@ describe('Client', function () {
         assert.ifError(err);
         assert.strictEqual(connectCalled, true);
         done();
+      });
+    });
+    context('with no callback specified', function () {
+      if (typeof Promise !== 'function') {
+        it('should throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.batch(['Q'], { prepare: false });
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.batch(['Q'], null);
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+      it('should reject the promise when queries is not an Array', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.batch('Q', null);
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.ArgumentError);
+          done();
+        });
       });
     });
   });
@@ -679,6 +753,25 @@ describe('Client', function () {
           }, 20);
         });
       })
+    });
+    context('with no callback specified', function () {
+      if (typeof Promise !== 'function') {
+        it('should not throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.doesNotThrow(function () {
+            client.shutdown();
+          });
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.shutdown();
+        helper.assertInstanceOf(p, Promise);
+        p.then(done);
+      });
     });
   });
   describe('#_waitForSchemaAgreement()', function () {

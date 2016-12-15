@@ -904,6 +904,48 @@ describe('Client', function () {
         ], done);
       });
     });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        return;
+      }
+      vit('2.0', 'should return a promise with the result as a value', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            // Only the query
+            return client.execute(helper.queries.basic);
+          })
+          .then(function (result) {
+            // With parameters
+            helper.assertInstanceOf(result, types.ResultSet);
+            assert.strictEqual(result.rowLength, 1);
+            return client.execute('select key from system.local WHERE key = ?', [ 'local' ]);
+          })
+          .then(function (result) {
+            // With parameters and options
+            helper.assertInstanceOf(result, types.ResultSet);
+            var options = { consistency: types.consistencies.localOne };
+            return client.execute('select key from system.local WHERE key = ?', [ 'local' ], options);
+          })
+          .then(function () {
+            return client.shutdown();
+          });
+      });
+      it('should reject the promise when there is a syntax error', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.execute('SELECT INVALID QUERY');
+          })
+          .then(function () {
+            throw new Error('should have been rejected');
+          })
+          .catch(function (err) {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            return client.shutdown();
+          });
+      });
+    });
   });
 });
 

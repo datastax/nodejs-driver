@@ -113,7 +113,7 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (typeof Promise !== 'function') {
+      if (!helper.promiseSupport) {
         it('should throw an ArgumentError', function () {
           var Client = require('../../lib/client');
           var client = new Client(helper.baseOptions);
@@ -466,7 +466,7 @@ describe('Client', function () {
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
     context('with no callback specified', function () {
-      if (typeof Promise !== 'function') {
+      if (!helper.promiseSupport) {
         it('should throw an error', function () {
           var Client = require('../../lib/client');
           var client = new Client(helper.baseOptions);
@@ -543,7 +543,7 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (typeof Promise !== 'function') {
+      if (!helper.promiseSupport) {
         it('should throw an error', function () {
           var Client = require('../../lib/client');
           var client = new Client(helper.baseOptions);
@@ -755,7 +755,7 @@ describe('Client', function () {
       })
     });
     context('with no callback specified', function () {
-      if (typeof Promise !== 'function') {
+      if (!helper.promiseSupport) {
         it('should not throw an error', function () {
           var Client = require('../../lib/client');
           var client = new Client(helper.baseOptions);

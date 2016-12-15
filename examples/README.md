@@ -7,8 +7,8 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
 ## Code samples
 - Basic
   - [Connect](basic/basic-connect.js)
-  - [Execute with nested callbacks](basic/basic-execute.js)
-  - [Execute using async series](basic/basic-execute-flow.js)
+  - [Execute with promise-based API](basic/basic-execute.js)
+  - [Execute using callbacks](basic/basic-execute-flow.js)
 - Metadata
   - [Get hosts information](metadata/metadata-hosts.js)
   - [Get keyspaces information](metadata/metadata-keyspaces.js)

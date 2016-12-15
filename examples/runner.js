@@ -7,7 +7,7 @@ var path = require('path');
 
 /**
  * This script is used to check that the samples run correctly.
- * It is not a valid examples, see README.md and subdirectories for more information.
+ * It is not a valid example, see README.md and subdirectories for more information.
  */
 
 /** List all js files in the directory */
@@ -25,6 +25,11 @@ function getJsFiles(dir, fileArray) {
     fileArray.push(dir+file);
   });
   return fileArray;
+}
+
+if (typeof Promise === 'undefined') {
+  console.log('Examples where not executed as promises are not supported');
+  return;
 }
 
 var runnerFileName = path.basename(module.filename);

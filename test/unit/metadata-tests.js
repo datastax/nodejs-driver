@@ -1726,13 +1726,8 @@ describe('Metadata', function () {
     });
   });
   describe('#getFunction()', function () {
-    it('should throw if callback is not provided', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      assert.throws(function () {
-        //noinspection JSCheckFunctionSignatures
-        metadata.getFunction('ks_udf', 'plus', []);
-      }, errors.ArgumentError);
+    context('with no callback specified', function () {
+      it('should not throw');
     });
     it('should callback in error if keyspace or name are not provided', function (done) {
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));

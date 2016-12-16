@@ -10,14 +10,14 @@ Cassandra 2.2 introduced the concept of unset for a parameter value. At the serv
 
 ```javascript
 const query = 'INSERT INTO tbl1 (id, val1) VALUES (?, ?)';
-client.execute(query, [id, cassandra.types.unset]);
+client.execute(query, [ id, cassandra.types.unset ]);
 ```
 
 You can even use the undefined primitive type to represent unset values on an INSERT or UPDATE operation.
 
 ```javascript
 const query = 'INSERT INTO tbl1 (id, val1) VALUES (?, ?)';
-client.execute(query, [id, undefined]);
+client.execute(query, [ id, undefined ]);
 ```
 
 The driver allows you to control the usage of undefined as unset with the flag useUndefinedAsUnset, which is set to true
@@ -25,7 +25,7 @@ in driver versions 3.0 and above:
 
 ```javascript
 const client = new cassandra.Client({
-  contactPoints: ['node1', 'node2'],
+  contactPoints: [ 'node1', 'node2' ],
   encoding: { useUndefinedAsUnset: false } 
 });
 ```

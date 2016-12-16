@@ -27,6 +27,6 @@ only call client.shutdown() once in your application's lifetime.
 If you have any doubt regarding these examples, feel free to post your question in the [mailing list][mailing-list].
 
 [cassandra]: http://cassandra.apache.org/
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/faq/njdFaq.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/

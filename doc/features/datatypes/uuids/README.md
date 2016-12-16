@@ -15,11 +15,11 @@ const id = Uuid.random();
 The driver decodes Cassandra uuid data type values as an instances of Uuid.
 
 ```javascript
-client.execute('SELECT id FROM users', function (err, result) {
-   assert.ifError(err);
-   console.log(result.rows[0].id instanceof Uuid); // true
-   console.log(result.rows[0].id.toString());      // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-});
+client.execute('SELECT id FROM users')
+  .then(function (result) {
+    console.log(result.rows[0].id instanceof Uuid); // true
+    console.log(result.rows[0].id.toString());      // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  });
 ```
 
 You can also parse a string representation of a uuid into a Uuid instance:
@@ -44,13 +44,13 @@ const id2 = TimeUuid.fromDate(new Date());
 The driver decodes CQL timeuuid data type values as instances of `TimeUuid`.
 
 ```javascript
-client.execute('SELECT id, timeid FROM sensor', function (err, result) {
-    assert.ifError(err);
+client.execute('SELECT id, timeid FROM sensor')
+  .then(function (result) {
     console.log(result.rows[0].timeid instanceof TimeUuid); // true
     console.log(result.rows[0].timeid instanceof Uuid); // true, it inherits from Uuid
     console.log(result.rows[0].timeid.toString());      // <- xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     console.log(result.rows[0].timeid.getDate());       // <- Date stored in the identifier
-});
+  });
 ```
 
 You can specify the other parts of the identifier, such as the node and the clock sequence, or the 100-nanosecond

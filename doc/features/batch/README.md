@@ -13,6 +13,19 @@ const queries = [
    { query: query1, params: [emailAddress, 'hendrix'] },
    { query: query2, params: ['hendrix', 'Changed email', new Date()] } 
 ];
+// Promise-based call
+client.batch(queries, { prepare: true })
+  .then(function() {
+    // All queries have been executed successfully
+  })
+  .catch(function(err) {
+    // None of the changes have been applied
+  });
+```
+
+Or using the callback-based invocation
+
+```javascript
 client.batch(queries, { prepare: true }, function (err) {
    // All queries have been executed successfully
    // Or none of the changes have been applied, check err
@@ -22,3 +35,7 @@ client.batch(queries, { prepare: true }, function (err) {
 By preparing your queries, you will get the best performance and your JavaScript parameters correctly mapped to 
 Cassandra types. The driver will prepare each query once on each host and execute the batch every time with the
 different parameters provided.
+
+Note that Cassandra batches are not suitable for bulk loading, there are dedicated tools for that. Batches allow you
+to group related updates in a single request, so keep the batch size small (in the order of tens).
+Starting from Cassandra version 2.0.8, the server issues a warning if the batch size is greater than 5K.

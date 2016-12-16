@@ -22,14 +22,13 @@ console.log(Object.keys(client.metadata.keyspaces));
 To retrieve the definition of a table, use the `Metadata#getTable()` method:
 
 ```javascript
-client.metadata.getTable('ks1', 'table1', function (err, tableInfo) {
-   if (!err) {
-      console.log('Table %s', table.name);
-      table.columns.forEach(function (column) {
-         console.log('Column %s with type %j', column.name, column.type);
-      });
-   }
-});
+client.metadata.getTable('ks1', 'table1')
+  .then(function (tableInfo) {
+    console.log('Table %s', table.name);
+    table.columns.forEach(function (column) {
+       console.log('Column %s with type %j', column.name, column.type);
+    });
+  });
 ```
 
 When retrieving the same table definition concurrently, the driver queries once and invokes all callbacks with the

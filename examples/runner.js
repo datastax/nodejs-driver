@@ -27,8 +27,8 @@ function getJsFiles(dir, fileArray) {
   return fileArray;
 }
 
-if (typeof Promise === 'undefined') {
-  console.log('Examples where not executed as promises are not supported');
+if (typeof Promise === 'undefined' || process.version.indexOf('v0.') === 0) {
+  console.log('Examples where not executed as a modern runtime is required');
   return;
 }
 

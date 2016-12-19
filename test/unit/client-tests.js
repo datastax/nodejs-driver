@@ -465,6 +465,30 @@ describe('Client', function () {
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
+    it('should set the timestamp', function (done) {
+      var actualOptions;
+      var handlerMock = function () {};
+      handlerMock.prototype.send = function (request, options, callback) {
+        actualOptions = options;
+        callback(null, {});
+      };
+      var client = newConnectedInstance(handlerMock);
+      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+        client.controlConnection.protocolVersion = version;
+        client.execute('Q', function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          if (version > 2) {
+            assert.ok(actualOptions.timestamp);
+            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+          }
+          else {
+            assert.strictEqual(actualOptions.timestamp, undefined);
+          }
+          next();
+        });
+      }, done);
+    });
     context('with no callback specified', function () {
       if (!helper.promiseSupport) {
         it('should throw an error', function () {
@@ -541,6 +565,30 @@ describe('Client', function () {
         assert.strictEqual(connectCalled, true);
         done();
       });
+    });
+    it('should set the timestamp', function (done) {
+      var actualOptions;
+      var handlerMock = function () {};
+      handlerMock.prototype.send = function (request, options, callback) {
+        actualOptions = options;
+        callback(null, {});
+      };
+      var client = newConnectedInstance(handlerMock);
+      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+        client.controlConnection.protocolVersion = version;
+        client.batch(['q1', 'q2', 'q3'], function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          if (version > 2) {
+            assert.ok(actualOptions.timestamp);
+            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+          }
+          else {
+            assert.strictEqual(actualOptions.timestamp, undefined);
+          }
+          next();
+        });
+      }, done);
     });
     context('with no callback specified', function () {
       if (!helper.promiseSupport) {

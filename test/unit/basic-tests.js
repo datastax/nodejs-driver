@@ -9,6 +9,7 @@ var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var timestampGeneration = require('../../lib/policies/timestamp-generation');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
 var writers = require('../../lib/writers');
@@ -781,6 +782,10 @@ describe('exports', function () {
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
     helper.assertInstanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
+    assert.strictEqual(api.policies.timestampGeneration, timestampGeneration);
+    assert.strictEqual(typeof timestampGeneration.TimestampGenerator, 'function');
+    assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');
+    helper.assertInstanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
     assert.strictEqual(api.auth, require('../../lib/auth'));
     //metadata module with classes
     assert.ok(api.metadata);

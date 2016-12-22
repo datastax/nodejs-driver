@@ -7,7 +7,7 @@ var addressResolution = require('../../lib/policies/address-resolution');
 var EC2MultiRegionTranslator = addressResolution.EC2MultiRegionTranslator;
 
 describe('EC2MultiRegionTranslator', function () {
-  this.timeout(5000);
+  this.timeout(10000);
   describe('#translate()', function () {
     it('should return the same address when it could not be resolved', function (done) {
       var t = new EC2MultiRegionTranslator();

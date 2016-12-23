@@ -21,6 +21,7 @@ out/
 ci/
 docs.yaml
 testing.js
+.eslintrc.js
 .DS_Store
 .idea
 npm-debug.log

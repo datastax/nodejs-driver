@@ -143,13 +143,13 @@ A retry policy centralizes the handling of query retries, minimizing the need fo
 
 The retry policy interface consists of four methods:
 
-- `#onReadTimeout(requestInfo, consistency, received, blockFor, isDataPresent)`: determines what to do when the driver
+- `#onReadTimeout(info, consistency, received, blockFor, isDataPresent)`: determines what to do when the driver
 gets a `ReadTimeoutException` response from a Cassandra node.
-- `#onUnavailable(requestInfo, consistency, required, alive)`: determines what to do when the driver gets an 
+- `#onUnavailable(info, consistency, required, alive)`: determines what to do when the driver gets an 
 `UnavailableException` response from a Cassandra node.
-- `#onWriteTimeout(requestInfo, consistency, received, blockFor, writeType)`: determines what to do when the driver gets
+- `#onWriteTimeout(info, consistency, received, blockFor, writeType)`: determines what to do when the driver gets
 a `WriteTimeoutException` response from a Cassandra node
-- `#onRequestError(requestInfo, consistency, err)`: defines whether to retry and at which consistency level on an 
+- `#onRequestError(info, consistency, err)`: defines whether to retry and at which consistency level on an 
 unexpected error, invoked in the following situations:
     - On a client timeout, while waiting for the server response , being the error an instance of 
     `OperationTimedOutError`.
@@ -157,6 +157,10 @@ unexpected error, invoked in the following situations:
     - When the contacted host replies with an error, such as `overloaded`, `isBootstrapping`, `serverError`, etc. In 
     this case, the error is instance of `ResponseError`
 
-A default and base retry policy is included.
+A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers.
+
+The [operation info][OperationInfo], passed as a parameter to the retry policy methods, exposes the `query` and query 
+`options` as properties.
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
+[OperationInfo]: /api/module.policies/module.retry/type.OperationInfo/

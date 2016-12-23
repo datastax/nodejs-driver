@@ -776,6 +776,7 @@ describe('exports', function () {
     helper.assertInstanceOf(api.policies.defaultLoadBalancingPolicy(), api.policies.loadBalancing.LoadBalancingPolicy);
     assert.strictEqual(api.policies.retry, retry);
     assert.strictEqual(typeof api.policies.retry.RetryPolicy, 'function');
+    assert.strictEqual(typeof api.policies.retry.IdempotenceAwareRetryPolicy, 'function');
     helper.assertInstanceOf(api.policies.defaultRetryPolicy(), api.policies.retry.RetryPolicy);
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');

@@ -87,7 +87,7 @@ vdescribe('2.2', 'Metadata', function () {
       if(!helper.promiseSupport) {
         it('should throw an ArgumentError', function (done) {
           var client = newInstance();
-          util.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               assert.throws(function () {
@@ -234,7 +234,7 @@ vdescribe('2.2', 'Metadata', function () {
       if(!helper.promiseSupport) {
         it('should throw an ArgumentError', function (done) {
           var client = newInstance();
-          util.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               assert.throws(function () {
@@ -315,7 +315,7 @@ vdescribe('2.2', 'Metadata', function () {
       if(!helper.promiseSupport) {
         it('should throw an ArgumentError', function (done) {
           var client = newInstance();
-          util.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               assert.throws(function () {
@@ -447,7 +447,7 @@ vdescribe('2.2', 'Metadata', function () {
       if(!helper.promiseSupport) {
         it('should throw an ArgumentError', function (done) {
           var client = newInstance();
-          util.series([
+          utils.series([
             client.connect.bind(client),
             function (next) {
               assert.throws(function () {

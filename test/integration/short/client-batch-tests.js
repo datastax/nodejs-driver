@@ -296,6 +296,39 @@ describe('Client', function () {
         client.shutdown.bind(client),
       ], done);
     });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        return;
+      }
+      vit('2.0', 'should return a promise when batch completes', function () {
+        var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'%s\')';
+        var selectQuery = 'SELECT * FROM %s WHERE id = %s';
+        var id1 = types.Uuid.random();
+        var id2 = types.Uuid.random();
+        var client = newInstance();
+        var queries = [
+          util.format(insertQuery, table1, id1, 'one'),
+          util.format(insertQuery, table2, id2, 'two')
+        ];
+
+        return client.batch(queries)
+          .then(function (result) {
+            assert.ok(result);
+            return client.execute(util.format(selectQuery, table1, id1));
+          })
+          .then(function (result) {
+            assert.ok(result);
+            assert.ok(result.rows);
+            assert.strictEqual(result.rows[0].text_sample, 'one');
+            return client.execute(util.format(selectQuery, table2, id2));
+          })
+          .then(function (result) {
+            assert.ok(result);
+            assert.ok(result.rows);
+            assert.strictEqual(result.rows[0].text_sample, 'two');
+          });
+      });
+    });
   });
   describe('#batch(queries, {prepare: 1}, callback)', function () {
     var keyspace = helper.getRandomName('ks');

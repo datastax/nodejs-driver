@@ -5,6 +5,7 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
+var errors = require('../../../lib/errors');
 var vdescribe = helper.vdescribe;
 
 vdescribe('2.2', 'Metadata', function () {

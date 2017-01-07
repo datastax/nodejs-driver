@@ -342,70 +342,42 @@ describe('Metadata', function () {
   });
   describe('#refreshKeyspace()', function() {
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance({ isMetadataSyncEnabled: false });
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.refreshKeyspace('system');
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
+      if(helper.promiseSupport) {
+        it('should return keyspace in a promise', function () {
+          var client = newInstance({isMetadataSyncEnabled: false});
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspace('system');
+            })
+            .then(function (keyspace) {
+              assert.ok(keyspace);
+              assert.strictEqual(keyspace.name, 'system');
+              return client.shutdown();
+            });
         });
-        return;
       }
-      it('should return keyspace in a promise', function () {
-        var client = newInstance({ isMetadataSyncEnabled: false });
-        return client.connect()
-          .then(function () {
-            var ks = client.metadata.keyspaces;
-            assert.ok(ks['system'] === undefined);
-            return client.metadata.refreshKeyspace('system');
-          })
-          .then(function (keyspace) {
-            assert.ok(keyspace);
-            assert.strictEqual(keyspace.name, 'system');
-            return client.shutdown();
-          });
-      });
     });
   });
   describe('#refreshKeyspaces()', function() {
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
+      if(helper.promiseSupport) {
+        it('should return keyspaces in a promise', function () {
           var client = newInstance({ isMetadataSyncEnabled: false });
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.refreshKeyspaces();
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspaces();
+            })
+            .then(function (data) {
+              assert.ok(data);
+              assert.ok(data['system']);
+              return client.shutdown();
+            });
         });
-        return;
       }
-      it('should return keyspaces in a promise', function () {
-        var client = newInstance({ isMetadataSyncEnabled: false });
-        return client.connect()
-          .then(function () {
-            var ks = client.metadata.keyspaces;
-            assert.ok(ks['system'] === undefined);
-            return client.metadata.refreshKeyspaces();
-          })
-          .then(function (data) {
-            assert.ok(data);
-            assert.ok(data['system']);
-            return client.shutdown();
-          });
-      });
     });
   });
   describe('#getTable()', function () {

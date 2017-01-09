@@ -1,6 +1,7 @@
 "use strict";
 
 var assert = require('assert');
+var helper = require('../test-helper');
 var types = require('../../lib/types');
 var ResultSet = types.ResultSet;
 
@@ -27,7 +28,7 @@ describe('ResultSet', function () {
       assert.strictEqual(result.first(), null);
     });
   });
-  if (typeof Symbol !== 'undefined' && typeof Symbol.iterator !== 'undefined') {
+  if (helper.iteratorSupport) {
     describe('#[@@iterator]()', function () {
       it('should return the rows iterator', function () {
         var result = new ResultSet({ rows: [ 100, 200, 300] }, null);

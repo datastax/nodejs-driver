@@ -45,6 +45,7 @@ var helper = {
     });
   },
   promiseSupport: (typeof Promise === 'function'),
+  iteratorSupport: (typeof Symbol !== 'undefined' && typeof Symbol.iterator === 'symbol'),
   /**
    * @type {ClientOptions}
    */

@@ -14,7 +14,7 @@ processed in a different order server-side, and end up with out-of-order timesta
 ### Using a timestamp generator
 
 When using Apache Cassandra 2.1+ or DataStax Enterprise 4.7+, it's possible to send the operation timestamp in the
-request. Starting from version 3.1 of the Node.js driver, the driver uses [`MononoticTimestampGenerator`][mtg] 
+request. Starting from version 3.2 of the Node.js driver, the driver uses [`MonotonicTimestampGenerator`][mtg] 
 by default to generate the request timestamps.
 
 You can provide a different generator when creating the `Client` instance:
@@ -51,7 +51,7 @@ monotonically increasing, even if multiple updates happen under the same millise
 
 Note that to guarantee such monotonicity, if more than one thousand timestamps are generated within the same
 millisecond, or in the event of a system clock skew, _the implementation might return timestamps that drift out into
-the future_. When this happens, the built-in generator log a periodic warning message. See their non-default
+the future_. When this happens, the built-in generator logs a periodic warning message. See their non-default
 constructors for ways to control the warning interval.
 
 

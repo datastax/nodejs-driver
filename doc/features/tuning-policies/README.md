@@ -157,7 +157,7 @@ unexpected error, invoked in the following situations:
     - When the contacted host replies with an error, such as `overloaded`, `isBootstrapping`, `serverError`, etc. In 
     this case, the error is instance of `ResponseError`
 
-A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers.
+A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence.
 
 The [operation info][OperationInfo], passed as a parameter to the retry policy methods, exposes the `query` and query 
 `options` as properties.

@@ -157,10 +157,16 @@ unexpected error, invoked in the following situations:
     - When the contacted host replies with an error, such as `overloaded`, `isBootstrapping`, `serverError`, etc. In 
     this case, the error is instance of `ResponseError`
 
-A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence.
-
 The [operation info][OperationInfo], passed as a parameter to the retry policy methods, exposes the `query` and query 
 `options` as properties.
+
+A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence.
+
+### Query idempotence
+
+Note that the current behaviour of the driver allows the `RetryPolicy` to retrieve the query idempotence as part of the
+information and take a decision whether to retry the execution or not. In future versions, the driver will rethrow the
+error back to the consumer for non-idempotent queries, without using the `RetryPolicy` for this case.
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
 [OperationInfo]: /api/module.policies/module.retry/type.OperationInfo/

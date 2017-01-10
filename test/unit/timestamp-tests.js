@@ -51,7 +51,7 @@ describe('MonotonicTimestampGenerator', function () {
         assert.strictEqual(logs.length, 2);
         assert.strictEqual(logs[1].level, 'warning');
         done();
-      }, 100)
+      }, 100);
     });
     it('should use the current date', function () {
       var g = new MonotonicTimestampGenerator();

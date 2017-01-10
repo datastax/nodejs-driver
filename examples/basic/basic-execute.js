@@ -1,25 +1,23 @@
 "use strict";
-var cassandra = require('cassandra-driver');
+const cassandra = require('cassandra-driver');
 
-var client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
 
 /**
- * Example using nested callbacks.
- * See basic-execute-flow.js for a more elegant example.
+ * Example using Promise.
+ * See basic-execute-flow.js for an example using callback-based execution.
  */
-client.connect(function (err) {
-  if (err) {
-    client.shutdown();
-    return console.error('There was an error when connecting', err);
-  }
-  client.execute('SELECT * FROM system.local', function (err, result) {
-    if (err) {
-      client.shutdown();
-      return console.error('There was while trying to retrieve data from system.local', err);
-    }
-    var row = result.rows[0];
+client.connect()
+  .then(function () {
+    return client.execute('SELECT * FROM system.local');
+  })
+  .then(function (result) {
+    const row = result.rows[0];
     console.log('Obtained row: ', row);
     console.log('Shutting down');
-    client.shutdown();
+    return client.shutdown();
+  })
+  .catch(function (err) {
+    console.error('There was an error when connecting', err);
+    return client.shutdown();
   });
-});

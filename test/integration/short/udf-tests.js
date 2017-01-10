@@ -5,6 +5,7 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
+var errors = require('../../../lib/errors');
 var vdescribe = helper.vdescribe;
 
 vdescribe('2.2', 'Metadata', function () {
@@ -82,6 +83,35 @@ vdescribe('2.2', 'Metadata', function () {
         },
         client.shutdown.bind(client)
       ], done);
+    });
+    describe('with no callback specified', function () {
+      if(!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getFunctions(keyspace, 'plus');
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return functions in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getFunctions(keyspace, 'plus');
+          })
+          .then(function (funcArray) {
+            assert.ok(funcArray);
+            assert.strictEqual(funcArray.length, 2);
+          });
+      });
     });
   });
   describe('#getFunction()', function () {
@@ -201,6 +231,40 @@ vdescribe('2.2', 'Metadata', function () {
         nonSyncClient.shutdown.bind(nonSyncClient)
       ], done);
     });
+    describe('with no callback specified', function () {
+      if(!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getFunction(keyspace, 'plus', ['int', 'int']);
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return function in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getFunction(keyspace, 'plus', ['int', 'int']);
+          })
+          .then(function (func) {
+            assert.ok(func);
+            assert.strictEqual(func.name, 'plus');
+            assert.strictEqual(func.keyspaceName, keyspace);
+            assert.strictEqual(func.argumentTypes.length, 2);
+            assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
+            assert.strictEqual(func.returnType.code, types.dataTypes.int);
+          });
+      });
+    });
   });
   describe('#getAggregates()', function () {
     it('should retrieve the metadata of cql aggregates', function (done) {
@@ -247,6 +311,37 @@ vdescribe('2.2', 'Metadata', function () {
         },
         client.shutdown.bind(client)
       ], done);
+    });
+    describe('with no callback specified', function () {
+      if(!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getAggregates(keyspace, 'sum');
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return aggregates in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getAggregates(keyspace, 'sum');
+          })
+          .then(function (aggregatesArray) {
+            assert.ok(aggregatesArray);
+            assert.strictEqual(aggregatesArray.length, 2);
+            assert.strictEqual(aggregatesArray[0].name, 'sum');
+            assert.strictEqual(aggregatesArray[1].name, 'sum');
+          });
+      });
     });
   });
   describe('#getAggregate()', function () {
@@ -348,6 +443,41 @@ vdescribe('2.2', 'Metadata', function () {
         client.shutdown.bind(client),
         nonSyncClient.shutdown.bind(nonSyncClient)
       ], done);
+    });
+    describe('with no callback specified', function () {
+      if(!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getAggregate(keyspace, 'sum', ['int'])
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return aggregate in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getAggregate(keyspace, 'sum', ['int']);
+          })
+          .then(function (aggregate) {
+            assert.ok(aggregate);
+            assert.strictEqual(aggregate.name, 'sum');
+            assert.strictEqual(aggregate.keyspaceName, keyspace);
+            assert.strictEqual(aggregate.argumentTypes.length, 1);
+            assert.strictEqual(aggregate.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(aggregate.returnType.code, types.dataTypes.int);
+            assert.strictEqual(aggregate.stateFunction, 'plus');
+            assert.strictEqual(aggregate.initCondition, '1');
+          });
+      });
     });
   });
 });

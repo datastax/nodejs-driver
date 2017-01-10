@@ -12,11 +12,11 @@ which node to use as coordinator for each query, how to handle retry and failove
 ```javascript
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({ contactPoints: ['host1'] });
-client.execute('SELECT key FROM system.local', function (err, result) {
-  assert.ifError(err);
-  const row = result.first();
-  console.log(row['key']);
-});
+client.execute('SELECT key FROM system.local')
+  .then(function (result) {
+      const row = result.first();
+      console.log(row['key']);
+  });
 ```
 
 See [`Client class documentation`](Client.html).

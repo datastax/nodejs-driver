@@ -44,6 +44,7 @@ var helper = {
       return value;
     });
   },
+  promiseSupport: (typeof Promise === 'function'),
   /**
    * @type {ClientOptions}
    */

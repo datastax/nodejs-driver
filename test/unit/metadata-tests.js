@@ -1726,13 +1726,21 @@ describe('Metadata', function () {
     });
   });
   describe('#getFunction()', function () {
-    it('should throw if callback is not provided', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
-      metadata.keyspaces['ks_udf'] = { functions: {}};
-      assert.throws(function () {
-        //noinspection JSCheckFunctionSignatures
-        metadata.getFunction('ks_udf', 'plus', []);
-      }, errors.ArgumentError);
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function () {
+          var metadata = newInstance();
+          assert.throws(function () {
+            metadata.getFunction('ks1', 'fn1', []);
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a Promise', function () {
+        var metadata = newInstance();
+        var p = metadata.getFunction('ks1', 'fn1', []);
+        helper.assertInstanceOf(p, Promise);
+      });
     });
     it('should callback in error if keyspace or name are not provided', function (done) {
       var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
@@ -2233,4 +2241,9 @@ function getTokenizer() {
   t.hash = function (b) { return b[0]};
   t.compare = function (a, b) { if (a > b) return 1; if (a < b) return -1; return 0 };
   return t;
+}
+
+/** @returns {Metadata} */
+function newInstance() {
+  return new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
 }

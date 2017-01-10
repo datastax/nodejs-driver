@@ -111,27 +111,49 @@ describe('Client', function () {
         done();
       });
     });
-    vit('2.0', 'should validate the arguments are valid', function (done) {
+    vit('2.0', 'should validate that arguments are valid', function () {
       var client = newInstance();
-      assert.throws(function () {
-          client.batch();
+      var badArgumentCalls = [
+        function () {
+          return client.batch();
         },
-        null
-      );
-      assert.throws(function () {
-          client.batch(['SELECT'], {});
+        function () {
+          return client.batch(['SELECT'], {});
         },
-        null
-      );
-      assert.throws(function () {
-          client.batch({}, {}, function () {});
-        },
-        null
-      );
+        function () {
+          return client.batch({}, {});
+        }
+      ];
 
-      //it should not throw an error with the following arguments
+      if (!helper.promiseSupport) {
+        badArgumentCalls.push(function () {
+          return client.batch({}, {}, function () {});
+        });
+        badArgumentCalls.forEach(function (method) {
+          assert.throws(method, errors.ArgumentError);
+        });
+        return;
+      }
+      var promises = badArgumentCalls.map(function (method) {
+        return method()
+          .then(function () {
+            throw new Error('Expected rejected promise for method ' + method.toString());
+          })
+          .catch(function (err) {
+            // should be an Argument Error
+            if (!(err instanceof errors.ArgumentError) && !(err instanceof errors.ResponseError)) {
+              throw new Error('Expected ArgumentError or ResponseError for method ' + method.toString());
+            }
+          });
+      });
+      setImmediate(client.shutdown.bind(client));
+      return Promise.all(promises);
+    });
+    vit('2.0', 'should allow parameters without hints', function (done) {
+      var client = newInstance();
       var query = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table1);
       utils.series([
+        client.connect.bind(client),
         function (next) {
           client.batch([{query: query, params: [types.Uuid.random(), null]}], next);
         },
@@ -140,7 +162,8 @@ describe('Client', function () {
             [{query: query, params: [types.Uuid.random(), null]}],
             {logged: false, consistency: types.consistencies.quorum},
             next);
-        }
+        },
+        client.shutdown.bind(client)
       ], done);
     });
     vit('2.0', 'should use hints when provided', function (done) {
@@ -257,6 +280,7 @@ describe('Client', function () {
         {query: util.format(insertQuery, table1), params: [id1, 'value with serial']}
       ];
       utils.series([
+        client.connect.bind(client),
         function (next) {
           client.batch(queries, { serialConsistency: types.consistencies.localSerial}, next);
         },
@@ -268,7 +292,42 @@ describe('Client', function () {
             assert.strictEqual(result.first()['text_sample'], 'value with serial');
             next();
           });
-        }], done);
+        },
+        client.shutdown.bind(client),
+      ], done);
+    });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        return;
+      }
+      vit('2.0', 'should return a promise when batch completes', function () {
+        var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'%s\')';
+        var selectQuery = 'SELECT * FROM %s WHERE id = %s';
+        var id1 = types.Uuid.random();
+        var id2 = types.Uuid.random();
+        var client = newInstance();
+        var queries = [
+          util.format(insertQuery, table1, id1, 'one'),
+          util.format(insertQuery, table2, id2, 'two')
+        ];
+
+        return client.batch(queries)
+          .then(function (result) {
+            assert.ok(result);
+            return client.execute(util.format(selectQuery, table1, id1));
+          })
+          .then(function (result) {
+            assert.ok(result);
+            assert.ok(result.rows);
+            assert.strictEqual(result.rows[0].text_sample, 'one');
+            return client.execute(util.format(selectQuery, table2, id2));
+          })
+          .then(function (result) {
+            assert.ok(result);
+            assert.ok(result.rows);
+            assert.strictEqual(result.rows[0].text_sample, 'two');
+          });
+      });
     });
   });
   describe('#batch(queries, {prepare: 1}, callback)', function () {

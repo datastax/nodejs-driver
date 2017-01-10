@@ -37,8 +37,8 @@ type. Values of type `Number` will be encoded as `double` (because `Number` is I
 Consider the following example:
 
 ```javascript
-var key = 1000;
-client.execute('SELECT * FROM table1 where key = ?', [key], callback);
+const key = 1000;
+client.execute('SELECT * FROM table1 where key = ?', [ key ]);
 ```
 
 If the key column is of type `int`, the execution fails. There are two possible ways to avoid this type of problem, as
@@ -53,8 +53,8 @@ and are ready for future execution. Also, the driver retrieves information about
 Using the previous example, setting the `prepare` flag in the queryOptions will fix it:
 
 ```javascript
-// prepare the query before execution 
-client.execute('SELECT * FROM table1 where key = ?', [key], { prepare : true }, callback);
+// Prepare the query before execution 
+client.execute('SELECT * FROM table1 where key = ?', [ key ], { prepare : true });
 ```
 
 When using prepared statements, the driver prepares the statement once on each host to execute multiple times.
@@ -65,7 +65,7 @@ Providing parameter hints in the query options is another way around it.
 
 ```javascript
 // Hint that the first parameter is an integer 
-client.execute('SELECT * FROM table1 where key = ?', [key], { hints : ['int'] }, callback);
+client.execute('SELECT * FROM table1 where key = ?', [ key ], { hints : ['int'] });
 ```
 
 [inetaddress-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html

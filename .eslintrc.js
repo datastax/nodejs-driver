@@ -95,6 +95,7 @@ module.exports = {
   "globals": {
     "Buffer": false,
     "Promise": true,
+    "Symbol": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,

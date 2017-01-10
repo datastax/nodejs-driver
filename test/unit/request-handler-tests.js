@@ -27,10 +27,10 @@ var options = (function () {
   };
 })();
 describe('RequestHandler', function () {
-  describe('#getDecision()', function () {
+  describe('#_getDecision()', function () {
     it('should retry when there was a socket error and mutation was not applied', function () {
       var handler = newInstance();
-      var result = handler.getDecision({ isSocketError: true, requestNotWritten: true });
+      var result = handler._getDecision({ isSocketError: true, requestNotWritten: true });
       assert.strictEqual(result.decision, retry.RetryPolicy.retryDecision.retry);
     });
     it('should use the retry policy when there was a socket error and mutation was applied', function () {
@@ -40,11 +40,11 @@ describe('RequestHandler', function () {
       handler.retryPolicy = { onRequestError: function () {
         requestErrorCalled++;
       }};
-      handler.getDecision({ isSocketError: true });
+      handler._getDecision({ isSocketError: true });
       assert.strictEqual(requestErrorCalled, 1);
     });
   });
-  describe('#handleError()', function () {
+  describe('#_handleError()', function () {
     it('should retrow on syntax error', function (done) {
       var handler = newInstance();
       handler.host = { address: '1'};
@@ -54,7 +54,7 @@ describe('RequestHandler', function () {
         assert.fail();
       };
       handler.requestOptions = {};
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         done();
       });
@@ -68,7 +68,7 @@ describe('RequestHandler', function () {
         assert.fail();
       };
       handler.requestOptions = {};
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         done();
       });
@@ -80,13 +80,13 @@ describe('RequestHandler', function () {
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.overloaded;
       var retryCalled = false;
-      handler.retry = function (c, useCurrentHost, cb) {
+      handler._retry = function (c, useCurrentHost, cb) {
         retryCalled = true;
         assert.strictEqual(useCurrentHost, false);
         cb();
       };
       handler.requestOptions = {};
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.equal(err, null);
         assert.strictEqual(retryCalled, true);
         done();
@@ -105,7 +105,7 @@ describe('RequestHandler', function () {
       var responseError = new errors.ResponseError(0, 'Test error');
       responseError.code = types.responseErrorCodes.writeTimeout;
       var retryCalled = false;
-      handler.retry = function (c, useCurrentHost, cb) {
+      handler._retry = function (c, useCurrentHost, cb) {
         retryCalled = true;
         assert.strictEqual(useCurrentHost, undefined);
         cb();
@@ -113,7 +113,7 @@ describe('RequestHandler', function () {
       handler.requestOptions = {};
       assert.strictEqual(handler.client.profileManager.getDefault().retry, policy);
       assert.strictEqual(handler.retryPolicy, policy);
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.equal(err, null);
         assert.strictEqual(retryCalled, true);
         assert.strictEqual(policyCalled, true);
@@ -131,11 +131,11 @@ describe('RequestHandler', function () {
       var handler = newInstance({ policies: { retry: policy }});
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError(types.responseErrorCodes.unavailableException, 'Test error');
-      handler.retry = function () {
+      handler._retry = function () {
         assert.fail();
       };
       handler.requestOptions = {};
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.strictEqual(err, responseError);
         assert.strictEqual(policyCalled, true);
         done();
@@ -146,11 +146,11 @@ describe('RequestHandler', function () {
       handler.host = { address: '1'};
       var responseError = new errors.ResponseError();
       responseError.code = types.responseErrorCodes.readTimeout;
-      handler.retry = function () {
+      handler._retry = function () {
         assert.fail();
       };
       handler.requestOptions = {};
-      handler.handleError(responseError, function (err) {
+      handler._handleError(responseError, function (err) {
         assert.strictEqual(err.coordinator, handler.host.address);
         done();
       });
@@ -159,11 +159,11 @@ describe('RequestHandler', function () {
       var handler = newInstance();
       handler.host = { address: '1'};
       handler.request = { };
-      handler.getDecision = function () {
+      handler._getDecision = function () {
         return { decision: retry.RetryPolicy.retryDecision.ignore };
       };
       handler.requestOptions = {};
-      handler.handleError({}, function (err, result) {
+      handler._handleError({}, function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
         assert.ok(!result.rowLength);
@@ -184,7 +184,7 @@ describe('RequestHandler', function () {
           });
         }
       };
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         cb(null, connection);
       };
       var eachCallback = function () { eachCounter++; };
@@ -211,10 +211,10 @@ describe('RequestHandler', function () {
           });
         }
       };
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         cb(null, connection);
       };
-      handler.retry = function (c, uh, cb) {
+      handler._retry = function (c, uh, cb) {
         retryCounter++;
         setImmediate(cb);
       };
@@ -235,7 +235,7 @@ describe('RequestHandler', function () {
           });
         }
       };
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         cb(null, connection);
       };
       handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
@@ -245,12 +245,12 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#prepareAndRetry()', function () {
+  describe('#_prepareAndRetry()', function () {
     it('should only re-prepare of ExecuteRequest and BatchRequest', function (done) {
       var handler = newInstance();
       handler.request = {};
       handler.host = {};
-      handler.prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(new Buffer(0), function (err) {
         helper.assertInstanceOf(err, errors.DriverInternalError);
         done();
       });
@@ -269,12 +269,12 @@ describe('RequestHandler', function () {
       }};
       handler.connection = connection;
       var queriesPrepared = [];
-      handler.sendOnConnection = function (request, o, cb) {
+      handler._sendOnConnection = function (request, o, cb) {
         helper.assertInstanceOf(request, requests.BatchRequest);
         assert.strictEqual(handler.connection, connection);
         setImmediate(cb);
       };
-      handler.prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(new Buffer(0), function (err) {
         assert.ifError(err);
         assert.strictEqual(queriesPrepared.toString(), handler.request.queries.map(function (x) {return x.query; }).toString());
         done();
@@ -294,12 +294,12 @@ describe('RequestHandler', function () {
       }};
       handler.connection = connection;
       var queriesPrepared = [];
-      handler.sendOnConnection = function (request, o, cb) {
+      handler._sendOnConnection = function (request, o, cb) {
         helper.assertInstanceOf(request, requests.BatchRequest);
         assert.strictEqual(handler.connection, connection);
         setImmediate(cb);
       };
-      handler.prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(new Buffer(0), function (err) {
         assert.ifError(err);
         //Only 1 query
         assert.strictEqual(queriesPrepared.length, 1);
@@ -308,17 +308,17 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#retry()', function () {
+  describe('#_retry()', function () {
     it('should set consistency level when provided', function (done) {
       var handler = newInstance();
       handler.request = { consistency: types.consistencies.localQuorum };
       var request;
-      handler.sendOnConnection = function (r, options, cb) {
+      handler._sendOnConnection = function (r, options, cb) {
         request = r;
         cb();
       };
       var retryConsistency = types.consistencies.three;
-      handler.retry(retryConsistency, true, function (err) {
+      handler._retry(retryConsistency, true, function (err) {
         assert.ifError(err);
         assert.ok(request);
         assert.strictEqual(request.consistency, retryConsistency);
@@ -333,7 +333,7 @@ describe('RequestHandler', function () {
         sendCalled++;
         cb();
       };
-      handler.retry(null, false, function (err) {
+      handler._retry(null, false, function (err) {
         assert.ifError(err);
         //RequestHandler#send() uses next host reusing hosts iterator from the previous query plan
         assert.strictEqual(sendCalled, 1);
@@ -357,7 +357,7 @@ describe('RequestHandler', function () {
           });
         });
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         setImmediate(function () {
           handler.host = { setUp: helper.noop };
           cb(null, connection);
@@ -387,7 +387,7 @@ describe('RequestHandler', function () {
           cb(null, { flags: utils.emptyObject });
         });
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         setImmediate(function () {
           handler.host = { setUp: helper.noop };
           cb(null, connection);
@@ -423,7 +423,7 @@ describe('RequestHandler', function () {
           }});
         });
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         setImmediate(function () {
           handler.host = { setUp: helper.noop };
           cb(null, connection);
@@ -443,7 +443,7 @@ describe('RequestHandler', function () {
       var connection = { sendStream: function (r, o, cb) {
         cb(new errors.OperationTimedOutError('Testing timeout'))
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         cb(null, connection);
       };
       var queryOptions = { retryOnTimeout: false};
@@ -464,7 +464,7 @@ describe('RequestHandler', function () {
       var connection2 = { sendStream: function (r, o, cb) {
         cb(null, {});
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         if (getNextConnectionCounter++ === 0) {
           return cb(null, connection1);
         }
@@ -488,7 +488,7 @@ describe('RequestHandler', function () {
       var connection2 = { sendStream: function (r, o, cb) {
         cb(null, {});
       }};
-      handler.getNextConnection = function (o, cb) {
+      handler._getNextConnection = function (o, cb) {
         if (getNextConnectionCounter++ === 0) {
           return cb(null, connection1);
         }
@@ -527,7 +527,7 @@ describe('RequestHandler', function () {
             cb(new errors.ResponseError(types.responseErrorCodes.syntaxError, 'syntax error'));
           });
         }};
-        handler.getNextConnection = function (o, cb) {
+        handler._getNextConnection = function (o, cb) {
           return cb(null, connection1);
         };
         //noinspection JSCheckFunctionSignatures
@@ -545,23 +545,7 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#onTimeout()', function () {
-    it('should check host health', function (done) {
-      var checkHealth = 0;
-      var handler = newInstance();
-      handler.host = { address: '1.1.1.1:9042', checkHealth: function () {
-        checkHealth++;
-      }};
-      handler.connection = { onTimeout: helper.noop };
-      //noinspection JSCheckFunctionSignatures
-      handler.onTimeout(new errors.OperationTimedOutError('Testing'), function (err) {
-        helper.assertInstanceOf(err, errors.OperationTimedOutError);
-        assert.strictEqual(checkHealth, 1);
-        done();
-      });
-    });
-  });
-  describe('#iterateThroughHosts()', function () {
+  describe('#_iterateThroughHosts()', function () {
     var getHost = function (address, isUp) {
       return {
         isUp: function () { return isUp !== false; },
@@ -576,11 +560,11 @@ describe('RequestHandler', function () {
     it('should synchronously get next connection when pool warmed', function (done) {
       var handler = newInstance();
       var hosts = utils.arrayIterator([ getHost() ]);
-      handler.getPooledConnection = function (h, cb) {
+      handler._getPooledConnection = function (h, cb) {
         cb(null, {});
       };
       var sync = true;
-      handler.iterateThroughHosts(hosts, function (err, c) {
+      handler._iterateThroughHosts(hosts, function (err, c) {
         assert.ifError(err);
         assert.ok(c);
         assert.ok(sync);
@@ -592,7 +576,7 @@ describe('RequestHandler', function () {
       var handler = newInstance();
       var hosts = utils.arrayIterator([ getHost('2001::1', false), getHost('2001::2', false) ]);
       var sync = true;
-      handler.iterateThroughHosts(hosts, function (err, c) {
+      handler._iterateThroughHosts(hosts, function (err, c) {
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.ok(err.innerErrors);
         assert.deepEqual(Object.keys(err.innerErrors), ['2001::1', '2001::2']);

@@ -1,12 +1,17 @@
 language: node_js
 node_js:
+  - "7"
   - "6"
-  - "5"
   - "4"
   - "0.12"
   - "0.10"
-  - "iojs"
 sudo: false
 cache:
   directories:
     - node_modules
+script:
+  - if [ "$TRAVIS_NODE_VERSION" != "0.10" ] && [ "$TRAVIS_NODE_VERSION" != "0.12" ]; then
+      npm install -g eslint;
+      eslint lib --ignore-pattern "/lib/types/integer.js";
+    fi
+  - npm test

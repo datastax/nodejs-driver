@@ -13,6 +13,7 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [Paging](paging)
 - [Native protocol](native-protocol)
 - [Parameterized queries](parameterized-queries)
+- [Query timestamps](query-timestamps)
 - [Query warnings](query-warnings)
 - [Tuning policies](tuning-policies)
 - [User-defined functions and aggregates](udfs)

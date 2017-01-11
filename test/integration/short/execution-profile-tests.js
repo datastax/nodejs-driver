@@ -109,7 +109,7 @@ describe('ProfileManager', function() {
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
           // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
           // so it should be considered remote.
-          var expectedDistance = n === 3 ? types.distance.remote : types.distance.local;
+          var expectedDistance = n === '3' ? types.distance.remote : types.distance.local;
           assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + n);
           assert.ok(h.isUp());
         });

@@ -460,7 +460,7 @@ var helper = {
     var host = undefined;
     var self = this;
     client.hosts.forEach(function(h) {
-      if(self.lastOctetOf(h) === number) {
+      if(self.lastOctetOf(h) === number.toString()) {
         host = h;
       }
     });

@@ -1,5 +1,4 @@
-// remove strict declaration since this test does rewiring.
-// eslint-disable-next-line strict
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var rewire = require('rewire');
@@ -580,7 +579,6 @@ describe('Client', function () {
       var connectCalled = false;
       client.connect = function (cb) {
         connectCalled = true;
-        client.profileManager = newProfileManager();
         cb();
       };
       client.batch(['q1'], function (err) {
@@ -986,7 +984,6 @@ describe('Client', function () {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
       client.controlConnection = { protocolVersion: 2};
-      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions({ prepare: false}, { named: 'val'}, null, function (err) {
         assert.ok(err);
@@ -1009,7 +1006,6 @@ describe('Client', function () {
         }
       };
       var options = { prepare: false, hints: [null, 'text']};
-      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, ['one', 'two'], null, function (err) {
         assert.ifError(err);
@@ -1031,8 +1027,6 @@ describe('Client', function () {
         ]
       };
       var options = { prepare: true, routingKey: new Buffer(2)};
-      client.profileManager = newProfileManager();
-      //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [1, 'two'], meta, function (err) {
         assert.ifError(err);
         assert.strictEqual(options.hints.length, 2);
@@ -1054,8 +1048,6 @@ describe('Client', function () {
         partitionKeys: [1, 0]
       };
       var options = { prepare: true};
-      client.profileManager = newProfileManager();
-      //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [types.Uuid.random(), 'another'], meta, function (err) {
         assert.ifError(err);
         assert.strictEqual(options.hints.length, 2);
@@ -1100,7 +1092,6 @@ describe('Client', function () {
         }
       };
       var options = { prepare: true};
-      client.profileManager = newProfileManager();
       utils.timesSeries(20, function (n, next) {
         var params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
         //noinspection JSAccessibilityCheck

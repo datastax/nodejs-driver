@@ -222,7 +222,7 @@ vdescribe('2.2', 'Metadata', function () {
               assert.ifError(err);
               assert.ok(func);
               assert.strictEqual(func.name, 'stringify');
-              assert.strictEqual(func.body, 'return Integer.toString(i) + \"hello\";');
+              assert.strictEqual(func.body, 'return Integer.toString(i) + "hello";');
               eachNext();
             });
           }, next);
@@ -452,7 +452,7 @@ vdescribe('2.2', 'Metadata', function () {
             client.connect.bind(client),
             function (next) {
               assert.throws(function () {
-                client.metadata.getAggregate(keyspace, 'sum', ['int'])
+                client.metadata.getAggregate(keyspace, 'sum', ['int']);
               }, errors.ArgumentError);
               next();
             },

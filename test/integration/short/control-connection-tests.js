@@ -54,7 +54,7 @@ describe('ControlConnection', function () {
           "{'class': 'SimpleStrategy', 'replication_factor' : 2}"),
         function (next) {
           helper.setIntervalUntil(function () {
-            return cc.metadata.keyspaces['sample_change_1'].strategyOptions.replication_factor == 2;
+            return cc.metadata.keyspaces['sample_change_1'].strategyOptions.replication_factor === 2;
           }, 200, 10, next);
         },
         function (next) {

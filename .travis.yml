@@ -12,6 +12,6 @@ cache:
 script:
   - if [ "$TRAVIS_NODE_VERSION" != "0.10" ] && [ "$TRAVIS_NODE_VERSION" != "0.12" ]; then
       npm install -g eslint;
-      eslint lib --ignore-pattern "/lib/types/integer.js";
+      npm run eslint;
     fi
   - npm test

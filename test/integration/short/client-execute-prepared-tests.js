@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
@@ -418,7 +419,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    vit('2.1',  'should support protocol level timestamp', function (done) {
+    vit('2.1', 'should support protocol level timestamp', function (done) {
       var client = newInstance();
       var id = Uuid.random();
       //noinspection JSCheckFunctionSignatures
@@ -493,8 +494,9 @@ describe('Client', function () {
       var client = newInstance();
       var loggedMessage = false;
       client.on('log', function (level, className, message) {
-        if (loggedMessage) return;
-        if (level !== 'warning') return;
+        if (loggedMessage || level !== 'warning') {
+          return;
+        }
         message = message.toLowerCase();
         if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
           loggedMessage = true;
@@ -676,7 +678,7 @@ describe('Client', function () {
             var query = 'INSERT INTO tbl_udt_change (id, phone_col) VALUES (?, ?)';
             utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString()}], { prepare: true}, timesNext);
-            }, next)
+            }, next);
           },
           helper.toTask(client.execute, client, 'ALTER TYPE phone_change ADD another text'),
           helper.toTask(client.execute, client, 'ALTER TABLE tbl_udt_change ALTER phone_col TYPE frozen<phone_change>'),
@@ -713,7 +715,7 @@ describe('Client', function () {
             var query = 'INSERT INTO tbl_udt_change2 (id, phone_col2) VALUES (?, ?)';
             utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [types.Uuid.random(), { alias: n.toString(), number: n.toString()}], { prepare: true}, timesNext);
-            }, next)
+            }, next);
           },
           helper.toTask(client.execute, client, 'ALTER TYPE phone_change2 ADD another text'),
           helper.toTask(client.execute, client, 'ALTER TABLE tbl_udt_change2 ALTER phone_col2 TYPE frozen<phone_change2>'),
@@ -721,7 +723,7 @@ describe('Client', function () {
             var query = 'SELECT * FROM tbl_udt_change2';
             utils.timesSeries(10, function (n, timesNext) {
               client.execute(query, [], { prepare: true}, timesNext);
-            }, next)
+            }, next);
           },
           client.shutdown.bind(client)
         ], done);
@@ -961,11 +963,11 @@ describe('Client', function () {
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              v = {
+              var v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };
-              if(n % 10 == 0) {
+              if(n % 10 === 0) {
                 v['by10'] = n / 10;
               }
               client.execute(query, [n, v], {prepare :1}, next);
@@ -998,7 +1000,7 @@ describe('Client', function () {
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              v = {
+              var v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };
@@ -1033,7 +1035,7 @@ describe('Client', function () {
           function insertData(seriesNext) {
             var query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              v = {
+              var v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };

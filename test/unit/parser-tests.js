@@ -1,6 +1,5 @@
 'use strict';
 var assert = require('assert');
-var util = require('util');
 
 var Encoder = require('../../lib/encoder');
 var streams = require('../../lib/streams');
@@ -377,7 +376,7 @@ describe('Parser', function () {
       var result;
       parser.on('readable', function () {
         var item;
-        while (item = parser.read()) {
+        while ((item = parser.read())) {
           if (!item.row && item.frameEnded) {
             continue;
           }
@@ -444,7 +443,7 @@ describe('Parser', function () {
       var result;
       parser.on('readable', function () {
         var item;
-        while (item = parser.read()) {
+        while ((item = parser.read())) {
           if (!item.row && item.frameEnded) {
             continue;
           }
@@ -741,6 +740,8 @@ function getEventData(eventType, value) {
  */
 function doneIfError(done) {
   return function doneIfErrorCallback(err) {
-    if (err) done(err);
+    if (err) {
+      done(err);
+    }
   };
 }

@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
@@ -37,7 +36,7 @@ describe('ProfileManager', function() {
     });
     // A profile that targets 127.0.0.4 specifically.
     var wlProfile = new ExecutionProfile('whitelist', {
-      loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [helper.ipPrefix + '4' + ":9042"]))
+      loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [helper.ipPrefix + '4:9042']))
     });
     // A profile with no defined lbp, it should fallback on the default profile's lbp.
     var emptyProfile = new ExecutionProfile('empty');
@@ -65,7 +64,9 @@ describe('ProfileManager', function() {
         function executeQueries(next) {
           utils.timesLimit(100, 25, function(n, timesNext) {
             client.execute(helper.queries.basic, [], queryOptions, function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               hostsUsed[helper.lastOctetOf(result.info.queriedHost)] = true;
               timesNext();
             });
@@ -76,7 +77,7 @@ describe('ProfileManager', function() {
           });
         },
         client.shutdown.bind(client)
-      ], done)
+      ], done);
     });
   }
 
@@ -108,7 +109,7 @@ describe('ProfileManager', function() {
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
           // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
           // so it should be considered remote.
-          var expectedDistance = n == 3 ? types.distance.remote : types.distance.local;
+          var expectedDistance = n === 3 ? types.distance.remote : types.distance.local;
           assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + n);
           assert.ok(h.isUp());
         });
@@ -133,7 +134,7 @@ describe('ProfileManager', function() {
       function executeQueries(next) {
         utils.timesLimit(100, 25, function(n, timesNext) {
           client.execute(helper.queries.basic, [], {executionProfile: 'empty'}, function (err, result) {
-            if (err) return timesNext(err);
+            if (err) {return timesNext(err);}
             hostsUsed[helper.lastOctetOf(result.info.queriedHost)] = true;
             timesNext();
           });

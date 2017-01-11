@@ -28,7 +28,7 @@ describe('Metadata', function () {
       function checkKeyspace(client, name, strategy, optionName, optionValue) {
         var m = client.metadata;
         var ks = m.keyspaces[name];
-        checkKeyspaceWithInfo(ks, strategy, optionName, optionValue)
+        checkKeyspaceWithInfo(ks, strategy, optionName, optionValue);
       }
 
       utils.series([
@@ -134,7 +134,7 @@ describe('Metadata', function () {
                 assert.strictEqual(udtInfo, null);
               })
               .then(timesNext)
-              .catch(timesNext)
+              .catch(timesNext);
           }, next);
         },
         client.shutdown.bind(client),
@@ -382,7 +382,7 @@ describe('Metadata', function () {
   });
   describe('#getTable()', function () {
     var keyspace = 'ks_tbl_meta';
-    var is3  = helper.isCassandraGreaterThan('3.0');
+    var is3 = helper.isCassandraGreaterThan('3.0');
     var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
     before(function createTables(done) {
       var client = newInstance();
@@ -426,7 +426,7 @@ describe('Metadata', function () {
           "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
           "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
           "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
-        )
+        );
       }
       utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
@@ -1029,7 +1029,7 @@ describe('Metadata', function () {
               assert.strictEqual(view, null);
               eachNext();
             });
-          }, next)
+          }, next);
         },
         client.shutdown.bind(client),
         nonSyncClient.shutdown.bind(nonSyncClient)

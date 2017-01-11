@@ -27,7 +27,7 @@ describe('reconnection', function () {
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
-            next()
+            next();
           });
         },
         helper.ccmHelper.start(2),
@@ -87,7 +87,7 @@ describe('reconnection', function () {
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
-            next()
+            next();
           });
         },
         helper.ccmHelper.start(1),
@@ -160,7 +160,7 @@ describe('reconnection', function () {
         function removeCcm(next) {
           helper.ccmHelper.remove(function () {
             //Ignore error
-            next()
+            next();
           });
         },
         helper.ccmHelper.start(3),
@@ -276,9 +276,9 @@ describe('reconnection', function () {
       ], function (err) {
         assert.ifError(err);
         helper.ccmHelper.removeIfAny(done);
-      })
-    })
-  })
+      });
+    });
+  });
 });
 
 /**

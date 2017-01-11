@@ -1,5 +1,5 @@
+'use strict';
 var assert = require('assert');
-var util = require('util');
 //project modules
 var utils = require('../../lib/utils');
 var reconnection = require('../../lib/policies/reconnection');

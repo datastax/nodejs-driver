@@ -1,7 +1,6 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
-var events = require('events');
-var utils = require('../../lib/utils');
 var helper = require('../test-helper');
 
 var Uuid = require('../../lib/types').Uuid;
@@ -11,16 +10,16 @@ describe('Uuid', function () {
   describe('constructor', function () {
     it('should validate the Buffer length', function () {
       assert.throws(function () {
-        new Uuid(new Buffer(10));
+        return new Uuid(new Buffer(10));
       });
       assert.throws(function () {
-        new Uuid(null);
+        return new Uuid(null);
       });
       assert.throws(function () {
-        new Uuid();
+        return new Uuid();
       });
       assert.doesNotThrow(function () {
-        new Uuid(new Buffer(16));
+        return new Uuid(new Buffer(16));
       });
     });
   });
@@ -203,7 +202,7 @@ describe('TimeUuid', function () {
         secondTimeUuid = TimeUuid.now();
       }
       assert.strictEqual(secondTimeUuid.getDatePrecision().ticks, 0);
-    })  
+    });  
   });
   describe('min()', function () {
     it('should generate uuid with the minimum node and clock id values', function () {

@@ -25,7 +25,9 @@ describe('Client', function () {
         // The rest of the test relies on the fact that the PK '1' will be placed on node1 with MurmurPartitioner
         utils.timesSeries(2000, function (n, timesNext) {
           client.execute('INSERT INTO test.foo (pk, cc, v) VALUES (1, ?, null)', [n], {prepare: true}, function (err, result) {
-            if (err) return next(err);
+            if (err) {
+              return next(err);
+            }
             assert.strictEqual(helper.lastOctetOf(result.info.queriedHost), '2');
             timesNext();
           });

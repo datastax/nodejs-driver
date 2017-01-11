@@ -4,7 +4,6 @@ var util = require('util');
 
 var helper = require('../../test-helper.js');
 var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var loadBalancing = require('../../../lib/policies/load-balancing.js');
 var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
@@ -20,7 +19,6 @@ describe('DCAwareRoundRobinPolicy', function () {
       function testCase(next) {
         var options = utils.deepExtend({}, helper.baseOptions, {policies: {loadBalancing: new DCAwareRoundRobinPolicy()}});
         var client = new Client(options);
-        var prevHost = null;
         utils.times(120, function (n, timesNext) {
           client.execute(helper.queries.basic, function (err, result) {
             assert.ifError(err);
@@ -30,7 +28,6 @@ describe('DCAwareRoundRobinPolicy', function () {
             var h = client.hosts.get(hostId);
             assert.ok(h);
             assert.strictEqual(h.datacenter, 'dc1');
-            prevHost = h;
             countByHost[hostId] = (countByHost[hostId] || 0) + 1;
             timesNext();
           });

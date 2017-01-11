@@ -20,7 +20,7 @@ describe('Client', function () {
       var counter = 0;
       //fail if its preparing
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function () {throw new Error('Prepared should not be called')};
+      client._getPrepared = function () {throw new Error('Prepared should not be called');};
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -265,7 +265,7 @@ describe('Client', function () {
               assert.ok(isNaN(row['data'].val));
             }
             else {
-              assert.strictEqual(row['data'].val, expected)
+              assert.strictEqual(row['data'].val, expected);
             }
           }, function (err, result) {
             assert.ifError(err);
@@ -395,9 +395,7 @@ describe('Client', function () {
         helper.toTask(insertTestData, null, client, table, 110),
         function selectData(seriesNext) {
           //Only fetch 60 the first time, 50 the following
-          var counter = 0;
           client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 60}, function (n, row) {
-            counter++;
             if (nextPageRows) {
               nextPageRows.push(row);
             }
@@ -509,8 +507,9 @@ describe('Client', function () {
       var client = newInstance();
       var loggedMessage = false;
       client.on('log', function (level, className, message) {
-        if (loggedMessage) return;
-        if (level !== 'warning') return;
+        if (loggedMessage || level !== 'warning') {
+          return;
+        }
         message = message.toLowerCase();
         if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
           loggedMessage = true;

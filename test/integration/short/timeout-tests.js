@@ -42,7 +42,9 @@ describe('client read timeouts', function () {
         function warmup(next) {
           utils.timesSeries(10, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
               timesNext();
             });
@@ -65,7 +67,9 @@ describe('client read timeouts', function () {
               timesNext();
             });
           }, function (err) {
-            if (err) return next(err);
+            if (err) {
+              return next(err);
+            }
             assert.strictEqual(Object.keys(coordinators).length, 1);
             assert.strictEqual(coordinators['1'], true);
             //half of the executions failed
@@ -102,7 +106,9 @@ describe('client read timeouts', function () {
         function warmup(next) {
           utils.times(10, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
               timesNext();
             });
@@ -127,12 +133,16 @@ describe('client read timeouts', function () {
           coordinators = {};
           utils.times(500, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
               timesNext();
             });
           }, function (err) {
-            if (err) return next(err);
+            if (err) {
+              return next(err);
+            }
             assert.strictEqual(Object.keys(coordinators).length, 1);
             assert.strictEqual(coordinators['1'], true);
             //we check using an internal property of socket which is lame
@@ -156,7 +166,9 @@ describe('client read timeouts', function () {
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
             }, function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
               assert.strictEqual(result.rowLength, counter);
               timesNext();
@@ -174,13 +186,17 @@ describe('client read timeouts', function () {
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
             }, function (err, result) {
-              if (err) return timesNext(err);
+              if (err) {
+                return timesNext(err);
+              }
               coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
               assert.strictEqual(result.rowLength, counter);
               timesNext();
             });
           }, function (err) {
-            if (err) return next(err);
+            if (err) {
+              return next(err);
+            }
             assert.strictEqual(Object.keys(coordinators).length, 1);
             assert.strictEqual(coordinators['1'], true);
             next();
@@ -336,7 +352,9 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
       function warmup(next) {
         utils.timesSeries(10, function (n, timesNext) {
           client.execute('SELECT key FROM system.local', [], { prepare: prepareWarmup }, function (err, result) {
-            if (err) return timesNext(err);
+            if (err) {
+              return timesNext(err);
+            }
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
             timesNext();
           });
@@ -354,13 +372,17 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
         utils.times(10, function (n, timesNext) {
           queryOptions = utils.extend({ }, queryOptions, { prepare: prepare});
           client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
-            if (err) return timesNext(err);
+            if (err) {
+              return timesNext(err);
+            }
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
             timesNext();
           });
         }, function timeFinished(err) {
           clearTimeout(testAbortTimeout);
-          if (err) return next(err);
+          if (err) {
+            return next(err);
+          }
           assert.strictEqual(Object.keys(coordinators).length, 1);
           assert.strictEqual(coordinators['1'], true);
           assert.ok(timeoutLogs.length);
@@ -392,7 +414,9 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
       function warmup(next) {
         utils.timesSeries(10, function (n, timesNext) {
           client.execute('SELECT key FROM system.local', [], { prepare: prepareWarmup }, function (err, result) {
-            if (err) return timesNext(err);
+            if (err) {
+              return timesNext(err);
+            }
             coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
             timesNext();
           });
@@ -405,12 +429,13 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
         assert.strictEqual(coordinators['2'], true);
         coordinators = {};
         //execute 2 queries without waiting for the response
+        var cb = function (err, result) {
+          assert.ifError(err);
+          coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+        };
         for (var i = 0; i < 2; i++) {
           queryOptions = utils.extend({ }, queryOptions, { prepare: prepare });
-          client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
-            assert.ifError(err);
-            coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-          });
+          client.execute('SELECT key FROM system.local', [], queryOptions, cb);
         }
         //wait for the node that is healthy to respond
         setTimeout(next, 2000);

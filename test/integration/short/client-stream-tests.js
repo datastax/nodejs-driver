@@ -17,7 +17,7 @@ describe('Client', function () {
     it('should emit end when no rows', function (done) {
       var client = newInstance();
       //noinspection JSAccessibilityCheck
-      client._getPrepared = function () { throw new Error('Query should not be prepared')};
+      client._getPrepared = function () { throw new Error('Query should not be prepared');};
       var stream = client.stream(helper.queries.basicNoResults, [], {prepare: false});
       stream
         .on('end', done)
@@ -41,7 +41,8 @@ describe('Client', function () {
         })
         .on('readable', function () {
           var row;
-          while (row = this.read()) {
+          while ((row = this.read())) {
+            assert.ok(row);
             counter++;
           }
         })
@@ -58,7 +59,7 @@ describe('Client', function () {
         })
         .on('readable', function () {
           var row;
-          while (row = this.read()) {
+          while ((row = this.read())) {
             assert.ok(row);
             assert.strictEqual(row.key, 'local');
             counter++;
@@ -192,7 +193,7 @@ describe('Client', function () {
             })
             .on('readable', function () {
               var row;
-              while (row = this.read()) {
+              while ((row = this.read())) {
                 assert.ok(row);
                 assert.strictEqual(typeof row.int_sample, 'number');
                 counter++;
@@ -234,7 +235,7 @@ describe('Client', function () {
             })
             .on('readable', function () {
               var row;
-              while (row = this.read()) {
+              while ((row = this.read())) {
                 assert.ok(row);
                 assert.ok(row.int_sample);
                 counter++;
@@ -301,7 +302,7 @@ describe('Client', function () {
           setTimeout(function () {
             //delay all reading
             var row;
-            while (row = streamContext.read()) {
+            while ((row = streamContext.read())) {
               assert.ok(row);
             }
             allRead = true;

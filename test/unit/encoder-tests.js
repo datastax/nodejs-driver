@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var utils = require('../../lib/utils');
@@ -379,7 +380,7 @@ describe('encoder', function () {
           //Set not supported in Node.js runtime
           return;
         }
-        //noinspection JSUnresolvedVariable
+        // eslint-disable-next-line no-undef
         var Es6Set = Set;
         var encoder = new Encoder(version, { encoding: { set: Es6Set}});
         var m = new Es6Set(['k1', 'k2', 'k3']);
@@ -432,11 +433,11 @@ describe('encoder', function () {
         function getValues(m) {
           var arr = [];
           m.forEach(function (val, key) {
-            arr.push([key, val])
+            arr.push([key, val]);
           });
           return arr.toString();
         }
-        //noinspection JSUnresolvedVariable
+        // eslint-disable-next-line no-undef
         var Es6Map = Map;
         var encoder = new Encoder(version, { encoding: { map: Es6Map}});
         var m = new Es6Map();
@@ -566,19 +567,20 @@ describe('encoder', function () {
         else {
           assert.equal(decoded.date.getTime(), item.date.getTime(), decoded.date + " != " + item.date);
         }
-    });
+      });
     });
     it('should refuse to encode invalid values as LocalDate.', function () {
       var encoder = new Encoder(4, {});
       var type = {code: dataTypes.date};
       // Non Date/String/LocalDate
-      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
-      assert.throws(function () { encoder.encode('zzz', type)}, TypeError);
-      assert.throws(function () { encoder.encode('', type)}, TypeError);
+      assert.throws(function () { encoder.encode(23.0, type);}, TypeError);
+      assert.throws(function () { encoder.encode('zzz', type);}, TypeError);
+      assert.throws(function () { encoder.encode('', type);}, TypeError);
     });
     it('should encode/decode LocalTime as time', function () {
       var encoder = new Encoder(3, {});
       var type = {code: dataTypes.time};
+      /* eslint-disable no-multi-spaces */
       [
         //Long value         |     string representation
         ['2000000501',             '00:00:02.000000501'],
@@ -589,19 +591,20 @@ describe('encoder', function () {
         ['52171800000000',         '14:29:31.8'],
         ['52171800600000',         '14:29:31.8006']
       ].forEach(function (item) {
-          var encoded = encoder.encode(new types.LocalTime(types.Long.fromString(item[0])), type);
-          var decoded = encoder.decode(encoded, type);
-          helper.assertInstanceOf(decoded, types.LocalTime);
-          assert.strictEqual(decoded.toString(), item[1]);
+        var encoded = encoder.encode(new types.LocalTime(types.Long.fromString(item[0])), type);
+        var decoded = encoder.decode(encoded, type);
+        helper.assertInstanceOf(decoded, types.LocalTime);
+        assert.strictEqual(decoded.toString(), item[1]);
       });
+      /* eslint-enable no-multi-spaces */
     });
     it('should refuse to encode invalid values as LocalTime.', function () {
       var encoder = new Encoder(4, {});
       var type = {code: dataTypes.time};
       // Negative value string.
-      assert.throws(function () { encoder.encode('-1:00:00', type)}, TypeError);
+      assert.throws(function () { encoder.encode('-1:00:00', type);}, TypeError);
       // Non string/LocalTime value.
-      assert.throws(function () { encoder.encode(23.0, type)}, TypeError);
+      assert.throws(function () { encoder.encode(23.0, type);}, TypeError);
     });
   });
   describe('#encode()', function () {
@@ -653,6 +656,7 @@ describe('encoder', function () {
       encoder.setRoutingKey([1, 'text'], options);
       assert.ok(options.routingKey);
       //The routingKey should have the form: [2-byte-length] + key + [0]
+      // eslint-disable-next-line no-useless-concat
       assert.strictEqual(options.routingKey.toString('hex'), '00010100' + '00010200' + '0002030300');
 
       options = {
@@ -695,6 +699,7 @@ describe('encoder', function () {
       };
       encoder.setRoutingKey([1, 'yeah', 2], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      // eslint-disable-next-line no-useless-concat
       assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '00000002' + '00');
 
       options = {
@@ -704,6 +709,7 @@ describe('encoder', function () {
       };
       encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      // eslint-disable-next-line no-useless-concat
       assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
       options = {
         //no hints
@@ -711,6 +717,7 @@ describe('encoder', function () {
       };
       encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
+      // eslint-disable-next-line no-useless-concat
       assert.strictEqual(options.routingKey.toString('hex'), '0004' + new Buffer('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
     it('should allow undefined routingIndexes', function () {
@@ -870,7 +877,7 @@ describe('encoder', function () {
       assert.strictEqual('tester', dataType.info.keyspace);
       var subTypes = dataType.info.fields;
       assert.strictEqual(3, subTypes.length);
-      assert.strictEqual('street,ZIP,phones', subTypes.map(function (f) {return f.name}).join(','));
+      assert.strictEqual('street,ZIP,phones', subTypes.map(function (f) {return f.name;}).join(','));
       assert.strictEqual(dataTypes.varchar, subTypes[0].type.code);
       assert.strictEqual(dataTypes.set, subTypes[2].type.code);
       //field name
@@ -891,6 +898,7 @@ describe('encoder', function () {
     }
     it('should parse single type names', function (done) {
       var encoder = new Encoder(4, {});
+      /* eslint-disable no-multi-spaces */
       var items = [
         ['int',        dataTypes.int],
         ['uuid',       dataTypes.uuid],
@@ -909,6 +917,7 @@ describe('encoder', function () {
         ['timeuuid',   dataTypes.timeuuid],
         ['ascii',      dataTypes.ascii]
       ];
+      /* eslint-enable no-multi-spaces */
       utils.eachSeries(items, function eachCb(item, next) {
         encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
           assert.ifError(err);
@@ -1144,7 +1153,7 @@ describe('encoder', function () {
       keys.forEach(function (k) {
         //noinspection JSUnresolvedVariable
         assert.strictEqual(typeof Encoder.prototype[k], 'function');
-      })
+      });
     });
   });
 });

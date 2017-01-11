@@ -128,7 +128,9 @@ describe('ControlConnection', function () {
       var refreshedObjects = [];
       cc.scheduleKeyspaceRefresh = function (name, b, cb) {
         refreshedKeyspaces.push(name);
-        if (cb) cb();
+        if (cb) {
+          cb();
+        }
       };
       cc.scheduleObjectRefresh = function (h, ks, cqlObject) {
         h();
@@ -167,10 +169,14 @@ describe('ControlConnection', function () {
       var downSet = 0;
       var options = clientOptions.extend({}, helper.baseOptions);
       var cc = newInstance(options);
-      cc.hosts = { get : function () { return {
-        setDown: function () { downSet++; },
-        setDistance: function () { return types.distance.ignored; }
-      }}};
+      cc.hosts = { 
+        get : function () { 
+          return {
+            setDown: function () { downSet++; },
+            setDistance: function () { return types.distance.ignored; }
+          };
+        }
+      };
       var event = { inet: { address: { toString: function () { return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
       assert.strictEqual(downSet, 1);
@@ -179,11 +185,15 @@ describe('ControlConnection', function () {
       var downSet = 0;
       var options = clientOptions.extend({}, helper.baseOptions);
       var cc = newInstance(options);
-      cc.hosts = { get : function () { return {
-        setDown: function () { downSet++;},
-        datacenter: 'dc1',
-        setDistance: helper.noop
-      } }};
+      cc.hosts = { 
+        get : function () { 
+          return {
+            setDown: function () { downSet++;},
+            datacenter: 'dc1',
+            setDistance: helper.noop
+          };
+        }
+      };
       var event = { inet: { address: { toString: function () { return 'host1';}}}};
       cc.nodeStatusChangeHandler(event);
       assert.strictEqual(downSet, 0);
@@ -468,5 +478,5 @@ function getInet(bytes) {
 }
 
 function newInstance(options) {
-  return new ControlConnection(options, new ProfileManager(options))
+  return new ControlConnection(options, new ProfileManager(options));
 }

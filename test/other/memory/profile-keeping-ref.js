@@ -1,9 +1,11 @@
+'use strict';
+/* eslint-disable no-console, no-undef */
 var assert = require('assert');
 var util = require('util');
-var fs = require('fs');
 var heapdump;
 var heapdumpPath = '/var/log/nodejs-driver';
 try {
+  // eslint-disable-next-line global-require
   heapdump = require('heapdump');
 }
 catch (e) {
@@ -22,7 +24,7 @@ var table = keyspace + '.' + helper.getRandomName('tbl');
 
 if (!global.gc) {
   console.log('You must run this test exposing the GC');
-  return
+  return;
 }
 
 var totalLength = 100;
@@ -81,7 +83,9 @@ utils.series([
       var diff = process.memoryUsage().heapUsed - heapUsed;
       console.log('Byte length %s in %d values', formatLength(totalByteLength), values.length);
       console.log('Heap used difference', formatLength(diff));
-      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      if (heapdump) {
+        heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      }
       helper.ccmHelper.removeIfAny();
       assert.ifError(err);
     });

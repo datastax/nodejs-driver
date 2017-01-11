@@ -1,11 +1,13 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
-var fs = require('fs');
 var heapdump;
 var heapdumpPath = '/var/log/nodejs-driver';
 try {
+  // eslint-disable-next-line global-require
   heapdump = require('heapdump');
 }
+/* eslint-disable no-console, no-undef */
 catch (e) {
   console.error('There was an error while trying to import heapdump', e);
 }
@@ -22,7 +24,7 @@ var table = keyspace + '.' + helper.getRandomName('tbl');
 
 if (!global.gc) {
   console.log('You must run this test exposing the GC');
-  return
+  return;
 }
 
 var insertOnly = process.argv.indexOf('--insert-only') > 0;
@@ -54,7 +56,9 @@ utils.series([
         setImmediate(timesNext);
       });
     }, function (err) {
-      if (err) return next(err);
+      if (err) {
+        return next(err);
+      }
       next();
     });
   }
@@ -73,7 +77,9 @@ utils.series([
       totalByteLength += row['blob_sample'].length + 4 + 16;
       rowCount++;
     }, function (err, result) {
-      if (err) return next(err);
+      if (err) {
+        return next(err);
+      }
       assert.strictEqual(rowCount, result.rowLength);
       console.log(util.format('Retrieved %d rows and around %s', result.rowLength, formatLength(totalByteLength)));
       next();
@@ -87,7 +93,9 @@ utils.series([
       global.gc();
       var diff = process.memoryUsage().heapUsed - heapUsed;
       console.log('Heap used difference', formatLength(diff));
-      if (heapdump) heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      if (heapdump) {
+        heapdump.writeSnapshot(heapdumpPath + '/' + Date.now() + '.heapsnapshot');
+      }
       helper.ccmHelper.removeIfAny();
       assert.ifError(err);
     });

@@ -102,6 +102,10 @@ module.exports = {
     "clearTimeout": false,
     "describe": false,
     "it": false,
-    "context": false
+    "context": false,
+    "after": false,
+    "afterEach": false,
+    "before": false,
+    "beforeEach": false
   }
 };

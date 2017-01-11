@@ -1,9 +1,5 @@
 'use strict';
 var assert = require('assert');
-var util = require('util');
-var events = require('events');
-
-var utils = require('../../lib/utils');
 var helper = require('../test-helper');
 var InetAddress = require('../../lib/types').InetAddress;
 
@@ -11,19 +7,19 @@ describe('InetAddress', function () {
   describe('constructor', function () {
     it('should validate the Buffer length', function () {
       assert.throws(function () {
-        new InetAddress(new Buffer(10));
+        return new InetAddress(new Buffer(10));
       }, TypeError);
       assert.throws(function () {
-        new InetAddress(null);
+        return new InetAddress(null);
       }, TypeError);
       assert.throws(function () {
-        new InetAddress();
+        return new InetAddress();
       }, TypeError);
       assert.doesNotThrow(function () {
-        new InetAddress(new Buffer(16));
+        return new InetAddress(new Buffer(16));
       }, TypeError);
       assert.doesNotThrow(function () {
-        new InetAddress(new Buffer(4));
+        return new InetAddress(new Buffer(4));
       }, TypeError);
     });
   });
@@ -81,9 +77,9 @@ describe('InetAddress', function () {
         '3ffe:0:0:1::a', // ensure furthest groups of 0-bytes are compressed when longest, but last non-0 bytes group is not truncated.
         '3ffe:0:0:1::' // ensure final groups of 0-bytes are compressed when longest and last group is also 0-bytes.
       ].forEach(function (item) {
-          var val = InetAddress.fromString(item);
-          helper.assertInstanceOf(val, InetAddress);
-          assert.strictEqual(val.toString(), item);
+        var val = InetAddress.fromString(item);
+        helper.assertInstanceOf(val, InetAddress);
+        assert.strictEqual(val.toString(), item);
       });
     });
     it('should parse IPv4 string representation', function () {
@@ -98,6 +94,7 @@ describe('InetAddress', function () {
       assert.strictEqual(val.toString(), '10.11.12.13');
     });
     it('should parse IPv4-Mapped IPv6 addresses', function () {
+      /* eslint-disable no-multi-spaces */
       [
         ['0:0:0:0:0:FFFF:129.144.52.38',    '00000000000000000000ffff81903426'],
         ['::ffff:129.144.52.38',            '00000000000000000000ffff81903426'],
@@ -106,6 +103,7 @@ describe('InetAddress', function () {
         var ip = InetAddress.fromString(item[0]);
         assert.strictEqual(ip.toString('hex'), item[1]);
       });
+      /* eslint-enable no-multi-spaces */
     });
     it('should throw TypeError for invalid IPv6 address with embedded IPv4 address', function () {
       [

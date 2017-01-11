@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var helper = require('../../test-helper.js');
 var utils = require('../../../lib/utils');

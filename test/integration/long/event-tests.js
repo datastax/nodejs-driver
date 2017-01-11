@@ -1,12 +1,9 @@
+'use strict';
 var assert = require('assert');
-var domain = require('domain');
 
 var helper = require('../../test-helper');
 var Host = require('../../../lib/host').Host;
 var utils = require('../../../lib/utils');
-var errors = require('../../../lib/errors');
-var types = require('../../../lib/types');
-var policies = require('../../../lib/policies');
 
 var Client = require('../../../lib/client');
 

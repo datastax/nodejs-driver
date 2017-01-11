@@ -1,6 +1,5 @@
+'use strict';
 var assert = require('assert');
-var util = require('util');
-var events = require('events');
 var dns = require('dns');
 
 var addressResolution = require('../../lib/policies/address-resolution');

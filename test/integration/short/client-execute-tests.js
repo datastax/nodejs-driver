@@ -67,7 +67,7 @@ describe('Client', function () {
       var client = newInstance();
       utils.times(500, function (n, next) {
         client.execute(helper.queries.basic, [], next);
-      }, done)
+      }, done);
     });
     it('should fail if non-existent profile provided', function (done) {
       var client = newInstance();
@@ -167,7 +167,6 @@ describe('Client', function () {
     });
     vit('2.0', 'should not autoPage', function (done) {
       var client = newInstance({keyspace: keyspace});
-      var pageState = null;
       utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
@@ -191,7 +190,6 @@ describe('Client', function () {
     if(helper.iteratorSupport) {
       vit('2.0', 'should return ResultSet compatible with @@iterator', function (done) {
         var client = newInstance({keyspace: keyspace});
-        var pageState = null;
         utils.series([
           function truncate(seriesNext) {
             client.execute('TRUNCATE ' + table, seriesNext);
@@ -528,8 +526,9 @@ describe('Client', function () {
       var client = newInstance();
       var loggedMessage = false;
       client.on('log', function (level, className, message) {
-        if (loggedMessage) return;
-        if (level !== 'warning') return;
+        if (loggedMessage || level !== 'warning') {
+          return;
+        }
         message = message.toLowerCase();
         if (message.indexOf('batch') >= 0 && message.indexOf('exceeding')) {
           loggedMessage = true;

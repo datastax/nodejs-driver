@@ -1,7 +1,6 @@
 "use strict";
 var assert = require('assert');
 var util = require('util');
-var events = require('events');
 
 var Client = require('../../lib/client.js');
 var clientOptions = require('../../lib/client-options.js');
@@ -19,6 +18,7 @@ describe('types', function () {
   describe('Long', function () {
     var Long = types.Long;
     it('should convert from and to Buffer', function () {
+      /* eslint-disable no-multi-spaces */
       [
         //int64 decimal value    //hex value
         ['-123456789012345678', 'fe4964b459cf0cb2'],
@@ -39,6 +39,7 @@ describe('types', function () {
         assert.strictEqual(Long.toBuffer(value).toString('hex'), buffer.toString('hex'),
           'Hexadecimal values should match for ' + item[1]);
       });
+      /* eslint-enable no-multi-spaces */
     });
 
     it('should return a valid number for int greater than 2^53 and less than -2^53', function () {
@@ -59,6 +60,7 @@ describe('types', function () {
   });
   describe('Integer', function () {
     var Integer = types.Integer;
+    /* eslint-disable no-multi-spaces */
     var values = [
       //hex value                      |      string varint
       ['02000001',                            '33554433'],
@@ -85,6 +87,7 @@ describe('types', function () {
       ['00ba0cef',                            '12193007'],
       ['00ffffffff',                          '4294967295']
     ];
+    /* eslint-enable no-multi-spaces */
     it('should create from buffer', function () {
       values.forEach(function (item) {
         var buffer = new Buffer(item[0], 'hex');
@@ -153,14 +156,14 @@ describe('types', function () {
     var LocalDate = types.LocalDate;
     describe('new LocalDate', function (){
       it('should refuse to create LocalDate from invalid values.', function () {
-        assert.throws(function () { new types.LocalDate() }, Error);
-        assert.throws(function () { new types.LocalDate(undefined) }, Error);
+        assert.throws(function () { return new types.LocalDate(); }, Error);
+        assert.throws(function () { return new types.LocalDate(undefined); }, Error);
         // Outside of ES5 Date range.
-        assert.throws(function () { new types.LocalDate(-271821, 4, 19) }, Error);
-        assert.throws(function () { new types.LocalDate(275760, 9, 14) }, Error);
+        assert.throws(function () { return new types.LocalDate(-271821, 4, 19); }, Error);
+        assert.throws(function () { return new types.LocalDate(275760, 9, 14); }, Error);
         // Outside of LocalDate range.
-        assert.throws(function () { new types.LocalDate(-2147483649) }, Error);
-        assert.throws(function () { new types.LocalDate(2147483648) }, Error);
+        assert.throws(function () { return new types.LocalDate(-2147483649); }, Error);
+        assert.throws(function () { return new types.LocalDate(2147483648); }, Error);
 
       });
     });
@@ -195,10 +198,10 @@ describe('types', function () {
           ['-1201-04-03', -1201, 4, 3],
           ['0-1-1', 0, 1, 1]
         ].forEach(function (item) {
-            var value = LocalDate.fromString(item[0]);
-            assert.strictEqual(value.year, item[1]);
-            assert.strictEqual(value.month, item[2]);
-            assert.strictEqual(value.day, item[3]);
+          var value = LocalDate.fromString(item[0]);
+          assert.strictEqual(value.year, item[1]);
+          assert.strictEqual(value.month, item[2]);
+          assert.strictEqual(value.day, item[3]);
         });
       });
       it('should parse the string representation as since epoch days', function () {
@@ -209,8 +212,8 @@ describe('types', function () {
           ['-2147483648', '-2147483648'],
           ['-719162', '0001-01-01']
         ].forEach(function (item) {
-            var value = LocalDate.fromString(item[0]);
-            assert.strictEqual(value.toString(), item[1]);
+          var value = LocalDate.fromString(item[0]);
+          assert.strictEqual(value.toString(), item[1]);
         });
       });
       it('should throw when string representation is invalid', function () {
@@ -222,9 +225,9 @@ describe('types', function () {
           null,
           '  '
         ].forEach(function (value) {
-            assert.throws(function () {
-              LocalDate.fromString(value);
-            }, Error, 'For value: ' + value);
+          assert.throws(function () {
+            LocalDate.fromString(value);
+          }, Error, 'For value: ' + value);
         });
       });
     });
@@ -232,6 +235,7 @@ describe('types', function () {
   describe('LocalTime', function () {
     var LocalTime = types.LocalTime;
     var Long = types.Long;
+    /* eslint-disable no-multi-spaces */
     var values = [
       //Long value         |     string representation  |   hour/min/sec/nanos
       ['1000000001',             '00:00:01.000000001',      [0, 0, 1, 1]],
@@ -242,14 +246,15 @@ describe('types', function () {
       ['52171800000000',         '14:29:31.8',              [14, 29, 31, 800000000]],
       ['52171800600000',         '14:29:31.8006',           [14, 29, 31, 800600000]]
     ];
+    /* eslint-enable no-multi-spaces */
     describe('new LocalTime', function () {
       it('should refuse to create LocalTime from invalid values.', function () {
         // Not a long.
-        assert.throws(function () { new types.LocalTime(23.0) }, Error);
+        assert.throws(function () { return new types.LocalTime(23.0); }, Error);
         // < 0
-        assert.throws(function () { new types.LocalTime(types.Long(-1)) }, Error);
+        assert.throws(function () { return new types.LocalTime(types.Long(-1)); }, Error);
         // > maxNanos
-        assert.throws(function () { new types.LocalTime(Long.fromString('86400000000000')) }, Error);
+        assert.throws(function () { return new types.LocalTime(Long.fromString('86400000000000')); }, Error);
       });
     });
     describe('#toString()', function () {
@@ -313,7 +318,7 @@ describe('types', function () {
     describe('fromMilliseconds', function () {
       it('should default nanoseconds to 0 when not provided', function () {
         var time = LocalTime.fromMilliseconds(1);
-        assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)))
+        assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)));
       });
     });
   });
@@ -328,7 +333,7 @@ describe('types', function () {
       });
       stream.on('readable', function streamReadable() {
         var item;
-        while (item = stream.read()) {
+        while ((item = stream.read())) {
           buf.push(item);
         }
       });
@@ -352,7 +357,7 @@ describe('types', function () {
       });
       stream.on('readable', function streamReadable() {
         var item;
-        while (item = stream.read()) {
+        while ((item = stream.read())) {
           buf.push(item);
         }
       });
@@ -370,7 +375,7 @@ describe('types', function () {
       });
       stream.on('readable', function streamReadable() {
         var item;
-        while (item = stream.read()) {
+        while ((item = stream.read())) {
           buf.push(item);
         }
       });
@@ -383,8 +388,8 @@ describe('types', function () {
       var buf = [];
       var stream = new types.ResultStream({objectMode: true});
       //passing objects
-      stream.add({toString: function (){return 'One'}});
-      stream.add({toString: function (){return 'Two'}});
+      stream.add({toString: function (){return 'One';}});
+      stream.add({toString: function (){return 'Two';}});
       stream.add(null);
       stream.on('end', function streamEnd() {
         assert.equal(buf.join(' '), 'One Two');
@@ -392,8 +397,8 @@ describe('types', function () {
       });
       stream.on('readable', function streamReadable() {
         var item;
-        while (item = stream.read()) {
-          buf.push(item.toString());
+        while ((item = stream.read())) {
+          buf.push(item);
         }
       });
     });
@@ -545,8 +550,12 @@ describe('utils', function () {
   describe('#binarySearch()', function () {
     it('should return the key index if found, or the bitwise compliment of the first larger value', function () {
       var compareFunc = function (a, b) {
-        if (a > b) return 1;
-        if (a < b) return -1;
+        if (a > b) {
+          return 1;
+        }
+        if (a < b) {
+          return -1;
+        }
         return 0;
       };
       var val;
@@ -578,14 +587,14 @@ describe('utils', function () {
       assert.strictEqual(value.a.a1, 1);
       assert.strictEqual(value.b, 1000);
       //composed 2 level
-      value = utils.deepExtend({a: { a1: 1, a2: { a21: 10,  a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
+      value = utils.deepExtend({a: { a1: 1, a2: { a21: 10, a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
       assert.strictEqual(value.a.a2.a21, 11);
       assert.strictEqual(value.a.a2.a22, 20);
       assert.strictEqual(value.a.a1, 1);
       assert.strictEqual(value.b.b1, 100);
       assert.strictEqual(value.b.b2, 200);
       //multiple sources
-      value = utils.deepExtend({z: 9}, {a: { a1: 1, a2: { a21: 10,  a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
+      value = utils.deepExtend({z: 9}, {a: { a1: 1, a2: { a21: 10, a22: 20}}}, {a: {a2: {a21: 11}}, b: { b1: 100, b2: 200}});
       assert.strictEqual(value.a.a2.a21, 11);
       assert.strictEqual(value.a.a2.a22, 20);
       assert.strictEqual(value.a.a1, 1);
@@ -763,6 +772,7 @@ describe('exports', function () {
   it('should contain API', function () {
     //test that the exposed API is the one expected
     //it looks like a dumb test and it is, but it is necessary!
+    /* eslint-disable global-require */
     var api = require('../../index.js');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
@@ -795,5 +805,6 @@ describe('exports', function () {
     assert.strictEqual(typeof api.Encoder, 'function');
     assert.strictEqual(api.Encoder, require('../../lib/encoder'));
     assert.ok(api.defaultOptions());
+    /* eslint-enable global-require */
   });
 });

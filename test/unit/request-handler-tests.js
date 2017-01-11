@@ -1,6 +1,6 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
-var rewire = require('rewire');
 
 var RequestHandler = require('../../lib/request-handler');
 var requests = require('../../lib/requests');
@@ -10,10 +10,10 @@ var types = require('../../lib/types');
 var utils = require('../../lib/utils');
 var retry = require('../../lib/policies/retry');
 var ProfileManager = require('../../lib/execution-profile').ProfileManager;
+var loadBalancing = require('../../lib/policies/load-balancing.js');
+var reconnection = require('../../lib/policies/reconnection.js');
 
 var options = (function () {
-  var loadBalancing = require('../../lib/policies/load-balancing.js');
-  var reconnection = require('../../lib/policies/reconnection.js');
   return {
     policies: {
       loadBalancing: new loadBalancing.RoundRobinPolicy(),
@@ -265,7 +265,7 @@ describe('RequestHandler', function () {
       ], {});
       var connection = { prepareOnce: function (q, cb) {
         queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)})});
+        setImmediate(function () { cb(null, { id: new Buffer(q)});});
       }};
       handler.connection = connection;
       var queriesPrepared = [];
@@ -290,7 +290,7 @@ describe('RequestHandler', function () {
       ], {});
       var connection = { prepareOnce: function (q, cb) {
         queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)})});
+        setImmediate(function () { cb(null, { id: new Buffer(q)});});
       }};
       handler.connection = connection;
       var queriesPrepared = [];
@@ -441,7 +441,7 @@ describe('RequestHandler', function () {
       var handler = newInstance( { socketOptions: { readTimeout: 1234 }});
       handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop };
       var connection = { sendStream: function (r, o, cb) {
-        cb(new errors.OperationTimedOutError('Testing timeout'))
+        cb(new errors.OperationTimedOutError('Testing timeout'));
       }};
       handler._getNextConnection = function (o, cb) {
         cb(null, connection);
@@ -459,7 +459,7 @@ describe('RequestHandler', function () {
       var getNextConnectionCounter = 0;
       handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
       var connection1 = { sendStream: function (r, o, cb) {
-        cb(new errors.OperationTimedOutError('Testing timeout'))
+        cb(new errors.OperationTimedOutError('Testing timeout'));
       }};
       var connection2 = { sendStream: function (r, o, cb) {
         cb(null, {});
@@ -483,7 +483,7 @@ describe('RequestHandler', function () {
       var getNextConnectionCounter = 0;
       handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
       var connection1 = { sendStream: function (r, o, cb) {
-        cb(new errors.OperationTimedOutError('Testing timeout'))
+        cb(new errors.OperationTimedOutError('Testing timeout'));
       }};
       var connection2 = { sendStream: function (r, o, cb) {
         cb(null, {});
@@ -534,11 +534,11 @@ describe('RequestHandler', function () {
         handler.send(new requests.QueryRequest('q'), test.options, function (err) {
           helper.assertInstanceOf(err, errors.ResponseError);
           if(test.expected) {
-            assert.ok(err.stack.indexOf('(event loop)') != -1, err.stack + '\n\tdoes not contain (event loop)');
-            assert.ok(err.stack.indexOf(stack) != -1, err.stack + '\n\tdoes not contain\n' + stack);
+            assert.ok(err.stack.indexOf('(event loop)') !== -1, err.stack + '\n\tdoes not contain (event loop)');
+            assert.ok(err.stack.indexOf(stack) !== -1, err.stack + '\n\tdoes not contain\n' + stack);
           } else {
-            assert.ok(err.stack.indexOf('(event loop)') == -1, err.stack + '\n\tcontains (event loop)');
-            assert.ok(err.stack.indexOf(stack) == -1, err.stack + '\n\tcontains\n' + stack);
+            assert.ok(err.stack.indexOf('(event loop)') === -1, err.stack + '\n\tcontains (event loop)');
+            assert.ok(err.stack.indexOf(stack) === -1, err.stack + '\n\tcontains\n' + stack);
           }
           done();
         });
@@ -555,7 +555,7 @@ describe('RequestHandler', function () {
           //noinspection JSPotentiallyInvalidUsageOfThis
           this.isDown = true;
         }
-      }
+      };
     };
     it('should synchronously get next connection when pool warmed', function (done) {
       var handler = newInstance();

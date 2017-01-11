@@ -1,10 +1,8 @@
 'use strict';
 var assert = require('assert');
-var util = require('util');
 
 var Protocol = require('../../lib/streams').Protocol;
 var types = require('../../lib/types');
-var helper = require('../test-helper');
 
 describe('Protocol', function () {
   it('should emit a single frame with 0-length body', function () {
@@ -12,7 +10,7 @@ describe('Protocol', function () {
     var items = [];
     p.on('readable', function () {
       var item;
-      while (item = p.read()) {
+      while ((item = p.read())) {
         items.push(item);
       }
     });
@@ -26,7 +24,7 @@ describe('Protocol', function () {
     var items = [];
     p.on('readable', function () {
       var item;
-      while (item = p.read()) {
+      while ((item = p.read())) {
         items.push(item);
       }
     });
@@ -41,7 +39,7 @@ describe('Protocol', function () {
     var items = [];
     p.on('readable', function () {
       var item;
-      while (item = p.read()) {
+      while ((item = p.read())) {
         items.push(item);
       }
     });
@@ -58,7 +56,7 @@ describe('Protocol', function () {
     var items = {};
     p.on('readable', function () {
       var item;
-      while (item = p.read()) {
+      while ((item = p.read())) {
         items[item.header.streamId] = items[item.header.streamId] || [];
         items[item.header.streamId].push(item);
       }
@@ -78,7 +76,7 @@ describe('Protocol', function () {
       var sumLength = item.reduce(function (previousValue, subItem) {
         return previousValue + subItem.chunk.length - subItem.offset;
       }, 0);
-      assert.ok(sumLength >= length, sumLength + ' >= ' + length  + ' failed');
+      assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
     });
   });
   it('should emit multiple frames from multiples small chunks', function () {
@@ -86,7 +84,7 @@ describe('Protocol', function () {
     var items = {};
     p.on('readable', function () {
       var item;
-      while (item = p.read()) {
+      while ((item = p.read())) {
         items[item.header.streamId] = items[item.header.streamId] || [];
         items[item.header.streamId].push(item);
       }
@@ -107,7 +105,7 @@ describe('Protocol', function () {
       var sumLength = item.reduce(function (previousValue, subItem) {
         return previousValue + subItem.chunk.length - subItem.offset;
       }, 0);
-      assert.ok(sumLength >= length, sumLength + ' >= ' + length  + ' failed');
+      assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
     });
   });
 });

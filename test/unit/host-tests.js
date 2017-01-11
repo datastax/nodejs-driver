@@ -52,10 +52,10 @@ describe('HostConnectionPool', function () {
         setTimeout(function () {
           hostPool.create(false, function (err) {
             assert.ifError(err);
-            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected}).length;
+            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected;}).length;
             if (closedConnections)
             {
-              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'))
+              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'));
             }
             next();
           });
@@ -82,15 +82,15 @@ describe('HostConnectionPool', function () {
         hostPool.create(false, function (err) {
           setImmediate(function () {
             assert.ifError(err);
-            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected}).length;
+            var closedConnections = hostPool.connections.filter(function (x) {return !x.connected;}).length;
             if (closedConnections) {
-              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'))
+              return next(new Error('All connections should be opened: ' + closedConnections + ' closed'));
             }
             if (counter > 5) {
               hostPool.coreConnectionsLength = 15;
             }
             next();
-          })
+          });
         });
       }, done);
     });
@@ -246,10 +246,8 @@ describe('HostConnectionPool', function () {
     });
     it('should callback when open succeeds', function (done) {
       var hostPool = newHostConnectionPoolInstance();
-      var openCalled = 0;
       var c = {
         open: function (cb) {
-          openCalled++;
           setImmediate(cb);
         }
       };

@@ -7,10 +7,21 @@ const client = new dse.Client({
   contactPoints: ['host1', 'host2'],
   graphOptions: { name: 'demo' }
 });
+// executeGraph() method returns a Promise
+client.executeGraph('g.V()')
+  .then(function (result) {
+    const vertex = result.first();
+    console.log(vertex.label);
+  });
+```
+
+Alternatively, you can use the callback-based execution:
+
+```javascript
 client.executeGraph('g.V()', function (err, result) {
   assert.ifError(err);
   const vertex = result.first();
-  console.log(vertex.label);
+  // ...
 });
 ```
 
@@ -31,11 +42,9 @@ These options may be overridden by specifying the [execution profile](../executi
 
 ```javascript
 // Use a different graph name than the one provided when creating the client instance
-client.executeGraph(query, params, { executionProfile: 'graph-oltp'}, function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  console.log(vertex.label);
-});
+const result = await client.executeGraph(query, params, { executionProfile: 'graph-oltp' });
+const vertex = result.first();
+console.log(vertex.label);
 ```
 
 You can check out more info on [Execution Profiles](../execution-profiles).
@@ -62,50 +71,42 @@ const query =
   'josh.addEdge("created", lop, "weight", 0.4f);\n' +
   'peter.addEdge("created", lop, "weight", 0.2f);';
 
-client.executeGraph(query, function (err) {
-  assert.ifError(err);
-});
+await client.executeGraph(query);
 ```
 
 ```javascript
 // Handling Edges
-client.executeGraph('g.E()', function (err, result) {
-  assert.ifError(err);
-  result.forEach(function (edge) {
-    console.log(edge.id); // [an internal id representing the edge]
-    console.log(edge.type); // edge
-    console.log(edge.label); // created
-    console.log(edge.properties.weight); // 0.4
-    console.log(edge.outVLabel); // person
-    console.log(edge.outV); // [an id representing the outgoing vertex]
-    console.log(edge.inVLabel); // software
-    console.log(edge.inV); // [an id representing the incoming vertex]
-  });
+const result = await client.executeGraph('g.E()');
+result.forEach(function (edge) {
+  console.log(edge.id); // [an internal id representing the edge]
+  console.log(edge.type); // edge
+  console.log(edge.label); // created
+  console.log(edge.properties.weight); // 0.4
+  console.log(edge.outVLabel); // person
+  console.log(edge.outV); // [an id representing the outgoing vertex]
+  console.log(edge.inVLabel); // software
+  console.log(edge.inV); // [an id representing the incoming vertex]
 });
 ```
 
 ```javascript
 // Using ES6 for...of
-client.executeGraph('g.E()', function (err, result) {
-  assert.ifError(err);
-  for (let edge of result) {
-    console.log(edge.label); // created
-    // ...
-  });
-});
+const result = await client.executeGraph('g.E()');
+for (let edge of result) {
+  console.log(edge.label); // created
+  // ...
+}
 ```
 
 ```javascript
 // Handling Vertices
-client.executeGraph('g.V().hasLabel("person")', function (err, result) {
-  assert.ifError(err);
-  result.forEach(function(vertex) {
-    console.log(vertex.id); // [an internal id representing the vertex]
-    console.log(vertex.type); // vertex
-    console.log(vertex.label); // person
-    console.log(vertex.properties.name[0].value); // marko
-    console.log(vertex.properties.age[0].value); // 29
-  });
+const result = await client.executeGraph('g.V().hasLabel("person")');
+result.forEach(function(vertex) {
+  console.log(vertex.id); // [an internal id representing the vertex]
+  console.log(vertex.type); // vertex
+  console.log(vertex.label); // person
+  console.log(vertex.properties.name[0].value); // marko
+  console.log(vertex.properties.age[0].value); // 29
 });
 ```
 
@@ -116,11 +117,8 @@ As a result of this, parameters must be passed in as an object:
 
 ```javascript
 const query = 'g.addV(label, vertexLabel, "name", username)';
-client.executeGraph(query, { vertexLabel: 'person', username: 'marko'}, function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  // ...
-});
+const result = await client.executeGraph(query, { vertexLabel: 'person', username: 'marko' });
+const vertex = result.first();
 ```
 
 Parameters are encoded in json, thus will ultimately use their json representation (`toJSON` if present,
@@ -130,15 +128,11 @@ You can use results from previous queries as parameters to subsequent queries.  
 of a vertex returned in a previous query for making a subsequent query:
 
 ```javascript
-client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  client.executeGraph('g.V(vertexId).out("knows").values("name")', {vertexId: vertex.id}, function (err, result) {
-    assert.ifError(err);
-    const names = result.toArray();
-    console.log(names); // [ 'vadas', 'josh' ]
-  });
-});
+let result = await client.executeGraph('g.V().hasLabel("person").has("name", "marko")');
+const vertex = result.first();
+result = await client.executeGraph('g.V(vertexId).out("knows").values("name")', {vertexId: vertex.id });
+const names = result.toArray();
+console.log(names); // [ 'vadas', 'josh' ]
 ```
 
 ### Prepared statements

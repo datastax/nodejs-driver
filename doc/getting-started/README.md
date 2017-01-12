@@ -39,9 +39,7 @@ Typically you create only 1 `Client` instance for a given Cassandra cluster and 
 ```javascript
 const dse = require('dse-driver');
 const client = new dse.Client({ contactPoints: ['host1'] });
-client.connect(function (err) {
-  assert.ifError(err);
-});
+client.connect();
 ```
 
 At this point, the driver will be connected to one of the contact points and discovered the rest of the nodes in your
@@ -58,17 +56,17 @@ a set of configuration options and reuse them across different query executions.
 Graph and CQL workloads, allowing you to use a single `Client` instance for all workloads, for example:
 
 ```javascript
-const client = new Client({ 
+const client = new dse.Client({ 
   contactPoints: ['host1'], 
   profiles: [
     new ExecutionProfile('time-series', {
-      consistency: consistency.localOne
+      consistency: consistency.localOne,
       readTimeout: 30000,
       serialConsistency: consistency.localSerial
     }),
     new ExecutionProfile('graph', {
-      loadBalancing: new DseLoadBalancingPolicy('graph-us-west')
-      consistency: consistency.localQuorum
+      loadBalancing: new DseLoadBalancingPolicy('graph-us-west'),
+      consistency: consistency.localQuorum,
       readTimeout: 10000,
       graphOptions: { name: 'myGraph' }
     })
@@ -76,14 +74,14 @@ const client = new Client({
 });
 
 // Use an execution profile for a CQL query
-client.execute('SELECT * FROM system.local', null, { executionProfile: 'time-series' }, callback);
+client.execute('SELECT * FROM system.local', null, { executionProfile: 'time-series' });
 
 // Use an execution profile for a gremlin query
-client.executeGraph('g.V().count()', null, { executionProfile: 'graph' }, callback);
+client.executeGraph('g.V().count()', null, { executionProfile: 'graph' });
 ```
 
 [dse]: http://www.datastax.com/products/datastax-enterprise
 [core-driver]: https://github.com/datastax/nodejs-driver-dse
-[core-driver-docs]: http://datastax.github.io/nodejs-driver/
-[core-features]: http://datastax.github.io/nodejs-driver/features/
-[core-getting-started]: http://datastax.github.io/nodejs-driver/getting-started/
+[core-driver-docs]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
+[core-features]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/
+[core-getting-started]: http://docs.datastax.com/en/developer/nodejs-driver/latest/getting-started/

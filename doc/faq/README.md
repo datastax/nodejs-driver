@@ -28,4 +28,4 @@ your application.
 No, only call `client.shutdown()` once in your application's lifetime, normally when you shutdown your application.
 
 [dse]: http://www.datastax.com/products/datastax-enterprise
-[core-features]: http://datastax.github.io/nodejs-driver/features/
+[core-features]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/

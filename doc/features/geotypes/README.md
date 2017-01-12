@@ -23,17 +23,13 @@ const Point = dse.geometry.Point;
 const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
 const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
 
-client.execute(insertQuery, ['Eiffel Tower', new Point(48.8582, 2.2945)], function (err, result) {
-  assert.ifError(err);
-  client.execute(selectQuery, ['Eiffel Tower'], function (err, result) {
-    assert.ifError(err);
-    const row = result.first();
-    const point = row['coords'];
-    console.log(point instanceof Point); // true
-    console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
-    console.log(point.toString()); // 'POINT (48.8582 2.2945)'
-  });
-});
+await client.execute(insertQuery, [ 'Eiffel Tower', new Point(48.8582, 2.2945) ]);
+const result = await client.execute(selectQuery, [ 'Eiffel Tower' ]);
+const row = result.first();
+const point = row['coords'];
+console.log(point instanceof Point); // true
+console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
+console.log(point.toString()); // 'POINT (48.8582 2.2945)'
 ```
 
 [dse]: http://www.datastax.com/products/datastax-enterprise

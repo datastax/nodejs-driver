@@ -15,6 +15,7 @@ var types = cassandra.types;
 var Long = types.Long;
 var utils = require('../../lib/utils');
 var policies = require('../../lib/policies');
+var errors = cassandra.errors;
 var DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
 
 describe('Client', function () {
@@ -36,6 +37,28 @@ describe('Client', function () {
       });
       helper.assertInstanceOf(client.options.policies.loadBalancing, DseLoadBalancingPolicy);
       assert.strictEqual(client.options.policies.retry, retryPolicy);
+    });
+  });
+  describe('#connect()', function () {
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function () {
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.connect();
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var client = new Client(helper.baseOptions);
+        var p = client.connect();
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
     });
   });
   describe('#executeGraph()', function () {
@@ -499,7 +522,7 @@ describe('Client', function () {
       assert.ok(actualOptions && actualOptions.customPayload);
       assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'gremlin-groovy');
     });
-    describe('with analytics queries', function () {
+    context('with analytics queries', function () {
       it('should query for analytics master', function (done) {
         var client = new Client({ contactPoints: ['host1'], graphOptions: {
           source: 'a',
@@ -626,6 +649,66 @@ describe('Client', function () {
           assert.strictEqual(actualOptions.preferredHost, null);
           done();
         });
+      });
+    });
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function () {
+          var client = new Client(helper.baseOptions);
+          var called = 0;
+          client.execute = function () {
+            called++;
+          };
+          assert.throws(function () {
+            client.executeGraph('g.V()');
+          }, errors.ArgumentError);
+          assert.strictEqual(called, 0);
+        });
+        return;
+      }
+      it('should return a promise', function () {
+        var client = new Client(helper.baseOptions);
+        var called = 0;
+        var callback;
+        var options;
+        var params;
+        client.execute = function (query, p, o, cb) {
+          called++;
+          params = p;
+          options = o;
+          callback = cb;
+          cb(null, { rows: [] });
+        };
+        var expectedParams = { id: {} };
+        var expectedOptions = { consistency: types.consistencies.three };
+        var p = client.executeGraph('g.V()');
+        helper.assertInstanceOf(p, Promise);
+        return p
+          .then(function () {
+            // Should use a callback internally
+            assert.strictEqual(typeof callback, 'function');
+            assert.strictEqual(called, 1);
+            var p = client.executeGraph('g.V(id)', expectedParams);
+            helper.assertInstanceOf(p, Promise);
+            return p;
+          })
+          .then(function () {
+            assert.strictEqual(called, 2);
+            assert.ok(params);
+            // Single parameter with json parameters
+            assert.strictEqual(params[0], JSON.stringify(expectedParams));
+            var p = client.executeGraph('g.V(id)', expectedParams, expectedOptions);
+            helper.assertInstanceOf(p, Promise);
+            return p;
+          })
+          .then(function () {
+            assert.strictEqual(called, 3);
+            assert.ok(params);
+            assert.strictEqual(params[0], JSON.stringify(expectedParams));
+            assert.ok(options);
+            assert.strictEqual(options.consistency, expectedOptions.consistency);
+            return null;
+          });
       });
     });
   });

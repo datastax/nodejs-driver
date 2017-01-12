@@ -26,7 +26,7 @@ that apply to the profile.
 ```javascript
 const aggregationProfile = new ExecutionProfile('aggregation', {
   consistency: consistency.localQuorum,
-  loadBalancing: new DCAwareRoundRobinPolicy('us-west')
+  loadBalancing: new DCAwareRoundRobinPolicy('us-west'),
   retry: myRetryPolicy,
   readTimeout: 30000,
   serialConsistency: consistency.localSerial
@@ -70,14 +70,14 @@ For the settings that are not specified in the default profile, the driver will 
 Use the name to specify which profile you want to use for the execution.
 
 ```javascript
-client.execute(query, params, { executionProfile: 'aggregation' }, callback);
+client.execute(query, params, { executionProfile: 'aggregation' });
 ```
 ### Using an execution profile by instance
 
 You can also use the `ExecutionProfile` instance.
 
 ```javascript
-client.execute(query, params, { executionProfile: aggregationProfile }, callback);
+client.execute(query, params, { executionProfile: aggregationProfile });
 ```
 
 ### Using default execution profile
@@ -85,5 +85,5 @@ client.execute(query, params, { executionProfile: aggregationProfile }, callback
 When the execution profile is not provided in the options, the default execution profile is used.
 
 ```javascript
-client.execute(query, params, null, callback);
+client.execute(query, params, null);
 ```

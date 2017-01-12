@@ -105,6 +105,7 @@ var helper = {
   vdescribe: function (testVersion, title, func) {
     executeIfVersion(testVersion, describe, [title, func]);
   },
+  promiseSupport: (typeof Promise === 'function'),
   baseOptions: {
     contactPoints: ['127.0.0.1']
   },

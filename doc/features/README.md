@@ -10,20 +10,20 @@ The DataStax Enterprise Node.js Driver is feature-rich and highly tunable Node.j
 
 ## Usage
 
-- [Address resolution <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/address-resolution/)
-- [Batch statements <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/batch/)
-- [CQL data types to JavaScript types <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/connection-pooling/)
-- [Cluster and schema metadata <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/metadata/)
-- [Connection pooling <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/connection-pooling/)
+- [Address resolution <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/address-resolution/)
+- [Batch statements <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/)
+- [CQL data types to JavaScript types <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/)
+- [Cluster and schema metadata <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/metadata/)
+- [Connection pooling <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/)
 - [Execution profiles](execution-profiles)
 - [Geospatial types support](geotypes)
 - [Graph support](graph-support)
-- [Paging <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/paging/)
-- [Native protocol <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/native-protocol/)
-- [Parameterized queries <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/parameterized-queries/)
-- [Query warnings <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/query-warnings/)
-- [Tuning policies <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/tuning-policies/)
-- [User-defined functions and aggregates <sup>1</sup>](http://datastax.github.io/nodejs-driver/features/udfs/)
+- [Paging <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/)
+- [Native protocol <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/native-protocol/)
+- [Parameterized queries <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/parameterized-queries/)
+- [Query warnings <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/query-warnings/)
+- [Tuning policies <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/)
+- [User-defined functions and aggregates <sup>1</sup>](http://docs.datastax.com/en/developer/nodejs-driver/latest/features/udfs/)
 
 ---
 
@@ -31,4 +31,4 @@ The DataStax Enterprise Node.js Driver is feature-rich and highly tunable Node.j
 
 [dse]: http://www.datastax.com/products/datastax-enterprise
 [core-driver]: https://github.com/datastax/nodejs-driver-dse
-[core-driver-docs]: http://datastax.github.io/nodejs-driver/
+[core-driver-docs]: http://docs.datastax.com/en/developer/nodejs-driver/latest/

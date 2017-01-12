@@ -699,6 +699,19 @@ vdescribe('5.0', 'Client', function () {
         }
       ], done)
     }));
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        return;
+      }
+      it('should return a promise', function () {
+        var client = newInstance();
+        var p = client.executeGraph('g.V()', null, null);
+        helper.assertInstanceOf(p, Promise);
+        return p.then(function (result) {
+          helper.assertInstanceOf(result, graphModule.GraphResultSet);
+        });
+      });
+    });
     [
       // Validate that all supported property types by DSE graph are properly encoded / decoded.
       ['Boolean()', [true, false]],
@@ -948,7 +961,21 @@ vdescribe('5.0', 'Client with spark workload', function () {
     it('should contact spark master directly to make an OLAP query when using profile with DseLoadBalancingPolicy',
       executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics',
         {loadBalancing: new DseLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
-    )
+    );
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        return;
+      }
+      it('should return a promise for OLAP query', function () {
+        var client = newInstance();
+        var p = client.executeGraph('g.V().count()', { graphSource: 'a' });
+        helper.assertInstanceOf(p, Promise);
+        return p.then(function (result) {
+          helper.assertInstanceOf(result, graphModule.GraphResultSet);
+          assert.strictEqual(typeof result.first(), 'number');
+        });
+      });
+    });
   });
 });
 
@@ -961,8 +988,7 @@ function validateVertexResult(result, expectedResult, vertexLabel, propertyName)
 
 function wrapClient(handler, options) {
   return (function wrappedTestCase(done) {
-    var opts = helper.getOptions(helper.extend(options || {}, {graphOptions : { name: 'name1' }}));
-    var client = new Client(opts);
+    var client = newInstance(options);
     utils.series([
       client.connect.bind(client),
       function testItem(next) {
@@ -973,4 +999,7 @@ function wrapClient(handler, options) {
   });
 }
 
-
+function newInstance(options) {
+  var opts = helper.getOptions(helper.extend(options || {}, { graphOptions : { name: 'name1' }}));
+  return new Client(opts);
+}

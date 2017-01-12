@@ -35,15 +35,23 @@ You can use the [project mailing list][mailing-list] or create a ticket on the [
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1'});
-const query = 'SELECT email, last_name FROM user_profiles WHERE key=?';
-client.execute(query, ['guy'], function(err, result) {
+const client = new dse.Client({ contactPoints: ['host1', 'host2'] });
+
+const query = 'SELECT name, email FROM users WHERE key = ?';
+client.execute(query, [ 'someone' ])
+  .then(result => console.log('User with email %s', result.rows[0].email));
+```
+
+Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
+
+```javascript
+client.execute(query, [ 'someone' ], function(err, result) {
   assert.ifError(err);
-  console.log('got user profile with email ' + result.rows[0].email);
+  console.log('User with email %s', result.rows[0].email);
 });
 ```
 
-Additionally, the dse module exports the submodules from the CQL driver, so you just need to import one module to access
+The `dse-driver` module also exports the submodules from the CQL driver, so you only need to import one module to access
 all DSE and Cassandra types.
 
 For example:
@@ -78,37 +86,56 @@ See the jsdoc of each implementation for more details.
 
 ```javascript
 const client = new dse.Client({
-  contactPoints: ['h1', 'h2'],
-  graphOptions: { name: 'demo' }
+  contactPoints: ['host1', 'host2'],
+  profiles: [
+    new ExecutionProfile('default', {
+      graphOptions: { name: 'demo' }
+    })
+  ]
 });
-client.executeGraph('g.V()', function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  console.log(vertex.label);
-});
+
+// executeGraph() method returns a Promise
+const result = await client.executeGraph('g.V()');
+const vertex = result.first();
+console.log(vertex.label);
 ```
 
 ### Graph Options
 
-You can set default graph options when initializing `Client` which will be used for all graph statements.  For
-example, to avoid providing a `graphName` option in each `executeGraph()` call:
+You can set graph options in execution profiles when initializing `Client`. Also, to avoid providing the graph name
+option in each `executeGraph()` call, you can set the graph options in the default execution profile:
 
 ```javascript
-const dse = require('dse-driver');
 const client = new dse.Client({
-  contactPoints: ['h1', 'h2'],
-  graphOptions: { name: 'demo' }
+  contactPoints: ['host1', 'host2'],
+  profiles: [
+    new ExecutionProfile('default', {
+      graphOptions: { name: 'demo' }
+    }),
+    new ExecutionProfile('demo2-profile', {
+      graphOptions: { name: 'demo2' }
+    })
+  ]
 });
 ```
+```javascript
+// Execute a traversal on the 'demo' graph
+const result = await client.executeGraph(query, params);
+```
 
-These options may be overridden by providing them in the `options` parameter of `executeGraph`:
+If needed, you can specify an execution profile different from the default one: 
 
 ```javascript
-// Use a different graph name than the one provided when creating the client instance
-client.executeGraph(query, params, { graphName: 'demo2'}, function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  console.log(vertex.label);
+// Execute a traversal on the 'demo2' graph
+client.executeGraph(query, params, { executionProfile: 'demo2-profile'});
+```
+
+Additionally, you can also set the default graph options without using execution profiles (not recommended). 
+
+```javascript
+const client = new dse.Client({
+  contactPoints: ['host1', 'host2'],
+  graphOptions: { name: 'demo' }
 });
 ```
 
@@ -134,50 +161,42 @@ const query =
   'josh.addEdge("created", lop, "weight", 0.4f);\n' +
   'peter.addEdge("created", lop, "weight", 0.2f);';
 
-client.executeGraph(query, function (err) {
-  assert.ifError(err);
-});
+await client.executeGraph(query);
 ```
 
 ```javascript
 // Handling Edges
-client.executeGraph('g.E()', function (err, result) {
-  assert.ifError(err);
-  result.forEach(function (edge) {
-    console.log(edge.id); // [an internal id representing the edge]
-    console.log(edge.type); // edge
-    console.log(edge.label); // created
-    console.log(edge.properties.weight); // 0.4
-    console.log(edge.outVLabel); // person
-    console.log(edge.outV); // [an id representing the outgoing vertex]
-    console.log(edge.inVLabel); // software
-    console.log(edge.inV); // [an id representing the incoming vertex]
-  });
+const result = await client.executeGraph('g.E()');
+result.forEach(function (edge) {
+  console.log(edge.id); // [an internal id representing the edge]
+  console.log(edge.type); // edge
+  console.log(edge.label); // created
+  console.log(edge.properties.weight); // 0.4
+  console.log(edge.outVLabel); // person
+  console.log(edge.outV); // [an id representing the outgoing vertex]
+  console.log(edge.inVLabel); // software
+  console.log(edge.inV); // [an id representing the incoming vertex]
 });
 ```
 
 ```javascript
 // Using ES6 for...of
-client.executeGraph('g.E()', function (err, result) {
-  assert.ifError(err);
-  for (let edge of result) {
-    console.log(edge.label); // created
-    // ...
-  });
-});
+const result = await client.executeGraph('g.E()');
+for (let edge of result) {
+  console.log(edge.label); // created
+  // ...
+}
 ```
 
 ```javascript
 // Handling Vertices
-client.executeGraph('g.V().hasLabel("person")', function (err, result) {
-  assert.ifError(err);
-  result.forEach(function(vertex) {
-    console.log(vertex.id); // [an internal id representing the vertex]
-    console.log(vertex.type); // vertex
-    console.log(vertex.label); // person
-    console.log(vertex.properties.name[0].value); // marko
-    console.log(vertex.properties.age[0].value); // 29
-  });
+const result = await client.executeGraph('g.V().hasLabel("person")');
+result.forEach(function(vertex) {
+  console.log(vertex.id); // [an internal id representing the vertex]
+  console.log(vertex.type); // vertex
+  console.log(vertex.label); // person
+  console.log(vertex.properties.name[0].value); // marko
+  console.log(vertex.properties.age[0].value); // 29
 });
 ```
 
@@ -188,11 +207,9 @@ As a result of this, parameters must be passed in as an object:
 
 ```javascript
 const query = 'g.addV(label, vertexLabel, "name", username)';
-client.executeGraph(query, { vertexLabel: 'person', username: 'marko'}, function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  // ...
-});
+const result = await client.executeGraph(query, { vertexLabel: 'person', username: 'marko' });
+const vertex = result.first();
+// ...
 ```
 
 Parameters are encoded in json, thus will ultimately use their json representation (`toJSON` if present,
@@ -202,15 +219,11 @@ You can use results from previous queries as parameters to subsequent queries.  
 of a vertex returned in a previous query for making a subsequent query:
 
 ```javascript
-client.executeGraph('g.V().hasLabel("person").has("name", "marko")', function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  client.executeGraph('g.V(vertexId).out("knows").values("name")', {vertexId: vertex.id}, function (err, result) {
-    assert.ifError(err);
-    const names = result.toArray();
-    console.log(names); // [ 'vadas', 'josh' ]
-  });
-});
+let result = await client.executeGraph('g.V().hasLabel("person").has("name", "marko")');
+const vertex = result.first();
+result = await client.executeGraph('g.V(vertexId).out("knows").values("name")', { vertexId: vertex.id });
+const names = result.toArray();
+console.log(names); // [ 'vadas', 'josh' ]
 ```
 
 ### Prepared graph statements
@@ -236,16 +249,12 @@ const Point = dse.geometry.Point;
 const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
 const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
 
-client.execute(insertQuery, ['Eiffel Tower', new Point(48.8582, 2.2945)], function (err, result) {
-  assert.ifError(err);
-  client.execute(selectQuery, ['Eiffel Tower'], function (err, result) {
-    assert.ifError(err);
-    const row = result.first();
-    const point = row['coords'];
-    console.log(point instanceof Point); // true
-    console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
-  });
-});
+await client.execute(insertQuery, [ 'Eiffel Tower', new Point(48.8582, 2.2945) ], { prepare: true });
+const result = await client.execute(selectQuery, ['Eiffel Tower'], { prepare: true });
+const row = result.first();
+const point = row['coords'];
+console.log(point instanceof Point); // true
+console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
 ```
 
 ## License

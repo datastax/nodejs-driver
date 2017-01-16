@@ -273,4 +273,4 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [api-docs]: http://docs.datastax.com/en/latest-dse-nodejs-driver-api/
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/1.0/faq/
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/

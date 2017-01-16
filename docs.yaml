@@ -26,10 +26,13 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/dse-driver
 api_docs:
+  1.2: http://docs.datastax.com/en/drivers/nodejs-dse/1.2/
   1.1: http://docs.datastax.com/en/drivers/nodejs-dse/1.1/
   1.0: http://docs.datastax.com/en/drivers/nodejs-dse/1.0/
 versions:
-  - name: '1.1'
+  - name: '1.2'
     ref: 'master'
+  - name: '1.1'
+    ref: '1.1'
   - name: '1.0'
     ref: '1.0'

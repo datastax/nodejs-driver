@@ -15,24 +15,32 @@ DseAuthenticator
 ```javascript
 const dse = require('dse-driver');
 const client = new dse.Client({
-  contactPoints: ['h1', 'h2'],
-  keyspace: 'ks1',
-  graphOptions: { name: 'graph1' }
-});
-const query = 'SELECT email, last_name FROM users WHERE key=?';
-client.execute(query, ['guy'], function(err, result) {
-  assert.ifError(err);
-  console.log('User email ' + result.rows[0].email);
+  contactPoints: ['h1', 'h2']
 });
 ```
 
-Additionally, the DSE module exports the submodules from the CQL driver, so you just need to import one module to access
+```javascript
+const query = 'SELECT name, email FROM users WHERE key = ?';
+client.execute(query, [ 'someone' ])
+  .then(result => console.log('User with email %s', result.rows[0].email));
+```
+
+Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
+
+```javascript
+client.execute(query, [ 'someone' ], function(err, result) {
+  assert.ifError(err);
+  console.log('User with email %s', result.rows[0].email);
+});
+```
+
+The `dse-driver` module also exports the submodules from the CQL driver, so you only need to import one module to access
 all DSE and Cassandra types.
 
 For example:
 ```javascript
+const dse = require('dse-driver');
 const Uuid = dse.types.Uuid;
-let id = Uuid.random();
 ```
 
 ### Graph
@@ -40,11 +48,10 @@ let id = Uuid.random();
 [`Client` includes a `executeGraph() method`](Client.html#executeGraph) to execute graph queries:
 
 ```javascript
-client.executeGraph('g.V()', function (err, result) {
-  assert.ifError(err);
-  const vertex = result.first();
-  console.log(vertex.label);
-});
+// executeGraph() method returns a Promise when no callback has been provided
+const result = await client.executeGraph('g.V()');
+const vertex = result.first();
+console.log(vertex.label);
 ```
 
 [cassandra-driver]: https://github.com/datastax/nodejs-driver

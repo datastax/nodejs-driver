@@ -21,7 +21,7 @@ $ npm install cassandra-driver
 - Automatic reconnection
 - Configurable [load balancing][load-balancing] and [retry policies][retry]
 - Works with any cluster size
-- Both promise and callback-based API
+- Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
 
 ## Documentation
@@ -232,6 +232,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
 [doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
 [doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
+[doc-promise-callback]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
 [load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
 [retry]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy

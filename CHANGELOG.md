@@ -1,5 +1,25 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.2.0
+
+2017-01-17
+
+### Notable Changes
+
+- Promise support ([#194](https://github.com/datastax/nodejs-driver/pull/194)).
+- Timestamp generation: client-side timestamps are generated and sent in the request by default when the 
+server supports it ([#195](https://github.com/datastax/nodejs-driver/pull/195)).
+- Added `isIdempotent` query option which is set to `false` by default: future versions of the driver will use this
+ value to consider whether an execution should be retried or directly rethrown to the consumer without using the retry
+ policy ([#197](https://github.com/datastax/nodejs-driver/pull/197)).
+
+### Features
+
+- [NODEJS-322] - Timestamp Generator Support for providing Client Timestamps Improvement
+- [NODEJS-189] - Support promises
+- [NODEJS-230] - Expose ResultSet `@@iterator`
+- [NODEJS-325] - Add explicit idempotency setting in the query options
+
 ## 3.1.6
 
 2016-11-14

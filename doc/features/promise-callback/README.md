@@ -14,7 +14,7 @@ When a `callback` is not provided as the last argument, the driver will return a
 _promisify_ the driver module. Returned promises are instances of [`Promise` global object][promise] and are created
 using the default constructor: `new Promise(executor)`.
 
-In case you want the driver use a third party `Promise` module (ie: [bluebird][bluebird]) to create the promise
+In case you want the driver to use a third party `Promise` module (ie: [bluebird][bluebird]) to create the `Promise`
 instances, you can optionally provide your own factory method when creating the `Client` instance, for example:
 
 ```javascript

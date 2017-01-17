@@ -1,5 +1,23 @@
 # ChangeLog - DataStax Enterprise Node.js Driver
 
+## 1.2.0
+
+2017-01-17
+
+### Notable Changes
+
+- Promise support ([#194](https://github.com/datastax/nodejs-driver/pull/194)).
+- Timestamp generation: client-side timestamps are generated and sent in the request by default when the 
+server supports it ([#195](https://github.com/datastax/nodejs-driver/pull/195)).
+- Added `isIdempotent` query option which is set to `false` by default: future versions of the driver will use this
+ value to consider whether an execution should be retried or directly rethrown to the consumer without using the retry
+ policy ([#197](https://github.com/datastax/nodejs-driver/pull/197)).
+
+### Improvements
+
+- [NODEJS-334] - Support promises in `executeGraph()` method
+- [NODEJS-336] - Update core driver dependency to v3.2.0
+
 ## 1.1.0
 
 2016-11-18

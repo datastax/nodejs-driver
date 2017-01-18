@@ -1,20 +1,22 @@
 {
-  "name": "cassandra-driver",
-  "version": "3.2.0",
-  "description": "DataStax Node.js Driver for Apache Cassandra",
+  "name": "dse-driver",
+  "version": "1.2.0",
+  "description": "DataStax Enterprise Node.js Driver",
   "author": "DataStax",
   "keywords": [
     "cassandra",
     "cql",
     "cql3",
     "connection",
-    "pool",
+    "gremlin",
     "datastax",
     "nosql",
     "driver",
-    "database"
+    "database",
+    "dse",
+    "graph",
+    "graphdb"
   ],
-  "license": "Apache-2.0",
   "dependencies": {
     "long": "^2.2.0"
   },
@@ -22,23 +24,21 @@
     "mocha": ">= 1.14.0",
     "rewire": ">= 2.1.0",
     "mocha-jenkins-reporter": ">= 0.1.9",
-    "mocha-appveyor-reporter": ">= 0.2.1",
-    "mocha-multi": ">= 0.8.0"
+    "temp": ">= 0.8.3"
   },
   "repository": {
     "type" : "git",
-    "url" : "https://github.com/datastax/nodejs-driver.git"
+    "url" : "https://github.com/datastax/nodejs-driver-dse.git"
   },
   "bugs": {
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
+  "license": "SEE LICENSE IN http://www.datastax.com/terms/datastax-dse-driver-license-terms",
   "scripts":  {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
-    "ci": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-multi",
-    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
-    "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
+    "ci": "./node_modules/.bin/mocha test/unit test/integration -R mocha-jenkins-reporter"
   },
   "engines": {
     "node" : ">=0.10.0"
-   }
+  }
 }

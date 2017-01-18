@@ -1,19 +1,20 @@
-# Execution Profiles (experimental)
+# Execution Profiles
 
 Execution profiles provide a mechanism to group together a set of configuration options and reuse them across different 
-query executions. These options include:
+query executions. This feature is specially useful when dealing with different workloads like DSE Graph, Cql OLTP
+workloads, DSE search, ...
+
+These options include:
 
 - Load balancing policy
 - Retry policy
 - Consistency levels
 - Per-host request timeout
-
-Execution profiles API is being introduced to help deal with the exploding number of configuration options, especially
-as the database platform evolves into more complex workloads. It is first introduced in an experimental capacity, in
-order to take advantage of it in existing projects, and to gauge interest and feedback in the community.
-
-This document explains how Execution Profiles relate to existing settings, and shows how to use the new profiles for
-request execution.
+- Graph Options
+    - Graph name
+    - Graph traversal source
+    - Graph read consistency
+    - Graph write consistency
 
 ## Using Execution Profiles
 
@@ -51,15 +52,16 @@ const client = new Client({
       consistency: consistency.one,
       readTimeout: 10000
     }),
-    new ExecutionProfile('time-series', {
-      consistency: consistency.localQuorum
+    new ExecutionProfile('graph-oltp', {
+      consistency: consistency.localQuorum,
+      graphOptions:  { name: 'myGraph' }
     })
   ]
 });
 ```
 
 The default profile will be used to fill the unspecified options in the rest of the profiles. In the above example, the
-read timeout for the profile named `'time-series'` will be the one defined in the default profile (10,000 ms).
+read timeout for the profile named `'graph-oltp'` will be the one defined in the default profile (10,000 ms).
 
 For the settings that are not specified in the default profile, the driver will use the default `Client` options.
 
@@ -83,5 +85,5 @@ client.execute(query, params, { executionProfile: aggregationProfile });
 When the execution profile is not provided in the options, the default execution profile is used.
 
 ```javascript
-client.execute(query, params);
+client.execute(query, params, null);
 ```

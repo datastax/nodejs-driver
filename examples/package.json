@@ -1,11 +1,11 @@
 {
-  "name": "cassandra-driver-examples",
-  "description": "Examples for the DataStax Node.js Driver for Apache Cassandra",
+  "name": "dse-driver-examples",
+  "description": "Examples for the DataStax Enterprise Node.js Driver",
   "version": "0.0.1",
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
-    "cassandra-driver": "file:../",
+    "dse-driver": "file:../",
     "async": "^1.5.2"
   }
 }

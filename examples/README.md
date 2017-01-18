@@ -13,10 +13,12 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
   - [Get hosts information](metadata/metadata-hosts.js)
   - [Get keyspaces information](metadata/metadata-keyspaces.js)
   - [Get table information](metadata/metadata-table.js)
-- User-defined types (UDT)
-  - [Inserting and retrieving UDTs](udt/udt-insert-select.js)
-- Tuples
-  - [Inserting and retrieving Tuples](tuple/tuple-insert-select.js)
+- Graph
+  - [Working with DSE Graph](graph/intro.js)
+- Data types
+  - [Working with geospatial types](geotypes/intro.js)
+  - [Working with user-defined types (UDT)](udt/udt-insert-select.js)
+  - [Working with tuples](tuple/tuple-insert-select.js)
 - Query tracing
   - [Retrieving the trace of a query request](tracing/retrieve-query-trace.js)
 

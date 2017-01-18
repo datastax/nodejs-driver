@@ -1,113 +1,79 @@
 # Getting started
 
-Getting started with the DataStax Node.js driver for Apache Cassandra.
+Getting started with the Node.js driver for DataStax Enterprise.
 
-## Connecting to a cluster
+## Upgrading from the core driver
 
-To connect to a Cassandra cluster, you need to provide at least 1 node of the cluster, if there are more nodes than
-the ones provided, the driver will discover all the nodes in the cluster after it connects to the first node.
- 
-Typically you create only 1 `Client` instance for a given Cassandra cluster and use it across your application.
+Upgrading from `cassandra-driver` to `dse-driver` can be as simple as changing the import statement to point to the
+dse package:
 
 ```javascript
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({ contactPoints: ['host1'] });
-client.connect(function (err) {
-  assert.ifError(err);
-});
+```
+
+Becomes:
+
+```javascript
+const dse = require('dse-driver');
+const client = new dse.Client({ contactPoints: ['host1'] });
+```
+
+All CQL features in the Cassandra driver (see the [core driver features][core-features]) are available in the
+DSE driver.
+
+## Connecting to a DSE cluster
+
+To connect to a DSE cluster, you need to provide at least 1 node of the cluster, if there are more nodes than
+the ones provided, the driver will automatically discover all the nodes in the cluster after it connects to the
+first node.
+ 
+Typically you create only 1 `Client` instance for a given Cassandra cluster and use it across your application.
+
+```javascript
+const dse = require('dse-driver');
+const client = new dse.Client({ contactPoints: ['host1'] });
+client.connect();
 ```
 
 At this point, the driver will be connected to one of the contact points and discovered the rest of the nodes in your
 cluster.  
 
-Even though calling `#connect()` is not required (the execute method internally calls to connect), it is recommended you
-call to `#connect()` on application startup, this way you can ensure that you start your app once your are connected to
-your Cassandra cluster.
+See [Getting started with DataStax Node.js driver for more information][core-getting-started].
 
-## Retrieving data
+## Working with mixed workloads
 
-The `#execute()` method can be used to send a CQL query to a Cassandra node, a simple way to use would be to provide a
-query and a callback.
+The driver features [Execution Profiles](../features/execution-profiles/) that provide a mechanism to group together
+a set of configuration options and reuse them across different query executions.
+
+[Execution Profiles](../features/execution-profiles/) are specially useful when dealing with different workloads like
+Graph and CQL workloads, allowing you to use a single `Client` instance for all workloads, for example:
 
 ```javascript
-const query = "SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger'";
-client.execute(query, function (err, result) {
-  var user = result.first();
-  //The row is an Object with column names as property keys. 
-  console.log('My name is %s and my email is %s', user.name, user.email);
+const client = new dse.Client({ 
+  contactPoints: ['host1'], 
+  profiles: [
+    new ExecutionProfile('time-series', {
+      consistency: consistency.localOne,
+      readTimeout: 30000,
+      serialConsistency: consistency.localSerial
+    }),
+    new ExecutionProfile('graph', {
+      loadBalancing: new DseLoadBalancingPolicy('graph-us-west'),
+      consistency: consistency.localQuorum,
+      readTimeout: 10000,
+      graphOptions: { name: 'myGraph' }
+    })
+  ]
 });
+
+// Use an execution profile for a CQL query
+client.execute('SELECT * FROM system.local', null, { executionProfile: 'time-series' });
+
+// Use an execution profile for a gremlin query
+client.executeGraph('g.V().count()', null, { executionProfile: 'graph' });
 ```
 
-### Using query parameters and prepared statements
-
-Instead of hard coding your parameters in your query, you can use parameter markers in your queries and provide the
-parameters as an Array.
-
-```javascript
-const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
-client.execute(query, ['mick-jagger'], callback);
-```
-
-This way you can reuse the query and forget about escaping / stringifying the parameters in your query. 
-
-Additionally, if you plan to reuse a query within your application (it is generally the case, your parameter value
-changes but there is only a small number of different queries for a given schema), **you can benefit from using prepared
-statements**.
- 
-Using prepared statements increases performance compared to plain executes, especially for repeated queries as the query
-only needs to be parsed once by the Cassandra node. It has the **additional benefit of providing metadata of the
-parameters to the driver, allowing better type mapping between javascript and Cassandra** without the need of
-additional info (hints) from the user.
-
-```javascript
-const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
-//Set the prepare flag in your queryOptions
-client.execute(query, ['mick-jagger'], { prepare: true }, callback);
-```
-
-See the [data types documentation to see how CQL types are mapped to javascript types][datatypes]. 
-
-## Inserting data
-
-You can use the `#execute()` method to execute any CQL query.
-
-```javascript
-const query = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
-const params = ['mick-jagger', 'Sir Mick Jagger', 'mick@rollingstones.com', new Date(1943, 6, 26)];
-client.execute(query, params, { prepare: true }, function (err) {
-  assert.ifError(err);
-  //Inserted in the cluster
-});
-```
-
-### Setting the consistency level
-
-To specify how consistent the data must be for a given read or write operation, you can set the
-[consistency level][consistency] per query
-
-```javascript
-client.execute(query, params, { consistency: types.consistencies.quorum }, function (err) {
-  //This callback will be called once it has been written in the number of replicas
-  //satisfying the consistency level specified.
-});
-```
-
-Or you can provide a default consistency level for all your queries when creating the `Client` instance (defaults to
-`one`).
-
-```javascript
-const client = new Client({ queryOptions: { consistency: types.consistencies.quorum } });
-```
-
-## Authentication (optional)
-
-Using an authentication provider on an auth-enabled Cassandra cluster:
-
-```javascript
-const authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
-//Set the auth provider in the clientOptions when creating the Client instance
-const client = new Client({ authProvider: authProvider });
-```
-
-[consistency]: http://docs.datastax.com/en/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html
-[datatypes]: /features/datatypes/
+[dse]: http://www.datastax.com/products/datastax-enterprise
+[core-features]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/
+[core-getting-started]: http://docs.datastax.com/en/developer/nodejs-driver/latest/getting-started/

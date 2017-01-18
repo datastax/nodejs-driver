@@ -1,5 +1,5 @@
-title:    DataStax Nodejs Driver
-summary:  DataStax Nodejs Driver for Apache Cassandra
+title:    DataStax Enterprise Node.js Driver
+summary:  Nodejs Driver for DataStax Enterprise
 theme:    datastax
 sections:
   - title:    Features
@@ -18,15 +18,9 @@ sections:
     prefix:   /coding-rules
     type:     markdown
     files:    'doc/coding-rules/**/*.md'
-  - title:    API docs
-    prefix:   /api
-    type:     jsdoc
-    config:   doc/jsdoc.json
 links:
   - title: Code
     href:  https://github.com/datastax/nodejs-driver/
-  - title: Docs
-    href:  http://datastax.github.io/nodejs-driver/
   - title: Issues
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
   - title: Mailing List
@@ -34,11 +28,15 @@ links:
   - title: IRC Channel
     href:  irc://irc.freenode.net/datastax-drivers
   - title: Npm
-    href:  https://www.npmjs.org/package/cassandra-driver
+    href:  https://www.npmjs.org/package/dse-driver
+api_docs:
+  1.2: http://docs.datastax.com/en/drivers/nodejs-dse/1.2/
+  1.1: http://docs.datastax.com/en/drivers/nodejs-dse/1.1/
+  1.0: http://docs.datastax.com/en/drivers/nodejs-dse/1.0/
 versions:
-  - name: '3.2'
+  - name: '1.2'
     ref: 'master'
-  - name: '3.1'
-    ref: '3.1'
-  - name: '3.0'
-    ref: '3.0'
+  - name: '1.1'
+    ref: '1.1'
+  - name: '1.0'
+    ref: '1.0'

@@ -1,0 +1,38 @@
+title:    DataStax Enterprise Node.js Driver
+summary:  Nodejs Driver for DataStax Enterprise
+theme:    datastax
+sections:
+  - title:    Features
+    prefix:   /features
+    type:     markdown
+    files:    'doc/features/**/*.md'
+  - title:    Frequently Asked Questions
+    prefix:   /faq
+    type:     markdown
+    files:    'doc/faq/**/*.md'
+  - title:    Getting started
+    prefix:   /getting-started
+    type:     markdown
+    files:    'doc/getting-started/**/*.md'
+links:
+  - title: Code
+    href:  https://github.com/datastax/nodejs-driver/
+  - title: Issues
+    href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
+  - title: Mailing List
+    href:  https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
+  - title: IRC Channel
+    href:  irc://irc.freenode.net/datastax-drivers
+  - title: Npm
+    href:  https://www.npmjs.org/package/dse-driver
+api_docs:
+  1.2: http://docs.datastax.com/en/drivers/nodejs-dse/1.2/
+  1.1: http://docs.datastax.com/en/drivers/nodejs-dse/1.1/
+  1.0: http://docs.datastax.com/en/drivers/nodejs-dse/1.0/
+versions:
+  - name: '1.2'
+    ref: 'master'
+  - name: '1.1'
+    ref: '1.1'
+  - name: '1.0'
+    ref: '1.0'

@@ -6,25 +6,23 @@
  */
 'use strict';
 var assert = require('assert');
-var cassandra = require('cassandra-driver');
-
 var Client = require('../../lib/dse-client');
-var ExecutionProfile = require('../../lib/execution-profile');
-var helper = require('../helper');
-var types = cassandra.types;
+var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
+var helper = require('../test-helper');
+var types = require('../../lib/types');
 var Long = types.Long;
 var utils = require('../../lib/utils');
 var policies = require('../../lib/policies');
-var errors = cassandra.errors;
+var errors = require('../../lib/errors');
 var DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
 
 describe('Client', function () {
   describe('constructor', function () {
     it('should validate options', function () {
       assert.throws(function () {
-        //noinspection JSCheckFunctionSignatures
+        // eslint-disable-next-line
         new Client();
-      }, cassandra.errors.ArgumentError);
+      }, errors.ArgumentError);
     });
     it('should set DseLoadBalancingPolicy as default', function () {
       var client = new Client({ contactPoints: ['host1'] });
@@ -90,16 +88,16 @@ describe('Client', function () {
       var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       assert.doesNotThrow(function () {
-        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop);
       });
       assert.throws(function () {
-        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop);
       }, TypeError);
     });
     it('should not allow a array query parameters', function () {
       var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
-      client.executeGraph('Q1', [], {  }, function (err) {
+      client.executeGraph('Q1', [], { }, function (err) {
         helper.assertInstanceOf(err, TypeError);
         assert.strictEqual(err.message, 'Parameters must be a Object instance as an associative array');
       });
@@ -161,7 +159,7 @@ describe('Client', function () {
         graphOptions: {
           name: 'name1',
           source: 'a1',
-          readConsistency: cassandra.types.consistencies.localOne
+          readConsistency: types.consistencies.localOne
         }
       });
       var optionsParameter = { anotherOption: { k: 'v'}};
@@ -186,7 +184,7 @@ describe('Client', function () {
         contactPoints: ['host1'],
         graphOptions: {
           source: 'x',
-          writeConsistency: cassandra.types.consistencies.two
+          writeConsistency: types.consistencies.two
         }
       });
       var actualOptions = null;
@@ -245,7 +243,7 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
       var optionsParameter = {
-        graphReadConsistency: cassandra.types.consistencies.localQuorum
+        graphReadConsistency: types.consistencies.localQuorum
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
       assert.notStrictEqual(optionsParameter, actualOptions);
@@ -256,7 +254,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_QUORUM');
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
       optionsParameter = {
-        graphWriteConsistency: cassandra.types.consistencies.quorum
+        graphWriteConsistency: types.consistencies.quorum
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
       assert.notStrictEqual(optionsParameter, actualOptions);
@@ -594,7 +592,7 @@ describe('Client', function () {
       });
       it('should call address translator', function (done) {
         var translatorCalled = 0;
-        var translator = new cassandra.policies.addressResolution.AddressTranslator();
+        var translator = new policies.addressResolution.AddressTranslator();
         translator.translate = function (ip, port, cb) {
           translatorCalled++;
           cb(ip + ':' + port);

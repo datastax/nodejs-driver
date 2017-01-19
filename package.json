@@ -23,7 +23,6 @@
   "devDependencies": {
     "mocha": ">= 1.14.0",
     "rewire": ">= 2.1.0",
-    "mocha-jenkins-reporter": ">= 0.1.9",
     "temp": ">= 0.8.3"
   },
   "repository": {
@@ -35,8 +34,9 @@
   },
   "license": "SEE LICENSE IN http://www.datastax.com/terms/datastax-dse-driver-license-terms",
   "scripts":  {
-    "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
-    "ci": "./node_modules/.bin/mocha test/unit test/integration -R mocha-jenkins-reporter"
+    "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
+    "ci": "./node_modules/.bin/mocha test/unit test/integration -R mocha-jenkins-reporter",
+    "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {
     "node" : ">=0.10.0"

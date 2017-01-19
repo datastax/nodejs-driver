@@ -4,6 +4,7 @@
  * Please see the license for details:
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
+'use strict';
 var assert = require('assert');
 var helper = require('../helper');
 var cassandra = require('cassandra-driver');

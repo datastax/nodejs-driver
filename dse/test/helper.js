@@ -264,7 +264,7 @@ var helper = {
     }
     return (function xdescribeWithText(name, fn) {
       return xdescribe(util.format('%s [%s]', name, text), fn);
-    })
+    });
   },
   ccm: {},
   ads: {}

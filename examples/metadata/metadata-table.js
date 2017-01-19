@@ -1,8 +1,7 @@
 "use strict";
-const cassandra = require('cassandra-driver');
-const async = require('async');
+const dse = require('dse-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Creates a table and retrieves its information

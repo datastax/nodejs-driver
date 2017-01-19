@@ -20,18 +20,18 @@ greater.
 You can set the number of connections per host in the pooling configuration:
 
 ```javascript
-const cassandra = require('cassandra-driver');
-const distance = cassandra.types.distance;
+const dse = require('dse-driver');
+const distance = dse.types.distance;
 
 const options = {
    contactPoints: ['1.2.3.4'],
    pooling: {
       coreConnectionsPerHost: {
-        [distance.local] = 2,
-        [distance.remote] = 1
+        [distance.local]: 2,
+        [distance.remote]: 1
       } 
    }
 };
 
-const client = new Client(options);
+const client = new dse.Client(options);
 ```

@@ -101,11 +101,14 @@ module.exports = {
     "setImmediate": false,
     "clearTimeout": false,
     "describe": false,
+    "xdescribe": false,
     "it": false,
+    "xit": false,
     "context": false,
     "after": false,
     "afterEach": false,
     "before": false,
-    "beforeEach": false
+    "beforeEach": false,
+    "__dirname": false
   }
 };

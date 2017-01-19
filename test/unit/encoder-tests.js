@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
 'use strict';
 var assert = require('assert');
 var util = require('util');
@@ -7,6 +13,8 @@ var Encoder = require('../../lib/encoder');
 var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var helper = require('../test-helper');
+var encoderExtensions = require('../../lib/encoder-extensions');
+encoderExtensions.register(Encoder);
 
 describe('encoder', function () {
   describe('Encoder.guessDataType()', function () {
@@ -1149,7 +1157,7 @@ describe('encoder', function () {
     it('should only expose encode() and decode() functions', function () {
       //noinspection JSUnresolvedVariable
       var keys = Object.keys(Encoder.prototype);
-      assert.deepEqual(keys, ['decode', 'encode']);
+      assert.deepEqual(keys, ['decode', 'encode', 'baseDecode', 'baseEncode']);
       keys.forEach(function (k) {
         //noinspection JSUnresolvedVariable
         assert.strictEqual(typeof Encoder.prototype[k], 'function');

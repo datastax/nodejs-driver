@@ -1,9 +1,9 @@
 "use strict";
-const cassandra = require('cassandra-driver');
+const dse = require('dse-driver');
 const async = require('async');
 const assert = require('assert');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Example using async library for avoiding nested callbacks
@@ -12,7 +12,7 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
  *
  * Inserts a row and retrieves a row
  */
-const id = cassandra.types.Uuid.random();
+const id = dse.types.Uuid.random();
 
 async.series([
   function connect(next) {

@@ -78,7 +78,7 @@ vdescribe('5.0', 'graph query client timeouts', function () {
             var match = err.message.match(serverTimeoutErrRE);
             assert.ok(match);
             assert.ok(match[1]);
-            assert.strictEqual(parseInt(match[1]), 1002);
+            assert.strictEqual(parseFloat(match[1]), 1002);
             next();
           });
         },
@@ -164,7 +164,7 @@ function getTimeoutTest(expectedTimeoutMillis, queryOptions, clientOptions) {
           assert.ok(!(err instanceof errors.NoHostAvailableError), 'Error should be rethrown by the retry policy');
           var match = err.message.match(operationTimeoutRE);
           assert.ok(match[1]);
-          assert.strictEqual(parseInt(match[1]), expectedTimeoutMillis);
+          assert.strictEqual(parseFloat(match[1]), expectedTimeoutMillis);
           next();
         });
       },

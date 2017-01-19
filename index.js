@@ -12,9 +12,8 @@ exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
-exports.metadata = {
-  Metadata: require('./lib/metadata')
-};
+var Metadata = require('./lib/metadata');
+exports.metadata = { Metadata: Metadata };
 exports.Encoder = require('./lib/encoder');
 exports.geometry = require('./lib/geometry');
 exports.graph = require('./lib/graph');

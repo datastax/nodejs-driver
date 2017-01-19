@@ -7,12 +7,11 @@
 'use strict';
 
 var assert = require('assert');
-var cassandra = require('cassandra-driver');
 var util = require('util');
-var helper = require('../helper');
+var helper = require('../test-helper');
 var GraphSONReader = require('../../lib/encoder-extensions').GraphSONReader;
 var graphModule = require('../../lib/graph');
-var types = cassandra.types;
+var types = require('../../lib/types');
 var geometry = require('../../lib/geometry');
 
 describe('GraphSONReader', function () {

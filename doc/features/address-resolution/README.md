@@ -54,9 +54,9 @@ less expensive)
 To use this implementation, provide an instance when initializing the `Client` object.
 
 ```javascript
-const cassandra = require('cassandra-driver');
-const addressResolution = cassandra.policies.addressResolution;
-const client = new Client({
+const dse = require('dse-driver');
+const addressResolution = dse.policies.addressResolution;
+const client = new dse.Client({
    contactPoints: ['1.2.3.4'], 
    policies: { 
       addressResolution: new addressResolution.EC2MultiRegionTranslator() 

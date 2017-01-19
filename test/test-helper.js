@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var path = require('path');
@@ -612,7 +618,7 @@ var helper = {
       });
     }
     props.forEach(function comparePropItem(p) {
-      assert.strictEqual(o1[p], o2[p]);
+      assert.strictEqual(o1[p], o2[p], 'For property ' + p);
     });
   },
   getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
@@ -631,6 +637,30 @@ var helper = {
    */
   isWin: function () {
     return process.platform.indexOf('win') === 0;
+  },
+  requireOptional: function (moduleName) {
+    try {
+      // eslint-disable-next-line
+      return require(moduleName);
+    }
+    catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        return null;
+      }
+      throw err;
+    }
+  },
+  assertBufferString: function (instance, textValue) {
+    this.assertInstanceOf(instance, Buffer);
+    assert.strictEqual(instance.toString(), textValue);
+  },
+  conditionalDescribe: function (condition, text) {
+    if (condition) {
+      return describe;
+    }
+    return (function xdescribeWithText(name, fn) {
+      return xdescribe(util.format('%s [%s]', name, text), fn);
+    });
   }
 };
 

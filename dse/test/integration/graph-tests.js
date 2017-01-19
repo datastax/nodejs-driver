@@ -161,7 +161,7 @@ vdescribe('5.0', 'Client', function () {
             assert.strictEqual(result.length, 1);
             assert.deepEqual(result.first(), vertex);
             done();
-          })
+          });
         });
       }));
       it('should handle edge id as parameter', wrapClient(function (client, done) {
@@ -201,8 +201,8 @@ vdescribe('5.0', 'Client', function () {
           var names = results.map(function (v) {
             return v.a;
           });
-          assert.ok(names.indexOf('lop') != -1);
-          assert.ok(names.indexOf('ripple') != -1);
+          assert.ok(names.indexOf('lop') !== -1);
+          assert.ok(names.indexOf('ripple') !== -1);
 
           results.forEach(function (result) {
             // The row should represent a map with a, b, and c keys.
@@ -219,9 +219,9 @@ vdescribe('5.0', 'Client', function () {
               var creators = result.c.map(function (v) {
                 return v.properties.name[0].value;
               });
-              assert.ok(creators.indexOf('marko') != -1);
-              assert.ok(creators.indexOf('josh') != -1);
-              assert.ok(creators.indexOf('peter') != -1);
+              assert.ok(creators.indexOf('marko') !== -1);
+              assert.ok(creators.indexOf('josh') !== -1);
+              assert.ok(creators.indexOf('peter') !== -1);
             } else {
               // ripple, 'c' should contain josh.
               assert.strictEqual(result.c.length, 1);
@@ -455,7 +455,7 @@ vdescribe('5.0', 'Client', function () {
           client.executeGraph(schemaQuery, seriesNext);
         },
         function loadGraph (seriesNext) {
-          var query =  '' +
+          var query =
             "characters.each { character -> \n" +
             "    graph.addVertex(label, 'character', 'characterName', character);\n" +
             "}";
@@ -468,7 +468,7 @@ vdescribe('5.0', 'Client', function () {
             var results = result.toArray();
             assert.strictEqual(results.length, characters.length);
             characters.forEach(function (c) {
-              assert.ok(results.indexOf(c) != -1);
+              assert.ok(results.indexOf(c) !== -1);
             });
             seriesNext();
           });
@@ -674,7 +674,7 @@ vdescribe('5.0', 'Client', function () {
               var vertex = result.first();
               validateVertex(user, vertex);
               next(err, vertex);
-            })
+            });
           }, next);
         },
         function retrieveAllVertices (next) {
@@ -697,7 +697,7 @@ vdescribe('5.0', 'Client', function () {
             next();
           });
         }
-      ], done)
+      ], done);
     }));
     context('with no callback specified', function () {
       if (!helper.promiseSupport) {
@@ -769,7 +769,7 @@ vdescribe('5.0', 'Client', function () {
                   assert.ifError(err);
                   validateVertexResult(result, expected[index], vertexLabel, propertyName);
                   callback();
-                })
+                });
               });
             }, next);
           }
@@ -819,12 +819,12 @@ vdescribe('5.0', 'Client with down node', function () {
     var getVertexQuery = 'g.V().limit(1)';
 
     function expectFailAtAll(done) {
-      return function(err, result) {
+      return (function(err, result) {
         assert.ok(err);
         assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
         assert.strictEqual(result, undefined);
         done();
-      }
+      });
     }
 
     it('should be able to make a read query with ONE read consistency, ALL write consistency', wrapClient(function (client, done) {
@@ -939,7 +939,7 @@ vdescribe('5.0', 'Client with spark workload', function () {
                 // Ensure the master was the queried host.
                 var queriedHost = result.info.queriedHost;
                 var portSep = queriedHost.lastIndexOf(":");
-                queriedHost = portSep != -1 ? queriedHost.substr(0, portSep) : queriedHost;
+                queriedHost = portSep !== -1 ? queriedHost.substr(0, portSep) : queriedHost;
                 assert.strictEqual(queriedHost, sparkMaster);
               }
               timesNext(err, result.info.queriedHost);

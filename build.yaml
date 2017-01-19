@@ -19,5 +19,10 @@ build:
       export JUNIT_REPORT_STACK=1
       export JUNIT_REPORT_PATH=.
       npm install kerberos
-      npm run-script ci || true
+      npm install mocha-jenkins-reporter
+      if [ "$NODEJS_VERSION" != "0.10" ] && [ "$NODEJS_VERSION" != "0.12" ]; then
+        npm install -g eslint;
+        npm run eslint;
+      fi
+      npm run ci || true
   - xunit: "*.xml"

@@ -7,19 +7,21 @@
 'use strict';
 var assert = require('assert');
 var rewire = require('rewire');
-var helper = require('../helper');
-var Point = require('../../lib/geometry/point');
-var moduleName = '../../lib/geometry/line-string';
+var helper = require('../../test-helper');
+var Point = require('../../../lib/geometry/point');
+var moduleName = '../../../lib/geometry/line-string';
 var LineString = require(moduleName);
 
 describe('LineString', function () {
   describe('constructor', function () {
     it('should validate points provided', function () {
       assert.doesNotThrow(function () {
+        // eslint-disable-next-line
         new LineString(new Point(1, 2.312), new Point(2, 5.3));
       });
       assert.doesNotThrow(function () {
-        //empty line strings are valid
+        // empty line strings are valid
+        // eslint-disable-next-line
         new LineString();
       });
     });

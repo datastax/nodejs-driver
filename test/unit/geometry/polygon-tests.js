@@ -7,19 +7,21 @@
 'use strict';
 var assert = require('assert');
 var rewire = require('rewire');
-var helper = require('../helper');
-var Point = require('../../lib/geometry/point');
-var moduleName = '../../lib/geometry/polygon';
+var helper = require('../../test-helper');
+var Point = require('../../../lib/geometry/point');
+var moduleName = '../../../lib/geometry/polygon';
 var Polygon = require(moduleName);
 
 describe('Polygon', function () {
   describe('constructor', function () {
     it('should validate points provided', function () {
       assert.doesNotThrow(function () {
+        // eslint-disable-next-line
         new Polygon(new Point(1, 2.312));
       });
       assert.doesNotThrow(function () {
         //empty polygons are valid
+        // eslint-disable-next-line
         new Polygon();
       });
     });

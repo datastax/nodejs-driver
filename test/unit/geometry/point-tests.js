@@ -7,20 +7,23 @@
 'use strict';
 var assert = require('assert');
 var rewire = require('rewire');
-var helper = require('../helper');
-var moduleName = '../../lib/geometry/point';
+var helper = require('../../test-helper');
+var moduleName = '../../../lib/geometry/point';
 var Point = require(moduleName);
 
 describe('Point', function () {
   describe('constructor', function () {
     it('should validate x and y', function () {
       assert.doesNotThrow(function () {
+        // eslint-disable-next-line
         new Point(1, 2.312);
       });
       assert.throws(function () {
+        // eslint-disable-next-line
         new Point('1', '2.3');
       }, TypeError);
       assert.throws(function () {
+        // eslint-disable-next-line
         new Point(1);
       }, TypeError);
     });

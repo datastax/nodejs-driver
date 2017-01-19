@@ -1,8 +1,14 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
-var Client = require('../../lib/client.js');
+var Client = require('../../lib/dse-client.js');
 var clientOptions = require('../../lib/client-options.js');
 var types = require('../../lib/types');
 var dataTypes = types.dataTypes;

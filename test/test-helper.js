@@ -6,11 +6,49 @@ var policies = require('../lib/policies');
 var types = require('../lib/types');
 var utils = require('../lib/utils.js');
 var spawn = require('child_process').spawn;
+var Client = require('../lib/client');
 
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
+  /**
+   * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
+   * @param {Number} nodeLength
+   * @param {Object} [options]
+   * @param {Object} [options.ccmOptions]
+   * @param {Boolean} [options.initClient] Determines whether to create a Client instance.
+   * @param {String} [options.keyspace] Name of the keyspace to create.
+   * @param {Number} [options.replicationFactor] Keyspace replication factor.
+   * @param {Array<String>} [options.queries] Queries to run after client creation.
+   */
+  setup: function (nodeLength, options) {
+    options = options || utils.emptyObject;
+    before(helper.ccmHelper.start(nodeLength || 1, options.ccmOptions));
+    var initClient = options.initClient !== false;
+    var client;
+    var keyspace;
+    if (initClient) {
+      client = new Client(helper.baseOptions);
+      before(client.connect.bind(client));
+      keyspace = options.keyspace || helper.getRandomName('ks');
+      before(helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, options.replicationFactor)));
+      before(helper.toTask(client.execute, client, 'USE ' + keyspace));
+      if (options.queries) {
+        before(function (done) {
+          utils.eachSeries(options.queries, function (q, next) {
+            client.execute(q, next);
+          }, done);
+        });
+      }
+      after(client.shutdown.bind(client));
+    }
+    after(helper.ccmHelper.remove);
+    return {
+      client: client,
+      keyspace: keyspace
+    };
+  },
   /**
    * Sync throws the error
    * @type Function

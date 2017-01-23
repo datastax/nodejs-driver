@@ -9,7 +9,7 @@ var Duration = types.Duration;
 
 vdescribe('3.10', 'Duration', function () {
   this.timeout('30000');
-  var setupInfo = helper.setup({
+  var setupInfo = helper.setup(1, {
     queries: ['CREATE TABLE tbl_duration (pk uuid PRIMARY KEY, c1 duration)']
   });
   var client = setupInfo.client;

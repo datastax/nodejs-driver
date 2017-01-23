@@ -56,6 +56,19 @@ describe('Duration', function () {
         });
       });
     });
+    it('should throw TypeError for invalid strings', function() {
+      [
+        '-PP',
+        '-P15',
+        'P17-13-50T22:00:00',
+        'P7-13-50T22:00:00',
+        'PW',
+        '-PW',
+        '-PTW',
+      ].forEach(function (testInfo) {
+        assert.throws(function() { Duration.fromString(testInfo); }, 'Unable to convert \'' + testInfo + '\' to a duration');
+      });
+    });
   });
   describe('#toString()', function () {
     it('should return the standard representation', function () {

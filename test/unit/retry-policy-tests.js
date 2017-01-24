@@ -1,10 +1,17 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
-
 var types = require('../../lib/types');
 var policies = require('../../lib/policies');
+var helper = require('../test-helper');
 var RetryPolicy = policies.retry.RetryPolicy;
 var IdempotenceAwareRetryPolicy = policies.retry.IdempotenceAwareRetryPolicy;
+var FallthroughRetryPolicy = policies.retry.FallthroughRetryPolicy;
 
 describe('RetryPolicy', function () {
   describe('#onUnavailable()', function () {
@@ -145,6 +152,46 @@ describe('IdempotenceAwareRetryPolicy', function () {
       var result = policy.onUnavailable(10, 20, 30, 40);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.retry);
       assert.deepEqual(actual, { info: 10, consistency: 20, required: 30, alive: 40 });
+    });
+  });
+});
+describe('FallthroughRetryPolicy', function () {
+  describe('constructor', function () {
+    it('should create instance of RetryPolicy', function () {
+      var policy = new FallthroughRetryPolicy();
+      helper.assertInstanceOf(policy, RetryPolicy);
+    });
+  });
+  describe('#onReadTimeout()', function () {
+    it('should return  rethrow decision', function () {
+      var policy = new FallthroughRetryPolicy();
+      var decisionInfo = policy.onReadTimeout();
+      assert.ok(decisionInfo);
+      assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
+    });
+  });
+  describe('#onRequestError()', function () {
+    it('should return  rethrow decision', function () {
+      var policy = new FallthroughRetryPolicy();
+      var decisionInfo = policy.onRequestError();
+      assert.ok(decisionInfo);
+      assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
+    });
+  });
+  describe('#onUnavailable()', function () {
+    it('should return  rethrow decision', function () {
+      var policy = new FallthroughRetryPolicy();
+      var decisionInfo = policy.onUnavailable();
+      assert.ok(decisionInfo);
+      assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
+    });
+  });
+  describe('#onWriteTimeout()', function () {
+    it('should return  rethrow decision', function () {
+      var policy = new FallthroughRetryPolicy();
+      var decisionInfo = policy.onWriteTimeout();
+      assert.ok(decisionInfo);
+      assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
     });
   });
 });

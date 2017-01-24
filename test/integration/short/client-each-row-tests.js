@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
@@ -503,7 +509,7 @@ describe('Client', function () {
         }
       ], done);
     });
-    helper.vit('2.2', 'should include the warning in the ResultSet', function (done) {
+    vit('2.2', 'should include the warning in the ResultSet', function (done) {
       var client = newInstance();
       var loggedMessage = false;
       client.on('log', function (level, className, message) {
@@ -521,7 +527,7 @@ describe('Client', function () {
         table,
         table
       );
-      var params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 2562) };
+      var params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 32768) };
       client.eachRow(query, params, {prepare: true}, function () {
         
       }, function (err, result) {

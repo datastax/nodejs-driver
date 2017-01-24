@@ -1,25 +1,30 @@
 # Frequently Asked Questions
 
-### Which versions of Cassandra does the driver support?
+### Which versions of DSE does the driver support?
 
-The latest version of the driver supports any Cassandra version greater than 1.2.
+The driver supports versions from 4.8 to 5 of [DataStax Enterprise][dse].
 
-### Which versions of CQL does the driver support?
+### How can I upgrade from the Cassandra driver to the DSE driver?
 
-It supports [CQL version 3](http://cassandra.apache.org/doc/latest/cql/index.html).
+There is a section in the [Getting Started](../getting-started/) page.
 
 ### How do I generate a random uuid or a time-based uuid?
 
 Use the [Uuid and TimeUuid classes](/features/datatypes/uuids) inside the types module.
 
-### Should I create one client instance per module in my application?
+### Can I use a single `Client` instance for graph and CQL?
+
+Yes, you can. You should use [Execution Profiles](../features/execution-profiles/) to define your settings for CQL and
+graph workloads, for example: define which datacenter should be used for graph or for CQL.
+
+### Should I create one `Client` instance per module in my application?
 
 Normally you should use one `Client` instance per application. You should share that instance between modules within
 your application.
 
 ### Should I shut down the pool after executing a query?
 
-No, only call `client.shutdown()` once in your application's lifetime.
+No, only call `client.shutdown()` once in your application's lifetime, normally when you shutdown your application.
 
 ### How can I use a list of values with the IN operator in a WHERE clause?
 
@@ -35,3 +40,5 @@ const key1 = 'param1';
 const allKeys2 = [ 'val1', 'val2', 'val3' ];
 client.execute(query, [ key1, allKeys2 ], { prepare: true });
 ```
+
+[dse]: http://www.datastax.com/products/datastax-enterprise

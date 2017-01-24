@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
@@ -152,7 +158,7 @@ describe('custom payload', function () {
           var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           var queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch2'] },
-            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 5 * 1025)] }
+            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 64 * 1024)] }
           ];
           client.batch(queries, { customPayload: payload}, function (err, result) {
             assert.ifError(err);

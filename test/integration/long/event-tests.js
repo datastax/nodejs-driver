@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2016 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
 'use strict';
 var assert = require('assert');
 
@@ -11,7 +17,6 @@ describe('Client', function () {
   describe('events', function () {
     //noinspection JSPotentiallyInvalidUsageOfThis
     this.timeout(600000);
-    var is1x = helper.getCassandraVersion().charAt(0) === '1';
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should emit hostUp hostDown', function (done) {
@@ -57,9 +62,7 @@ describe('Client', function () {
 
           // Special exception for C* 1.x, as it may send duplicate down events
           // for a single host.
-          if(!is1x) {
-            assert.strictEqual(hostsWentDown.length, 1);
-          }
+          assert.strictEqual(hostsWentDown.length, 1);
           hostsWentDown.forEach(function(downHost) {
             helper.assertInstanceOf(downHost, Host);
             assert.strictEqual(helper.lastOctetOf(downHost), '2');

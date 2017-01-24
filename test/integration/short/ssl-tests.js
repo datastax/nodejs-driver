@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var util = require('util');
 
@@ -31,7 +37,7 @@ describe('Client', function () {
     });
     describe('#execute()', function () {
       it('should handle multiple requests in parallel with queueing', function (done) {
-        var parallelLimit = helper.isCassandraGreaterThan('2.0') ? 2100 : 200;
+        var parallelLimit = 2100;
         var client = newInstance();
         utils.series([
           client.connect.bind(client),

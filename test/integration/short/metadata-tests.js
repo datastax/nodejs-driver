@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 
 var helper = require('../../test-helper');
@@ -382,7 +388,7 @@ describe('Metadata', function () {
   });
   describe('#getTable()', function () {
     var keyspace = 'ks_tbl_meta';
-    var is3 = helper.isCassandraGreaterThan('3.0');
+    var is3 = helper.isDseGreaterThan('5.0');
     var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
     before(function createTables(done) {
       var client = newInstance();
@@ -401,27 +407,23 @@ describe('Metadata', function () {
         "CREATE TABLE ks_tbl_meta.tbl_collections (id uuid, ck blob, list_sample list<int>, set_sample list<text>, int_sample int, map_sample map<text,int>, PRIMARY KEY (id, ck))",
         "CREATE INDEX text_index ON tbl1 (text_sample)"
       ];
-      if (helper.isCassandraGreaterThan('2.1')) {
-        queries.push(
-          "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_values map<text,int>, map_keys map<text,int>, map_entries map<text,int>, map_all map<text,int>, list_sample frozen<list<blob>>)",
-          "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
-          "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
-          "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
-          "CREATE TYPE udt1 (i int, b blob, t text, c 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')",
-          'CREATE TYPE "UDTq""uoted" ("I" int, "B""B" blob, t text)',
-          "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
-          "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)",
-          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
-        );
-      }
-      if (helper.isCassandraGreaterThan('2.2')) {
+      queries.push(
+        "CREATE TABLE tbl_indexes1 (id uuid PRIMARY KEY, map_values map<text,int>, map_keys map<text,int>, map_entries map<text,int>, map_all map<text,int>, list_sample frozen<list<blob>>)",
+        "CREATE INDEX map_keys_index ON tbl_indexes1 (keys(map_keys))",
+        "CREATE INDEX map_values_index ON tbl_indexes1 " + valuesIndex,
+        "CREATE INDEX list_index ON tbl_indexes1 (full(list_sample))",
+        "CREATE TYPE udt1 (i int, b blob, t text, c 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')",
+        'CREATE TYPE "UDTq""uoted" ("I" int, "B""B" blob, t text)',
+        "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
+        "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)",
+        'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
+      );
+      if (helper.isDseGreaterThan('5.0')) {
         queries.push(
           'CREATE INDEX map_entries_index ON tbl_indexes1 (entries(map_entries))',
           'CREATE TABLE ks_tbl_meta.tbl_c22 ' +
           '(id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, date_sample date, time_sample time)'
         );
-      }
-      if (is3) {
         queries.push(
           "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
           "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",

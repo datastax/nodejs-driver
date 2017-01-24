@@ -1,15 +1,21 @@
 {
   "source": {
     "include": [
-      "lib/types",
       "lib/auth",
-      "lib/policies",
-      "lib/metadata",
-      "lib/client.js",
+      "lib/dse-client.js",
       "lib/execution-profile.js",
-      "lib/encoder.js",
+      "lib/geometry",
+      "lib/graph",
+      "lib/policies",
+      "lib/client.js",
       "lib/errors.js",
-      "lib/host.js"
+      "lib/host.js",
+      "lib/metadata",
+      "lib/policies/address-resolution.js",
+      "lib/policies/load-balancing.js",
+      "lib/policies/retry.js",
+      "lib/policies/reconnection.js",
+      "lib/types"
     ]
   },
   "templates": {
@@ -17,5 +23,5 @@
       "outputSourceFiles": false
     }
   },
-  "plugins": ["doc/doc-plugin"]
+  "plugins": ["doc/dse-doc-plugin"]
 }

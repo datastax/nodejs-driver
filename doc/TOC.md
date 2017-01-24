@@ -1,34 +1,58 @@
-The DataStax Node.js Driver for Apache Cassandra is a modern feature-rich and highly tunable Node.js
-client library for Apache Cassandra (1.2+) and DataStax Enterprise (3.1+) using exclusively Cassandra's binary
-protocol and Cassandra Query Language v3.
+The DSE driver is built on top of [Node.js CQL driver for Apache Cassandra][cassandra-driver] and provides the
+following extensions for DataStax Enterprise:
 
-## Getting started
+- [Authenticator implementations](module-auth.html) that use the authentication scheme negotiation in the server-side
+DseAuthenticator
+- [Geospatial types](module-geometry.html) support
+- [DSE Graph](module-graph.html) integration
 
-A [`Client`](Client.html) instance maintains multiple connections to the cluster nodes and uses policies to determine
-which node to use as coordinator for each query, how to handle retry and failover.
 
-`Client` instances are designed to be long-lived and usually a single instance is enough per application.
+## Getting Started
+
+[`Client`](Client.html) inherits from the CQL driver counterpart. All CQL features available to `Client` (see the 
+[CQL driver manual][core-manual]) can also be used with the `Client` of the DSE module.
 
 ```javascript
-const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['host1'] });
-client.execute('SELECT key FROM system.local')
-  .then(function (result) {
-      const row = result.first();
-      console.log(row['key']);
-  });
+const dse = require('dse-driver');
+const client = new dse.Client({
+  contactPoints: ['h1', 'h2']
+});
 ```
 
-See [`Client class documentation`](Client.html).
+```javascript
+const query = 'SELECT name, email FROM users WHERE key = ?';
+client.execute(query, [ 'someone' ])
+  .then(result => console.log('User with email %s', result.rows[0].email));
+```
 
-## Submodules
+Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
 
-- [auth](module-auth.html)
-- [errors](module-errors.html)
-- [metadata](module-metadata.html)
-- [policies](module-policies.html)
-- [policies/addressResolution](module-policies_addressResolution.html)
-- [policies/loadBalancing](module-policies_loadBalancing.html)
-- [policies/reconnection](module-policies_reconnection.html)
-- [policies/retry](module-policies_retry.html)
-- [types](module-types.html)
+```javascript
+client.execute(query, [ 'someone' ], function(err, result) {
+  assert.ifError(err);
+  console.log('User with email %s', result.rows[0].email);
+});
+```
+
+The `dse-driver` module also exports the submodules from the CQL driver, so you only need to import one module to access
+all DSE and Cassandra types.
+
+For example:
+```javascript
+const dse = require('dse-driver');
+const Uuid = dse.types.Uuid;
+```
+
+### Graph
+
+[`Client` includes a `executeGraph() method`](Client.html#executeGraph) to execute graph queries:
+
+```javascript
+// executeGraph() method returns a Promise when no callback has been provided
+const result = await client.executeGraph('g.V()');
+const vertex = result.first();
+console.log(vertex.label);
+```
+
+[cassandra-driver]: https://github.com/datastax/nodejs-driver
+[core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/latest/

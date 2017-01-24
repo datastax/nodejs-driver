@@ -1,4 +1,10 @@
-"use strict";
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+'use strict';
 var assert = require('assert');
 var domain = require('domain');
 var dns = require('dns');
@@ -43,7 +49,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
-    it('should retrieve the cassandra version of the hosts', function (done) {
+    xit('should retrieve the cassandra version of the hosts', function (done) {
       var client = newInstance();
       client.connect(function (err) {
         if (err) {
@@ -52,9 +58,10 @@ describe('Client', function () {
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.values().forEach(function (h) {
           assert.strictEqual(typeof h.cassandraVersion, 'string');
-          assert.strictEqual(
-            h.cassandraVersion.split('.').slice(0, 2).join('.'),
-            helper.getCassandraVersion().split('.').slice(0, 2).join('.'));
+          h.cassandraVersion.split('.').slice(0, 2).forEach(function (versionPart) {
+            assert.ok(parseFloat(versionPart) > 0);
+            assert.ok(parseFloat(versionPart) < utils.maxInt);
+          });
         });
         client.shutdown(done);
       });
@@ -254,7 +261,7 @@ describe('Client', function () {
     });
   });
   describe('#connect() with auth', function () {
-    before(helper.ccmHelper.start(helper.isCassandraGreaterThan('2.1') ? 2 : 1, {
+    before(helper.ccmHelper.start(2, {
       yaml: ['authenticator:PasswordAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],
       sleep: 5000

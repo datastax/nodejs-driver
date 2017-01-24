@@ -1,7 +1,7 @@
 "use strict";
-var cassandra = require('cassandra-driver');
+var dse = require('dse-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'] });
+const client = new dse.Client({ contactPoints: ['127.0.0.1'] });
 client.connect()
   .then(function () {
     console.log('Connected, listing keyspaces:');

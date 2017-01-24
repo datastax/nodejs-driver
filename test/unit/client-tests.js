@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2016-2017 DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
 'use strict';
 var assert = require('assert');
 var util = require('util');
@@ -424,7 +430,7 @@ describe('Client', function () {
         queryOptions = o;
       };
       client.execute('Q', [], { }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name', 'graphOptions']);
     });
     it('should use the provided execution profile options', function () {
       var Client = require('../../lib/client');
@@ -442,7 +448,7 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name', 'graphOptions']);
       var previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { executionProfile: profile }, utils.noop);
@@ -464,12 +470,14 @@ describe('Client', function () {
       };
       // profile by name
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing', 'name']);
+      helper.compareProps(queryOptions, profile, Object.keys(profile),
+        ['consistency', 'loadBalancing', 'name', 'graphOptions']);
       assert.strictEqual(queryOptions.consistency, types.consistencies.all);
       var previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
-      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
+      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions),
+        ['executionProfile', 'graphOptions']);
     });
     it('should set the timestamp', function (done) {
       var actualOptions;

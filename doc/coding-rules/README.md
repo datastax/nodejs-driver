@@ -16,9 +16,9 @@ before the driver performs node discovery), the request routing policy, retry an
 Generally such settings are set once at the application level.
 
 ```javascript
-const cassandra = require('cassandra-driver');
-const DCAwareRoundRobinPolicy = cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy;
-const client = new cassandra.Client({
+const dse = require('dse-driver');
+const DCAwareRoundRobinPolicy = dse.policies.loadBalancing.DCAwareRoundRobinPolicy;
+const client = new dse.Client({
    contactPoints: ['10.1.1.3', '10.1.1.4', '10.1.1.5'], 
    policies: {
       loadBalancing: new DCAwareRoundRobinPolicy('US_EAST');

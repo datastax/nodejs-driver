@@ -7,17 +7,18 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var helper = require('../helper');
-var cassandra = require('cassandra-driver');
-var Client = require('../../lib/dse-client');
+var helper = require('../../../test-helper');
+var Client = require('../../../../lib/dse-client');
 var vdescribe = helper.vdescribe;
-var types = cassandra.types;
+var geometry = require('../../../../lib/geometry');
+var types = require('../../../../lib/types');
+var utils = require('../../../../lib/utils');
+var Point = geometry.Point;
+var LineString = geometry.LineString;
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
-var Point = require('../../lib/geometry/point');
-var utils = require('../../lib/utils');
 
-vdescribe('5.0', 'Point', function () {
+vdescribe('dse-5.0', 'LineString', function () {
   this.timeout(120000);
   before(function (done) {
     var client = new Client(helper.getOptions());
@@ -30,12 +31,13 @@ vdescribe('5.0', 'Point', function () {
         var queries = [
           "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1} and durable_writes = false",
           "use ks1",
-          "CREATE TABLE points (id text, value 'PointType', PRIMARY KEY (id))",
-          "INSERT INTO points (id, value) VALUES ('POINT(0 0)', 'POINT(0 0)')",
-          "INSERT INTO points (id, value) VALUES ('POINT(2 4)', 'POINT(2 4)')",
-          "INSERT INTO points (id, value) VALUES ('POINT(-1.2 -100)', 'POINT(-1.2 -100)')",
-          "CREATE TABLE keyed (id 'PointType', value text, PRIMARY KEY (id))",
-          "INSERT INTO keyed (id, value) VALUES ('POINT(1 0)', 'hello')"
+          "CREATE TABLE lines (id text, value 'LineStringType', PRIMARY KEY (id))",
+          "INSERT INTO lines (id, value) VALUES ('LINESTRING (0 0, 1 1)', 'LINESTRING (0 0, 1 1)')",
+          "INSERT INTO lines (id, value) VALUES ('LINESTRING (1 3, 2 6, 3 9)', 'LINESTRING (1 3, 2 6, 3 9)')",
+          "INSERT INTO lines (id, value) VALUES ('LINESTRING (-1.2 -100, 0.99 3)', 'LINESTRING (-1.2 -100, 0.99 3)')",
+          "INSERT INTO lines (id, value) VALUES ('LINESTRING EMPTY', 'LINESTRING EMPTY')",
+          "CREATE TABLE keyed (id 'LineStringType', value text, PRIMARY KEY (id))",
+          "INSERT INTO keyed (id, value) VALUES ('LINESTRING (0 0, 1 1)', 'hello')"
         ];
         utils.eachSeries(queries, function (q, eachNext) {
           client.execute(q, eachNext);
@@ -44,24 +46,30 @@ vdescribe('5.0', 'Point', function () {
       client.shutdown.bind(client)
     ], done);
   });
-  it('should parse points', function (done) {
+  it('should parse lines', function (done) {
     var client = new Client(helper.getOptions());
     utils.series([
       client.connect.bind(client),
       function test(next) {
-        client.execute('SELECT * FROM ks1.points', function (err, result) {
+        client.execute('SELECT * FROM ks1.lines', function (err, result) {
           assert.ifError(err);
           var map = helper.keyedById(result);
           [
-            ['POINT(0 0)', 0, 0],
-            ['POINT(2 4)', 2, 4],
-            ['POINT(-1.2 -100)', -1.2, -100]
+            ['LINESTRING (0 0, 1 1)', new LineString(new Point(0, 0), new Point(1, 1))],
+            ['LINESTRING (1 3, 2 6, 3 9)', new LineString(new Point(1, 3), new Point(2, 6), new Point(3, 9))],
+            ['LINESTRING (-1.2 -100, 0.99 3)', new LineString(new Point(-1.2, -100), new Point(0.99, 3))],
+            ['LINESTRING EMPTY', new LineString()]
           ]
             .forEach(function (item) {
-              var p = map[item[0]];
-              helper.assertInstanceOf(p, Point);
-              assert.strictEqual(p.x, item[1]);
-              assert.strictEqual(p.y, item[2]);
+              var l = map[item[0]];
+              helper.assertInstanceOf(l, LineString);
+              assert.strictEqual(l.points.length, item[1].points.length);
+              l.points.forEach(function (p1, i) {
+                var p2 = item[1].points[i];
+                assert.strictEqual(p1.x, p2.x);
+                assert.strictEqual(p1.y, p2.y);
+              });
+              assert.strictEqual(l.toString(), item[0]);
             });
           next();
         });
@@ -71,22 +79,22 @@ vdescribe('5.0', 'Point', function () {
   });
   [0, 1].forEach(function (prepare) {
     var name = prepare ? 'prepared' : 'simple';
-    it(util.format('should encode points for %s queries', name), function (done) {
+    it(util.format('should encode lines for %s queries', name), function (done) {
       var client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function test(next) {
           var values = [
-            new Point(1.2, 3.9),
-            new Point(-1.2, 1.9),
-            new Point(0.21222, 3122.9)
+            new LineString(new Point(1.2, 3.9), new Point(6.2, 18.9)),
+            new LineString(new Point(-1.2, 1.9), new Point(111, 22)),
+            new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9))
           ];
-          var insertQuery = 'INSERT INTO ks1.points (id, value) VALUES (?, ?)';
-          var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.points WHERE id = ?';
+          var insertQuery = 'INSERT INTO ks1.lines (id, value) VALUES (?, ?)';
+          var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.lines WHERE id = ?';
           var counter = 0;
-          utils.each(values, function (p, eachNext) {
+          utils.each(values, function (line, eachNext) {
             var id = util.format('%s-%d', name, ++counter);
-            client.execute(insertQuery, [id, p], { prepare: prepare}, function (err) {
+            client.execute(insertQuery, [id, line], { prepare: prepare }, function (err) {
               assert.ifError(err);
               client.execute(selectQuery, [id], function (err, result) {
                 assert.ifError(err);
@@ -94,7 +102,9 @@ vdescribe('5.0', 'Point', function () {
                 assert.ok(row);
                 //use json value to avoid decoding client side in this test
                 var value = JSON.parse(row['json_value']);
-                assert.deepEqual(value.coordinates, [p.x, p.y]);
+                assert.deepEqual(value.coordinates, line.points.map(function (p) {
+                  return [p.x, p.y];
+                }));
                 eachNext();
               });
             });
@@ -103,9 +113,9 @@ vdescribe('5.0', 'Point', function () {
         client.shutdown.bind(client)
       ], done);
     });
-    it(util.format('should be able to retrieve data where point is partition key for %s queries', name), function (done) {
+    it(util.format('should be able to retrieve data where line is partition key for %s queries', name), function (done) {
       var client = new Client(helper.getOptions());
-      var id = new Point(1, 0);
+      var id = new LineString(new Point(0, 0), new Point(1, 1));
       utils.series([
         client.connect.bind(client),
         function (next) {
@@ -123,8 +133,8 @@ vdescribe('5.0', 'Point', function () {
     });
   });
   describe('with collections, tuples and udts', function () {
-    var point = new Point(0, 0);
-    var point2 = new Point(1, 1);
+    var line = new LineString(new Point(0, 0), new Point(1, 1));
+    var line2 = new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9));
     before(function (done) {
       var client = new Client(helper.getOptions());
       utils.series([
@@ -132,12 +142,12 @@ vdescribe('5.0', 'Point', function () {
         function createAll(next) {
           var queries = [
             "use ks1",
-            "CREATE TYPE pointt (f text, v 'PointType')",
-            "CREATE TABLE tbl_udts (id uuid PRIMARY KEY, udt_col frozen<pointt>)",
-            "CREATE TABLE tbl_tuple (id uuid PRIMARY KEY, tuple_col tuple<int, 'PointType'>)",
-            "CREATE TABLE tbl_list (id uuid PRIMARY KEY, list_col list<'PointType'>)",
-            "CREATE TABLE tbl_set (id uuid PRIMARY KEY, set_col set<'PointType'>)",
-            "CREATE TABLE tbl_map (id uuid PRIMARY KEY, map_col map<text, 'PointType'>)"
+            "CREATE TYPE linet (f text, v 'LineStringType')",
+            "CREATE TABLE tbl_udts (id uuid PRIMARY KEY, udt_col frozen<linet>)",
+            "CREATE TABLE tbl_tuple (id uuid PRIMARY KEY, tuple_col tuple<int, 'LineStringType'>)",
+            "CREATE TABLE tbl_list (id uuid PRIMARY KEY, list_col list<'LineStringType'>)",
+            "CREATE TABLE tbl_set (id uuid PRIMARY KEY, set_col set<'LineStringType'>)",
+            "CREATE TABLE tbl_map (id uuid PRIMARY KEY, map_col map<text, 'LineStringType'>)"
           ];
           utils.eachSeries(queries, function (q, eachNext) {
             client.execute(q, eachNext);
@@ -148,17 +158,17 @@ vdescribe('5.0', 'Point', function () {
     });
     [0, 1].forEach(function (prepare) {
       var name = prepare ? 'prepared' : 'simple';
-      it(util.format('should create and retrieve points in a udt for %s queries', name), function (done) {
+      it(util.format('should create and retrieve lines in a udt for %s queries', name), function (done) {
         var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
         var selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
         var id = Uuid.random();
-        var udt = { f: 'hello', v: point};
+        var udt = { f: 'hello', v: line};
 
         utils.series([
           client.connect.bind(client),
           function (next) {
-            client.execute(insertQuery, [id, udt], {prepare: prepare, hints: [null, 'udt<ks1.pointt>']}, function (err) {
+            client.execute(insertQuery, [id, udt], {prepare: prepare, hints: [null, 'udt<ks1.linet>']}, function (err) {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);
@@ -178,17 +188,17 @@ vdescribe('5.0', 'Point', function () {
         //mark it as pending
         tupleTestCase = xit;
       }
-      tupleTestCase(util.format('should create and retrieve points in a tuple for %s queries', name), function (done) {
+      tupleTestCase(util.format('should create and retrieve lines in a tuple for %s queries', name), function (done) {
         var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
         var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
         var id = Uuid.random();
-        var tuple = new Tuple(0, point);
+        var tuple = new Tuple(0, line);
 
         utils.series([
           client.connect.bind(client),
           function (next) {
-            client.execute(insertQuery, [id, tuple], { prepare: prepare }, function (err) {
+            client.execute(insertQuery, [id, tuple], {prepare: prepare}, function (err) {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);
@@ -203,12 +213,12 @@ vdescribe('5.0', 'Point', function () {
         ], done);
       });
       ['list', 'set'].forEach(function (colType) {
-        it(util.format('should create and retrieve points in a %s for %s queries', colType, name), function (done) {
+        it(util.format('should create and retrieve lines in a %s for %s queries', colType, name), function (done) {
           var client = new Client(helper.getOptions());
           var insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
           var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
           var id = Uuid.random();
-          var data = [point, point2];
+          var data = [line, line2];
           utils.series([
             client.connect.bind(client),
             function (next) {
@@ -227,12 +237,12 @@ vdescribe('5.0', 'Point', function () {
           ], done);
         });
       });
-      it(util.format('should create and retrieve points in a map for %s queries', name), function (done) {
+      it(util.format('should create and retrieve lines in a map for %s queries', name), function (done) {
         var client = new Client(helper.getOptions());
         var insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
         var selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
         var id = Uuid.random();
-        var map = { point : point };
+        var map = { line : line };
 
         utils.series([
           client.connect.bind(client),

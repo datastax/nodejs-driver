@@ -6,15 +6,15 @@
  */
 'use strict';
 var assert = require('assert');
-var errors = require('cassandra-driver').errors;
-var helper = require('../helper.js');
+var errors = require('../../../../lib/errors');
+var helper = require('../../../test-helper');
 var vdescribe = helper.vdescribe;
-var utils = require('../../lib/utils.js');
-var Client = require('../../lib/dse-client');
-var ExecutionProfile = require('../../lib/execution-profile');
-var DefaultRetryPolicy = require('cassandra-driver').policies.retry.RetryPolicy;
+var utils = require('../../../../lib/utils');
+var Client = require('../../../../lib/dse-client');
+var ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
+var DefaultRetryPolicy = require('../../../../lib/policies/retry').RetryPolicy;
 
-vdescribe('5.0', 'graph query client timeouts', function () {
+vdescribe('dse-5.0', 'graph query client timeouts', function () {
   this.timeout(120000);
   function profiles() {
     return [

@@ -58,7 +58,7 @@ describe('Client', function () {
     var table = keyspace + '.tbl1';
     utils.series([
       helper.ccmHelper.removeIfAny,
-      helper.toTask(helper.ccmHelper.exec, null, ['create', 'test', '-v', helper.getCassandraVersion()]),
+      helper.toTask(helper.ccmHelper.exec, null, ['create', 'test', '-v', helper.getDseVersion()]),
       helper.toTask(helper.ccmHelper.exec, null, ['populate', '-n', 2]),
       helper.toTask(helper.ccmHelper.exec, null, ['node1', 'start', '--wait-for-binary-proto', '--jvm_arg=-Dcassandra.test.fail_writes_ks=' + keyspace]),
       helper.toTask(helper.ccmHelper.exec, null, ['node2', 'start', '--wait-for-binary-proto']),

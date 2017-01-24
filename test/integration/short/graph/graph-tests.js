@@ -7,22 +7,23 @@
 'use strict';
 var util = require('util');
 var assert = require('assert');
-var Client = require('../../lib/dse-client');
-var helper = require('../helper');
+var Client = require('../../../../lib/dse-client');
+var helper = require('../../../test-helper');
 var vdescribe = helper.vdescribe;
 var schemaCounter = 0;
-var Point = require('../../lib/geometry/point');
-var LineString = require('../../lib/geometry/line-string');
-var Polygon = require('../../lib/geometry/polygon');
-var cassandra = require('cassandra-driver');
-var InetAddress = cassandra.types.InetAddress;
-var Uuid = cassandra.types.Uuid;
-var cl = cassandra.types.consistencies;
-var loadBalancing = require('../../lib/policies/load-balancing');
+var geometry = require('../../../../lib/geometry');
+var Point = geometry.Point;
+var LineString = geometry.LineString;
+var Polygon = geometry.Polygon;
+var types = require('../../../../lib/types');
+var InetAddress = types.InetAddress;
+var Uuid = types.Uuid;
+var cl = types.consistencies;
+var loadBalancing = require('../../../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
-var ExecutionProfile = require('../../lib/execution-profile.js');
-var utils = require('../../lib/utils');
-var graphModule = require('../../lib/graph');
+var ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
+var utils = require('../../../../lib/utils');
+var graphModule = require('../../../../lib/graph');
 
 var makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
 
@@ -54,7 +55,7 @@ var modernGraph =
   'josh.addEdge("created", lop, "weight", 0.4f);\n' +
   'peter.addEdge("created", lop, "weight", 0.2f);';
 
-vdescribe('5.0', 'Client', function () {
+vdescribe('dse-5.0', 'Client', function () {
   this.timeout(60000);
   before(function (done) {
     var client = new Client(helper.getOptions());
@@ -421,7 +422,7 @@ vdescribe('5.0', 'Client', function () {
             assert.ifError(err);
             helper.assertInstanceOf(result, graphModule.GraphResultSet);
             var count = result.first();
-            helper.assertInstanceOf(count, cassandra.types.Long);
+            helper.assertInstanceOf(count, types.Long);
             done();
           });
         }));
@@ -779,7 +780,7 @@ vdescribe('5.0', 'Client', function () {
   });
 });
 
-vdescribe('5.0', 'Client with down node', function () {
+vdescribe('dse-5.0', 'Client with down node', function () {
   this.timeout(240000);
   before(function (done) {
     var client = new Client(helper.getOptions());
@@ -869,7 +870,7 @@ vdescribe('5.0', 'Client with down node', function () {
   });
 });
 
-vdescribe('5.0', 'Client with spark workload', function () {
+vdescribe('dse-5.0', 'Client with spark workload', function () {
   this.timeout(300000);
   before(function (done) {
     var client = new Client(helper.getOptions());
@@ -1000,6 +1001,6 @@ function wrapClient(handler, options) {
 }
 
 function newInstance(options) {
-  var opts = helper.getOptions(helper.extend(options || {}, { graphOptions : { name: 'name1' }}));
+  var opts = helper.getOptions(utils.extend(options || {}, { graphOptions : { name: 'name1' }}));
   return new Client(opts);
 }

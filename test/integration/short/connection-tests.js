@@ -47,23 +47,6 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
-    it('should open with all the protocol versions supported', function (done) {
-      var maxProtocolVersionSupported = getProtocolVersion();
-      var minProtocolVersionSupported = getMinProtocolVersion();
-      if(helper.getCassandraVersion()) {
-        var protocolVersion = minProtocolVersionSupported - 1;
-      }
-      utils.whilst(function condition() {
-        return (++protocolVersion) <= maxProtocolVersionSupported;
-      }, function iterator (next) {
-        var localCon = newInstance(null, protocolVersion);
-        localCon.open(function (err) {
-          assert.ifError(err);
-          assert.ok(localCon.connected, 'Must be status connected');
-          localCon.close(next);
-        });
-      }, done);
-    });
     it('should fail when the host does not exits', function (done) {
       var localCon = newInstance('1.1.1.1');
       localCon.open(function (err) {
@@ -234,31 +217,13 @@ function getRequest(query) {
  * @returns {number}
  */
 function getProtocolVersion() {
-  //expected protocol version
-  if (helper.getCassandraVersion().indexOf('2.1.') === 0) {
+  // expected protocol version
+  var dseVersion = helper.getDseVersion();
+  if (dseVersion.indexOf('5.0') === 0) {
+    return 4;
+  }
+  if (dseVersion.indexOf('4.8') === 0) {
     return 3;
   }
-  if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
-    return 2;
-  }
-  if (helper.getCassandraVersion().indexOf('1.') === 0) {
-    return 1;
-  }
   return 4;
-}
-
-/**
- * Gets the minimum supported protocol version for the current Cassandra version
- *
- * For < C* 3.0 returns 1.  Otherwise returns maximum supported protocol
- * version - 1.
- *
- * @returns {number}
- */
-function getMinProtocolVersion() {
-  if (helper.getCassandraVersion().indexOf('2') === 0
-    || helper.getCassandraVersion().indexOf('1') === 0) {
-    return 1;
-  }
-  return getProtocolVersion() - 1;
 }

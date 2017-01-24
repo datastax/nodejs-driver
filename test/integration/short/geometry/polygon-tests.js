@@ -7,18 +7,18 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var helper = require('../helper');
-var cassandra = require('cassandra-driver');
-var Client = require('../../lib/dse-client');
+var helper = require('../../../test-helper');
+var Client = require('../../../../lib/dse-client');
 var vdescribe = helper.vdescribe;
-var Point = require('../../lib/geometry/point');
-var Polygon = require('../../lib/geometry/polygon');
-var types = cassandra.types;
-var utils = require('../../lib/utils');
+var geometry = require('../../../../lib/geometry');
+var types = require('../../../../lib/types');
+var utils = require('../../../../lib/utils');
+var Point = geometry.Point;
+var Polygon = geometry.Polygon;
 var Uuid = types.Uuid;
 var Tuple = types.Tuple;
 
-vdescribe('5.0', 'Polygon', function () {
+vdescribe('dse-5.0', 'Polygon', function () {
   this.timeout(120000);
   before(function (done) {
     var client = new Client(helper.getOptions());

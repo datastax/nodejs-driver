@@ -35,7 +35,7 @@
   "license": "SEE LICENSE IN http://www.datastax.com/terms/datastax-dse-driver-license-terms",
   "scripts":  {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
-    "ci": "./node_modules/.bin/mocha test/unit test/integration -R mocha-jenkins-reporter",
+    "ci": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {

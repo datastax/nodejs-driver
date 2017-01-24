@@ -6,9 +6,9 @@
  */
 'use strict';
 var assert = require('assert');
-var helper = require('../helper');
-var cassandra = require('cassandra-driver');
-var DseGssAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
+var helper = require('../../../test-helper');
+var DseGssAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
+var Client = require('../../../../lib/dse-client');
 var ads = helper.ads;
 var cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
@@ -50,7 +50,7 @@ cDescribe('DseGssapiAuthProvider', function () {
       assert.ifError(err);
       var authProvider = new DseGssAuthProvider();
       var clientOptions = helper.getOptions({ authProvider: authProvider });
-      helper.connectAndQuery(new cassandra.Client(clientOptions), done);
+      helper.connectAndQuery(new Client(clientOptions), done);
     });
   });
 });

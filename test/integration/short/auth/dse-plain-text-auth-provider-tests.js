@@ -6,9 +6,9 @@
  */
 'use strict';
 var assert = require('assert');
-var helper = require('../helper');
-var cassandra = require('cassandra-driver');
-var DsePlainTextAuthProvider = require('../../lib/auth/dse-plain-text-auth-provider');
+var helper = require('../../../test-helper');
+var DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
+var Client = require('../../../../lib/dse-client');
 var vit = helper.vit;
 
 describe('DsePlainTextAuthProvider', function () {
@@ -22,7 +22,7 @@ describe('DsePlainTextAuthProvider', function () {
       assert.ifError(err);
       var authProvider = new DsePlainTextAuthProvider('cassandra', 'cassandra');
       var clientOptions = helper.getOptions({ authProvider: authProvider });
-      var client = new cassandra.Client(clientOptions);
+      var client = new Client(clientOptions);
       client.connect(function (err) {
         assert.ifError(err);
         assert.notEqual(client.hosts.length, 0);
@@ -30,7 +30,7 @@ describe('DsePlainTextAuthProvider', function () {
       });
     });
   });
-  vit('5.0', 'should authenticate against DSE 5+ DseAuthenticator', function (done) {
+  vit('dse-5.0', 'should authenticate against DSE 5+ DseAuthenticator', function (done) {
     var testClusterOptions = {
       yaml: ['authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],
@@ -40,7 +40,7 @@ describe('DsePlainTextAuthProvider', function () {
       assert.ifError(err);
       var authProvider = new DsePlainTextAuthProvider('cassandra', 'cassandra');
       var clientOptions = helper.getOptions({ authProvider: authProvider });
-      var client = new cassandra.Client(clientOptions);
+      var client = new Client(clientOptions);
       client.connect(function (err) {
         assert.ifError(err);
         assert.notEqual(client.hosts.length, 0);

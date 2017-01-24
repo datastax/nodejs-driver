@@ -6,11 +6,10 @@
  */
 'use strict';
 var assert = require('assert');
-var version = require('../../index.js').version;
-var helper = require('../helper');
-var cassandra = require('cassandra-driver');
-var Client = require('../../lib/dse-client');
-var utils = require('../../lib/utils');
+var version = require('../../../index').version;
+var helper = require('../../test-helper');
+var Client = require('../../../lib/dse-client');
+var utils = require('../../../lib/utils');
 
 describe('Client', function() {
   this.timeout(60000);
@@ -20,7 +19,7 @@ describe('Client', function() {
   after(helper.ccm.remove.bind(helper.ccm));
   it('should log the module versions on first connect only', function(done) {
     var client = new Client(helper.getOptions());
-    var versionLogRE = /Using DSE driver v(.*) with core driver v(.*)/;
+    var versionLogRE = /^Using DSE driver v(.+)$/;
     var versionMessage = undefined;
 
     client.on('log', function(level, className, message) {
@@ -37,7 +36,6 @@ describe('Client', function() {
         assert.strictEqual(versionMessage.level, 'info');
         // versions should match those from the modules.
         assert.strictEqual(versionMessage.match[1], version);
-        assert.strictEqual(versionMessage.match[2], cassandra.version);
         versionMessage = undefined;
         next();
       },

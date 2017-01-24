@@ -37,7 +37,7 @@ describe('Client', function () {
     });
     describe('#execute()', function () {
       it('should handle multiple requests in parallel with queueing', function (done) {
-        var parallelLimit = helper.isCassandraGreaterThan('2.0') ? 2100 : 200;
+        var parallelLimit = 2100;
         var client = newInstance();
         utils.series([
           client.connect.bind(client),

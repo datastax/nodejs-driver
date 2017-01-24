@@ -514,7 +514,7 @@ describe('Client', function () {
         commonTable,
         commonTable
       );
-      var params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 2562) };
+      var params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 32768) };
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

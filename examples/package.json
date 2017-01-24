@@ -2,10 +2,10 @@
   "name": "dse-driver-examples",
   "description": "Examples for the DataStax Enterprise Node.js Driver",
   "version": "0.0.1",
-  "license": "SEE LICENSE IN http://www.datastax.com/terms/datastax-dse-driver-license-terms",
+  "license": "Apache-2.0",
   "private": true,
   "dependencies": {
-    "dse-driver": "datastax/dse-driver",
+    "dse-driver": "file:../",
     "async": "^1.5.2"
   }
 }

@@ -8,10 +8,9 @@ The driver supports versions from 4.8 to 5 of [DataStax Enterprise][dse].
 
 There is a section in the [Getting Started](../getting-started/) page.
 
-### Where can I find more tutorials or documentation?
+### How do I generate a random uuid or a time-based uuid?
 
-All the functionality present in the Cassandra driver is available on the DSE driver, [any tutorial or documentation
-that references the DataStax Node.js driver for Apache Cassandra also applies to this driver][core-features].
+Use the [Uuid and TimeUuid classes](/features/datatypes/uuids) inside the types module.
 
 ### Can I use a single `Client` instance for graph and CQL?
 
@@ -27,5 +26,19 @@ your application.
 
 No, only call `client.shutdown()` once in your application's lifetime, normally when you shutdown your application.
 
+### How can I use a list of values with the IN operator in a WHERE clause?
+
+To provide a dynamic list of values in a single parameter, use the `IN` operator followed by the question mark
+placeholder without parenthesis in the query. The parameter containing the list of values should be of an instance of
+Array.
+
+For example:
+
+```javascript
+const query = 'SELECT * FROM table1 WHERE key1 = ? AND key2 IN ?';
+const key1 = 'param1';
+const allKeys2 = [ 'val1', 'val2', 'val3' ];
+client.execute(query, [ key1, allKeys2 ], { prepare: true });
+```
+
 [dse]: http://www.datastax.com/products/datastax-enterprise
-[core-features]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/

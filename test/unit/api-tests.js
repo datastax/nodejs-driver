@@ -6,17 +6,17 @@
  */
 'use strict';
 var assert = require('assert');
-var api = require('../../index.js');
-var cassandra = require('cassandra-driver');
-var helper = require('../helper');
+var api = require('../../index');
+var auth = require('../../lib/auth');
+var helper = require('../test-helper');
 
 describe('API', function () {
   it('should expose auth module', function () {
     assert.ok(api.auth);
     assert.strictEqual(typeof api.auth.DsePlainTextAuthProvider, 'function');
-    assert.ok(new api.auth.DsePlainTextAuthProvider('u', 'pass') instanceof cassandra.auth.AuthProvider);
+    assert.ok(new api.auth.DsePlainTextAuthProvider('u', 'pass') instanceof auth.AuthProvider);
     if (helper.requireOptional('kerberos')) {
-      assert.ok(new api.auth.DseGssapiAuthProvider() instanceof cassandra.auth.AuthProvider);
+      assert.ok(new api.auth.DseGssapiAuthProvider() instanceof auth.AuthProvider);
     }
   });
   it('should expose geometry module', function () {

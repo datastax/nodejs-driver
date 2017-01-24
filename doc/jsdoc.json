@@ -7,15 +7,15 @@
       "lib/geometry",
       "lib/graph",
       "lib/policies",
-      "node_modules/cassandra-driver/lib/client.js",
-      "node_modules/cassandra-driver/lib/errors.js",
-      "node_modules/cassandra-driver/lib/host.js",
-      "node_modules/cassandra-driver/lib/metadata",
-      "node_modules/cassandra-driver/lib/policies/address-resolution.js",
-      "node_modules/cassandra-driver/lib/policies/load-balancing.js",
-      "node_modules/cassandra-driver/lib/policies/retry.js",
-      "node_modules/cassandra-driver/lib/policies/reconnection.js",
-      "node_modules/cassandra-driver/lib/types"
+      "lib/client.js",
+      "lib/errors.js",
+      "lib/host.js",
+      "lib/metadata",
+      "lib/policies/address-resolution.js",
+      "lib/policies/load-balancing.js",
+      "lib/policies/retry.js",
+      "lib/policies/reconnection.js",
+      "lib/types"
     ]
   },
   "templates": {

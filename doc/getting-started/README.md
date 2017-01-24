@@ -1,9 +1,3 @@
-*This is the documentation for the DataStax Enterprise Node.js Driver for [DSE][dse]. This driver is built on top of the
-[DataStax Node.js driver for Apache Cassandra][core-driver] and enhanced for the adaptive data management and mixed
-workload capabilities provided by [DataStax Enterprise][dse]. Therefore a lot of the underlying concepts are the same
-and to keep this documentation focused we will be linking to the relevant sections of the [DataStax Node.js driver
-for Apache Cassandra][core-driver-docs] documentation where necessary.*
-
 # Getting started
 
 Getting started with the Node.js driver for DataStax Enterprise.
@@ -81,7 +75,5 @@ client.executeGraph('g.V().count()', null, { executionProfile: 'graph' });
 ```
 
 [dse]: http://www.datastax.com/products/datastax-enterprise
-[core-driver]: https://github.com/datastax/nodejs-driver-dse
-[core-driver-docs]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
 [core-features]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/
 [core-getting-started]: http://docs.datastax.com/en/developer/nodejs-driver/latest/getting-started/

@@ -14,6 +14,10 @@ sections:
     prefix:   /getting-started
     type:     markdown
     files:    'doc/getting-started/**/*.md'
+  - title:    Three simple rules for coding with the driver
+    prefix:   /coding-rules
+    type:     markdown
+    files:    'doc/coding-rules/**/*.md'
 links:
   - title: Code
     href:  https://github.com/datastax/nodejs-driver/

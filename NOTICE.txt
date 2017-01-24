@@ -1,0 +1,4 @@
+Integer provided by The Closure Library from
+https://github.com/google/closure-library/
+under the Apache License 2.0.
+Copyright (c) 2010 Google Inc.

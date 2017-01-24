@@ -1,0 +1,26 @@
+environment:
+  ci_type: ci_unit
+  matrix:
+    - nodejs_version: 6
+      TEST_CASSANDRA_VERSION: 3.0.9
+      ci_type: ci
+    - nodejs_version: 5
+    - nodejs_version: 4
+    - nodejs_version: 0.12
+    - nodejs_version: 0.10
+os: Previous Visual Studio 2015
+platform:
+  - x64
+install:
+  - ps: .\ci\hardwareinfo.ps1
+  - ps: .\ci\appveyor.ps1
+  - npm install
+build: off
+test_script:
+  - "npm run %ci_type%"
+on_finish:
+  - ps: .\ci\hardwareinfo.ps1
+cache:
+  - node_modules -> package.json
+  - C:\Users\appveyor\.ccm\repository
+  - C:\Users\appveyor\deps -> .\ci\appveyor.ps1

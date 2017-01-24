@@ -6,25 +6,23 @@
  */
 'use strict';
 var assert = require('assert');
-var cassandra = require('cassandra-driver');
-
 var Client = require('../../lib/dse-client');
-var ExecutionProfile = require('../../lib/execution-profile');
-var helper = require('../helper');
-var types = cassandra.types;
+var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
+var helper = require('../test-helper');
+var types = require('../../lib/types');
 var Long = types.Long;
 var utils = require('../../lib/utils');
 var policies = require('../../lib/policies');
-var errors = cassandra.errors;
+var errors = require('../../lib/errors');
 var DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
 
 describe('Client', function () {
   describe('constructor', function () {
     it('should validate options', function () {
       assert.throws(function () {
-        //noinspection JSCheckFunctionSignatures
+        // eslint-disable-next-line
         new Client();
-      }, cassandra.errors.ArgumentError);
+      }, errors.ArgumentError);
     });
     it('should set DseLoadBalancingPolicy as default', function () {
       var client = new Client({ contactPoints: ['host1'] });
@@ -90,16 +88,16 @@ describe('Client', function () {
       var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       assert.doesNotThrow(function () {
-        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop);
       });
       assert.throws(function () {
-        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop)
+        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop);
       }, TypeError);
     });
     it('should not allow a array query parameters', function () {
       var client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
-      client.executeGraph('Q1', [], {  }, function (err) {
+      client.executeGraph('Q1', [], { }, function (err) {
         helper.assertInstanceOf(err, TypeError);
         assert.strictEqual(err.message, 'Parameters must be a Object instance as an associative array');
       });
@@ -124,7 +122,7 @@ describe('Client', function () {
         assert.strictEqual(typeof callback, 'function');
         done();
       };
-      client.executeGraph('Q3', { a: 1}, helper.throwOp);
+      client.executeGraph('Q3', { a: 1}, helper.throwop);
     });
     it('should execute with all parameters defined', function (done) {
       var client = new Client({ contactPoints: ['host1']});
@@ -137,7 +135,7 @@ describe('Client', function () {
         assert.strictEqual(typeof callback, 'function');
         done();
       };
-      client.executeGraph('Q4', { a: 2}, optionsParameter, helper.throwOp);
+      client.executeGraph('Q4', { a: 2}, optionsParameter, helper.throwop);
     });
     it('should set the same default options when not set', function (done) {
       var client = new Client({ contactPoints: ['host1']});
@@ -161,7 +159,7 @@ describe('Client', function () {
         graphOptions: {
           name: 'name1',
           source: 'a1',
-          readConsistency: cassandra.types.consistencies.localOne
+          readConsistency: types.consistencies.localOne
         }
       });
       var optionsParameter = { anotherOption: { k: 'v'}};
@@ -169,7 +167,7 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
       assert.notStrictEqual(optionsParameter, actualOptions);
       //shallow copy the properties
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
@@ -186,7 +184,7 @@ describe('Client', function () {
         contactPoints: ['host1'],
         graphOptions: {
           source: 'x',
-          writeConsistency: cassandra.types.consistencies.two
+          writeConsistency: types.consistencies.two
         }
       });
       var actualOptions = null;
@@ -194,7 +192,7 @@ describe('Client', function () {
         actualOptions = options;
       };  
       //with options defined
-      client.executeGraph('Q10', { c: 0}, { }, helper.throwOp);
+      client.executeGraph('Q10', { c: 0}, { }, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -203,7 +201,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'TWO');
       assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
       //with payload defined
-      client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': new Buffer('zValue')} }, helper.throwOp);
+      client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': new Buffer('zValue')} }, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -211,7 +209,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['z'], 'zValue');
       assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
       //with timeout defined
-      client.executeGraph('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwOp);
+      client.executeGraph('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -220,7 +218,7 @@ describe('Client', function () {
       assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(9999)));
       assert.strictEqual(actualOptions.readTimeout, 9999);
       //without options defined
-      client.executeGraph('Q10', { c: 0}, helper.throwOp);
+      client.executeGraph('Q10', { c: 0}, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -238,16 +236,16 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q5', { c: 0}, helper.throwOp);
+      client.executeGraph('Q5', { c: 0}, helper.throwop);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'g');
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name10');
       assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
       var optionsParameter = {
-        graphReadConsistency: cassandra.types.consistencies.localQuorum
+        graphReadConsistency: types.consistencies.localQuorum
       };
-      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
       assert.notStrictEqual(optionsParameter, actualOptions);
       //shallow copy the properties
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
@@ -256,9 +254,9 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_QUORUM');
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
       optionsParameter = {
-        graphWriteConsistency: cassandra.types.consistencies.quorum
+        graphWriteConsistency: types.consistencies.quorum
       };
-      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwOp);
+      client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
       assert.notStrictEqual(optionsParameter, actualOptions);
       //shallow copy the properties
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
@@ -279,8 +277,8 @@ describe('Client', function () {
         assert.ok(options.customPayload);
         actualOptions.push(options);
       };
-      client.executeGraph('Q5', { a: 1}, optionsParameter, helper.throwOp);
-      client.executeGraph('Q6', { b: 1}, optionsParameter, helper.throwOp);
+      client.executeGraph('Q5', { a: 1}, optionsParameter, helper.throwop);
+      client.executeGraph('Q6', { b: 1}, optionsParameter, helper.throwop);
       assert.strictEqual(actualOptions.length, 2);
       assert.notStrictEqual(actualOptions[0], actualOptions[1]);
       assert.strictEqual(actualOptions[0].customPayload, actualOptions[1].customPayload);
@@ -304,7 +302,7 @@ describe('Client', function () {
         assert.deepEqual(options.customPayload['graph-name'], new Buffer('namespace2'));
         done();
       };
-      client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwOp);
+      client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwop);
     });
     it('should set the options according to default profile', function () {
       var client = new Client({
@@ -327,7 +325,7 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', { 'x': 1 }, null, helper.throwOp);
+      client.executeGraph('Q', { 'x': 1 }, null, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'groovy1');
@@ -365,7 +363,7 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwOp);
+      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-source'], 'aaa');
@@ -374,13 +372,13 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
       assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(99000)));
       var lastOptions = actualOptions;
-      client.executeGraph('Q2', { 'x': 2 }, optionsParameter, helper.throwOp);
+      client.executeGraph('Q2', { 'x': 2 }, optionsParameter, helper.throwop);
       assert.notStrictEqual(actualOptions, lastOptions);
       // Reusing same customPayload instance
       assert.strictEqual(actualOptions.customPayload, lastOptions.customPayload);
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
       optionsParameter.retry = new policies.retry.RetryPolicy();
-      client.executeGraph('Q2', { 'x': 3 }, optionsParameter, helper.throwOp);
+      client.executeGraph('Q2', { 'x': 3 }, optionsParameter, helper.throwop);
       assert.strictEqual(actualOptions.retry, optionsParameter.retry);
     });
     it('should let the core driver deal with profile specified not found', function () {
@@ -402,7 +400,7 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwOp);
+      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(!actualOptions.customPayload);
       assert.strictEqual(actualOptions.executionProfile, 'profile-x');
@@ -426,16 +424,16 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', null, null, helper.throwOp);
+      client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy1);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy3);
-      client.executeGraph('Q', null, { retry: retryPolicy3 }, helper.throwOp);
+      client.executeGraph('Q', null, { retry: retryPolicy3 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy3);
     });
@@ -455,19 +453,19 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', null, null, helper.throwOp);
+      client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
-      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwop);
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy1);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
-      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwOp);
+      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
@@ -486,19 +484,19 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', null, null, helper.throwOp);
+      client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
-      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwop);
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy1);
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
-      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwOp);
+      client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
@@ -515,10 +513,10 @@ describe('Client', function () {
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
-      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwOp);
+      client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions && actualOptions.customPayload);
       assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'lolcode');
-      client.executeGraph('Q', null, null, helper.throwOp);
+      client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions && actualOptions.customPayload);
       assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'gremlin-groovy');
     });
@@ -594,7 +592,7 @@ describe('Client', function () {
       });
       it('should call address translator', function (done) {
         var translatorCalled = 0;
-        var translator = new cassandra.policies.addressResolution.AddressTranslator();
+        var translator = new policies.addressResolution.AddressTranslator();
         translator.translate = function (ip, port, cb) {
           translatorCalled++;
           cb(ip + ':' + port);

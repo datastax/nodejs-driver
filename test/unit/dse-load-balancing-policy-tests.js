@@ -7,10 +7,10 @@
 'use strict';
 var assert = require('assert');
 var util = require('util');
-var cassandra = require('cassandra-driver');
+var types = require('../../lib/types');
 var loadBalancing = require('../../lib/policies/load-balancing');
 var DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
-var helper = require('../helper');
+var helper = require('../test-helper');
 
 describe('DseLoadBalancingPolicy', function () {
   describe('constructor', function () {
@@ -46,15 +46,15 @@ describe('DseLoadBalancingPolicy', function () {
       var hosts = [ 'h1', 'h2', 'h3'];
       var childPolicy = new TestLoadBalancingPolicy(hosts);
       childPolicy.getDistance = function () {
-        return cassandra.types.distance.ignored;
+        return types.distance.ignored;
       };
       var lbp = DseLoadBalancingPolicy.createAsWrapper(childPolicy);
       lbp.newQueryPlan('ks1', { preferredHost: 'h0' }, function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
         iteratorToArray(iterator);
-        assert.strictEqual(lbp.getDistance('h0'), cassandra.types.distance.local);
-        assert.strictEqual(lbp.getDistance('h_not_exist'), cassandra.types.distance.ignored);
+        assert.strictEqual(lbp.getDistance('h0'), types.distance.local);
+        assert.strictEqual(lbp.getDistance('h_not_exist'), types.distance.ignored);
         done();
       });
     });
@@ -97,7 +97,7 @@ function arrayIterator (arr) {
     if (index >= arr.length) {
       return { done: true };
     }
-    return { value: arr[index++], done: false}
+    return { value: arr[index++], done: false };
   }};
 }
 

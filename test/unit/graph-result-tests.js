@@ -6,8 +6,7 @@
  */
 'use strict';
 var assert = require('assert');
-var cassandra = require('cassandra-driver');
-var helper = require('../helper');
+var ResultSet = require('../../lib/types/result-set');
 var GraphResultSet = require('../../lib/graph/result-set');
 
 var resultVertex = getResultSet([ {
@@ -87,7 +86,6 @@ describe('GraphResultSet', function () {
   });
   //noinspection JSUnresolvedVariable
   if (typeof Symbol !== 'undefined' && typeof Symbol.iterator === 'symbol') {
-    console.log('hello symbol!');
     describe('@@iterator', function () {
       it('should be iterable', function () {
         var result = new GraphResultSet(resultEdge);
@@ -112,5 +110,5 @@ describe('GraphResultSet', function () {
  * @returns {ResultSet}
  */
 function getResultSet(rows) {
-  return new cassandra.types.ResultSet({ rows: rows }, null, null, null);
+  return new ResultSet({ rows: rows }, null, null, null);
 }

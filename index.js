@@ -4,19 +4,23 @@
  * Please see the license for details:
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
-var cassandra = require('cassandra-driver');
-
-module.exports = {
-  auth: require('./lib/auth'),
-  Client: require('./lib/dse-client'),
-  geometry: require('./lib/geometry'),
-  graph: require('./lib/graph'),
-  //export cassandra driver modules
-  Encoder: cassandra.Encoder,
-  errors: cassandra.errors,
-  ExecutionProfile: require('./lib/execution-profile'),
-  metadata: cassandra.metadata,
-  policies: cassandra.policies,
-  types: cassandra.types,
-  version: require('./package.json').version
+'use strict';
+var clientOptions = require('./lib/client-options');
+exports.Client = require('./lib/dse-client');
+exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
+exports.types = require('./lib/types');
+exports.errors = require('./lib/errors');
+exports.policies = require('./lib/policies');
+exports.auth = require('./lib/auth');
+var Metadata = require('./lib/metadata');
+exports.metadata = { Metadata: Metadata };
+exports.Encoder = require('./lib/encoder');
+exports.geometry = require('./lib/geometry');
+exports.graph = require('./lib/graph');
+/**
+ * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+ */
+exports.defaultOptions = function () {
+  return clientOptions.defaultOptions();
 };
+exports.version = require('./package.json').version;

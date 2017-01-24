@@ -9,3 +9,9 @@ sudo: false
 cache:
   directories:
     - node_modules
+script:
+  - if [ "$TRAVIS_NODE_VERSION" != "0.10" ] && [ "$TRAVIS_NODE_VERSION" != "0.12" ]; then
+      npm install -g eslint;
+      npm run eslint;
+    fi
+  - npm test

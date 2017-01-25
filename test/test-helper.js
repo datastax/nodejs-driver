@@ -661,10 +661,11 @@ var helper = {
    * alternative is to do a GET on http://master:7080/ and do a regular expression match to resolve the number of
    * active workers.  This could be somewhat fragile and break easily in future releases.
    *
+   * @param {Client} client client instace that contains host metadata (used for resolving master address).
    * @param {Number} expectedWorkers The number of workers expected.
    * @param {Function} callback Invoked after expectedWorkers found or at least 100 seconds have passed.
    */
-  waitForWorkers: function(expectedWorkers, callback) {
+  waitForWorkers: function(client, expectedWorkers, callback) {
     helper.trace("Waiting for %d spark workers", expectedWorkers);
     var workerRE = /Alive Workers:.*(\d+)<\/li>/;
     var numWorkers = 0;
@@ -677,28 +678,34 @@ var helper = {
       function(cb) {
         setTimeout(function() {
           var errored = false;
-          var req = http.get({host: 'localhost', port: 7080, path: '/'}, function(response) {
-            var body = '';
-            response.on('data', function (data) {
-              body += data;
+          // resolve master each time in oft chance it changes (highly unlikely).
+          helper.findSparkMaster(client, function(err, master) {
+            if(err) {
+              cb();
+            }
+            var req = http.get({host: master, port: 7080, path: '/'}, function(response) {
+              var body = '';
+              response.on('data', function (data) {
+                body += data;
+              });
+              response.on('end', function () {
+                var match = body.match(workerRE);
+                if (match) {
+                  numWorkers = parseFloat(match[1]);
+                  helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
+                } else {
+                  helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
+                }
+                if (!errored) {
+                  cb();
+                }
+              });
             });
-            response.on('end', function () {
-              var match = body.match(workerRE);
-              if (match) {
-                numWorkers = parseFloat(match[1]);
-                helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
-              } else {
-                helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
-              }
-              if (!errored) {
-                cb();
-              }
+            req.on('error', function (err) {
+              errored = true;
+              helper.trace("(%d/%d) Got error while fetching workers.", attempts+1, maxAttempts, err);
+              cb();
             });
-          });
-          req.on('error', function (err) {
-            errored = true;
-            helper.trace("(%d/%d) Got error while fetching workers.", attempts+1, maxAttempts, err);
-            cb();
           });
         }, 100);
       }, function complete() {

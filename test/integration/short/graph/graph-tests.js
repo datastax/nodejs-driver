@@ -902,7 +902,7 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
       function waitForWorkers(next) {
         // Wait for master to come online before altering keyspace as it needs to meet LOCAL_QUORUM CL to start, and
         // that can't be met with 1/NUM_NODES available.
-        helper.waitForWorkers(1, next);
+        helper.waitForWorkers(client, 1, next);
       },
       function updateDseLeases(next) {
         // Set the dse_leases keyspace to RF of 2, this will prevent election of new job tracker until all nodes
@@ -921,7 +921,7 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
         helper.ccm.startNode(2, next);
       },
       function waitForWorkers(next) {
-        helper.waitForWorkers(2, next);
+        helper.waitForWorkers(client, 2, next);
       },
       function createSchema(next) {
         client.executeGraph(modernSchema, null, {graphName: "name1"}, next);

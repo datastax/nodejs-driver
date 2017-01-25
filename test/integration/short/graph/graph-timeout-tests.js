@@ -62,7 +62,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
   });
   describe('when readTimeout not set on profile or graphOptions', function() {
     it('should not encounter a client timeout and instead depend on server timeout', function (done) {
-      var serverTimeoutErrRE = /^script evaluation exceeded.*?of (\d+) ms/i;
+      var serverTimeoutErrRE = /^script evaluation exceeded.*\s+(\d+) ms/i;
       // the read timeout on socket options should be completely ignored.
       var client = newInstance({socketOptions: {readTimeout: 1000}, graphOptions: {name: 'name1', source: '1sectimeout'}});
       utils.series([

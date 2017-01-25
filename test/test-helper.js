@@ -870,7 +870,12 @@ helper.ccm.bootstrapNode = function (nodeIndex, callback) {
 
 helper.ccm.decommissionNode = function (nodeIndex, callback) {
   helper.trace('decommissioning node', nodeIndex);
-  helper.ccm.exec(['node' + nodeIndex, 'decommission'], callback);
+  var args = ['node' + nodeIndex, 'decommission'];
+  // Special case for C* 3.12+, DSE 5.1+, force decommission (see CASSANDRA-12510)
+  if (helper.isDseGreaterThan('5.1')) {
+    args.push('--force');
+  }
+  helper.ccm.exec(args, callback);
 };
 
 /**

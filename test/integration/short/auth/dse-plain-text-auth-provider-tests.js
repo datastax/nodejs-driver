@@ -15,7 +15,7 @@ describe('DsePlainTextAuthProvider', function () {
   this.timeout(60000);
   it('should authenticate against DSE daemon instance', function (done) {
     var testClusterOptions = {
-      yaml: ['authenticator: PasswordAuthenticator'],
+      yaml: ['authenticator:PasswordAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0']
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
@@ -32,9 +32,9 @@ describe('DsePlainTextAuthProvider', function () {
   });
   vit('dse-5.0', 'should authenticate against DSE 5+ DseAuthenticator', function (done) {
     var testClusterOptions = {
-      yaml: ['authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator'],
+      yaml: ['authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],
-      dseYaml: ['authentication_options.default_scheme: internal']
+      dseYaml: ['authentication_options.default_scheme:internal']
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);

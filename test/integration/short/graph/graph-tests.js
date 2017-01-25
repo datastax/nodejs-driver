@@ -713,6 +713,15 @@ vdescribe('dse-5.0', 'Client', function () {
         });
       });
     });
+
+   // In DSE 5.1 geo types must now bounded in the graph schema, however
+   // older versions of DSE do not support this, so the type must be conditionally
+   // derived.
+    var is51 = helper.isDseGreaterThan('5.1');
+    var pointType = is51 ? 'Point().withBounds(-40, -40, 40, 40)' : 'Point()';
+    var lineType = is51 ? 'Linestring().withGeoBounds()' : 'Linestring()';
+    var polygonType = is51 ? 'Polygon().withGeoBounds()' : 'Polygon()';
+
     [
       // Validate that all supported property types by DSE graph are properly encoded / decoded.
       ['Boolean()', [true, false]],
@@ -729,9 +738,9 @@ vdescribe('dse-5.0', 'Client', function () {
       ['Text()', ["", "75", "Lorem Ipsum"]],
       ['Uuid()', [Uuid.random()]],
       ['Inet()', [InetAddress.fromString("127.0.0.1"), InetAddress.fromString("::1"), InetAddress.fromString("2001:db8:85a3:0:0:8a2e:370:7334")], ["127.0.0.1", "0:0:0:0:0:0:0:1", "2001:db8:85a3:0:0:8a2e:370:7334"]],
-      ['Point()', [new Point(0, 1).toString(), new Point(-5, 20).toString()]],
-      ['Linestring()', [new LineString(new Point(30, 10), new Point(10, 30), new Point(40, 40)).toString()]],
-      ['Polygon()', [new Polygon(
+      [pointType, [new Point(0, 1).toString(), new Point(-5, 20).toString()]],
+      [lineType, [new LineString(new Point(30, 10), new Point(10, 30), new Point(40, 40)).toString()]],
+      [polygonType, [new Polygon(
         [new Point(35, 10), new Point(45, 45), new Point(15, 40), new Point(10, 20), new Point(35, 10)],
         [new Point(20, 30), new Point(35, 35), new Point(30, 20), new Point(20, 30)]
       ).toString()]]

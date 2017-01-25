@@ -7,6 +7,7 @@
 'use strict';
 var assert = require('assert');
 var Client = require('../../lib/dse-client');
+var clientOptions = require('../../lib/client-options');
 var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 var helper = require('../test-helper');
 var types = require('../../lib/types');
@@ -303,6 +304,26 @@ describe('Client', function () {
         done();
       };
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwop);
+    });
+    it('should set the payload with the user/role provided', function () {
+      var client = new Client({ contactPoints: ['host1'], graphOptions: {
+        name: 'name2'
+      }});
+      var actualOptions = null;
+      client.execute = function (q, p, options) {
+        actualOptions = options;
+      };
+      client.executeGraph('Q5', { 'x': 1 }, null, helper.throwop);
+      assert.ok(actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name2');
+      assert.strictEqual(actualOptions.customPayload[clientOptions.proxyExecuteKey], undefined);
+      var previousPayload = actualOptions.customPayload;
+      client.executeGraph('Q5', { 'x': 1 }, { executeAs: 'alice' }, helper.throwop);
+      assert.notStrictEqual(previousPayload, actualOptions.customPayload);
+      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name2');
+      helper.assertBufferString(actualOptions.customPayload[clientOptions.proxyExecuteKey], 'alice');
     });
     it('should set the options according to default profile', function () {
       var client = new Client({

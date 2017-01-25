@@ -22,7 +22,7 @@ var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
 
 describe('Client', function () {
-  this.timeout(120000);
+  this.timeout(180000);
   describe('#connect()', function () {
     var useLocalhost;
     before(helper.ccmHelper.start(3));

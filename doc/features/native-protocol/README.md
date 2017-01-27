@@ -11,9 +11,11 @@ By default, the driver uses the highest protocol version supported by the driver
 to limit the protocol version to use, you do so in the protocol options.
 
 ```javascript
-const client = new Client({
-   contactPoints: ['1.2.3.4'],
-   protocolOptions: { maxVersion: 2}
+const cassandra = require('cassandra-driver');
+const protocolVersion = cassandra.types.protocolVersion;
+const client = new cassandra.Client({
+   contactPoints: [ 'host1', 'host2' ],
+   protocolOptions: { maxVersion: protocolVersion.v3 }
 });
 ```
 
@@ -34,14 +36,17 @@ version when initializing the client:
 
 ```javascript
 const client = new Client({
-   contactPoints: ['1.2.3.4'],
-   protocolOptions: { maxVersion: 2}
+   contactPoints: [ 'host1', 'host2' ],
+   protocolOptions: { maxVersion: protocolVersion.v2 }
 });
 ```
 
 And switching it to the highest protocol version once the upgrade is completed, by leaving the maximum protocol version
-unspecified:
+unspecified or by using `protocolVersion.maxSupported`:
 
 ```javascript
-const client = new Client({ contactPoints: ['1.2.3.4'] });
+const client = new Client({
+   contactPoints: [ 'host1', 'host2' ],
+   protocolOptions: { maxVersion: protocolVersion.maxSupported }
+});
 ```

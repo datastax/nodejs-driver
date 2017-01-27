@@ -36,6 +36,16 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    vit('3.0', 'should callback in error when protocol version is not supported server side', function (done) {
+      // Attempting to connect with protocol v2
+      var localCon = newInstance(null, 2);
+      localCon.open(function (err) {
+        helper.assertInstanceOf(err, Error);
+        assert.ok(!localCon.connected);
+        helper.assertContains(err.message, 'protocol version');
+        localCon.close(done);
+      });
+    });
     vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
       var options = utils.extend({}, defaultOptions);
       options.protocolOptions.maxVersion = getProtocolVersion() - 1;

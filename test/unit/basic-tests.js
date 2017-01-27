@@ -717,6 +717,20 @@ describe('clientOptions', function () {
         });
       });
     });
+    it('should validate protocolOptions.maxVersion', function () {
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          protocolOptions: { maxVersion: '1' }
+        });
+      }, TypeError);
+      assert.throws(function () {
+        clientOptions.extend({
+          contactPoints: ['host1'],
+          protocolOptions: { maxVersion: 16 }
+        });
+      }, TypeError);
+    });
   });
   describe('#defaultOptions()', function () {
     var options = clientOptions.defaultOptions();

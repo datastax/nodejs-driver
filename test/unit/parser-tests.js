@@ -116,9 +116,11 @@ describe('Parser', function () {
     it('should read a RESULT result with trace id chunked', function (done) {
       var parser = newInstance();
       var responseCounter = 0;
+      var byRowCompleted = false;
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
+        byRowCompleted = item.byRowCompleted;
         responseCounter++;
       });
 
@@ -132,6 +134,7 @@ describe('Parser', function () {
         offset: 0
       }, null, doneIfError(done));
       assert.strictEqual(responseCounter, 1);
+      assert.notEqual(byRowCompleted, true);
       parser.setOptions(88, { byRow: true });
       for (var i = 0; i < body.length; i++) {
         parser._transform({
@@ -140,7 +143,8 @@ describe('Parser', function () {
           offset: 0
         }, null, doneIfError(done));
       }
-      assert.strictEqual(responseCounter, 2);
+      assert.strictEqual(responseCounter, 3);
+      assert.ok(byRowCompleted);
       done();
     });
     it('should read a VOID result with warnings and custom payload', function (done) {
@@ -380,10 +384,15 @@ describe('Parser', function () {
     describe('with multiple chunk lengths', function () {
       var parser = newInstance();
       var result;
+      var byRowCompleted;
       parser.on('readable', function () {
         var item;
         while ((item = parser.read())) {
           if (!item.row && item.frameEnded) {
+            continue;
+          }
+          byRowCompleted = item.byRowCompleted;
+          if (byRowCompleted) {
             continue;
           }
           assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -394,6 +403,7 @@ describe('Parser', function () {
       });
       [1, 3, 5, 13].forEach(function (chunkLength) {
         it('should emit rows chunked with chunk length of ' + chunkLength, function () {
+          byRowCompleted = 'hello';
           result = {};
           var expected = [
             { columnLength: 3, rowLength: 10 },
@@ -434,6 +444,8 @@ describe('Parser', function () {
           for (var i = 0; i < items.length; i++) {
             transformChunkedItem(i);
           }
+
+          assert.ok(byRowCompleted);
           //assert result
           expected.forEach(function (expectedItem, index) {
             assert.ok(result[index], 'Result not found for index ' + index);
@@ -447,10 +459,15 @@ describe('Parser', function () {
       var parser = newInstance();
       protocol.pipe(parser);
       var result;
+      var byRowCompleted;
       parser.on('readable', function () {
         var item;
         while ((item = parser.read())) {
           if (!item.row && item.frameEnded) {
+            continue;
+          }
+          byRowCompleted = item.byRowCompleted;
+          if (byRowCompleted) {
             continue;
           }
           assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -482,6 +499,7 @@ describe('Parser', function () {
             }
             protocol._transform(buffer.slice(j, end), null, helper.throwop);
           }
+          assert.ok(byRowCompleted);
           //assert result
           expected.forEach(function (expectedItem, index) {
             assert.ok(result[index], 'Result not found for index ' + index);
@@ -629,11 +647,15 @@ describe('Parser', function () {
       var parser = newInstance();
       var rowLength = 2;
       var rowCounter = 0;
+      var byRowCompleted = false;
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
-        assert.ok(item.row);
-        rowCounter++;
+        byRowCompleted = item.byRowCompleted;
+        if (!item.byRowCompleted) {
+          assert.ok(item.row);
+          rowCounter++;
+        }
       });
       //12 is the stream id used by the header helper by default
       parser.setOptions(12, { byRow: true });
@@ -642,8 +664,10 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 55), null, doneIfError(done));
       assert.strictEqual(rowCounter, 1);
+      assert.notEqual(byRowCompleted, true);
       parser._transform(getBodyChunks(3, rowLength, 55, null), null, doneIfError(done));
       assert.strictEqual(rowCounter, 2);
+      assert.ok(byRowCompleted);
       done();
     });
   });

@@ -11,6 +11,7 @@ var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');
+var protocolVersion = require('../../../lib/types').protocolVersion;
 var helper = require('../../test-helper.js');
 var vit = helper.vit;
 
@@ -48,7 +49,7 @@ describe('Connection', function () {
     });
     vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
       var options = utils.extend({}, defaultOptions);
-      options.protocolOptions.maxVersion = getProtocolVersion() - 1;
+      options.protocolOptions.maxVersion = protocolVersion.getLowerSupported(getProtocolVersion());
       var localCon = newInstance(null, null, options);
       localCon.open(function (err) {
         assert.ifError(err);
@@ -229,11 +230,14 @@ function getRequest(query) {
 function getProtocolVersion() {
   // expected protocol version
   var dseVersion = helper.getDseVersion();
+  if (dseVersion.indexOf('5.1') === 0) {
+    return protocolVersion.dseV1;
+  }
   if (dseVersion.indexOf('5.0') === 0) {
-    return 4;
+    return protocolVersion.v4;
   }
   if (dseVersion.indexOf('4.8') === 0) {
-    return 3;
+    return protocolVersion.v3;
   }
   return 4;
 }

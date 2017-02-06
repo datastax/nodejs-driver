@@ -722,7 +722,7 @@ vdescribe('dse-5.0', 'Client', function () {
     var lineType = is51 ? 'Linestring().withGeoBounds()' : 'Linestring()';
     var polygonType = is51 ? 'Polygon().withGeoBounds()' : 'Polygon()';
 
-    [
+    var values = [
       // Validate that all supported property types by DSE graph are properly encoded / decoded.
       ['Boolean()', [true, false]],
       ['Int()', [2147483647, -2147483648, 0, 42]],
@@ -744,7 +744,15 @@ vdescribe('dse-5.0', 'Client', function () {
         [new Point(35, 10), new Point(45, 45), new Point(15, 40), new Point(10, 20), new Point(35, 10)],
         [new Point(20, 30), new Point(35, 35), new Point(30, 20), new Point(20, 30)]
       ).toString()]]
-    ].forEach(function (args) {
+    ];
+    if (is51) {
+      values.push.apply(values, [
+        ['Date()', [ new types.LocalDate(2017, 2, 3), new types.LocalDate(-5, 2, 8) ]],
+        //TODO: Wait for DSP-12318 to be resolved
+        //['Time()', [ types.LocalTime.fromString('4:53:03.000000021') ]]
+      ]);
+    }
+    values.forEach(function (args) {
       var id = schemaCounter++;
       var propType = args[0];
       var input = args[1];
@@ -772,7 +780,7 @@ vdescribe('dse-5.0', 'Client', function () {
                 // Ensure the vertex is retrievable.
                 // make an exception for Blob type as retrieval by property value does not currently work (DSP-10145).
                 // TODO: Fix when DSP-10145 is fixed.
-                var query = propType === 'Blob()' ?
+                var query = propType === 'Time()' ?
                     "g.V().hasLabel(vertexLabel).has(propertyName)" :
                     "g.V().hasLabel(vertexLabel).has(propertyName, val)";
                 client.executeGraph(query, params, null, function (err, result) {

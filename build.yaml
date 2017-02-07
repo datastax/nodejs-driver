@@ -31,12 +31,12 @@ nodejs:
 os:
   - ubuntu/trusty64
 cassandra:
-  - 1.2
-  - 2.0
-  - 2.1
-  - 2.2
-  - 3.0
-  - 3.9
+  - '1.2'
+  - '2.0'
+  - '2.1'
+  - '2.2'
+  - '3.0'
+  - '3.10'
 build:
   - type: envinject
     properties: |

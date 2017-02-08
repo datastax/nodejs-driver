@@ -7,6 +7,7 @@ var types = require('../lib/types');
 var utils = require('../lib/utils.js');
 var spawn = require('child_process').spawn;
 var Client = require('../lib/client');
+var net = require('net');
 
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
@@ -819,19 +820,33 @@ Ccm.prototype.waitForUp = function (callback) {
   var retryCount = 0;
   var self = this;
   utils.whilst(function () {
-    return !started && retryCount < 10;
+    return !started && retryCount < 60;
   }, function iterator (next) {
-    self.exec(['node1', 'showlog'], function (err, info) {
-      if (err) {
-        return next(err);
-      }
-      var regex = /Starting listening for CQL clients/mi;
-      started = regex.test(info.stdout.join(''));
+    var nodesTested = 0;
+    var ping = true;
+    utils.whilst(function () {
+      return nodesTested < self.nodeLength;
+    }, function pingNodes (nextIp) {
+      var pingIp = '127.0.0.' + (nodesTested + 1);
+      helper.trace('Attempt to ping ' + pingIp);
+      nodesTested++;
+      var conn = net.createConnection(9042, pingIp)
+        .on('error', function() {
+          ping = false;
+          nextIp();
+        })
+        .on('connect', function() {
+          ping = ping && true;
+          conn.end();
+          nextIp();
+        });
+    }, function () {
       retryCount++;
-      if (!started) {
+      if (!ping) {
         //wait 1 sec between retries
         return setTimeout(next, 1000);
       }
+      started = true;
       return next();
     });
   }, callback);

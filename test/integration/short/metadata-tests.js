@@ -215,43 +215,6 @@ describe('Metadata', function () {
         client.shutdown.bind(client)
       ], done);
     });
-    it('should retrieve the updated metadata after a schema change', function (done) {
-      var client = newInstance({ refreshSchemaDelay: 50 });
-      var nonSyncClient = newInstance({ isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
-      utils.series([
-        client.connect.bind(client),
-        nonSyncClient.connect.bind(nonSyncClient),
-        helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt_meta', 2)),
-        helper.toTask(client.execute, client, 'USE ks_udt_meta'),
-        helper.toTask(client.execute, client, 'CREATE TYPE type_changing (id uuid, name ascii)'),
-        function checkType1(next) {
-          utils.each(clients, function(client, eachNext) {
-            client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
-              assert.ifError(err);
-              assert.ok(udt);
-              assert.strictEqual(udt.fields.length, 2);
-              eachNext();
-            });
-          }, next);
-        },
-        helper.toTask(client.execute, client, 'ALTER TYPE type_changing ALTER name TYPE varchar'),
-        function checkType2(next) {
-          utils.each(clients, function(client, eachNext) {
-            client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
-              assert.ifError(err);
-              assert.ok(udt);
-              assert.strictEqual(udt.fields.length, 2);
-              assert.strictEqual(udt.fields[1].name, 'name');
-              assert.ok(udt.fields[1].type.code === types.dataTypes.varchar || udt.fields[1].type.code === types.dataTypes.text);
-              eachNext();
-            });
-          }, next);
-        },
-        client.shutdown.bind(client),
-        nonSyncClient.shutdown.bind(nonSyncClient)
-      ], done);
-    });
   });
   describe('#getTrace()', function () {
     it('should retrieve the trace immediately after', function (done) {

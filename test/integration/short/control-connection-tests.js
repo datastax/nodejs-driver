@@ -32,6 +32,7 @@ describe('ControlConnection', function () {
           assert.ok(h.datacenter);
           assert.ok(h.rack);
           assert.ok(h.tokens);
+          assert.ok(Array.isArray(h.workloads));
         });
         done();
       });

@@ -80,6 +80,22 @@ vdescribe('dse-5.0', 'Client', function () {
     ], done);
   });
   after(helper.ccm.remove.bind(helper.ccm));
+  describe('#connect()', function () {
+    it('should obtain DSE workload', function (done) {
+      var client = newInstance();
+      client.connect(function (err) {
+        assert.ifError(err);
+        var host = client.hosts.values()[0];
+        if (helper.isDseGreaterThan('5.1')) {
+          assert.deepEqual(host.workloads, [ 'Cassandra', 'Graph' ]);
+        }
+        else {
+          assert.deepEqual(host.workloads, [ 'Cassandra' ]);
+        }
+        done();
+      });
+    });
+  });
   describe('#executeGraph()', function () {
     it('should execute a simple graph query', wrapClient(function (client, done) {
       client.executeGraph('g.V()', null, null, function (err, result) {
@@ -941,6 +957,22 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
     ], done);
   });
   after(helper.ccm.remove.bind(helper.ccm));
+  describe('#connect()', function () {
+    it('should obtain DSE workload', function (done) {
+      var client = newInstance();
+      client.connect(function (err) {
+        assert.ifError(err);
+        var host = client.hosts.values()[0];
+        if (helper.isDseGreaterThan('5.1')) {
+          assert.deepEqual(host.workloads, [ 'Analytics', 'Cassandra', 'Graph' ]);
+        }
+        else {
+          assert.deepEqual(host.workloads, [ 'Analytics' ]);
+        }
+        done();
+      });
+    });
+  });
   describe('#executeGraph()', function () {
 
     function executeAnalyticsQueries(queryOptions, options, shouldQueryMasterOnly) {

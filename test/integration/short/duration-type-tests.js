@@ -90,8 +90,8 @@ vdescribe('3.10', 'Duration', function () {
         assert.strictEqual(tableInfo.columns.length, 2);
         var c1 = tableInfo.columnsByName['c1'];
         assert.ok(c1);
-        assert.strictEqual(c1.type.code, types.dataTypes.custom);
-        assert.strictEqual(c1.type.info, 'org.apache.cassandra.db.marshal.DurationType');
+        assert.strictEqual(c1.type.code, types.dataTypes.duration);
+        assert.strictEqual(c1.type.info, null);
         done();
       });
     });

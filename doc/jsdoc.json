@@ -15,7 +15,8 @@
       "lib/policies/load-balancing.js",
       "lib/policies/retry.js",
       "lib/policies/reconnection.js",
-      "lib/types"
+      "lib/types",
+      "lib/search"
     ]
   },
   "templates": {

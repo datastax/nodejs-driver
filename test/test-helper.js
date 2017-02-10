@@ -14,8 +14,7 @@ var utils = require('../lib/utils');
 var spawn = require('child_process').spawn;
 var http = require('http');
 var temp = require('temp').track(true);
-var Client = require('../lib/client');
-
+var Client = require('../lib/dse-client');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 

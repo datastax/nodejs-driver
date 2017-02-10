@@ -96,6 +96,7 @@ module.exports = {
     "Buffer": false,
     "Promise": true,
     "Symbol": false,
+    "Int32Array": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,
@@ -109,6 +110,5 @@ module.exports = {
     "afterEach": false,
     "before": false,
     "beforeEach": false,
-    "__dirname": false
   }
 };

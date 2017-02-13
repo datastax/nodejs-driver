@@ -11,10 +11,6 @@
       "lib/errors.js",
       "lib/host.js",
       "lib/metadata",
-      "lib/policies/address-resolution.js",
-      "lib/policies/load-balancing.js",
-      "lib/policies/retry.js",
-      "lib/policies/reconnection.js",
       "lib/types",
       "lib/search"
     ]

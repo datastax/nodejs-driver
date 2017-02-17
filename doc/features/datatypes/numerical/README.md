@@ -12,13 +12,13 @@ JavaScript provides methods to operate with Numbers (that is, IEEE 754 double-pr
 When decoding any of these datatype values, it is returned as a `Number`.
 
 ```javascript
-client.execute('SELECT int_val, float_val, double_val FROM tbl', function (err, result) {
-    assert.ifError(err);
+client.execute('SELECT int_val, float_val, double_val FROM tbl')
+  .then(function (result) {
     console.log(typeof result.rows[0]['int_val']);    // Number
     console.log(typeof result.rows[0]['float_val']);  // Number
     console.log(typeof result.rows[0]['double_val']); // Number
-});
-```javascript
+  });
+```
 
 When encoding the data, the driver tries to encode a `Number` as double because it can not automatically determine if is
 dealing with an int, a float, or a double.
@@ -27,16 +27,17 @@ Inserting a Number value as a double succeeds:
 
 ```javascript
 const query = 'INSERT INTO tbl (id, double_val) VALUES (?, ?)';
-client.execute(query, [id, 1.2], callback);
+client.execute(query, [ id, 1.2 ]);
 ```
 
 But doing the same with a float fails:
 
 ```javascript
 const query = 'INSERT INTO tbl (id, float_val) VALUES (?, ?)';
-client.execute(query, [id, 1.2], function (err) {
+client.execute(query, [ id, 1.2 ])
+  .catch(function (err) {
     console.log(err) // ResponseError: Expected 4 or 0 byte value for a float (8)
-});
+  });
 ```
 
 Trying to do the same with an int, also fails because Cassandra expects a float or an int, and the driver sent a 64-bit
@@ -44,9 +45,10 @@ double.
 
 ```javascript
 const query = 'INSERT INTO tbl (id, int_val) VALUES (?, ?)';
-client.execute(query, [id, 1], function (err) {
+client.execute(query, [ id, 1 ])
+  .catch(function (err) {
     console.log(err) // ResponseError: Expected 4 or 0 byte int (8)
-});
+  });
 ```
 
 To overcome this limitation, you should prepare your queries. Because preparing and executing statements in the driver
@@ -57,8 +59,8 @@ The previous query, using the prepare flag, succeeds no matter if it is an int, 
 
 ```javascript
 const query = 'INSERT INTO tbl (id, int_val) VALUES (?, ?)';
-client.execute(query, [id, 1], { prepare: true }, callback);
-```javascript
+client.execute(query, [ id, 1 ], { prepare: true });
+```
 
 
 ## decimal 
@@ -78,11 +80,11 @@ console.log(value1.equals(value2)); // true
 The driver decodes CQL decimal datatype values as instances of `BigDecimal`.
 
 ```javascript
-client.execute('SELECT decimal_val FROM users', function (err, result) {
-    assert.ifError(err);
+client.execute('SELECT decimal_val FROM users')
+  .then(function (result) {
     console.log(result.rows[0]['decimal_val'] instanceof BigDecimal); // true
-});
-```javascript
+  });
+```
 
 ## bigint 
 
@@ -102,10 +104,10 @@ console.log(value1.add(value2).toString()); // 202
 The driver decodes CQL bigint datatype values as instances of `Long`.
 
 ```javascript
-client.execute('SELECT bigint_val FROM users', function (err, result) {
-    assert.ifError(err);
+client.execute('SELECT bigint_val FROM users')
+  .then(function (result) {
     console.log(result.rows[0]['bigint_val'] instanceof Long); // true
-});
+  });
 ```
 
 ## varint 
@@ -126,18 +128,19 @@ console.log(value1.add(value2).toString()); // 808
 The driver decodes CQL varint datatype values as instances of `Integer`.
 
 ```javascript
-client.execute('SELECT varint_val FROM users', function (err, result) {
-    assert.ifError(err);
+client.execute('SELECT varint_val FROM users')
+  .then(function (result) {
     console.log(result.rows[0]['varint_val'] instanceof Integer); // true
-});
+  });
 ```
 
 ## smallint and tinyint 
 
-Cassandra 2.2 introduced smallint for 2-byte numerical representation and tinyint for 1-byte numerical representation.
+Cassandra 2.2 introduced `smallint` for 2-byte numerical representation and `tinyint` for 1-byte numerical
+representation.
 
 The driver represents these types as `Number` to take advantage of the ECMAScript built-in operations for `Number` (sum,
 subtraction, division, bitwise, etc).
 
-For tinyint only Numbers between -128 and 127 are valid, and for smallint only Numbers between -32768 and 32767.
-Numbers outside valid ranges will callback with TypeError when executing.
+For `tinyint`, only Numbers between -128 and 127 are valid, and for `smallint` only Numbers between -32768 and 32767.
+Numbers outside valid ranges will callback with `TypeError` when executing.

@@ -10,7 +10,7 @@ When using positional parameters, the query parameters must be provided as an Ar
 const query = 'INSERT INTO artists (id, name) VALUES (?, ?)';
 // Parameters by marker position
 const params = ['krichards', 'Keith Richards'];
-client.execute(query, params, { prepare: true }, callback);
+client.execute(query, params, { prepare: true });
 ```
 
 ##  Named parameterized query 
@@ -22,7 +22,7 @@ the `Object` property names matching the parameters names.
 const query = 'INSERT INTO artists (id, name) VALUES (:id, :name)';
 // Parameters by marker name
 const params = { id: 'krichards', name: 'Keith Richards' };
-client.execute(query, params, { prepare: true }, callback);
+client.execute(query, params, { prepare: true });
 ```
 
 Defining named markers in your queries is supported in Cassandra 2.0 or greater for prepared statements and

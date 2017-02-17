@@ -5,16 +5,58 @@ var path = require('path');
 var policies = require('../lib/policies');
 var types = require('../lib/types');
 var utils = require('../lib/utils.js');
+var spawn = require('child_process').spawn;
+var Client = require('../lib/client');
+
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {
   /**
+   * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
+   * @param {Number} nodeLength
+   * @param {Object} [options]
+   * @param {Object} [options.ccmOptions]
+   * @param {Boolean} [options.initClient] Determines whether to create a Client instance.
+   * @param {String} [options.keyspace] Name of the keyspace to create.
+   * @param {Number} [options.replicationFactor] Keyspace replication factor.
+   * @param {Array<String>} [options.queries] Queries to run after client creation.
+   */
+  setup: function (nodeLength, options) {
+    options = options || utils.emptyObject;
+    before(helper.ccmHelper.start(nodeLength || 1, options.ccmOptions));
+    var initClient = options.initClient !== false;
+    var client;
+    var keyspace;
+    if (initClient) {
+      client = new Client(helper.baseOptions);
+      before(client.connect.bind(client));
+      keyspace = options.keyspace || helper.getRandomName('ks');
+      before(helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, options.replicationFactor)));
+      before(helper.toTask(client.execute, client, 'USE ' + keyspace));
+      if (options.queries) {
+        before(function (done) {
+          utils.eachSeries(options.queries, function (q, next) {
+            client.execute(q, next);
+          }, done);
+        });
+      }
+      after(client.shutdown.bind(client));
+    }
+    after(helper.ccmHelper.remove);
+    return {
+      client: client,
+      keyspace: keyspace
+    };
+  },
+  /**
    * Sync throws the error
    * @type Function
    */
   throwop: function (err) {
-    if (err) throw err;
+    if (err) {
+      throw err;
+    }
   },
   /** @type Function */
   noop: function () {
@@ -44,6 +86,8 @@ var helper = {
       return value;
     });
   },
+  promiseSupport: (typeof Promise === 'function'),
+  iteratorSupport: (typeof Symbol !== 'undefined' && typeof Symbol.iterator === 'symbol'),
   /**
    * @type {ClientOptions}
    */
@@ -85,7 +129,9 @@ var helper = {
     removeIfAny: function (callback) {
       new Ccm().remove(function () {
         //ignore err
-        if (callback) callback();
+        if (callback) {
+          callback();
+        }
       });
     },
     pauseNode: function (nodeIndex, callback) {
@@ -118,7 +164,7 @@ var helper = {
     startNode: function (nodeIndex, callback) {
       var args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
-        args.push('--quiet-windows')
+        args.push('--quiet-windows');
       }
       new Ccm().exec(args, callback);
     },
@@ -146,7 +192,7 @@ var helper = {
    * @returns {String}
    */
   createTableCql: function (tableName) {
-    return  util.format('CREATE TABLE %s (' +
+    return util.format('CREATE TABLE %s (' +
       '   id uuid primary key,' +
       '   ascii_sample ascii,' +
       '   text_sample text,' +
@@ -171,7 +217,7 @@ var helper = {
    * @returns {String}
    */
   createTableWithClusteringKeyCql: function (tableName) {
-    return  util.format('CREATE TABLE %s (' +
+    return util.format('CREATE TABLE %s (' +
     '   id1 uuid,' +
     '   id2 timeuuid,' +
     '   text_sample text,' +
@@ -241,9 +287,11 @@ var helper = {
    */
   waitSchema: function (client, callback) {
     return (function (err) {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
       if (!client.hosts) {
-        throw new Error('No hosts on Client')
+        throw new Error('No hosts on Client');
       }
       if (client.hosts.length === 1) {
         return callback();
@@ -266,7 +314,9 @@ var helper = {
       ms = 0;
     }
     return (function (err) {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
       setTimeout(callback, ms);
     });
   },
@@ -307,6 +357,7 @@ var helper = {
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
         //noinspection JSUnresolvedVariable
+        // eslint-disable-next-line no-console, no-undef
         console.log.apply(console, arguments);
       }
     });
@@ -399,6 +450,7 @@ var helper = {
     if (!helper.isTracing()) {
       return;
     }
+    // eslint-disable-next-line no-console, no-undef
     console.log('\t...' + util.format.apply(null, arguments));
   },
 
@@ -430,7 +482,7 @@ var helper = {
    * @returns {string} Last octet of the host address.
    */
   lastOctetOf: function(host) {
-    var address = typeof host == "string" ? host : host.address;
+    var address = typeof host === "string" ? host : host.address;
     var ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
@@ -446,7 +498,7 @@ var helper = {
     var host = undefined;
     var self = this;
     client.hosts.forEach(function(h) {
-      if(self.lastOctetOf(h) == number) {
+      if(self.lastOctetOf(h) === number.toString()) {
         host = h;
       }
     });
@@ -666,7 +718,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       var i = 0;
       utils.whilst(
         function condition() {
-          return i < options.yaml.length
+          return i < options.yaml.length;
         },
         function iterator(whilstNext) {
           self.exec(['updateconf', options.yaml[i++]], whilstNext);
@@ -687,7 +739,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
     function (next) {
       var start = ['start', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
-        start.push('--quiet-windows')
+        start.push('--quiet-windows');
       }
       if (util.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
@@ -715,7 +767,6 @@ Ccm.prototype.spawn = function (processName, params, callback) {
   }
   params = params || [];
   var originalProcessName = processName;
-  var spawn = require('child_process').spawn;
   if (helper.isWin()) {
     params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
     processName = 'powershell.exe';
@@ -769,7 +820,9 @@ Ccm.prototype.waitForUp = function (callback) {
     return !started && retryCount < 10;
   }, function iterator (next) {
     self.exec(['node1', 'showlog'], function (err, info) {
-      if (err) return next(err);
+      if (err) {
+        return next(err);
+      }
       var regex = /Starting listening for CQL clients/mi;
       started = regex.test(info.stdout.join(''));
       retryCount++;

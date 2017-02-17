@@ -5,6 +5,7 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
+var errors = require('../../../lib/errors');
 var vit = helper.vit;
 var vdescribe = helper.vdescribe;
 
@@ -27,7 +28,7 @@ describe('Metadata', function () {
       function checkKeyspace(client, name, strategy, optionName, optionValue) {
         var m = client.metadata;
         var ks = m.keyspaces[name];
-        checkKeyspaceWithInfo(ks, strategy, optionName, optionValue)
+        checkKeyspaceWithInfo(ks, strategy, optionName, optionValue);
       }
 
       utils.series([
@@ -107,22 +108,39 @@ describe('Metadata', function () {
       });
     });
   });
-  describe('#getUdt()', function () {
-    vit('2.1', 'should return null if it does not exists', function (done) {
+  vdescribe('2.1', '#getUdt()', function () {
+    it('should return null if it does not exists', function (done) {
       var client = newInstance();
-      client.connect(function (err) {
-        assert.ifError(err);
-        var m = client.metadata;
-        utils.timesSeries(10, function (n, next) {
-          m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
-            assert.ifError(err);
-            assert.strictEqual(udtInfo, null);
-            next();
-          });
-        }, helper.finish(client, done));
-      });
+      utils.series([
+        client.connect.bind(client),
+        function testWithCallbacks(next) {
+          var m = client.metadata;
+          utils.timesSeries(10, function (n, timesNext) {
+            m.getUdt('ks1', 'udt_does_not_exists', function (err, udtInfo) {
+              assert.ifError(err);
+              assert.strictEqual(udtInfo, null);
+              timesNext();
+            });
+          }, next);
+        },
+        function testWithPromises(next) {
+          if (!helper.promiseSupport) {
+            return next();
+          }
+          var m = client.metadata;
+          utils.timesSeries(10, function (n, timesNext) {
+            m.getUdt('ks1', 'udt_does_not_exists')
+              .then(function (udtInfo) {
+                assert.strictEqual(udtInfo, null);
+              })
+              .then(timesNext)
+              .catch(timesNext);
+          }, next);
+        },
+        client.shutdown.bind(client),
+      ], done);
     });
-    vit('2.1', 'should return the udt information', function (done) {
+    it('should return the udt information', function (done) {
       var client = newInstance();
       var createUdtQuery1 = "CREATE TYPE phone (alias text, number text, country_code int, second_number 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')";
       var createUdtQuery2 = 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)';
@@ -173,44 +191,22 @@ describe('Metadata', function () {
             assert.strictEqual(udtInfo.fields[2].type.info.info.fields[0].name, 'alias');
             next();
           });
-        }
-      ], done);
-    });
-    vit('2.1', 'should retrieve the updated metadata after a schema change', function (done) {
-      var client = newInstance({ refreshSchemaDelay: 50 });
-      var nonSyncClient = newInstance({ isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
-      utils.series([
-        client.connect.bind(client),
-        nonSyncClient.connect.bind(nonSyncClient),
-        helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_udt_meta', 2)),
-        helper.toTask(client.execute, client, 'USE ks_udt_meta'),
-        helper.toTask(client.execute, client, 'CREATE TYPE type_changing (id uuid, name ascii)'),
-        function checkType1(next) {
-          utils.each(clients, function(client, eachNext) {
-            client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
-              assert.ifError(err);
-              assert.ok(udt);
-              assert.strictEqual(udt.fields.length, 2);
-              eachNext();
-            });
-          }, next);
         },
-        helper.toTask(client.execute, client, 'ALTER TYPE type_changing ALTER name TYPE varchar'),
-        function checkType2(next) {
-          utils.each(clients, function(client, eachNext) {
-            client.metadata.getUdt('ks_udt_meta', 'type_changing', function (err, udt) {
-              assert.ifError(err);
-              assert.ok(udt);
-              assert.strictEqual(udt.fields.length, 2);
-              assert.strictEqual(udt.fields[1].name, 'name');
-              assert.ok(udt.fields[1].type.code === types.dataTypes.varchar || udt.fields[1].type.code === types.dataTypes.text);
-              eachNext();
-            });
-          }, next);
+        function checkAddressUdtWithPromises(next) {
+          if (!helper.promiseSupport) {
+            return next();
+          }
+          var m = client.metadata;
+          m.getUdt('ks_udt1', 'address')
+            .then(function (udtInfo) {
+              assert.ok(udtInfo);
+              assert.strictEqual(udtInfo.name, 'address');
+              assert.strictEqual(udtInfo.fields.length, 3);
+            })
+            .then(next)
+            .catch(next);
         },
-        client.shutdown.bind(client),
-        nonSyncClient.shutdown.bind(nonSyncClient)
+        client.shutdown.bind(client)
       ], done);
     });
   });
@@ -272,10 +268,84 @@ describe('Metadata', function () {
         }
       ], done);
     });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getTrace(types.Uuid.random());
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return the trace in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.execute(helper.queries.basic, [], { traceQuery: true });
+          })
+          .then(function (result) {
+            return client.metadata.getTrace(result.info.traceId);
+          })
+          .then(function (trace) {
+            assert.ok(trace);
+            assert.strictEqual(typeof trace.duration, 'number');
+            assert.ok(trace.events.length);
+            return client.shutdown();
+          });
+      });
+    });
+  });
+  describe('#refreshKeyspace()', function() {
+    describe('with no callback specified', function () {
+      if(helper.promiseSupport) {
+        it('should return keyspace in a promise', function () {
+          var client = newInstance({isMetadataSyncEnabled: false});
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspace('system');
+            })
+            .then(function (keyspace) {
+              assert.ok(keyspace);
+              assert.strictEqual(keyspace.name, 'system');
+              return client.shutdown();
+            });
+        });
+      }
+    });
+  });
+  describe('#refreshKeyspaces()', function() {
+    describe('with no callback specified', function () {
+      if(helper.promiseSupport) {
+        it('should return keyspaces in a promise', function () {
+          var client = newInstance({ isMetadataSyncEnabled: false });
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspaces();
+            })
+            .then(function (data) {
+              assert.ok(data);
+              assert.ok(data['system']);
+              return client.shutdown();
+            });
+        });
+      }
+    });
   });
   describe('#getTable()', function () {
     var keyspace = 'ks_tbl_meta';
-    var is3  = helper.isCassandraGreaterThan('3.0');
+    var is3 = helper.isCassandraGreaterThan('3.0');
     var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
     before(function createTables(done) {
       var client = newInstance();
@@ -319,7 +389,7 @@ describe('Metadata', function () {
           "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
           "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
           "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
-        )
+        );
       }
       utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
     });
@@ -803,6 +873,37 @@ describe('Metadata', function () {
         nonSyncClient.shutdown.bind(nonSyncClient)
       ], done);
     });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getTable(keyspace, 'tbl1');
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return the metadata in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getTable(keyspace, 'tbl1');
+          })
+          .then(function (table) {
+            assert.ok(table);
+            assert.strictEqual(table.name, 'tbl1');
+            assert.ok(table.columns.length);
+            return client.shutdown();
+          });
+      });
+    });
   });
   vdescribe('3.0', '#getMaterializedView()', function () {
     var keyspace = 'ks_view_meta';
@@ -891,7 +992,7 @@ describe('Metadata', function () {
               assert.strictEqual(view, null);
               eachNext();
             });
-          }, next)
+          }, next);
         },
         client.shutdown.bind(client),
         nonSyncClient.shutdown.bind(nonSyncClient)
@@ -961,7 +1062,38 @@ describe('Metadata', function () {
         },
         client.shutdown.bind(client)
       ], done);
-    })
+    });
+    describe('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function (done) {
+          var client = newInstance();
+          utils.series([
+            client.connect.bind(client),
+            function (next) {
+              assert.throws(function () {
+                client.metadata.getMaterializedView(keyspace, 'dailyhigh');
+              }, errors.ArgumentError);
+              next();
+            },
+            client.shutdown.bind(client)
+          ], done);
+        });
+        return;
+      }
+      it('should return the metadata in a promise', function () {
+        var client = newInstance();
+        return client.connect()
+          .then(function () {
+            return client.metadata.getMaterializedView(keyspace, 'dailyhigh');
+          })
+          .then(function (view) {
+            assert.ok(view);
+            assert.strictEqual(view.name, 'dailyhigh');
+            assert.ok(view.clusteringKeys.length);
+            return client.shutdown();
+          });
+      });
+    });
   });
 });
 

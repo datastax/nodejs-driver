@@ -3,9 +3,6 @@ var assert = require('assert');
 var util = require('util');
 var rewire = require('rewire');
 
-var utils = require('../../lib/utils');
-var helper = require('../test-helper');
-
 describe('StreamIdStack', function () {
   this.timeout(2000);
   it('should pop and push', function () {
@@ -26,22 +23,22 @@ describe('StreamIdStack', function () {
       [2, 128],
       [3, Math.pow(2, 15)]
     ].forEach(function (value) {
-        var version = value[0];
-        var maxSize = value[1];
-        var stack = newInstance(version);
-        var ids = pop(stack, maxSize + 20);
-        assert.strictEqual(ids.length, maxSize + 20);
-        for (var i = 0; i < maxSize + 20; i++) {
-          if (i < maxSize) {
-            assert.strictEqual(ids[i], i);
-          }
-          else {
-            assert.strictEqual(ids[i], null);
-          }
+      var version = value[0];
+      var maxSize = value[1];
+      var stack = newInstance(version);
+      var ids = pop(stack, maxSize + 20);
+      assert.strictEqual(ids.length, maxSize + 20);
+      for (var i = 0; i < maxSize + 20; i++) {
+        if (i < maxSize) {
+          assert.strictEqual(ids[i], i);
         }
-        stack.push(5);
-        assert.strictEqual(stack.inUse, maxSize - 1);
-        stack.clear();
+        else {
+          assert.strictEqual(ids[i], null);
+        }
+      }
+      stack.push(5);
+      assert.strictEqual(stack.inUse, maxSize - 1);
+      stack.clear();
     });
   });
   it('should yield the lowest available id', function () {

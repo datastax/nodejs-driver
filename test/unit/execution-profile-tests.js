@@ -4,7 +4,6 @@ var assert = require('assert');
 
 var clientOptions = require('../../lib/client-options');
 var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-var helper = require('../test-helper');
 var ProfileManager = require('../../lib/execution-profile').ProfileManager;
 var types = require('../../lib/types');
 

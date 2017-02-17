@@ -7,8 +7,8 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
 ## Code samples
 - Basic
   - [Connect](basic/basic-connect.js)
-  - [Execute with nested callbacks](basic/basic-execute.js)
-  - [Execute using async series](basic/basic-execute-flow.js)
+  - [Execute with promise-based API](basic/basic-execute.js)
+  - [Execute using callbacks](basic/basic-execute-flow.js)
 - Metadata
   - [Get hosts information](metadata/metadata-hosts.js)
   - [Get keyspaces information](metadata/metadata-keyspaces.js)
@@ -27,6 +27,6 @@ only call client.shutdown() once in your application's lifetime.
 If you have any doubt regarding these examples, feel free to post your question in the [mailing list][mailing-list].
 
 [cassandra]: http://cassandra.apache.org/
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/2.1/nodejs-driver/faq/njdFaq.html
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/

@@ -1,6 +1,5 @@
 'use strict';
 var assert = require('assert');
-var util = require('util');
 
 var helper = require('../test-helper.js');
 var Client = require('../../lib/client.js');
@@ -177,7 +176,7 @@ describe('DCAwareRoundRobinPolicy', function () {
       originalHosts.set(i.toString(), h);
     }
     var localHosts = originalHosts.values().filter(function(element) {
-      return element.datacenter == 'dc1';
+      return element.datacenter === 'dc1';
     });
     var times = 50;
 
@@ -284,15 +283,15 @@ describe('DCAwareRoundRobinPolicy', function () {
     }
 
     var localHosts = originalHosts.values().filter(function(element) {
-      return element.datacenter == 'dc1';
+      return element.datacenter === 'dc1';
     });
 
     var dc2Hosts = originalHosts.values().filter(function(element) {
-      return element.datacenter == 'dc2';
+      return element.datacenter === 'dc2';
     });
 
     var dc3Hosts = originalHosts.values().filter(function(element) {
-      return element.datacenter == 'dc3';
+      return element.datacenter === 'dc3';
     });
 
     var times = 60;
@@ -348,23 +347,23 @@ describe('DCAwareRoundRobinPolicy', function () {
             planHosts.slice(localHosts.length, localHosts.length + (3 * 2)).forEach(function (host) {
               var length = 0;
               dc2Hosts.forEach(function (dc2Host) {
-                length += (host == dc2Host ? 1: 0);
+                length += (host === dc2Host ? 1: 0);
               });
 
               assert.ok(length <= 1, host + " found more than once in plan.");
-              if(length == 1) {
+              if(length === 1) {
                 foundDc2Hosts.push(host);
               } else {
                 // If host is not in dc2, it should be in dc3.
                 length = 0;
                 dc3Hosts.forEach(function (dc3Host) {
-                  length += (host == dc3Host ? 1 : 0);
+                  length += (host === dc3Host ? 1 : 0);
                 });
 
                 assert.ok(length <= 1, host + " found more than once in plan.");
                 assert.equal(1, length, host + " is a non-remote host found" +
                   " in plan advanced past local hosts.");
-                if (length == 1) {
+                if (length === 1) {
                   foundDc3Hosts.push(host);
                 }
               }
@@ -557,6 +556,7 @@ describe('TokenAwarePolicy', function () {
         var expected = iterations / totalHosts;
         for (var i = 0; i < totalHosts; i++) {
           var hostsAtPosition = replicaPositions[i];
+          // eslint-disable-next-line no-loop-func
           Object.keys(hostsAtPosition).forEach(function (address) {
             var timesSelected = hostsAtPosition[address];
             // Check that the times that the value is selected is close to the expected
@@ -600,7 +600,7 @@ describe('WhiteListPolicy', function () {
       assert.strictEqual(hosts.length, 2);
       assert.strictEqual(helper.lastOctetOf(hosts[0]), '1');
       assert.strictEqual(helper.lastOctetOf(hosts[1]), '3');
-      done()
+      done();
     });
   });
 });

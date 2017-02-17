@@ -1,17 +1,18 @@
 "use strict";
-var cassandra = require('cassandra-driver');
-var async = require('async');
-var assert = require('assert');
+const cassandra = require('cassandra-driver');
+const async = require('async');
+const assert = require('assert');
 
-var client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Example using async library for avoiding nested callbacks
  * See https://github.com/caolan/async
+ * Alternately you can use the Promise-based API.
  *
  * Inserts a row and retrieves a row
  */
-var id = cassandra.types.Uuid.random();
+const id = cassandra.types.Uuid.random();
 
 async.series([
   function connect(next) {
@@ -27,11 +28,11 @@ async.series([
   },
   function insert(next) {
     var query = 'INSERT INTO examples.basic (id, txt, val) VALUES (?, ?, ?)';
-    client.execute(query, [id, 'Hello!', 100], { prepare: true}, next);
+    client.execute(query, [ id, 'Hello!', 100 ], { prepare: true}, next);
   },
   function select(next) {
     var query = 'SELECT id, txt, val FROM examples.basic WHERE id = ?';
-    client.execute(query, [id], { prepare: true}, function (err, result) {
+    client.execute(query, [ id ], { prepare: true}, function (err, result) {
       if (err) return next(err);
       var row = result.first();
       console.log('Obtained row: ', row);

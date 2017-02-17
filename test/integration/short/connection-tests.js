@@ -1,10 +1,8 @@
 "use strict";
 var assert = require('assert');
-var util = require('util');
 
 var Connection = require('../../../lib/connection.js');
 var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
-var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var requests = require('../../../lib/requests.js');
 var helper = require('../../test-helper.js');
@@ -32,9 +30,19 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
+    vit('3.0', 'should callback in error when protocol version is not supported server side', function (done) {
+      // Attempting to connect with protocol v2
+      var localCon = newInstance(null, 2);
+      localCon.open(function (err) {
+        helper.assertInstanceOf(err, Error);
+        assert.ok(!localCon.connected);
+        helper.assertContains(err.message, 'protocol version');
+        localCon.close(done);
+      });
+    });
     vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
       var options = utils.extend({}, defaultOptions);
-      options.protocolOptions.maxVersion =  getProtocolVersion() - 1;
+      options.protocolOptions.maxVersion = getProtocolVersion() - 1;
       var localCon = newInstance(null, null, options);
       localCon.open(function (err) {
         assert.ifError(err);
@@ -46,8 +54,9 @@ describe('Connection', function () {
     it('should open with all the protocol versions supported', function (done) {
       var maxProtocolVersionSupported = getProtocolVersion();
       var minProtocolVersionSupported = getMinProtocolVersion();
-      if(helper.getCassandraVersion())
-      var protocolVersion = minProtocolVersionSupported - 1;
+      if(helper.getCassandraVersion()) {
+        var protocolVersion = minProtocolVersionSupported - 1;
+      }
       utils.whilst(function condition() {
         return (++protocolVersion) <= maxProtocolVersionSupported;
       }, function iterator (next) {
@@ -94,7 +103,7 @@ describe('Connection', function () {
         //at least 3 requests
         assert.ok(sendCounter > 2, 'sendCounter ' + sendCounter);
         done();
-      }, 1000)
+      }, 1000);
     });
   });
   describe('#open with ssl', function () {
@@ -254,7 +263,6 @@ function getMinProtocolVersion() {
   if (helper.getCassandraVersion().indexOf('2') === 0
     || helper.getCassandraVersion().indexOf('1') === 0) {
     return 1;
-  } else {
-    return getProtocolVersion() - 1;
   }
+  return getProtocolVersion() - 1;
 }

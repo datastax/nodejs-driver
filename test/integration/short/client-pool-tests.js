@@ -11,6 +11,9 @@ var errors = require('../../../lib/errors');
 var types = require('../../../lib/types');
 var policies = require('../../../lib/policies');
 var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
+var EventEmitter = require('events').EventEmitter;
+var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
+var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -27,7 +30,9 @@ describe('Client', function () {
     it('should discover all hosts in the ring and hosts object can be serializable', function (done) {
       var client = newInstance();
       client.connect(function (err) {
-        if (err) return done(err);
+        if (err) {
+          return done(err);
+        }
         assert.strictEqual(client.hosts.length, 3);
         assert.strictEqual(client.hosts.values().length, 3);
         assert.strictEqual(client.hosts.keys().length, 3);
@@ -41,7 +46,9 @@ describe('Client', function () {
     it('should retrieve the cassandra version of the hosts', function (done) {
       var client = newInstance();
       client.connect(function (err) {
-        if (err) return done(err);
+        if (err) {
+          return done(err);
+        }
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.values().forEach(function (h) {
           assert.strictEqual(typeof h.cassandraVersion, 'string');
@@ -74,8 +81,8 @@ describe('Client', function () {
     it('should select a tokenizer', function (done) {
       var client = newInstance();
       client.connect(function (err) {
-        if (err) return done(err);
-        helper.assertInstanceOf(client.metadata.tokenizer, require('../../../lib/tokenizer.js').Murmur3Tokenizer);
+        if (err) {return done(err);}
+        helper.assertInstanceOf(client.metadata.tokenizer, Murmur3Tokenizer);
         client.shutdown(done);
       });
     });
@@ -149,7 +156,7 @@ describe('Client', function () {
         utils.times(10, function (n, next) {
           client.execute('SELECT key FROM system.local', next);
         }, function (err) {
-          if (err) return done(err);
+          if (err) {return done(err);}
           assert.strictEqual(client.hosts.values()[0].pool.connections.length, client.options.pooling.coreConnectionsPerHost[types.distance.local]);
           client.shutdown(done);
         });
@@ -215,17 +222,17 @@ describe('Client', function () {
       var lbPolicy = new RoundRobinPolicy();
       lbPolicy.getDistance = function (host) {
         var id = helper.lastOctetOf(host.address);
-        if(id == '1') {
+        if(id === '1') {
           return types.distance.local;
         }
-        else if(id == '2') {
+        else if(id === '2') {
           return types.distance.remote;
         }
         return types.distance.ignored;
       };
 
       var connectionsPerHost = {};
-      connectionsPerHost[types.distance.local]  = 3;
+      connectionsPerHost[types.distance.local] = 3;
       connectionsPerHost[types.distance.remote] = 1;
       var client = newInstance({
         policies: { loadBalancing: lbPolicy },
@@ -236,7 +243,7 @@ describe('Client', function () {
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.forEach(function (host) {
           var id = helper.lastOctetOf(host);
-          if(id == '1') {
+          if(id === '1') {
             assert.strictEqual(host.pool.connections.length, 3);
           } else {
             assert.strictEqual(host.pool.connections.length, 0);
@@ -253,7 +260,6 @@ describe('Client', function () {
       sleep: 5000
     }));
     after(helper.ccmHelper.remove);
-    var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
     it('should connect using the plain text authenticator', function (done) {
       var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')};
       var client = newInstance(options);
@@ -321,7 +327,7 @@ describe('Client', function () {
           assert.strictEqual(client.hosts.length, 1);
           var expected = contactPoint + ':9042';
           if (contactPoint.indexOf('[') === 0) {
-            expected = contactPoint.replace(/[\[\]]/g, '');
+            expected = contactPoint.replace(/[[\]]/g, '');
           }
           assert.strictEqual(client.hosts.values()[0].address, expected);
           utils.times(10, function (n, next) {
@@ -502,7 +508,6 @@ describe('Client', function () {
           }, next);
         },
         function blowUpSingleDomain(next) {
-          var EventEmitter = require('events').EventEmitter;
           utils.timesSeries(domains.length, function (n, timesNext) {
             var waiting = 1;
             var d = domains[n];
@@ -654,7 +659,7 @@ describe('Client', function () {
             var expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
             expectedPoolInfo[ignoredHost] = 0;
             assert.deepEqual(getPoolInfo(client), expectedPoolInfo );
-            assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost}));
+            assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost;}));
           }),
           client.shutdown.bind(client),
           function checkPoolState(next) {
@@ -773,8 +778,6 @@ describe('Client', function () {
         function testCase(seriesNext) {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
-          var counter = 0;
-          var issued = 0;
           var killed = false;
           utils.timesLimit(500, 20, function (n, next) {
             if (n === 10) {
@@ -793,10 +796,8 @@ describe('Client', function () {
               //Don't issue more requests
               return next();
             }
-            issued++;
             client.execute(query, function (err) {
               assert.ifError(err);
-              counter++;
               next();
             });
           }, function (err) {
@@ -819,7 +820,9 @@ describe('Client', function () {
           var warnings = [];
           var client = newInstance({ pooling: { warmup: true } });
           client.on('log', function (level, className, message) {
-            if (level !== 'warning' || className !== 'Client') return;
+            if (level !== 'warning' || className !== 'Client') {
+              return;
+            }
             warnings.push(message);
           });
           client.connect(function (err) {

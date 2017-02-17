@@ -7,7 +7,6 @@ var rewire = require('rewire');
 var Connection = require('../../lib/connection');
 var requests = require('../../lib/requests');
 var defaultOptions = require('../../lib/client-options.js').defaultOptions();
-var types = require('../../lib/types');
 var utils = require('../../lib/utils.js');
 var helper = require('../test-helper.js');
 
@@ -179,7 +178,7 @@ describe('Connection', function () {
       var connection = newInstance('address1', 2, options);
       connection.sendStream = function (req, options, cb) {
         helper.assertInstanceOf(req, requests.QueryRequest);
-        setImmediate(function () { cb (new Error('Dummy'))});
+        setImmediate(function () { cb (new Error('Dummy'));});
       };
       connection.on('idleRequestError', function (err) {
         helper.assertInstanceOf(err, Error);
@@ -207,7 +206,7 @@ describe('Connection', function () {
       SocketMock.prototype.setTimeout = helper.noop;
       SocketMock.prototype.setKeepAlive = helper.noop;
       SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this};
+      SocketMock.prototype.pipe = function () {return this;};
       ConnectionInjected.__set__("net", { Socket: SocketMock});
       var c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
@@ -248,7 +247,7 @@ describe('Connection', function () {
       SocketMock.prototype.setTimeout = helper.noop;
       SocketMock.prototype.setKeepAlive = helper.noop;
       SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this};
+      SocketMock.prototype.pipe = function () {return this;};
       ConnectionInjected.__set__("net", { Socket: SocketMock});
       var c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;

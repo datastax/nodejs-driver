@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var util = require('util');
 var rewire = require('rewire');
@@ -7,7 +8,6 @@ var helper = require('../test-helper');
 var errors = require('../../lib/errors');
 var utils = require('../../lib/utils');
 var types = require('../../lib/types');
-var requests = require('../../lib/requests');
 var HostMap = require('../../lib/host').HostMap;
 var Host = require('../../lib/host').Host;
 var Metadata = require('../../lib/metadata');
@@ -16,21 +16,24 @@ var ProfileManager = require('../../lib/execution-profile').ProfileManager;
 var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 var clientOptions = require('../../lib/client-options');
 
+// allow non-global require as Client gets rewired.
+/* eslint-disable global-require */
+
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
       var Client = require('../../lib/client');
       assert.throws(function () {
-        new Client({});
+        return new Client({});
       }, TypeError);
       assert.throws(function () {
-        new Client({contactPoints: []});
+        return new Client({contactPoints: []});
       }, TypeError);
       assert.throws(function () {
-        new Client(null);
+        return new Client(null);
       }, TypeError);
       assert.throws(function () {
-        new Client();
+        return new Client();
       }, TypeError);
     });
     it('should create Metadata instance', function () {
@@ -112,6 +115,28 @@ describe('Client', function () {
         });
       });
     });
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an ArgumentError', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.connect();
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.connect();
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+    });
   });
   describe('#_getPrepared()', function () {
     var Client = rewire('../../lib/client.js');
@@ -170,7 +195,9 @@ describe('Client', function () {
           });
         }
       ], function (err) {
-        if (err) return done(err);
+        if (err) {
+          return done(err);
+        }
         assert.strictEqual(prepareCounter, 2);
         done();
       });
@@ -183,7 +210,9 @@ describe('Client', function () {
         //noinspection JSAccessibilityCheck
         client._getPrepared('QUERY ' + n.toString(), queryOptions, next);
       }, function (err) {
-        if (err) return done(err);
+        if (err) {
+          return done(err);
+        }
         assert.strictEqual(client.metadata.preparedQueries.__length, maxPrepared);
         done();
       });
@@ -287,6 +316,7 @@ describe('Client', function () {
       requestHandlerMock.prototype.send = function (q, options, cb) {
         assert.ok(options);
         assert.ok(options.routingKey);
+        // eslint-disable-next-line no-useless-concat
         assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
         cb();
         done();
@@ -339,11 +369,9 @@ describe('Client', function () {
       });
     });
     it('should callback with an argument error when the hints are not valid strings', function (done) {
-      var options;
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
       requestHandlerMock.prototype.send = function (q, o, cb) {
-        options = o;
         cb();
       };
       var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
@@ -367,18 +395,6 @@ describe('Client', function () {
           });
         }
       ], done);
-    });
-    it('should throw argument error when last parameter is not a function', function () {
-      var client = newConnectedInstance();
-      assert.throws(function () {
-        client.execute('QUERY', [], {});
-      }, errors.ArgumentError);
-      assert.throws(function () {
-        client.execute('QUERY', []);
-      }, errors.ArgumentError);
-      assert.throws(function () {
-        client.execute('QUERY');
-      }, errors.ArgumentError);
     });
     it('should pass optional parameters as null when not defined', function () {
       var client = newConnectedInstance();
@@ -455,6 +471,78 @@ describe('Client', function () {
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
+    it('should set the timestamp', function (done) {
+      var actualOptions;
+      var handlerMock = function () {};
+      handlerMock.prototype.send = function (request, options, callback) {
+        actualOptions = options;
+        callback(null, {});
+      };
+      var client = newConnectedInstance(handlerMock);
+      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+        client.controlConnection.protocolVersion = version;
+        client.execute('Q', function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          if (version > 2) {
+            assert.ok(actualOptions.timestamp);
+            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+          }
+          else {
+            assert.strictEqual(actualOptions.timestamp, undefined);
+          }
+          next();
+        });
+      }, done);
+    });
+    it('should not set the timestamp when timestampGeneration is null', function (done) {
+      var actualOptions;
+      var handlerMock = function () {};
+      handlerMock.prototype.send = function (request, options, callback) {
+        actualOptions = options;
+        callback(null, {});
+      };
+      var client = newConnectedInstance(handlerMock, { policies: { timestampGeneration: null }});
+      client.controlConnection.protocolVersion = 4;
+      client.execute('Q', function (err) {
+        assert.ifError(err);
+        assert.ok(actualOptions);
+        assert.strictEqual(actualOptions.timestamp, undefined);
+        done();
+      });
+    });
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.execute('Q', [ 1, 2 ], { prepare: true });
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.execute('Q', [ 1, 2 ], { prepare: true });
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+      it('should reject the promise when an ExecutionProfile is not found', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.ArgumentError);
+          done();
+        });
+      });
+    });
   });
   describe('#eachRow()', function () {
     it('should pass optional parameters as null when not defined', function () {
@@ -491,13 +579,68 @@ describe('Client', function () {
       var connectCalled = false;
       client.connect = function (cb) {
         connectCalled = true;
-        client.profileManager = newProfileManager();
         cb();
       };
       client.batch(['q1'], function (err) {
         assert.ifError(err);
         assert.strictEqual(connectCalled, true);
         done();
+      });
+    });
+    it('should set the timestamp', function (done) {
+      var actualOptions;
+      var handlerMock = function () {};
+      handlerMock.prototype.send = function (request, options, callback) {
+        actualOptions = options;
+        callback(null, {});
+      };
+      var client = newConnectedInstance(handlerMock);
+      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+        client.controlConnection.protocolVersion = version;
+        client.batch(['q1', 'q2', 'q3'], function (err) {
+          assert.ifError(err);
+          assert.ok(actualOptions);
+          if (version > 2) {
+            assert.ok(actualOptions.timestamp);
+            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+          }
+          else {
+            assert.strictEqual(actualOptions.timestamp, undefined);
+          }
+          next();
+        });
+      }, done);
+    });
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.throws(function () {
+            client.batch(['Q'], { prepare: false });
+          }, errors.ArgumentError);
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.batch(['Q'], null);
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          done();
+        });
+      });
+      it('should reject the promise when queries is not an Array', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.batch('Q', null);
+        helper.assertInstanceOf(p, Promise);
+        p.catch(function (err) {
+          helper.assertInstanceOf(err, errors.ArgumentError);
+          done();
+        });
       });
     });
   });
@@ -678,7 +821,26 @@ describe('Client', function () {
             }, 100);
           }, 20);
         });
-      })
+      });
+    });
+    context('with no callback specified', function () {
+      if (!helper.promiseSupport) {
+        it('should not throw an error', function () {
+          var Client = require('../../lib/client');
+          var client = new Client(helper.baseOptions);
+          assert.doesNotThrow(function () {
+            client.shutdown();
+          });
+        });
+        return;
+      }
+      it('should return a promise', function (done) {
+        var Client = require('../../lib/client');
+        var client = new Client(helper.baseOptions);
+        var p = client.shutdown();
+        helper.assertInstanceOf(p, Promise);
+        p.then(done);
+      });
     });
   });
   describe('#_waitForSchemaAgreement()', function () {
@@ -695,7 +857,7 @@ describe('Client', function () {
         },
         getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
-          setImmediate(function () { cb(null, ['1', '1']); })
+          setImmediate(function () { cb(null, ['1', '1']); });
         }
       };
       client._waitForSchemaAgreement(null, function (err) {
@@ -718,7 +880,7 @@ describe('Client', function () {
         getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
           //The third time it gets called versions will match
-          setImmediate(function () { cb(null, [peerCalls]); })
+          setImmediate(function () { cb(null, [peerCalls]); });
         }
       };
       client._waitForSchemaAgreement(null, function (err) {
@@ -741,7 +903,7 @@ describe('Client', function () {
         getPeersSchemaVersions: function (c, cb) {
           peerCalls++;
           //The versions are always different
-          setImmediate(function () { cb(null, ['2']); })
+          setImmediate(function () { cb(null, ['2']); });
         }
       };
       client._waitForSchemaAgreement(null, function (err) {
@@ -822,7 +984,6 @@ describe('Client', function () {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
       client.controlConnection = { protocolVersion: 2};
-      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions({ prepare: false}, { named: 'val'}, null, function (err) {
         assert.ok(err);
@@ -833,7 +994,7 @@ describe('Client', function () {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
       var metaCalled = 0;
-      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 2};
       client.metadata = {
         adaptUserHints: function (ks, h, cb) {
@@ -845,7 +1006,6 @@ describe('Client', function () {
         }
       };
       var options = { prepare: false, hints: [null, 'text']};
-      client.profileManager = newProfileManager();
       //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, ['one', 'two'], null, function (err) {
         assert.ifError(err);
@@ -858,7 +1018,7 @@ describe('Client', function () {
     it('should use meta columns', function (done) {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
-      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 2};
       var meta = {
         columns: [
@@ -867,8 +1027,6 @@ describe('Client', function () {
         ]
       };
       var options = { prepare: true, routingKey: new Buffer(2)};
-      client.profileManager = newProfileManager();
-      //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [1, 'two'], meta, function (err) {
         assert.ifError(err);
         assert.strictEqual(options.hints.length, 2);
@@ -880,7 +1038,7 @@ describe('Client', function () {
     it('should use the meta partition keys to fill the routingIndexes', function (done) {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
-      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 4};
       var meta = {
         columns: [
@@ -890,8 +1048,6 @@ describe('Client', function () {
         partitionKeys: [1, 0]
       };
       var options = { prepare: true};
-      client.profileManager = newProfileManager();
-      //noinspection JSAccessibilityCheck
       client._setQueryOptions(options, [types.Uuid.random(), 'another'], meta, function (err) {
         assert.ifError(err);
         assert.strictEqual(options.hints.length, 2);
@@ -907,7 +1063,7 @@ describe('Client', function () {
       var Client = rewire('../../lib/client');
       var client = new Client(helper.baseOptions);
       var metaCalled = 0;
-      client._getEncoder = function () { return { setRoutingKey: helper.noop} };
+      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 3};
       var meta = {
         keyspace: 'ks1',
@@ -936,7 +1092,6 @@ describe('Client', function () {
         }
       };
       var options = { prepare: true};
-      client.profileManager = newProfileManager();
       utils.timesSeries(20, function (n, next) {
         var params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
         //noinspection JSAccessibilityCheck
@@ -980,11 +1135,11 @@ function newProfileManager(options) {
   return new ProfileManager(getOptions(options));
 }
 
-function newConnectedInstance(requestHandlerMock) {
+function newConnectedInstance(requestHandlerMock, options) {
   var Client = rewire('../../lib/client.js');
   Client.__set__("RequestHandler", requestHandlerMock || function () {});
-  var client = new Client(helper.baseOptions);
-  client._getEncoder = function () { return new Encoder(2, {})};
+  var client = new Client(utils.extend({}, helper.baseOptions, options));
+  client._getEncoder = function () { return new Encoder(2, {});};
   client.connect = helper.callbackNoop;
   return client;
 }

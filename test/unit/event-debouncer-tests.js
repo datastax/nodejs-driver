@@ -119,7 +119,9 @@ describe('EventDebouncer', function () {
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
-          if (cb) cb();
+          if (cb) {
+            cb();
+          }
         });
       }
       debouncer.eventReceived({ handler: getHandler('A'), callback: increaseCounter, keyspace: 'ks1' }, false);
@@ -151,7 +153,9 @@ describe('EventDebouncer', function () {
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
-          if (cb) cb();
+          if (cb) {
+            cb();
+          }
         });
       }
       debouncer.eventReceived({ handler: getHandler('A'), callback: increaseCounter, keyspace: 'ks1' }, false);
@@ -170,7 +174,9 @@ describe('EventDebouncer', function () {
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
-          if (cb) cb();
+          if (cb) {
+            cb();
+          }
         });
       }
       debouncer.eventReceived({ handler: getHandler('A'), callback: increaseCounter, keyspace: 'ks2' }, false);

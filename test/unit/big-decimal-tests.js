@@ -1,7 +1,5 @@
+'use strict';
 var assert = require('assert');
-var util = require('util');
-var events = require('events');
-var utils = require('../../lib/utils.js');
 
 var types = require('../../lib/types');
 
@@ -87,11 +85,11 @@ describe('BigDecimal', function () {
     });
   });
   describe('fromNumber()', function () {
-      it('should convert from string in decimal representation', function () {
-        intAndScaleToString.forEach(function (item) {
-          var value = BigDecimal.fromNumber(Number(item[2]));
-          assert.strictEqual(value.toNumber(), parseFloat(item[2]));
-        });
+    it('should convert from string in decimal representation', function () {
+      intAndScaleToString.forEach(function (item) {
+        var value = BigDecimal.fromNumber(Number(item[2]));
+        assert.strictEqual(value.toNumber(), parseFloat(item[2]));
+      });
     });
   });
   describe('#toString()', function () {
@@ -114,12 +112,12 @@ describe('BigDecimal', function () {
         ['102.1', '100.05', '2.05'],
         ['10201.00', '10201', '0.00']
       ].forEach(function (item) {
-          var first = BigDecimal.fromString(item[0]);
-          var second = BigDecimal.fromString(item[1]);
-          assert.strictEqual(first.subtract(second).toString(), item[2]);
+        var first = BigDecimal.fromString(item[0]);
+        var second = BigDecimal.fromString(item[1]);
+        assert.strictEqual(first.subtract(second).toString(), item[2]);
           //check mutations
-          assert.strictEqual(first.toString(), item[0]);
-        });
+        assert.strictEqual(first.toString(), item[0]);
+      });
     });
   });
   describe('#add()', function () {
@@ -134,12 +132,12 @@ describe('BigDecimal', function () {
         ['102.1', '100.05', '202.15'],
         ['10201.00', '-10201', '0.00']
       ].forEach(function (item) {
-          var first = BigDecimal.fromString(item[0]);
-          var second = BigDecimal.fromString(item[1]);
-          assert.strictEqual(first.add(second).toString(), item[2]);
+        var first = BigDecimal.fromString(item[0]);
+        var second = BigDecimal.fromString(item[1]);
+        assert.strictEqual(first.add(second).toString(), item[2]);
           //check mutations
-          assert.strictEqual(first.toString(), item[0]);
-        });
+        assert.strictEqual(first.toString(), item[0]);
+      });
     });
   });
   describe('#compare()', function () {
@@ -156,12 +154,12 @@ describe('BigDecimal', function () {
         ['-1.010', '-1.01', 0],
         ['-1.01', '-1.01', 0]
       ].forEach(function (item) {
-          var first = BigDecimal.fromString(item[0]);
-          var second = BigDecimal.fromString(item[1]);
-          assert.strictEqual(first.compare(second), item[2]);
+        var first = BigDecimal.fromString(item[0]);
+        var second = BigDecimal.fromString(item[1]);
+        assert.strictEqual(first.compare(second), item[2]);
           //check mutations
-          assert.strictEqual(first.toString(), item[0]);
-        });
+        assert.strictEqual(first.toString(), item[0]);
+      });
     });
   });
 });

@@ -1,17 +1,42 @@
+schedules:
+  commit:
+    # per commit job for all branches to run a subset of configs.
+    schedule: per_commit
+    matrix:
+      exclude:
+        # Exclude all 0.12 and 4 builds.
+        - nodejs: ['0.12', '4']
+        # Only build with latest for 0.10
+        - nodejs: '0.10'
+          cassandra: ['1.2', '2.0', '2.1', '2.2', '3.0']
+        # Only build with 1.2 and latest for 0.10
+        - nodejs: '6'
+          cassandra: ['2.0', '2.1', '2.2', '3.0']
+  nightly:
+    # nightly job for primary branches to run all configs.
+    schedule: nightly
+    branches:
+      # regex matches primary branch format (2.1, 3.x, 3.0.x, 3.1.x, master, etc).
+      include: ["/((\\d+(\\.[\\dx]+)+)|master)/"]
+  adhoc:
+    # adhoc job for non-primary braches that doesn't have a schedule but may be used to run all configs.
+    schedule: adhoc
+    branches: 
+      exclude: ["/((\\d+(\\.[\\dx]+)+)|master)/"]
 nodejs:
-  - "0.10"
-  - "0.12"
-  - "4"
-  - "6"
+  - '0.10'
+  - '0.12'
+  - '4'
+  - '6'
 os:
   - ubuntu/trusty64
 cassandra:
-  - 1.2
-  - 2.0
-  - 2.1
-  - 2.2
-  - 3.0
-  - 3.7
+  - '1.2'
+  - '2.0'
+  - '2.1'
+  - '2.2'
+  - '3.0'
+  - '3.10'
 build:
   - type: envinject
     properties: |

@@ -21,6 +21,7 @@ $ npm install cassandra-driver
 - Automatic reconnection
 - Configurable [load balancing][load-balancing] and [retry policies][retry]
 - Works with any cluster size
+- Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
 
 ## Documentation
@@ -40,10 +41,17 @@ You can use the [project mailing list][mailinglist] or create a ticket on the [J
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1' });
 
-const query = 'SELECT name, age, email FROM users WHERE key = ?';
-client.execute(query, [ 'guy' ], function(err, result) {
+const query = 'SELECT name, email FROM users WHERE key = ?';
+client.execute(query, [ 'someone' ])
+  .then(result => console.log('User with email %s', result.rows[0].email));
+```
+
+Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
+
+```javascript
+client.execute(query, [ 'someone' ], function(err, result) {
   assert.ifError(err);
-  console.log('got user profile with email ' + result.rows[0].email);
+  console.log('User with email %s', result.rows[0].email);
 });
 ```
 
@@ -61,10 +69,8 @@ The driver will prepare the query once on each host and execute the statement wi
 const query = 'UPDATE users SET birth = ? WHERE key=?'; 
 const params = [ new Date(1942, 10, 1), 'jimi-hendrix' ];
 // Set the prepare flag in the query options
-client.execute(query, params, { prepare: true }, function(err) {
-  assert.ifError(err);
-  console.log('Row updated on the cluster');
-});
+client.execute(query, params, { prepare: true })
+  .then(result => console.log('Row updated on the cluster'));
 ```
 
 ### Row streaming and pipes
@@ -90,7 +96,7 @@ The `#stream()` method works in the same way but instead of callback it returns 
 It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
 
 ```javascript
-client.stream('SELECT time, val FROM temperature WHERE station_id=', ['abc'])
+client.stream('SELECT time, val FROM temperature WHERE station_id=', [ 'abc' ])
   .on('readable', function () {
     // 'readable' is emitted as soon a row is received and parsed
     var row;
@@ -131,12 +137,13 @@ CREATE TABLE users (
 You can retrieve the user address details as a regular JavaScript object.
 
 ```javascript
-const query = 'SELECT name, email, address FROM users WHERE name = ?';
-client.execute(query, [ name ], { prepare: true }, function (err, result) {
-  const row = result.first();
-  const address = row.address;
-  console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
-});
+const query = 'SELECT name, address FROM users WHERE key = ?';
+client.execute(query, [ key ], { prepare: true })
+  .then(result => {
+    const row = result.first();
+    const address = row.address;
+    console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
+  });
 ```
 
 Read more information  about using [UDTs with the Node.js Driver][doc-udt].
@@ -170,10 +177,8 @@ const queries = [
     params: [ 'hendrix', 'Changed email', new Date() ]
   }
 ];
-client.batch(queries, { prepare: true }, function(err) {
-  assert.ifError(err);
-  console.log('Data updated on cluster');
-});
+client.batch(queries, { prepare: true })
+  .then(result => console.log('Data updated on cluster'));
 ```
 
 ----
@@ -183,8 +188,8 @@ client.batch(queries, { prepare: true }, function(err) {
 There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
  to deal with data types that come from other systems in JavaScript.
 
-The driver supports all the CQL data types in Apache Cassandra (2.2 and below) even for types that no built-in
-JavaScript representation exists, like decimal, varint and bigint. Check the documentation on working with
+The driver supports all the CQL data types in Apache Cassandra (3.0 and below) even for types with no built-in
+JavaScript representation, like decimal, varint and bigint. Check the documentation on working with
  [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
 ## Logging
@@ -227,6 +232,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
 [doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
 [doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
+[doc-promise-callback]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
 [load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
 [retry]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy

@@ -12,7 +12,7 @@ With the Node.js driver, you can retrieve and store UDTs using JavaScript object
 
 For example, given the following UDT and table:
 
-``
+```
 CREATE TYPE address (
    street text,
    city text,
@@ -32,11 +32,12 @@ You retrieve the user address details as a regular JavaScript object.
 
 ```javascript
 const query = 'SELECT name, email, address FROM users WHERE id = ?';
-client.execute(query, [name], { prepare: true }, function (err, result) {
-   var row = result.first();
-   var address = row.address;
-   console.log('User lives in %s - %s', address.city, address.state); 
-});
+client.execute(query, [name], { prepare: true })
+  .then(function (result) {
+    const row = result.first();
+    const address = row.address;
+    console.log('User lives in %s - %s', address.city, address.state); 
+  });
 ```
 
 You modify the address using JavaScript objects as well:
@@ -49,15 +50,15 @@ const address = {
    zip: 95054,
    phones: ['650-389-6000']
 };
-var query = 'UPDATE users SET address = ? WHERE id = ?';
-client.execute(query, [address, name], { prepare: true}, callback);
+const query = 'UPDATE users SET address = ? WHERE id = ?';
+client.execute(query, [address, name], { prepare: true });
 ```
 
 **Setting the prepare flag is recommended** because it helps the driver to accurately map the UDT fields from and to
 object properties.
 
 You can provide JavaScript objects as parameters without setting the prepare flag, but you must provide the parameter
-hint (`udt<address>`) and initially the driver makes an extra roundtrip to the cluster to retrieve the UDT metadata.
+hint (`udt<address>`) and initially the driver makes an extra round-strip to the cluster to retrieve the UDT metadata.
 
 ## Nesting user-defined types in CQL 
 
@@ -91,12 +92,12 @@ You access the UDT fields in the same way, but as nested JavaScript objects.
 
 ```javascript
 const query = 'SELECT name, email, address FROM users WHERE id = ?';
-client.execute(query, [name], { prepare: true }, function (err, result) {
-   const row = result.first();
-   const address = row.address;
-   // phones is an Array of Objects
-   address.phones.forEach(function (phone) {
-      console.log(Phone %s: %s', phone.alias, phone.phone_number);
-   });
-});
+client.execute(query, [name], { prepare: true })
+  .then(function (result) {
+    const row = result.first();
+    const address = row.address;
+    // phones is an Array of Objects
+    address.phones.forEach(phone => 
+      console.log('Phone %s: %s', phone.alias, phone.phone_number));
+  });
 ```

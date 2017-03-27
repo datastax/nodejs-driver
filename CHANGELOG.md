@@ -14,7 +14,6 @@
 - [NODEJS-324] - DSE Auth 5.1: Support Proxy Authentication in 5.1
 - [NODEJS-328] - Support DSE 5.1 DateRangeField
 - [NODEJS-329] - Read optional workload set from node metadata
-- [NODEJS-330] - Support continuous paging
 - [NODEJS-332] - Support Duration Type
 - [NODEJS-338] - Make protocol negotiation more resilient
 

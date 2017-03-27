@@ -6,7 +6,7 @@ The driver addresses this by exposing the `eachRow()` and `stream()` methods, th
 user as they come through the network.
 
 The driver only requests a limited number of rows each time (`5000` being the default `fetchSize`). To retrieve the
-rows beyond this default size, use one of the several paging mechanisms.
+rows beyond this default size, use one of the following paging mechanisms.
 
 ## Automatic paging
 
@@ -38,31 +38,6 @@ client.eachRow(query, parameters, { prepare: true, autoPage : true }, function(n
    // Invoked per each row in all the pages
 }, callback);
 ```
-
-## Continuous paging
-
-Starting from DSE 5.1, it's possible to ask the server to push to the client all the result pages continuously, 
-avoiding the additional coordination required to request each individual page and without the need to evaluate the 
-query each time server-side. Both DSE and this driver implement back pressure mechanisms to ensure the client is not 
-overflowed.
-
-```javascript
-client.stream(query, parameters, { prepare: true, continuousPaging: { } })
-  .on('readable', function () {
-    // readable is emitted as soon a row is received and parsed
-    // You can also use `data` event
-    var row;
-    while (row = this.read()) {
-      // process row
-    }
-  })
-  .on('end', function () {
-    // emitted when all rows have been retrieved and read
-  });
-```
-
-Continuous paging is only supported using the `stream()` method. If needed, you can specify the continuous 
-paging options in the [QueryOptions][query-options].
 
 ## Manual paging 
 

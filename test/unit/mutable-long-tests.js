@@ -52,4 +52,44 @@ describe('MutableLong', function () {
       });
     });
   });
+  describe('#shiftRightUnsigned()', function () {
+    it('should shift across int16 blocks', function () {
+      for (var i = 1; i < 64; i++) {
+        var l = MutableLong.fromBits(0xffffffff, 0xffffffff).shiftRightUnsigned(i);
+
+        var expectedHigh = 0xffffffff;
+        var expectedLow = 0xffffffff;
+        if (i < 32) {
+          expectedLow = (expectedLow >>> i) | (expectedHigh << (32 - i));
+          expectedHigh = expectedHigh >>> i;
+        }
+        else {
+          expectedLow = expectedHigh >>> (i - 32);
+          expectedHigh = 0;
+        }
+        expectedLow = expectedLow >>> 0;
+        assert.strictEqual(l.getLowBitsUnsigned().toString(16), expectedLow.toString(16));
+        assert.strictEqual(l.getHighBitsUnsigned().toString(16), expectedHigh.toString(16));
+      }
+    });
+  });
+  describe('#shiftLeft()', function () {
+    it('should shift across int16 blocks', function () {
+      for (var i = 1; i < 64; i++) {
+        var l = MutableLong.fromBits(1, 0).shiftLeft(i);
+        var expectedHigh = 0;
+        var expectedLow = 0;
+        if (i < 32) {
+          expectedLow = 1 << i;
+        }
+        else {
+          expectedHigh = 1 << (i - 32);
+        }
+        expectedLow = expectedLow >>> 0;
+        expectedHigh = expectedHigh >>> 0;
+        assert.strictEqual(l.getLowBitsUnsigned().toString(16), expectedLow.toString(16));
+        assert.strictEqual(l.getHighBitsUnsigned().toString(16), expectedHigh.toString(16));
+      }
+    });
+  });
 });

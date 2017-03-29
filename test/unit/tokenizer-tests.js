@@ -56,16 +56,32 @@ describe('Murmur3Tokenizer', function () {
     it('should return expected results', function () {
       var t = new Murmur3Tokenizer();
       [
-        [[1, 2, 3, 4, 5, 6, 7, 8], '578437695752307201'],
-        [[1, -2, 3, 4, 5, 6, 7, -8],'-574483808854475263'],
-        [[1, -2, 3, 4, 5, -6, 7, -8],'-574215528017297919'],
-        [[100, -2, 3, 4, 5, -6, 7, 122],'8793271696913333860'],
-        [[100, -2, 3, 4, -102, -6, 7, 122], '8793272336863460964']
+        [[1, 2, 3, 4, 5, 6, 7, 8], 0x4030201, 0x8070605],
+        [[1, -2, 3, 4, 5, 6, 7, -8], 0x403fe01, 0xf8070605],
+        [[1, -2, 3, 4, 5, -6, 7, -8], 0x403fe01, 0xf807fa05],
+        [[100, -2, 3, 4, 5, -6, 7, 122], 0x403fe64, 0x7a07fa05],
+        [[100, -2, 3, 4, -102, -6, 7, 122], 0x403fe64, 0x7a07fa9a]
       ].forEach(function (item) {
         var data = item[0].map(function (x) {
           return Long.fromNumber(x);
         });
-        assert.strictEqual(t.getBlock(data, 0, 0).toString(), item[1]);
+        var result = t.getBlock(data, 0, 0);
+        assert.strictEqual(result.toString(), Long.fromBits(item[1], item[2], false).toString());
+      });
+    });
+  });
+  describe('#getBlock2()', function () {
+    it('should return expected results', function () {
+      var t = new Murmur3Tokenizer();
+      [
+        [[1, 2, 3, 4, 5, 6, 7, 8], 0x4030201, 0x8070605],
+        [[1, -2, 3, 4, 5, 6, 7, -8], 0x403fe01, 0xf8070605],
+        [[1, -2, 3, 4, 5, -6, 7, -8], 0x403fe01, 0xf807fa05],
+        [[100, -2, 3, 4, 5, -6, 7, 122], 0x403fe64, 0x7a07fa05],
+        [[100, -2, 3, 4, -102, -6, 7, 122], 0x403fe64, 0x7a07fa9a]
+      ].forEach(function (item) {
+        var result = t.getBlock2(item[0], 0, 0);
+        assert.ok(result.equals(MutableLong.fromBits(item[1], item[2])));
       });
     });
   });
@@ -83,7 +99,7 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.hash([226, 231, 226, 231, 226, 231, 1]).toString(), '2222373981930033306');
     });
   });
-  xdescribe('#hash2()', function () {
+  describe('#hash2()', function () {
     it('should hash the according results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.hash2([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).toString(), '-5563837382979743776');

@@ -5,6 +5,7 @@ var tokenizer = require('../../lib/tokenizer');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 var RandomTokenizer = tokenizer.RandomTokenizer;
 var types = require('../../lib/types');
+var MutableLong = require('../../lib/types/mutable-long');
 var Long = types.Long;
 var helper = require('../test-helper');
 
@@ -21,11 +22,34 @@ describe('Murmur3Tokenizer', function () {
   describe('#fmix()', function () {
     it('should return expected results', function () {
       var t = new Murmur3Tokenizer();
-      assert.strictEqual(t.fmix(Long.fromString('44744441112828')).toString(), '-7224089102552050611');
-      assert.strictEqual(t.fmix(Long.fromString('9090')).toString(), '-7504869017411790576');
-      assert.strictEqual(t.fmix(Long.fromString('90913738921')).toString(), '2458123773104054050');
-      assert.strictEqual(t.fmix(Long.fromString('1')).toString(), '-5451962507482445012');
-      assert.strictEqual(t.fmix(Long.fromString('-1')).toString(), '7256831767414464289');
+      [
+        [44744441112828, 0x709d544d, 0x9bbee13c],
+        [9090, 0x2355d910, 0x97d95964],
+        [90913738921, 0x45cf5f22, 0x221d028c],
+        [1, 0x34c2cb2c, 0xb456bcfc],
+        [-1, 0x4b825f21, 0x64b5720b]
+      ].forEach(function (item) {
+        var input = Long.fromNumber(item[0]);
+        var expected = Long.fromBits(item[1], item[2], false);
+        assert.strictEqual(t.fmix(input).toString(), expected.toString());
+      });
+    });
+  });
+  describe('#fmix2()', function () {
+    it('should return expected results', function () {
+      var t = new Murmur3Tokenizer();
+      [
+        [44744441112828, 0x709d544d, 0x9bbee13c],
+        [9090, 0x2355d910, 0x97d95964],
+        [90913738921, 0x45cf5f22, 0x221d028c],
+        [1, 0x34c2cb2c, 0xb456bcfc],
+        [-1, 0x4b825f21, 0x64b5720b]
+      ].forEach(function (item) {
+        var input = MutableLong.fromNumber(item[0]);
+        t.fmix2(input);
+        assert.strictEqual(input.getLowBitsUnsigned(), item[1]);
+        assert.strictEqual(input.getHighBitsUnsigned(), item[2]);
+      });
     });
   });
   describe('#getBlock()', function () {
@@ -59,7 +83,7 @@ describe('Murmur3Tokenizer', function () {
       assert.strictEqual(t.hash([226, 231, 226, 231, 226, 231, 1]).toString(), '2222373981930033306');
     });
   });
-  describe('#hash2()', function () {
+  xdescribe('#hash2()', function () {
     it('should hash the according results', function () {
       var t = new Murmur3Tokenizer();
       assert.strictEqual(t.hash2([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).toString(), '-5563837382979743776');

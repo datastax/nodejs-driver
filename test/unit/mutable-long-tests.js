@@ -6,13 +6,29 @@ var Long = require('long');
 var MutableLong = require('../../lib/types/mutable-long');
 
 describe('MutableLong', function () {
-  describe('fromNumber()', function () {
-    it('should convert from a Number', function () {
+  describe('fromNumber() and #toNumber()', function () {
+    it('should convert from and to a Number', function () {
       var values = [ 1, 2, -1, -999999, 256, 1024 * 1024, 1024 * 1025 + 13, Math.pow(2, 52), -1 * Math.pow(2, 52) ];
       values.forEach(function (value) {
         var ml = MutableLong.fromNumber(value);
-        var long = ml.toImmutable();
-        assert.strictEqual(long.toNumber(), value);
+        assert.strictEqual(ml.toNumber(), value);
+      });
+    });
+  });
+  describe('fromString()', function () {
+    it('should parse from string representation for decimal numbers', function () {
+      [
+        [ '-1', [ 0xffff, 0xffff, 0xffff, 0xffff ]],
+        [ '0', []],
+        [ '255', [ 0xff ]],
+        [ '4294901760', [ 0, 0xffff ]],
+        [ '9223372036854775807', [ 0xffff, 0xffff, 0xffff, 0x7fff ]],
+        [ '8354511557626137073', [ 0x89f1, 0x6033, 0x2fff, 0x73f1 ]],
+        [ '-6989252372825142799', [ 0x89f1, 0x6033, 0x2fff, 0x9f01 ]],
+        [ '-8142173877431989775', [ 0x89f1, 0x6033, 0x2fff, 0x8f01 ]],
+      ].forEach(function (item) {
+        var expected = new MutableLong(item[1][0], item[1][1], item[1][2], item[1][3]);
+        assert.ok(MutableLong.fromString(item[0]).equals(expected));
       });
     });
   });
@@ -125,7 +141,7 @@ describe('MutableLong', function () {
         arr2[i] = MutableLong.fromNumber(n);
       }
       arr1.sort(function compare(a, b) {
-        return a < b ? -1 : a > b ? 1 : 0;
+        return a - b;
       });
       arr2.sort(function (a, b) {
         return a.compare(b);

@@ -145,7 +145,8 @@ describe('Metadata', function () {
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0];};
-      metadata.tokenizer.compare = function (a, b) {if (a > b) {return 1;} if (a < b) {return -1;} return 0;};
+      metadata.tokenizer.compare = function (a, b) { return a - b; };
+      metadata.tokenizer.stringify = stringifyDefault;
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
@@ -2241,8 +2242,13 @@ function getTokenizer() {
   var t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
   t.hash = function (b) { return b[0];};
-  t.compare = function (a, b) { if (a > b) {return 1;} if (a < b) {return -1;} return 0; };
+  t.compare = function (a, b) { return a - b; };
+  t.stringify = stringifyDefault;
   return t;
+}
+
+function stringifyDefault(v) {
+  return v.toString();
 }
 
 /** @returns {Metadata} */

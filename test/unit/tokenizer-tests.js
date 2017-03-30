@@ -75,10 +75,10 @@ describe('Murmur3Tokenizer', function () {
       var t = new Murmur3Tokenizer();
       [
         [[1, 2, 3, 4, 5, 6, 7, 8], 0x4030201, 0x8070605],
-        [[1, -2, 3, 4, 5, 6, 7, -8], 0x403fe01, 0xf8070605],
-        [[1, -2, 3, 4, 5, -6, 7, -8], 0x403fe01, 0xf807fa05],
-        [[100, -2, 3, 4, 5, -6, 7, 122], 0x403fe64, 0x7a07fa05],
-        [[100, -2, 3, 4, -102, -6, 7, 122], 0x403fe64, 0x7a07fa9a]
+        [[1, 254, 3, 4, 5, 6, 7, 248], 0x403fe01, 0xf8070605],
+        [[1, 254, 3, 4, 5, 250, 7, 248], 0x403fe01, 0xf807fa05],
+        [[100, 254, 3, 4, 5, 250, 7, 122], 0x403fe64, 0x7a07fa05],
+        [[100, 254, 3, 4, 154, 250, 7, 122], 0x403fe64, 0x7a07fa9a]
       ].forEach(function (item) {
         var result = t.getBlock2(item[0], 0, 0);
         assert.ok(result.equals(MutableLong.fromBits(item[1], item[2])));

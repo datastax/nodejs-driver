@@ -92,4 +92,48 @@ describe('MutableLong', function () {
       }
     });
   });
+  describe('#compare()', function () {
+    it('should compare the values provided', function () {
+      [
+        [ new MutableLong(1), new MutableLong() ],
+        [ new MutableLong(1, 2, 3, 4), new MutableLong(0, 1, 2, 3) ],
+        [ new MutableLong(1, 2, 2, 2), new MutableLong(0, 0, 2, 2) ],
+        [ new MutableLong(0xffff, 0xffff, 0xffff, 0xffff), new MutableLong(0xfffe, 0xffff, 0xffff, 0xffff) ],
+        [ new MutableLong(), new MutableLong(0xfffe, 0xffff, 0xffff, 0xffff) ],
+      ].forEach(function (item) {
+        assert.strictEqual(item[0].compare(item[1]), 1);
+        assert.strictEqual(item[1].compare(item[0]), -1);
+        assert.strictEqual(item[0].compare(item[0]), 0);
+        assert.strictEqual(item[1].compare(item[1]), 0);
+      });
+    });
+    it('should compare random numbers', function () {
+      var max = Math.pow(2, 52);
+      var length = 100;
+      var i;
+      var arr1 = new Array(length);
+      var arr2 = new Array(length);
+      for (i = 0; i < length; i++) {
+        var n = 0;
+        if (i !== 0) {
+          n = Math.floor(Math.random() * max);
+          if (i%2 === 1) {
+            n = -n;
+          }
+        }
+        arr1[i] = n;
+        arr2[i] = MutableLong.fromNumber(n);
+      }
+      arr1.sort(function compare(a, b) {
+        return a < b ? -1 : a > b ? 1 : 0;
+      });
+      arr2.sort(function (a, b) {
+        return a.compare(b);
+      });
+      for (i = 0; i < length; i++) {
+        var expected = MutableLong.fromNumber(arr1[i]);
+        assert.ok(arr2[i].equals(expected));
+      }
+    });
+  });
 });

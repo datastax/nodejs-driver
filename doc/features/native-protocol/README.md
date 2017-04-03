@@ -11,9 +11,9 @@ By default, the driver uses the highest protocol version supported by the driver
 to limit the protocol version to use, you do so in the protocol options.
 
 ```javascript
-const cassandra = require('cassandra-driver');
-const protocolVersion = cassandra.types.protocolVersion;
-const client = new cassandra.Client({
+const dse = require('dse-driver');
+const protocolVersion = dse.types.protocolVersion;
+const client = new dse.Client({
    contactPoints: [ 'host1', 'host2' ],
    protocolOptions: { maxVersion: protocolVersion.v3 }
 });

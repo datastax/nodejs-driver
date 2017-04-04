@@ -34,7 +34,7 @@ describe('DsePlainTextAuthProvider', function () {
     var testClusterOptions = {
       yaml: ['authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],
-      dseYaml: ['authentication_options.default_scheme:internal']
+      dseYaml: ['authentication_options.enabled:true', 'authentication_options.default_scheme:internal']
     };
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);

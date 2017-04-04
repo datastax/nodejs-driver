@@ -29,13 +29,21 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
           ],
           jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0', '-Djava.security.krb5.conf=' + ads.getKrb5ConfigPath()],
           dseYaml: [
-            'authorization_options.enabled:true',
-            'authentication_options.enabled:true',
-            'kerberos_options.keytab:' + ads.getKeytabPath('dse'),
-            'kerberos_options.service_principal:dse/_HOST@DATASTAX.COM',
-            'kerberos_options.http_principal:dse/_HOST@DATASTAX.COM',
-            'kerberos_options.qop:auth',
-            'audit_logging_options.enabled:true'
+            '-y',
+            'authorization_options:\n' +
+            '  enabled: true\n' +
+            'authentication_options:\n' +
+            '  enabled: true\n' +
+            '  default_scheme: kerberos\n' +
+            '  other_schemes:\n' +
+            '    - internal\n' +
+            'kerberos_options:\n' +
+            '  keytab: ' + ads.getKeytabPath('dse') + '\n' +
+            '  service_principal: dse/_HOST@DATASTAX.COM\n' +
+            '  http_principal: dse/_HOST@DATASTAX.COM\n' +
+            '  qop: auth\n' +
+            'audit_logging_options: \n' +
+            '  enabled: true'
           ]
         };
         helper.ccm.startAll(1, ccmOptions, next);

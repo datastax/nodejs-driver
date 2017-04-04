@@ -37,7 +37,10 @@ cDescribe('DseGssapiAuthProvider', function () {
 
     // add DSE 5.0 specific options required to enable kerberos.
     if(v5) {
-      yamlOptions.push('authentication_options.enabled:true');
+      yamlOptions.concat(
+        'authentication_options.enabled:true',
+        'authentication_options.default_scheme:kerberos'
+      );
     }
 
     var testClusterOptions = {

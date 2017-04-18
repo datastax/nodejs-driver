@@ -1,6 +1,6 @@
 # DataStax Enterprise Node.js Driver
 
-This driver is built on top of [Node.js CQL driver for Apache Cassandra][cassandra-driver] and provides the following
+This driver is built on top of [Node.js driver for Apache Cassandra][cassandra-driver] and provides the following
 additions for [DataStax Enterprise][dse]:
 
 * `Authenticator` implementations that use the authentication scheme negotiation in the server-side `DseAuthenticator`;
@@ -30,8 +30,7 @@ You can use the [project mailing list][mailing-list] or create a ticket on the [
 
 ## Getting Started
 
-`Client` inherits from the CQL driver counterpart `Client`.  All CQL features available to  `Client` (see the
-[CQL driver manual][core-manual]) can also be used with `Client`.
+`Client` inherits from the CQL driver counterpart `Client`.
 
 ```javascript
 const dse = require('dse-driver');
@@ -42,7 +41,12 @@ client.execute(query, [ 'someone' ])
   .then(result => console.log('User with email %s', result.rows[0].email));
 ```
 
-Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
+Along with the rest of asynchronous execution methods in the driver, `execute()` returns a [`Promise`][promise] that
+ can be chained using `then()` method. On modern JavaScript engines, promises can be awaited upon using the `await` 
+ keyword within [async functions][async-fn].
+
+Alternatively, you can use the callback-based execution for all asynchronous methods of the API by providing a 
+callback as the last parameter.
 
 ```javascript
 client.execute(query, [ 'someone' ], function(err, result) {
@@ -51,10 +55,11 @@ client.execute(query, [ 'someone' ], function(err, result) {
 });
 ```
 
-The `dse-driver` module also exports the submodules from the CQL driver, so you only need to import one module to access
-all DSE and Cassandra types.
+_In order to have concise code examples in this documentation, we will use the promise-based API of the driver 
+along with the `await` keyword._
 
-For example:
+The same submodules structure in the Node.js driver for Apache Cassandra is available in the `dse-driver`, for example:
+
 ```javascript
 const dse = require('dse-driver');
 const Uuid = dse.types.Uuid;
@@ -93,7 +98,9 @@ const client = new dse.Client({
     })
   ]
 });
+```
 
+```javascript
 // executeGraph() method returns a Promise
 const result = await client.executeGraph('g.V()');
 const vertex = result.first();
@@ -259,18 +266,19 @@ console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
 
 ## License
 
-Copyright 2016 DataStax
+Copyright 2016-2017 DataStax
 
 http://www.datastax.com/terms/datastax-dse-driver-license-terms
 
 
 [dse]: http://www.datastax.com/products/datastax-enterprise
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
-[core-manual]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
-[modern-graph]: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure
+[modern-graph]: http://tinkerpop.apache.org/docs/3.2.4/reference/#_the_graph_structure
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
-[api-docs]: http://docs.datastax.com/en/latest-dse-nodejs-driver-api/
+[api-docs]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/api/
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/
+[promise]: https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[async-fn]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function

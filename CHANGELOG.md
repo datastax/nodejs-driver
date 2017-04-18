@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Enterprise Node.js Driver
 
+## 1.3.0
+
+2017-04-18
+
+### Bug Fixes
+
+- [NODEJS-350] - Handle new WRITE_FAILURE and READ_FAILURE format in DSE_V1 protocol
+
 ## 1.3.0-beta1
 
 2017-02-13

@@ -24,6 +24,7 @@ var licenseHeaderRegex = new RegExp(
 
 describe('All source files', function() {
   it('should start with license header', function () {
+    // eslint-disable-next-line no-undef
     var root = path.normalize(path.join(__dirname, '../../'));
     // Files to capture and validate header on.
     var candidateRE = /.*\.(js)$/;

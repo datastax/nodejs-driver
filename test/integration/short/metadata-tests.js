@@ -1,9 +1,11 @@
 "use strict";
 var assert = require('assert');
+var util = require('util');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
+var policies = require('../../../lib/policies');
 var types = require('../../../lib/types');
 var errors = require('../../../lib/errors');
 var vit = helper.vit;
@@ -1096,6 +1098,71 @@ describe('Metadata', function () {
     });
   });
 });
+describe('Metadata with ring changes', function () {
+  this.timeout(120000);
+  beforeEach(helper.ccmHelper.start(2, { vnodes: true }));
+  afterEach(helper.ccmHelper.remove);
+  it('should refresh ring information after node decommission', function (done) {
+    var reconnectionPolicy1 = new TestReconnectionPolicy();
+    var reconnectionPolicy2 = new TestReconnectionPolicy();
+    var client1 = new Client({
+      contactPoints: [ '127.0.0.1' ],
+      pooling: { warmup: true },
+      policies: { reconnection: reconnectionPolicy1 }
+    });
+    var client2 = new Client({
+      contactPoints: [ '127.0.0.2' ],
+      pooling: { warmup: true },
+      policies: { reconnection: reconnectionPolicy2 }
+    });
+    utils.series([
+      client1.connect.bind(client1),
+      client2.connect.bind(client2),
+      function (next) {
+        assert.strictEqual(client1.hosts.length, 2);
+        assert.strictEqual(client2.hosts.length, 2);
+        next();
+      },
+      helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
+      helper.waitOnHostGone(client1, 2),
+      helper.waitOnHostGone(client2, 2),
+      helper.delay(2000),
+      function (next) {
+        assert.strictEqual(client1.hosts.length, 1);
+        assert.strictEqual(client2.hosts.length, 1);
+        // 1 schedule per pool, no reconnection
+        assert.strictEqual(reconnectionPolicy1.schedulesRequested, 2);
+        assert.strictEqual(reconnectionPolicy2.schedulesRequested, 2);
+        assert.strictEqual(reconnectionPolicy1.wasUsed, false);
+        // the client2 instance scheduled a reconnection attempt as it is considered to be DOWN initially
+        // until ControlConnection switches to node1 and refreshes the ring info.
+        assert.strictEqual(reconnectionPolicy2.wasUsed, true);
+        next();
+      },
+      client1.shutdown.bind(client1),
+      client2.shutdown.bind(client2)
+    ], done);
+  });
+});
+
+function TestReconnectionPolicy(delay) {
+  this.wasUsed = false;
+  this.schedulesRequested = 0;
+  this.delay = delay || 1000;
+}
+
+util.inherits(TestReconnectionPolicy, policies.reconnection.ReconnectionPolicy);
+
+TestReconnectionPolicy.prototype.newSchedule = function () {
+  this.schedulesRequested++;
+  var self = this;
+  return {
+    next: function () {
+      self.wasUsed = true;
+      return { value: self.delay, done: false };
+    }
+  };
+};
 
 /** @returns {Client}  */
 function newInstance(options) {

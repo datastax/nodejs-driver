@@ -1,5 +1,14 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.2.1
+
+2017-04-24
+
+### Features
+
+- [NODEJS-332] - Support Duration Type
+- [NODEJS-338] - Make protocol negotiation more resilient
+
 ## 3.2.0
 
 2017-01-17

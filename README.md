@@ -1,7 +1,6 @@
 # DataStax Node.js Driver for Apache Cassandra
 
-A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra (1.2+) and DataStax
-Enterprise (3.1+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3.
+A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3. _Use the [DSE Node.js driver][dse-driver] for better compatibility and support for DataStax Enterprise_.
 
 ## Installation
 
@@ -33,7 +32,7 @@ $ npm install cassandra-driver
 
 ## Getting Help
 
-You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
+You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira]. Additionally, you can use the `#datastax-drivers` channel in the [DataStax Academy Slack][slack].
 
 ## Basic usage
 
@@ -216,7 +215,7 @@ The development effort to provide an up to date, high performance, fully feature
 
 ## License
 
-Copyright 2016 DataStax
+Copyright 2014-2017 DataStax
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
@@ -247,3 +246,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#udts
 [survey]: http://goo.gl/forms/f216tY3Ebr
+[dse-driver]: https://github.com/datastax/nodejs-dse-driver
+[slack]: https://academy.datastax.com/slack
+[dse]: https://www.datastax.com/products/datastax-enterprise

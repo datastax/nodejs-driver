@@ -69,7 +69,7 @@ describe('ControlConnection', function () {
         assert.ifError(err);
         var hosts = cc.hosts.values();
         assert.strictEqual(hosts.length, 2);
-        assert.deepEqual(hosts.map(function (h) { return h.address; }).sort(), [ '127.0.0.1:9999', '::1:9999' ]);
+        assert(hosts.indexOf('127.0.0.1:9999') >= 0);
         done();
       });
     });

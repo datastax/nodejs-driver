@@ -68,8 +68,8 @@ describe('ControlConnection', function () {
       cc.init(function (err) {
         assert.ifError(err);
         var hosts = cc.hosts.values();
-        assert.strictEqual(hosts.length, 1);
-        assert.equal(hosts.filter(function (h) { return h.address === '127.0.0.1:9999'; }).length, 1);
+        assert.ok(hosts.length >= 1);
+        assert.strictEqual(hosts.filter(function (h) { return h.address === '127.0.0.1:9999'; }).length, 1);
         done();
       });
     });

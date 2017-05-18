@@ -58,6 +58,21 @@ describe('ControlConnection', function () {
         done();
       });
     });
+    it('should resolve IPv4 and IPv6 addresses with non default port', function (done) {
+      if (!useLocalhost) {
+        return done();
+      }
+      var cc = new ControlConnection(clientOptions.extend({ contactPoints: ['localhost:9999'] }));
+      cc.getConnection = helper.callbackNoop;
+      cc.refreshOnConnection = helper.callbackNoop;
+      cc.init(function (err) {
+        assert.ifError(err);
+        var hosts = cc.hosts.values();
+        assert.ok(hosts.length >= 1);
+        assert.strictEqual(hosts.filter(function (h) { return h.address === '127.0.0.1:9999'; }).length, 1);
+        done();
+      });
+    });
     it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', function (done) {
       var ControlConnectionMock = rewire('../../lib/control-connection');
       ControlConnectionMock.__set__('dns', {

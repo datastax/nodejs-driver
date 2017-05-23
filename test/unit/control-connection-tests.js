@@ -363,6 +363,7 @@ function getFakeConnection(endpoint, queryResults) {
   var c = new events.EventEmitter();
   c.protocolVersion = types.protocolVersion.maxSupported;
   c.endpoint = endpoint;
+  c.connected = true;
   c.requests = [];
   var queryResultKeys = Object.keys(queryResults);
   var defaultResult = { rows: [ {} ] };

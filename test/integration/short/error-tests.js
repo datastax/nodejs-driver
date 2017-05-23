@@ -90,17 +90,13 @@ describe('Client', function () {
     });
     it('should callback with functionFailure error when the cql function throws an error', function (done) {
       var client = setupInfo.client;
-      utils.series([
-        function (next) {
-          client.execute('SELECT ks_func.div(v1,v2) FROM ks_func.tbl1 where id = 1', function (err) {
-            helper.assertInstanceOf(err, errors.ResponseError);
-            assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
-            assert.strictEqual(err.keyspace, 'ks_func');
-            assert.strictEqual(err.functionName, 'div');
-            next();
-          });
-        },
-      ], done);
+      client.execute('SELECT ks_func.div(v1,v2) FROM ks_func.tbl1 where id = 1', function (err) {
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
+        assert.strictEqual(err.keyspace, 'ks_func');
+        assert.strictEqual(err.functionName, 'div');
+        done();
+      });
     });
   });
 });

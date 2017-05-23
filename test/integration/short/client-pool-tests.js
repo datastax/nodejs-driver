@@ -847,9 +847,10 @@ describe('Client', function () {
       ], done);
     });
     it('should reconnect in the background', function (done) {
+      var reconnectionDelay = 500;
       var client = newInstance({
         pooling: { heartBeatInterval: 0, warmup: true },
-        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(1000) }
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) }
       });
       utils.series([
         client.connect.bind(client),
@@ -880,6 +881,7 @@ describe('Client', function () {
         },
         helper.toTask(helper.ccmHelper.startNode, null, 3),
         helper.waitOnHostUp(client, 3),
+        helper.delay(reconnectionDelay * 2),
         function assertReconnected(next) {
           assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));
           client.hosts.forEach(function (host) {

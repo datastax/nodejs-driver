@@ -52,7 +52,8 @@ describe('Client', function () {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.ok(err.message.indexOf('resolve') > 0, 'Message was: ' + err.message);
-        assert.ok(!client.hosts);
+        assert.ok(client.hosts);
+        assert.strictEqual(client.hosts.length, 0);
         done();
       });
     });

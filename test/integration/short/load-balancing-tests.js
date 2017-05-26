@@ -85,7 +85,7 @@ function testNoHops(loggedKeyspace, table, expectedSourcesLength, done) {
     var params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
-      client.metadata.getTrace(result.info.traceId, function (err, trace) {
+      getTrace(client, result.info.traceId, function (err, trace) {
         assert.ifError(err);
         // Check where the events are coming from
         var sources = {};
@@ -126,7 +126,7 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
           // Only check the trace once
           return timesNext();
         }
-        client.metadata.getTrace(result.info.traceId, function (err, trace) {
+        getTrace(client, result.info.traceId, function (err, trace) {
           assert.ifError(err);
           // Check where the events are coming from
           trace.events.forEach(function (event) {
@@ -144,6 +144,30 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
   }, helper.finish(client, done));
 }
 
+/**
+ * Gets the query trace retrying additional times if it fails.
+ */
+function getTrace(client, traceId, callback) {
+  var attempts = 0;
+  var trace;
+  var error;
+  // Retry several times
+  utils.whilst(
+    function condition() {
+      return !trace && attempts++ < 20;
+    },
+    function fn(next) {
+      client.metadata.getTrace(traceId, function (err, t) {
+        error = err;
+        trace = t;
+        next();
+      });
+    },
+    function whilstEnd() {
+      callback(error, trace);
+    }
+  );
+}
 
 function newInstance(policy) {
   var options = utils.deepExtend({}, helper.baseOptions, { policies: { loadBalancing: policy}});

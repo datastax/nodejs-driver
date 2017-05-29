@@ -70,10 +70,10 @@ context('with a reusable 3 node cluster', function () {
  * Check that the trace event sources only shows nodes that are replicas to fulfill a consistency ALL query.
  * @param {String} loggedKeyspace
  * @param {String} table
- * @param {Number} expectedSourcesLength
+ * @param {Number} expectedReplicas
  * @param {Function} done
  */
-function testNoHops(loggedKeyspace, table, expectedSourcesLength, done) {
+function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
   var client = new Client({
     policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
     keyspace: loggedKeyspace,
@@ -81,22 +81,26 @@ function testNoHops(loggedKeyspace, table, expectedSourcesLength, done) {
   });
   var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
   var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+  var results = [];
   utils.timesLimit(50, 16, function (n, timesNext) {
     var params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
       getTrace(client, result.info.traceId, function (err, trace) {
         assert.ifError(err);
-        // Check where the events are coming from
-        var sources = {};
-        trace.events.forEach(function (event) {
-          sources[helper.lastOctetOf(event['source'].toString())] = true;
-        });
-        assert.strictEqual(Object.keys(sources).length, expectedSourcesLength);
+        results.push(trace);
         timesNext();
       });
     });
-  }, helper.finish(client, done));
+  }, function loopEnd() {
+    client.shutdown();
+    // Check where the events are coming from
+    results.forEach(function (trace) {
+      var replicas = getReplicas(trace);
+      assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
+    });
+    done();
+  });
 }
 
 /**
@@ -114,10 +118,11 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
   });
   var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
   var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+  var results = [];
   utils.timesSeries(10, function (i, nextParameters) {
     var params = [ i, i ];
     var coordinators = {};
-    var replicas = {};
+    var replicas;
     utils.times(10, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
@@ -128,20 +133,27 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
         }
         getTrace(client, result.info.traceId, function (err, trace) {
           assert.ifError(err);
-          // Check where the events are coming from
-          trace.events.forEach(function (event) {
-            replicas[helper.lastOctetOf(event['source'].toString())] = true;
-          });
+          replicas = getReplicas(trace);
           timesNext();
         });
       });
     }, function (err) {
       assert.ifError(err);
-      assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
-      assert.deepEqual(Object.keys(replicas).sort(), Object.keys(coordinators).sort());
+      results.push({
+        replicas: replicas,
+        coordinators: coordinators
+      });
       nextParameters();
     });
-  }, helper.finish(client, done));
+  }, function () {
+    client.shutdown();
+    results.forEach(function (item) {
+      assert.strictEqual(Object.keys(item.replicas).length, expectedReplicas);
+      assert.deepEqual(Object.keys(item.replicas).sort(), Object.keys(item.coordinators).sort(),
+        'All replicas should be used as coordinators');
+    });
+    done();
+  });
 }
 
 /**
@@ -167,6 +179,19 @@ function getTrace(client, traceId, callback) {
       callback(error, trace);
     }
   );
+}
+
+function getReplicas(trace) {
+  var replicas = {};
+  var regex = /\b(?:from|to) \/([\da-f:.]+)$/i;
+  trace.events.forEach(function (event) {
+    replicas[helper.lastOctetOf(event['source'].toString())] = true;
+    var activityMatches = regex.exec(event['activity']);
+    if (activityMatches && activityMatches.length === 2) {
+      replicas[helper.lastOctetOf(activityMatches[1])] = true;
+    }
+  });
+  return replicas;
 }
 
 function newInstance(policy) {

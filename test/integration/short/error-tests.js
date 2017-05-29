@@ -16,6 +16,17 @@ describe('Client', function () {
     var failWritesKs = helper.getRandomName('ks');
     var setupInfo = helper.setup(2, {
       keyspace: commonKs,
+      clientOptions: {
+        policies: { retry: new helper.FallthroughRetryPolicy() }
+      },
+      queries: [
+        'CREATE TABLE read_fail_tbl(pk int, cc int, v int, primary key (pk, cc))',
+        helper.createKeyspaceCql('ks_func'),
+        'CREATE TABLE ks_func.tbl1 (id int PRIMARY KEY, v1 int, v2 int)',
+        'INSERT INTO ks_func.tbl1 (id, v1, v2) VALUES (1, 1, 0)',
+        "CREATE FUNCTION ks_func.div(a int, b int) RETURNS NULL ON NULL INPUT" +
+        " RETURNS int LANGUAGE java AS 'return a / b;'"
+      ],
       ccmOptions: {
         yaml: ['tombstone_failure_threshold:1000', 'enable_user_defined_functions:true'],
         jvmArgs: ['-Dcassandra.test.fail_writes_ks=' + failWritesKs]
@@ -24,7 +35,6 @@ describe('Client', function () {
     it('should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
       var client = setupInfo.client;
       utils.series([
-        helper.toTask(client.execute, client, "CREATE TABLE read_fail_tbl(pk int, cc int, v int, primary key (pk, cc))"),
         function generateTombstones(next) {
           utils.timesSeries(2000, function (n, timesNext) {
             client.execute('INSERT INTO read_fail_tbl (pk, cc, v) VALUES (1, ?, null)', [n], {prepare: true}, function (err, result) {
@@ -80,21 +90,13 @@ describe('Client', function () {
     });
     it('should callback with functionFailure error when the cql function throws an error', function (done) {
       var client = setupInfo.client;
-      utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql('ks_func')),
-        helper.toTask(client.execute, client, 'CREATE TABLE ks_func.tbl1 (id int PRIMARY KEY, v1 int, v2 int)'),
-        helper.toTask(client.execute, client, 'INSERT INTO ks_func.tbl1 (id, v1, v2) VALUES (1, 1, 0)'),
-        helper.toTask(client.execute, client, "CREATE FUNCTION ks_func.div(a int, b int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return a / b;'"),
-        function (next) {
-          client.execute('SELECT ks_func.div(v1,v2) FROM ks_func.tbl1 where id = 1', function (err) {
-            helper.assertInstanceOf(err, errors.ResponseError);
-            assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
-            assert.strictEqual(err.keyspace, 'ks_func');
-            assert.strictEqual(err.functionName, 'div');
-            next();
-          });
-        },
-      ], done);
+      client.execute('SELECT ks_func.div(v1,v2) FROM ks_func.tbl1 where id = 1', function (err) {
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
+        assert.strictEqual(err.keyspace, 'ks_func');
+        assert.strictEqual(err.functionName, 'div');
+        done();
+      });
     });
   });
 });

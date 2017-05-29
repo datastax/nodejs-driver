@@ -252,6 +252,34 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+    it('should connect after unsuccessful attempt caused by a non-existent keyspace', function (done) {
+      var keyspace = 'ks_test_after_fail';
+      var client = newInstance({ keyspace: keyspace });
+      utils.series([
+        function tryConnect(next) {
+          client.connect(function (err) {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            next();
+          });
+        },
+        function createKeyspace(next) {
+          var tempClient = newInstance();
+          tempClient.execute(helper.createKeyspaceCql(keyspace), function (err) {
+            assert.ifError(err);
+            tempClient.shutdown(next);
+          });
+        },
+        function tryConnectAgain(next) {
+          client.connect(function (err) {
+            assert.ifError(err);
+            client.execute(helper.queries.basic, next);
+          });
+        }
+      ], function (err) {
+        client.shutdown();
+        done(err);
+      });
+    });
   });
   describe('#connect() with auth', function () {
     before(helper.ccmHelper.start(helper.isCassandraGreaterThan('2.1') ? 2 : 1, {
@@ -847,9 +875,10 @@ describe('Client', function () {
       ], done);
     });
     it('should reconnect in the background', function (done) {
+      var reconnectionDelay = 500;
       var client = newInstance({
         pooling: { heartBeatInterval: 0, warmup: true },
-        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(1000) }
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) }
       });
       utils.series([
         client.connect.bind(client),
@@ -880,6 +909,7 @@ describe('Client', function () {
         },
         helper.toTask(helper.ccmHelper.startNode, null, 3),
         helper.waitOnHostUp(client, 3),
+        helper.delay(reconnectionDelay * 2),
         function assertReconnected(next) {
           assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));
           client.hosts.forEach(function (host) {
@@ -951,6 +981,30 @@ describe('Client', function () {
           }, 1000);
         }
       ], done);
+    });
+    it('should callback after a NoHostAvailableError', function (done) {
+      var client = newInstance({ contactPoints: [ '::1', '::2'] });
+      client.connect(function (err) {
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.strictEqual(client.hosts.length, 0);
+        client.shutdown(function (err) {
+          assert.strictEqual(client.hosts.length, 0);
+          assert.ifError(err);
+          done();
+        });
+      });
+    });
+    it('should close all connections after connecting with an invalid keyspace', function (done) {
+      var client = newInstance({ keyspace: 'KS_DOES_NOT_EXIST' });
+      client.connect(function (err) {
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(client.hosts.length, 0);
+        client.shutdown(function (err) {
+          assert.ifError(err);
+          assert.strictEqual(client.hosts.length, 0);
+          done();
+        });
+      });
     });
   });
 });

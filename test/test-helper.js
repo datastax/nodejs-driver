@@ -18,6 +18,7 @@ var helper = {
    * @param {Object} [options]
    * @param {Object} [options.ccmOptions]
    * @param {Boolean} [options.initClient] Determines whether to create a Client instance.
+   * @param {Object} [options.clientOptions] The options to use to initialize the client.
    * @param {String} [options.keyspace] Name of the keyspace to create.
    * @param {Number} [options.replicationFactor] Keyspace replication factor.
    * @param {Array<String>} [options.queries] Queries to run after client creation.
@@ -29,7 +30,7 @@ var helper = {
     var client;
     var keyspace;
     if (initClient) {
-      client = new Client(helper.baseOptions);
+      client = new Client(utils.extend({}, options.clientOptions, helper.baseOptions));
       before(client.connect.bind(client));
       keyspace = options.keyspace || helper.getRandomName('ks');
       before(helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, options.replicationFactor)));
@@ -440,6 +441,7 @@ var helper = {
   Map: MapPolyFill,
   Set: SetPolyFill,
   WhiteListPolicy: WhiteListPolicy,
+  FallthroughRetryPolicy: FallthroughRetryPolicy,
   /**
    * Determines if test tracing is enabled
    */
@@ -963,6 +965,20 @@ WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callb
     });
   });
 };
+
+function FallthroughRetryPolicy() {
+
+}
+
+util.inherits(FallthroughRetryPolicy, policies.retry.RetryPolicy);
+
+FallthroughRetryPolicy.prototype.onUnavailable = function () {
+  this.rethrowResult();
+};
+
+FallthroughRetryPolicy.prototype.onReadTimeout = FallthroughRetryPolicy.prototype.onUnavailable;
+FallthroughRetryPolicy.prototype.onWriteTimeout = FallthroughRetryPolicy.prototype.onUnavailable;
+FallthroughRetryPolicy.prototype.onRequestError = FallthroughRetryPolicy.prototype.onUnavailable;
 
 /**
  * Conditionally executes func if testVersion is <= the current cassandra version.

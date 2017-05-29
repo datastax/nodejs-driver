@@ -27,6 +27,7 @@ describe('ControlConnection', function () {
           assert.ok(h.rack);
           assert.ok(h.tokens);
         });
+        cc.shutdown();
         done();
       });
     });
@@ -129,6 +130,7 @@ describe('ControlConnection', function () {
             return value;
           }, 0);
           assert.strictEqual(countUp, 3);
+          cc.shutdown();
           next();
         }
       ], done);
@@ -142,6 +144,7 @@ describe('ControlConnection', function () {
         function (next) {
           var hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 1);
+          cc.shutdown();
           next();
         }
       ], done);
@@ -191,7 +194,8 @@ describe('ControlConnection', function () {
     });
     it('should reconnect when all hosts go down and back up', function (done) {
       var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
-      options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
+      var reconnectionDelay = 200;
+      options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay);
       var cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
@@ -224,9 +228,13 @@ describe('ControlConnection', function () {
               assert.strictEqual(h.isUp(), true);
             }
           });
-          assert.ok(cc.host);
-          assert.strictEqual(helper.lastOctetOf(cc.host), '2');
-          next();
+          // Wait until
+          setTimeout(function () {
+            assert.ok(cc.host);
+            assert.strictEqual(helper.lastOctetOf(cc.host), '2');
+            cc.shutdown();
+            next();
+          }, reconnectionDelay * 2);
         }
       ], done);
     });
@@ -244,6 +252,7 @@ describe('ControlConnection', function () {
         assert.ok(cc.metadata.keyspaces['system']);
         assert.ok(cc.metadata.keyspaces['system'].strategy);
         assert.strictEqual(typeof cc.metadata.keyspaces['system'].tokenToReplica, 'function');
+        cc.shutdown();
         done();
       });
     });

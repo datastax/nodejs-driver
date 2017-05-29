@@ -20,7 +20,9 @@ context('with a reusable 3 node cluster', function () {
       'CREATE KEYSPACE ks_network_rp2 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'datacenter1\' : 2}',
       'CREATE TABLE ks_simple_rp1.table_a (id int primary key, name int)',
       'CREATE TABLE ks_network_rp1.table_b (id int primary key, name int)',
-      'CREATE TABLE ks_network_rp2.table_c (id int primary key, name int)'
+      'CREATE TABLE ks_network_rp2.table_c (id int primary key, name int)',
+      // Try to prevent consistency issues in the query trace
+      'ALTER KEYSPACE system_traces WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': \'1\'}'
     ]
   });
   describe('WhiteListPolicy', function () {

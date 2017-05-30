@@ -73,7 +73,8 @@ describe('Client', function () {
           });
         }
         else {
-          assert.strictEqual(err.failures, 1);
+          assert.strictEqual(typeof err.failures, 'number');
+          assert.ok(err.failures > 0);
         }
         assert.strictEqual(err.writeType, 'SIMPLE');
         done();

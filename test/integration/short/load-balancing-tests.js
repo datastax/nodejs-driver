@@ -10,6 +10,7 @@ var loadBalancing = require('../../../lib/policies/load-balancing');
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 var WhiteListPolicy = loadBalancing.WhiteListPolicy;
+var vdescribe = helper.vdescribe;
 
 context('with a reusable 3 node cluster', function () {
   this.timeout(180000);
@@ -25,7 +26,7 @@ context('with a reusable 3 node cluster', function () {
       'ALTER KEYSPACE system_traces WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': \'1\'}'
     ]
   });
-  describe('WhiteListPolicy', function () {
+  vdescribe('2.0', 'WhiteListPolicy', function () {
     it('should use the hosts in the white list only', function (done) {
       var policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
       var client = newInstance(policy);
@@ -42,7 +43,7 @@ context('with a reusable 3 node cluster', function () {
       });
     });
   });
-  describe('TokenAwarePolicy', function () {
+  vdescribe('2.0', 'TokenAwarePolicy', function () {
     it('should target the correct partition with logged keyspace', function (done) {
       utils.series([
         function testCaseWithSimpleStrategy(next) {

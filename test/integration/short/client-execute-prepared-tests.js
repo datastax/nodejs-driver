@@ -618,7 +618,7 @@ describe('Client', function () {
           queryOptionsArray.push(queryOptions);
           lbp.newQueryPlanOriginal(query, queryOptions, callback);
         };
-        var client = newInstance({ policies: { loadBalancing: lbp}});
+        var client = newInstance({ keyspace: commonKs, policies: { loadBalancing: lbp}});
         utils.series([
           client.connect.bind(client),
           function query(next) {

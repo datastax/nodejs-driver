@@ -23,7 +23,9 @@ var values = [
   [ new Duration(1, 1, Long.fromNumber(1)), '020202', '1mo1d1ns'],
   [ new Duration(257, 0, Long.fromNumber(0)), '82020000', '21y5mo', 'P21Y5M'],
   [ new Duration(0, 2, Long.fromNumber(120000000000)), '0004f837e11d6000', '2d2m', 'P2DT2M'],
-  [ new Duration(0, 0, Long.fromString('9223372036854775805')), '0000fffffffffffffffffa']
+  [ new Duration(0, 0, Long.fromString('9223372036854775805')), '0000fffffffffffffffffa'],
+  [ new Duration(0, 0, Long.fromString('-9223372036854775808')), '0000ffffffffffffffffff'],
+  [ new Duration(0, 0, Long.fromString('9223372036854775807')), '0000fffffffffffffffffe']
 ];
 
 describe('Duration', function () {

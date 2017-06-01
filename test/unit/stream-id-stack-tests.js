@@ -5,6 +5,7 @@ var rewire = require('rewire');
 
 describe('StreamIdStack', function () {
   this.timeout(2000);
+  var osPrecision = 30;
   it('should pop and push', function () {
     var stack = newInstance();
     assert.strictEqual(stack.pop(), 0);
@@ -62,8 +63,8 @@ describe('StreamIdStack', function () {
     stack.clear();
   });
   it('should release unused groups', function (done) {
-    var releaseDelay = 50;
-    var stack = newInstance(3, releaseDelay - 10);
+    var releaseDelay = 100;
+    var stack = newInstance(3, releaseDelay);
     //6 groups,
     pop(stack, 128 * 5 + 2);
     //return just 1 to the last group
@@ -79,11 +80,11 @@ describe('StreamIdStack', function () {
       assert.strictEqual(stack.groups.length, 5);
       stack.clear();
       done();
-    }, releaseDelay);
+    }, releaseDelay + osPrecision);
   });
   it('should not release the current group', function (done) {
-    var releaseDelay = 50;
-    var stack = newInstance(3, releaseDelay - 10);
+    var releaseDelay = 100;
+    var stack = newInstance(3, releaseDelay);
     //6 groups,
     pop(stack, 128 * 5 + 2);
     //return just 1 to the last group
@@ -97,11 +98,11 @@ describe('StreamIdStack', function () {
       assert.strictEqual(stack.groups.length, 6);
       stack.clear();
       done();
-    }, releaseDelay);
+    }, releaseDelay + osPrecision);
   });
   it('should not release more than release size per time', function (done) {
-    var releaseDelay = 50;
-    var stack = newInstance(3, releaseDelay - 10);
+    var releaseDelay = 100;
+    var stack = newInstance(3, releaseDelay);
     //12 groups,
     pop(stack, 128 * 11 + 2);
     assert.strictEqual(stack.groups.length, 12);
@@ -115,13 +116,13 @@ describe('StreamIdStack', function () {
     setTimeout(function () {
       //there should be 12 - 4 groups now
       assert.strictEqual(stack.groups.length, 8);
-    }, releaseDelay);
+    }, releaseDelay + osPrecision);
     setTimeout(function () {
       //there should be 12 - 8 groups now
       assert.strictEqual(stack.groups.length, 4);
       stack.clear();
       done();
-    }, releaseDelay * 2);
+    }, releaseDelay * 2 + osPrecision);
   });
 });
 

@@ -6,6 +6,7 @@
  */
 'use strict';
 var assert = require('assert');
+var util = require('util');
 var helper = require('../../test-helper');
 var types = require('../../../lib/types');
 var utils = require('../../../lib/utils');
@@ -38,6 +39,8 @@ vdescribe('3.10', 'Duration', function () {
         '1950000ns',
         '1950000NS',
         '-1950000ns',
+        '9223372036854775807ns',
+        '-9223372036854775808ns',
         '1y3mo2h10m',
         'P1Y2D',
         'P1Y2M',
@@ -74,7 +77,7 @@ vdescribe('3.10', 'Duration', function () {
               assert.strictEqual(result.rowLength, 1);
               var actual = result.first()['c1'];
               helper.assertInstanceOf(actual, Duration);
-              assert.ok(actual.equals(value));
+              assert.ok(actual.equals(value), util.format('Assertion failed: %j !== %j', actual, value));
               next();
             });
           });

@@ -1499,6 +1499,46 @@ describe('Metadata', function () {
         });
       });
     });
+    describe('with Thrift secondary index', function () {
+      it('should parse tables from Thrift with secondary indexes', function (done) {
+        var tableRow = {
+          keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', bloom_filter_fp_chance: null,
+          caching: {"keys":"ALL", "rows_per_partition":"NONE"}, cf_id: "121d4950-41fd-11e7-ac8d-e1535f74c6ee",
+          column_aliases: [], comparator: 'org.apache.cassandra.db.marshal.UTF8Type',
+          compaction_strategy_options: '{}',
+          compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}',
+          default_validator: 'org.apache.cassandra.db.marshal.BytesType', key_aliases: '["key"]',
+          key_validator: 'org.apache.cassandra.db.marshal.UTF8Type', type: 'Standard' };
+        var columnRows = [
+          { keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', column_name: 'ACCOUNT',
+            component_index: null, index_name: 'ACCOUNT1', index_options: 'null', index_type: 'KEYS', type: 'regular',
+            validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
+          { keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', column_name: 'USER',
+            component_index: null, index_name: 'USER1', index_options: 'null', index_type: 'KEYS', type: 'regular',
+            validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
+          { keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', column_name: 'key',
+            component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key',
+            validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
+        ];
+        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.setCassandraVersion([2, 1]);
+        metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
+        metadata.getTable('ks_tbl_meta', 'ThriftSecondaryIndexTest', function (err, table) {
+          assert.ifError(err);
+          assert.ok(table);
+          assert.strictEqual(table.isCompact, true);
+          assert.strictEqual(table.columns.length, 3);
+          assert.strictEqual(table.partitionKeys.length, 1);
+          assert.strictEqual(table.clusteringKeys.length, 0);
+          assert.strictEqual(table.indexes.length, 2);
+          assert.strictEqual(table.indexes[0].name, 'ACCOUNT1');
+          assert.strictEqual(table.indexes[0].target, 'ACCOUNT');
+          assert.strictEqual(table.indexes[1].name, 'USER1');
+          assert.strictEqual(table.indexes[1].target, 'USER');
+          done();
+        });
+      });
+    });
   });
   describe('#getFunctions()', function () {
     it('should return an empty array when not found', function (done) {

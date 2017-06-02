@@ -615,6 +615,30 @@ describe('Client', function () {
         }
       ], done);
     });
+    describe('with a different keyspace', function () {
+      it('should fill in the keyspace in the query options passed to the lbp', function (done) {
+        var lbp = new loadBalancing.RoundRobinPolicy();
+        lbp.newQueryPlanOriginal = lbp.newQueryPlan;
+        var queryOptionsArray = [];
+        lbp.newQueryPlan = function (query, queryOptions, callback) {
+          queryOptionsArray.push(queryOptions);
+          lbp.newQueryPlanOriginal(query, queryOptions, callback);
+        };
+        var client = newInstance({ keyspace: commonKs, policies: { loadBalancing: lbp}});
+        utils.series([
+          client.connect.bind(client),
+          function query(next) {
+            client.execute('SELECT * FROM system.local WHERE key = ?', [ 'local' ], { prepare: true }, next);
+          },
+          client.shutdown.bind(client),
+          function assertResults(next) {
+            var queryOptions = queryOptionsArray[queryOptionsArray.length - 1];
+            assert.strictEqual(queryOptions.keyspace, 'system');
+            next();
+          }
+        ], done);
+      });
+    });
     describe('with udt and tuple', function () {
       before(function (done) {
         var client = setupInfo.client;

@@ -256,10 +256,10 @@ describe('Metadata', function () {
         client.connect.bind(client),
         function executeQuery(next) {
           client.execute(helper.queries.basic, [], { traceQuery: true}, function (err, result) {
-            traceId = result.info.traceId;
             if (err) {
               return next(err);
             }
+            traceId = result.info.traceId;
             setTimeout(next, 1500);
           });
         },

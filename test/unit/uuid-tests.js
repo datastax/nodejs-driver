@@ -6,7 +6,6 @@
  */
 'use strict';
 var assert = require('assert');
-var util = require('util');
 var helper = require('../test-helper');
 
 var Uuid = require('../../lib/types').Uuid;
@@ -196,10 +195,11 @@ describe('TimeUuid', function () {
       assert.strictEqual(val.getNodeIdString(), 'h12345');
     });
     it('should use current date', function () {
-      var date = new Date().getTime();
+      var startDate = new Date().getTime();
       var val = TimeUuid.now().getDate().getTime();
-      assert.ok([date-1, date, date+1].indexOf(val) > -1,
-        util.format("Expected %d to be within ± 1ms of %d.", val, date));
+      var endDate = new Date().getTime();
+      assert.ok(val >= startDate);
+      assert.ok(val <= endDate);
     });
     it('should reset the ticks portion of the TimeUuid to zero when the time progresses', function () {
       var firstTimeUuid = TimeUuid.now();

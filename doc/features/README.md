@@ -7,7 +7,7 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 
 - [Address resolution](address-resolution)
 - [Batch statements](batch)
-- [CQL data types to JavaScript types](connection-pooling)
+- [CQL data types to JavaScript types](datatypes)
 - [Cluster and schema metadata](metadata)
 - [Connection pooling](connection-pooling)
 - [Paging](paging)

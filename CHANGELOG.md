@@ -1,5 +1,18 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.2.2
+
+2017-06-05
+
+### Bug Fixes
+
+- [NODEJS-346] - Shutdown doesn't work if error occurs after control connection initialization
+- [NODEJS-347] - Metadata: Schema parser fails to handle index_options null values
+- [NODEJS-355] - Domain without dots will not connect
+- [NODEJS-358] - TokenAwarePolicy does not take statement keyspace into account
+- [NODEJS-360] - ControlConnection: when any of the queries to refresh topology fail it will not attempt to reconnect
+- [NODEJS-362] - Driver fails to encode Duration's with large values
+
 ## 3.2.1
 
 2017-04-24

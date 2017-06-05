@@ -128,7 +128,7 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
     var params = [ i, i ];
     var coordinators = {};
     var replicas;
-    utils.times(10, function (n, timesNext) {
+    utils.timesLimit(100, 20, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
         coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

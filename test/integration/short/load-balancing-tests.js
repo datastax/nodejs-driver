@@ -20,11 +20,13 @@ var vdescribe = helper.vdescribe;
 
 context('with a reusable 3 node cluster', function () {
   this.timeout(180000);
-  helper.setup(3, {
+  // pass in 3:0 to exercise CCM dc set up logic which will use a consistent data center name
+  // for both Apache Cassandra and DSE.
+  helper.setup('3:0', {
     queries: [
       'CREATE KEYSPACE ks_simple_rp1 WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1}',
-      'CREATE KEYSPACE ks_network_rp1 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'datacenter1\' : 1}',
-      'CREATE KEYSPACE ks_network_rp2 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'datacenter1\' : 2}',
+      'CREATE KEYSPACE ks_network_rp1 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'dc1\' : 1}',
+      'CREATE KEYSPACE ks_network_rp2 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'dc1\' : 2}',
       'CREATE TABLE ks_simple_rp1.table_a (id int primary key, name int)',
       'CREATE TABLE ks_network_rp1.table_b (id int primary key, name int)',
       'CREATE TABLE ks_network_rp2.table_c (id int primary key, name int)',
@@ -132,7 +134,7 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
     var params = [ i, i ];
     var coordinators = {};
     var replicas;
-    utils.times(10, function (n, timesNext) {
+    utils.timesLimit(100, 20, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
         coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

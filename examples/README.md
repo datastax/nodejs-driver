@@ -1,6 +1,6 @@
-# Node.js Driver usage samples
+# DataStax Node.js Driver usage samples
 
-These folder contains examples on how to use some features of the Node.js Driver for [Apache Cassandra][cassandra].
+These folder contains examples on how to use some features of the Node.js Driver for [DataStax Enterprise][dse].
 
 You should also visit the [Documentation][doc-index] and [FAQ][faq].
 
@@ -28,7 +28,7 @@ only call client.shutdown() once in your application's lifetime.
 
 If you have any doubt regarding these examples, feel free to post your question in the [mailing list][mailing-list].
 
-[cassandra]: http://cassandra.apache.org/
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
+[dse]: https://www.datastax.com/products/datastax-enterprise
+[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/

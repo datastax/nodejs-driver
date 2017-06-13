@@ -264,6 +264,18 @@ console.log(point instanceof Point); // true
 console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
 ```
 
+## Logging
+
+Instances of `Client` are [`EventEmitter`][event-emitter] and emit `'log'` events:
+
+```javascript
+client.on('log', (level, className, message, furtherInfo) => {
+  console.log('%s: %s', level, message);
+});
+```
+
+The `level` values passed to the listener can be `verbose`, `info`, `warning` or `error`. In production environment, you should filter out `verbose` log events, that are suitable for debug.
+
 ## License
 
 Copyright 2016-2017 DataStax
@@ -282,3 +294,4 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/
 [promise]: https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise
 [async-fn]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function
+[event-emitter]: https://nodejs.org/api/events.html#events_class_eventemitter

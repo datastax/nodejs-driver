@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "7"
+  - "8"
   - "6"
   - "4"
   - "0.12"
@@ -11,7 +11,7 @@ cache:
     - node_modules
 script:
   - if [ "$TRAVIS_NODE_VERSION" != "0.10" ] && [ "$TRAVIS_NODE_VERSION" != "0.12" ]; then
-      npm install -g eslint;
+      npm install -g eslint@3;
       npm run eslint;
     fi
   - npm test

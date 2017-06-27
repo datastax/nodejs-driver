@@ -634,9 +634,29 @@ describe('encoder', function () {
       var encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
       assert.strictEqual(encoder.encode(undefined), null);
     });
-    it('should decode 0-length map values', function () {
+    it('should decode 0-length map values, v2', function () {
       var encoder = new Encoder(2, {});
       var buffer = new Buffer('000100046b6579310000', 'hex');
+      var value = encoder.decode(buffer,
+        { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
+      assert.ok(value);
+      assert.deepEqual(Object.keys(value), ['key1']);
+      assert.strictEqual(value['key1'], '');
+    });
+    it('should decode 0-length map values, v3', function () {
+      var encoder = new Encoder(3, {});
+      var buffer = new Buffer('00000001000000046b65793100000000', 'hex');
+      var value = encoder.decode(buffer,
+        { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
+      assert.ok(value);
+      assert.deepEqual(Object.keys(value), ['key1']);
+      assert.strictEqual(value['key1'], '');
+    });
+    it('should decode null map values', function () {
+      // technically this should not be possible as nulls are not allowed in collections.
+      // at a protocol level this is only possible with v3+ as v2 uses unsigned short for collection element size.
+      var encoder = new Encoder(3, {});
+      var buffer = new Buffer('00000001000000046b657931FFFFFFFF', 'hex');
       var value = encoder.decode(buffer,
         { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
       assert.ok(value);

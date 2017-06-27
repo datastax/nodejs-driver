@@ -615,7 +615,7 @@ describe('Client', function () {
       var client = setupInfo.client;
       var tid = types.TimeUuid.now();
       var id = Uuid.random();
-      var map = {}
+      var map = {};
       map[tid] = '';
       utils.series([
         function insertDataWithEmptyStringValues(next) {

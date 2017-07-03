@@ -116,6 +116,7 @@ describe('Metadata', function () {
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
@@ -147,6 +148,7 @@ describe('Metadata', function () {
       metadata.tokenizer.hash = function (b) { return b[0];};
       metadata.tokenizer.compare = function (a, b) {if (a > b) {return 1;} if (a < b) {return -1;} return 0;};
       metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces();
@@ -180,6 +182,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racks },
         'dc2': { hostLength: 4, racks: racks }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -220,6 +223,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -262,6 +266,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -321,6 +326,10 @@ describe('Metadata', function () {
       metadata.ring.sort(function (a, b) {
         return a - b;
       });
+      metadata.ringTokensAsStrings = [];
+      for (var i = 0; i < metadata.ring.length; i++) {
+        metadata.ringTokensAsStrings.push(metadata.ring[i].toString());
+      }
 
       metadata.log = helper.noop;
       // Get the replicas of 5.  Since DC2 has 0 replicas, we only expect 3 replicas (the number of DC1).
@@ -374,6 +383,10 @@ describe('Metadata', function () {
       metadata.ring.sort(function (a, b) {
         return a - b;
       });
+      metadata.ringTokensAsStrings = [];
+      for (var i = 0; i < metadata.ring.length; i++) {
+        metadata.ringTokensAsStrings.push(metadata.ring[i].toString());
+      }
 
       metadata.log = helper.noop;
       // Get the replicas of 0.  Since token 0 is a replica in DC2 and DC2 only has 1, it should return 1 replica

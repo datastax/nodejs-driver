@@ -17,9 +17,10 @@ describe('Client', function () {
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
     var commonKs = helper.getRandomName('ks');
     var commonTable = commonKs + '.' + helper.getRandomName('table');
+    var commonTable2 = commonKs + '.' + helper.getRandomName('table');
     var setupInfo = helper.setup(3, {
       keyspace: commonKs,
-      queries: [ helper.createTableWithClusteringKeyCql(commonTable) ]
+      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
     });
     it('should execute a prepared query with parameters on all hosts', function (done) {
       var client = setupInfo.client;
@@ -604,6 +605,32 @@ describe('Client', function () {
           var query = util.format('INSERT INTO %s (id1, id2, map_sample) VALUES (?, ?, ?)', commonTable);
           client.execute(query, [Uuid.random(), tid, map], { prepare: true}, function (err) {
             helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should return empty string values', function (done) {
+      // empty strings are an interesting case in collections as they have 0 length.
+      var client = setupInfo.client;
+      var tid = types.TimeUuid.now();
+      var id = Uuid.random();
+      var map = {};
+      map[tid] = '';
+      utils.series([
+        function insertDataWithEmptyStringValues(next) {
+          var query = util.format('INSERT INTO %s (id, map_sample, list_sample, set_sample) VALUES (?, ?, ?, ?)', commonTable2);
+          client.execute(query, [id, map, [''], ['']], { prepare: true}, next);
+        },
+        function retrieveMapWithEmptyStringValue(next) {
+          var query = util.format('SELECT * FROM %s where id = ?', commonTable2);
+          client.execute(query, [id], { prepare: true }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 1);
+            var row = result.first();
+            assert.deepEqual(row['map_sample'], map);
+            assert.deepEqual(row['list_sample'], ['']);
+            assert.deepEqual(row['set_sample'], ['']);
             next();
           });
         }

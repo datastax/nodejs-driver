@@ -7,6 +7,7 @@ var rewire = require('rewire');
 var helper = require('../test-helper.js');
 var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
+var HostMap = require('../../lib/host').HostMap;
 var Metadata = require('../../lib/metadata');
 var TableMetadata = require('../../lib/metadata/table-metadata');
 var tokenizer = require('../../lib/tokenizer');
@@ -2212,6 +2213,50 @@ describe('Metadata', function () {
       });
     });
   });
+  describe('#buildTokens', function() {
+    it('should set sorted tokens from a single host', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var tokenizer = getTokenizer();
+      metadata.tokenizer = tokenizer;
+      var hosts = new HostMap();
+      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      h1.tokens = ['10', '20', '400', '15', '25', '5'];
+      hosts.push(h1.address, h1);
+      metadata.buildTokens(hosts);
+      //Sorting is alphanumeric for this tokenizer
+      var sortedTokens = ['10', '15', '20', '25', '400', '5'];
+      var sortedParsedTokens = [];
+      sortedTokens.forEach(function (token) {
+        sortedParsedTokens.push(tokenizer.parse(token));
+      });
+      assert.deepEqual(metadata.ring, sortedParsedTokens);
+      assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
+      done();
+    });
+    it('should set sorted tokens from multiple hosts', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var tokenizer = getTokenizer();
+      metadata.tokenizer = tokenizer;
+      var hosts = new HostMap();
+      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      h1.tokens = ['10', '400', '25', '5'];
+      hosts.push(h1.address, h1);
+      var h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
+      h2.tokens = ['13', '203', '18', '8'];
+      hosts.push(h2.address, h2);
+      metadata.buildTokens(hosts);
+      //Sorting is alphanumeric for this tokenizer
+      var sortedTokens = ['10', '13', '18', '203', '25', '400', '5', '8'];
+      var sortedParsedTokens = [];
+      sortedTokens.forEach(function (token) {
+        sortedParsedTokens.push(tokenizer.parse(token));
+      });
+      assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
+      assert.deepEqual(metadata.ring, sortedParsedTokens);
+      done();
+    });
+  });
+
 });
 describe('SchemaParser', function () {
   var isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');

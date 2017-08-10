@@ -203,6 +203,14 @@ client.on('log', function(level, className, message, furtherInfo) {
 
 The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
 
+## Compatibility
+
+- Apache Cassandra versions 2.0 and above.
+- DataStax Enterprise versions 4.5 and above.
+- Node.js versions 0.10 and above.
+
+Note: DataStax products do not support big-endian systems.
+
 ## Feedback Requested
 
 **Help us focus our efforts!** Provide your input on the [Platform and Runtime Survey][survey] (we kept it short).

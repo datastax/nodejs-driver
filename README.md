@@ -276,6 +276,13 @@ client.on('log', (level, className, message, furtherInfo) => {
 
 The `level` values passed to the listener can be `verbose`, `info`, `warning` or `error`. In production environment, you should filter out `verbose` log events, that are suitable for debug.
 
+## Compatibility
+
+- DataStax Enterprise versions 4.5 and above.
+- Node.js versions 0.10 and above.
+
+Note: DataStax products do not support big-endian systems.
+
 ## License
 
 Copyright 2016-2017 DataStax

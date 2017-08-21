@@ -2224,8 +2224,7 @@ describe('Metadata', function () {
       h1.tokens = ['10', '20', '400', '15', '25', '5'];
       hosts.push(h1.address, h1);
       metadata.buildTokens(hosts);
-      //Sorting is alphanumeric for this tokenizer
-      var sortedTokens = ['10', '15', '20', '25', '400', '5'];
+      var sortedTokens = ['5', '10', '15', '20', '25', '400'];
       var sortedParsedTokens = [];
       sortedTokens.forEach(function (token) {
         sortedParsedTokens.push(tokenizer.parse(token));
@@ -2246,8 +2245,7 @@ describe('Metadata', function () {
       h2.tokens = ['13', '203', '18', '8'];
       hosts.push(h2.address, h2);
       metadata.buildTokens(hosts);
-      //Sorting is alphanumeric for this tokenizer
-      var sortedTokens = ['10', '13', '18', '203', '25', '400', '5', '8'];
+      var sortedTokens = ['5', '8', '10', '13', '18', '25', '203', '400'];
       var sortedParsedTokens = [];
       sortedTokens.forEach(function (token) {
         sortedParsedTokens.push(tokenizer.parse(token));
@@ -2342,6 +2340,9 @@ function getTokenizer() {
   t.hash = function (b) { return b[0];};
   t.compare = function (a, b) { return a - b; };
   t.stringify = stringifyDefault;
+  t.parse = function (b) {
+    return parseInt(b, 10);
+  };
   return t;
 }
 

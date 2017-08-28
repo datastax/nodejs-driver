@@ -17,9 +17,6 @@ describe('Client', function () {
       var client = newInstance();
       var query = helper.queries.basic;
       var counter = 0;
-      //fail if its preparing
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function () {throw new Error('Prepared should not be called');};
       client.eachRow(query, [], {prepare: false}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -165,14 +162,6 @@ describe('Client', function () {
       var client = setupInfo.client;
       var query = helper.queries.basic;
       var counter = 0;
-      //noinspection JSAccessibilityCheck
-      var originalGetPrepared = client._getPrepared;
-      var prepareCalled = false;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function () {
-        prepareCalled = true;
-        originalGetPrepared.apply(client, arguments);
-      };
       client.eachRow(query, [], {prepare: true}, function (n, row) {
         assert.strictEqual(n, 0);
         assert.ok(row instanceof types.Row, null);
@@ -180,7 +169,6 @@ describe('Client', function () {
       }, function (err) {
         assert.ifError(err);
         assert.strictEqual(counter, 1);
-        assert.strictEqual(prepareCalled, true);
         done();
       });
     });

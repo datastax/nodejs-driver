@@ -7,6 +7,8 @@ var types = require('../lib/types');
 var utils = require('../lib/utils.js');
 var spawn = require('child_process').spawn;
 var Client = require('../lib/client');
+var defaultOptions = require('../lib/client-options').defaultOptions;
+var Host = require('../lib/host').Host;
 
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
@@ -664,6 +666,55 @@ var helper = {
     pooling.coreConnectionsPerHost[types.distance.remote] = remoteLength || 1;
     pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
     return pooling;
+  },
+  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
+    return hostsInfo.map(function (info, index) {
+      var h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      h.isUp = function () {
+        return !(info.isUp === false);
+      };
+      h.shouldBeIgnored = !!info.ignored;
+      h.prepareCalled = 0;
+      h.sendStreamCalled = 0;
+      h.changeKeyspaceCalled = 0;
+      h.borrowConnection = function (cb) {
+        if (!h.isUp() || h.shouldBeIgnored) {
+          return cb(new Error('This host should not be used'));
+        }
+        cb(null, {
+          prepareOnce: function (q, cb) {
+            h.prepareCalled++;
+            if (prepareQueryCb) {
+              return prepareQueryCb(q, h, cb);
+            }
+            cb(null, { id: 1, meta: {} });
+          },
+          sendStream: function (r, o, cb) {
+            h.sendStreamCalled++;
+            if (sendStreamCb) {
+              return sendStreamCb(r, h, cb);
+            }
+            cb(null, { });
+          },
+          changeKeyspace: function (ks, cb) {
+            h.changeKeyspaceCalled++;
+            cb();
+          }
+        });
+      };
+      return h;
+    });
+  },
+  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
+    var hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
+    return ({
+      newQueryPlan: function (q, ks, cb) {
+        cb(null, utils.arrayIterator(hosts));
+      },
+      getFixedQueryPlan: function () {
+        return hosts;
+      }
+    });
   },
   /**
    * Returns true if the tests are being run on Windows

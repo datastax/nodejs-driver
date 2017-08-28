@@ -171,143 +171,6 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#prepareMultiple()', function () {
-    it('should prepare each query serially and callback with the response', function (done) {
-      var handler = newInstance();
-      var prepareCounter = 0;
-      var eachCounter = 0;
-      var connection = {
-        prepareOnce: function (q, cb) {
-          prepareCounter++;
-          setImmediate(function () {
-            cb(null, {});
-          });
-        }
-      };
-      handler._getNextConnection = function (o, cb) {
-        cb(null, connection);
-      };
-      var eachCallback = function () { eachCounter++; };
-      handler.prepareMultiple(['q1', 'q2'], [eachCallback, eachCallback], {}, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(2, eachCounter);
-        assert.strictEqual(2, prepareCounter);
-        done();
-      });
-    });
-    it('should retry with a handler when there is an error', function (done) {
-      var handler = newInstance();
-      handler.request = {};
-      handler.host = { address: '1'};
-      var retryCounter = 0;
-      var connection = {
-        prepareOnce: function (q, cb) {
-          var err;
-          if (retryCounter === 0) {
-            err = new errors.ResponseError(types.responseErrorCodes.overloaded, 'dummy error');
-          }
-          setImmediate(function () {
-            cb(err, { flags: utils.emptyObject});
-          });
-        }
-      };
-      handler._getNextConnection = function (o, cb) {
-        cb(null, connection);
-      };
-      handler._retry = function (c, uh, cb) {
-        retryCounter++;
-        setImmediate(cb);
-      };
-      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
-        assert.ifError(err);
-        assert.ok(handler.retryHandler);
-        assert.strictEqual(1, retryCounter);
-        done();
-      });
-    });
-    it('should not retry when there is an query error', function (done) {
-      var handler = newInstance();
-      handler.host = { address: '1'};
-      var connection = {
-        prepareOnce: function (q, cb) {
-          setImmediate(function () {
-            cb(new errors.ResponseError(types.responseErrorCodes.syntaxError, 'syntax error'));
-          });
-        }
-      };
-      handler._getNextConnection = function (o, cb) {
-        cb(null, connection);
-      };
-      handler.prepareMultiple(['q1', 'q2'], [helper.noop, helper.noop], {}, function (err) {
-        helper.assertInstanceOf(err, errors.ResponseError);
-        assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
-        done();
-      });
-    });
-  });
-  describe('#_prepareAndRetry()', function () {
-    it('should only re-prepare of ExecuteRequest and BatchRequest', function (done) {
-      var handler = newInstance();
-      handler.request = {};
-      handler.host = {};
-      handler._prepareAndRetry(new Buffer(0), function (err) {
-        helper.assertInstanceOf(err, errors.DriverInternalError);
-        done();
-      });
-    });
-    it('should prepare all BatchRequest queries and send request again on the same connection', function (done) {
-      var handler = newInstance();
-      handler.request = {};
-      handler.host = {};
-      handler.request = new requests.BatchRequest([
-        { info: { queryId: new Buffer('10')}, query: '1'},
-        { info: { queryId: new Buffer('20')}, query: '2'}
-      ], {});
-      var connection = { prepareOnce: function (q, cb) {
-        queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)});});
-      }};
-      handler.connection = connection;
-      var queriesPrepared = [];
-      handler._sendOnConnection = function (request, o, cb) {
-        helper.assertInstanceOf(request, requests.BatchRequest);
-        assert.strictEqual(handler.connection, connection);
-        setImmediate(cb);
-      };
-      handler._prepareAndRetry(new Buffer(0), function (err) {
-        assert.ifError(err);
-        assert.strictEqual(queriesPrepared.toString(), handler.request.queries.map(function (x) {return x.query; }).toString());
-        done();
-      });
-    });
-    it('should prepare distinct BatchRequest queries', function (done) {
-      var handler = newInstance();
-      handler.request = {};
-      handler.host = {};
-      handler.request = new requests.BatchRequest([
-        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'},
-        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'}
-      ], {});
-      var connection = { prepareOnce: function (q, cb) {
-        queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)});});
-      }};
-      handler.connection = connection;
-      var queriesPrepared = [];
-      handler._sendOnConnection = function (request, o, cb) {
-        helper.assertInstanceOf(request, requests.BatchRequest);
-        assert.strictEqual(handler.connection, connection);
-        setImmediate(cb);
-      };
-      handler._prepareAndRetry(new Buffer(0), function (err) {
-        assert.ifError(err);
-        //Only 1 query
-        assert.strictEqual(queriesPrepared.length, 1);
-        assert.strictEqual(queriesPrepared.join(','), 'SAME QUERY');
-        done();
-      });
-    });
-  });
   describe('#_retry()', function () {
     it('should set consistency level when provided', function (done) {
       var handler = newInstance();
@@ -342,6 +205,71 @@ describe('RequestHandler', function () {
     });
   });
   describe('#send()', function () {
+    context('when an UNPREPARED response is obtained', function () {
+      it('should send a prepare request on the same connection', function (done) {
+        var queryId = utils.allocBufferFromString('123');
+        var lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
+          if (h.sendStreamCalled === 1) {
+            // Its the first request, send an error
+            var err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            err.queryId = queryId;
+            return cb(err);
+          }
+          cb(null, { });
+        });
+        var hosts = lbp.getFixedQueryPlan();
+        var client = newClient(options, {
+          getPreparedById: function (id) {
+            return { query: 'QUERY1', id: id };
+          }
+        });
+        var handler = newInstance(null, client, lbp);
+        var request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        handler.send(request, {}, function (err, response) {
+          assert.ifError(err);
+          assert.ok(response);
+          assert.strictEqual(hosts[0].prepareCalled, 1);
+          assert.strictEqual(hosts[0].sendStreamCalled, 2);
+          assert.strictEqual(hosts[1].prepareCalled, 0);
+          assert.strictEqual(hosts[1].sendStreamCalled, 0);
+          done();
+        });
+      });
+      it('should move to next host when PREPARE response is an error', function (done) {
+        var queryId = utils.allocBufferFromString('123');
+        var lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function prepareCallback(q, h, cb) {
+          if (h.address === '0') {
+            return cb(new Error('Test error'));
+          }
+          cb();
+        }, function sendFake(r, h, cb) {
+          if (h.sendStreamCalled === 1) {
+            // Its the first request, send an error
+            var err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            err.queryId = queryId;
+            return cb(err);
+          }
+          cb(null, { });
+        });
+        var hosts = lbp.getFixedQueryPlan();
+        var client = newClient(options, {
+          getPreparedById: function (id) {
+            return { query: 'QUERY1', id: id };
+          }
+        });
+        var handler = newInstance(null, client, lbp);
+        var request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        handler.send(request, {}, function (err, response) {
+          assert.ifError(err);
+          assert.ok(response);
+          assert.strictEqual(hosts[0].prepareCalled, 1);
+          assert.strictEqual(hosts[0].sendStreamCalled, 1);
+          assert.strictEqual(hosts[1].prepareCalled, 1);
+          assert.strictEqual(hosts[1].sendStreamCalled, 2);
+          done();
+        });
+      });
+    });
     it('should return a ResultSet with valid columns', function (done) {
       var handler = newInstance();
       var connection = { sendStream: function (r, o, cb) {
@@ -478,31 +406,6 @@ describe('RequestHandler', function () {
         done();
       });
     });
-    it('should retry sending using the next host when is a PREPARE request', function (done) {
-      var handler = newInstance();
-      var getNextConnectionCounter = 0;
-      handler.host = { address: '1.1.1.1:9042', checkHealth: helper.noop, setUp: helper.noop };
-      var connection1 = { sendStream: function (r, o, cb) {
-        cb(new errors.OperationTimedOutError('Testing timeout'));
-      }};
-      var connection2 = { sendStream: function (r, o, cb) {
-        cb(null, {});
-      }};
-      handler._getNextConnection = function (o, cb) {
-        if (getNextConnectionCounter++ === 0) {
-          return cb(null, connection1);
-        }
-        cb(null, connection2);
-      };
-      //even though it is set to false, it should be retried
-      var queryOptions = { retryOnTimeout: false };
-      //noinspection JSCheckFunctionSignatures
-      handler.send(new requests.PrepareRequest('q'), queryOptions, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(getNextConnectionCounter, 2);
-        done();
-      });
-    });
 
     var captureStackTraceOptions = [
       {options:{}, expected:false},
@@ -545,50 +448,6 @@ describe('RequestHandler', function () {
       });
     });
   });
-  describe('#_iterateThroughHosts()', function () {
-    var getHost = function (address, isUp) {
-      return {
-        isUp: function () { return isUp !== false; },
-        setDistance: helper.noop,
-        address: address,
-        setDown: function () {
-          //noinspection JSPotentiallyInvalidUsageOfThis
-          this.isDown = true;
-        }
-      };
-    };
-    it('should synchronously get next connection when pool warmed', function (done) {
-      var handler = newInstance();
-      var hosts = utils.arrayIterator([ getHost() ]);
-      handler._getPooledConnection = function (h, cb) {
-        cb(null, {});
-      };
-      var sync = true;
-      handler._iterateThroughHosts(hosts, function (err, c) {
-        assert.ifError(err);
-        assert.ok(c);
-        assert.ok(sync);
-        done();
-      });
-      sync = false;
-    });
-    it('should callback with NoHostAvailableError when all host down', function (done) {
-      var handler = newInstance();
-      var hosts = utils.arrayIterator([ getHost('2001::1', false), getHost('2001::2', false) ]);
-      var sync = true;
-      handler._iterateThroughHosts(hosts, function (err, c) {
-        helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        assert.ok(err.innerErrors);
-        assert.deepEqual(Object.keys(err.innerErrors), ['2001::1', '2001::2']);
-        assert.strictEqual(typeof err.innerErrors['2001::1'], 'string');
-        assert.strictEqual(typeof err.innerErrors['2001::2'], 'string');
-        assert.ok(!c);
-        assert.ok(sync);
-        done();
-      });
-      sync = false;
-    });
-  });
 });
 
 /** @returns {RequestHandler} */
@@ -598,10 +457,11 @@ function newInstance(customOptions, client, loadBalancingPolicy, retryPolicy) {
     client || newClient(o), loadBalancingPolicy || o.policies.loadBalancing, retryPolicy || o.policies.retry);
 }
 
-function newClient(o) {
+function newClient(o, metadata) {
   //noinspection JSCheckFunctionSignatures
   return {
     profileManager: new ProfileManager(o),
-    options: o
+    options: o,
+    metadata: metadata
   };
 }

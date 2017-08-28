@@ -409,11 +409,13 @@ describe('Metadata', function () {
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {
       var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      metadata.getPreparedInfo(null, 'QUERY1');
-      metadata.getPreparedInfo(null, 'QUERY2');
-      assert.strictEqual(metadata.preparedQueries['__length'], 2);
+      var info1 = metadata.getPreparedInfo(null, 'QUERY1');
+      // Should be created once
+      assert.strictEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
+      var info2 = metadata.getPreparedInfo(null, 'QUERY2');
       metadata.clearPrepared();
-      assert.strictEqual(metadata.preparedQueries['__length'], 0);
+      assert.notEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
+      assert.notEqual(info2, metadata.getPreparedInfo(null, 'QUERY2'));
     });
   });
   describe('#getPreparedInfo()', function () {

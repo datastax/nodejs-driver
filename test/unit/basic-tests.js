@@ -12,6 +12,7 @@ var timestampGeneration = require('../../lib/policies/timestamp-generation');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
 var writers = require('../../lib/writers');
+var OperationState = require('../../lib/operation-state');
 var helper = require('../test-helper.js');
 
 describe('types', function () {
@@ -764,8 +765,7 @@ describe('writers', function () {
         itemCallbackCounter++;
       }
       for (var i = 0; i < 10; i++) {
-        //noinspection JSCheckFunctionSignatures
-        queue.push(request, itemCallback);
+        queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
       setTimeout(function () {
         //10 frames

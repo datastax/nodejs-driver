@@ -513,7 +513,7 @@ describe('Host', function () {
       var host = newHostInstance(defaultOptions);
       var closeInvoked = 0;
       var c = {
-        timedOutHandlers: 1000,
+        timedOutOperations: 1000,
         close: function () {
           closeInvoked++;
         }

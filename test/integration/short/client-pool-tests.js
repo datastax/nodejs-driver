@@ -2,6 +2,7 @@
 var assert = require('assert');
 var domain = require('domain');
 var dns = require('dns');
+var util = require('util');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -14,6 +15,7 @@ var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundR
 var EventEmitter = require('events').EventEmitter;
 var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
+var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -658,6 +660,68 @@ describe('Client', function () {
     });
     it('should handle distance changing load balancing policies', changingDistancesTest('2'));
     it('should handle distance changing load balancing policies for control connection host', changingDistancesTest('1'));
+    [
+      new policies.speculativeExecution.NoSpeculativeExecutionPolicy(),
+      new ConstantSpeculativeExecutionPolicy(100, 1)
+    ].forEach(function (policy) {
+      context('with ' + policy.constructor.name, function () {
+        afterEach(function (done) {
+          helper.ccmHelper.resumeNode(1, done);
+        });
+        afterEach(function (done) {
+          helper.ccmHelper.resumeNode(2, done);
+        });
+        it('should wait until is completed on the first node', function (done) {
+          var client = newInstance({
+            pooling: { warmup: true },
+            policies: {
+              speculativeExecution: policy,
+              loadBalancing: new OrderedLoadBalancingPolicy(),
+              retry: new helper.FallthroughRetryPolicy()
+            },
+            socketOptions: {
+              readTimeout: 5000
+            }
+          });
+          utils.series([
+            client.connect.bind(client),
+            helper.toTask(helper.ccmHelper.pauseNode, null, 1),
+            function query(next) {
+              if (!(policy instanceof ConstantSpeculativeExecutionPolicy)) {
+                // Resume first node after a few ms
+                setTimeout(function () {
+                  helper.ccmHelper.resumeNode(1);
+                }, 400);
+              }
+              utils.map([ false, true ], function execute(prepare, mapNext) {
+                client.execute('SELECT * FROM system.local', null, { prepare: prepare, isIdempotent: true }, mapNext);
+              }, function (err, results) {
+                assert.ifError(err);
+                assert.strictEqual(results.length, 2);
+                var expectedHost;
+                if (policy instanceof ConstantSpeculativeExecutionPolicy) {
+                  // Use the next one in a speculative execution
+                  expectedHost = client.hosts.keys()[1];
+                }
+                else {
+                  // It should wait for it to yield the response without speculative execution
+                  expectedHost = client.hosts.keys()[0];
+                }
+                assert.deepEqual(
+                  results.map(function (rs) {
+                    return rs.info.queriedHost;
+                  }),
+                  results.map(function () {
+                    return expectedHost;
+                  }));
+                next();
+              });
+            },
+            helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+          ], helper.finish(client, done));
+        });
+      });
+    });
     function changingDistancesTest(address) {
       return (function doTest(done) {
         var lbp = new RoundRobinPolicy();
@@ -1048,3 +1112,18 @@ function getPoolInfo(client) {
   });
   return info;
 }
+
+/**
+ * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, ie: [a, b].
+ * @constructor
+ */
+function OrderedLoadBalancingPolicy() {
+
+}
+
+util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
+
+OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  callback(null, utils.arrayIterator(this.hosts.values()));
+};
+

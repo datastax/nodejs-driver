@@ -8,6 +8,7 @@ var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var speculativeExecution = require('../../lib/policies/speculative-execution');
 var timestampGeneration = require('../../lib/policies/timestamp-generation');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
@@ -806,6 +807,10 @@ describe('exports', function () {
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
     helper.assertInstanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
+    assert.strictEqual(api.policies.speculativeExecution, speculativeExecution);
+    assert.strictEqual(typeof speculativeExecution.NoSpeculativeExecutionPolicy, 'function');
+    assert.strictEqual(typeof speculativeExecution.ConstantSpeculativeExecutionPolicy, 'function');
+    assert.strictEqual(typeof speculativeExecution.SpeculativeExecutionPolicy, 'function');
     assert.strictEqual(api.policies.timestampGeneration, timestampGeneration);
     assert.strictEqual(typeof timestampGeneration.TimestampGenerator, 'function');
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');

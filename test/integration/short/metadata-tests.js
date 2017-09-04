@@ -11,8 +11,10 @@ var vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
   this.timeout(60000);
-  before(helper.ccmHelper.start(2, {vnodes: true}));
-  after(helper.ccmHelper.remove);
+  var setupInfo = helper.setup(2, { ccmOptions: {
+    vnodes: true,
+    yaml: helper.isCassandraGreaterThan('3.10') ? ['cdc_enabled:true'] : null
+  }});
   describe('Metadata', function () {
     describe('#keyspaces', function () {
       it('should keep keyspace information up to date', function (done) {
@@ -390,6 +392,12 @@ describe('metadata', function () {
             "CREATE INDEX map_all_entries_index on tbl_indexes1 (entries(map_all))",
             "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
             "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))"
+          );
+        }
+        if (helper.isCassandraGreaterThan('3.10')) {
+          queries.push(
+            'CREATE TABLE tbl_cdc_true (a int PRIMARY KEY, b text) WITH cdc=TRUE',
+            'CREATE TABLE tbl_cdc_false (a int PRIMARY KEY, b text) WITH cdc=FALSE'
           );
         }
         utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
@@ -838,6 +846,20 @@ describe('metadata', function () {
           },
           client.shutdown.bind(client)
         ], done);
+      });
+      vit('3.10', 'should retrieve the cdc information of a table metadata', function (done) {
+        var client = setupInfo.client;
+        utils.mapSeries([
+          [ 'tbl_cdc_true', true ],
+          [ 'tbl_cdc_false', false ],
+          [ 'tbl1', false ]
+        ], function mapEach(item, next) {
+          client.metadata.getTable(keyspace, item[0], function (err, table) {
+            assert.ifError(err);
+            assert.strictEqual(table.cdc, item[1]);
+            next();
+          });
+        }, done);
       });
       it('should retrieve the updated metadata after a schema change', function (done) {
         var client = newInstance();

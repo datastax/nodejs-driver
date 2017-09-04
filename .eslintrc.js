@@ -90,6 +90,7 @@ module.exports = {
     "no-useless-return": "error",
     "no-void": "error",
     "no-with": "error",
+    "no-buffer-constructor": "error",
     radix: "error"
   },
   "globals": {

@@ -5,6 +5,7 @@ var tokenizer = require('../../lib/tokenizer');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 var RandomTokenizer = tokenizer.RandomTokenizer;
 var types = require('../../lib/types');
+var utils = require('../../lib/utils');
 var MutableLong = require('../../lib/types/mutable-long');
 var helper = require('../test-helper');
 
@@ -82,8 +83,8 @@ describe('Murmur3Tokenizer', function () {
         [
           [[1, 2, 3, 4], '11748876857495436398853550283091289647'],
           [[1, 2, 3, 4, 5, 6], '141904934057871337334287797400233978956'],
-          [new Buffer('fffafa000102030405fe', 'hex'), '93979376327542758013347018124903879310'],
-          [new Buffer('f000ee0000', 'hex'), '155172302213453714586395175393246848871']
+          [utils.allocBufferFromString('fffafa000102030405fe', 'hex'), '93979376327542758013347018124903879310'],
+          [utils.allocBufferFromString('f000ee0000', 'hex'), '155172302213453714586395175393246848871']
         ].forEach(function (item) {
           assert.strictEqual(t.hash(item[0]).toString(), item[1]);
         });

@@ -110,7 +110,7 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]),
+      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, utils.allocBufferFromArray([1, 240]),
         true, new Date(1221111111), types.InetAddress.fromString('10.12.0.1'), null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
         'boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';

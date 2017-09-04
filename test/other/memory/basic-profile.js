@@ -16,7 +16,7 @@ var helper = require('../../test-helper.js');
 var cassandra = require('../../../index.js');
 var Client = cassandra.Client;
 var types = cassandra.types;
-var utils = require('../../../lib/utils.js');
+var utils = require('../../../lib/utils');
 
 var client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
 var keyspace = helper.getRandomName('ks');
@@ -48,7 +48,8 @@ utils.series([
     global.gc();
     utils.timesLimit(10000, 500, function (v, timesNext) {
       var n = counter++;
-      client.execute(query, [types.Uuid.random(), n, new Buffer(generateAsciiString(1024), 'utf8')], {prepare: true}, function (err) {
+      var buffer = utils.allocBufferFromString(generateAsciiString(1024), 'utf8');
+      client.execute(query, [types.Uuid.random(), n, buffer], {prepare: true}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {
           console.log('Inserted', callbackCounter);
         }

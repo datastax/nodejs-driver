@@ -147,7 +147,7 @@ describe('Client', function () {
       //make it async
       setTimeout(function () {
         prepareCounter++;
-        cb(null, {id: new Buffer([0]), meta: {}});
+        cb(null, {id: utils.allocBufferFromArray([0]), meta: {}});
       }, 50);
     };
     Client.__set__("RequestHandler", requestHandlerMock);
@@ -244,7 +244,7 @@ describe('Client', function () {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
       client._getPrepared = function (q, o, cb) { cb (null,
-        new Buffer(0), { columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});
+        utils.allocBufferUnsafe(0), { columns: [{name: 'abc', type: 2}, {name: 'def', type: 2}]});
       };
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
@@ -256,7 +256,7 @@ describe('Client', function () {
     it('should keep the parameters if an array is provided', function (done) {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._getPrepared = function (q, o, cb) { cb (null, utils.allocBufferUnsafe(0), {columns: [{name: 'abc', type: 2}]});};
       requestHandlerMock.prototype.send = function (req) {
         assert.ok(req);
         assert.strictEqual(util.inspect(req.params), util.inspect([101]));
@@ -268,7 +268,7 @@ describe('Client', function () {
       var requestHandlerMock = function () {};
       requestHandlerMock.prototype.send = helper.callbackNoop;
       var client = newConnectedInstance(requestHandlerMock);
-      client._getPrepared = function (q, o, cb) { cb (null, new Buffer(0), {columns: [{name: 'abc', type: 2}]});};
+      client._getPrepared = function (q, o, cb) { cb (null, utils.allocBufferUnsafe(0), {columns: [{name: 'abc', type: 2}]});};
       utils.series([function (next) {
         //noinspection JSAccessibilityCheck
         client._executeAsPrepared('SELECT ...', {not_the_same_name: 100}, queryOptions, function (err) {
@@ -305,7 +305,7 @@ describe('Client', function () {
       var requestHandlerMock = function () {};
       var client = newConnectedInstance(requestHandlerMock);
       client._getPrepared = function (q, o, cb) {
-        cb(null, new Buffer([1]), { columns: [
+        cb(null, utils.allocBufferFromArray([1]), { columns: [
           { name: 'key1', type: { code: types.dataTypes.int} },
           { name: 'key2', type: { code: types.dataTypes.int} }
         ]});
@@ -691,8 +691,8 @@ describe('Client', function () {
       var client = newConnectedInstance(handlerMock);
       client.metadata = new Metadata(client.options);
       //q2 and q4 are prepared
-      client.metadata.getPreparedInfo(null, 'q2').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo(null, 'q4').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q2').queryId = utils.allocBufferUnsafe(3);
+      client.metadata.getPreparedInfo(null, 'q4').queryId = utils.allocBufferUnsafe(3);
       client.batch(['q1', 'q2', 'q3', 'q4', 'q5'], {prepare: 1}, function (err) {
         assert.ifError(err);
         assert.ok(called);
@@ -714,8 +714,8 @@ describe('Client', function () {
       var client = newConnectedInstance(handlerMock);
       client.metadata = new Metadata(client.options);
       //q3 and q4 are prepared
-      client.metadata.getPreparedInfo(null, 'q3').queryId = new Buffer(3);
-      client.metadata.getPreparedInfo(null, 'q4').queryId = new Buffer(3);
+      client.metadata.getPreparedInfo(null, 'q3').queryId = utils.allocBufferUnsafe(3);
+      client.metadata.getPreparedInfo(null, 'q4').queryId = utils.allocBufferUnsafe(3);
       //q2 is being prepared
       var q2Info = client.metadata.getPreparedInfo(null, 'q2');
       q2Info.preparing = true;
@@ -730,7 +730,7 @@ describe('Client', function () {
       });
       setTimeout(function () {
         q2Info.preparing = false;
-        q2Info.queryId = new Buffer(1);
+        q2Info.queryId = utils.allocBufferUnsafe(1);
         preparingCallbackCalled = true;
         q2Info.dummyCb();
       }, 80);
@@ -1027,7 +1027,7 @@ describe('Client', function () {
           { type: types.dataTypes.text }
         ]
       };
-      var options = { prepare: true, routingKey: new Buffer(2)};
+      var options = { prepare: true, routingKey: utils.allocBufferUnsafe(2)};
       client._setQueryOptions(options, [1, 'two'], meta, function (err) {
         assert.ifError(err);
         assert.strictEqual(options.hints.length, 2);

@@ -234,10 +234,7 @@ var helper = {
   createKeyspaceCql: function (keyspace, replicationFactor, durableWrites) {
     return util.format('CREATE KEYSPACE %s' +
       ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d}' +
-      ' AND durable_writes = %s;',
-      keyspace,
-      replicationFactor || 1,
-      !!durableWrites
+      ' AND durable_writes = %s;', keyspace, replicationFactor || 1, !!durableWrites
     );
   },
   assertValueEqual: function (val1, val2) {
@@ -796,9 +793,9 @@ Ccm.prototype.spawn = function (processName, params, callback) {
     var err = null;
     if (code !== 0) {
       err = new Error(
-          'Error executing ' + originalProcessName + ':\n' +
-          info.stderr.join('\n') +
-          info.stdout.join('\n')
+        'Error executing ' + originalProcessName + ':\n' +
+        info.stderr.join('\n') +
+        info.stdout.join('\n')
       );
       err.info = info;
     }

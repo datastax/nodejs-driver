@@ -260,7 +260,7 @@ describe('ControlConnection', function () {
         //valid rpc address
         {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1])},
         //should not be added
-        {'rpc_address': null, peer: new Buffer([1, 1, 1, 1])},
+        {'rpc_address': null, peer: utils.allocBufferFromArray([1, 1, 1, 1])},
         //should use peer address
         {'rpc_address': getInet([0, 0, 0, 0]), peer: getInet([5, 5, 5, 5])}
       ];
@@ -349,7 +349,7 @@ describe('ControlConnection', function () {
  * @returns {exports.InetAddress}
  */
 function getInet(bytes) {
-  return new types.InetAddress(new Buffer(bytes));
+  return new types.InetAddress(utils.allocBufferFromArray(bytes));
 }
 
 /** @return {ControlConnection} */

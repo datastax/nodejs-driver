@@ -48,7 +48,7 @@ describe('Client', function () {
       var client = newInstance({ isMetadataSyncEnabled: false });
       client.connect(function (err) {
         assert.ifError(err);
-        var replicas = client.getReplicas('sampleks1', new Buffer([0, 0, 0, 1]));
+        var replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
         assert.strictEqual(null, replicas);
         done();
       });
@@ -57,7 +57,7 @@ describe('Client', function () {
       var client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
-        var replicas = client.getReplicas(null, new Buffer([0, 0, 0, 1]));
+        var replicas = client.getReplicas(null, utils.allocBufferFromArray([0, 0, 0, 1]));
         assert.ok(replicas);
         assert.strictEqual(replicas.length, 1);
         //pre-calculated based on murmur3
@@ -112,7 +112,7 @@ describe('Client', function () {
           var position = utils.binarySearch(client.metadata.ring, token, client.metadata.tokenizer.compare);
           assert.ok(position >= 0);
         }
-        client.execute('select key from system.local', [], { routingKey: new Buffer(2)}, function (err) {
+        client.execute('select key from system.local', [], { routingKey: utils.allocBufferUnsafe(2)}, function (err) {
           assert.ifError(err);
           done();
         });
@@ -122,7 +122,7 @@ describe('Client', function () {
 });
 
 function validateMurmurReplicas(client) {
-  var replicas = client.getReplicas('sampleks1', new Buffer([0, 0, 0, 1]));
+  var replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
   assert.ok(replicas);
   //2 replicas per each dc
   assert.strictEqual(replicas.length, 4);
@@ -135,7 +135,7 @@ function validateMurmurReplicas(client) {
   assert.strictEqual(lastOctets[2], '4');
   assert.strictEqual(lastOctets[3], '8');
 
-  replicas = client.getReplicas('sampleks1', new Buffer([0, 0, 0, 3]));
+  replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 3]));
   assert.ok(replicas);
   //2 replicas per each dc
   assert.strictEqual(replicas.length, 4);

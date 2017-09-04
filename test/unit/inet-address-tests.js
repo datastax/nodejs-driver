@@ -1,13 +1,14 @@
 'use strict';
 var assert = require('assert');
 var helper = require('../test-helper');
+var utils = require('../../lib/utils');
 var InetAddress = require('../../lib/types').InetAddress;
 
 describe('InetAddress', function () {
   describe('constructor', function () {
     it('should validate the Buffer length', function () {
       assert.throws(function () {
-        return new InetAddress(new Buffer(10));
+        return new InetAddress(utils.allocBufferUnsafe(10));
       }, TypeError);
       assert.throws(function () {
         return new InetAddress(null);
@@ -16,38 +17,38 @@ describe('InetAddress', function () {
         return new InetAddress();
       }, TypeError);
       assert.doesNotThrow(function () {
-        return new InetAddress(new Buffer(16));
+        return new InetAddress(utils.allocBufferUnsafe(16));
       }, TypeError);
       assert.doesNotThrow(function () {
-        return new InetAddress(new Buffer(4));
+        return new InetAddress(utils.allocBufferUnsafe(4));
       }, TypeError);
     });
   });
   describe('#toString()', function () {
     it('should convert IPv6 to string representation', function () {
-      var val = new InetAddress(new Buffer('aabb0000eeff00112233445566778899', 'hex'));
+      var val = new InetAddress(utils.allocBufferFromString('aabb0000eeff00112233445566778899', 'hex'));
       assert.strictEqual(val.version, 6);
       assert.strictEqual(val.toString(), 'aabb::eeff:11:2233:4455:6677:8899');
-      val = new InetAddress(new Buffer('aabbccddeeff00112233445566778899', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'aabb:ccdd:eeff:11:2233:4455:6677:8899');
-      val = new InetAddress(new Buffer('aabb0000000000112233445566778899', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('aabb0000000000112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'aabb::11:2233:4455:6677:8899');
-      val = new InetAddress(new Buffer('aabb0001000100112233445500000000', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('aabb0001000100112233445500000000', 'hex'));
       assert.strictEqual(val.toString(), 'aabb:1:1:11:2233:4455::');
-      val = new InetAddress(new Buffer('00000000000100112233445500aa00bb', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('00000000000100112233445500aa00bb', 'hex'));
       assert.strictEqual(val.toString(), '::1:11:2233:4455:aa:bb');
-      val = new InetAddress(new Buffer('000000000000000022330000000000bb', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('000000000000000022330000000000bb', 'hex'));
       assert.strictEqual(val.toString(), '::2233:0:0:bb');
-      val = new InetAddress(new Buffer('00000000000000000000000000000001', 'hex'));
+      val = new InetAddress(utils.allocBufferFromString('00000000000000000000000000000001', 'hex'));
       assert.strictEqual(val.toString(), '::1');
     });
     it('should convert IPv4 to string representation', function () {
-      var val = new InetAddress(new Buffer([127, 0, 0, 1]));
+      var val = new InetAddress(utils.allocBufferFromArray([127, 0, 0, 1]));
       assert.strictEqual(val.version, 4);
       assert.strictEqual(val.toString(), '127.0.0.1');
-      val = new InetAddress(new Buffer([198, 168, 1, 1]));
+      val = new InetAddress(utils.allocBufferFromArray([198, 168, 1, 1]));
       assert.strictEqual(val.toString(), '198.168.1.1');
-      val = new InetAddress(new Buffer([10, 12, 254, 32]));
+      val = new InetAddress(utils.allocBufferFromArray([10, 12, 254, 32]));
       assert.strictEqual(val.toString(), '10.12.254.32');
     });
   });
@@ -55,11 +56,11 @@ describe('InetAddress', function () {
     it('should return true when the bytes are the same', function () {
       var hex1 = 'aabb0000eeff00112233445566778899';
       var hex2 = 'ffff0000eeff00112233445566778899';
-      var buf1 = new Buffer(hex1, 'hex');
+      var buf1 = utils.allocBufferFromString(hex1, 'hex');
       var val1 = new InetAddress(buf1);
-      var val2 = new InetAddress(new Buffer(hex2, 'hex'));
+      var val2 = new InetAddress(utils.allocBufferFromString(hex2, 'hex'));
       assert.ok(val1.equals(new InetAddress(buf1)));
-      assert.ok(val1.equals(new InetAddress(new Buffer(hex1, 'hex'))));
+      assert.ok(val1.equals(new InetAddress(utils.allocBufferFromString(hex1, 'hex'))));
       assert.ok(!val1.equals(val2));
     });
   });

@@ -480,7 +480,7 @@ describe('TokenAwarePolicy', function () {
     utils.series([
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
-        policy.newQueryPlan(null, {routingKey: new Buffer(16)}, function (err, iterator) {
+        policy.newQueryPlan(null, {routingKey: utils.allocBufferUnsafe(16)}, function (err, iterator) {
           var hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 4);
@@ -507,7 +507,7 @@ describe('TokenAwarePolicy', function () {
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         utils.timesLimit(100, 32, function (n, timesNext) {
-          policy.newQueryPlan(null, { routingKey: new Buffer(16) }, function (err, iterator) {
+          policy.newQueryPlan(null, { routingKey: utils.allocBufferUnsafe(16) }, function (err, iterator) {
             var hosts = helper.iteratorToArray(iterator);
             assert.strictEqual(hosts.length, 5);
             assert.deepEqual(hosts.map(toAddress).slice(0, 3).sort(), ['repl2_local', 'repl4_local', 'repl5_local']);

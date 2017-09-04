@@ -962,6 +962,31 @@ describe('Client', function () {
           });
       });
     });
+    describe('with lightweight transactions', function () {
+      var client = setupInfo.client;
+      var id = types.Uuid.random();
+      before(function (done) {
+        var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+        client.execute(query, [id, 'val' ], done);
+      });
+      [
+        [ 'is not a conditional update', true, 'INSERT INTO %s (id, text_sample) VALUES (?, ?)', [ id, 'val'] ],
+        [ 'is a conditional update and it was applied', true,
+          'INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', [ types.Uuid.random(), 'val2'] ],
+        [ 'is a conditional update and it was not applied', false,
+          'INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', [ id, 'val'] ]
+      ].forEach(function (item) {
+        context('when it ' + item[0], function () {
+          it('should return a ResultSet with wasApplied set to ' + item[1], function (done) {
+            client.execute(util.format(item[2], table), item[3], function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.wasApplied(), item[1]);
+              done();
+            });
+          });
+        });
+      });
+    });
   });
 });
 

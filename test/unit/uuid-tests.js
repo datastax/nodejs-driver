@@ -132,24 +132,20 @@ describe('Uuid', function () {
       var values = {};
       var promises = [];
       var length = 100000;
+      var count = length;
       for (var i = 0; i < length; i++) {
-        promises.push(new Promise(function(resolve, reject) {
-          Uuid.random(function(err, val) {
-            if (err) {
-              return reject(err);
-            }
-            values[val.toString()] = true;
-            resolve();
-          });
-        }));
+        Uuid.random(function(err, val) {
+          if (err) {
+            return assert.fail(err);
+          }
+          values[val.toString()] = true;
+          --count;
+          if (count == 0) {
+            assert.strictEqual(Object.keys(values).length, length);
+            done();
+          }
+        });
       }
-      Promise.all(promises).then(function() {
-        assert.strictEqual(Object.keys(values).length, length);
-        done();
-      }).catch(function(err) {
-        assert.fail(err);
-      });
-      
     });
   });
 });

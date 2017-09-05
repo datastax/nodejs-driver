@@ -105,6 +105,53 @@ describe('Uuid', function () {
       assert.strictEqual(Object.keys(values).length, length);
     });
   });
+
+  describe('random(cb)', function () {
+    this.timeout(5000);
+    it('should return a Uuid instance', function (done) {
+      Uuid.random(function(err, uuid) {
+        helper.assertInstanceOf(Uuid.random(), Uuid);
+        done();
+      });
+      
+    });
+    it('should contain the version bits and IETF variant', function (done) {
+      Uuid.random(function(err, val) {
+        assert.strictEqual(val.toString().charAt(14), '4');
+        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+        val = Uuid.random();
+        assert.strictEqual(val.toString().charAt(14), '4');
+        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+        val = Uuid.random();
+        assert.strictEqual(val.toString().charAt(14), '4');
+        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+        done();
+      });
+    });
+    it('should generate v4 uuids that do not collide', function (done) {
+      var values = {};
+      var promises = [];
+      var length = 100000;
+      for (var i = 0; i < length; i++) {
+        promises.push(new Promise(function(resolve, reject) {
+          Uuid.random(function(err, val) {
+            if (err) {
+              return reject(err);
+            }
+            values[val.toString()] = true;
+            resolve();
+          });
+        }));
+      }
+      Promise.all(promises).then(function() {
+        assert.strictEqual(Object.keys(values).length, length);
+        done();
+      }).catch(function(err) {
+          assert.fail(err);
+      });
+      
+    });
+  });
 });
 describe('TimeUuid', function () {
   describe('constructor()', function () {

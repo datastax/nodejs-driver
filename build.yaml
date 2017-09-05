@@ -46,6 +46,7 @@ build:
       JUNIT_REPORT_STACK=1
       JUNIT_REPORT_PATH=.
       multi=mocha-jenkins-reporter=-
+      SIMULACRON_PATH=$HOME/simulacron.jar
   - npm: install
   - npm: run-script ci
     graceful: true

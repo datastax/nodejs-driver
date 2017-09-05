@@ -147,7 +147,7 @@ describe('Uuid', function () {
         assert.strictEqual(Object.keys(values).length, length);
         done();
       }).catch(function(err) {
-          assert.fail(err);
+        assert.fail(err);
       });
       
     });

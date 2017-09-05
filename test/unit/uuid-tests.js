@@ -130,21 +130,23 @@ describe('Uuid', function () {
     });
     it('should generate v4 uuids that do not collide', function (done) {
       var values = {};
-      var promises = [];
       var length = 100000;
       var count = length;
+
+      function callback(err, val) {
+        if (err) {
+          return assert.fail(err);
+        }
+        values[val.toString()] = true;
+        --count;
+        if (count === 0) {
+          assert.strictEqual(Object.keys(values).length, length);
+          done();
+        }
+      }
+      
       for (var i = 0; i < length; i++) {
-        Uuid.random(function(err, val) {
-          if (err) {
-            return assert.fail(err);
-          }
-          values[val.toString()] = true;
-          --count;
-          if (count == 0) {
-            assert.strictEqual(Object.keys(values).length, length);
-            done();
-          }
-        });
+        Uuid.random(callback);
       }
     });
   });

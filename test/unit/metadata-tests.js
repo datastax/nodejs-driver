@@ -639,9 +639,9 @@ describe('Metadata', function () {
         source_elapsed: 101
       }];
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
             }
             cb(null, { rows: eventRows});
@@ -650,7 +650,7 @@ describe('Metadata', function () {
         getEncoder: function () { return new Encoder(1, {});}
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+      metadata.getTrace(types.Uuid.random(), types.consistencies.all, function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
         assert.strictEqual(trace.requestType, sessionRow.request);
@@ -684,9 +684,9 @@ describe('Metadata', function () {
         source_elapsed: 101
       }];
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
             }
             cb(null, { rows: eventRows});
@@ -725,9 +725,9 @@ describe('Metadata', function () {
       }];
       var calls = 0;
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               if (++calls > 1) {
                 sessionRow.duration = 2002;
               }
@@ -763,7 +763,7 @@ describe('Metadata', function () {
       };
       var calls = 0;
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
             //try with empty result and null duration
             var rows = [];
@@ -787,7 +787,7 @@ describe('Metadata', function () {
     it('should callback in error if there was an error retrieving the trace', function (done) {
       var err = new Error('dummy err');
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
             cb(err);
           });

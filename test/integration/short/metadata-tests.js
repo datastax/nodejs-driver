@@ -241,6 +241,15 @@ describe('metadata', function () {
               next();
             });
           },
+          function getTraceWithConsistency(next) {
+            client.metadata.getTrace(traceId, types.consistencies.all, function (err, trace) {
+              assert.ifError(err);
+              assert.ok(trace);
+              assert.strictEqual(typeof trace.duration, 'number');
+              assert.ok(trace.events.length);
+              next();
+            });
+          },
           client.shutdown.bind(client)
         ], done);
       });
@@ -295,12 +304,17 @@ describe('metadata', function () {
               return client.execute(helper.queries.basic, [], { traceQuery: true });
             })
             .then(function (result) {
-              return client.metadata.getTrace(result.info.traceId);
+              return Promise.all([
+                client.metadata.getTrace(result.info.traceId),
+                client.metadata.getTrace(result.info.traceId, types.consistencies.all)
+              ]);
             })
-            .then(function (trace) {
-              assert.ok(trace);
-              assert.strictEqual(typeof trace.duration, 'number');
-              assert.ok(trace.events.length);
+            .then(function (traceArray) {
+              traceArray.forEach(function (trace) {
+                assert.ok(trace);
+                assert.strictEqual(typeof trace.duration, 'number');
+                assert.ok(trace.events.length);
+              });
               return client.shutdown();
             });
         });

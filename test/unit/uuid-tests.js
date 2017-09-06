@@ -110,7 +110,7 @@ describe('Uuid', function () {
     this.timeout(5000);
     it('should return a Uuid instance', function (done) {
       Uuid.random(function(err, uuid) {
-        helper.assertInstanceOf(Uuid.random(), Uuid);
+        helper.assertInstanceOf(uuid, Uuid);
         done();
       });
       
@@ -119,13 +119,15 @@ describe('Uuid', function () {
       Uuid.random(function(err, val) {
         assert.strictEqual(val.toString().charAt(14), '4');
         assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
-        val = Uuid.random();
-        assert.strictEqual(val.toString().charAt(14), '4');
-        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
-        val = Uuid.random();
-        assert.strictEqual(val.toString().charAt(14), '4');
-        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
-        done();
+        Uuid.random(function(err, val) {
+          assert.strictEqual(val.toString().charAt(14), '4');
+          assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+          Uuid.random(function(err, val) {
+            assert.strictEqual(val.toString().charAt(14), '4');
+            assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+            done();
+          });
+        });
       });
     });
     it('should generate v4 uuids that do not collide', function (done) {
@@ -144,7 +146,7 @@ describe('Uuid', function () {
           done();
         }
       }
-      
+
       for (var i = 0; i < length; i++) {
         Uuid.random(callback);
       }

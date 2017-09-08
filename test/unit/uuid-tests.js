@@ -1,7 +1,7 @@
 'use strict';
 var assert = require('assert');
 var helper = require('../test-helper');
-
+var utils = require('../../lib/utils');
 var Uuid = require('../../lib/types').Uuid;
 var TimeUuid = require('../../lib/types').TimeUuid;
 
@@ -133,23 +133,20 @@ describe('Uuid', function () {
     it('should generate v4 uuids that do not collide', function (done) {
       var values = {};
       var length = 100000;
-      var count = length;
-
-      function callback(err, val) {
-        if (err) {
-          return assert.fail(err);
-        }
-        values[val.toString()] = true;
-        --count;
-        if (count === 0) {
-          assert.strictEqual(Object.keys(values).length, length);
-          done();
-        }
-      }
-
-      for (var i = 0; i < length; i++) {
-        Uuid.random(callback);
-      }
+      
+      utils.times(length, function eachTime(n, next) {
+        Uuid.random(function (err, val) {
+          if (err) {
+            return next(err);
+          }
+          values[val.toString()] = true;
+          next();
+        });
+      }, function finish(err) {
+        assert.ifError(err);
+        assert.strictEqual(Object.keys(values).length, length);
+        done();
+      });
     });
   });
 });

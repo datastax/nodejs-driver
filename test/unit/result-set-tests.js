@@ -9,11 +9,12 @@ describe('ResultSet', function () {
   describe('constructor', function () {
     it('should set the properties', function () {
       var response = { rows: [ 0, 1, 2 ] };
-      var result = new ResultSet(response, '192.168.1.100', {}, types.consistencies.three);
+      var result = new ResultSet(response, '192.168.1.100', {}, 1, types.consistencies.three);
       assert.strictEqual(result.rowLength, 3);
       assert.ok(result.info);
       assert.strictEqual(result.info.queriedHost, '192.168.1.100');
       assert.strictEqual(result.info.achievedConsistency, types.consistencies.three);
+      assert.strictEqual(result.info.speculativeExecutions, 1);
       assert.strictEqual(result.rows, response.rows);
       assert.strictEqual(new ResultSet({ rowLength: 12 }).rowLength, 12);
     });

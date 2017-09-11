@@ -1,7 +1,7 @@
 'use strict';
 var assert = require('assert');
 var helper = require('../test-helper');
-
+var utils = require('../../lib/utils');
 var Uuid = require('../../lib/types').Uuid;
 var TimeUuid = require('../../lib/types').TimeUuid;
 
@@ -103,6 +103,50 @@ describe('Uuid', function () {
         values[Uuid.random().toString()] = true;
       }
       assert.strictEqual(Object.keys(values).length, length);
+    });
+  });
+
+  describe('random(cb)', function () {
+    this.timeout(5000);
+    it('should return a Uuid instance', function (done) {
+      Uuid.random(function(err, uuid) {
+        helper.assertInstanceOf(uuid, Uuid);
+        done();
+      });
+      
+    });
+    it('should contain the version bits and IETF variant', function (done) {
+      Uuid.random(function(err, val) {
+        assert.strictEqual(val.toString().charAt(14), '4');
+        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+        Uuid.random(function(err, val) {
+          assert.strictEqual(val.toString().charAt(14), '4');
+          assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+          Uuid.random(function(err, val) {
+            assert.strictEqual(val.toString().charAt(14), '4');
+            assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+            done();
+          });
+        });
+      });
+    });
+    it('should generate v4 uuids that do not collide', function (done) {
+      var values = {};
+      var length = 100000;
+      
+      utils.times(length, function eachTime(n, next) {
+        Uuid.random(function (err, val) {
+          if (err) {
+            return next(err);
+          }
+          values[val.toString()] = true;
+          next();
+        });
+      }, function finish(err) {
+        assert.ifError(err);
+        assert.strictEqual(Object.keys(values).length, length);
+        done();
+      });
     });
   });
 });

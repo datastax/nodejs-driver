@@ -1,5 +1,6 @@
+'use strict';
 var helper = require('../test-helper');
-const http = require('http');
+var http = require('http');
 var spawn = require('child_process').spawn;
 var util = require('util');
 var fs = require('fs');
@@ -20,15 +21,15 @@ var simulacronHelper = {
     p.stdout.setEncoding('utf8');
     p.stderr.setEncoding('utf8');
     p.stdout.on('data', function (data) {
-      console.log("%s_out> %s", originalProcessName, data);
+      helper.trace("%s_out> %s", originalProcessName, data);
     });
 
     p.stderr.on('data', function (data) {
-      console.log("%s_err> %s", originalProcessName, data);
+      helper.trace("%s_err> %s", originalProcessName, data);
     });
 
     p.on('close', function (code) {
-      console.log("%s exited with code %d", originalProcessName, code);
+      helper.trace("%s exited with code %d", originalProcessName, code);
       if(cb) {
         clearTimeout(timeout);
         if (code === 0) {
@@ -44,7 +45,7 @@ var simulacronHelper = {
   start: function(cb) {
     var self = this;
     var simulacronJarPath = process.env['SIMULACRON_PATH'];
-    if (simulacronJarPath == undefined) {
+    if (!simulacronJarPath) {
       simulacronJarPath = "$HOME/simulacron.jar";
       helper.trace("SIMULACRON_PATH not set, using $home/simulacron.jar");
     }
@@ -80,7 +81,7 @@ var simulacronHelper = {
   stop: function(cb) {
     if(this.sProcess !== undefined) {
       if(this.sProcess.exitCode) {
-        console.log("Server already stopped with exit code %d.", this.process.exitCode);
+        helper.trace("Server already stopped with exit code %d.", this.process.exitCode);
         cb();
       } else {
         this.sProcess.on('close', function () {
@@ -105,7 +106,7 @@ var simulacronHelper = {
 };
 
 function makeRequest(options, callback) {
-  return http.request(options, function(response) {
+  var request = http.request(options, function(response) {
     // Continuously update stream with data
     var body = '';
     response.on('data', function(d) {
@@ -118,11 +119,12 @@ function makeRequest(options, callback) {
         callback(JSON.parse(body));
       }
     });
-  })
-  .on("error", function(err) {
+  });
+  request.on("error", function(err) {
     helper.trace(err.message);
     throw new Error(err);
   });
+  return request;
 }
 
 function SimulacronCluster() {
@@ -143,9 +145,9 @@ SimulacronCluster.prototype.start = function(dcs, cassandraVersion, dseVersion, 
     self.name = data.name;
     self.id = data.id;
     self.dcs = data.data_centers;
-    callback(null)
+    callback(null);
   }).end();
-}
+};
 
 SimulacronCluster.prototype.destroy = function(callback) {
   var self = this;
@@ -159,7 +161,7 @@ SimulacronCluster.prototype.destroy = function(callback) {
   makeRequest(options, function(data) {
     callback();
   }).end();
-}
+};
 
 SimulacronCluster.prototype.clearLog = function(callback) {
   var self = this;
@@ -173,7 +175,7 @@ SimulacronCluster.prototype.clearLog = function(callback) {
   makeRequest(options, function(data) {
     callback(null);
   }).end();
-}
+};
 
 SimulacronCluster.prototype.primeQueryWithEmptyResult = function(queryStr, callback) {
   var self = this;
@@ -201,7 +203,7 @@ SimulacronCluster.prototype.primeQueryWithEmptyResult = function(queryStr, callb
   });
   request.write(JSON.stringify(body));
   request.end();
-}
+};
 
 SimulacronCluster.prototype.findNode = function(nodeAddress) {
   var self = this;
@@ -212,23 +214,22 @@ SimulacronCluster.prototype.findNode = function(nodeAddress) {
     });
     if (nodeItem === undefined) {
       return false;
-    }else {
-      node = {
-        nodeId: nodeItem.id,
-        dataCenterId: dataCenter.id
-      };
-      return true;
     }
+    node = {
+      nodeId: nodeItem.id,
+      dataCenterId: dataCenter.id
+    };
+    return true;
   });
   return node;
-}
+};
 
 SimulacronCluster.prototype.getContactPoints = function(dataCenterId) {
   var dcId = dataCenterId = typeof dataCenterId === 'undefined' ? 0 : dataCenterId;
   return this.dcs[dcId].nodes.map(function (node) {
     return node.address;
   });
-}
+};
 
 SimulacronCluster.prototype.queryNodeLog = function(nodeAddress, callback) {
   var self = this;
@@ -247,7 +248,7 @@ SimulacronCluster.prototype.queryNodeLog = function(nodeAddress, callback) {
   makeRequest(options, function(data) {
     callback(data.data_centers[0].nodes[0].queries);
   }).end();
-}
+};
 
 SimulacronCluster.prototype.stopNode = function(nodeAddress, callback) {
   var self = this;
@@ -266,7 +267,7 @@ SimulacronCluster.prototype.stopNode = function(nodeAddress, callback) {
   makeRequest(options, function(data) {
     callback(data);
   }).end();
-}
+};
 
 SimulacronCluster.prototype.resumeNode = function(nodeAddress, callback) {
   var self = this;
@@ -285,6 +286,6 @@ SimulacronCluster.prototype.resumeNode = function(nodeAddress, callback) {
   makeRequest(options, function(data) {
     callback(data);
   }).end();
-}
+};
 
 module.exports = simulacronHelper;

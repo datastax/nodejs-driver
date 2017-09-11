@@ -9,7 +9,7 @@ var helper = require('../../test-helper');
 var reconnection = require('../../../lib/policies/reconnection');
 var simulacron = require('../simulacron');
 
-describe('Client #prepare', function () {
+describe('Client #prepare #simulacron', function () {
   this.timeout(20000);
   describe('Preparing statements on nodes behavior', function () {
     var nodes = "5";
@@ -34,7 +34,8 @@ describe('Client #prepare', function () {
             client = new Client({
               contactPoints: [sCluster.getContactPoints()[0]],
               policies: {
-                reconnection: new reconnection.ConstantReconnectionPolicy(100)
+                reconnection: new reconnection.ConstantReconnectionPolicy(100),
+                retry: new helper.RetryMultipleTimes(3)
               },
               pooling: poolingOptions
             });
@@ -68,7 +69,7 @@ describe('Client #prepare', function () {
             assert.ifError(err);
             var prepareQuery = logs.find(function(queryLog) {
               return queryLog.type === "PREPARE"
-                && queryLog.query == query;
+                && queryLog.query === query;
             });
             assert.notEqual(prepareQuery, undefined);
             next();
@@ -84,6 +85,23 @@ describe('Client #prepare', function () {
           function stopLastNode(next) {
             sCluster.stopNode(nodeDownAddress, next);
           },
+          function runQuery(next) {
+            utils.timesSeries(5, function (n, nextIteration) {
+              client.execute(query, [idRandom], {prepare: 0}, function (err, result) {
+                assert.ifError(err);
+                assert.strictEqual(client.hosts.length, 5);
+                assert.notEqual(result, null);
+                assert.notEqual(result.rows, null);
+                nextIteration();
+              });
+            }, next);
+          },
+          function verifyIfNodeIsMarkedDown(next) {
+            var nodeDown = client.hosts.get(nodeDownAddress);
+            nodeDown.checkIsUp();
+            assert(!nodeDown.isUp());
+            next();
+          },
           function prepareQuery(next) {
             client.execute(query, [idRandom], {prepare: 1}, function (err, result) {
               assert.ifError(err);
@@ -98,9 +116,9 @@ describe('Client #prepare', function () {
               sCluster.queryNodeLog(host.address, function(logs) {
                 var prepareQuery = logs.find(function(queryLog) {
                   return queryLog.type === "PREPARE"
-                    && queryLog.query == query;
+                    && queryLog.query === query;
                 });
-                if (prepareQuery == undefined) {
+                if (!prepareQuery) {
                   assert.strictEqual(nodeDownAddress, host.address);
                 } else {
                   assert.notEqual(prepareQuery, undefined);
@@ -110,22 +128,20 @@ describe('Client #prepare', function () {
             }, next);
           },
           function resumeLastNode(next) {
-            var timeout = null;
             var nodeDown = client.hosts.get(nodeDownAddress);
             nodeDown.on('up', function() {
-              clearTimeout(timeout);
               helper.trace("Node marked as UP");
               setTimeout(next, 1000); //give time for driver to re prepare statement
             });
             sCluster.resumeNode(nodeDownAddress, function() {
-              timeout = setTimeout(next, 10000);
+              nodeDown.checkIsUp();
             });
           },
           function verifyPrepareQueryOnLastNode(next) {
             sCluster.queryNodeLog(nodeDownAddress, function(logs) {
               var prepareQuery = logs.find(function(queryLog) {
                 return queryLog.type === "PREPARE"
-                  && queryLog.query == query;
+                  && queryLog.query === query;
               });
               assert.notEqual(prepareQuery, undefined);
               next();

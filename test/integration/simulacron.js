@@ -207,21 +207,24 @@ SimulacronCluster.prototype.primeQueryWithEmptyResult = function(queryStr, callb
 
 SimulacronCluster.prototype.findNode = function(nodeAddress) {
   var self = this;
-  var node = null;
-  self.dcs.find(function(dataCenter) {
-    var nodeItem = dataCenter.nodes.find(function(dcNode) {
-      return dcNode.address === nodeAddress;
-    });
-    if (nodeItem === undefined) {
-      return false;
+
+  function findInDc(dc) {
+    for (var nodeId = 0; nodeId < dc.nodes.length; nodeId++) {
+      if (dc.nodes[nodeId].address === nodeAddress) {
+        return {
+          nodeId: dc.nodes[nodeId].id,
+          dataCenterId: dc.id
+        };
+      }
     }
-    node = {
-      nodeId: nodeItem.id,
-      dataCenterId: dataCenter.id
-    };
-    return true;
-  });
-  return node;
+  }
+
+  for(var dcIndex = 0; dcIndex < self.dcs.length; dcIndex++) {
+    var nodeFound = findInDc(self.dcs[dcIndex]);
+    if (nodeFound) {
+      return nodeFound;
+    }
+  }
 };
 
 SimulacronCluster.prototype.getContactPoints = function(dataCenterId) {

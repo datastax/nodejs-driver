@@ -67,11 +67,16 @@ describe('Client #prepare #simulacron', function () {
         utils.eachSeries(client.hosts.values(), function(host, next) {
           sCluster.queryNodeLog(host.address, function(logs) {
             assert.ifError(err);
-            var prepareQuery = logs.find(function(queryLog) {
-              return queryLog.type === "PREPARE"
-                && queryLog.query === query;
-            });
-            assert.notEqual(prepareQuery, undefined);
+            var prepareQuery;
+            for(var i = 0; i < logs.length; i++) {
+              var queryLog = logs[i];
+              if (queryLog.type === "PREPARE" && queryLog.query === query) {
+                prepareQuery = queryLog;
+              }
+            }
+            if (!prepareQuery) {
+              assert.fail('Query no prepared on all hosts');
+            }
             next();
           });
         }, done);
@@ -114,10 +119,13 @@ describe('Client #prepare #simulacron', function () {
           function verifyLogs(next) {
             utils.eachSeries(client.hosts.values(), function(host, nextHost) {
               sCluster.queryNodeLog(host.address, function(logs) {
-                var prepareQuery = logs.find(function(queryLog) {
-                  return queryLog.type === "PREPARE"
-                    && queryLog.query === query;
-                });
+                var prepareQuery;
+                for(var i = 0; i < logs.length; i++) {
+                  var queryLog = logs[i];
+                  if (queryLog.type === "PREPARE" && queryLog.query === query) {
+                    prepareQuery = queryLog;
+                  }
+                }
                 if (!prepareQuery) {
                   assert.strictEqual(nodeDownAddress, host.address);
                 } else {
@@ -139,11 +147,16 @@ describe('Client #prepare #simulacron', function () {
           },
           function verifyPrepareQueryOnLastNode(next) {
             sCluster.queryNodeLog(nodeDownAddress, function(logs) {
-              var prepareQuery = logs.find(function(queryLog) {
-                return queryLog.type === "PREPARE"
-                  && queryLog.query === query;
-              });
-              assert.notEqual(prepareQuery, undefined);
+              var prepareQuery;
+              for(var i = 0; i < logs.length; i++) {
+                var queryLog = logs[i];
+                if (queryLog.type === "PREPARE" && queryLog.query === query) {
+                  prepareQuery = queryLog;
+                }
+              }
+              if (!prepareQuery) {
+                assert.fail('Query no prepared on restarted host');
+              }
               next();
             });
           }

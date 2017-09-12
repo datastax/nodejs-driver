@@ -9,6 +9,7 @@ var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -962,7 +963,7 @@ describe('Client', function () {
           });
       });
     });
-    describe('with lightweight transactions', function () {
+    vdescribe('2.0', 'with lightweight transactions', function () {
       var client = setupInfo.client;
       var id = types.Uuid.random();
       before(function (done) {

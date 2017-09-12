@@ -559,7 +559,7 @@ describe('Client', function () {
             function wait() {
               if (waiting > 0) {
                 waiting++;
-                if (waiting > 100) {
+                if (waiting > 300) {
                   return timesNext(new Error('Timed out'));
                 }
                 return setTimeout(wait, 50);

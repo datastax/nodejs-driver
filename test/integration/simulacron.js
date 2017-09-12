@@ -4,6 +4,7 @@ var http = require('http');
 var spawn = require('child_process').spawn;
 var util = require('util');
 var fs = require('fs');
+var utils = require('../../lib/utils.js');
 
 var simulacronHelper = {
   _execute: function(processName, params, cb) {
@@ -13,7 +14,7 @@ var simulacronHelper = {
     var timeout = undefined;
     if(cb) {
       timeout = setTimeout(function() {
-        cb("Timed out while waiting for " + processName + " to complete.");
+        cb('Timed out while waiting for ' + processName + ' to complete.');
       }, 10000);
     }
 
@@ -21,21 +22,21 @@ var simulacronHelper = {
     p.stdout.setEncoding('utf8');
     p.stderr.setEncoding('utf8');
     p.stdout.on('data', function (data) {
-      helper.trace("%s_out> %s", originalProcessName, data);
+      helper.trace('%s_out> %s', originalProcessName, data);
     });
 
     p.stderr.on('data', function (data) {
-      helper.trace("%s_err> %s", originalProcessName, data);
+      helper.trace('%s_err> %s', originalProcessName, data);
     });
 
     p.on('close', function (code) {
-      helper.trace("%s exited with code %d", originalProcessName, code);
+      helper.trace('%s exited with code %d', originalProcessName, code);
       if(cb) {
         clearTimeout(timeout);
         if (code === 0) {
           cb();
         } else {
-          cb(Error("Process exited with non-zero exit code: " + code));
+          cb(Error('Process exited with non-zero exit code: ' + code));
         }
       }
     });
@@ -46,11 +47,11 @@ var simulacronHelper = {
     var self = this;
     var simulacronJarPath = process.env['SIMULACRON_PATH'];
     if (!simulacronJarPath) {
-      simulacronJarPath = "$HOME/simulacron.jar";
-      helper.trace("SIMULACRON_PATH not set, using $home/simulacron.jar");
+      simulacronJarPath = '$HOME/simulacron.jar';
+      helper.trace('SIMULACRON_PATH not set, using $home/simulacron.jar');
     }
     if (!fs.existsSync(simulacronJarPath)) {
-      throw new Error("Simulacron jar not found at: " + simulacronJarPath);
+      throw new Error('Simulacron jar not found at: ' + simulacronJarPath);
     }
 
     var processName = 'java';
@@ -58,7 +59,7 @@ var simulacronHelper = {
     var initialized = false;
 
     var timeout = setTimeout(function() {
-      cb(new Error("Timed out while waiting for ADS server to start."));
+      cb(new Error('Timed out while waiting for Simulacron server to start.'));
     }, 10000);
 
     self.sProcess = self._execute(processName, params, function() {
@@ -71,7 +72,6 @@ var simulacronHelper = {
       // that all principals have been created before invoking the completion callback.
       if(data.indexOf('Started HTTP server interface') !== -1) {
         clearTimeout(timeout);
-
         helper.trace('Simulacron initialized!');
         initialized = true;
         cb();
@@ -81,7 +81,7 @@ var simulacronHelper = {
   stop: function(cb) {
     if(this.sProcess !== undefined) {
       if(this.sProcess.exitCode) {
-        helper.trace("Server already stopped with exit code %d.", this.process.exitCode);
+        helper.trace('Server already stopped with exit code %d.', this.sProcess.exitCode);
         cb();
       } else {
         this.sProcess.on('close', function () {
@@ -97,10 +97,20 @@ var simulacronHelper = {
 
       }
     } else {
-      cb(Error("Process is not defined."));
+      cb(Error('Process is not defined.'));
     }
   },
-  baseAddress: "localhost",
+  baseOptions: (function () {
+    return {
+      //required
+      cassandraVersion: '3.10',
+      dseVersion: '',
+      clusterName: 'testCluster',
+      activityLog: true,
+      numTokens: 1
+    };
+  })(),
+  baseAddress: 'localhost',
   defaultPort: 8187,
   SimulacronCluster: SimulacronCluster
 };
@@ -120,7 +130,7 @@ function makeRequest(options, callback) {
       }
     });
   });
-  request.on("error", function(err) {
+  request.on('error', function(err) {
     helper.trace(err.message);
     throw new Error(err);
   });
@@ -132,16 +142,22 @@ function SimulacronCluster() {
   this.port = simulacronHelper.defaultPort;
 }
 
-SimulacronCluster.prototype.start = function(dcs, cassandraVersion, dseVersion, clusterName, activityLog, numTokens, callback) {
+SimulacronCluster.prototype.start = function(dcs, clientOptions, callback) {
   var self = this;
   var createClusterPath = '/cluster?data_centers=%s&cassandra_version=%s&dse_version=%s&name=%s&activity_log=%s&num_tokens=%d';
-  var options = {
+
+  var options = utils.extend({}, simulacronHelper.baseOptions, clientOptions);
+
+  var urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
+    options.clusterName, options.activityLog, options.numTokens));
+
+  var requestOptions = {
     host: self.baseAddress,
-    path: encodeURI(util.format(createClusterPath, dcs, cassandraVersion, dseVersion, clusterName, activityLog, numTokens)),
     port: self.port,
+    path: urlPath,
     method: 'POST'
   };
-  makeRequest(options, function(data) {
+  makeRequest(requestOptions, function(data) {
     self.name = data.name;
     self.id = data.id;
     self.dcs = data.data_centers;
@@ -185,14 +201,14 @@ SimulacronCluster.prototype.primeQueryWithEmptyResult = function(queryStr, callb
     path: encodeURI(util.format(primeQueryPath, self.id)),
     port: self.port,
     method: 'POST',
-    headers: { "Content-Type": "application/json" }
+    headers: { 'Content-Type': 'application/json' }
   };
   var body = {
     when: {
       query: queryStr
     },
     then: {
-      result: "success",
+      result: 'success',
       delay_in_ms: 0,
       rows: [],
       column_types: {}

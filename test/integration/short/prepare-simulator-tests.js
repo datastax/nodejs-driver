@@ -9,12 +9,9 @@ var helper = require('../../test-helper');
 var reconnection = require('../../../lib/policies/reconnection');
 var simulacron = require('../simulacron');
 
-describe('Client #prepare #simulacron', function () {
+describe('Client', function () {
   this.timeout(20000);
   describe('Preparing statements on nodes behavior', function () {
-    var nodes = "5";
-    var clusterName = "simulacronTest";
-    var cassandraVersion = "3.10";
     var sCluster = null;
     var client = null;
     var query = util.format('SELECT * FROM ks.table1 WHERE id1 = ?');
@@ -26,7 +23,7 @@ describe('Client #prepare #simulacron', function () {
         [
           function startCluster(next) {
             sCluster = new simulacron.SimulacronCluster();
-            sCluster.start(nodes, cassandraVersion, "", clusterName, true, 1, next);
+            sCluster.start('5', {}, next);
           },
           function connectCluster(next) {
             var poolingOptions = {};
@@ -103,7 +100,6 @@ describe('Client #prepare #simulacron', function () {
           },
           function verifyIfNodeIsMarkedDown(next) {
             var nodeDown = client.hosts.get(nodeDownAddress);
-            nodeDown.checkIsUp();
             assert(!nodeDown.isUp());
             next();
           },
@@ -142,7 +138,6 @@ describe('Client #prepare #simulacron', function () {
               setTimeout(next, 1000); //give time for driver to re prepare statement
             });
             sCluster.resumeNode(nodeDownAddress, function() {
-              nodeDown.checkIsUp();
             });
           },
           function verifyPrepareQueryOnLastNode(next) {

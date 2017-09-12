@@ -103,7 +103,7 @@ var simulacronHelper = {
   baseOptions: (function () {
     return {
       //required
-      cassandraVersion: '3.10',
+      cassandraVersion: helper.getCassandraVersion(),
       dseVersion: '',
       clusterName: 'testCluster',
       activityLog: true,

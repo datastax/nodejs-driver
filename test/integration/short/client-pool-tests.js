@@ -955,7 +955,7 @@ describe('Client', function () {
           assert.deepEqual(state.getConnectedHosts(), []);
           hosts.forEach(function each(host) {
             assert.strictEqual(host.pool.connections.length, 0);
-            assert.strictEqual(state.getOpenConnections(host), undefined);
+            assert.strictEqual(state.getOpenConnections(host), 0);
           });
           next();
         }

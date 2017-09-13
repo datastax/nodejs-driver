@@ -47,8 +47,8 @@ var simulacronHelper = {
     var self = this;
     var simulacronJarPath = process.env['SIMULACRON_PATH'];
     if (!simulacronJarPath) {
-      simulacronJarPath = '$HOME/simulacron.jar';
-      helper.trace('SIMULACRON_PATH not set, using $home/simulacron.jar');
+      simulacronJarPath = process.env['HOME'] + "/simulacron.jar";
+      helper.trace("SIMULACRON_PATH not set, using " + simulacronJarPath);
     }
     if (!fs.existsSync(simulacronJarPath)) {
       throw new Error('Simulacron jar not found at: ' + simulacronJarPath);

@@ -1,4 +1,5 @@
 environment:
+  appveyor_build_worker_cloud: gce
   ci_type: ci_unit
   matrix:
     - nodejs_version: 6
@@ -8,7 +9,7 @@ environment:
     - nodejs_version: 4
     - nodejs_version: 0.12
     - nodejs_version: 0.10
-os: Previous Visual Studio 2015
+image: Visual Studio 2017
 platform:
   - x64
 install:

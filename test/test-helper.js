@@ -671,6 +671,7 @@ var helper = {
       h.isUp = function () {
         return !(info.isUp === false);
       };
+      h.checkHealth = utils.noop;
       h.log = utils.noop;
       h.shouldBeIgnored = !!info.ignored;
       h.prepareCalled = 0;

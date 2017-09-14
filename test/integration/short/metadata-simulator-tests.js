@@ -1,49 +1,21 @@
 'use strict';
 var assert = require('assert');
 var utils = require('../../../lib/utils');
-var Client = require('../../../lib/client');
 var types = require('../../../lib/types/index');
-var helper = require('../../test-helper');
 var simulacron = require('../simulacron');
+var util = require('util');
 
 describe('Metadata', function () {
   this.timeout(20000);
   describe("#getTrace()", function () {
-    var sCluster = null;
-    before(function (done) {
-      simulacron.start(done);
-    });
-    beforeEach(function (done) {
-      utils.series(
-        [
-          function startCluster(next) {
-            sCluster = new simulacron.SimulacronCluster();
-            sCluster.start('5', {}, next);
-          },
-          function clearLog(next) {
-            sCluster.clearLog(next);
-          }
-        ], done);
-    });
-    afterEach(function (done) {
-      sCluster.destroy(done);
-    });
-    after(function (done) {
-      simulacron.stop(done);
-    });
+    var setupInfo = simulacron.setup('3', null);
+    var sCluster = setupInfo.cluster;
+    var client = setupInfo.client;
+
     it('should set consistency level', function (done) {
-      // use a single node
-      var client = new Client({
-        contactPoints: [sCluster.getContactPoints()[0]],
-        policies: {
-          retry: new helper.RetryMultipleTimes(3)
-        }
-      });
       var traceId = types.Uuid.random();
-      var sessionQuery = 'SELECT * FROM system_traces.sessions WHERE session_id=1';
-      var eventsQuery = 'SELECT * FROM system_traces.events WHERE session_id=1';
-      var primeParams = {traceId: traceId};
-      var primeParamTypes = {traceId: 'uuid'};
+      var sessionQuery = util.format('SELECT * FROM system_traces.sessions WHERE session_id=%s', traceId);
+      var eventsQuery = util.format('SELECT * FROM system_traces.events WHERE session_id=%s', traceId);
 
       var resultSessions = {
         result: 'success',
@@ -53,12 +25,20 @@ describe('Metadata', function () {
             session_id: traceId,
             client: '127.0.0.1',
             command: 'QUERY',
-            coordinator: sCluster.getContactPoints()[0],
+            coordinator: "127.0.0.101",
             duration: 10000,
             request: 'Execute CQL3 query',
-            started_at: new types.LocalTime.now
+            started_at: new types.LocalTime.now().getTotalNanoseconds()
           }
-        ]
+        ],
+        column_types: {
+          session_id: "uuid",
+          command: "varchar",
+          coordinator: "inet",
+          duration: "int",
+          request: "varchar",
+          started_at: "timestamp"
+        }
       };
       var resultEvents = {
         result: 'success',
@@ -68,21 +48,37 @@ describe('Metadata', function () {
             session_id: traceId,
             event_id: types.Uuid.random(),
             activity: 'Parsing...',
-            source: sCluster.getContactPoints()[0],
+            source: "127.0.0.1",
             source_elapsed: 1000,
             thread: 'Native-Transport-Requests-2'
           }
         ],
-
+        column_types: {
+          session_id: "uuid",
+          event_id: "uuid",
+          activity: "varchar",
+          source: "inet",
+          source_elapsed: "int",
+          thread: "varchar"
+        }
       };
       utils.series([
-        client.connect.bind(client),
-        // function primeTraceSessionsQueries(next) {
-        //   sCluster.primeQueryWithEmptyResult(sessionQuery, next);
-        // },
-        // function primeTraceEventsQueries(next) {
-        //   sCluster.primeQueryWithEmptyResult(eventsQuery, next);
-        // },
+        function primeTraceSessionsQueries(next) {
+          sCluster.prime({
+            when: {
+              query: sessionQuery,
+            },
+            then : resultSessions
+          }, next);
+        },
+        function primeTraceEventsQueries(next) {
+          sCluster.prime({
+            when: {
+              query: eventsQuery,
+            },
+            then : resultEvents
+          }, next);
+        },
         function getTrace(next) {
           client.metadata.getTrace(traceId, types.consistencies.all, function (err, trace) {
             assert.ifError(err);
@@ -92,20 +88,24 @@ describe('Metadata', function () {
           });
         },
         function getTraceWithConsistency(next) {
-          sCluster.queryNodeLog(sCluster.getContactPoints()[0], function (logs) {
+          var node0 = sCluster.node(0);
+          node0.getLogs(function (err, logs) {
+            assert.ifError(err);
             assert.notEqual(logs, null);
-            for (var i = 0; i < logs.length; i++) {
-              var queryLog = logs[i];
-              if (queryLog.type === "QUERY" && (queryLog.query === sessionQuery
-                || queryLog.query === eventsQuery)) {
-                assert.strictEqual(queryLog.consistency_level, 'ALL');
-                return next();
+            var verifyQuery = function(logsToSearch, query, consistency) {
+              for (var i = 0; i < logsToSearch.length; i++) {
+                var log = logsToSearch[i];
+                if (log.type === "QUERY" && log.query === query && log.consistency_level === consistency) {
+                  return true;
+                }
               }
-            }
-            assert.fail('Consistency not achieved');
+              return false;
+            };
+            assert(verifyQuery(logs, sessionQuery, 'ALL'));
+            assert(verifyQuery(logs, eventsQuery, 'ALL'));
+            next();
           });
-        },
-        client.shutdown.bind(client)
+        }
       ], done);
     });
   });

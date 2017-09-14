@@ -20,7 +20,7 @@ describe('Connection', function () {
         [
           function startCluster(next) {
             sCluster = new simulacron.SimulacronCluster();
-            sCluster.start('5', {}, next);
+            sCluster.register('5', {}, next);
           },
           function connect(next) {
             var addressAndPort = sCluster.getContactPoints()[0].split(':');
@@ -36,12 +36,12 @@ describe('Connection', function () {
             connection.open(next);
           },
           function clearLog(next) {
-            sCluster.clearLog(next);
+            sCluster.clearLogs(next);
           }
         ], done);
     });
     afterEach(function (done) {
-      sCluster.destroy(done);
+      sCluster.unregister(done);
     });
     after(function (done) {
       simulacron.stop(done);
@@ -68,7 +68,8 @@ describe('Connection', function () {
       utils.eachSeries(testRequests,
         function (req, nextRequest) {
           connection.sendStream(req.request, null, function() {
-            sCluster.queryNodeLog(sCluster.getContactPoints()[0], function (logs) {
+            sCluster.node(0).getLogs(function (err, logs) {
+              assert.ifError(err);
               assert.notEqual(logs, null);
               for (var i = 0; i < logs.length; i++) {
                 var queryLog = logs[i];

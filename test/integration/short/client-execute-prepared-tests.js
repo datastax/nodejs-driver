@@ -11,11 +11,11 @@ var loadBalancing = require('../../../lib/policies/load-balancing');
 var vit = helper.vit;
 var vdescribe = helper.vdescribe;
 var Uuid = types.Uuid;
+var commonKs = helper.getRandomName('ks');
 
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
-    var commonKs = helper.getRandomName('ks');
     var commonTable = commonKs + '.' + helper.getRandomName('table');
     var commonTable2 = commonKs + '.' + helper.getRandomName('table');
     var setupInfo = helper.setup(3, {
@@ -151,15 +151,13 @@ describe('Client', function () {
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {
       var client = newInstance({
-        keyspace: setupInfo.keyspace,
+        keyspace: commonKs,
         queryOptions: { consistency: types.consistencies.quorum }
       });
       var pageState;
       var metaPageState;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = helper.getRandomName('table');
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, helper.createTableCql(table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -198,11 +196,9 @@ describe('Client', function () {
     });
     it('should encode and decode varint values', function (done) {
       var client = setupInfo.client;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var expectedRows = {};
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
@@ -234,11 +230,9 @@ describe('Client', function () {
     });
     it('should encode and decode decimal values', function (done) {
       var client = setupInfo.client;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var expectedRows = {};
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
@@ -310,8 +304,7 @@ describe('Client', function () {
     });
     it('should encode and decode maps using Map polyfills', function (done) {
       var client = newInstance({ encoding: { map: helper.Map}});
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var MapPF = helper.Map;
       var values = [
         [
@@ -332,7 +325,6 @@ describe('Client', function () {
       'map_varint_boolean map<varint,boolean>, ' +
       'map_timeuuid_text map<timeuuid,decimal>)', table);
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, map_text_text, map_int_date, map_date_float, map_varint_boolean, map_timeuuid_text) ' +
@@ -364,8 +356,7 @@ describe('Client', function () {
     });
     it('should encode and decode sets using Set polyfills', function (done) {
       var client = newInstance({ encoding: { set: helper.Set}});
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var SetPF = helper.Set;
       var values = [
         [
@@ -393,7 +384,6 @@ describe('Client', function () {
       'set_bigint set<bigint>, ' +
       'set_timeuuid set<timeuuid>)', table);
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, set_text, set_timestamp, set_float, set_bigint, set_timeuuid) ' +
@@ -1077,10 +1067,9 @@ function newInstance(options) {
 }
 
 function serializationTest(client, values, columns, done) {
-  var keyspace = helper.getRandomName('ks');
-  var table = keyspace + '.' + helper.getRandomName('table');
+  var table = commonKs + '.' + helper.getRandomName('table');
+  var queryOptions = { prepare: true, consistency: types.consistencies.localQuorum };
   utils.series([
-    helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
     helper.toTask(client.execute, client, helper.createTableCql(table)),
     function (next) {
       var markers = '?';
@@ -1091,11 +1080,11 @@ function serializationTest(client, values, columns, done) {
       var query = util.format('INSERT INTO %s ' +
         '(%s) VALUES ' +
         '(%s)', table, columns, markers);
-      client.execute(query, values, {prepare: 1}, next);
+      client.execute(query, values, queryOptions, next);
     },
     function (next) {
       var query = util.format('SELECT %s FROM %s WHERE id = ?', columns, table);
-      client.execute(query, [values[0]], {prepare: 1}, function (err, result) {
+      client.execute(query, [values[0]], queryOptions, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');

@@ -525,7 +525,7 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
   it('should fairly distribute between replicas', function (done) {
-    this.timeout(10000);
+    this.timeout(20000);
     var options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
     var policy = new TokenAwarePolicy(childPolicy);

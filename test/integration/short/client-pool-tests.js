@@ -514,30 +514,22 @@ describe('Client', function () {
       var unexpectedErrors = [];
       var errors = [];
       var domains = [
-        //2 domains because there are more than 2 hosts as an uncaught error
-        //will blow up the host pool, by design
-        //But we need to test prepared and unprepared
+        // Use 2 domains and 2 clients to test prepared and unprepared executions
         domain.create(),
         domain.create()
       ];
-      var fatherDomain = domain.create();
-      var childDomain = domain.create();
       var client1 = new Client(helper.baseOptions);
       var client2 = new Client(helper.baseOptions);
+      var clients = [ client1, client2 ];
       utils.series([
         client1.connect.bind(client1),
         client2.connect.bind(client1),
         function executeABunchOfTimes1(next) {
-          utils.times(10, function (n, timesNext) {
-            client1.execute('SELECT * FROM system.local', timesNext);
+          utils.times(20, function (n, timesNext) {
+            clients[n % 2].execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
-        function executeABunchOfTimes2(next) {
-          utils.times(10, function (n, timesNext) {
-            client2.execute('SELECT * FROM system.local', timesNext);
-          }, next);
-        },
-        function blowUpSingleDomain(next) {
+        function blowEachDomain(next) {
           utils.timesSeries(domains.length, function (n, timesNext) {
             var waiting = 1;
             var d = domains[n];
@@ -550,7 +542,7 @@ describe('Client', function () {
               });
             });
             d.run(function() {
-              client1.execute('SELECT * FROM system.local', [], {prepare: n % 2}, function (err) {
+              clients[n % 2].execute('SELECT * FROM system.local', [], { prepare: n % 2 }, function (err) {
                 waiting = 0;
                 if (err) {
                   unexpectedErrors.push(err);
@@ -561,17 +553,40 @@ describe('Client', function () {
             function wait() {
               if (waiting > 0) {
                 waiting++;
-                if (waiting > 100) {
+                if (waiting > 20) {
                   return timesNext(new Error('Timed out'));
                 }
                 return setTimeout(wait, 50);
               }
-              //Delay to allow throw
+              // Delay to allow throw
               setTimeout(function () {
                 timesNext();
               }, 100);
             }
             wait();
+          }, next);
+        },
+        function assertResults(next) {
+          assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
+          assert.strictEqual(errors.length, domains.length);
+          errors.forEach(function (item) {
+            assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
+          });
+          next();
+        }
+      ], done);
+    });
+    it('should maintain nested domain in the callbacks', function (done) {
+      var unexpectedErrors = [];
+      var errors = [];
+      var fatherDomain = domain.create();
+      var childDomain = domain.create();
+      var client = new Client(helper.baseOptions);
+      utils.series([
+        client.connect.bind(client),
+        function executeABunchOfTimes1(next) {
+          utils.times(20, function (n, timesNext) {
+            client.execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
         function nestedDomain(next) {
@@ -584,7 +599,7 @@ describe('Client', function () {
               errors.push([err.toString(), 'child']);
             });
             childDomain.run(function() {
-              client2.execute('SELECT * FROM system.local', function (err) {
+              client.execute('SELECT * FROM system.local', function (err) {
                 waiting = false;
                 if (err) {
                   unexpectedErrors.push(err);
@@ -604,7 +619,7 @@ describe('Client', function () {
         },
         function assertResults(next) {
           assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
-          //assert.strictEqual(errors.length, domains.length + 1);
+          assert.strictEqual(errors.length, 1);
           errors.forEach(function (item) {
             assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
           });

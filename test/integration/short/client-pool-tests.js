@@ -2,7 +2,6 @@
 var assert = require('assert');
 var domain = require('domain');
 var dns = require('dns');
-var util = require('util');
 
 var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
@@ -16,6 +15,7 @@ var EventEmitter = require('events').EventEmitter;
 var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
 var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+var OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -1112,18 +1112,3 @@ function getPoolInfo(client) {
   });
   return info;
 }
-
-/**
- * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, ie: [a, b].
- * @constructor
- */
-function OrderedLoadBalancingPolicy() {
-
-}
-
-util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
-
-OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
-  callback(null, utils.arrayIterator(this.hosts.values()));
-};
-

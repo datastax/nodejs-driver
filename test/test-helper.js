@@ -1050,5 +1050,20 @@ function executeIfVersion (testVersion, func, args) {
   }
 }
 
+/**
+ * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].
+ * @constructor
+ */
+function OrderedLoadBalancingPolicy() {
+
+}
+
+util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
+
+OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  callback(null, utils.arrayIterator(this.hosts.values()));
+};
+
 module.exports = helper;
 module.exports.RetryMultipleTimes = RetryMultipleTimes;
+module.exports.OrderedLoadBalancingPolicy = OrderedLoadBalancingPolicy;

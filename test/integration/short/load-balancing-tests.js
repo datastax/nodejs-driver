@@ -24,6 +24,7 @@ context('with a reusable 3 node cluster', function () {
       'CREATE TABLE ks_simple_rp1.table_a (id int primary key, name int)',
       'CREATE TABLE ks_network_rp1.table_b (id int primary key, name int)',
       'CREATE TABLE ks_network_rp2.table_c (id int primary key, name int)',
+      'CREATE TABLE ks_network_rp2.table_composite (id1 text, id2 text, primary key ((id1, id2)))',
       // Try to prevent consistency issues in the query trace
       'ALTER KEYSPACE system_traces WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': \'1\'}'
     ]
@@ -46,7 +47,7 @@ context('with a reusable 3 node cluster', function () {
     });
   });
   vdescribe('2.0', 'TokenAwarePolicy', function () {
-    it('should target the correct partition with logged keyspace', function (done) {
+    it('should target the correct replica for partition with logged keyspace', function (done) {
       utils.series([
         function testCaseWithSimpleStrategy(next) {
           testNoHops('ks_simple_rp1', 'table_a', 1, next);
@@ -61,6 +62,28 @@ context('with a reusable 3 node cluster', function () {
     });
     it('should target the correct partition on a different keyspace', function (done) {
       testNoHops('ks_simple_rp1', 'ks_network_rp2.table_c', 2, done);
+    });
+    it('should target correct replica for composite routing key', function (done) {
+      var client = new Client({
+        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+        keyspace: 'ks_network_rp2',
+        contactPoints: helper.baseOptions.contactPoints
+      });
+      var query = 'INSERT INTO table_composite (id1, id2) VALUES (?, ?)';
+      var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+      utils.mapSeries([
+        utils.stringRepeat('a', 1),
+        utils.stringRepeat('b', 0x3fff),
+        utils.stringRepeat('c', 0x7fff),
+        utils.stringRepeat('d', 0xffe0),
+      ], function eachValue(value, next) {
+        utils.timesLimit(32, 16, function eachTime(n, timesNext) {
+          client.execute(query, [ value, n.toString() ], queryOptions, function (err, result) {
+            assert.ifError(err);
+            assertReplicas(result, client, 2, timesNext);
+          });
+        }, next);
+      }, helper.finish(client, done));
     });
     it('should balance between replicas with logged keyspace', function (done) {
       testAllReplicasAreUsedAsCoordinator('ks_network_rp2', 'table_c', 2, done);
@@ -86,25 +109,23 @@ function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
   });
   var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
   var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-  var results = [];
   utils.timesLimit(50, 16, function (n, timesNext) {
     var params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
-      getTrace(client, result.info.traceId, function (err, trace) {
-        assert.ifError(err);
-        results.push(trace);
-        timesNext();
-      });
+      assertReplicas(result, client, expectedReplicas, timesNext);
     });
-  }, function loopEnd() {
-    client.shutdown();
+  }, helper.finish(client, done));
+}
+
+function assertReplicas(result, client, expectedReplicas, next) {
+  getTrace(client, result.info.traceId, function (err, trace) {
+    assert.ifError(err);
     // Check where the events are coming from
-    results.forEach(function (trace) {
-      var replicas = getReplicas(trace);
-      assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
-    });
-    done();
+    var replicas = getReplicas(trace);
+    // Verify that only replicas were hit (coordinator + replica)
+    assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
+    next();
   });
 }
 
@@ -168,6 +189,9 @@ function getTrace(client, traceId, callback) {
   var attempts = 0;
   var trace;
   var error;
+  if (!traceId) {
+    throw new Error('traceid was not provided');
+  }
   // Retry several times
   utils.whilst(
     function condition() {

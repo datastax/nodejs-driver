@@ -101,6 +101,20 @@ describe('Client', function () {
         }, seriesNext);
       }], done);
     });
+    context('when prepareOnAllHosts set to false', function () {
+      it('should execute a prepared query on all hosts', function (done) {
+        var client = newInstance({ prepareOnAllHosts: false });
+        utils.timesSeries(6, function (n, next) {
+          client.execute(helper.queries.basic, [], { prepare: true }, next);
+        }, helper.finish(client, done));
+      });
+      it('should execute a prepared query on all hosts with the keyspace set', function (done) {
+        var client = newInstance({ prepareOnAllHosts: false, keyspace: 'system' });
+        utils.timesSeries(6, function (n, next) {
+          client.execute('SELECT * FROM local', [], { prepare: true }, next);
+        }, helper.finish(client, done));
+      });
+    });
     it('should fail if the type does not match', function (done) {
       var client = setupInfo.client;
       client.execute(util.format('SELECT * FROM %s WHERE id1 = ?', commonTable), [1000], {prepare: 1}, function (err) {
@@ -453,6 +467,7 @@ describe('Client', function () {
         [types.TimeUuid.now()],
         [types.TimeUuid.now(), types.TimeUuid.now()]
       ];
+      client.on('log', helper.log);
       utils.series([
         helper.toTask(client.execute, client, createTableCql),
         function insert(next) {

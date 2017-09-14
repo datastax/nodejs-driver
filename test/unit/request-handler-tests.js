@@ -250,7 +250,7 @@ describe('RequestHandler', function () {
       var handler = newInstance();
       handler.request = {};
       handler.host = {};
-      handler._prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(utils.allocBufferUnsafe(0), function (err) {
         helper.assertInstanceOf(err, errors.DriverInternalError);
         done();
       });
@@ -260,12 +260,12 @@ describe('RequestHandler', function () {
       handler.request = {};
       handler.host = {};
       handler.request = new requests.BatchRequest([
-        { info: { queryId: new Buffer('10')}, query: '1'},
-        { info: { queryId: new Buffer('20')}, query: '2'}
+        { info: { queryId: utils.allocBufferFromString('10')}, query: '1'},
+        { info: { queryId: utils.allocBufferFromString('20')}, query: '2'}
       ], {});
       var connection = { prepareOnce: function (q, cb) {
         queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)});});
+        setImmediate(function () { cb(null, { id: utils.allocBufferFromString(q)});});
       }};
       handler.connection = connection;
       var queriesPrepared = [];
@@ -274,7 +274,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(handler.connection, connection);
         setImmediate(cb);
       };
-      handler._prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(utils.allocBufferUnsafe(0), function (err) {
         assert.ifError(err);
         assert.strictEqual(queriesPrepared.toString(), handler.request.queries.map(function (x) {return x.query; }).toString());
         done();
@@ -285,12 +285,12 @@ describe('RequestHandler', function () {
       handler.request = {};
       handler.host = {};
       handler.request = new requests.BatchRequest([
-        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'},
-        { info: { queryId: new Buffer('zz')}, query: 'SAME QUERY'}
+        { info: { queryId: utils.allocBufferFromString('zz')}, query: 'SAME QUERY'},
+        { info: { queryId: utils.allocBufferFromString('zz')}, query: 'SAME QUERY'}
       ], {});
       var connection = { prepareOnce: function (q, cb) {
         queriesPrepared.push(q);
-        setImmediate(function () { cb(null, { id: new Buffer(q)});});
+        setImmediate(function () { cb(null, { id: utils.allocBufferFromString(q)});});
       }};
       handler.connection = connection;
       var queriesPrepared = [];
@@ -299,7 +299,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(handler.connection, connection);
         setImmediate(cb);
       };
-      handler._prepareAndRetry(new Buffer(0), function (err) {
+      handler._prepareAndRetry(utils.allocBufferUnsafe(0), function (err) {
         assert.ifError(err);
         //Only 1 query
         assert.strictEqual(queriesPrepared.length, 1);
@@ -352,7 +352,7 @@ describe('RequestHandler', function () {
                 { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
                 { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
               ],
-              pageState: new Buffer('1234aa', 'hex')},
+              pageState: utils.allocBufferFromString('1234aa', 'hex')},
             flags: utils.emptyObject
           });
         });
@@ -419,7 +419,7 @@ describe('RequestHandler', function () {
               { type: { code: types.dataTypes.text, info: null}, name: 'col1'},
               { type: { code: types.dataTypes.list, info: { code: types.dataTypes.uuid, info: null}}, name: 'col2'}
             ],
-            pageState: new Buffer('1234aa', 'hex')
+            pageState: utils.allocBufferFromString('1234aa', 'hex')
           }});
         });
       }};

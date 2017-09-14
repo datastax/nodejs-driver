@@ -16,7 +16,7 @@ describe('encoder', function () {
       assertGuessed(true, dataTypes.boolean, 'Guess type for a boolean value failed');
       assertGuessed([1,2,3], dataTypes.list, 'Guess type for an Array value failed');
       assertGuessed('a string', dataTypes.text, 'Guess type for an string value failed');
-      assertGuessed(new Buffer('bip bop'), dataTypes.blob, 'Guess type for a buffer value failed');
+      assertGuessed(utils.allocBufferFromString('bip bop'), dataTypes.blob, 'Guess type for a buffer value failed');
       assertGuessed(new Date(), dataTypes.timestamp, 'Guess type for a Date value failed');
       assertGuessed(new types.Long(10), dataTypes.bigint, 'Guess type for a Int 64 value failed');
       assertGuessed(types.Uuid.random(), dataTypes.uuid, 'Guess type for a UUID value failed');
@@ -25,8 +25,8 @@ describe('encoder', function () {
       assertGuessed(types.timeuuid(), dataTypes.uuid, 'Guess type for a Timeuuid value failed');
       assertGuessed(types.Integer.fromNumber(1), dataTypes.varint, 'Guess type for a varint value failed');
       assertGuessed(types.BigDecimal.fromString('1.01'), dataTypes.decimal, 'Guess type for a varint value failed');
-      assertGuessed(types.Integer.fromBuffer(new Buffer([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
-      assertGuessed(new types.InetAddress(new Buffer([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
+      assertGuessed(types.Integer.fromBuffer(utils.allocBufferFromArray([0xff])), dataTypes.varint, 'Guess type for a varint value failed');
+      assertGuessed(new types.InetAddress(utils.allocBufferFromArray([10, 10, 10, 2])), dataTypes.inet, 'Guess type for a inet value failed');
       assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
       assertGuessed(new types.LocalDate(2010, 4, 29), dataTypes.date, 'Guess type for a date value failed');
       assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
@@ -183,13 +183,13 @@ describe('encoder', function () {
     it('should encode/decode InetAddress/Buffer as inet', function () {
       var InetAddress = types.InetAddress;
       var encoder = new Encoder(2, {});
-      var val1 = new InetAddress(new Buffer([15, 15, 15, 1]));
+      var val1 = new InetAddress(utils.allocBufferFromArray([15, 15, 15, 1]));
       var encoded = encoder.encode(val1, dataTypes.inet);
       assert.strictEqual(encoded.toString('hex'), '0f0f0f01');
       var val2 = encoder.decode(encoded, {code: dataTypes.inet});
       assert.strictEqual(val2.toString(), '15.15.15.1');
       assert.ok(val1.equals(val2));
-      val1 = new InetAddress(new Buffer('00000000000100112233445500aa00bb', 'hex'));
+      val1 = new InetAddress(utils.allocBufferFromString('00000000000100112233445500aa00bb', 'hex'));
       encoded = encoder.encode(val1, dataTypes.inet);
       val2 = encoder.decode(encoded, {code: dataTypes.inet});
       assert.ok(val1.equals(val2));
@@ -636,7 +636,7 @@ describe('encoder', function () {
     });
     it('should decode 0-length map values, v2', function () {
       var encoder = new Encoder(2, {});
-      var buffer = new Buffer('000100046b6579310000', 'hex');
+      var buffer = utils.allocBufferFromString('000100046b6579310000', 'hex');
       var value = encoder.decode(buffer,
         { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
       assert.ok(value);
@@ -645,7 +645,7 @@ describe('encoder', function () {
     });
     it('should decode 0-length map values, v3', function () {
       var encoder = new Encoder(3, {});
-      var buffer = new Buffer('00000001000000046b65793100000000', 'hex');
+      var buffer = utils.allocBufferFromString('00000001000000046b65793100000000', 'hex');
       var value = encoder.decode(buffer,
         { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
       assert.ok(value);
@@ -656,7 +656,7 @@ describe('encoder', function () {
       // technically this should not be possible as nulls are not allowed in collections.
       // at a protocol level this is only possible with v3+ as v2 uses unsigned short for collection element size.
       var encoder = new Encoder(3, {});
-      var buffer = new Buffer('00000001000000046b657931FFFFFFFF', 'hex');
+      var buffer = utils.allocBufferFromString('00000001000000046b657931FFFFFFFF', 'hex');
       var value = encoder.decode(buffer,
         { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
       assert.ok(value);
@@ -671,7 +671,7 @@ describe('encoder', function () {
       var options = {
         //Its an array of 3 values
         /** @type {Array|Buffer} */
-        routingKey: [new Buffer([1]), new Buffer([2]), new Buffer([3, 3])]
+        routingKey: [utils.allocBufferFromArray([1]), utils.allocBufferFromArray([2]), utils.allocBufferFromArray([3, 3])]
       };
       encoder.setRoutingKey([1, 'text'], options);
       assert.ok(options.routingKey);
@@ -681,7 +681,7 @@ describe('encoder', function () {
 
       options = {
         //Its an array of 1 value
-        routingKey: [new Buffer([1])]
+        routingKey: [utils.allocBufferFromArray([1])]
       };
       encoder.setRoutingKey([], options);
       //the result should be a single value
@@ -690,7 +690,7 @@ describe('encoder', function () {
     it('should not affect Buffer routing keys', function () {
       /** @type {QueryOptions} */
       var options = {
-        routingKey: new Buffer([1, 2, 3, 4])
+        routingKey: utils.allocBufferFromArray([1, 2, 3, 4])
       };
       var initialRoutingKey = options.routingKey.toString('hex');
       encoder.setRoutingKey([1, 'text'], options);
@@ -698,7 +698,7 @@ describe('encoder', function () {
 
       options = {
         routingIndexes: [1],
-        routingKey: new Buffer([1, 2, 3, 4])
+        routingKey: utils.allocBufferFromArray([1, 2, 3, 4])
       };
       encoder.setRoutingKey([1, 'text'], options);
       //The routing key should take precedence over routingIndexes
@@ -727,7 +727,7 @@ describe('encoder', function () {
         hints: ['int'],
         routingIndexes: [0, 2]
       };
-      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
+      encoder.setRoutingKey([1, 'yeah', utils.allocBufferFromArray([1, 1, 1, 1])], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
       // eslint-disable-next-line no-useless-concat
       assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
@@ -735,10 +735,10 @@ describe('encoder', function () {
         //no hints
         routingIndexes: [1, 2]
       };
-      encoder.setRoutingKey([1, 'yeah', new Buffer([1, 1, 1, 1])], options);
+      encoder.setRoutingKey([1, 'yeah', utils.allocBufferFromArray([1, 1, 1, 1])], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
       // eslint-disable-next-line no-useless-concat
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + new Buffer('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
+      assert.strictEqual(options.routingKey.toString('hex'), '0004' + utils.allocBufferFromString('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
     it('should allow undefined routingIndexes', function () {
       /** @type {QueryOptions} */
@@ -752,11 +752,11 @@ describe('encoder', function () {
     it('should allow null or undefined routingKey parts', function () {
       /** @type {QueryOptions} */
       var options = {
-        routingKey: [new Buffer([0]), null, new Buffer([1])]
+        routingKey: [utils.allocBufferFromArray([0]), null, utils.allocBufferFromArray([1])]
       };
       encoder.setRoutingKey([], options);
       assert.strictEqual(options.routingKey, null);
-      options.routingKey = [new Buffer([0]), undefined, new Buffer([1])];
+      options.routingKey = [utils.allocBufferFromArray([0]), undefined, utils.allocBufferFromArray([1])];
       encoder.setRoutingKey([], options);
       assert.strictEqual(options.routingKey, null);
     });

@@ -75,7 +75,7 @@ describe('Client', function () {
       var client = setupInfo.client;
       var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
-      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), new Buffer(100), ['one', 'two']];
+      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), utils.allocBufferUnsafe(100), ['one', 'two']];
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
@@ -657,7 +657,7 @@ describe('Client', function () {
       vit('2.1', 'should allow tuple parameter hints', function (done) {
         var client = setupInfo.client;
         var id = types.Uuid.random();
-        var tuple = new types.Tuple('Surf Rider', 110, new Buffer('0f0f', 'hex'));
+        var tuple = new types.Tuple('Surf Rider', 110, utils.allocBufferFromString('0f0f', 'hex'));
         utils.series([
           function insert(next) {
             var query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';

@@ -136,7 +136,7 @@ describe('Client', function () {
         var options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
-        var buf = new Buffer(i * 1024);
+        var buf = utils.allocBuffer(i * 1024);
         buf.write(i + ' dummy values ' + (new Array(100)).join(i.toString()));
         clientInsert.execute(insertQuery, [types.uuid(), buf.length, buf], options, next);
       }, callback);

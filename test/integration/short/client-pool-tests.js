@@ -211,8 +211,10 @@ describe('Client', function () {
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
+          var state = client.getState();
           client.hosts.forEach(function (host) {
             assert.strictEqual(host.pool.connections.length, 3, 'For host ' + host.address);
+            assert.strictEqual(state.getOpenConnections(host), 3);
           });
           client.shutdown(next);
         });
@@ -935,19 +937,26 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.slice(0);
+          var hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          assert.ok(hosts[0].pool.connections.length > 0);
-          assert.ok(hosts[1].pool.connections.length > 0);
-          assert.ok(!hosts[0].pool.shuttingDown);
-          assert.ok(!hosts[1].pool.shuttingDown);
+          var state = client.getState();
+          // Check the pools before shutting down
+          hosts.forEach(function each(host) {
+            assert.ok(state.getOpenConnections(host) > 0);
+            assert.ok(host.pool.connections.length > 0);
+            assert.ok(!host.pool.shuttingDown);
+          });
           client.shutdown(next);
         },
         function checkPool(next) {
-          var hosts = client.hosts.slice(0);
+          var hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          assert.strictEqual(hosts[0].pool.connections.length, 0);
-          assert.strictEqual(hosts[1].pool.connections.length, 0);
+          var state = client.getState();
+          assert.deepEqual(state.getConnectedHosts(), []);
+          hosts.forEach(function each(host) {
+            assert.strictEqual(host.pool.connections.length, 0);
+            assert.strictEqual(state.getOpenConnections(host), 0);
+          });
           next();
         }
       ], done);

@@ -19,11 +19,11 @@ describe('Client', function () {
       simulacron.start(done);
     });
     beforeEach(function (done) {
+      sCluster = new simulacron.SimulacronCluster();
       utils.series(
         [
           function startCluster(next) {
-            sCluster = new simulacron.SimulacronCluster();
-            sCluster.start('5', {}, next);
+            sCluster.register([5], {}, next);
           },
           function connectCluster(next) {
             var poolingOptions = {};
@@ -39,17 +39,13 @@ describe('Client', function () {
             client.connect.bind(client);
             next();
           },
-          function primeQuery(next) {
-            sCluster.primeQueryWithEmptyResult(query, next);
-          },
-          function clearLog(next) {
-            sCluster.clearLog(next);
-          }
+          helper.toTask(sCluster.clear, sCluster),
+          helper.toTask(sCluster.primeQuery, sCluster, query)
         ], done);
     });
     afterEach(function (done) {
       client.shutdown.bind(client);
-      sCluster.destroy(done);
+      sCluster.unregister(done);
     });
     after(function (done) {
       simulacron.stop(done);
@@ -62,7 +58,7 @@ describe('Client', function () {
         assert.notEqual(result, null);
         assert.notEqual(result.rows, null);
         utils.eachSeries(client.hosts.values(), function(host, next) {
-          sCluster.queryNodeLog(host.address, function(logs) {
+          sCluster.node(host.address).getLogs(function(err, logs) {
             assert.ifError(err);
             var prepareQuery;
             for(var i = 0; i < logs.length; i++) {
@@ -85,7 +81,7 @@ describe('Client', function () {
       utils.series(
         [
           function stopLastNode(next) {
-            sCluster.stopNode(nodeDownAddress, next);
+            sCluster.node(nodeDownAddress).stop(next);
           },
           function runQuery(next) {
             utils.timesSeries(5, function (n, nextIteration) {
@@ -114,7 +110,7 @@ describe('Client', function () {
           },
           function verifyLogs(next) {
             utils.eachSeries(client.hosts.values(), function(host, nextHost) {
-              sCluster.queryNodeLog(host.address, function(logs) {
+              sCluster.node(host.address).getLogs(function(err, logs) {
                 var prepareQuery;
                 for(var i = 0; i < logs.length; i++) {
                   var queryLog = logs[i];
@@ -137,11 +133,11 @@ describe('Client', function () {
               helper.trace("Node marked as UP");
               setTimeout(next, 1000); //give time for driver to re prepare statement
             });
-            sCluster.resumeNode(nodeDownAddress, function() {
+            sCluster.node(nodeDownAddress).start(function() {
             });
           },
           function verifyPrepareQueryOnLastNode(next) {
-            sCluster.queryNodeLog(nodeDownAddress, function(logs) {
+            sCluster.node(nodeDownAddress).getLogs(function(err, logs) {
               var prepareQuery;
               for(var i = 0; i < logs.length; i++) {
                 var queryLog = logs[i];

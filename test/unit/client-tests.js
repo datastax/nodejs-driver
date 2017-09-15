@@ -149,7 +149,9 @@ describe('Client', function () {
       });
     });
     it('should build the routingKey based on routingNames', function (done) {
-      var requestHandlerMock = function () {};
+      var requestHandlerMock = function (request, options) {
+        this._options = options;
+      };
       var prepareHandlerMock = {
         getPrepared: function (c, lbp, q, ks, cb) {
           cb(null, utils.allocBufferFromArray([1]), { columns: [
@@ -159,11 +161,11 @@ describe('Client', function () {
         }
       };
       var client = newConnectedInstance(requestHandlerMock, null, prepareHandlerMock);
-      requestHandlerMock.prototype.send = function (q, options, cb) {
-        assert.ok(options);
-        assert.ok(options.routingKey);
+      requestHandlerMock.prototype.send = function (cb) {
+        assert.ok(this._options);
+        assert.ok(this._options.routingKey);
         // eslint-disable-next-line no-useless-concat
-        assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
+        assert.strictEqual(this._options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
         cb();
         done();
       };
@@ -173,13 +175,14 @@ describe('Client', function () {
     });
     it('should fill parameter information for string hints', function (done) {
       var options;
-      var requestHandlerMock = function () {};
+      var requestHandlerMock = function (r, o) {
+        options = o;
+      };
       var client = newConnectedInstance(requestHandlerMock);
       client.metadata.getUdt = function (ks, n, cb) {
         cb(null, {keyspace: ks, name: n});
       };
-      requestHandlerMock.prototype.send = function (q, o, cb) {
-        options = o;
+      requestHandlerMock.prototype.send = function (cb) {
         cb();
       };
       var query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
@@ -319,9 +322,10 @@ describe('Client', function () {
     });
     it('should set the timestamp', function (done) {
       var actualOptions;
-      var handlerMock = function () {};
-      handlerMock.prototype.send = function (request, options, callback) {
-        actualOptions = options;
+      var handlerMock = function (r, o) {
+        actualOptions = o;
+      };
+      handlerMock.prototype.send = function (callback) {
         callback(null, {});
       };
       var client = newConnectedInstance(handlerMock);
@@ -343,9 +347,10 @@ describe('Client', function () {
     });
     it('should not set the timestamp when timestampGeneration is null', function (done) {
       var actualOptions;
-      var handlerMock = function () {};
-      handlerMock.prototype.send = function (request, options, callback) {
-        actualOptions = options;
+      var handlerMock = function (r, o) {
+        actualOptions = o;
+      };
+      handlerMock.prototype.send = function (callback) {
         callback(null, {});
       };
       var client = newConnectedInstance(handlerMock, { policies: { timestampGeneration: null }});
@@ -413,7 +418,7 @@ describe('Client', function () {
   describe('#batch()', function () {
     var Client = rewire('../../lib/client.js');
     var requestHandlerMock = function () {};
-    requestHandlerMock.prototype.send = function noop (query, options, cb) {
+    requestHandlerMock.prototype.send = function noop (cb) {
       //make it async
       setTimeout(function () {
         cb(null, {meta: {}});
@@ -435,9 +440,10 @@ describe('Client', function () {
     });
     it('should set the timestamp', function (done) {
       var actualOptions;
-      var handlerMock = function () {};
-      handlerMock.prototype.send = function (request, options, callback) {
-        actualOptions = options;
+      var handlerMock = function (r, o) {
+        actualOptions = o;
+      };
+      handlerMock.prototype.send = function (callback) {
         callback(null, {});
       };
       var client = newConnectedInstance(handlerMock);

@@ -26,7 +26,6 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ifError(err);
         assert.strictEqual(localCon.protocolVersion, getProtocolVersion());
-        assert.strictEqual(localCon.checkingVersion, true);
         localCon.close(done);
       });
     });
@@ -47,7 +46,6 @@ describe('Connection', function () {
       localCon.open(function (err) {
         assert.ifError(err);
         assert.strictEqual(localCon.protocolVersion, options.protocolOptions.maxVersion);
-        assert.strictEqual(localCon.checkingVersion, true);
         localCon.close(done);
       });
     });
@@ -84,26 +82,23 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
-    it('should set the timeout for the hearbeat', function (done) {
+    it('should set the timeout for the heartbeat', function (done) {
       var options = utils.extend({}, defaultOptions);
-      options.pooling.heartBeatInterval = 200;
+      options.pooling.heartBeatInterval = 100;
       var c = newInstance(null, undefined, options);
       var sendCounter = 0;
       c.open(function (err) {
         assert.ifError(err);
-        assert.ok(c.idleTimeout);
         var originalSend = c.sendStream;
         c.sendStream = function() {
           sendCounter++;
-          originalSend.apply(c, Array.prototype.slice.call(arguments));
+          originalSend.apply(c, arguments);
         };
+        setTimeout(function () {
+          assert.ok(sendCounter > 3, 'sendCounter ' + sendCounter);
+          done();
+        }, 600);
       });
-      setTimeout(function () {
-        //wait for requests to take place
-        //at least 3 requests
-        assert.ok(sendCounter > 2, 'sendCounter ' + sendCounter);
-        done();
-      }, 1000);
     });
   });
   describe('#open with ssl', function () {

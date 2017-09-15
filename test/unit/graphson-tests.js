@@ -12,11 +12,13 @@ var helper = require('../test-helper');
 var GraphSONReader = require('../../lib/encoder-extensions').GraphSONReader;
 var graphModule = require('../../lib/graph');
 var types = require('../../lib/types');
+var utils = require('../../lib/utils');
 var geometry = require('../../lib/geometry');
 
 describe('GraphSONReader', function () {
   describe('#read()', function () {
     var reader = new GraphSONReader();
+    var buffer = utils.allocBufferFromString('010203', 'hex');
     (function defineObjectTest() {
       [
         [ 'g:UUID', types.Uuid, types.Uuid.random() ],
@@ -24,7 +26,7 @@ describe('GraphSONReader', function () {
         [ 'gx:BigDecimal', types.BigDecimal, types.BigDecimal.fromString('123.32') ],
         [ 'gx:BigInteger', types.Integer, types.Integer.fromString('99901')],
         [ 'gx:InetAddress', types.InetAddress, types.InetAddress.fromString('123.123.123.201')],
-        [ 'dse:Blob', Buffer, new Buffer('010203', 'hex')],
+        [ 'dse:Blob', Buffer, buffer.toString('base64'), buffer ],
         [ 'dse:Point', geometry.Point, new geometry.Point(1, 2.1)],
         [ 'dse:LineString', geometry.LineString, geometry.LineString.fromString('LINESTRING (1 1, 2 2, 3 3)')],
         [ 'dse:Polygon', geometry.Polygon, new geometry.Polygon.fromString('POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))')]
@@ -37,9 +39,9 @@ describe('GraphSONReader', function () {
           var result = reader.read(obj);
           helper.assertInstanceOf(result, item[1]);
           if (result.equals) {
-            assert.ok(result.equals(item[2]));
+            assert.ok(result.equals(item[3] || item[2]));
           } else {
-            assert.deepEqual(result, item[2]);
+            assert.deepEqual(result, item[3] || item[2]);
           }
         });
       });

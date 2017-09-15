@@ -730,9 +730,9 @@ vdescribe('dse-5.0', 'Client', function () {
       });
     });
 
-   // In DSE 5.1 geo types must now bounded in the graph schema, however
-   // older versions of DSE do not support this, so the type must be conditionally
-   // derived.
+    // In DSE 5.1 geo types must now bounded in the graph schema, however
+    // older versions of DSE do not support this, so the type must be conditionally
+    // derived.
     var is51 = helper.isDseGreaterThan('5.1');
     var pointType = is51 ? 'Point().withBounds(-40, -40, 40, 40)' : 'Point()';
     var lineType = is51 ? 'Linestring().withGeoBounds()' : 'Linestring()';
@@ -797,8 +797,8 @@ vdescribe('dse-5.0', 'Client', function () {
                 // make an exception for Blob type as retrieval by property value does not currently work (DSP-10145).
                 // TODO: Fix when DSP-10145 is fixed.
                 var query = propType === 'Time()' ?
-                    "g.V().hasLabel(vertexLabel).has(propertyName)" :
-                    "g.V().hasLabel(vertexLabel).has(propertyName, val)";
+                  "g.V().hasLabel(vertexLabel).has(propertyName)" :
+                  "g.V().hasLabel(vertexLabel).has(propertyName, val)";
                 client.executeGraph(query, params, null, function (err, result) {
                   assert.ifError(err);
                   validateVertexResult(result, expected[index], vertexLabel, propertyName);

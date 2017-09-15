@@ -22,8 +22,6 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should emit end when no rows', function (done) {
       var client = newInstance();
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function () { throw new Error('Query should not be prepared');};
       var stream = client.stream(helper.queries.basicNoResults, [], {prepare: false});
       stream
         .on('end', done)
@@ -146,18 +144,9 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should prepare and emit end when no rows', function (done) {
       var client = newInstance();
-      //noinspection JSAccessibilityCheck
-      var originalGetPrepared = client._getPrepared;
-      var calledPrepare = true;
-      //noinspection JSAccessibilityCheck
-      client._getPrepared = function () {
-        calledPrepare = true;
-        originalGetPrepared.apply(client, arguments);
-      };
-      var stream = client.stream(helper.queries.basicNoResults, [], {prepare: 1});
+      var stream = client.stream(helper.queries.basicNoResults, [], { prepare: true });
       stream
         .on('end', function () {
-          assert.strictEqual(calledPrepare, true);
           done();
         })
         .on('readable', function () {

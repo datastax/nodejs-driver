@@ -15,6 +15,7 @@ var types = require('../../../lib/types');
 var utils = require('../../../lib/utils.js');
 var errors = require('../../../lib/errors.js');
 var vit = helper.vit;
+var vdescribe = helper.vdescribe;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -80,7 +81,7 @@ describe('Client', function () {
       var client = setupInfo.client;
       var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
-      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), new Buffer(100), ['one', 'two']];
+      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), utils.allocBufferUnsafe(100), ['one', 'two']];
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
@@ -662,7 +663,7 @@ describe('Client', function () {
       vit('2.1', 'should allow tuple parameter hints', function (done) {
         var client = setupInfo.client;
         var id = types.Uuid.random();
-        var tuple = new types.Tuple('Surf Rider', 110, new Buffer('0f0f', 'hex'));
+        var tuple = new types.Tuple('Surf Rider', 110, utils.allocBufferFromString('0f0f', 'hex'));
         utils.series([
           function insert(next) {
             var query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
@@ -966,6 +967,31 @@ describe('Client', function () {
           .catch(function (err) {
             helper.assertInstanceOf(err, errors.ResponseError);
           });
+      });
+    });
+    vdescribe('2.0', 'with lightweight transactions', function () {
+      var client = setupInfo.client;
+      var id = types.Uuid.random();
+      before(function (done) {
+        var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+        client.execute(query, [id, 'val' ], done);
+      });
+      [
+        [ 'is not a conditional update', true, 'INSERT INTO %s (id, text_sample) VALUES (?, ?)', [ id, 'val'] ],
+        [ 'is a conditional update and it was applied', true,
+          'INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', [ types.Uuid.random(), 'val2'] ],
+        [ 'is a conditional update and it was not applied', false,
+          'INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', [ id, 'val'] ]
+      ].forEach(function (item) {
+        context('when it ' + item[0], function () {
+          it('should return a ResultSet with wasApplied set to ' + item[1], function (done) {
+            client.execute(util.format(item[2], table), item[3], function (err, result) {
+              assert.ifError(err);
+              assert.strictEqual(result.wasApplied(), item[1]);
+              done();
+            });
+          });
+        });
       });
     });
   });

@@ -12,6 +12,7 @@ var events = require('events');
 var hostModule = require('../../lib/host');
 var Host = hostModule.Host;
 var HostConnectionPool = require('../../lib/host-connection-pool');
+var Metadata = require('../../lib/metadata');
 var HostMap = hostModule.HostMap;
 var types = require('../../lib/types');
 var clientOptions = require('../../lib/client-options');
@@ -518,7 +519,7 @@ describe('Host', function () {
       var host = newHostInstance(defaultOptions);
       var closeInvoked = 0;
       var c = {
-        timedOutHandlers: 1000,
+        timedOutOperations: 1000,
         close: function () {
           closeInvoked++;
         }
@@ -708,7 +709,7 @@ function newHostConnectionPoolInstance(options) {
  */
 function newHostInstance(options) {
   options = utils.extend({logEmitter: function () {}}, options);
-  return new Host('0.0.0.1:9042', 2, options);
+  return new Host('0.0.0.1:9042', 2, options, new Metadata(options, null));
 }
 
 /**

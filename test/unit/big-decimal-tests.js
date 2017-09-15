@@ -5,9 +5,10 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
 
+var assert = require('assert');
 var types = require('../../lib/types');
+var utils = require('../../lib/utils');
 
 describe('BigDecimal', function () {
   var BigDecimal = types.BigDecimal;
@@ -72,7 +73,7 @@ describe('BigDecimal', function () {
   describe('fromBuffer()', function () {
     it('should convert from buffer (scale + unscaledValue in BE)', function () {
       hexToDecimalValues.forEach(function (item) {
-        var buffer = new Buffer(item[0], 'hex');
+        var buffer = utils.allocBufferFromString(item[0], 'hex');
         var value = BigDecimal.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[1]);
       });
@@ -121,7 +122,7 @@ describe('BigDecimal', function () {
         var first = BigDecimal.fromString(item[0]);
         var second = BigDecimal.fromString(item[1]);
         assert.strictEqual(first.subtract(second).toString(), item[2]);
-          //check mutations
+        // check mutations
         assert.strictEqual(first.toString(), item[0]);
       });
     });
@@ -141,7 +142,7 @@ describe('BigDecimal', function () {
         var first = BigDecimal.fromString(item[0]);
         var second = BigDecimal.fromString(item[1]);
         assert.strictEqual(first.add(second).toString(), item[2]);
-          //check mutations
+        // check mutations
         assert.strictEqual(first.toString(), item[0]);
       });
     });
@@ -163,7 +164,7 @@ describe('BigDecimal', function () {
         var first = BigDecimal.fromString(item[0]);
         var second = BigDecimal.fromString(item[1]);
         assert.strictEqual(first.compare(second), item[2]);
-          //check mutations
+        // check mutations
         assert.strictEqual(first.toString(), item[0]);
       });
     });

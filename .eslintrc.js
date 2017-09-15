@@ -90,12 +90,14 @@ module.exports = {
     "no-useless-return": "error",
     "no-void": "error",
     "no-with": "error",
+    "no-buffer-constructor": "error",
     radix: "error"
   },
   "globals": {
     "Buffer": false,
     "Promise": true,
     "Symbol": false,
+    "Uint16Array": false,
     "Int32Array": false,
     "process": false,
     "setTimeout": false,

@@ -202,7 +202,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'TWO');
       assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
       //with payload defined
-      client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': new Buffer('zValue')} }, helper.throwop);
+      client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': utils.allocBufferFromString('zValue')} }, helper.throwop);
       assert.ok(actualOptions);
       assert.ok(actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -298,9 +298,9 @@ describe('Client', function () {
         //shallow copy the properties
         assert.strictEqual(optionsParameter.anotherOption, options.anotherOption);
         assert.ok(options.customPayload);
-        assert.deepEqual(options.customPayload['graph-language'], new Buffer('groovy2'));
-        assert.deepEqual(options.customPayload['graph-source'], new Buffer('another-source'));
-        assert.deepEqual(options.customPayload['graph-name'], new Buffer('namespace2'));
+        assert.deepEqual(options.customPayload['graph-language'], utils.allocBufferFromString('groovy2'));
+        assert.deepEqual(options.customPayload['graph-source'], utils.allocBufferFromString('another-source'));
+        assert.deepEqual(options.customPayload['graph-name'], utils.allocBufferFromString('namespace2'));
         done();
       };
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwop);

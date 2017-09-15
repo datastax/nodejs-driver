@@ -35,7 +35,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload with rows response', function (done) {
       var client = newInstance();
       var payload = {
-        'key1': new Buffer('val1')
+        'key1': utils.allocBufferFromString('val1')
       };
       utils.series([
         client.connect.bind(client),
@@ -55,7 +55,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload with void response', function (done) {
       var client = newInstance();
       var payload = {
-        'key2': new Buffer('val2')
+        'key2': utils.allocBufferFromString('val2')
       };
       utils.series([
         client.connect.bind(client),
@@ -76,7 +76,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload and trace', function (done) {
       var client = newInstance();
       var payload = {
-        'key3': new Buffer('val3')
+        'key3': utils.allocBufferFromString('val3')
       };
       utils.series([
         client.connect.bind(client),
@@ -100,8 +100,8 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload with rows response', function (done) {
       var client = newInstance();
       var payload = {
-        'key-prep1': new Buffer('val-prep1'),
-        'key-prep2': new Buffer('val-prep2')
+        'key-prep1': utils.allocBufferFromString('val-prep1'),
+        'key-prep2': utils.allocBufferFromString('val-prep2')
       };
       utils.series([
         client.connect.bind(client),
@@ -125,7 +125,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload', function (done) {
       var client = newInstance();
       var payload = {
-        'key-batch1': new Buffer('val-batch1')
+        'key-batch1': utils.allocBufferFromString('val-batch1')
       };
       utils.series([
         client.connect.bind(client),
@@ -150,7 +150,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload with warnings', function (done) {
       var client = newInstance();
       var payload = {
-        'key-batch2': new Buffer('val-batch2')
+        'key-batch2': utils.allocBufferFromString('val-batch2')
       };
       utils.series([
         client.connect.bind(client),
@@ -180,7 +180,7 @@ describe('custom payload', function () {
     vit('2.2', 'should encode and decode the payload', function (done) {
       var client = newInstance();
       var payload = {
-        'key-batch-prep1': new Buffer('val-batch-prep1')
+        'key-batch-prep1': utils.allocBufferFromString('val-batch-prep1')
       };
       utils.series([
         client.connect.bind(client),

@@ -8,6 +8,7 @@
 var assert = require('assert');
 var DseGssapiAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
 var helper = require('../test-helper');
+var utils = require('../../lib/utils');
 var cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 var dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
@@ -72,7 +73,7 @@ cDescribe('GssapiAuthenticator', function () {
           cb();
         }
       };
-      authenticator.evaluateChallenge(new Buffer(1), function (err) {
+      authenticator.evaluateChallenge(utils.allocBuffer(1), function (err) {
         assert.ifError(err);
         assert.strictEqual(evaluateChallengeCalled, 1);
         done();

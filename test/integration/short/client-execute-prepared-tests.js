@@ -17,15 +17,16 @@ var loadBalancing = require('../../../lib/policies/load-balancing');
 var vit = helper.vit;
 var vdescribe = helper.vdescribe;
 var Uuid = types.Uuid;
+var commonKs = helper.getRandomName('ks');
 
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
-    var commonKs = helper.getRandomName('ks');
     var commonTable = commonKs + '.' + helper.getRandomName('table');
+    var commonTable2 = commonKs + '.' + helper.getRandomName('table');
     var setupInfo = helper.setup(3, {
       keyspace: commonKs,
-      queries: [ helper.createTableWithClusteringKeyCql(commonTable) ]
+      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
     });
     it('should execute a prepared query with parameters on all hosts', function (done) {
       var client = setupInfo.client;
@@ -106,6 +107,20 @@ describe('Client', function () {
         }, seriesNext);
       }], done);
     });
+    context('when prepareOnAllHosts set to false', function () {
+      it('should execute a prepared query on all hosts', function (done) {
+        var client = newInstance({ prepareOnAllHosts: false });
+        utils.timesSeries(6, function (n, next) {
+          client.execute(helper.queries.basic, [], { prepare: true }, next);
+        }, helper.finish(client, done));
+      });
+      it('should execute a prepared query on all hosts with the keyspace set', function (done) {
+        var client = newInstance({ prepareOnAllHosts: false, keyspace: 'system' });
+        utils.timesSeries(6, function (n, next) {
+          client.execute('SELECT * FROM local', [], { prepare: true }, next);
+        }, helper.finish(client, done));
+      });
+    });
     it('should fail if the type does not match', function (done) {
       var client = setupInfo.client;
       client.execute(util.format('SELECT * FROM %s WHERE id1 = ?', commonTable), [1000], {prepare: 1}, function (err) {
@@ -115,7 +130,7 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, new Buffer([1, 240]),
+      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, utils.allocBufferFromArray([1, 240]),
         true, new Date(1221111111), types.InetAddress.fromString('10.12.0.1'), null, null, null];
       var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
         'boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
@@ -142,15 +157,13 @@ describe('Client', function () {
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {
       var client = newInstance({
-        keyspace: setupInfo.keyspace,
+        keyspace: commonKs,
         queryOptions: { consistency: types.consistencies.quorum }
       });
       var pageState;
       var metaPageState;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = helper.getRandomName('table');
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, helper.createTableCql(table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
@@ -189,11 +202,9 @@ describe('Client', function () {
     });
     it('should encode and decode varint values', function (done) {
       var client = setupInfo.client;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var expectedRows = {};
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
@@ -225,11 +236,9 @@ describe('Client', function () {
     });
     it('should encode and decode decimal values', function (done) {
       var client = setupInfo.client;
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var expectedRows = {};
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
@@ -301,8 +310,7 @@ describe('Client', function () {
     });
     it('should encode and decode maps using Map polyfills', function (done) {
       var client = newInstance({ encoding: { map: helper.Map}});
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var MapPF = helper.Map;
       var values = [
         [
@@ -323,7 +331,6 @@ describe('Client', function () {
       'map_varint_boolean map<varint,boolean>, ' +
       'map_timeuuid_text map<timeuuid,decimal>)', table);
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, map_text_text, map_int_date, map_date_float, map_varint_boolean, map_timeuuid_text) ' +
@@ -355,8 +362,7 @@ describe('Client', function () {
     });
     it('should encode and decode sets using Set polyfills', function (done) {
       var client = newInstance({ encoding: { set: helper.Set}});
-      var keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
+      var table = commonKs + '.' + helper.getRandomName('table');
       var SetPF = helper.Set;
       var values = [
         [
@@ -384,7 +390,6 @@ describe('Client', function () {
       'set_bigint set<bigint>, ' +
       'set_timeuuid set<timeuuid>)', table);
       utils.series([
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
         helper.toTask(client.execute, client, createTableCql),
         function insertData(seriesNext) {
           var query = util.format('INSERT INTO %s (id, set_text, set_timestamp, set_float, set_bigint, set_timeuuid) ' +
@@ -458,6 +463,7 @@ describe('Client', function () {
         [types.TimeUuid.now()],
         [types.TimeUuid.now(), types.TimeUuid.now()]
       ];
+      client.on('log', helper.log);
       utils.series([
         helper.toTask(client.execute, client, createTableCql),
         function insert(next) {
@@ -610,6 +616,32 @@ describe('Client', function () {
           var query = util.format('INSERT INTO %s (id1, id2, map_sample) VALUES (?, ?, ?)', commonTable);
           client.execute(query, [Uuid.random(), tid, map], { prepare: true}, function (err) {
             helper.assertInstanceOf(err, TypeError);
+            next();
+          });
+        }
+      ], done);
+    });
+    it('should return empty string values', function (done) {
+      // empty strings are an interesting case in collections as they have 0 length.
+      var client = setupInfo.client;
+      var tid = types.TimeUuid.now();
+      var id = Uuid.random();
+      var map = {};
+      map[tid] = '';
+      utils.series([
+        function insertDataWithEmptyStringValues(next) {
+          var query = util.format('INSERT INTO %s (id, map_sample, list_sample, set_sample) VALUES (?, ?, ?, ?)', commonTable2);
+          client.execute(query, [id, map, [''], ['']], { prepare: true}, next);
+        },
+        function retrieveMapWithEmptyStringValue(next) {
+          var query = util.format('SELECT * FROM %s where id = ?', commonTable2);
+          client.execute(query, [id], { prepare: true }, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 1);
+            var row = result.first();
+            assert.deepEqual(row['map_sample'], map);
+            assert.deepEqual(row['list_sample'], ['']);
+            assert.deepEqual(row['set_sample'], ['']);
             next();
           });
         }
@@ -1041,10 +1073,9 @@ function newInstance(options) {
 }
 
 function serializationTest(client, values, columns, done) {
-  var keyspace = helper.getRandomName('ks');
-  var table = keyspace + '.' + helper.getRandomName('table');
+  var table = commonKs + '.' + helper.getRandomName('table');
+  var queryOptions = { prepare: true, consistency: types.consistencies.localQuorum };
   utils.series([
-    helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace, 3)),
     helper.toTask(client.execute, client, helper.createTableCql(table)),
     function (next) {
       var markers = '?';
@@ -1055,11 +1086,11 @@ function serializationTest(client, values, columns, done) {
       var query = util.format('INSERT INTO %s ' +
         '(%s) VALUES ' +
         '(%s)', table, columns, markers);
-      client.execute(query, values, {prepare: 1}, next);
+      client.execute(query, values, queryOptions, next);
     },
     function (next) {
       var query = util.format('SELECT %s FROM %s WHERE id = ?', columns, table);
-      client.execute(query, [values[0]], {prepare: 1}, function (err, result) {
+      client.execute(query, [values[0]], queryOptions, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');

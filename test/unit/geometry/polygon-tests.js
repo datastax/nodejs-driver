@@ -8,6 +8,7 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../../test-helper');
+var utils = require('../../../lib/utils');
 var Point = require('../../../lib/geometry/point');
 var moduleName = '../../../lib/geometry/polygon';
 var Polygon = require(moduleName);
@@ -41,19 +42,20 @@ describe('Polygon', function () {
   describe('fromBuffer()', function () {
     it('should create an instance from WKB', function () {
       [
-        [ '00000000030000000100000004' +
-        '3ff0000000000000' + //p1
-        '4008000000000000' +
-        '4008000000000000' + //p2
-        '3ff0000000000000' +
-        '4008000000000000' + //p3
-        '4018000000000000' +
-        '3ff0000000000000' + //p4
-        '4008000000000000',
+        [
+          '00000000030000000100000004' +
+            '3ff0000000000000' + //p1
+            '4008000000000000' +
+            '4008000000000000' + //p2
+            '3ff0000000000000' +
+            '4008000000000000' + //p3
+            '4018000000000000' +
+            '3ff0000000000000' + //p4
+            '4008000000000000',
           [new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]]
       ]
         .forEach(function (item) {
-          var polygon = Polygon.fromBuffer(new Buffer(item[0], 'hex'));
+          var polygon = Polygon.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
           assert.strictEqual(polygon.rings.length, 1);
           polygon.rings[0].forEach(function (p, i) {
             assert.strictEqual(p.toString(), item[1][i].toString());
@@ -107,10 +109,12 @@ describe('Polygon', function () {
   describe('#toString()', function () {
     it('should return WKT of the object', function () {
       [
-        [ new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]),
+        [
+          new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]),
           'POLYGON ((1 3, 3 1, 3 6, 1 3))'
         ],
-        [ new Polygon(
+        [
+          new Polygon(
             [new Point(1.1, 3.3), new Point(3, 0), new Point(3, 6), new Point(1, 3)],
             [new Point(2, 2), new Point(2, 1), new Point(1, 1), new Point(2, 2)]
           ),
@@ -125,10 +129,12 @@ describe('Polygon', function () {
   describe('#toJSON()', function () {
     it('should return geo json of the object', function () {
       [
-        [ new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]),
+        [
+          new Polygon([new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]),
           '{"type":"Polygon","coordinates":[[[1,3],[3,1],[3,6],[1,3]]]}'
         ],
-        [ new Polygon(
+        [
+          new Polygon(
             [new Point(1.1, 3.3), new Point(3, 0), new Point(3, 6), new Point(1, 3)],
             [new Point(2, 2), new Point(2, 1), new Point(1, 1), new Point(2, 2)]
           ),

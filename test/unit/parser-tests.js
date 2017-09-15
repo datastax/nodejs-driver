@@ -27,7 +27,7 @@ describe('Parser', function () {
         assert.strictEqual(item.header.opcode, types.opcodes.ready);
         done();
       });
-      parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: new Buffer([])}, null, doneIfError(done));
+      parser._transform({header: getFrameHeader(0, types.opcodes.ready), chunk: utils.allocBufferFromArray([])}, null, doneIfError(done));
     });
     it('should read a AUTHENTICATE response', function (done) {
       var parser = newInstance();
@@ -37,7 +37,7 @@ describe('Parser', function () {
         assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
         done();
       });
-      parser._transform({ header: getFrameHeader(2, types.opcodes.authenticate), chunk: new Buffer([0, 0])}, null, doneIfError(done));
+      parser._transform({ header: getFrameHeader(2, types.opcodes.authenticate), chunk: utils.allocBufferFromArray([0, 0])}, null, doneIfError(done));
     });
     it('should buffer a AUTHENTICATE response until complete', function (done) {
       var parser = newInstance();
@@ -50,9 +50,9 @@ describe('Parser', function () {
         done();
       });
       var header = getFrameHeader(5, types.opcodes.authenticate);
-      parser._transform({ header: header, chunk: new Buffer([0, 3]), offset: 0}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('a'), offset: 0}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('bc'), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromArray([0, 3]), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromString('a'), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromString('bc'), offset: 0}, null, doneIfError(done));
     });
     it('should read a VOID result', function (done) {
       var parser = newInstance();
@@ -64,7 +64,7 @@ describe('Parser', function () {
       });
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result),
-        chunk: new Buffer([0, 0, 0, types.resultKind.voidResult])
+        chunk: utils.allocBufferFromArray([0, 0, 0, types.resultKind.voidResult])
       }, null, doneIfError(done));
     });
     it('should read a VOID result with trace id', function (done) {
@@ -79,8 +79,8 @@ describe('Parser', function () {
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result, 2, true),
         chunk: Buffer.concat([
-          new Buffer(16), //uuid
-          new Buffer([0, 0, 0, types.resultKind.voidResult])
+          utils.allocBufferUnsafe(16), //uuid
+          utils.allocBufferFromArray([0, 0, 0, types.resultKind.voidResult])
         ])
       }, null, doneIfError(done));
     });
@@ -94,8 +94,8 @@ describe('Parser', function () {
       });
 
       var body = Buffer.concat([
-        new Buffer(16), //uuid
-        new Buffer([0, 0, 0, types.resultKind.voidResult])
+        utils.allocBufferUnsafe(16), //uuid
+        utils.allocBufferFromArray([0, 0, 0, types.resultKind.voidResult])
       ]);
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result, 2, true),
@@ -125,7 +125,7 @@ describe('Parser', function () {
       });
 
       var body = Buffer.concat([
-        new Buffer(16), //uuid
+        utils.allocBufferUnsafe(16), //uuid
         getBodyChunks(3, 1, 0, undefined, null).chunk
       ]);
       parser._transform({
@@ -151,9 +151,12 @@ describe('Parser', function () {
       var parser = newInstance();
 
       var body = Buffer.concat([
-        new Buffer('0002000548656c6c6f0005576f726c64', 'hex'),    // 2 string list of warnings containing 'Hello', 'World'
-        new Buffer('000200016100000001010001620000000102', 'hex'), // Custom payload byte map of {a: 1, b: 2}
-        new Buffer([0, 0, 0, types.resultKind.voidResult]) // void result indicator
+        // 2 string list of warnings containing 'Hello', 'World'
+        utils.allocBufferFromString('0002000548656c6c6f0005576f726c64', 'hex'),
+        // Custom payload byte map of {a: 1, b: 2}
+        utils.allocBufferFromString('000200016100000001010001620000000102', 'hex'),
+        // void result indicator
+        utils.allocBufferFromArray([0, 0, 0, types.resultKind.voidResult])
       ]);
 
       parser.on('readable', function () {
@@ -165,7 +168,7 @@ describe('Parser', function () {
         assert.ok(item.flags.warnings);
         assert.deepEqual(item.flags.warnings, ['Hello', 'World']);
         assert.ok(item.flags.customPayload);
-        assert.deepEqual(item.flags.customPayload, {a: new Buffer([0x01]), b: new Buffer([0x02])});
+        assert.deepEqual(item.flags.customPayload, {a: utils.allocBufferFromArray([0x01]), b: utils.allocBufferFromArray([0x02])});
         done();
       });
 
@@ -188,17 +191,17 @@ describe('Parser', function () {
       var bodyLength = 4 + 2 + 3;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer([0, 0, 0, types.resultKind.setKeyspace]),
+        chunk: utils.allocBufferFromArray([0, 0, 0, types.resultKind.setKeyspace]),
         offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer([0, 3]),
+        chunk: utils.allocBufferFromArray([0, 3]),
         offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
-        chunk: new Buffer('ks1'),
+        chunk: utils.allocBufferFromString('ks1'),
         offset: 0
       }, null, doneIfError(done));
     });
@@ -218,11 +221,11 @@ describe('Parser', function () {
       // metadata (flags + columnLength + ksname + tblname + column name + column type) +
       // result metadata (flags + columnLength + ksname + tblname + column name + column type)
       var body = Buffer.concat([
-        new Buffer([0, 0, 0, types.resultKind.prepared]),
-        new Buffer([0, 16]),
+        utils.allocBufferFromArray([0, 0, 0, types.resultKind.prepared]),
+        utils.allocBufferFromArray([0, 16]),
         id.getBuffer(),
-        new Buffer([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text]),
-        new Buffer([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text])
+        utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text]),
+        utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text])
       ]);
       var bodyLength = body.length;
       parser._transform({
@@ -296,8 +299,8 @@ describe('Parser', function () {
       });
 
       var body = Buffer.concat([
-        new Buffer('0002000548656c6c6f0005576f726c64', 'hex'), // 2 string list of warnings containing 'Hello', 'World'
-        new Buffer('0000000000044661696c', 'hex') // Server Error Code (0x0000) with 4 length message 'Fail'
+        utils.allocBufferFromString('0002000548656c6c6f0005576f726c64', 'hex'), // 2 string list of warnings containing 'Hello', 'World'
+        utils.allocBufferFromString('0000000000044661696c', 'hex') // Server Error Code (0x0000) with 4 length message 'Fail'
       ]);
       var bodyLength = body.length;
       var header = getFrameHeader(bodyLength, types.opcodes.error, 4, false, 12, true);
@@ -327,12 +330,12 @@ describe('Parser', function () {
       });
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result),
-        chunk: new Buffer([ 0 ]),
+        chunk: utils.allocBufferFromArray([ 0 ]),
         offset: 0
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(4, types.opcodes.result),
-        chunk: new Buffer([ 0, 0, types.resultKind.voidResult ]),
+        chunk: utils.allocBufferFromArray([ 0, 0, types.resultKind.voidResult ]),
         offset: 0
       }, null, doneIfError(done));
     });
@@ -431,7 +434,7 @@ describe('Parser', function () {
               var start = j;
               if (start === 0) {
                 //sum a few bytes
-                chunkedItem.chunk = Buffer.concat([ new Buffer(9), item.chunk.slice(start, end) ]);
+                chunkedItem.chunk = Buffer.concat([ utils.allocBufferUnsafe(9), item.chunk.slice(start, end) ]);
                 chunkedItem.offset = 9;
               }
               else {
@@ -607,7 +610,7 @@ describe('Parser', function () {
       parser.on('readable', function () {
         var item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authChallenge);
-        helper.assertValueEqual(item.token, new Buffer([100, 100]));
+        helper.assertValueEqual(item.token, utils.allocBufferFromArray([100, 100]));
         assert.strictEqual(item.authChallenge, true);
         done();
       });
@@ -615,12 +618,12 @@ describe('Parser', function () {
       var bodyLength = 4 + 2;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
-        chunk: new Buffer([255, 254, 0, 0, 0, 2]),
+        chunk: utils.allocBufferFromArray([255, 254, 0, 0, 0, 2]),
         offset: 2
       }, null, doneIfError(done));
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
-        chunk: new Buffer([100, 100]),
+        chunk: utils.allocBufferFromArray([100, 100]),
         offset: 0
       }, null, doneIfError(done));
     });
@@ -639,9 +642,9 @@ describe('Parser', function () {
       var header = new types.FrameHeader(4, 0, 33, types.opcodes.error, 9);
       parser.setOptions(33, { byRow: true });
       assert.strictEqual(parser.frameState({ header: header}).byRow, true);
-      parser._transform({ header: header, chunk: new Buffer([255, 0, 0, 0, 0]), offset: 1}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer([0, 3]), offset: 0}, null, doneIfError(done));
-      parser._transform({ header: header, chunk: new Buffer('ERR'), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromArray([255, 0, 0, 0, 0]), offset: 1}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromArray([0, 3]), offset: 0}, null, doneIfError(done));
+      parser._transform({ header: header, chunk: utils.allocBufferFromString('ERR'), offset: 0}, null, doneIfError(done));
     });
     it('should not buffer RESULT ROWS response when byRow is enabled', function (done) {
       var parser = newInstance();
@@ -742,7 +745,7 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue, s
 
   return {
     header: getFrameHeader(fullChunk.length, types.opcodes.result, null, null, streamId),
-    chunk: new Buffer(fullChunk.slice(fromIndex, toIndex || undefined)),
+    chunk: utils.allocBufferFromArray(fullChunk.slice(fromIndex, toIndex || undefined)),
     offset: 0
   };
 }
@@ -750,15 +753,15 @@ function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue, s
 function getEventData(eventType, value) {
   var bodyArray = [];
   //EVENT TYPE
-  bodyArray.push(new Buffer([0, eventType.length]));
-  bodyArray.push(new Buffer(eventType));
+  bodyArray.push(utils.allocBufferFromArray([0, eventType.length]));
+  bodyArray.push(utils.allocBufferFromString(eventType));
   //STATUS CHANGE DESCRIPTION
-  bodyArray.push(new Buffer([0, value.length]));
-  bodyArray.push(new Buffer(value));
+  bodyArray.push(utils.allocBufferFromArray([0, value.length]));
+  bodyArray.push(utils.allocBufferFromString(value));
   //Address
-  bodyArray.push(new Buffer([4, 127, 0, 0, 1]));
+  bodyArray.push(utils.allocBufferFromArray([4, 127, 0, 0, 1]));
   //Port
-  bodyArray.push(new Buffer([0, 0, 0, 200]));
+  bodyArray.push(utils.allocBufferFromArray([0, 0, 0, 200]));
 
   var body = Buffer.concat(bodyArray);
   var header = new types.FrameHeader(2, 0, -1, types.opcodes.event, body.length);

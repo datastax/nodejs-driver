@@ -5,9 +5,10 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
+
 var assert = require('assert');
 var helper = require('../test-helper');
-
+var utils = require('../../lib/utils');
 var Uuid = require('../../lib/types').Uuid;
 var TimeUuid = require('../../lib/types').TimeUuid;
 
@@ -15,7 +16,7 @@ describe('Uuid', function () {
   describe('constructor', function () {
     it('should validate the Buffer length', function () {
       assert.throws(function () {
-        return new Uuid(new Buffer(10));
+        return new Uuid(utils.allocBufferUnsafe(10));
       });
       assert.throws(function () {
         return new Uuid(null);
@@ -24,27 +25,27 @@ describe('Uuid', function () {
         return new Uuid();
       });
       assert.doesNotThrow(function () {
-        return new Uuid(new Buffer(16));
+        return new Uuid(utils.allocBufferUnsafe(16));
       });
     });
   });
   describe('#toString()', function () {
     it('should convert to string representation', function () {
-      var val = new Uuid(new Buffer('aabbccddeeff00112233445566778899', 'hex'));
+      var val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'aabbccdd-eeff-0011-2233-445566778899');
-      val = new Uuid(new Buffer('a1b1ccddeeff00112233445566778899', 'hex'));
+      val = new Uuid(utils.allocBufferFromString('a1b1ccddeeff00112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'a1b1ccdd-eeff-0011-2233-445566778899');
-      val = new Uuid(new Buffer('ffb1ccddeeff00112233445566778800', 'hex'));
+      val = new Uuid(utils.allocBufferFromString('ffb1ccddeeff00112233445566778800', 'hex'));
       assert.strictEqual(val.toString(), 'ffb1ccdd-eeff-0011-2233-445566778800');
     });
   });
   describe('#equals', function () {
     it('should return true only when the values are equal', function () {
-      var val = new Uuid(new Buffer('aabbccddeeff00112233445566778899', 'hex'));
-      var val2 = new Uuid(new Buffer('ffffffffffff00000000000000000000', 'hex'));
-      var val3 = new Uuid(new Buffer('ffffffffffff00000000000000000001', 'hex'));
+      var val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
+      var val2 = new Uuid(utils.allocBufferFromString('ffffffffffff00000000000000000000', 'hex'));
+      var val3 = new Uuid(utils.allocBufferFromString('ffffffffffff00000000000000000001', 'hex'));
       assert.strictEqual(val.equals(val), true);
-      assert.strictEqual(val.equals(new Uuid(new Buffer('aabbccddeeff00112233445566778899', 'hex'))), true);
+      assert.strictEqual(val.equals(new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'))), true);
       assert.strictEqual(val.equals(val2), false);
       assert.strictEqual(val.equals(val3), false);
       assert.strictEqual(val2.equals(val3), false);
@@ -53,10 +54,10 @@ describe('Uuid', function () {
   });
   describe('#getBuffer()', function () {
     it('should return the Buffer representation', function () {
-      var buf = new Buffer(16);
+      var buf = utils.allocBufferUnsafe(16);
       var val = new Uuid(buf);
       assert.strictEqual(val.getBuffer().toString('hex'), buf.toString('hex'));
-      buf = new Buffer('ffffccddeeff00222233445566778813', 'hex');
+      buf = utils.allocBufferFromString('ffffccddeeff00222233445566778813', 'hex');
       val = new Uuid(buf);
       assert.strictEqual(val.getBuffer().toString('hex'), buf.toString('hex'));
     });
@@ -111,24 +112,68 @@ describe('Uuid', function () {
       assert.strictEqual(Object.keys(values).length, length);
     });
   });
+
+  describe('random(cb)', function () {
+    this.timeout(5000);
+    it('should return a Uuid instance', function (done) {
+      Uuid.random(function(err, uuid) {
+        helper.assertInstanceOf(uuid, Uuid);
+        done();
+      });
+      
+    });
+    it('should contain the version bits and IETF variant', function (done) {
+      Uuid.random(function(err, val) {
+        assert.strictEqual(val.toString().charAt(14), '4');
+        assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+        Uuid.random(function(err, val) {
+          assert.strictEqual(val.toString().charAt(14), '4');
+          assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+          Uuid.random(function(err, val) {
+            assert.strictEqual(val.toString().charAt(14), '4');
+            assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
+            done();
+          });
+        });
+      });
+    });
+    it('should generate v4 uuids that do not collide', function (done) {
+      var values = {};
+      var length = 100000;
+      
+      utils.times(length, function eachTime(n, next) {
+        Uuid.random(function (err, val) {
+          if (err) {
+            return next(err);
+          }
+          values[val.toString()] = true;
+          next();
+        });
+      }, function finish(err) {
+        assert.ifError(err);
+        assert.strictEqual(Object.keys(values).length, length);
+        done();
+      });
+    });
+  });
 });
 describe('TimeUuid', function () {
   describe('constructor()', function () {
     it('should generate based on the parameters', function () {
       //Gregorian calendar epoch
-      var val = new TimeUuid(new Date(-12219292800000), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      var val = new TimeUuid(new Date(-12219292800000), 0, utils.allocBufferFromArray([0,0,0,0,0,0]), utils.allocBufferFromArray([0,0]));
       assert.strictEqual(val.toString(), '00000000-0000-1000-8000-000000000000');
-      val = new TimeUuid(new Date(-12219292800000 + 1000), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      val = new TimeUuid(new Date(-12219292800000 + 1000), 0, utils.allocBufferFromArray([0,0,0,0,0,0]), utils.allocBufferFromArray([0,0]));
       assert.strictEqual(val.toString(), '00989680-0000-1000-8000-000000000000');
       //unix  epoch
-      val = new TimeUuid(new Date(0), 0, new Buffer([0,0,0,0,0,0]), new Buffer([0,0]));
+      val = new TimeUuid(new Date(0), 0, utils.allocBufferFromArray([0,0,0,0,0,0]), utils.allocBufferFromArray([0,0]));
       assert.strictEqual(val.toString(), '13814000-1dd2-11b2-8000-000000000000');
-      val = new TimeUuid(new Date(0), 0, new Buffer([255,255,255,255,255,255]), new Buffer([255,255]));
+      val = new TimeUuid(new Date(0), 0, utils.allocBufferFromArray([255,255,255,255,255,255]), utils.allocBufferFromArray([255,255]));
       assert.strictEqual(val.toString(), '13814000-1dd2-11b2-bfff-ffffffffffff');
-      val = new TimeUuid(new Date(0), 0, new Buffer([1,1,1,1,1,1]), new Buffer([1,1]));
+      val = new TimeUuid(new Date(0), 0, utils.allocBufferFromArray([1,1,1,1,1,1]), utils.allocBufferFromArray([1,1]));
       assert.strictEqual(val.toString(), '13814000-1dd2-11b2-8101-010101010101');
 
-      val = new TimeUuid(new Date('2015-01-10 5:05:05 GMT+0000'), 0, new Buffer([1,1,1,1,1,1]), new Buffer([1,1]));
+      val = new TimeUuid(new Date('2015-01-10 5:05:05 GMT+0000'), 0, utils.allocBufferFromArray([1,1,1,1,1,1]), utils.allocBufferFromArray([1,1]));
       assert.strictEqual(val.toString(), '3d555680-9886-11e4-8101-010101010101');
     });
   });
@@ -148,7 +193,7 @@ describe('TimeUuid', function () {
   });
   describe('#getNodeId()', function () {
     it('should get the node id of the Uuid representation', function () {
-      var val = new TimeUuid(new Date(), 0, new Buffer([1, 2, 3, 4, 5, 6]));
+      var val = new TimeUuid(new Date(), 0, utils.allocBufferFromArray([1, 2, 3, 4, 5, 6]));
       helper.assertInstanceOf(val.getNodeId(), Buffer);
       assert.strictEqual(val.getNodeId().toString('hex'), '010203040506');
       val = new TimeUuid(new Date(), 0, 'host01');

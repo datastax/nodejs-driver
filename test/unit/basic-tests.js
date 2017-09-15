@@ -14,10 +14,12 @@ var types = require('../../lib/types');
 var dataTypes = types.dataTypes;
 var loadBalancing = require('../../lib/policies/load-balancing.js');
 var retry = require('../../lib/policies/retry.js');
+var speculativeExecution = require('../../lib/policies/speculative-execution');
 var timestampGeneration = require('../../lib/policies/timestamp-generation');
 var Encoder = require('../../lib/encoder');
 var utils = require('../../lib/utils.js');
 var writers = require('../../lib/writers');
+var OperationState = require('../../lib/operation-state');
 var helper = require('../test-helper.js');
 
 describe('types', function () {
@@ -39,7 +41,7 @@ describe('types', function () {
         ['789456'            ,  '00000000000c0bd0'],
         ['888888888888888888',  '0c55f7bc23038e38']
       ].forEach(function (item) {
-        var buffer = new Buffer(item[1], 'hex');
+        var buffer = utils.allocBufferFromString(item[1], 'hex');
         var value = Long.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[0]);
         assert.strictEqual(Long.toBuffer(value).toString('hex'), buffer.toString('hex'),
@@ -96,7 +98,7 @@ describe('types', function () {
     /* eslint-enable no-multi-spaces */
     it('should create from buffer', function () {
       values.forEach(function (item) {
-        var buffer = new Buffer(item[0], 'hex');
+        var buffer = utils.allocBufferFromString(item[0], 'hex');
         var value = Integer.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[1]);
       });
@@ -343,18 +345,18 @@ describe('types', function () {
           buf.push(item);
         }
       });
-      stream.add(new Buffer('Jimmy'));
-      stream.add(new Buffer(' '));
-      stream.add(new Buffer('McNulty'));
+      stream.add(utils.allocBufferFromString('Jimmy'));
+      stream.add(utils.allocBufferFromString(' '));
+      stream.add(utils.allocBufferFromString('McNulty'));
       stream.add(null);
     });
 
     it('should buffer until is read', function (done) {
       var buf = [];
       var stream = new types.ResultStream();
-      stream.add(new Buffer('Stringer'));
-      stream.add(new Buffer(' '));
-      stream.add(new Buffer('Bell'));
+      stream.add(utils.allocBufferFromString('Stringer'));
+      stream.add(utils.allocBufferFromString(' '));
+      stream.add(utils.allocBufferFromString('Bell'));
       stream.add(null);
 
       stream.on('end', function streamEnd() {
@@ -372,8 +374,8 @@ describe('types', function () {
     it('should be readable until the end', function (done) {
       var buf = [];
       var stream = new types.ResultStream();
-      stream.add(new Buffer('Omar'));
-      stream.add(new Buffer(' '));
+      stream.add(utils.allocBufferFromString('Omar'));
+      stream.add(utils.allocBufferFromString(' '));
 
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Omar Little');
@@ -386,7 +388,7 @@ describe('types', function () {
         }
       });
 
-      stream.add(new Buffer('Little'));
+      stream.add(utils.allocBufferFromString('Little'));
       stream.add(null);
     });
 
@@ -432,7 +434,7 @@ describe('types', function () {
     it('should be serializable to json', function () {
       var i;
       var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
-      var row = new types.Row(columns, [new Buffer('val1'), new Buffer('val2')]);
+      var row = new types.Row(columns, [utils.allocBufferFromString('val1'), utils.allocBufferFromString('val2')]);
       row['col1'] = 'val1';
       row['col2'] = 'val2';
       assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
@@ -458,7 +460,7 @@ describe('types', function () {
       assert.strictEqual(JSON.stringify(row), expected);
       rowValues = [
         types.BigDecimal.fromString("1.762"),
-        new types.InetAddress(new Buffer([192, 168, 0, 1])),
+        new types.InetAddress(utils.allocBufferFromArray([192, 168, 0, 1])),
         null];
       columns = [
         {name: 'cdecimal', type: { code: dataTypes.decimal}},
@@ -490,7 +492,7 @@ describe('types', function () {
       assert.notEqual(val, types.uuid());
     });
     it('should fill in the values in a buffer', function () {
-      var buf = new Buffer(16);
+      var buf = utils.allocBufferUnsafe(16);
       var val = types.uuid(null, buf);
       assert.strictEqual(val, buf);
     });
@@ -505,7 +507,7 @@ describe('types', function () {
       assert.notEqual(val, types.timeuuid());
     });
     it('should fill in the values in a buffer', function () {
-      var buf = new Buffer(16);
+      var buf = utils.allocBufferUnsafe(16);
       var val = types.timeuuid(null, buf);
       assert.strictEqual(val, buf);
     });
@@ -763,15 +765,14 @@ describe('writers', function () {
       var queue = new writers.WriteQueue(socketMock, encoder, options);
       var request = {
         write: function () {
-          return new Buffer(10);
+          return utils.allocBufferUnsafe(10);
         }
       };
       function itemCallback() {
         itemCallbackCounter++;
       }
       for (var i = 0; i < 10; i++) {
-        //noinspection JSCheckFunctionSignatures
-        queue.push(request, itemCallback);
+        queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
       setTimeout(function () {
         //10 frames
@@ -812,6 +813,10 @@ describe('exports', function () {
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
     helper.assertInstanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
+    assert.strictEqual(api.policies.speculativeExecution, speculativeExecution);
+    assert.strictEqual(typeof speculativeExecution.NoSpeculativeExecutionPolicy, 'function');
+    assert.strictEqual(typeof speculativeExecution.ConstantSpeculativeExecutionPolicy, 'function');
+    assert.strictEqual(typeof speculativeExecution.SpeculativeExecutionPolicy, 'function');
     assert.strictEqual(api.policies.timestampGeneration, timestampGeneration);
     assert.strictEqual(typeof timestampGeneration.TimestampGenerator, 'function');
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');

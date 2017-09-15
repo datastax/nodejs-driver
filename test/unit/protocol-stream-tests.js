@@ -9,6 +9,7 @@ var assert = require('assert');
 
 var Protocol = require('../../lib/streams').Protocol;
 var types = require('../../lib/types');
+var utils = require('../../lib/utils');
 
 describe('Protocol', function () {
   it('should emit a single frame with 0-length body', function () {
@@ -124,7 +125,7 @@ describe('Protocol', function () {
 function generateBuffer(version, frameBodyLengths) {
   var buffers = frameBodyLengths.map(function (bodyLength, index) {
     var header = new types.FrameHeader(version, 0, index, 0, bodyLength);
-    return Buffer.concat([ header.toBuffer(), new Buffer(bodyLength) ]);
+    return Buffer.concat([ header.toBuffer(), utils.allocBuffer(bodyLength) ]);
   });
   return Buffer.concat(buffers);
 }

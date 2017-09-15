@@ -20,6 +20,8 @@ var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundR
 var EventEmitter = require('events').EventEmitter;
 var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
+var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+var OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 
 describe('Client', function () {
   this.timeout(180000);
@@ -218,8 +220,10 @@ describe('Client', function () {
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
+          var state = client.getState();
           client.hosts.forEach(function (host) {
             assert.strictEqual(host.pool.connections.length, 3, 'For host ' + host.address);
+            assert.strictEqual(state.getOpenConnections(host), 3);
           });
           client.shutdown(next);
         });
@@ -519,30 +523,22 @@ describe('Client', function () {
       var unexpectedErrors = [];
       var errors = [];
       var domains = [
-        //2 domains because there are more than 2 hosts as an uncaught error
-        //will blow up the host pool, by design
-        //But we need to test prepared and unprepared
+        // Use 2 domains and 2 clients to test prepared and unprepared executions
         domain.create(),
         domain.create()
       ];
-      var fatherDomain = domain.create();
-      var childDomain = domain.create();
       var client1 = new Client(helper.baseOptions);
       var client2 = new Client(helper.baseOptions);
+      var clients = [ client1, client2 ];
       utils.series([
         client1.connect.bind(client1),
         client2.connect.bind(client1),
         function executeABunchOfTimes1(next) {
-          utils.times(10, function (n, timesNext) {
-            client1.execute('SELECT * FROM system.local', timesNext);
+          utils.times(20, function (n, timesNext) {
+            clients[n % 2].execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
-        function executeABunchOfTimes2(next) {
-          utils.times(10, function (n, timesNext) {
-            client2.execute('SELECT * FROM system.local', timesNext);
-          }, next);
-        },
-        function blowUpSingleDomain(next) {
+        function blowEachDomain(next) {
           utils.timesSeries(domains.length, function (n, timesNext) {
             var waiting = 1;
             var d = domains[n];
@@ -555,7 +551,7 @@ describe('Client', function () {
               });
             });
             d.run(function() {
-              client1.execute('SELECT * FROM system.local', [], {prepare: n % 2}, function (err) {
+              clients[n % 2].execute('SELECT * FROM system.local', [], { prepare: n % 2 }, function (err) {
                 waiting = 0;
                 if (err) {
                   unexpectedErrors.push(err);
@@ -566,17 +562,40 @@ describe('Client', function () {
             function wait() {
               if (waiting > 0) {
                 waiting++;
-                if (waiting > 100) {
+                if (waiting > 20) {
                   return timesNext(new Error('Timed out'));
                 }
                 return setTimeout(wait, 50);
               }
-              //Delay to allow throw
+              // Delay to allow throw
               setTimeout(function () {
                 timesNext();
               }, 100);
             }
             wait();
+          }, next);
+        },
+        function assertResults(next) {
+          assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
+          assert.strictEqual(errors.length, domains.length);
+          errors.forEach(function (item) {
+            assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
+          });
+          next();
+        }
+      ], done);
+    });
+    it('should maintain nested domain in the callbacks', function (done) {
+      var unexpectedErrors = [];
+      var errors = [];
+      var fatherDomain = domain.create();
+      var childDomain = domain.create();
+      var client = new Client(helper.baseOptions);
+      utils.series([
+        client.connect.bind(client),
+        function executeABunchOfTimes1(next) {
+          utils.times(20, function (n, timesNext) {
+            client.execute('SELECT * FROM system.local', timesNext);
           }, next);
         },
         function nestedDomain(next) {
@@ -589,7 +608,7 @@ describe('Client', function () {
               errors.push([err.toString(), 'child']);
             });
             childDomain.run(function() {
-              client2.execute('SELECT * FROM system.local', function (err) {
+              client.execute('SELECT * FROM system.local', function (err) {
                 waiting = false;
                 if (err) {
                   unexpectedErrors.push(err);
@@ -609,7 +628,7 @@ describe('Client', function () {
         },
         function assertResults(next) {
           assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
-          //assert.strictEqual(errors.length, domains.length + 1);
+          assert.strictEqual(errors.length, 1);
           errors.forEach(function (item) {
             assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
           });
@@ -648,6 +667,68 @@ describe('Client', function () {
     });
     it('should handle distance changing load balancing policies', changingDistancesTest('2'));
     it('should handle distance changing load balancing policies for control connection host', changingDistancesTest('1'));
+    [
+      new policies.speculativeExecution.NoSpeculativeExecutionPolicy(),
+      new ConstantSpeculativeExecutionPolicy(100, 1)
+    ].forEach(function (policy) {
+      context('with ' + policy.constructor.name, function () {
+        afterEach(function (done) {
+          helper.ccmHelper.resumeNode(1, done);
+        });
+        afterEach(function (done) {
+          helper.ccmHelper.resumeNode(2, done);
+        });
+        it('should wait until is completed on the first node', function (done) {
+          var client = newInstance({
+            pooling: { warmup: true },
+            policies: {
+              speculativeExecution: policy,
+              loadBalancing: new OrderedLoadBalancingPolicy(),
+              retry: new helper.FallthroughRetryPolicy()
+            },
+            socketOptions: {
+              readTimeout: 5000
+            }
+          });
+          utils.series([
+            client.connect.bind(client),
+            helper.toTask(helper.ccmHelper.pauseNode, null, 1),
+            function query(next) {
+              if (!(policy instanceof ConstantSpeculativeExecutionPolicy)) {
+                // Resume first node after a few ms
+                setTimeout(function () {
+                  helper.ccmHelper.resumeNode(1);
+                }, 400);
+              }
+              utils.map([ false, true ], function execute(prepare, mapNext) {
+                client.execute('SELECT * FROM system.local', null, { prepare: prepare, isIdempotent: true }, mapNext);
+              }, function (err, results) {
+                assert.ifError(err);
+                assert.strictEqual(results.length, 2);
+                var expectedHost;
+                if (policy instanceof ConstantSpeculativeExecutionPolicy) {
+                  // Use the next one in a speculative execution
+                  expectedHost = client.hosts.keys()[1];
+                }
+                else {
+                  // It should wait for it to yield the response without speculative execution
+                  expectedHost = client.hosts.keys()[0];
+                }
+                assert.deepEqual(
+                  results.map(function (rs) {
+                    return rs.info.queriedHost;
+                  }),
+                  results.map(function () {
+                    return expectedHost;
+                  }));
+                next();
+              });
+            },
+            helper.toTask(helper.ccmHelper.resumeNode, null, 1),
+          ], helper.finish(client, done));
+        });
+      });
+    });
     function changingDistancesTest(address) {
       return (function doTest(done) {
         var lbp = new RoundRobinPolicy();
@@ -942,19 +1023,26 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.slice(0);
+          var hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          assert.ok(hosts[0].pool.connections.length > 0);
-          assert.ok(hosts[1].pool.connections.length > 0);
-          assert.ok(!hosts[0].pool.shuttingDown);
-          assert.ok(!hosts[1].pool.shuttingDown);
+          var state = client.getState();
+          // Check the pools before shutting down
+          hosts.forEach(function each(host) {
+            assert.ok(state.getOpenConnections(host) > 0);
+            assert.ok(host.pool.connections.length > 0);
+            assert.ok(!host.pool.shuttingDown);
+          });
           client.shutdown(next);
         },
         function checkPool(next) {
-          var hosts = client.hosts.slice(0);
+          var hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          assert.strictEqual(hosts[0].pool.connections.length, 0);
-          assert.strictEqual(hosts[1].pool.connections.length, 0);
+          var state = client.getState();
+          assert.deepEqual(state.getConnectedHosts(), []);
+          hosts.forEach(function each(host) {
+            assert.strictEqual(host.pool.connections.length, 0);
+            assert.strictEqual(state.getOpenConnections(host), 0);
+          });
           next();
         }
       ], done);

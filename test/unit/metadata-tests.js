@@ -13,6 +13,7 @@ var rewire = require('rewire');
 var helper = require('../test-helper.js');
 var clientOptions = require('../../lib/client-options.js');
 var Host = require('../../lib/host.js').Host;
+var HostMap = require('../../lib/host').HostMap;
 var Metadata = require('../../lib/metadata');
 var TableMetadata = require('../../lib/metadata/table-metadata');
 var tokenizer = require('../../lib/tokenizer');
@@ -122,6 +123,7 @@ describe('Metadata', function () {
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
@@ -151,12 +153,14 @@ describe('Metadata', function () {
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0];};
-      metadata.tokenizer.compare = function (a, b) {if (a > b) {return 1;} if (a < b) {return -1;} return 0;};
+      metadata.tokenizer.compare = function (a, b) { return a - b; };
+      metadata.tokenizer.stringify = stringifyDefault;
       metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces();
-      var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+      var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
       assert.ok(replicas);
       //Primary replica plus the 2 next tokens
       assert.strictEqual(replicas.length, 3);
@@ -164,7 +168,7 @@ describe('Metadata', function () {
       assert.strictEqual(replicas[1], '1');
       assert.strictEqual(replicas[2], '2');
 
-      replicas = metadata.getReplicas('dummy', new Buffer([5]));
+      replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([5]));
       assert.ok(replicas);
       assert.strictEqual(replicas.length, 3);
       assert.strictEqual(replicas[0], '5');
@@ -186,6 +190,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racks },
         'dc2': { hostLength: 4, racks: racks }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -196,7 +201,7 @@ describe('Metadata', function () {
       }
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         //3 replicas from dc1 and 1 replica from dc2
         assert.strictEqual(replicas.length, 4);
@@ -226,6 +231,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -237,13 +243,13 @@ describe('Metadata', function () {
       }
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '2', '3', '4', '5' ]);
-        replicas = metadata.getReplicas('dummy', new Buffer([1]));
+        replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([1]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), [ '1', '2', '3', '4', '5', '6' ]);
-        replicas = metadata.getReplicas('dummy', new Buffer([3]));
+        replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([3]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), [ '3', '4', '5', '6', '7', '0' ]);
         done();
@@ -268,6 +274,7 @@ describe('Metadata', function () {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
       metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
       for (var i = 0; i < metadata.ring.length; i ++) {
@@ -284,7 +291,7 @@ describe('Metadata', function () {
       metadata.primaryReplicas['6'].rack = 'dc1_rack2';
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         // For DC1, it should skip the replica with the same rack (node2) and add it at the end: 0, 4, 2
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '3', '4', '2' ]);
@@ -327,11 +334,15 @@ describe('Metadata', function () {
       metadata.ring.sort(function (a, b) {
         return a - b;
       });
+      metadata.ringTokensAsStrings = [];
+      for (var i = 0; i < metadata.ring.length; i++) {
+        metadata.ringTokensAsStrings.push(metadata.ring[i].toString());
+      }
 
       metadata.log = helper.noop;
       // Get the replicas of 5.  Since DC2 has 0 replicas, we only expect 3 replicas (the number of DC1).
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', new Buffer([5]));
+        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([5]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), ['5', '6', '7']);
         done();
@@ -380,17 +391,21 @@ describe('Metadata', function () {
       metadata.ring.sort(function (a, b) {
         return a - b;
       });
+      metadata.ringTokensAsStrings = [];
+      for (var i = 0; i < metadata.ring.length; i++) {
+        metadata.ringTokensAsStrings.push(metadata.ring[i].toString());
+      }
 
       metadata.log = helper.noop;
       // Get the replicas of 0.  Since token 0 is a replica in DC2 and DC2 only has 1, it should return 1 replica
       // in addition to the next 3 replicas from DC1.
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', new Buffer([0]));
+        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), ['0', '1', '2', '3']);
         // Get the replicas for token 51752 which should resolve to primary replica 40 (202nd vnode, 212 * 256 + 40),
         // its next two subsequent replicas for DC1, and then 0 for DC2 since it only has that one replica.
-        replicas = metadata.getReplicas('dummy', new Buffer([51752]));
+        replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([51752]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), ['40', '41', '42', '0']);
         done();
@@ -400,11 +415,13 @@ describe('Metadata', function () {
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {
       var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      metadata.getPreparedInfo(null, 'QUERY1');
-      metadata.getPreparedInfo(null, 'QUERY2');
-      assert.strictEqual(metadata.preparedQueries['__length'], 2);
+      var info1 = metadata.getPreparedInfo(null, 'QUERY1');
+      // Should be created once
+      assert.strictEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
+      var info2 = metadata.getPreparedInfo(null, 'QUERY2');
       metadata.clearPrepared();
-      assert.strictEqual(metadata.preparedQueries['__length'], 0);
+      assert.notEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
+      assert.notEqual(info2, metadata.getPreparedInfo(null, 'QUERY2'));
     });
   });
   describe('#getPreparedInfo()', function () {
@@ -628,9 +645,9 @@ describe('Metadata', function () {
         source_elapsed: 101
       }];
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
             }
             cb(null, { rows: eventRows});
@@ -639,7 +656,7 @@ describe('Metadata', function () {
         getEncoder: function () { return new Encoder(1, {});}
       };
       var metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.getTrace(types.Uuid.random(), function (err, trace) {
+      metadata.getTrace(types.Uuid.random(), types.consistencies.all, function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
         assert.strictEqual(trace.requestType, sessionRow.request);
@@ -673,9 +690,9 @@ describe('Metadata', function () {
         source_elapsed: 101
       }];
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               return cb(null, { rows: [ sessionRow], flags: utils.emptyObject});
             }
             cb(null, { rows: eventRows});
@@ -714,9 +731,9 @@ describe('Metadata', function () {
       }];
       var calls = 0;
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
-            if (q.indexOf('system_traces.sessions') >= 0) {
+            if (r.query.indexOf('system_traces.sessions') >= 0) {
               if (++calls > 1) {
                 sessionRow.duration = 2002;
               }
@@ -752,7 +769,7 @@ describe('Metadata', function () {
       };
       var calls = 0;
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
             //try with empty result and null duration
             var rows = [];
@@ -776,7 +793,7 @@ describe('Metadata', function () {
     it('should callback in error if there was an error retrieving the trace', function (done) {
       var err = new Error('dummy err');
       var cc = {
-        query: function (q, cb) {
+        query: function (r, cb) {
           setImmediate(function () {
             cb(err);
           });
@@ -1068,8 +1085,8 @@ describe('Metadata', function () {
       it('should parse custom index (legacy)', function (done) {
         var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
         var columnRows = [
-            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
-            {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
+          {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -1322,7 +1339,7 @@ describe('Metadata', function () {
           "compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},
           "dclocal_read_repair_chance":0.1,
           "default_time_to_live":0,
-          "extensions":{'hello': new Buffer('world')},
+          "extensions":{'hello': utils.allocBufferFromString('world')},
           "flags":["compound"],
           "gc_grace_seconds":864000,
           "id":"8008ae40-5862-11e5-b0ce-c7d0c38d1d8d",
@@ -1941,7 +1958,7 @@ describe('Metadata', function () {
       it('should query once when called in parallel', function (done) {
         var called = 0;
         var rows = [
-          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         var cc = {
           query: function (q, cb) {
@@ -1970,7 +1987,7 @@ describe('Metadata', function () {
       it('should query once when called serially', function (done) {
         var called = 0;
         var rows = [
-          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         var cc = {
           query: function (q, cb) {
@@ -1999,7 +2016,7 @@ describe('Metadata', function () {
       it('should query the following times if was previously not found', function (done) {
         var called = 0;
         var rows = [
-          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         var cc = {
           query: function (q, cb) {
@@ -2038,7 +2055,7 @@ describe('Metadata', function () {
       it('should query the following times if there was an error previously', function (done) {
         var called = 0;
         var rows = [
-          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
+          {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         var cc = {
           query: function (q, cb) {
@@ -2077,8 +2094,8 @@ describe('Metadata', function () {
       });
       it('should parse aggregate metadata with 1 parameter', function (done) {
         var rows = [
-          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":new Buffer([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
-          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":new Buffer([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
+          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
+          {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
         var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.keyspaces['ks_udf1'] = { aggregates: {}};
@@ -2205,6 +2222,48 @@ describe('Metadata', function () {
       });
     });
   });
+  describe('#buildTokens', function() {
+    it('should set sorted tokens from a single host', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var tokenizer = getTokenizer();
+      metadata.tokenizer = tokenizer;
+      var hosts = new HostMap();
+      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      h1.tokens = ['10', '20', '400', '15', '25', '5'];
+      hosts.push(h1.address, h1);
+      metadata.buildTokens(hosts);
+      var sortedTokens = ['5', '10', '15', '20', '25', '400'];
+      var sortedParsedTokens = [];
+      sortedTokens.forEach(function (token) {
+        sortedParsedTokens.push(tokenizer.parse(token));
+      });
+      assert.deepEqual(metadata.ring, sortedParsedTokens);
+      assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
+      done();
+    });
+    it('should set sorted tokens from multiple hosts', function (done) {
+      var metadata = new Metadata(clientOptions.defaultOptions(), null);
+      var tokenizer = getTokenizer();
+      metadata.tokenizer = tokenizer;
+      var hosts = new HostMap();
+      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      h1.tokens = ['10', '400', '25', '5'];
+      hosts.push(h1.address, h1);
+      var h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
+      h2.tokens = ['13', '203', '18', '8'];
+      hosts.push(h2.address, h2);
+      metadata.buildTokens(hosts);
+      var sortedTokens = ['5', '8', '10', '13', '18', '25', '203', '400'];
+      var sortedParsedTokens = [];
+      sortedTokens.forEach(function (token) {
+        sortedParsedTokens.push(tokenizer.parse(token));
+      });
+      assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
+      assert.deepEqual(metadata.ring, sortedParsedTokens);
+      done();
+    });
+  });
+
 });
 describe('SchemaParser', function () {
   var isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
@@ -2287,8 +2346,16 @@ function getTokenizer() {
   var t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
   t.hash = function (b) { return b[0];};
-  t.compare = function (a, b) { if (a > b) {return 1;} if (a < b) {return -1;} return 0; };
+  t.compare = function (a, b) { return a - b; };
+  t.stringify = stringifyDefault;
+  t.parse = function (b) {
+    return parseInt(b, 10);
+  };
   return t;
+}
+
+function stringifyDefault(v) {
+  return v.toString();
 }
 
 /** @returns {Metadata} */

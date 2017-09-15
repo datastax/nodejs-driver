@@ -13,8 +13,10 @@ var types = require('../lib/types');
 var utils = require('../lib/utils');
 var spawn = require('child_process').spawn;
 var http = require('http');
-var temp = require('temp').track(true);
-var Client = require('../lib/dse-client');
+var temp = require('temp').track(true);var Client = require('../lib/dse-client');
+var defaultOptions = require('../lib/client-options').defaultOptions;
+var Host = require('../lib/host').Host;
+var OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -168,10 +170,7 @@ var helper = {
   createKeyspaceCql: function (keyspace, replicationFactor, durableWrites) {
     return util.format('CREATE KEYSPACE %s' +
       ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : %d}' +
-      ' AND durable_writes = %s;',
-      keyspace,
-      replicationFactor || 1,
-      !!durableWrites
+      ' AND durable_writes = %s;', keyspace, replicationFactor || 1, !!durableWrites
     );
   },
   assertValueEqual: function (val1, val2) {
@@ -261,6 +260,9 @@ var helper = {
       version = '4.8.11';
     }
     return version;
+  },
+  getCassandraVersion: function () {
+    return cassandraVersionByDse[this.getDseVersion()];
   },
   /**
    * Determines if the current DSE instance version is greater than or equals to the version provided
@@ -609,6 +611,64 @@ var helper = {
     pooling.coreConnectionsPerHost[types.distance.remote] = remoteLength || 1;
     pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
     return pooling;
+  },
+  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
+    return hostsInfo.map(function (info, index) {
+      var h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      h.isUp = function () {
+        return !(info.isUp === false);
+      };
+      h.checkHealth = utils.noop;
+      h.log = utils.noop;
+      h.shouldBeIgnored = !!info.ignored;
+      h.prepareCalled = 0;
+      h.sendStreamCalled = 0;
+      h.changeKeyspaceCalled = 0;
+      h.borrowConnection = function (cb) {
+        if (!h.isUp() || h.shouldBeIgnored) {
+          return cb(new Error('This host should not be used'));
+        }
+        cb(null, {
+          prepareOnce: function (q, cb) {
+            h.prepareCalled++;
+            if (prepareQueryCb) {
+              return prepareQueryCb(q, h, cb);
+            }
+            cb(null, { id: 1, meta: {} });
+          },
+          sendStream: function (r, o, cb) {
+            h.sendStreamCalled++;
+            if (sendStreamCb) {
+              return sendStreamCb(r, h, cb);
+            }
+            var op = new OperationState(r, o, cb);
+            setImmediate(function () {
+              op.setResult(null, {});
+            });
+            return op;
+          },
+          changeKeyspace: function (ks, cb) {
+            h.changeKeyspaceCalled++;
+            cb();
+          }
+        });
+      };
+      return h;
+    });
+  },
+  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
+    var hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
+    return ({
+      newQueryPlan: function (q, ks, cb) {
+        cb(null, utils.arrayIterator(hosts));
+      },
+      getFixedQueryPlan: function () {
+        return hosts;
+      },
+      getDistance: function () {
+        return types.distance.local;
+      }
+    });
   },
   /**
    * Returns true if the tests are being run on Windows
@@ -1362,5 +1422,20 @@ var cassandraVersionByDse = {
   '5.1': '3.10'
 };
 
+/**
+ * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].
+ * @constructor
+ */
+function OrderedLoadBalancingPolicy() {
+
+}
+
+util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
+
+OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+  callback(null, utils.arrayIterator(this.hosts.values()));
+};
+
 module.exports = helper;
 module.exports.RetryMultipleTimes = RetryMultipleTimes;
+module.exports.OrderedLoadBalancingPolicy = OrderedLoadBalancingPolicy;

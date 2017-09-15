@@ -8,6 +8,7 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../../test-helper');
+var utils = require('../../../lib/utils');
 var moduleName = '../../../lib/geometry/point';
 var Point = require(moduleName);
 
@@ -43,7 +44,7 @@ describe('Point', function () {
         ['0000000001400aaaaa8b5964f6c025cccccccccccd', 3.3333331, -10.9]
       ]
         .forEach(function (item) {
-          var p = Point.fromBuffer(new Buffer(item[0], 'hex'));
+          var p = Point.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
           assert.strictEqual(p.x, item[1]);
           assert.strictEqual(p.y, item[2]);
         });

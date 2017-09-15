@@ -8,6 +8,7 @@
 var assert = require('assert');
 var rewire = require('rewire');
 var helper = require('../../test-helper');
+var utils = require('../../../lib/utils');
 var Point = require('../../../lib/geometry/point');
 var moduleName = '../../../lib/geometry/line-string';
 var LineString = require(moduleName);
@@ -47,7 +48,7 @@ describe('LineString', function () {
           [ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111)]]
       ]
         .forEach(function (item) {
-          var line = LineString.fromBuffer(new Buffer(item[0], 'hex'));
+          var line = LineString.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
           assert.strictEqual(line.points.length, item[1].length);
           line.points.forEach(function (p, i) {
             assert.strictEqual(p.toString(), item[1][i].toString());

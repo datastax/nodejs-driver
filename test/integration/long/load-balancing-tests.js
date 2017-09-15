@@ -100,7 +100,7 @@ describe('TokenAwarePolicy', function () {
       utils.times(100, function (n, timesNext) {
         var id = (n % 10) + 1;
         var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
-        client.execute(query, null, {routingKey: new Buffer([0, 0, 0, id])}, function (err, result) {
+        client.execute(query, null, {routingKey: utils.allocBufferFromArray([0, 0, 0, id])}, function (err, result) {
           assert.ifError(err);
           //for murmur id = 1, it go to replica 2
           var address = result.info.queriedHost;
@@ -114,7 +114,7 @@ describe('TokenAwarePolicy', function () {
     var keyspace1 = 'ks1';
     var keyspace2 = 'ks2';
     // Resolves to token -4069959284402364209 which should have primary replica of 3 and 7 with 3 being the closest replica.
-    var routingKey = new Buffer([0, 0, 0, 1]);
+    var routingKey = utils.allocBufferFromArray([0, 0, 0, 1]);
 
     var client_dc2 = new Client({
       policies: { loadBalancing: new TokenAwarePolicy(new DCAwareRoundRobinPolicy())},

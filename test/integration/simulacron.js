@@ -148,8 +148,7 @@ var simulacronHelper = {
     afterEach(simulacronCluster.clear.bind(simulacronCluster));
     after(simulacronHelper.stop.bind(simulacronHelper));
 
-    var setupInfo = { cluster: simulacronCluster, client: client };
-    return setupInfo;
+    return { cluster: simulacronCluster, client: client };
   },
   baseOptions: (function () {
     return {
@@ -197,7 +196,7 @@ function _makeRequest(options, callback) {
  */
 function SimulacronTopic() {
   this.baseAddress = simulacronHelper.baseAddress;
-  this.port = simulacronHelper.defaultPort; 
+  this.port = simulacronHelper.defaultPort;
 }
 
 /**
@@ -225,8 +224,9 @@ SimulacronTopic.prototype.clearLogs = function(callback) {
 
 /**
  * Primes the given query.  All nodes associated with this topic will use this prime.
- * 
+ *
  * @param {Object} body Body for prime query, refer to simulacron documentation for more details.
+ * @param {Function} callback
  */
 SimulacronTopic.prototype.prime = function(body, callback) {
   var request = _makeRequest(this._getOptions('prime', this.id, 'POST'), function(err, data) {
@@ -240,6 +240,7 @@ SimulacronTopic.prototype.prime = function(body, callback) {
  * Convenience method that primes the given query string with a simple successful response. 
  * 
  * @param {String} query Query string for prime query.
+ * @param {Function} callback
  */
 SimulacronTopic.prototype.primeQuery = function(query, callback) {
   this.prime({
@@ -337,17 +338,18 @@ util.inherits(SimulacronCluster, SimulacronTopic);
  * Registers and starts cluster with given dc configuration and options.
  * 
  * @param {Array} dcs array of nodes-per-dc configuration (i.e. 2,2,2 creates 3 2 node dcs)
- * @param {Object} clientOptions Startup options
+ * @param {Object} options Startup options
  * @param {String} [options.cassandraVersion] Version of cassandra nodes should use. (default is helper.getCassandraVersion())
  * @param {String} [options.dseVersion] Version of dse nodes should use. (default is unset)
  * @param {Boolean} [options.clusterName] Name of the cluster. (default is 'testCluster')
  * @param {Number} [options.numTokens] Number of tokens for each node. (default is 1)
+ * @param {Function} callback
  */
-SimulacronCluster.prototype.register = function(dcs, clientOptions, callback) {
+SimulacronCluster.prototype.register = function(dcs, options, callback) {
   var self = this;
   var createClusterPath = '/cluster?data_centers=%s&cassandra_version=%s&dse_version=%s&name=%s&activity_log=%s&num_tokens=%d';
 
-  var options = utils.extend({}, simulacronHelper.baseOptions, clientOptions);
+  options = utils.extend({}, simulacronHelper.baseOptions, options);
 
   var urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
     options.clusterName, options.activityLog, options.numTokens));
@@ -361,7 +363,7 @@ SimulacronCluster.prototype.register = function(dcs, clientOptions, callback) {
 
   _makeRequest(requestOptions, function(err, data) {
     if (err) {
-      callback(err);
+      return callback(err);
     }
     self.name = data.name;
     self.id = data.id;
@@ -369,7 +371,7 @@ SimulacronCluster.prototype.register = function(dcs, clientOptions, callback) {
     self.dcs = data.data_centers.map(function(dc) {
       return new SimulacronDataCenter(self, dc);
     });
-    callback(err, self);
+    callback(null, self);
   }).end();
 };
 
@@ -385,49 +387,42 @@ SimulacronCluster.prototype.unregister = function(callback) {
 
 /**
  * Finds a node in the cluster by its id or address.
- * 
- * @param {Number|String} id Identifier of node.  If Number, assumes the id of the node in the data center.
+ *
+ * @param {Number|String} key Identifier of node.  If Number, assumes the id of the node in the data center.
  * If String, assumes an 'ip:port' designation and looks up node by address.
- * @param {Number} id2 Second identifier.  If present, 'id' is assumed to be the data center id.  If not
+ * @param {Number} [datacenterIndex] Second identifier.  If present, 'id' is assumed to be the data center id.  If not
  * present, 'id' is assumed to be the node id or address.  If number is passed in for 'id', 0 is the assumed
  * data center id.
  * @returns {SimulacronNode} The node, if found.
  */
-SimulacronCluster.prototype.node = function() {
-  var args = arguments;
+SimulacronCluster.prototype.node = function(key, datacenterIndex) {
   // if the first argument is a string, assume its an address.
-  if (typeof args[0] === "string") {
+  if (typeof key === "string") {
     // iterate over DCs and their nodes looking for first node that matches.
     for (var dcIndex = 0; dcIndex < this.dcs.length; dcIndex++) {
       var dc = this.dcs[dcIndex];
-      for (var nodeIndex = 0; nodeIndex < dc.nodes.length; nodeIndex++) {
-        var n = dc.nodes[nodeIndex];
-        if (n.address === args[0]) {
-          return n;
-        }
+      var node = dc.nodes.filter(function (n) {
+        return n.address === key;
+      })[0];
+      if (node) {
+        return node;
       }
     }
     // node not found, raise error.
-    throw new Error("No node found for " + args[0]);
-  } else {
-    var dcId = 0;
-    var nodeId;
-    // if only one argument provided, assume nodeId in 0th data center.
-    if (args.length === 1) {
-      nodeId = args[0];
-    } else {
-      dcId = args[0];
-      nodeId = args[1];
-    }
-    dc = this.dcs[dcId];
-    return dc.node(nodeId);
+    throw new Error("No node found for " + key);
   }
+  if (typeof key !== 'number') {
+    throw new Error('Node key must be either be a String or a Number');
+  }
+  // If the dc is not provided, assume first
+  dc = this.dcs[datacenterIndex || 0];
+  return dc.node(key);
 };
 
 /**
  * Finds a data center in the cluster by its id.
  * 
- * @param {Number} id Idenfitifer of the dc.
+ * @param {Number} id Identifier of the dc.
  * @returns {SimulacronDataCenter} The data center, if found.
  */
 SimulacronCluster.prototype.dc = function(id) {
@@ -435,12 +430,11 @@ SimulacronCluster.prototype.dc = function(id) {
 };
 
 /**
- * @param {Number} dataCenterId The data center to return node addresses from, if not provided assumes 0.
+ * @param {Number} [dataCenterId] The data center to return node addresses from, if not provided assumes 0.
  * @returns {Array} Listing of addresses of the nodes in the input dc.
  */
 SimulacronCluster.prototype.getContactPoints = function(dataCenterId) {
-  var dcId = dataCenterId = typeof dataCenterId === 'undefined' ? 0 : dataCenterId;
-  return this.dcs[dcId].nodes.map(function (node) {
+  return this.dcs[dataCenterId || 0].nodes.map(function (node) {
     return node.address;
   });
 };
@@ -471,23 +465,22 @@ util.inherits(SimulacronDataCenter, SimulacronTopic);
  * If String, assumes an 'ip:port' designation and looks up node by address.
  * @returns {SimulacronNode} The node, if found.
  */
-SimulacronDataCenter.prototype.node = function() {
-  var args = arguments;
+SimulacronDataCenter.prototype.node = function(id) {
   // if the first argument is a string, assume its an address.
-  if (typeof args[0] === "string") {
+  if (typeof id === "string") {
     for (var nodeIndex = 0; nodeIndex < this.nodes.length; nodeIndex++) {
       var n = this.nodes[nodeIndex];
-      if (n.address === args[0]) {
+      if (n.address === id) {
         return n;
       }
     }
-
     // node not found, raise error.
-    throw new Error("No node found for " + args[0] + " in dc " + this.localId);
-  } else {
-    var nodeId = args[0];
-    return this.nodes[nodeId];
+    throw new Error("No node found for " + id + " in dc " + this.localId);
   }
+  if (typeof id !== 'number') {
+    throw new Error('Node id must be a string or a number');
+  }
+  return this.nodes[id];
 };
 
 /**

@@ -84,17 +84,16 @@ var simulacronHelper = {
         helper.trace('Server already stopped with exit code %d.', this.sProcess.exitCode);
         cb();
       } else {
-        this.sProcess.on('close', function () {
-          cb();
-        });
-        this.sProcess.on('error', cb);
-        if (process.platform.indexOf('win') === 0) {
+        if (helper.isWin()) {
           var params = ['Stop-Process', this.sProcess.pid];
           this._execute('powershell', params, cb);
         } else {
+          this.sProcess.on('close', function () {
+            cb();
+          });
+          this.sProcess.on('error', cb);
           this.sProcess.kill('SIGINT');
         }
-
       }
     } else {
       cb(Error('Process is not defined.'));

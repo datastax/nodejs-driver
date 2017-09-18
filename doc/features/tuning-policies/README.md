@@ -313,9 +313,11 @@ The default is also configurable: if you want all statements to start out as ide
 
 ```js
  client = new cassandra.Client({
-     contactPoints: contactPoints,
+     contactPoints: contactPoints.split(','),
      keyspace: keyspace,
-     isIdempotent: true
+     options: {
+         isIdempotent: true
+     }
  });
 ```
 

@@ -99,7 +99,7 @@ const client = new Client({
 ## Enabling speculative execution 
 
 Speculative executions are controlled by an instance of `SpeculativeExecutionPolicy` provided when initializing the
-Client. This policy defines the threshold after which a new speculative execution is triggered.
+`Client`. This policy defines the threshold after which a new speculative execution is triggered.
 
 The driver provides a `ConstantSpeculativeExecutionPolicy` that schedules a given number of speculative executions,
 separated by a fixed delay, the policy is exported under the `<root>.policies.speculativeExecution` module.

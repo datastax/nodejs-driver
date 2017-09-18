@@ -14,8 +14,13 @@ var vdescribe = helper.vdescribe;
 
 describe('client read timeouts', function () {
   this.timeout(120000);
-  before(helper.ccmHelper.start(2));
-  after(helper.ccmHelper.remove);
+  helper.setup(2, {
+    queries: [
+      helper.createKeyspaceCql('ks_batch_test', 2),
+      helper.createTableCql('ks_batch_test.tbl1'),
+      helper.createTableCql('ks_batch_test.tbl2'),
+    ]
+  });
   afterEach(function (done) {
     // Tests will pause any of the nodes and should resume it in the general case, but if for whatever reason they fail
     // resuming the nodes should be safe.
@@ -241,25 +246,22 @@ describe('client read timeouts', function () {
   vdescribe('2.0', 'with prepared batches', function () {
     it('should retry when preparing multiple queries', function (done) {
       var client = newInstance({
+        keyspace: 'ks_batch_test',
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
         pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
         socketOptions: { readTimeout: 1000 },
         queryOptions: { consistency: types.consistencies.one }
       });
-      var ksName = 'ks_batch_test1';
-      var tableName = ksName + '.table1';
       utils.series([
         client.connect.bind(client),
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(ksName, 2)),
-        helper.toTask(client.execute, client, helper.createTableCql(tableName)),
         helper.toTask(helper.ccmHelper.pauseNode, null, 1),
         function checkPreparing(next) {
           var queries = [{
-            query: util.format("INSERT INTO %s (id, text_sample) VALUES (?, ?)", tableName),
+            query: 'INSERT INTO tbl1 (id, text_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 'one']
           }, {
-            query: util.format("INSERT INTO %s (id, int_sample) VALUES (?, ?)", tableName),
+            query: 'INSERT INTO tbl1 (id, int_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 2]
           }];
           // It should be retried on the next node
@@ -269,32 +271,28 @@ describe('client read timeouts', function () {
             next();
           });
         },
-        helper.toTask(helper.ccmHelper.resumeNode, null, 1),
-        client.shutdown.bind(client)
-      ], done);
+        helper.toTask(helper.ccmHelper.resumeNode, null, 1)
+      ], helper.finish(client, done));
     });
     it('should produce a NoHostAvailableError when prepare tried and timed out on all hosts', function (done) {
       var client = newInstance({
+        keyspace: 'ks_batch_test',
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
         pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
         socketOptions: { readTimeout: 1000 },
         queryOptions: { consistency: types.consistencies.one }
       });
-      var ksName = 'ks_batch_test2';
-      var tableName = ksName + '.table1';
       utils.series([
         client.connect.bind(client),
-        helper.toTask(client.execute, client, helper.createKeyspaceCql(ksName, 2)),
-        helper.toTask(client.execute, client, helper.createTableCql(tableName)),
         helper.toTask(helper.ccmHelper.pauseNode, null, 1),
         helper.toTask(helper.ccmHelper.pauseNode, null, 2),
         function checkPreparing(next) {
           var queries = [{
-            query: util.format("INSERT INTO %s (id, text_sample) VALUES (?, ?)", tableName),
+            query: 'INSERT INTO tbl2 (id, text_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 'one']
           }, {
-            query: util.format("INSERT INTO %s (id, int_sample) VALUES (?, ?)", tableName),
+            query: 'INSERT INTO tbl2 (id, int_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 2]
           }];
           // It should be tried on all nodes and produce a NoHostAvailableError.

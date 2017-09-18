@@ -157,16 +157,173 @@ unexpected error, invoked in the following situations:
     - When the contacted host replies with an error, such as `overloaded`, `isBootstrapping`, `serverError`, etc. In 
     this case, the error is instance of `ResponseError`
 
-The [operation info][OperationInfo], passed as a parameter to the retry policy methods, exposes the `query` and query 
-`options` as properties.
+A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence. The default implementation doesn't use `IdempotenceAwareRetryPolicy`, in order to use it you should wrap the default policy with `IdempotenceAwareRetryPolicy`:
 
-A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence.
+``` js
+ client = new cassandra.Client({
+     contactPoints: contactPoints.split(','),
+     keyspace: keyspace,
+     authProvider: authProvider,
+     policies: {
+         retry: new cassandra.policies.retry.IdempotenceAwareRetryPolicy(new cassandra.policies.retry.RetryPolicy())
+     }
+ });
+```
 
-### Query idempotence
+You can also override the policy implementation by inherits the default policy:
 
-Note that the current behaviour of the driver allows the `RetryPolicy` to retrieve the query idempotence as part of the
+``` js
+var cassandra = require('cassandra-driver');
+var util = require('util');
+
+function MyRetryPolicy() {}
+
+util.inherits(MyRetryPolicy, cassandra.policies.retry.RetryPolicy);
+
+/**
+ * Determines what to do when the driver gets an UnavailableException response from a Cassandra node.
+ * @param {OperationInfo} info
+ * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+ * the exception.
+ * @param {Number} required The number of replicas whose response is required to achieve the
+ * required [consistency]{@link module:types~consistencies}.
+ * @param {Number} alive The number of replicas that were known to be alive when the request had been processed
+ * (since an unavailable exception has been triggered, there will be alive &lt; required)
+ * @returns {DecisionInfo}
+ */
+MyRetryPolicy.prototype.onUnavailable = function (info, consistency, required, alive) {
+    if (info.nbRetry > 3) {
+        return this.rethrowResult();
+    }
+    return this.retryResult(undefined, false);
+};
+
+/**
+ * Determines what to do when the driver gets a ReadTimeoutException response from a Cassandra node.
+ * @param {OperationInfo} info
+ * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+ * the exception.
+ * @param {Number} received The number of nodes having answered the request.
+ * @param {Number} blockFor The number of replicas whose response is required to achieve the
+ * required [consistency]{@link module:types~consistencies}.
+ * @param {Boolean} isDataPresent When <code>false</code>, it means the replica that was asked for data has not responded.
+ * @returns {DecisionInfo}
+ */
+MyRetryPolicy.prototype.onReadTimeout = function (info, consistency, received, blockFor, isDataPresent) {
+    if (info.nbRetry > 3) {
+        return this.rethrowResult();
+    }
+    return (!isDataPresent
+        ? this.retryResult()
+        : this.rethrowResult());
+};
+
+/**
+ * Determines what to do when the driver gets a WriteTimeoutException response from a Cassandra node.
+ * @param {OperationInfo} info
+ * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+ * the exception.
+ * @param {Number} received The number of nodes having acknowledged the request.
+ * @param {Number} blockFor The number of replicas whose acknowledgement is required to achieve the required
+ * [consistency]{@link module:types~consistencies}.
+ * @param {String} writeType A <code>string</code> that describes the type of the write that timed out ("SIMPLE"
+ * / "BATCH" / "BATCH_LOG" / "UNLOGGED_BATCH" / "COUNTER").
+ * @returns {DecisionInfo}
+ */
+MyRetryPolicy.prototype.onWriteTimeout = function (info, consistency, received, blockFor, writeType) {
+    if (info.nbRetry > 3) {
+        return this.rethrowResult();
+    }
+    // If the batch log write failed, retry the operation as this might just be we were unlucky at picking candidates
+    return writeType === 'BATCH_LOG' ? this.retryResult() : this.rethrowResult();
+};
+
+/**
+ * Defines whether to retry and at which consistency level on an unexpected error.
+ * <p>
+ * This method might be invoked in the following situations:
+ * </p>
+ * <ol>
+ * <li>On a client timeout, while waiting for the server response
+ * (see [socketOptions.readTimeout]{@link ClientOptions}), being the error an instance of
+ * [OperationTimedOutError]{@link module:errors~OperationTimedOutError}.</li>
+ * <li>On a connection error (socket closed, etc.).</li>
+ * <li>When the contacted host replies with an error, such as <code>overloaded</code>, <code>isBootstrapping</code>,
+ * </code>serverError, etc. In this case, the error is instance of [ResponseError]{@link module:errors~ResponseError}.
+ * </li>
+ * </ol>
+ * <p>
+ * Note that when this method is invoked, <em>the driver cannot guarantee that the mutation has been effectively
+ * applied server-side</em>; a retry should only be attempted if the request is known to be idempotent.
+ * </p>
+ * @param {OperationInfo} info
+ * @param {Number|undefined} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+ * the exception.
+ * @param {Error} err The error that caused this request to fail.
+ * @returns {DecisionInfo}
+ */
+MyRetryPolicy.prototype.onRequestError = function (info, consistency, err) {
+    // if (err instanceof errors.OperationTimedOutError && !info.options.retryOnTimeout) {
+    //     return this.rethrowResult();
+    // }
+    // The default implementation triggers a retry on the next host in the query plan with the same consistency level,
+    // regardless of the statement's idempotence, for historical reasons.
+    // return this.retryResult(undefined, false);
+    if (info.nbRetry > 3) {
+        return this.rethrowResult();
+    }
+    return this.retryResult(undefined, false);
+};
+
+ client = new cassandra.Client({
+     contactPoints: contactPoints.split(','),
+     keyspace: keyspace,
+     authProvider: authProvider,
+     policies: {
+         retry: new RetryPolicy()
+     }
+ });
+```
+
+## Query idempotence
+
+A query is *idempotent* if it can be applied multiple times without changing the result of the initial application. For
+example:
+
+* `update my_table set list_col = [1] where pk = 1` is idempotent: no matter how many times it gets executed, `list_col`
+  will always end up with the value `[1]`;
+* `update my_table set list_col = [1] + list_col where pk = 1` is not idempotent: if `list_col` was initially empty,
+  it will contain `[1]` after the first execution, `[1, 1]` after the second, etc.
+
+Idempotence matters for [retries](../retries/) and [speculative query executions](../speculative_execution/). The driver
+will bypass those features if the [Statement#isIdempotent()][isIdempotent] flag is set to `false`, to ensure that the
+statement does not get executed more than once.
+
+In most cases, you must set that flag manually. The driver does not parse query strings, so it can't infer it
+automatically (except for statements coming from the query builder, see below).
+
+Statements start out as non-idempotent by default. You can override the flag on each statement:
+
+```js
+const query = "SELECT * FROM users WHERE id = 1";
+client.execute(query, null, { isIdempotent = true }
+```
+
+The default is also configurable: if you want all statements to start out as idempotent, do this:
+
+```js
+ client = new cassandra.Client({
+     contactPoints: contactPoints,
+     keyspace: keyspace,
+     isIdempotent: true
+ });
+```
+
+Any statement on which you didn't set `isIdempotent` gets this default value.
+
+** Note that the current behaviour of the driver allows the `RetryPolicy` to retrieve the query idempotence as part of the
 information and take a decision whether to retry the execution or not. In future versions, the driver will rethrow the
-error back to the consumer for non-idempotent queries, without using the `RetryPolicy` for this case.
+error back to the consumer for non-idempotent queries, without using the `RetryPolicy` for this case. **
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
 [OperationInfo]: /api/module.policies/module.retry/type.OperationInfo/

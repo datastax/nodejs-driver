@@ -10,7 +10,6 @@ var Client = require('../lib/client');
 var defaultOptions = require('../lib/client-options').defaultOptions;
 var Host = require('../lib/host').Host;
 var OperationState = require('../lib/operation-state');
-var Connection = require('../lib/connection.js');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 

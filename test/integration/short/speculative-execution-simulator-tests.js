@@ -21,6 +21,7 @@ var delay = 100;
 
 describe('Client', function() {
 
+  this.timeout(20000);
   var setupInfo = simulacron.setup([3], { initClient: false });
   var cluster = setupInfo.cluster;
   var assertQueryCount = function (nodeCounts, cb) {

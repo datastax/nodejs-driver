@@ -1,5 +1,27 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.3.0
+
+2017-09-19
+
+### Features
+
+- [NODEJS-82] - Speculative query retries
+- [NODEJS-287] - Provide metrics on the state of connections to Cassandra
+- [NODEJS-308] - Add CDC to TableOptionsMetadata and TableOptions for Cassandra 3.8+
+- [NODEJS-309] - Allow prepared statements to be prepared on all nodes
+- [NODEJS-339] - Avoid using deprecated Buffer constructors
+- [NODEJS-343] - Improve performance of Murmur 3 partitioner
+- [NODEJS-359] - Add 'applied' to ResultSet, similar to java-drivers ResultSet.wasApplied()
+- [NODEJS-375] - Expose optional callbacks Uuid.random() as async overload
+- [NODEJS-376] - Stringify tokens once to simplify computations when building token map
+
+### Bug Fixes
+
+- [NODEJS-365] - Routing key component length is encoded as int16 instead of uint16
+- [NODEJS-370] - Consistency of trace queries is not configurable
+- [NODEJS-373] - Empty string in a map field returned as null on query
+
 ## 3.2.2
 
 2017-06-05

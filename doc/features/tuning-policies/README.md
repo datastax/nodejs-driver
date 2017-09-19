@@ -157,15 +157,17 @@ unexpected error, invoked in the following situations:
     - When the contacted host replies with an error, such as `overloaded`, `isBootstrapping`, `serverError`, etc. In 
     this case, the error is instance of `ResponseError`
 
-A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence. The default implementation doesn't use `IdempotenceAwareRetryPolicy`, in order to use it you should wrap the default policy with `IdempotenceAwareRetryPolicy`:
+A default and base retry policy is included, along with IdempotenceAwareRetryPolicy. The default implementation doesn't consider query idempotence. You can use the IdempotenceAwareRetryPolicy by setting it on the client options:
 
 ``` js
- client = new cassandra.Client({
-     contactPoints: contactPoints.split(','),
-     keyspace: keyspace,
-     authProvider: authProvider,
+var Client = reuiqre('cassandra-driver').Client;
+var IdempotenceAwareRetryPolicy = reuiqre('cassandra-driver').policies.retry.IdempotenceAwareRetryPolicy;
+var RetryPolicy = require('cassandra-driver').policies.retry.RetryPolicy;
+
+ client = new Client({
+     contactPoints,
      policies: {
-         retry: new cassandra.policies.retry.IdempotenceAwareRetryPolicy(new cassandra.policies.retry.RetryPolicy())
+         retry: new IdempotenceAwareRetryPolicy(new RetryPolicy())
      }
  });
 ```

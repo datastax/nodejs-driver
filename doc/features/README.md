@@ -17,5 +17,6 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [Promise and callback-based API](promise-callback)
 - [Query timestamps](query-timestamps)
 - [Query warnings](query-warnings)
+- [Speculative query executions](speculative-executions)
 - [Tuning policies](tuning-policies)
 - [User-defined functions and aggregates](udfs)

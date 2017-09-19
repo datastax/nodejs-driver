@@ -36,8 +36,10 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/cassandra-driver
 versions:
-  - name: '3.2'
+  - name: '3.3'
     ref: 'master'
+  - name: '3.2'
+    ref: '3.2'
   - name: '3.1'
     ref: '3.1'
   - name: '3.0'

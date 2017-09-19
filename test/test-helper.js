@@ -729,34 +729,6 @@ var helper = {
    */
   isWin: function () {
     return process.platform.indexOf('win') === 0;
-  },
-  newConnection: function(address, protocolVersion, options){
-    if (!address) {
-      address = helper.baseOptions.contactPoints[0];
-    }
-    if (typeof protocolVersion === 'undefined') {
-      protocolVersion = this.getProtocolVersion();
-    }
-    //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
-    options = utils.deepExtend({logEmitter: helper.noop}, options || this.defaultOptions);
-    return new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
-  },
-  /**
-   * Gets the max supported protocol version for the current Cassandra version
-   * @returns {number}
-   */
-  getProtocolVersion: function() {
-    //expected protocol version
-    if (helper.getCassandraVersion().indexOf('2.1.') === 0) {
-      return 3;
-    }
-    if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
-      return 2;
-    }
-    if (helper.getCassandraVersion().indexOf('1.') === 0) {
-      return 1;
-    }
-    return 4;
   }
 };
 

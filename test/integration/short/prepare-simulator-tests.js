@@ -111,6 +111,7 @@ describe('Client', function () {
           function verifyLogs(next) {
             utils.eachSeries(client.hosts.values(), function(host, nextHost) {
               sCluster.node(host.address).getLogs(function(err, logs) {
+                assert.ifError(err);
                 var prepareQuery;
                 for(var i = 0; i < logs.length; i++) {
                   var queryLog = logs[i];
@@ -138,6 +139,7 @@ describe('Client', function () {
           },
           function verifyPrepareQueryOnLastNode(next) {
             sCluster.node(nodeDownAddress).getLogs(function(err, logs) {
+              assert.ifError(err);
               var prepareQuery;
               for(var i = 0; i < logs.length; i++) {
                 var queryLog = logs[i];

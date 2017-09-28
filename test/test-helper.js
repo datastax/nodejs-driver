@@ -11,7 +11,6 @@ var defaultOptions = require('../lib/client-options').defaultOptions;
 var Host = require('../lib/host').Host;
 var OperationState = require('../lib/operation-state');
 
-
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
 var helper = {

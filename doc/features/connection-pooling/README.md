@@ -27,8 +27,8 @@ const options = {
    contactPoints: ['1.2.3.4'],
    pooling: {
       coreConnectionsPerHost: {
-        [distance.local] = 2,
-        [distance.remote] = 1
+        [distance.local]: 2,
+        [distance.remote]: 1
       } 
    }
 };

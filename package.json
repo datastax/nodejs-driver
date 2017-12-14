@@ -21,7 +21,7 @@
     "long": "^2.2.0"
   },
   "devDependencies": {
-    "mocha": ">= 1.14.0",
+    "mocha": "~2.5.3",
     "rewire": ">= 2.1.0",
     "temp": ">= 0.8.3"
   },

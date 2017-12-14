@@ -108,6 +108,7 @@ module.exports = {
     "after": false,
     "afterEach": false,
     "before": false,
-    "beforeEach": false
+    "beforeEach": false,
+    "__filename": false
   }
 };

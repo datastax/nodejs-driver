@@ -48,7 +48,7 @@ function assertError(err, errorConstructor) {
   assert.ok(err.message);
   assert.ok(err.info);
   assert.ok(err.stack);
-  helper.assertInstanceOf(err, Error);
+  helper.assertInstanceOf(err, errors.DriverError);
   assert.strictEqual(err.stack.indexOf('new ' + errorConstructor.name), -1,
     'It should exclude the error instance creation from stack');
   helper.assertContains(err.stack, fileName);

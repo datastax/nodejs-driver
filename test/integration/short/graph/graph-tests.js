@@ -10,6 +10,7 @@ var assert = require('assert');
 var Client = require('../../../../lib/dse-client');
 var helper = require('../../../test-helper');
 var vdescribe = helper.vdescribe;
+var vit = helper.vit;
 var schemaCounter = 0;
 var geometry = require('../../../../lib/geometry');
 var Point = geometry.Point;
@@ -354,6 +355,20 @@ vdescribe('dse-5.0', 'Client', function () {
               helper.assertInstanceOf(v.properties['age'][0], graphModule.VertexProperty);
               assert.strictEqual(typeof v.properties['age'][0].value, 'number');
             });
+            done();
+          });
+        }));
+        vit('dse-5.0.9', 'should parse bulked results', wrapClient(function (client, done) {
+          var query = JSON.stringify({
+            '@type': 'g:Bytecode',
+            '@value': {
+              'step': [['V'], ['hasLabel', 'person'], ['has', 'name', 'marko'], ['outE'], ['label']]
+            }
+          });
+          client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+            assert.ifError(err);
+            assert.ok(result);
+            assert.deepEqual(result.toArray(), ['created', 'knows', 'knows']);
             done();
           });
         }));

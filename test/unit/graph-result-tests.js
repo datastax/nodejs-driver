@@ -5,7 +5,9 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
+
 var assert = require('assert');
+var utils = require('../../lib/utils');
 var ResultSet = require('../../lib/types/result-set');
 var GraphResultSet = require('../../lib/graph/result-set');
 
@@ -38,6 +40,16 @@ var resultEdge = getResultSet([ {
 var resultScalars = getResultSet([
   { gremlin: JSON.stringify({ result: 'a'})},
   { gremlin: JSON.stringify({ result: 'b'})}
+]);
+var resultScalarsBulked1 = getResultSet([
+  { gremlin: JSON.stringify({ result: 'a', bulk: 1 })},
+  { gremlin: JSON.stringify({ result: 'b', bulk: 2 })},
+  { gremlin: JSON.stringify({ result: 'c', bulk: 3 })},
+]);
+var resultScalarsBulked2 = getResultSet([
+  { gremlin: JSON.stringify({ result: 'a', bulk: 3 })},
+  { gremlin: JSON.stringify({ result: 'b', bulk: 2 })},
+  { gremlin: JSON.stringify({ result: 'c', bulk: 1 })},
 ]);
 
 describe('GraphResultSet', function () {
@@ -82,6 +94,12 @@ describe('GraphResultSet', function () {
       var item = iterator.next();
       assert.strictEqual(typeof item.value, 'undefined');
       assert.strictEqual(item.done, true);
+    });
+    it('should parse bulked results', function () {
+      var result1 = new GraphResultSet(resultScalarsBulked1);
+      assert.deepEqual(utils.iteratorToArray(result1.values()), [ 'a', 'b', 'b', 'c', 'c', 'c']);
+      var result2 = new GraphResultSet(resultScalarsBulked2);
+      assert.deepEqual(utils.iteratorToArray(result2.values()), [ 'a', 'a', 'a', 'b', 'b', 'c']);
     });
   });
   //noinspection JSUnresolvedVariable

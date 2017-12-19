@@ -5,7 +5,6 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
-var errors = require('../../../lib/errors');
 var vdescribe = helper.vdescribe;
 
 vdescribe('2.2', 'Metadata', function () {
@@ -85,22 +84,6 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getFunctions(keyspace, 'plus');
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return functions in a promise', function () {
         var client = newInstance();
         return client.connect()
@@ -232,22 +215,6 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getFunction(keyspace, 'plus', ['int', 'int']);
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return function in a promise', function () {
         var client = newInstance();
         return client.connect()
@@ -313,22 +280,6 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getAggregates(keyspace, 'sum');
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return aggregates in a promise', function () {
         var client = newInstance();
         return client.connect()
@@ -445,22 +396,6 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getAggregate(keyspace, 'sum', ['int']);
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return aggregate in a promise', function () {
         var client = newInstance();
         return client.connect()

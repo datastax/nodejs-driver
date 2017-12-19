@@ -118,16 +118,6 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an ArgumentError', function () {
-          var Client = require('../../lib/client');
-          var client = new Client(helper.baseOptions);
-          assert.throws(function () {
-            client.connect();
-          }, errors.ArgumentError);
-        });
-        return;
-      }
       it('should return a promise', function (done) {
         var Client = require('../../lib/client');
         var client = new Client(helper.baseOptions);
@@ -363,16 +353,6 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an error', function () {
-          var Client = require('../../lib/client');
-          var client = new Client(helper.baseOptions);
-          assert.throws(function () {
-            client.execute('Q', [ 1, 2 ], { prepare: true });
-          }, errors.ArgumentError);
-        });
-        return;
-      }
       it('should return a promise', function (done) {
         var Client = require('../../lib/client');
         var client = new Client(helper.baseOptions);
@@ -464,16 +444,6 @@ describe('Client', function () {
       }, done);
     });
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an error', function () {
-          var Client = require('../../lib/client');
-          var client = new Client(helper.baseOptions);
-          assert.throws(function () {
-            client.batch(['Q'], { prepare: false });
-          }, errors.ArgumentError);
-        });
-        return;
-      }
       it('should return a promise', function (done) {
         var Client = require('../../lib/client');
         var client = new Client(helper.baseOptions);
@@ -601,16 +571,6 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should not throw an error', function () {
-          var Client = require('../../lib/client');
-          var client = new Client(helper.baseOptions);
-          assert.doesNotThrow(function () {
-            client.shutdown();
-          });
-        });
-        return;
-      }
       it('should return a promise', function (done) {
         var Client = require('../../lib/client');
         var client = new Client(helper.baseOptions);

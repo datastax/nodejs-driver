@@ -39,6 +39,6 @@
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {
-    "node" : ">=0.10.0"
+    "node" : ">=4"
    }
 }

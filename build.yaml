@@ -4,13 +4,13 @@ schedules:
     schedule: per_commit
     matrix:
       exclude:
-        # Exclude all 0.12 and 4 builds.
-        - nodejs: ['0.12', '4']
-        # Only build with latest for 0.10
-        - nodejs: '0.10'
+        # Exclude all builds for 6.x.
+        - nodejs: ['6']
+        # Only build with latest for 4.x
+        - nodejs: '4'
           cassandra: ['1.2', '2.0', '2.1', '2.2', '3.0']
-        # Only build with 1.2 and latest for 0.10
-        - nodejs: '6'
+        # Only build with 1.2 and latest for 8.x
+        - nodejs: '8'
           cassandra: ['2.0', '2.1', '2.2', '3.0']
   nightly:
     # nightly job for primary branches to run all configs.
@@ -24,10 +24,9 @@ schedules:
     branches: 
       exclude: ["/((\\d+(\\.[\\dx]+)+)|master)/"]
 nodejs:
-  - '0.10'
-  - '0.12'
   - '4'
   - '6'
+  - '8'
 os:
   - ubuntu/trusty64
 cassandra:

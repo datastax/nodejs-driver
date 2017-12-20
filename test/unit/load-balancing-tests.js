@@ -466,8 +466,8 @@ describe('DCAwareRoundRobinPolicy', function () {
         assert.strictEqual(logEvents.length, 1);
         var event = logEvents[0];
         assert.strictEqual(event.level, 'warning');
-        assert.strictEqual(event.message, 'No local DC was provided with DCAwareRoundRobinPolicy.' +
-          '  Using discovered DC \'dc1\' from host 1.  Future releases will require local DC to be provided.');
+        assert.strictEqual(event.message, 'No local Data Center was provided with DCAwareRoundRobinPolicy.' +
+          '  Using discovered DC \'dc1\' from host 1.  Future releases will require local DC to be specified.');
         next();
       }
     ], done);

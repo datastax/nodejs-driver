@@ -1,9 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var path = require('path');
-var errors = require('../../lib/errors');
-var helper = require('../test-helper');
+const assert = require('assert');
+const path = require('path');
+const errors = require('../../lib/errors');
+const helper = require('../test-helper');
 var fileName = path.basename(__filename);
 
 describe('DriverError', function () {

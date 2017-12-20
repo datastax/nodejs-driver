@@ -4,10 +4,10 @@
  * Name of the doclets and the maximum amount of occurrences.
  * @private
  */
-var filterDoclets = {
+const filterDoclets = {
   'module:types': 1
 };
-var filtered = {};
+const filtered = {};
 
 exports.handlers = {
   newDoclet: function (e) {

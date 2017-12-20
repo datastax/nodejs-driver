@@ -1,21 +1,21 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
+const helper = require('../../test-helper.js');
+const Client = require('../../../lib/client.js');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils.js');
 
 describe('Client', function () {
   this.timeout(180000);
   afterEach(helper.ccmHelper.remove);
   it('should handle parallel insert and select', function (done) {
-    var client = newInstance({encoding: { copyBuffer: false}});
-    //var client = newInstance();
-    var keyspace = helper.getRandomName('ks');
+    const client = newInstance({encoding: { copyBuffer: false}});
+    //const client = newInstance();
+    const keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
-    var selectQuery = 'SELECT * FROM ' + table;
+    const selectQuery = 'SELECT * FROM ' + table;
     var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
     var times = 2000;
     utils.series([
@@ -32,16 +32,16 @@ describe('Client', function () {
     ], done);
     function insert(callback) {
       utils.timesLimit(times, 500, function (i, next) {
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
         client.execute(insertQuery, [types.uuid(), 'text' + i, new Date()], options, next);
       }, callback);
     }
     function select(callback) {
-      var resultCount = 0;
+      let resultCount = 0;
       utils.timesLimit(Math.floor(times / 5), 200, function (i, next) {
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.one};
         client.execute(selectQuery, [], options, function (err, result) {
@@ -58,10 +58,10 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select with nodes failing', function (done) {
-    var client = newInstance();
-    var keyspace = helper.getRandomName('ks');
+    const client = newInstance();
+    const keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('tbl');
-    var selectQuery = 'SELECT * FROM ' + table;
+    const selectQuery = 'SELECT * FROM ' + table;
     var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
     var times = 2000;
     utils.series([
@@ -78,16 +78,16 @@ describe('Client', function () {
     ], done);
     function insert(callback) {
       utils.timesLimit(times, 500, function (i, next) {
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
         client.execute(insertQuery, [types.uuid(), 'text' + i, new Date()], options, next);
       }, callback);
     }
     function select(callback) {
-      var resultCount = 0;
+      let resultCount = 0;
       utils.timesLimit(Math.floor(times / 5), 100, function (i, next) {
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.one};
         client.execute(selectQuery, [], options, function (err, result) {
@@ -109,12 +109,12 @@ describe('Client', function () {
     }
   });
   it('should handle parallel insert and select of large blobs', function (done) {
-    var client = newInstance();
-    var keyspace = helper.getRandomName('ks');
-    var table = helper.getRandomName('tbl');
+    const client = newInstance();
+    const keyspace = helper.getRandomName('ks');
+    const table = helper.getRandomName('tbl');
     var clientInsert = newInstance({keyspace: keyspace});
     var clientSelect = newInstance({keyspace: keyspace});
-    var selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
+    const selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
     var insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
     var times = 500;
     utils.series([
@@ -130,10 +130,10 @@ describe('Client', function () {
       }
     ], done);
     function insert(callback) {
-      var n = 0;
+      let n = 0;
       utils.timesLimit(times, 100, function (i, next) {
         i = ++n;
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
         var buf = utils.allocBuffer(i * 1024);
@@ -142,9 +142,9 @@ describe('Client', function () {
       }, callback);
     }
     function select(callback) {
-      var resultCount = 0;
+      let resultCount = 0;
       utils.timesLimit(times*10, 2, function (i, next) {
-        var options = {
+        const options = {
           prepare: 1,
           consistency: types.consistencies.one,
           autoPage: true};

@@ -1,6 +1,5 @@
 "use strict";
 const cassandra = require('cassandra-driver');
-const async = require('async');
 
 const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
 
@@ -36,7 +35,7 @@ client.connect()
     return client.execute(query, ['The Rolling Stones', address], { prepare: true});
   })
   .then(function () {
-    var query = 'SELECT name, address FROM examples.udt_tbl1 WHERE name = ?';
+    const query = 'SELECT name, address FROM examples.udt_tbl1 WHERE name = ?';
     return client.execute(query, ['The Rolling Stones'], { prepare: true });
   })
   .then(function (result) {

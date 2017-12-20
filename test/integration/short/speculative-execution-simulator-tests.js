@@ -1,16 +1,16 @@
 'use strict';
-var assert = require('assert');
-var responseErrorCodes = require('../../../lib/types').responseErrorCodes;
-var simulacron = require('../simulacron');
-var helper = require('../../test-helper');
-var utils = require('../../../lib/utils');
+const assert = require('assert');
+const responseErrorCodes = require('../../../lib/types').responseErrorCodes;
+const simulacron = require('../simulacron');
+const helper = require('../../test-helper');
+const utils = require('../../../lib/utils');
 
-var Client = require('../../../lib/client.js');
-var ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
-var NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
-var OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
+const Client = require('../../../lib/client.js');
+const ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
+const NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
+const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
 
-var query = "select * from data";
+const query = "select * from data";
 var delay = 100;
 
 describe('Client', function() {
@@ -45,7 +45,7 @@ describe('Client', function() {
     {title: 'with NoSpeculativeExecutionPolicy', policy: new NoSpeculativeExecutionPolicy()}
   ].forEach(function (data) {
     describe(data.title, function () {
-      var clientOptions = {
+      const clientOptions = {
         contactPoints: [simulacron.startingIp],
         policies: { 
           loadBalancing: new OrderedLoadBalancingPolicy()
@@ -56,7 +56,7 @@ describe('Client', function() {
         clientOptions.policies.speculativeExecution = data.policy;
       }
 
-      var client = new Client(clientOptions);
+      const client = new Client(clientOptions);
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));
 
@@ -82,7 +82,7 @@ describe('Client', function() {
     });
   });
   describe('with ConstantSpeculativeExecutionPolicy', function () {
-    var clientOptions = {
+    const clientOptions = {
       contactPoints: [simulacron.startingIp],
       policies: { 
         speculativeExecution: new ConstantSpeculativeExecutionPolicy(delay, 3), 
@@ -90,7 +90,7 @@ describe('Client', function() {
       }
     };
 
-    var client = new Client(clientOptions);
+    const client = new Client(clientOptions);
     before(client.connect.bind(client));
     after(client.shutdown.bind(client));
 
@@ -296,13 +296,13 @@ describe('Client', function() {
       ], done);
     });
     it('should allow zero delay', function (done) {
-      var clientOptions = {
+      const clientOptions = {
         contactPoints: cluster.getContactPoints(0),
         policies: { 
           speculativeExecution: new ConstantSpeculativeExecutionPolicy(0, 3),
         }
       };
-      var client = new Client(clientOptions);
+      const client = new Client(clientOptions);
 
       utils.series([
         client.connect.bind(client),

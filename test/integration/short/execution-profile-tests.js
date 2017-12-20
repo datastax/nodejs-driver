@@ -1,14 +1,14 @@
 "use strict";
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
-var loadBalancing = require('../../../lib/policies/load-balancing.js');
-var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
-var WhiteListPolicy = loadBalancing.WhiteListPolicy;
-var ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
+const helper = require('../../test-helper.js');
+const Client = require('../../../lib/client.js');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils.js');
+const loadBalancing = require('../../../lib/policies/load-balancing.js');
+const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
+const WhiteListPolicy = loadBalancing.WhiteListPolicy;
+const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 
 describe('ProfileManager', function() {
   this.timeout(120000);
@@ -56,9 +56,9 @@ describe('ProfileManager', function() {
   function ensureOnlyHostsUsed(hostOctets, profile) {
     return (function test(done) {
       var queryOptions = profile ? {executionProfile: profile} : {};
-      var hostsUsed = {};
+      const hostsUsed = {};
 
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function executeQueries(next) {
@@ -82,7 +82,7 @@ describe('ProfileManager', function() {
   }
 
   it('should init each profile\'s load balancing policy exactly once', function(done) {
-    var client = newInstance();
+    const client = newInstance();
     utils.series([
       client.connect.bind(client),
       function validateInitCount(next) {
@@ -96,7 +96,7 @@ describe('ProfileManager', function() {
     ], done);
   });
   it('should consider all load balancing policies when establishing distance for hosts', function (done) {
-    var client = newInstance();
+    const client = newInstance();
 
     utils.series([
       client.connect.bind(client),
@@ -104,7 +104,7 @@ describe('ProfileManager', function() {
         var hosts = client.hosts;
         assert.strictEqual(hosts.length, 4);
         hosts.forEach(function(h) {
-          var n = helper.lastOctetOf(h);
+          const n = helper.lastOctetOf(h);
           var distance = client.profileManager.getDistance(h);
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
           // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
@@ -123,11 +123,11 @@ describe('ProfileManager', function() {
   it('should only use hosts from the load balancing policy in the default profile when specified', ensureOnlyHostsUsed(['1', '2'], 'default'));
   it('should only use hosts from the load balancing policy in whitelist profile', ensureOnlyHostsUsed(['4'], 'whitelist'));
   it('should fallback on client load balancing policy when default profile has no lbp', function (done) {
-    var policy = new DCAwareRoundRobinPolicy('dc2');
-    var profiles = [new ExecutionProfile('default'), new ExecutionProfile('empty')];
+    const policy = new DCAwareRoundRobinPolicy('dc2');
+    const profiles = [new ExecutionProfile('default'), new ExecutionProfile('empty')];
     // also provide retry policy since the default would be overridden by provided policies options.
-    var client = newInstance({policies: {loadBalancing: policy, retry: new helper.RetryMultipleTimes(3)}}, profiles);
-    var hostsUsed = {};
+    const client = newInstance({policies: {loadBalancing: policy, retry: new helper.RetryMultipleTimes(3)}}, profiles);
+    const hostsUsed = {};
 
     utils.series([
       client.connect.bind(client),

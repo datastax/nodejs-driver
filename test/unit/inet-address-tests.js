@@ -1,8 +1,8 @@
 'use strict';
-var assert = require('assert');
-var helper = require('../test-helper');
-var utils = require('../../lib/utils');
-var InetAddress = require('../../lib/types').InetAddress;
+const assert = require('assert');
+const helper = require('../test-helper');
+const utils = require('../../lib/utils');
+const InetAddress = require('../../lib/types').InetAddress;
 
 describe('InetAddress', function () {
   describe('constructor', function () {

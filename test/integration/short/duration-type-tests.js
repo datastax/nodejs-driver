@@ -1,19 +1,19 @@
 'use strict';
-var assert = require('assert');
-var util = require('util');
-var helper = require('../../test-helper');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils');
+const assert = require('assert');
+const util = require('util');
+const helper = require('../../test-helper');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils');
 
-var vdescribe = helper.vdescribe;
-var Duration = types.Duration;
+const vdescribe = helper.vdescribe;
+const Duration = types.Duration;
 
 vdescribe('3.10', 'Duration', function () {
   this.timeout('30000');
-  var setupInfo = helper.setup(1, {
+  const setupInfo = helper.setup(1, {
     queries: ['CREATE TABLE tbl_duration (pk uuid PRIMARY KEY, c1 duration)']
   });
-  var client = setupInfo.client;
+  const client = setupInfo.client;
   describe('serialization', function () {
     it('should serialize and deserialize duration type instances', function (done) {
       var values = [
@@ -60,12 +60,12 @@ vdescribe('3.10', 'Duration', function () {
       ];
       utils.eachSeries([ true, false ], function (prepare, prepareNext) {
         utils.eachSeries(values, function (v, next) {
-          var query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
-          var id = types.Uuid.random();
+          const query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
+          const id = types.Uuid.random();
           var value = Duration.fromString(v);
           client.execute(query, [ id, value ], { prepare: prepare }, function (err) {
             assert.ifError(err);
-            var query = 'SELECT pk, c1 FROM tbl_duration WHERE pk = ?';
+            const query = 'SELECT pk, c1 FROM tbl_duration WHERE pk = ?';
             client.execute(query, [ id ], { prepare: prepare }, function (err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 1);

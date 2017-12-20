@@ -1,9 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var MonotonicTimestampGenerator = require('../../lib/policies/timestamp-generation').MonotonicTimestampGenerator;
-var Long = require('../../lib/types').Long;
-var helper = require('../test-helper');
+const assert = require('assert');
+const MonotonicTimestampGenerator = require('../../lib/policies/timestamp-generation').MonotonicTimestampGenerator;
+const Long = require('../../lib/types').Long;
+const helper = require('../test-helper');
 
 describe('MonotonicTimestampGenerator', function () {
   describe('#next()', function () {
@@ -25,20 +25,20 @@ describe('MonotonicTimestampGenerator', function () {
     });
     it('should log a warning once when it drifted into the future', function (done) {
       var g = new MonotonicTimestampGenerator(null, 50);
-      var counter = 0;
+      let counter = 0;
       g.getDate = function () {
         if (counter++ === 0) {
           return 1000;
         }
         return 0;
       };
-      var logs = [];
-      var client = {
+      const logs = [];
+      const client = {
         log: function (level, message) {
           logs.push({ level: level, message: message });
         }
       };
-      for (var i = 0; i < 200; i++) {
+      for (let i = 0; i < 200; i++) {
         var value = g.next(client);
         assert.strictEqual(value, 1000000 + i);
       }
@@ -69,7 +69,7 @@ describe('MonotonicTimestampGenerator', function () {
         // Use a fixed date
         return 1;
       };
-      for (var i = 0; i < 1000; i++) {
+      for (let i = 0; i < 1000; i++) {
         var value = g.next();
         assert.strictEqual(value, 1000 + i);
       }

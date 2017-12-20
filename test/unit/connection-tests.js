@@ -1,17 +1,17 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
-var events = require('events');
-var rewire = require('rewire');
+const assert = require('assert');
+const util = require('util');
+const events = require('events');
+const rewire = require('rewire');
 
-var Connection = require('../../lib/connection');
-var requests = require('../../lib/requests');
-var defaultOptions = require('../../lib/client-options').defaultOptions();
-var utils = require('../../lib/utils');
-var errors = require('../../lib/errors');
-var helper = require('../test-helper');
+const Connection = require('../../lib/connection');
+const requests = require('../../lib/requests');
+const defaultOptions = require('../../lib/client-options').defaultOptions();
+const utils = require('../../lib/utils');
+const errors = require('../../lib/errors');
+const helper = require('../test-helper');
 
-var idleQuery = 'SELECT key from system.local';
+const idleQuery = 'SELECT key from system.local';
 
 describe('Connection', function () {
   describe('constructor', function () {
@@ -41,7 +41,7 @@ describe('Connection', function () {
       });
     }
     it('should prepare different queries', function (done) {
-      var connection = newInstance();
+      const connection = newInstance();
       //override sendStream behaviour
       connection.sendStream = function(r, o, cb) {
         setImmediate(function () {
@@ -58,7 +58,7 @@ describe('Connection', function () {
       });
     });
     it('should prepare different queries with keyspace', function (done) {
-      var connection = newInstance();
+      const connection = newInstance();
       connection.keyspace = 'ks1';
       //override sendStream behaviour
       connection.sendStream = function(r, o, cb) {
@@ -76,8 +76,8 @@ describe('Connection', function () {
       });
     });
     it('should prepare the same query once', function (done) {
-      var connection = newInstance();
-      var ioCount = 0;
+      const connection = newInstance();
+      let ioCount = 0;
       //override sendStream behaviour
       connection.sendStream = function(r, o, cb) {
         setImmediate(function () {
@@ -96,9 +96,9 @@ describe('Connection', function () {
       });
     });
     it('should prepare the same query once with keyspace', function (done) {
-      var connection = newInstance();
+      const connection = newInstance();
       connection.keyspace = 'ks1';
-      var ioCount = 0;
+      let ioCount = 0;
       //override sendStream behaviour
       connection.sendStream = function(r, o, cb) {
         setImmediate(function () {
@@ -120,7 +120,7 @@ describe('Connection', function () {
   describe('#sendStream()', function () {
     this.timeout(1000);
     it('should set the timeout for the idle request', function (done) {
-      var sent = [];
+      const sent = [];
       var writeQueueFake = getWriteQueueFake(sent);
       var c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 20 } }, writeQueueFake);
       c.sendStream(new requests.QueryRequest('QUERY1'), null, utils.noop);
@@ -134,7 +134,7 @@ describe('Connection', function () {
       }, 30);
     });
     it('should not set the timeout for the idle request when heartBeatInterval is 0', function (done) {
-      var sent = [];
+      const sent = [];
       var writeQueueFake = getWriteQueueFake(sent);
       var c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 0 } }, writeQueueFake);
       c.sendStream(new requests.QueryRequest('QUERY1'), null, utils.noop);
@@ -148,10 +148,10 @@ describe('Connection', function () {
       }, 20);
     });
     it('should reset the timeout after each new request', function (done) {
-      var sent = [];
+      const sent = [];
       var writeQueueFake = getWriteQueueFake(sent);
       var c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 20 } }, writeQueueFake);
-      for (var i = 0; i < 4; i++) {
+      for (let i = 0; i < 4; i++) {
         setTimeout(function (query) {
           c.sendStream(new requests.QueryRequest(query), null, utils.noop);
         }, 10 * i, 'QUERY' + i);
@@ -185,7 +185,7 @@ describe('Connection', function () {
         setImmediate(cb);
       };
       SocketMock.prototype.destroy = function () {
-        var self = this;
+        const self = this;
         setImmediate(function () {
           self.emit('close');
         });
@@ -205,9 +205,8 @@ describe('Connection', function () {
         assert.ifError(err);
         assert.ok(c.connected);
         //it is now connected
-        //noinspection JSUnresolvedVariable
         var socket = c.netClient;
-        var closeEmitted = 0;
+        let closeEmitted = 0;
         socket.on('close', function () {
           closeEmitted++;
         });
@@ -227,7 +226,7 @@ describe('Connection', function () {
         setImmediate(cb);
       };
       SocketMock.prototype.end = function () {
-        var self = this;
+        const self = this;
         setImmediate(function () {
           self.emit('close');
         });
@@ -247,9 +246,8 @@ describe('Connection', function () {
         assert.ok(c.connected);
         //force destroy
         c.connected = false;
-        //noinspection JSUnresolvedVariable
         var socket = c.netClient;
-        var closeEmitted = 0;
+        let closeEmitted = 0;
         socket.on('close', function () {
           closeEmitted++;
         });

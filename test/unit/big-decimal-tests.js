@@ -1,12 +1,12 @@
 'use strict';
 
-var assert = require('assert');
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
+const assert = require('assert');
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
 
 describe('BigDecimal', function () {
-  var BigDecimal = types.BigDecimal;
-  var Integer = types.Integer;
+  const BigDecimal = types.BigDecimal;
+  const Integer = types.Integer;
   var hexToDecimalValues = [
     ['000000050100', '0.00256'],
     ['0000000304', '0.004'],
@@ -67,7 +67,7 @@ describe('BigDecimal', function () {
   describe('fromBuffer()', function () {
     it('should convert from buffer (scale + unscaledValue in BE)', function () {
       hexToDecimalValues.forEach(function (item) {
-        var buffer = utils.allocBufferFromString(item[0], 'hex');
+        const buffer = utils.allocBufferFromString(item[0], 'hex');
         var value = BigDecimal.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[1]);
       });

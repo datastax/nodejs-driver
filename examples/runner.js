@@ -1,9 +1,9 @@
 "use strict";
 
-var async = require('async');
-var exec = require('child_process').exec;
-var fs = require('fs');
-var path = require('path');
+const async = require('async');
+const exec = require('child_process').exec;
+const fs = require('fs');
+const path = require('path');
 
 /**
  * This script is used to check that the samples run correctly.
@@ -36,14 +36,14 @@ if (typeof Promise === 'undefined' || process.version.indexOf('v0.') === 0) {
 }
 
 var runnerFileName = path.basename(module.filename);
-var counter = 0;
-var failures = 0;
+let counter = 0;
+let failures = 0;
 async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
   if (file.indexOf(runnerFileName) >= 0) {
     return next();
   }
 
-  var timedOut = false;
+  let timedOut = false;
   var timeout = setTimeout(function() {
     console.log("%s timed out after 10s", file);
     counter++;

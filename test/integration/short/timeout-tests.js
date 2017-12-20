@@ -1,16 +1,16 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var Connection = require('../../../lib/connection');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var errors = require('../../../lib/errors');
-var ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
-var loadBalancing = require('../../../lib/policies').loadBalancing;
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const Connection = require('../../../lib/connection');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const errors = require('../../../lib/errors');
+const ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
+const loadBalancing = require('../../../lib/policies').loadBalancing;
+const vdescribe = helper.vdescribe;
 
 describe('client read timeouts', function () {
   this.timeout(120000);
@@ -39,9 +39,9 @@ describe('client read timeouts', function () {
     it('should move to next host for prepared requests', getMoveNextHostTest(true, false));
     it('should move to next host for the initial prepare', getMoveNextHostTest(true, false));
     it('should callback in error when retryOnTimeout is false', function (done) {
-      var client = newInstance({ socketOptions: { readTimeout: 3000 } });
-      var coordinators = {};
-      var errorsReceived = [];
+      const client = newInstance({ socketOptions: { readTimeout: 3000 } });
+      const coordinators = {};
+      const errorsReceived = [];
       utils.series([
         client.connect.bind(client),
         function warmup(next) {
@@ -90,7 +90,7 @@ describe('client read timeouts', function () {
       ], done);
     });
     it('defunct the connection when the threshold passed', function (done) {
-      var client = newInstance({
+      const client = newInstance({
         socketOptions: {
           readTimeout: 3000,
           defunctReadTimeoutThreshold: 32
@@ -104,8 +104,8 @@ describe('client read timeouts', function () {
           }
         }
       });
-      var coordinators = {};
-      var connection;
+      const coordinators = {};
+      let connection;
       utils.series([
         client.connect.bind(client),
         function warmup(next) {
@@ -161,13 +161,13 @@ describe('client read timeouts', function () {
       ], done);
     });
     it('should move to next host for eachRow() executions', function (done) {
-      var client = newInstance({ socketOptions: { readTimeout: 3000 } });
-      var coordinators = {};
+      const client = newInstance({ socketOptions: { readTimeout: 3000 } });
+      const coordinators = {};
       utils.series([
         client.connect.bind(client),
         function warmup(next) {
           utils.timesSeries(10, function (n, timesNext) {
-            var counter = 0;
+            let counter = 0;
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
             }, function (err, result) {
@@ -187,7 +187,7 @@ describe('client read timeouts', function () {
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
           utils.times(10, function (n, timesNext) {
-            var counter = 0;
+            let counter = 0;
             client.eachRow('SELECT key FROM system.local', [], function () {
               counter++;
             }, function (err, result) {
@@ -245,7 +245,7 @@ describe('client read timeouts', function () {
   });
   vdescribe('2.0', 'with prepared batches', function () {
     it('should retry when preparing multiple queries', function (done) {
-      var client = newInstance({
+      const client = newInstance({
         keyspace: 'ks_batch_test',
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
@@ -275,7 +275,7 @@ describe('client read timeouts', function () {
       ], helper.finish(client, done));
     });
     it('should produce a NoHostAvailableError when prepare tried and timed out on all hosts', function (done) {
-      var client = newInstance({
+      const client = newInstance({
         keyspace: 'ks_batch_test',
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
@@ -298,7 +298,6 @@ describe('client read timeouts', function () {
           // It should be tried on all nodes and produce a NoHostAvailableError.
           client.batch(queries, { prepare: true, logged: false }, function (err) {
             helper.assertInstanceOf(err, errors.NoHostAvailableError);
-            //noinspection JSUnresolvedVariable
             var numErrors = Object.keys(err.innerErrors).length;
             assert.strictEqual(numErrors, 2);
             next();
@@ -336,15 +335,15 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
   }
   profiles = profiles || [];
   return (function moveNextHostTest(done) {
-    var client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
-    var timeoutLogs = [];
+    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
+    const timeoutLogs = [];
     client.on('log', function (level, constructorName, info) {
       if (level !== 'warning' || info.indexOf('timeout') === -1) {
         return;
       }
       timeoutLogs.push(info);
     });
-    var coordinators = {};
+    const coordinators = {};
     utils.series([
       client.connect.bind(client),
       function warmup(next) {
@@ -405,8 +404,8 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
   profiles = profiles || [];
 
   return (function timeoutErrorNotExpectedTest(done) {
-    var client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
-    var coordinators = {};
+    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
+    const coordinators = {};
     utils.series([
       client.connect.bind(client),
       function warmup(next) {
@@ -431,7 +430,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
           assert.ifError(err);
           coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
         };
-        for (var i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
           queryOptions = utils.extend({ }, queryOptions, { prepare: prepare });
           client.execute('SELECT key FROM system.local', [], queryOptions, cb);
         }

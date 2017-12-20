@@ -1,12 +1,12 @@
 "use strict";
-var assert = require('assert');
+const assert = require('assert');
 
-var Connection = require('../../../lib/connection.js');
-var defaultOptions = require('../../../lib/client-options.js').defaultOptions();
-var utils = require('../../../lib/utils.js');
-var requests = require('../../../lib/requests.js');
-var helper = require('../../test-helper.js');
-var vit = helper.vit;
+const Connection = require('../../../lib/connection.js');
+const defaultOptions = require('../../../lib/client-options.js').defaultOptions();
+const utils = require('../../../lib/utils.js');
+const requests = require('../../../lib/requests.js');
+const helper = require('../../test-helper.js');
+const vit = helper.vit;
 
 describe('Connection', function () {
   this.timeout(120000);
@@ -14,7 +14,7 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should open', function (done) {
-      var localCon = newInstance();
+      const localCon = newInstance();
       localCon.open(function (err) {
         assert.ifError(err);
         assert.ok(localCon.connected, 'Must be status connected');
@@ -40,7 +40,7 @@ describe('Connection', function () {
       });
     });
     vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
-      var options = utils.extend({}, defaultOptions);
+      const options = utils.extend({}, defaultOptions);
       options.protocolOptions.maxVersion = getProtocolVersion() - 1;
       var localCon = newInstance(null, null, options);
       localCon.open(function (err) {
@@ -83,10 +83,10 @@ describe('Connection', function () {
       });
     });
     it('should set the timeout for the heartbeat', function (done) {
-      var options = utils.extend({}, defaultOptions);
+      const options = utils.extend({}, defaultOptions);
       options.pooling.heartBeatInterval = 100;
       var c = newInstance(null, undefined, options);
-      var sendCounter = 0;
+      let sendCounter = 0;
       c.open(function (err) {
         assert.ifError(err);
         var originalSend = c.sendStream;
@@ -105,7 +105,7 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1, {ssl: true}));
     after(helper.ccmHelper.remove);
     it('should open to a ssl enabled host', function (done) {
-      var localCon = newInstance();
+      const localCon = newInstance();
       localCon.options.sslOptions = {};
       localCon.open(function (err) {
         assert.ifError(err);
@@ -123,12 +123,12 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should change active keyspace', function (done) {
-      var localCon = newInstance();
-      var keyspace = helper.getRandomName();
+      const localCon = newInstance();
+      const keyspace = helper.getRandomName();
       utils.series([
         localCon.open.bind(localCon),
         function creating(next) {
-          var query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+          const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
           localCon.sendStream(getRequest(query), {}, next);
         },
         function changing(next) {
@@ -141,13 +141,13 @@ describe('Connection', function () {
       ], done);
     });
     it('should be case sensitive', function (done) {
-      var localCon = newInstance();
-      var keyspace = helper.getRandomName().toUpperCase();
+      const localCon = newInstance();
+      const keyspace = helper.getRandomName().toUpperCase();
       assert.notStrictEqual(keyspace, keyspace.toLowerCase());
       utils.series([
         localCon.open.bind(localCon),
         function creating(next) {
-          var query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+          const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
           localCon.sendStream(getRequest(query), {}, next);
         },
         function changing(next) {
@@ -164,7 +164,7 @@ describe('Connection', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
-      var options = utils.extend({}, defaultOptions);
+      const options = utils.extend({}, defaultOptions);
       options.socketOptions.readTimeout = 0;
       options.policies.retry = new helper.RetryMultipleTimes(3);
       var connection = newInstance(null, null, options);
@@ -180,12 +180,12 @@ describe('Connection', function () {
       ], done);
     });
     it('should callback the pending queue if the connection is there is a socket error', function (done) {
-      var options = utils.extend({}, defaultOptions);
+      const options = utils.extend({}, defaultOptions);
       options.socketOptions.readTimeout = 0;
       options.policies.retry = new helper.RetryMultipleTimes(3);
       var connection = newInstance(null, null, options);
       var maxRequests = connection.protocolVersion < 3 ? 128 : Math.pow(2, 15);
-      var killed = false;
+      let killed = false;
       utils.series([
         connection.open.bind(connection),
         function asserting(seriesNext) {

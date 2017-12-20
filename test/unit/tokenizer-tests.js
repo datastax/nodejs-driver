@@ -1,13 +1,13 @@
 'use strict';
-var assert = require('assert');
+const assert = require('assert');
 
-var tokenizer = require('../../lib/tokenizer');
+const tokenizer = require('../../lib/tokenizer');
 var Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 var RandomTokenizer = tokenizer.RandomTokenizer;
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
-var MutableLong = require('../../lib/types/mutable-long');
-var helper = require('../test-helper');
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
+const MutableLong = require('../../lib/types/mutable-long');
+const helper = require('../test-helper');
 
 describe('Murmur3Tokenizer', function () {
   describe('#rotl64()', function () {

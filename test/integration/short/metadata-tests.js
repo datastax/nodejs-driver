@@ -1,23 +1,23 @@
 "use strict";
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var vit = helper.vit;
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const vit = helper.vit;
+const vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
   this.timeout(60000);
-  var setupInfo = helper.setup(2, { ccmOptions: {
+  const setupInfo = helper.setup(2, { ccmOptions: {
     vnodes: true,
     yaml: helper.isCassandraGreaterThan('3.10') ? ['cdc_enabled:true'] : null
   }});
   describe('Metadata', function () {
     describe('#keyspaces', function () {
       it('should keep keyspace information up to date', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         var nonSyncClient = newInstance({ isMetadataSyncEnabled: false });
 
         function checkKeyspaceWithInfo(ks, strategy, optionName, optionValue) {
@@ -89,7 +89,7 @@ describe('metadata', function () {
         ], done);
       });
       it('should delete keyspace information on drop', function (done) {
-        var client = newInstance({ refreshSchemaDelay: 50 });
+        const client = newInstance({ refreshSchemaDelay: 50 });
         client.connect(function (err) {
           assert.ifError(err);
           var m = client.metadata;
@@ -112,7 +112,7 @@ describe('metadata', function () {
     });
     vdescribe('2.1', '#getUdt()', function () {
       it('should return null if it does not exists', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function testWithCallbacks(next) {
@@ -140,7 +140,7 @@ describe('metadata', function () {
         ], done);
       });
       it('should return the udt information', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         var createUdtQuery1 = "CREATE TYPE phone (alias text, number text, country_code int, second_number 'DynamicCompositeType(s => UTF8Type, i => Int32Type)')";
         var createUdtQuery2 = 'CREATE TYPE address (street text, "ZIP" int, phones set<frozen<phone>>)';
         utils.series([
@@ -210,8 +210,8 @@ describe('metadata', function () {
       it('should retrieve the trace immediately after', function (done) {
         // use a single node
         var lbp = new helper.WhiteListPolicy(['1']);
-        var client = newInstance({ policies: { loadBalancing: lbp }});
-        var traceId;
+        const client = newInstance({ policies: { loadBalancing: lbp }});
+        let traceId;
         utils.series([
           client.connect.bind(client),
           function executeQuery(next) {
@@ -249,8 +249,8 @@ describe('metadata', function () {
       it('should retrieve the trace a few seconds after', function (done) {
         // use a single node
         var lbp = new helper.WhiteListPolicy(['2']);
-        var client = newInstance({ policies: { loadBalancing: lbp }});
-        var traceId;
+        const client = newInstance({ policies: { loadBalancing: lbp }});
+        let traceId;
         utils.series([
           client.connect.bind(client),
           function executeQuery(next) {
@@ -275,7 +275,7 @@ describe('metadata', function () {
       });
       describe('with no callback specified', function () {
         it('should return the trace in a promise', function () {
-          var client = newInstance();
+          const client = newInstance();
           return client.connect()
             .then(function () {
               return client.execute(helper.queries.basic, [], { traceQuery: true });
@@ -300,7 +300,7 @@ describe('metadata', function () {
     describe('#refreshKeyspace()', function() {
       describe('with no callback specified', function () {
         it('should return keyspace in a promise', function () {
-          var client = newInstance({isMetadataSyncEnabled: false});
+          const client = newInstance({isMetadataSyncEnabled: false});
           return client.connect()
             .then(function () {
               var ks = client.metadata.keyspaces;
@@ -318,7 +318,7 @@ describe('metadata', function () {
     describe('#refreshKeyspaces()', function() {
       describe('with no callback specified', function () {
         it('should return keyspaces in a promise', function () {
-          var client = newInstance({ isMetadataSyncEnabled: false });
+          const client = newInstance({ isMetadataSyncEnabled: false });
           return client.connect()
             .then(function () {
               var ks = client.metadata.keyspaces;
@@ -335,10 +335,10 @@ describe('metadata', function () {
     });
     describe('#getTable()', function () {
       var keyspace = 'ks_tbl_meta';
-      var is3 = helper.isCassandraGreaterThan('3.0');
+      const is3 = helper.isCassandraGreaterThan('3.0');
       var valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
       before(function createTables(done) {
-        var client = newInstance();
+        const client = newInstance();
         var queries = [
           "CREATE KEYSPACE ks_tbl_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
           "USE ks_tbl_meta",
@@ -390,7 +390,7 @@ describe('metadata', function () {
         utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
       });
       it('should retrieve the metadata of a single partition key table', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl1', function (err, table) {
@@ -413,7 +413,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a composite partition key table', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl2', function (err, table) {
@@ -433,7 +433,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a partition key and clustering key table', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl3', function (err, table) {
@@ -458,7 +458,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a table with reversed clustering order', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl7', function (err, table) {
@@ -485,7 +485,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a counter table', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl8', function (err, table) {
@@ -510,7 +510,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl6', function (err, table) {
@@ -532,7 +532,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table with clustering key', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl5', function (err, table) {
@@ -553,7 +553,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a table with ColumnToCollectionType', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_collections', function (err, table) {
@@ -573,7 +573,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve a simple secondary index', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl1', function (err, table) {
@@ -594,7 +594,7 @@ describe('metadata', function () {
         });
       });
       vit('2.1', 'should retrieve a secondary index on map keys', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
@@ -615,7 +615,7 @@ describe('metadata', function () {
         });
       });
       vit('2.1', 'should retrieve a secondary index on map values', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
@@ -636,7 +636,7 @@ describe('metadata', function () {
         });
       });
       vit('2.2', 'should retrieve a secondary index on map entries', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
@@ -657,7 +657,7 @@ describe('metadata', function () {
         });
       });
       vit('3.0', 'should retrieve multiple indexes on same map column', function (done) {
-        var client = newInstance({ keyspace: keyspace});
+        const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
@@ -687,7 +687,7 @@ describe('metadata', function () {
         });
       });
       vit('2.1', 'should retrieve a secondary index on frozen list', function (done) {
-        var client = newInstance({keyspace: keyspace});
+        const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
           client.metadata.getTable(keyspace, 'tbl_indexes1', function (err, table) {
@@ -710,7 +710,7 @@ describe('metadata', function () {
         });
       });
       vit('2.2', 'should retrieve the metadata of a table containing new 2.2 types', function (done) {
-        var client = newInstance({ keyspace: keyspace });
+        const client = newInstance({ keyspace: keyspace });
         utils.series([
           client.connect.bind(client),
           function checkTable(next) {
@@ -732,7 +732,7 @@ describe('metadata', function () {
         ], done);
       });
       vit('2.1', 'should retrieve the metadata of a table with udt column', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function checkMetadata(next) {
@@ -753,7 +753,7 @@ describe('metadata', function () {
         ], done);
       });
       vit('2.1', 'should retrieve the metadata of a table with udt partition key', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function checkMetadata(next) {
@@ -775,7 +775,7 @@ describe('metadata', function () {
         ], done);
       });
       it('should retrieve the metadata of a table with custom type columns', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function checkMetadata(next) {
@@ -814,7 +814,7 @@ describe('metadata', function () {
         ], done);
       });
       vit('2.1', 'should retrieve the metadata of a table with quoted udt', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function checkMetadata(next) {
@@ -835,7 +835,7 @@ describe('metadata', function () {
         ], done);
       });
       vit('3.10', 'should retrieve the cdc information of a table metadata', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         utils.mapSeries([
           [ 'tbl_cdc_true', true ],
           [ 'tbl_cdc_false', false ],
@@ -849,7 +849,7 @@ describe('metadata', function () {
         }, done);
       });
       it('should retrieve the updated metadata after a schema change', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         var nonSyncClient = newInstance({ isMetadataSyncEnabled: false });
         var clients = [client, nonSyncClient];
         utils.series([
@@ -885,7 +885,7 @@ describe('metadata', function () {
       });
       describe('with no callback specified', function () {
         it('should return the metadata in a promise', function () {
-          var client = newInstance();
+          const client = newInstance();
           return client.connect()
             .then(function () {
               return client.metadata.getTable(keyspace, 'tbl1');
@@ -902,7 +902,7 @@ describe('metadata', function () {
     vdescribe('3.0', '#getMaterializedView()', function () {
       var keyspace = 'ks_view_meta';
       before(function createTables(done) {
-        var client = newInstance();
+        const client = newInstance();
         var queries = [
           "CREATE KEYSPACE ks_view_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
           "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
@@ -917,7 +917,7 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the view and table metadata', function (done) {
-        var client = newInstance();
+        const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function checkMeta(next) {
@@ -940,7 +940,7 @@ describe('metadata', function () {
         ], done);
       });
       it('should refresh the view metadata via events', function (done) {
-        var client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
+        const client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
         var nonSyncClient = newInstance({ keyspace: 'ks_view_meta', isMetadataSyncEnabled: false });
         var clients = [client, nonSyncClient];
         utils.series([
@@ -993,7 +993,7 @@ describe('metadata', function () {
         ], done);
       });
       it('should refresh the view metadata as result of table change via events', function (done) {
-        var client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
+        const client = newInstance({ keyspace: 'ks_view_meta', refreshSchemaDelay: 50 });
         utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TABLE users (user TEXT PRIMARY KEY, first_name TEXT)'),
@@ -1059,7 +1059,7 @@ describe('metadata', function () {
       });
       describe('with no callback specified', function () {
         it('should return the metadata in a promise', function () {
-          var client = newInstance();
+          const client = newInstance();
           return client.connect()
             .then(function () {
               return client.metadata.getMaterializedView(keyspace, 'dailyhigh');
@@ -1076,7 +1076,7 @@ describe('metadata', function () {
   });
   describe('Client#getState()', function () {
     it('should return a snapshot of the connection pool state', function (done) {
-      var client = newInstance({ pooling: { warmup: true, coreConnectionsPerHost: {
+      const client = newInstance({ pooling: { warmup: true, coreConnectionsPerHost: {
         '0': 3
       }}});
       utils.series([
@@ -1093,7 +1093,7 @@ describe('metadata', function () {
           next();
         },
         function (next) {
-          var state;
+          let state;
           utils.timesLimit(100, 64, function (n, timesNext) {
             if (n === 65) {
               // Take a snapshot while some requests are in-flight

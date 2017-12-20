@@ -1,19 +1,19 @@
 'use strict';
-var assert = require('assert');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types/index');
-var simulacron = require('../simulacron');
-var util = require('util');
+const assert = require('assert');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types/index');
+const simulacron = require('../simulacron');
+const util = require('util');
 
 describe('Metadata', function () {
   this.timeout(20000);
   describe("#getTrace()", function () {
     var setupInfo = simulacron.setup('3', null);
     var sCluster = setupInfo.cluster;
-    var client = setupInfo.client;
+    const client = setupInfo.client;
 
     it('should set consistency level', function (done) {
-      var traceId = types.Uuid.random();
+      const traceId = types.Uuid.random();
       var sessionQuery = util.format('SELECT * FROM system_traces.sessions WHERE session_id=%s', traceId);
       var eventsQuery = util.format('SELECT * FROM system_traces.events WHERE session_id=%s', traceId);
 
@@ -93,7 +93,7 @@ describe('Metadata', function () {
             assert.ifError(err);
             assert.notEqual(logs, null);
             var verifyQuery = function(logsToSearch, query, consistency) {
-              for (var i = 0; i < logsToSearch.length; i++) {
+              for (let i = 0; i < logsToSearch.length; i++) {
                 var log = logsToSearch[i];
                 if (log.type === "QUERY" && log.query === query && log.consistency_level === consistency) {
                   return true;

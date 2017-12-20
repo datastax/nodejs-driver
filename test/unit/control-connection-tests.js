@@ -1,30 +1,30 @@
 "use strict";
-var assert = require('assert');
-var events = require('events');
-var rewire = require('rewire');
-var dns = require('dns');
+const assert = require('assert');
+const events = require('events');
+const rewire = require('rewire');
+const dns = require('dns');
 
-var helper = require('../test-helper.js');
-var ControlConnection = require('../../lib/control-connection');
-var Host = require('../../lib/host').Host;
-var utils = require('../../lib/utils');
-var Metadata = require('../../lib/metadata');
-var types = require('../../lib/types');
-var errors = require('../../lib/errors');
-var policies = require('../../lib/policies');
-var clientOptions = require('../../lib/client-options');
-var ProfileManager = require('../../lib/execution-profile').ProfileManager;
+const helper = require('../test-helper.js');
+const ControlConnection = require('../../lib/control-connection');
+const Host = require('../../lib/host').Host;
+const utils = require('../../lib/utils');
+const Metadata = require('../../lib/metadata');
+const types = require('../../lib/types');
+const errors = require('../../lib/errors');
+const policies = require('../../lib/policies');
+const clientOptions = require('../../lib/client-options');
+const ProfileManager = require('../../lib/execution-profile').ProfileManager;
 
 describe('ControlConnection', function () {
   describe('constructor', function () {
     it('should create a new metadata instance', function () {
-      var cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
+      const cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
       helper.assertInstanceOf(cc.metadata, Metadata);
     });
   });
   describe('#init()', function () {
     this.timeout(20000);
-    var useLocalhost;
+    let useLocalhost;
     before(function (done) {
       dns.resolve('localhost', function (err) {
         if (err) {
@@ -35,7 +35,7 @@ describe('ControlConnection', function () {
       });
     });
     function testResolution(CcMock, expectedHosts, done) {
-      var cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
+      const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
         queryResults: { 'system\\.peers': {
           rows: expectedHosts
             .filter(function (address) { return address !== '1:9042'; })
@@ -54,7 +54,7 @@ describe('ControlConnection', function () {
       if (!useLocalhost) {
         return done();
       }
-      var cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext());
+      const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext());
       cc.init(function (err) {
         cc.shutdown();
         assert.ifError(err);
@@ -68,7 +68,7 @@ describe('ControlConnection', function () {
       if (!useLocalhost) {
         return done();
       }
-      var cc = newInstance({ contactPoints: [ 'localhost:9999' ] }, getContext());
+      const cc = newInstance({ contactPoints: [ 'localhost:9999' ] }, getContext());
       cc.init(function (err) {
         cc.shutdown();
         assert.ifError(err);
@@ -139,8 +139,8 @@ describe('ControlConnection', function () {
       testResolution(ControlConnectionMock, [ '123:9042' ], done);
     });
     it('should continue iterating through the hosts when borrowing a connection fails', function (done) {
-      var hosts = [];
-      var cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0 ] }));
+      const hosts = [];
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0 ] }));
       cc.init(function (err) {
         cc.shutdown();
         assert.ifError(err);
@@ -150,8 +150,8 @@ describe('ControlConnection', function () {
       });
     });
     it('should callback with NoHostAvailableError when borrowing all connections fail', function (done) {
-      var hosts = [];
-      var cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1] }));
+      const hosts = [];
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1] }));
       cc.init(function (err) {
         cc.shutdown();
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -162,8 +162,8 @@ describe('ControlConnection', function () {
       });
     });
     it('should continue iterating through the hosts when metadata retrieval fails', function (done) {
-      var hosts = [];
-      var cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({
+      const hosts = [];
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({
         hosts: hosts, queryResults: { '::1': 'Test error, failed query' }
       }));
       cc.init(function (err) {
@@ -173,10 +173,10 @@ describe('ControlConnection', function () {
       });
     });
     it('should listen to socketClose and reconnect', function (done) {
-      var state = {};
-      var hostsTried = [];
+      const state = {};
+      const hostsTried = [];
       var lbp = new policies.loadBalancing.RoundRobinPolicy();
-      var cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp } }, getContext({
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp } }, getContext({
         state: state, hosts: hostsTried
       }));
       cc.init(function (err) {
@@ -196,8 +196,8 @@ describe('ControlConnection', function () {
   });
   describe('#getAddressForPeerHost()', function() {
     it('should handle null, 0.0.0.0 and valid addresses', function (done) {
-      var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = newInstance(options);
+      const options = clientOptions.extend({}, helper.baseOptions);
+      const cc = newInstance(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var peer = getInet([100, 100, 100, 100]);
@@ -228,16 +228,16 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should call the AddressTranslator', function (done) {
-      var options = clientOptions.extend({}, helper.baseOptions);
-      var address = null;
-      var port = null;
+      const options = clientOptions.extend({}, helper.baseOptions);
+      let address = null;
+      let port = null;
       options.policies.addressResolution = policies.defaultAddressTranslator();
       options.policies.addressResolution.translate = function (addr, p, cb) {
         address = addr;
         port = p;
         cb(addr + ':' + p);
       };
-      var cc = newInstance(options);
+      const cc = newInstance(options);
       cc.host = new Host('2.2.2.2', 1, options);
       cc.log = helper.noop;
       var row = {'rpc_address': getInet([5, 2, 3, 4]), peer: null};
@@ -251,8 +251,8 @@ describe('ControlConnection', function () {
   });
   describe('#setPeersInfo()', function () {
     it('should use not add invalid addresses', function () {
-      var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = newInstance(options);
+      const options = clientOptions.extend({}, helper.baseOptions);
+      const cc = newInstance(options);
       cc.host = new Host('18.18.18.18', 1, options);
       var rows = [
         //valid rpc address
@@ -273,8 +273,8 @@ describe('ControlConnection', function () {
       });
     });
     it('should set the host datacenter and cassandra version', function () {
-      var options = clientOptions.extend({}, helper.baseOptions);
-      var cc = newInstance(options);
+      const options = clientOptions.extend({}, helper.baseOptions);
+      const cc = newInstance(options);
       var rows = [
         //valid rpc address
         {'rpc_address': getInet([5, 4, 3, 2]), peer: getInet([1, 1, 1, 1]), data_center: 'dc100', release_version: '2.1.4'},
@@ -295,8 +295,8 @@ describe('ControlConnection', function () {
   });
   describe('#refresh()', function () {
     it('should schedule reconnection when it cant borrow a connection', function (done) {
-      var state = {};
-      var hostsTried = [];
+      const state = {};
+      const hostsTried = [];
       var lbp = new policies.loadBalancing.RoundRobinPolicy();
       lbp.queryPlanCount = 0;
       lbp.newQueryPlan = function (ks, o, cb) {
@@ -316,7 +316,7 @@ describe('ControlConnection', function () {
           }
         };
       };
-      var cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp, reconnection: rp } },
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp, reconnection: rp } },
         getContext({ state: state, hosts: hostsTried }));
       cc.init(function (err) {
         assert.ifError(err);
@@ -369,8 +369,8 @@ function getFakeConnection(endpoint, queryResults) {
   var defaultResult = { rows: [ {} ] };
   c.sendStream = function (request, options, cb) {
     c.requests.push(request);
-    var result;
-    for (var i = 0; i < queryResultKeys.length; i++) {
+    let result;
+    for (let i = 0; i < queryResultKeys.length; i++) {
       var key = queryResultKeys[i];
       var re = new RegExp(key);
       if (re.test(request.query) || re.test(endpoint)) {

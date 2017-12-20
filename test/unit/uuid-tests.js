@@ -1,10 +1,10 @@
 'use strict';
 
-var assert = require('assert');
-var helper = require('../test-helper');
-var utils = require('../../lib/utils');
-var Uuid = require('../../lib/types').Uuid;
-var TimeUuid = require('../../lib/types').TimeUuid;
+const assert = require('assert');
+const helper = require('../test-helper');
+const utils = require('../../lib/utils');
+const Uuid = require('../../lib/types').Uuid;
+const TimeUuid = require('../../lib/types').TimeUuid;
 
 describe('Uuid', function () {
   describe('constructor', function () {
@@ -25,7 +25,7 @@ describe('Uuid', function () {
   });
   describe('#toString()', function () {
     it('should convert to string representation', function () {
-      var val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
+      let val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'aabbccdd-eeff-0011-2233-445566778899');
       val = new Uuid(utils.allocBufferFromString('a1b1ccddeeff00112233445566778899', 'hex'));
       assert.strictEqual(val.toString(), 'a1b1ccdd-eeff-0011-2233-445566778899');
@@ -35,7 +35,7 @@ describe('Uuid', function () {
   });
   describe('#equals', function () {
     it('should return true only when the values are equal', function () {
-      var val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
+      const val = new Uuid(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
       var val2 = new Uuid(utils.allocBufferFromString('ffffffffffff00000000000000000000', 'hex'));
       var val3 = new Uuid(utils.allocBufferFromString('ffffffffffff00000000000000000001', 'hex'));
       assert.strictEqual(val.equals(val), true);
@@ -98,9 +98,9 @@ describe('Uuid', function () {
       assert.ok(['8', '9', 'a', 'b'].indexOf(val.toString().charAt(19)) >= 0);
     });
     it('should generate v4 uuids that do not collide', function () {
-      var values = {};
+      const values = {};
       var length = 100000;
-      for (var i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         values[Uuid.random().toString()] = true;
       }
       assert.strictEqual(Object.keys(values).length, length);
@@ -132,7 +132,7 @@ describe('Uuid', function () {
       });
     });
     it('should generate v4 uuids that do not collide', function (done) {
-      var values = {};
+      const values = {};
       var length = 100000;
       
       utils.times(length, function eachTime(n, next) {
@@ -199,19 +199,19 @@ describe('TimeUuid', function () {
   describe('fromDate()', function () {
     this.timeout(5000);
     it('should generate v1 uuids that do not collide', function () {
-      var values = {};
+      const values = {};
       var length = 50000;
       var date = new Date();
-      for (var i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         values[TimeUuid.fromDate(date).toString()] = true;
       }
       assert.strictEqual(Object.keys(values).length, length);
     });
     it('should collide exactly at 10001 if date but not the ticks are specified', function () {
-      var values = {};
+      const values = {};
       var length = 10000;
       var date = new Date();
-      for (var i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()] = true;
       }
       assert.strictEqual(Object.keys(values).length, length);

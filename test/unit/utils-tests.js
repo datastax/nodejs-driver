@@ -1,7 +1,7 @@
 "use strict";
-var assert = require('assert');
-var utils = require('../../lib/utils');
-var helper = require('../test-helper');
+const assert = require('assert');
+const utils = require('../../lib/utils');
+const helper = require('../test-helper');
 
 describe('utils', function () {
   describe('timesLimit()', function () {
@@ -19,7 +19,7 @@ describe('utils', function () {
       var b = utils.allocBuffer(256);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.length, 256);
-      for (var i = 0; i < b.length; i++) {
+      for (let i = 0; i < b.length; i++) {
         assert.strictEqual(b[i], 0);
       }
     });
@@ -79,7 +79,7 @@ describe('utils', function () {
       var b = utils.allocBufferFromArray(arr);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.length, arr.length);
-      for (var i = 0; i < b.length; i++) {
+      for (let i = 0; i < b.length; i++) {
         assert.strictEqual(b[i], arr[i]);
       }
     });

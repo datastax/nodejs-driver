@@ -1,14 +1,14 @@
 'use strict';
 
-var assert = require('assert');
-var requests = require('../../lib/requests');
-var Encoder = require('../../lib/encoder');
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
+const assert = require('assert');
+const requests = require('../../lib/requests');
+const Encoder = require('../../lib/encoder');
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
 var QueryRequest = requests.QueryRequest;
 var ExecuteRequest = requests.ExecuteRequest;
 var BatchRequest = requests.BatchRequest;
-var encoder = new Encoder(types.protocolVersion.maxSupported, {});
+const encoder = new Encoder(types.protocolVersion.maxSupported, {});
 
 describe('QueryRequest', function () {
   describe('#clone()', function () {

@@ -1,15 +1,15 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
-var path = require('path');
-var policies = require('../lib/policies');
-var types = require('../lib/types');
-var utils = require('../lib/utils.js');
-var spawn = require('child_process').spawn;
-var Client = require('../lib/client');
-var defaultOptions = require('../lib/client-options').defaultOptions;
-var Host = require('../lib/host').Host;
-var OperationState = require('../lib/operation-state');
+const assert = require('assert');
+const util = require('util');
+const path = require('path');
+const policies = require('../lib/policies');
+const types = require('../lib/types');
+const utils = require('../lib/utils.js');
+const spawn = require('child_process').spawn;
+const Client = require('../lib/client');
+const defaultOptions = require('../lib/client-options').defaultOptions;
+const Host = require('../lib/host').Host;
+const OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -29,8 +29,8 @@ var helper = {
     options = options || utils.emptyObject;
     before(helper.ccmHelper.start(nodeLength || 1, options.ccmOptions));
     var initClient = options.initClient !== false;
-    var client;
-    var keyspace;
+    let client;
+    let keyspace;
     if (initClient) {
       client = new Client(utils.extend({}, options.clientOptions, helper.baseOptions));
       before(client.connect.bind(client));
@@ -147,7 +147,7 @@ var helper = {
      * @param {Function} callback
      */
     bootstrapNode: function (nodeIndex, callback) {
-      var ipPrefix = helper.ipPrefix;
+      const ipPrefix = helper.ipPrefix;
       new Ccm().exec([
         'add',
         'node' + nodeIndex,
@@ -319,7 +319,6 @@ var helper = {
     });
   },
   getCassandraVersion: function() {
-    //noinspection JSUnresolvedVariable
     var version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
       version = '3.0.5';
@@ -334,7 +333,7 @@ var helper = {
   isCassandraGreaterThan: function (version) {
     var instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
     var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
-    for (var i = 0; i < compareVersion.length; i++) {
+    for (let i = 0; i < compareVersion.length; i++) {
       var compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
@@ -354,7 +353,6 @@ var helper = {
     }
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
-        //noinspection JSUnresolvedVariable
         // eslint-disable-next-line no-console, no-undef
         console.log.apply(console, arguments);
       }
@@ -364,8 +362,8 @@ var helper = {
    * @returns {Array}
    */
   fillArray: function (length, val) {
-    var result = new Array(length);
-    for (var i = 0; i < length; i++) {
+    const result = new Array(length);
+    for (let i = 0; i < length; i++) {
       result[i] = val;
     }
     return result;
@@ -374,7 +372,7 @@ var helper = {
    * @returns {Array}
    */
   iteratorToArray: function (iterator) {
-    var result = [];
+    const result = [];
     var item = iterator.next();
     while (!item.done) {
       result.push(item.value);
@@ -401,8 +399,8 @@ var helper = {
     if (typeof predicate !== 'function') {
       throw new TypeError('predicate must be a function');
     }
-    var value;
-    for (var i = 0; i < arr.length; i++) {
+    let value;
+    for (let i = 0; i < arr.length; i++) {
       value = arr[i];
       if (predicate.call(null, value, i, arr)) {
         return value;
@@ -426,7 +424,7 @@ var helper = {
    * @param {Object} obj
    */
   values : function (obj) {
-    var vals = [];
+    const vals = [];
     for (var key in obj) {
       if (!obj.hasOwnProperty(key)) {
         continue;
@@ -495,7 +493,7 @@ var helper = {
    */
   findHost: function(client, number) {
     var host = undefined;
-    var self = this;
+    const self = this;
     client.hosts.forEach(function(h) {
       if(self.lastOctetOf(h) === number.toString()) {
         host = h;
@@ -511,7 +509,7 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostUp: function(client, number) {
-    var self = this;
+    const self = this;
     var hostIsUp = function() {
       var host = self.findHost(client, number);
       return host === undefined ? false : host.isUp();
@@ -527,7 +525,7 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostDown: function(client, number) {
-    var self = this;
+    const self = this;
     var hostIsDown = function() {
       var host = self.findHost(client, number);
       return host === undefined ? false : !host.isUp();
@@ -543,7 +541,7 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostGone: function(client, number) {
-    var self = this;
+    const self = this;
     var hostIsGone = function() {
       var host = self.findHost(client, number);
       return host === undefined;
@@ -592,7 +590,7 @@ var helper = {
    * @param {Function} done
    */
   setIntervalUntil: function (condition, delay, maxAttempts, done) {
-    var attempts = 0;
+    let attempts = 0;
     utils.whilst(
       function whilstCondition() {
         return !condition();
@@ -614,7 +612,7 @@ var helper = {
    * @param {Number} maxAttempts
    */
   setIntervalUntilTask: function (condition, delay, maxAttempts) {
-    var self = this;
+    const self = this;
     return (function setIntervalUntilHandler(done) {
       self.setIntervalUntil(condition, delay, maxAttempts, done);
     });
@@ -740,9 +738,9 @@ function Ccm() {
  * @param {Function} callback
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
-  var self = this;
+  const self = this;
   options = options || {};
-  var version = helper.getCassandraVersion();
+  const version = helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   utils.series([
     function (next) {
@@ -772,7 +770,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
         return next();
       }
       helper.trace('With conf', options.yaml);
-      var i = 0;
+      let i = 0;
       utils.whilst(
         function condition() {
           return i < options.yaml.length;
@@ -801,7 +799,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       if (util.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
           // Windows requires jvm arguments to be quoted, while *nix requires unquoted.
-          var jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
+          const jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
           start.push('--jvm_arg', jvmArg);
         }, this);
         helper.trace('With jvm args', options.jvmArgs);
@@ -831,7 +829,7 @@ Ccm.prototype.spawn = function (processName, params, callback) {
   var p = spawn(processName, params);
   var stdoutArray= [];
   var stderrArray= [];
-  var closing = 0;
+  let closing = 0;
   p.stdout.setEncoding('utf8');
   p.stderr.setEncoding('utf8');
   p.stdout.on('data', function (data) {
@@ -848,7 +846,7 @@ Ccm.prototype.spawn = function (processName, params, callback) {
       return;
     }
     var info = {code: code, stdout: stdoutArray, stderr: stderrArray};
-    var err = null;
+    let err = null;
     if (code !== 0) {
       err = new Error(
         'Error executing ' + originalProcessName + ':\n' +
@@ -870,9 +868,9 @@ Ccm.prototype.remove = function (callback) {
  * @param callback
  */
 Ccm.prototype.waitForUp = function (callback) {
-  var started = false;
-  var retryCount = 0;
-  var self = this;
+  let started = false;
+  let retryCount = 0;
+  const self = this;
   utils.whilst(function () {
     return !started && retryCount < 10;
   }, function iterator (next) {
@@ -880,7 +878,7 @@ Ccm.prototype.waitForUp = function (callback) {
       if (err) {
         return next(err);
       }
-      var regex = /Starting listening for CQL clients/mi;
+      const regex = /Starting listening for CQL clients/mi;
       started = regex.test(info.stdout.join(''));
       retryCount++;
       if (!started) {
@@ -911,7 +909,7 @@ Ccm.prototype.getPath = function (subPath) {
  */
 function MapPolyFill(arr) {
   this.arr = arr || [];
-  var self = this;
+  const self = this;
   Object.defineProperty(this, 'size', {
     get: function() { return self.arr.length; },
     configurable: false
@@ -1009,7 +1007,6 @@ WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callb
       next: function () {
         var item = iterator.next();
         while (!item.done) {
-          //noinspection JSCheckFunctionSignatures
           if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
             break;
           }

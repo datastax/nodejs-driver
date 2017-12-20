@@ -1,14 +1,14 @@
 'use strict';
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../test-helper.js');
-var Client = require('../../lib/client.js');
-var clientOptions = require('../../lib/client-options.js');
-var Host = require('../../lib/host.js').Host;
-var HostMap = require('../../lib/host.js').HostMap;
-var types = require('../../lib/types');
-var utils = require('../../lib/utils.js');
-var loadBalancing = require('../../lib/policies/load-balancing.js');
+const helper = require('../test-helper.js');
+const Client = require('../../lib/client.js');
+const clientOptions = require('../../lib/client-options.js');
+const Host = require('../../lib/host.js').Host;
+const HostMap = require('../../lib/host.js').HostMap;
+const types = require('../../lib/types');
+const utils = require('../../lib/utils.js');
+const loadBalancing = require('../../lib/policies/load-balancing.js');
 var LoadBalancingPolicy = loadBalancing.LoadBalancingPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
@@ -17,7 +17,7 @@ var WhiteListPolicy = loadBalancing.WhiteListPolicy;
 
 describe('RoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
-    var policy = new RoundRobinPolicy();
+    const policy = new RoundRobinPolicy();
     policy.hosts = null;
     policy.newQueryPlan(null, null, function(err) {
       assert(err instanceof Error);
@@ -25,8 +25,8 @@ describe('RoundRobinPolicy', function () {
     });
   });
   it('should yield nodes in a round robin manner even in parallel', function (done) {
-    var policy = new RoundRobinPolicy();
-    var hosts = [];
+    const policy = new RoundRobinPolicy();
+    const hosts = [];
     var originalHosts = createHostMap(['A', 'B', 'C', 'E']);
     var times = 100;
     policy.init(null, originalHosts, function () {
@@ -43,8 +43,8 @@ describe('RoundRobinPolicy', function () {
         assert.strictEqual(hosts.length, times);
         //Count the number of times of each element
         originalHosts.forEach(function (item) {
-          var length = 0;
-          var lastHost = null;
+          let length = 0;
+          let lastHost = null;
           hosts.forEach(function (host) {
             length += (host === item ? 1 : 0);
             assert.notEqual(lastHost, host);
@@ -57,12 +57,12 @@ describe('RoundRobinPolicy', function () {
     });
   });
   it('should yield host in a round robin manner when consuming', function (done) {
-    var policy = new RoundRobinPolicy();
+    const policy = new RoundRobinPolicy();
     var hostList = ['A', 'B', 'C', 'E', 'F'];
-    var permutations = [];
+    const permutations = [];
     // Capture the various permutations of plans.
-    for (var i = 0; i < hostList.length; i++) {
-      var permutation = [];
+    for (let i = 0; i < hostList.length; i++) {
+      const permutation = [];
       for(var j = i; j < hostList.length + i; j++) {
         permutation.push(hostList[j % hostList.length]);
       }
@@ -74,14 +74,14 @@ describe('RoundRobinPolicy', function () {
     testRoundRobinPlan(times, policy, null, originalHosts, originalHosts, permutations, done);
   });
   it('should yield no more than N host', function (done) {
-    var policy = new RoundRobinPolicy();
+    const policy = new RoundRobinPolicy();
     var originalHosts = createHostMap(['A', 'B', 'C']);
     var times = 10;
     policy.init(null, originalHosts, function () {
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
-          var item;
-          for (var i = 0; i < originalHosts.length; i++) {
+          let item;
+          for (let i = 0; i < originalHosts.length; i++) {
             item = iterator.next();
             assert.strictEqual(item.done, false);
             assert.notEqual(item.value, null);
@@ -101,7 +101,7 @@ describe('RoundRobinPolicy', function () {
 });
 describe('DCAwareRoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
-    var policy = new DCAwareRoundRobinPolicy('dc1');
+    const policy = new DCAwareRoundRobinPolicy('dc1');
     policy.hosts = null;
     policy.newQueryPlan(null, null, function(err) {
       assert(err instanceof Error);
@@ -111,23 +111,23 @@ describe('DCAwareRoundRobinPolicy', function () {
   it('should yield local nodes in a round robin manner in parallel', function (done) {
     //local datacenter: dc1
     //0 host per remote datacenter
-    var policy = new DCAwareRoundRobinPolicy('dc1');
-    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
-    var hosts = [];
+    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    const hosts = [];
     var originalHosts = new HostMap();
-    for (var i = 0; i < 50; i++) {
+    for (let i = 0; i < 50; i++) {
       var h = new Host(i, 2, options);
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
       originalHosts.set(i.toString(), h);
     }
     var localLength = originalHosts.length / 2;
-    var times = 1;
+    let times = 1;
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
-          for (var i = 0; i < originalHosts.length; i++) {
+          for (let i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
             if (i >= localLength) {
               //once the local have ended, it should be "done"
@@ -145,8 +145,8 @@ describe('DCAwareRoundRobinPolicy', function () {
         assert.strictEqual(hosts.length, times * localLength);
         //Count the number of times of each element
         originalHosts.forEach(function (item) {
-          var length = 0;
-          var lastHost = null;
+          let length = 0;
+          let lastHost = null;
           hosts.forEach(function (host) {
             length += (host === item ? 1 : 0);
             assert.notEqual(lastHost, host);
@@ -166,10 +166,10 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
   });
   it('should yield local hosts in a round robin manner when consuming.', function (done) {
-    var policy = new DCAwareRoundRobinPolicy('dc1');
-    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var originalHosts = new HostMap();
-    var i;
+    let i;
     for (i = 0; i < 50; i++) {
       var h = new Host(i, 2, options);
       h.datacenter = (i % 2 === 0) ? 'dc1' : 'dc2';
@@ -180,10 +180,10 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
     var times = 50;
 
-    var localPermutations = [];
+    const localPermutations = [];
     // Capture the various permutations of plans.
     for (i = 0; i < localHosts.length; i++) {
-      var permutation = [];
+      const permutation = [];
       for(var j = i; j < localHosts.length + i; j++) {
         permutation.push(localHosts[j % localHosts.length]);
       }
@@ -195,11 +195,11 @@ describe('DCAwareRoundRobinPolicy', function () {
   it('should yield the correct amount of remote nodes at the end', function (done) {
     //local datacenter: null (first host's datacenter will be used)
     //2 host per remote datacenter
-    var policy = new DCAwareRoundRobinPolicy(null, 2);
-    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
-    var hosts = [];
+    const policy = new DCAwareRoundRobinPolicy(null, 2);
+    const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    const hosts = [];
     var originalHosts = new HostMap();
-    for (var i = 0; i < 60; i++) {
+    for (let i = 0; i < 60; i++) {
       var h = new Host(i, 2, options);
       switch (i % 3) {
         case 0:
@@ -217,14 +217,14 @@ describe('DCAwareRoundRobinPolicy', function () {
     var localLength = originalHosts.length / 3;
     //2 nodes per each remote dc
     var expectedLength = localLength + 2 * 2;
-    var times = 1;
+    let times = 1;
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
       assert.strictEqual(policy.localDc, 'dc1');
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
-          for (var i = 0; i < originalHosts.length; i++) {
+          for (let i = 0; i < originalHosts.length; i++) {
             var item = iterator.next();
             if (i >= expectedLength) {
               assert.strictEqual(item.done, true);
@@ -246,8 +246,8 @@ describe('DCAwareRoundRobinPolicy', function () {
         //Count the number of times of each element
         originalHosts.forEach(function (item) {
           if (item.datacenter === 'dc1') {
-            var length = 0;
-            var lastHost = null;
+            let length = 0;
+            let lastHost = null;
             hosts.forEach(function (host) {
               length += (host === item ? 1 : 0);
               assert.notEqual(lastHost, host);
@@ -262,10 +262,10 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
   });
   it('should yield local + remote hosts in a round robin manner when consuming', function (done) {
-    var policy = new DCAwareRoundRobinPolicy(null, 3);
-    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    const policy = new DCAwareRoundRobinPolicy(null, 3);
+    const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var originalHosts = new HostMap();
-    var i;
+    let i;
     for (i = 0; i < 60; i++) {
       var h = new Host(i, 2, options);
       switch (i % 3) {
@@ -296,10 +296,10 @@ describe('DCAwareRoundRobinPolicy', function () {
 
     var times = 60;
 
-    var localPermutations = [];
+    const localPermutations = [];
     // Capture the various permutations of plans.
     for (i = 0; i < localHosts.length; i++) {
-      var permutation = [];
+      const permutation = [];
       for(var j = i; j < localHosts.length + i; j++) {
         permutation.push(localHosts[j % localHosts.length]);
       }
@@ -308,11 +308,11 @@ describe('DCAwareRoundRobinPolicy', function () {
 
     policy.init(new Client(options), originalHosts, function (err) {
       assert.ifError(err);
-      var plans = [];
+      const plans = [];
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function(err, iterator) {
           assert.ifError(err);
-          var planHosts = [];
+          const planHosts = [];
           // Iterate through plan local hosts + (remoteHosts * remoteDcs) + 1.
           utils.timesSeries(localHosts.length + (3 * 2) + 1, function (planN, iteratorNext) {
             var item = iterator.next();
@@ -331,7 +331,7 @@ describe('DCAwareRoundRobinPolicy', function () {
             // Ensure each host appears only once and at the beginning of the
             // plan.
             localHosts.forEach(function (host) {
-              var length = 0;
+              let length = 0;
               planHosts.slice(0, localHosts.length).forEach(function (planHost) {
                 length += (host === planHost ? 1 : 0);
               });
@@ -340,12 +340,12 @@ describe('DCAwareRoundRobinPolicy', function () {
                 + planHosts + ".  Expected only once.");
             });
 
-            var foundDc2Hosts = [];
-            var foundDc3Hosts = [];
+            const foundDc2Hosts = [];
+            const foundDc3Hosts = [];
             // Ensure that planHosts returned 3 remote hosts from each dc and
             // that they were unique.
             planHosts.slice(localHosts.length, localHosts.length + (3 * 2)).forEach(function (host) {
-              var length = 0;
+              let length = 0;
               dc2Hosts.forEach(function (dc2Host) {
                 length += (host === dc2Host ? 1: 0);
               });
@@ -389,8 +389,8 @@ describe('DCAwareRoundRobinPolicy', function () {
         // Ensure each permutation happened the expected number of times
         // (times / permutations) and never consecutively.
         localPermutations.forEach(function(permutation) {
-          var length = 0;
-          var lastPlan = null;
+          let length = 0;
+          let lastPlan = null;
           plans.forEach(function(item) {
             var localOnlyPlan = item.plan.slice(0, localHosts.length);
             var localOnlyPlanDesc = JSON.stringify(localOnlyPlan);
@@ -404,7 +404,7 @@ describe('DCAwareRoundRobinPolicy', function () {
         });
 
         // Ensure remote part of query plans is non-repeating among plans.
-        var lastPlan = null;
+        let lastPlan = null;
         plans.forEach(function (item){
           var remoteOnlyPlan = item.plan.slice(localHosts.length);
           var remoteOnlyPlanDesc = JSON.stringify(remoteOnlyPlan);
@@ -417,8 +417,8 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
   });
   it('should handle cache being cleared and next iterations', function (done) {
-    var policy = new DCAwareRoundRobinPolicy('dc1');
-    var options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
+    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     var hosts = new HostMap();
     hosts.set('1', createHost('1', options));
     hosts.set('2', createHost('2', options));
@@ -494,16 +494,16 @@ describe('DCAwareRoundRobinPolicy', function () {
 });
 describe('TokenAwarePolicy', function () {
   it('should use the childPolicy when no routingKey provided', function (done) {
-    var options = clientOptions.extend({}, helper.baseOptions);
+    const options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
-    var policy = new TokenAwarePolicy(childPolicy);
+    const policy = new TokenAwarePolicy(childPolicy);
     utils.series([
       function (next) {
         policy.init(new Client(options), new HostMap(), next);
       },
       function (next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 3);
           assert.strictEqual(childPolicy.initCalled, 1);
@@ -514,16 +514,16 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
   it('should retrieve local replicas plus childPolicy hosts plus remote replicas', function (done) {
-    var options = clientOptions.extend({}, helper.baseOptions);
+    const options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
-    var policy = new TokenAwarePolicy(childPolicy);
-    var client = new Client(options);
+    const policy = new TokenAwarePolicy(childPolicy);
+    const client = new Client(options);
     client.getReplicas = toFunc([ 'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local' ].map(toHost));
     utils.series([
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         policy.newQueryPlan(null, {routingKey: utils.allocBufferUnsafe(16)}, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 4);
           assert.strictEqual(childPolicy.initCalled, 1);
@@ -538,19 +538,19 @@ describe('TokenAwarePolicy', function () {
     ], done);
   });
   it('should retrieve local and remote replicas in a pseudo random order', function (done) {
-    var options = clientOptions.extend({}, helper.baseOptions);
+    const options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
-    var policy = new TokenAwarePolicy(childPolicy);
-    var client = new Client(options);
+    const policy = new TokenAwarePolicy(childPolicy);
+    const client = new Client(options);
     client.getReplicas = toFunc(
       [ 'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local', 'repl5_local'].map(toHost));
-    var localReplicas = {};
+    const localReplicas = {};
     utils.series([
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         utils.timesLimit(100, 32, function (n, timesNext) {
           policy.newQueryPlan(null, { routingKey: utils.allocBufferUnsafe(16) }, function (err, iterator) {
-            var hosts = helper.iteratorToArray(iterator);
+            const hosts = helper.iteratorToArray(iterator);
             assert.strictEqual(hosts.length, 5);
             assert.deepEqual(hosts.map(toAddress).slice(0, 3).sort(), ['repl2_local', 'repl4_local', 'repl5_local']);
             localReplicas[hosts[0].address] = true;
@@ -568,23 +568,23 @@ describe('TokenAwarePolicy', function () {
   });
   it('should fairly distribute between replicas', function (done) {
     this.timeout(20000);
-    var options = clientOptions.extend({}, helper.baseOptions);
+    const options = clientOptions.extend({}, helper.baseOptions);
     var childPolicy = createDummyPolicy(options);
-    var policy = new TokenAwarePolicy(childPolicy);
-    var client = new Client(options);
+    const policy = new TokenAwarePolicy(childPolicy);
+    const client = new Client(options);
     client.getReplicas = toFunc([
       'repl1_remote', 'repl2_local', 'repl3_remote', 'repl4_local', 'repl5_remote', 'repl6_local', 'repl7_local'
     ].map(toHost));
     // An array containing the amount of times it host appeared at a determined position
     var replicaPositions = [ {}, {}, {}, {} ];
-    var routingKey = types.Uuid.random().buffer;
+    const routingKey = types.Uuid.random().buffer;
     var iterations = 100000;
     utils.series([
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         utils.timesLimit(iterations, 128, function (n, timesNext) {
           policy.newQueryPlan(null, { routingKey: routingKey }, function (err, iterator) {
-            var hosts = helper.iteratorToArray(iterator);
+            const hosts = helper.iteratorToArray(iterator);
             assert.strictEqual(hosts.length, 6);
             hosts.map(toAddress).slice(0, 4).forEach(function (address, i) {
               replicaPositions[i][address] = (replicaPositions[i][address] || 0) + 1;
@@ -595,8 +595,8 @@ describe('TokenAwarePolicy', function () {
       },
       function checkReplicas(next) {
         var totalHosts = replicaPositions.length;
-        var expected = iterations / totalHosts;
-        for (var i = 0; i < totalHosts; i++) {
+        const expected = iterations / totalHosts;
+        for (let i = 0; i < totalHosts; i++) {
           var hostsAtPosition = replicaPositions[i];
           // eslint-disable-next-line no-loop-func
           Object.keys(hostsAtPosition).forEach(function (address) {
@@ -613,14 +613,14 @@ describe('TokenAwarePolicy', function () {
 });
 describe('WhiteListPolicy', function () {
   it('should use the childPolicy to determine the distance', function () {
-    var getDistanceCalled = 0;
+    let getDistanceCalled = 0;
     var childPolicy = {
       getDistance: function () {
         getDistanceCalled++;
         return types.distance.local;
       }
     };
-    var policy = new WhiteListPolicy(childPolicy, ['h1:9042', 'h2:9042']);
+    const policy = new WhiteListPolicy(childPolicy, ['h1:9042', 'h2:9042']);
     assert.strictEqual(policy.getDistance({ address: 'h1:9042'}), types.distance.local);
     assert.strictEqual(getDistanceCalled, 1);
     assert.strictEqual(policy.getDistance({ address: 'h2:9042'}), types.distance.local);
@@ -635,10 +635,10 @@ describe('WhiteListPolicy', function () {
         cb(null, utils.arrayIterator([{ address: '1.1.1.1:9042'}, { address: '1.1.1.2:9042'}, { address: '1.1.1.3:9042'}]));
       }
     };
-    var policy = new WhiteListPolicy(childPolicy, ['1.1.1.3:9042', '1.1.1.1:9042']);
+    const policy = new WhiteListPolicy(childPolicy, ['1.1.1.3:9042', '1.1.1.1:9042']);
     policy.newQueryPlan('ks1', {}, function (err, iterator) {
       assert.ifError(err);
-      var hosts = helper.iteratorToArray(iterator);
+      const hosts = helper.iteratorToArray(iterator);
       assert.strictEqual(hosts.length, 2);
       assert.strictEqual(helper.lastOctetOf(hosts[0]), '1');
       assert.strictEqual(helper.lastOctetOf(hosts[1]), '3');
@@ -648,11 +648,11 @@ describe('WhiteListPolicy', function () {
 });
 
 function testRoundRobinPlan(times, policy, options, allHosts, expectedHosts, permutations, done) {
-  var client = options ? new Client(options) : null;
+  const client = options ? new Client(options) : null;
 
   policy.init(client, allHosts, function (err) {
     assert.ifError(err);
-    var i = 0;
+    let i = 0;
     utils.map(new Array(times), function (n, next) {
       n = i++;
       policy.newQueryPlan(null, null, function(err, iterator) {
@@ -675,7 +675,7 @@ function testRoundRobinPlan(times, policy, options, allHosts, expectedHosts, per
 
           // Ensure each host appears only once.
           expectedHosts.forEach(function(host) {
-            var length = 0;
+            let length = 0;
             planHosts.forEach(function(planHost) {
               length += (host === planHost ? 1 : 0);
             });
@@ -698,8 +698,8 @@ function testRoundRobinPlan(times, policy, options, allHosts, expectedHosts, per
       // Ensure each permutation happened the expected number of times
       // (times / permutations) and never consecutively.
       permutations.forEach(function(permutation) {
-        var length = 0;
-        var lastPlan = null;
+        let length = 0;
+        let lastPlan = null;
         plans.forEach(function(item) {
           var planDesc = JSON.stringify(item.plan);
           var permutationDesc = JSON.stringify(permutation);
@@ -748,7 +748,7 @@ function createDummyPolicy(options) {
  */
 function createHostMap(hosts) {
   var map = new HostMap();
-  for (var i = 0; i < hosts.length; i++) {
+  for (let i = 0; i < hosts.length; i++) {
     map.set(hosts[i], hosts[i]);
   }
   return map;
@@ -779,7 +779,7 @@ function toAddress(h) {
  * @returns {Host}
  */
 function toHost(address) {
-  var options = clientOptions.extend({}, helper.baseOptions);
+  const options = clientOptions.extend({}, helper.baseOptions);
   return new Host(address, 4, options);
 }
 

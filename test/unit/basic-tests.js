@@ -1,24 +1,24 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var Client = require('../../lib/client.js');
-var clientOptions = require('../../lib/client-options.js');
-var types = require('../../lib/types');
-var dataTypes = types.dataTypes;
-var loadBalancing = require('../../lib/policies/load-balancing.js');
-var retry = require('../../lib/policies/retry.js');
-var speculativeExecution = require('../../lib/policies/speculative-execution');
-var timestampGeneration = require('../../lib/policies/timestamp-generation');
-var Encoder = require('../../lib/encoder');
-var utils = require('../../lib/utils.js');
-var writers = require('../../lib/writers');
-var OperationState = require('../../lib/operation-state');
-var helper = require('../test-helper.js');
+const Client = require('../../lib/client.js');
+const clientOptions = require('../../lib/client-options.js');
+const types = require('../../lib/types');
+const dataTypes = types.dataTypes;
+const loadBalancing = require('../../lib/policies/load-balancing.js');
+const retry = require('../../lib/policies/retry.js');
+const speculativeExecution = require('../../lib/policies/speculative-execution');
+const timestampGeneration = require('../../lib/policies/timestamp-generation');
+const Encoder = require('../../lib/encoder');
+const utils = require('../../lib/utils.js');
+const writers = require('../../lib/writers');
+const OperationState = require('../../lib/operation-state');
+const helper = require('../test-helper.js');
 
 describe('types', function () {
   describe('Long', function () {
-    var Long = types.Long;
+    const Long = types.Long;
     it('should convert from and to Buffer', function () {
       /* eslint-disable no-multi-spaces */
       [
@@ -35,8 +35,8 @@ describe('types', function () {
         ['789456'            ,  '00000000000c0bd0'],
         ['888888888888888888',  '0c55f7bc23038e38']
       ].forEach(function (item) {
-        var buffer = utils.allocBufferFromString(item[1], 'hex');
-        var value = Long.fromBuffer(buffer);
+        const buffer = utils.allocBufferFromString(item[1], 'hex');
+        const value = Long.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[0]);
         assert.strictEqual(Long.toBuffer(value).toString('hex'), buffer.toString('hex'),
           'Hexadecimal values should match for ' + item[1]);
@@ -61,7 +61,7 @@ describe('types', function () {
     });
   });
   describe('Integer', function () {
-    var Integer = types.Integer;
+    const Integer = types.Integer;
     /* eslint-disable no-multi-spaces */
     var values = [
       //hex value                      |      string varint
@@ -92,20 +92,20 @@ describe('types', function () {
     /* eslint-enable no-multi-spaces */
     it('should create from buffer', function () {
       values.forEach(function (item) {
-        var buffer = utils.allocBufferFromString(item[0], 'hex');
+        const buffer = utils.allocBufferFromString(item[0], 'hex');
         var value = Integer.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[1]);
       });
     });
     it('should convert to buffer', function () {
       values.forEach(function (item) {
-        var buffer = Integer.toBuffer(Integer.fromString(item[1]));
+        const buffer = Integer.toBuffer(Integer.fromString(item[1]));
         assert.strictEqual(buffer.toString('hex'), item[0]);
       });
     });
   });
   describe('Tuple', function () {
-    var Tuple = types.Tuple;
+    const Tuple = types.Tuple;
     describe('#get()', function () {
       it('should return the element at position', function () {
         var t = new Tuple('first', 'second');
@@ -117,16 +117,16 @@ describe('types', function () {
     });
     describe('#toString()', function () {
       it('should return the string of the elements surrounded by parenthesis', function () {
-        var id = types.Uuid.random();
-        var decimal = types.BigDecimal.fromString('1.2');
+        const id = types.Uuid.random();
+        const decimal = types.BigDecimal.fromString('1.2');
         var t = new Tuple(id, decimal, 0);
         assert.strictEqual(t.toString(), '(' + id.toString() + ',' + decimal.toString() + ',0)');
       });
     });
     describe('#toJSON()', function () {
       it('should return the string of the elements surrounded by square brackets', function () {
-        var id = types.TimeUuid.now();
-        var decimal = types.BigDecimal.fromString('-1');
+        const id = types.TimeUuid.now();
+        const decimal = types.BigDecimal.fromString('-1');
         var t = new Tuple(id, decimal, 1, {z: 1});
         assert.strictEqual(JSON.stringify(t), '["' + id.toString() + '","' + decimal.toString() + '",1,{"z":1}]');
       });
@@ -155,7 +155,7 @@ describe('types', function () {
     });
   });
   describe('LocalDate', function () {
-    var LocalDate = types.LocalDate;
+    const LocalDate = types.LocalDate;
     describe('new LocalDate', function (){
       it('should refuse to create LocalDate from invalid values.', function () {
         assert.throws(function () { return new types.LocalDate(); }, Error);
@@ -235,8 +235,8 @@ describe('types', function () {
     });
   });
   describe('LocalTime', function () {
-    var LocalTime = types.LocalTime;
-    var Long = types.Long;
+    const LocalTime = types.LocalTime;
+    const Long = types.Long;
     /* eslint-disable no-multi-spaces */
     var values = [
       //Long value         |     string representation  |   hour/min/sec/nanos
@@ -326,7 +326,7 @@ describe('types', function () {
   });
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
-      var buf = [];
+      const buf = [];
       var stream = new types.ResultStream();
       
       stream.on('end', function streamEnd() {
@@ -334,7 +334,7 @@ describe('types', function () {
         done();
       });
       stream.on('readable', function streamReadable() {
-        var item;
+        let item;
         while ((item = stream.read())) {
           buf.push(item);
         }
@@ -346,7 +346,7 @@ describe('types', function () {
     });
 
     it('should buffer until is read', function (done) {
-      var buf = [];
+      const buf = [];
       var stream = new types.ResultStream();
       stream.add(utils.allocBufferFromString('Stringer'));
       stream.add(utils.allocBufferFromString(' '));
@@ -358,7 +358,7 @@ describe('types', function () {
         done();
       });
       stream.on('readable', function streamReadable() {
-        var item;
+        let item;
         while ((item = stream.read())) {
           buf.push(item);
         }
@@ -366,7 +366,7 @@ describe('types', function () {
     });
 
     it('should be readable until the end', function (done) {
-      var buf = [];
+      const buf = [];
       var stream = new types.ResultStream();
       stream.add(utils.allocBufferFromString('Omar'));
       stream.add(utils.allocBufferFromString(' '));
@@ -376,7 +376,7 @@ describe('types', function () {
         done();
       });
       stream.on('readable', function streamReadable() {
-        var item;
+        let item;
         while ((item = stream.read())) {
           buf.push(item);
         }
@@ -387,7 +387,7 @@ describe('types', function () {
     });
 
     it('should be readable on objectMode', function (done) {
-      var buf = [];
+      const buf = [];
       var stream = new types.ResultStream({objectMode: true});
       //passing objects
       stream.add({toString: function (){return 'One';}});
@@ -398,7 +398,7 @@ describe('types', function () {
         done();
       });
       stream.on('readable', function streamReadable() {
-        var item;
+        let item;
         while ((item = stream.read())) {
           buf.push(item);
         }
@@ -426,7 +426,7 @@ describe('types', function () {
       assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
     });
     it('should be serializable to json', function () {
-      var i;
+      let i;
       var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
       var row = new types.Row(columns, [utils.allocBufferFromString('val1'), utils.allocBufferFromString('val2')]);
       row['col1'] = 'val1';
@@ -449,7 +449,7 @@ describe('types', function () {
       for (i = 0; i < columns.length; i++) {
         row[columns[i].name] = rowValues[i];
       }
-      var expected = util.format('{"cid":"%s","ctid":"%s","clong":"1000","cvarint":"22"}',
+      let expected = util.format('{"cid":"%s","ctid":"%s","clong":"1000","cvarint":"22"}',
         rowValues[0].toString(), rowValues[1].toString());
       assert.strictEqual(JSON.stringify(row), expected);
       rowValues = [
@@ -478,8 +478,8 @@ describe('types', function () {
   });
   describe('uuid() backward-compatibility', function () {
     it('should generate a random string uuid', function () {
-      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      var val = types.uuid();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const val = types.uuid();
       assert.strictEqual(typeof val, 'string');
       assert.strictEqual(val.length, 36);
       assert.ok(uuidRegex.test(val));
@@ -487,14 +487,14 @@ describe('types', function () {
     });
     it('should fill in the values in a buffer', function () {
       var buf = utils.allocBufferUnsafe(16);
-      var val = types.uuid(null, buf);
+      const val = types.uuid(null, buf);
       assert.strictEqual(val, buf);
     });
   });
   describe('timeuuid() backward-compatibility', function () {
     it('should generate a string uuid', function () {
-      var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      var val = types.timeuuid();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const val = types.timeuuid();
       assert.strictEqual(typeof val, 'string');
       assert.strictEqual(val.length, 36);
       assert.ok(uuidRegex.test(val));
@@ -502,14 +502,14 @@ describe('types', function () {
     });
     it('should fill in the values in a buffer', function () {
       var buf = utils.allocBufferUnsafe(16);
-      var val = types.timeuuid(null, buf);
+      const val = types.timeuuid(null, buf);
       assert.strictEqual(val, buf);
     });
   });
   describe('generateTimestamp()', function () {
     it('should generate using date and microseconds parts', function () {
-      var date = new Date();
-      var value = types.generateTimestamp(date, 123);
+      let date = new Date();
+      let value = types.generateTimestamp(date, 123);
       helper.assertInstanceOf(value, types.Long);
       assert.strictEqual(value.toString(), types.Long
         .fromNumber(date.getTime())
@@ -531,8 +531,8 @@ describe('types', function () {
 describe('utils', function () {
   describe('#extend()', function () {
     it('should allow null sources', function () {
-      var originalObject = {};
-      var extended = utils.extend(originalObject, null);
+      const originalObject = {};
+      const extended = utils.extend(originalObject, null);
       assert.strictEqual(originalObject, extended);
     });
   });
@@ -560,7 +560,7 @@ describe('utils', function () {
         }
         return 0;
       };
-      var val;
+      let val;
       val = utils.binarySearch([0, 1, 2, 3, 4], 2, compareFunc);
       assert.strictEqual(val, 2);
       val = utils.binarySearch(['A', 'B', 'C', 'D', 'E'], 'D', compareFunc);
@@ -573,7 +573,7 @@ describe('utils', function () {
   });
   describe('#deepExtend', function () {
     it('should override only the most inner props', function () {
-      var value;
+      let value;
       //single values
       value = utils.deepExtend({}, {a: '1'});
       assert.strictEqual(value.a, '1');
@@ -633,12 +633,12 @@ describe('clientOptions', function () {
       });
     });
     it('should create a new instance', function () {
-      var a = {contactPoints: ['host1']};
-      var options = clientOptions.extend(a);
+      const a = {contactPoints: ['host1']};
+      let options = clientOptions.extend(a);
       assert.notStrictEqual(a, options);
       assert.notStrictEqual(options, clientOptions.defaultOptions());
       //it should use baseOptions as source
-      var b = {};
+      const b = {};
       options = clientOptions.extend(b, a);
       //B is the instance source
       assert.strictEqual(b, options);
@@ -649,7 +649,7 @@ describe('clientOptions', function () {
     it('should validate the policies', function () {
       var policy1 = new loadBalancing.RoundRobinPolicy();
       var policy2 = new retry.RetryPolicy();
-      var options = clientOptions.extend({
+      const options = clientOptions.extend({
         contactPoints: ['host1'],
         policies: {
           loadBalancing: policy1,
@@ -729,7 +729,7 @@ describe('clientOptions', function () {
     });
   });
   describe('#defaultOptions()', function () {
-    var options = clientOptions.defaultOptions();
+    const options = clientOptions.defaultOptions();
     it('should set LOCAL_QUORUM as default consistency level', function () {
       assert.strictEqual(types.consistencies.localOne, options.queryOptions.consistency);
     });
@@ -744,18 +744,17 @@ describe('clientOptions', function () {
 describe('writers', function () {
   describe('WriteQueue', function () {
     it('should buffer until threshold is passed', function (done) {
-      var itemCallbackCounter = 0;
-      var buffers = [];
+      let itemCallbackCounter = 0;
+      const buffers = [];
       var socketMock = {
         write: function (buf, cb) {
           buffers.push(buf);
           setTimeout(cb, 50);
         }
       };
-      var options = utils.extend({}, clientOptions.defaultOptions());
+      const options = utils.extend({}, clientOptions.defaultOptions());
       options.socketOptions.coalescingThreshold = 50;
-      var encoder = new Encoder(3, options);
-      //noinspection JSCheckFunctionSignatures
+      const encoder = new Encoder(3, options);
       var queue = new writers.WriteQueue(socketMock, encoder, options);
       var request = {
         write: function () {
@@ -765,7 +764,7 @@ describe('writers', function () {
       function itemCallback() {
         itemCallbackCounter++;
       }
-      for (var i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i++) {
         queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
       setTimeout(function () {
@@ -788,7 +787,7 @@ describe('exports', function () {
     //test that the exposed API is the one expected
     //it looks like a dumb test and it is, but it is necessary!
     /* eslint-disable global-require */
-    var api = require('../../index.js');
+    const api = require('../../index.js');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
     assert.ok(typeof api.errors.DriverError, 'function');

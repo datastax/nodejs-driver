@@ -1,17 +1,17 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var utils = require('../../../lib/utils');
-var tokenizer = require('../../../lib/tokenizer');
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const tokenizer = require('../../../lib/tokenizer');
 
 describe('Client', function () {
   this.timeout(240000);
   describe('#getReplicas() with MurmurPartitioner', function () {
     before(function (done) {
-      var client = newInstance();
+      const client = newInstance();
       var createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";
       utils.series([
         helper.ccmHelper.start('4:4', {sleep: 1000}),
@@ -25,7 +25,7 @@ describe('Client', function () {
     });
     after(helper.ccmHelper.remove);
     it('should get the local and remote replicas for a given keyspace', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
         validateMurmurReplicas(client);
@@ -33,7 +33,7 @@ describe('Client', function () {
       });
     });
     it('should get the local and remote replicas for a given keyspace if isMetadataSyncEnabled is false but keyspace metadata is present', function (done) {
-      var client = newInstance({ isMetadataSyncEnabled: false });
+      const client = newInstance({ isMetadataSyncEnabled: false });
       client.connect(function (err) {
         assert.ifError(err);
         client.metadata.refreshKeyspace('sampleks1', function(err, keyspace) {
@@ -45,7 +45,7 @@ describe('Client', function () {
       });
     });
     it('should return null if keyspace metadata is not present', function (done) {
-      var client = newInstance({ isMetadataSyncEnabled: false });
+      const client = newInstance({ isMetadataSyncEnabled: false });
       client.connect(function (err) {
         assert.ifError(err);
         var replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
@@ -54,7 +54,7 @@ describe('Client', function () {
       });
     });
     it('should get the closest replica if no keyspace specified', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
         var replicas = client.getReplicas(null, utils.allocBufferFromArray([0, 0, 0, 1]));
@@ -68,7 +68,7 @@ describe('Client', function () {
     });
   });
   describe('#getReplicas() with ByteOrderPartitioner', function () {
-    var ccmOptions = {
+    const ccmOptions = {
       vnodes: true,
       yaml: ['partitioner:org.apache.cassandra.dht.ByteOrderedPartitioner']
     };
@@ -83,10 +83,10 @@ describe('Client', function () {
         //pre-calculated based on Byte ordered partitioner
         assert.strictEqual(replicas[0].address, expectedReplica.address);
       }
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
-        for (var i = 0; i < client.metadata.ring.length; i++) {
+        for (let i = 0; i < client.metadata.ring.length; i++) {
           var token = client.metadata.ring[i];
           var replica = client.metadata.primaryReplicas[client.metadata.tokenizer.stringify(token)];
           compareReplicas(token, replica);
@@ -96,18 +96,18 @@ describe('Client', function () {
     });
   });
   describe('#getReplicas() with RandomPartitioner', function () {
-    var ccmOptions = {
+    const ccmOptions = {
       vnodes: true,
       yaml: ['partitioner:org.apache.cassandra.dht.RandomPartitioner']
     };
     before(helper.ccmHelper.start('2', ccmOptions));
     after(helper.ccmHelper.remove);
     it('should get the replica', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         helper.assertInstanceOf(client.metadata.tokenizer, tokenizer.RandomTokenizer);
         assert.ifError(err);
-        for (var i = 0; i < client.metadata.ring.length; i++) {
+        for (let i = 0; i < client.metadata.ring.length; i++) {
           var token = client.metadata.ring[i];
           var position = utils.binarySearch(client.metadata.ring, token, client.metadata.tokenizer.compare);
           assert.ok(position >= 0);

@@ -1,24 +1,24 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var utils = require('../../../lib/utils.js');
-var loadBalancing = require('../../../lib/policies/load-balancing.js');
+const helper = require('../../test-helper.js');
+const Client = require('../../../lib/client.js');
+const utils = require('../../../lib/utils.js');
+const loadBalancing = require('../../../lib/policies/load-balancing.js');
 var DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 
 describe('DCAwareRoundRobinPolicy', function () {
   this.timeout(180000);
   it('should never hit remote dc if not set', function (done) {
-    var countByHost = {};
+    const countByHost = {};
     utils.series([
       //1 cluster with 3 dcs with 2 nodes each
       helper.ccmHelper.start('2:2:2') ,
       function testCase(next) {
-        var options = utils.deepExtend({}, helper.baseOptions, {policies: {loadBalancing: new DCAwareRoundRobinPolicy()}});
-        var client = new Client(options);
+        const options = utils.deepExtend({}, helper.baseOptions, {policies: {loadBalancing: new DCAwareRoundRobinPolicy()}});
+        const client = new Client(options);
         utils.times(120, function (n, timesNext) {
           client.execute(helper.queries.basic, function (err, result) {
             assert.ifError(err);
@@ -48,7 +48,7 @@ describe('TokenAwarePolicy', function () {
   describe('with a 3:3 node topology', function() {
     var keyspace = 'ks1';
     var table = 'table1';
-    var client = new Client({
+    const client = new Client({
       policies: { loadBalancing: new TokenAwarePolicy(new DCAwareRoundRobinPolicy())},
       keyspace: keyspace,
       contactPoints: helper.baseOptions.contactPoints
@@ -64,7 +64,7 @@ describe('TokenAwarePolicy', function () {
           localClient.execute(util.format(createQuery, keyspace, 1, 1), helper.waitSchema(localClient, next));
         },
         function createTable(next) {
-          var query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
+          const query = util.format('CREATE TABLE %s.%s (id int primary key, name int)', keyspace, table);
           localClient.execute(query, helper.waitSchema(localClient, next));
         },
         localClient.shutdown.bind(localClient)
@@ -93,7 +93,7 @@ describe('TokenAwarePolicy', function () {
       };
       utils.times(100, function (n, timesNext) {
         var id = (n % 10) + 1;
-        var query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
+        const query = util.format('INSERT INTO %s (id, name) VALUES (%s, %s)', table, id, id);
         client.execute(query, null, {routingKey: utils.allocBufferFromArray([0, 0, 0, id])}, function (err, result) {
           assert.ifError(err);
           //for murmur id = 1, it go to replica 2
@@ -149,7 +149,7 @@ describe('TokenAwarePolicy', function () {
       utils.times(20, function (n, timesNext) {
         //keyspace 1
         policy_dc2.newQueryPlan(keyspace1, {routingKey: routingKey}, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           // 2 local replicas first, 2 remaining local nodes.
           assert.ok(hosts.length, 4);
           hosts.forEach(function(host) {
@@ -166,7 +166,7 @@ describe('TokenAwarePolicy', function () {
       utils.times(20, function (n, timesNext) {
         //keyspace 2
         policy_dc2.newQueryPlan(keyspace2, {routingKey: routingKey}, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           // 1 local replica, 3 remaining local nodes.
           assert.ok(hosts.length, 4);
           hosts.forEach(function(host) {
@@ -183,7 +183,7 @@ describe('TokenAwarePolicy', function () {
       utils.times(20, function (n, timesNext) {
         //no keyspace
         policy_dc1.newQueryPlan(null, {routingKey: routingKey}, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           //1 (closest) replica irrespective of keyspace topology, plus 3 additional local nodes
           assert.ok(hosts.length, 4);
           hosts.forEach(function(host) {
@@ -200,7 +200,7 @@ describe('TokenAwarePolicy', function () {
       utils.times(20, function (n, timesNext) {
         //no keyspace
         policy_dc2.newQueryPlan(null, {routingKey: routingKey}, function (err, iterator) {
-          var hosts = helper.iteratorToArray(iterator);
+          const hosts = helper.iteratorToArray(iterator);
           // Should simply get all local nodes, since no keyspace was provided and the closest
           // replica is in dc1, no token aware ordering is provided.
           assert.ok(hosts.length, 4);

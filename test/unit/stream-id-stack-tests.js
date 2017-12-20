@@ -1,13 +1,13 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
-var rewire = require('rewire');
+const assert = require('assert');
+const util = require('util');
+const rewire = require('rewire');
 
 describe('StreamIdStack', function () {
   this.timeout(2000);
   var osPrecision = 30;
   it('should pop and push', function () {
-    var stack = newInstance();
+    const stack = newInstance();
     assert.strictEqual(stack.pop(), 0);
     assert.strictEqual(stack.pop(), 1);
     assert.strictEqual(stack.pop(), 2);
@@ -29,7 +29,7 @@ describe('StreamIdStack', function () {
       var stack = newInstance(version);
       var ids = pop(stack, maxSize + 20);
       assert.strictEqual(ids.length, maxSize + 20);
-      for (var i = 0; i < maxSize + 20; i++) {
+      for (let i = 0; i < maxSize + 20; i++) {
         if (i < maxSize) {
           assert.strictEqual(ids[i], i);
         }
@@ -46,7 +46,7 @@ describe('StreamIdStack', function () {
     var stack = newInstance(3);
     var ids = pop(stack, 128 * 3 - 1);
     assert.strictEqual(ids.length, 128 * 3 - 1);
-    for (var i = 0; i < ids.length; i++) {
+    for (let i = 0; i < ids.length; i++) {
       assert.strictEqual(ids[i], i);
     }
     //popped all from the first 3 groups
@@ -134,8 +134,8 @@ function newInstance(version, releaseDelay) {
 }
 
 function pop(stack, n) {
-  var arr = [];
-  for (var i = 0; i < n; i++) {
+  const arr = [];
+  for (let i = 0; i < n; i++) {
     arr.push(stack.pop());
   }
   return arr;
@@ -146,7 +146,7 @@ function push(stack, initialValue, length) {
     initialValue.forEach(stack.push.bind(stack));
     return;
   }
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     stack.push(initialValue + i);
   }
 }

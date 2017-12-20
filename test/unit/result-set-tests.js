@@ -1,8 +1,8 @@
 "use strict";
 
-var assert = require('assert');
-var types = require('../../lib/types');
-var ResultSet = types.ResultSet;
+const assert = require('assert');
+const types = require('../../lib/types');
+const ResultSet = types.ResultSet;
 
 describe('ResultSet', function () {
   describe('constructor', function () {

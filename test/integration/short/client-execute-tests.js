@@ -1,25 +1,25 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils.js');
-var errors = require('../../../lib/errors.js');
-var vit = helper.vit;
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper.js');
+const Client = require('../../../lib/client.js');
+const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils.js');
+const errors = require('../../../lib/errors.js');
+const vit = helper.vit;
+const vdescribe = helper.vdescribe;
 
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 0}, callback)', function () {
-    var keyspace = helper.getRandomName('ks');
+    const keyspace = helper.getRandomName('ks');
     var table = keyspace + '.' + helper.getRandomName('table');
-    var selectAllQuery = 'SELECT * FROM ' + table;
-    var setupInfo = helper.setup(1, { keyspace: keyspace, queries: [ helper.createTableCql(table) ] });
+    const selectAllQuery = 'SELECT * FROM ' + table;
+    const setupInfo = helper.setup(1, { keyspace: keyspace, queries: [ helper.createTableCql(table) ] });
     it('should execute a basic query', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.execute(helper.queries.basic, function (err, result) {
         assert.equal(err, null);
         assert.notEqual(result, null);
@@ -28,10 +28,10 @@ describe('Client', function () {
       });
     });
     it('should callback with syntax error', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.connect(function (err) {
         assert.ifError(err);
-        var query = 'SELECT WILL FAIL';
+        const query = 'SELECT WILL FAIL';
         client.execute(query, function (err, result) {
           assert.ok(err);
           assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
@@ -42,7 +42,7 @@ describe('Client', function () {
       });
     });
     it('should callback with an empty Array instance as rows when not found', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.execute(helper.queries.basicNoResults, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
@@ -53,13 +53,13 @@ describe('Client', function () {
       });
     });
     it('should handle 500 parallel queries', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       utils.times(500, function (n, next) {
         client.execute(helper.queries.basic, [], next);
       }, done);
     });
     it('should fail if non-existent profile provided', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         function queryWithBadProfile(next) {
           client.execute(helper.queries.basicNoResults, [], {executionProfile: 'none'}, function(err) {
@@ -72,7 +72,7 @@ describe('Client', function () {
       ], done);
     });
     vit('2.0', 'should guess known types', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
       var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), utils.allocBufferUnsafe(100), ['one', 'two']];
@@ -80,7 +80,7 @@ describe('Client', function () {
       insertSelectTest(client, table, columns, values, null, done);
     });
     vit('2.0', 'should use parameter hints as number for simple types', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       var columns = 'id, text_sample, float_sample, int_sample';
       //a precision a float32 can represent
       var values = [types.Uuid.random(), 'text sample', 1000.0999755859375, -12];
@@ -91,14 +91,14 @@ describe('Client', function () {
       var columns = 'id, text_sample, float_sample, int_sample';
       var values = [types.Uuid.random(), 'text sample', -9, 1];
       var hints = [null, 'text', 'float', 'int'];
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints as string for complex types partial', function (done) {
       var columns = 'id, map_sample, list_sample, set_sample';
       var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       var hints = [null, 'map', 'list', 'set'];
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints as string for complex types complete', function (done) {
@@ -106,7 +106,7 @@ describe('Client', function () {
       var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       //complete info
       var hints = [null, 'map<text, text>', 'list<text>', 'set<text>'];
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints for custom map polyfills', function (done) {
@@ -117,18 +117,18 @@ describe('Client', function () {
       var values = [types.Uuid.random(), map];
       //complete info
       var hints = [null, 'map<text, text>'];
-      var client = newInstance({encoding: { map: helper.Map }});
+      const client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use pageState and fetchSize', function (done) {
-      var client = setupInfo.client;
-      var pageState = null;
+      const client = setupInfo.client;
+      let pageState = null;
       utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
         },
         function insertData(seriesNext) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           utils.times(100, function (n, next) {
             client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
@@ -155,13 +155,13 @@ describe('Client', function () {
       ], done);
     });
     vit('2.0', 'should not autoPage', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
         },
         function insertData(seriesNext) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           utils.times(100, function (n, next) {
             client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
@@ -177,13 +177,13 @@ describe('Client', function () {
       ], done);
     });
     vit('2.0', 'should return ResultSet compatible with @@iterator', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       utils.series([
         function truncate(seriesNext) {
           client.execute('TRUNCATE ' + table, seriesNext);
         },
         function insertData(seriesNext) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           utils.times(100, function (n, next) {
             client.execute(query, [types.Uuid.random(), n.toString()], next);
           }, seriesNext);
@@ -195,9 +195,9 @@ describe('Client', function () {
             assert.strictEqual(result.rowLength, 25);
             // should not page
             var iterator = result[Symbol.iterator]();
-            var count = 0;
-            var uuids = [];
-            var item;
+            let count = 0;
+            const uuids = [];
+            let item;
             for (item = iterator.next(); !item.done; item = iterator.next()) {
               assert.ok(item.value);
               var id = item.value.id;
@@ -218,8 +218,8 @@ describe('Client', function () {
       ], done);
     });
     vit('2.0', 'should callback in err when wrong hints are provided', function (done) {
-      var client = setupInfo.client;
-      var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
+      const client = setupInfo.client;
+      const query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
       //valid params
       var params = [types.Uuid.random(), types.Uuid.random(), types.Uuid.random()];
       utils.series([
@@ -253,12 +253,12 @@ describe('Client', function () {
       ], done);
     });
     vit('2.1', 'should encode CONTAINS parameter', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.execute(util.format('CREATE INDEX list_sample_index ON %s(list_sample)', table), function (err) {
         assert.ifError(err);
         // Allow 1 second for index to build (otherwise an IndexNotAvailableException may be raised while index is building).
         setTimeout(function() {
-          var query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
+          const query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
           //valid params
           var params = ['val1', 'val2'];
           client.execute(query, params, function (err) {
@@ -270,7 +270,7 @@ describe('Client', function () {
       });
     });
     it('should accept localOne and localQuorum consistencies', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       utils.series([
         function (next) {
           client.execute(selectAllQuery, [], {consistency: types.consistencies.localOne}, next);
@@ -281,7 +281,7 @@ describe('Client', function () {
       ], done);
     });
     it('should use consistency level from profile and override profile when provided in query options', function (done) {
-      var client = newInstance({profiles: [new ExecutionProfile('cl', {consistency: types.consistencies.quorum})]});
+      const client = newInstance({profiles: [new ExecutionProfile('cl', {consistency: types.consistencies.quorum})]});
       utils.series([
         function ensureProfileCLUsed (next) {
           client.execute(selectAllQuery, [], {executionProfile: 'cl'}, function(err, result) {
@@ -301,20 +301,20 @@ describe('Client', function () {
       ], done);
     });
     vit('2.2', 'should accept unset as a valid value', function (done) {
-      var client = setupInfo.client;
-      var id = types.Uuid.random();
+      const client = setupInfo.client;
+      const id = types.Uuid.random();
       utils.series([
         client.connect.bind(client),
         function insert(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample, double_sample) VALUES (?, ?, ?)', table);
           client.execute(query, [id, 'sample unset', types.unset], next);
         },
         function select(next) {
-          var query = util.format('SELECT id, text_sample, double_sample FROM %s WHERE id = ?', table);
+          const query = util.format('SELECT id, text_sample, double_sample FROM %s WHERE id = ?', table);
           client.execute(query, [id], function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rowLength, 1);
-            var row = result.first();
+            const row = result.first();
             assert.strictEqual(row['text_sample'], 'sample unset');
             assert.strictEqual(row['double_sample'], null);
             next();
@@ -323,7 +323,7 @@ describe('Client', function () {
       ], done);
     });
     it('should handle several concurrent executes while the pool is not ready', function (done) {
-      var client = newInstance({pooling: {
+      const client = newInstance({pooling: {
         coreConnectionsPerHost: {
           //lots of connections per host
           '0': 100,
@@ -347,14 +347,14 @@ describe('Client', function () {
       ], helper.finish(client, done));
     });
     it('should return the column definitions', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       //insert at least 1 row
       var insertQuery = util.format('INSERT INTO %s (id) VALUES (%s)', table, types.Uuid.random());
       utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, insertQuery),
         function verifyColumns(next) {
-          var query = util.format('SELECT text_sample, timestamp_sample, int_sample, timeuuid_sample, list_sample2, map_sample from %s LIMIT 1', table);
+          const query = util.format('SELECT text_sample, timestamp_sample, int_sample, timeuuid_sample, list_sample2, map_sample from %s LIMIT 1', table);
           client.execute(query, function (err, result) {
             assert.ifError(err);
             assert.ok(result.rows.length);
@@ -376,7 +376,7 @@ describe('Client', function () {
           });
         },
         function verifyColumnsInAnEmptyResultSet(next) {
-          var query = util.format('SELECT * from %s WHERE id = 00000000-0000-0000-0000-000000000000', table);
+          const query = util.format('SELECT * from %s WHERE id = 00000000-0000-0000-0000-000000000000', table);
           client.execute(query, function (err, result) {
             assert.ifError(err);
             assert.ok(result.columns);
@@ -387,24 +387,24 @@ describe('Client', function () {
       ], done);
     });
     it('should return rows that are serializable to json', function (done) {
-      var client = setupInfo.client;
-      var id = types.Uuid.random();
-      var timeId = types.TimeUuid.now();
+      const client = setupInfo.client;
+      const id = types.Uuid.random();
+      const timeId = types.TimeUuid.now();
       utils.series([
         function insert(next) {
-          var query = util.format(
+          const query = util.format(
             'INSERT INTO %s (id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample) VALUES (%s, %s, \'%s\', %s, %s)',
             table, id, timeId, '::2233:0:0:bb', -100, "0.1");
           client.execute(query, next);
         },
         function select(next) {
-          var query = util.format(
+          const query = util.format(
             'SELECT id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample from %s WHERE id = %s', table, id);
           client.execute(query, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 1);
             var row = result.rows[0];
-            var expected = util.format('{"id":"%s",' +
+            const expected = util.format('{"id":"%s",' +
               '"timeuuid_sample":"%s",' +
               '"inet_sample":"::2233:0:0:bb",' +
               '"bigint_sample":"-100",' +
@@ -418,11 +418,11 @@ describe('Client', function () {
     vit('2.0', 'should use serial consistency level from profile and override profile when provided in query options', function (done) {
       // This is a bit crude, but sets an invalid serial CL (ONE) and ensures an error is thrown when using the
       // profile serial CL.  This establishes a way to differentiate between when the profile cl is used and not.
-      var client = newInstance({profiles: [new ExecutionProfile('cl', {serialConsistency: types.consistencies.one})]});
-      var id = types.Uuid.random();
+      const client = newInstance({profiles: [new ExecutionProfile('cl', {serialConsistency: types.consistencies.one})]});
+      const id = types.Uuid.random();
       utils.series([
         function insertWithProfileSerialCL(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
           client.execute(query, [id, 'hello serial'], { executionProfile: 'cl'}, function(err) {
             // expect an error as we used an invalid serial CL.
             assert.ok(err);
@@ -431,13 +431,13 @@ describe('Client', function () {
           });
         },
         function insertWithQueryCL(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?) IF NOT EXISTS', table);
           client.execute(query, [id, 'hello serial'], { executionProfile: 'cl', serialConsistency: types.consistencies.localSerial}, next);
         },
         function select(next) {
-          var query = util.format('SELECT id, text_sample from %s WHERE id = ?', table);
+          const query = util.format('SELECT id, text_sample from %s WHERE id = ?', table);
           client.execute(query, [id], function (err, result) {
-            var row = result.first();
+            const row = result.first();
             assert.ok(row);
             assert.strictEqual(row['text_sample'], 'hello serial');
             next();
@@ -446,18 +446,18 @@ describe('Client', function () {
       ], helper.finish(client, done));
     });
     vit('2.1', 'should support protocol level timestamp', function (done) {
-      var client = setupInfo.client;
-      var id = types.Uuid.random();
-      var timestamp = types.generateTimestamp(new Date(), 777);
+      const client = setupInfo.client;
+      const id = types.Uuid.random();
+      const timestamp = types.generateTimestamp(new Date(), 777);
       utils.series([
         function insert(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           client.execute(query, [id, 'hello timestamp'], { timestamp: timestamp}, next);
         },
         function select(next) {
-          var query = util.format('SELECT id, text_sample, writetime(text_sample) from %s WHERE id = ?', table);
+          const query = util.format('SELECT id, text_sample, writetime(text_sample) from %s WHERE id = ?', table);
           client.execute(query, [id], function (err, result) {
-            var row = result.first();
+            const row = result.first();
             assert.ok(row);
             assert.strictEqual(row['text_sample'], 'hello timestamp');
             assert.strictEqual(row['writetime(text_sample)'].toString(), timestamp.toString());
@@ -467,12 +467,12 @@ describe('Client', function () {
       ], done);
     });
     it('should retrieve the trace id when queryTrace flag is set', function (done) {
-      var client = setupInfo.client;
-      var id = types.Uuid.random();
+      const client = setupInfo.client;
+      const id = types.Uuid.random();
       utils.series([
         client.connect.bind(client),
         function selectNotExistent(next) {
-          var query = util.format('SELECT * FROM %s WHERE id = %s', table, types.Uuid.random());
+          const query = util.format('SELECT * FROM %s WHERE id = %s', table, types.Uuid.random());
           client.execute(query, [], { traceQuery: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -481,7 +481,7 @@ describe('Client', function () {
           });
         },
         function insertQuery(next) {
-          var query = util.format('INSERT INTO %s (id) VALUES (%s)', table, id.toString());
+          const query = util.format('INSERT INTO %s (id) VALUES (%s)', table, id.toString());
           client.execute(query, [], { traceQuery: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -490,7 +490,7 @@ describe('Client', function () {
           });
         },
         function selectSingleRow(next) {
-          var query = util.format('SELECT * FROM %s WHERE id = %s', table, id.toString());
+          const query = util.format('SELECT * FROM %s WHERE id = %s', table, id.toString());
           client.execute(query, [], { traceQuery: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -501,7 +501,7 @@ describe('Client', function () {
       ], done);
     });
     it('should not retrieve trace id by default', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.execute('SELECT * FROM system.local', function (err, result) {
         assert.ifError(err);
         assert.ok(result.info);
@@ -510,8 +510,8 @@ describe('Client', function () {
       });
     });
     vit('2.2', 'should include the warning in the ResultSet', function (done) {
-      var client = setupInfo.client;
-      var loggedMessage = false;
+      const client = setupInfo.client;
+      let loggedMessage = false;
       client.on('log', function (level, className, message) {
         if (loggedMessage || level !== 'warning') {
           return;
@@ -521,7 +521,7 @@ describe('Client', function () {
           loggedMessage = true;
         }
       });
-      var query = util.format(
+      const query = util.format(
         "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (%s, '%s')\n" +
         "INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
         table,
@@ -542,11 +542,11 @@ describe('Client', function () {
       });
     });
     describe('with udt and tuple', function () {
-      var sampleId = types.Uuid.random();
+      const sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
-      var selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
+      const selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
       before(function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         utils.series([
           client.connect.bind(client),
           helper.toTask(client.execute, client, 'CREATE TYPE phone (alias text, number text, country_code int, other boolean)'),
@@ -561,7 +561,7 @@ describe('Client', function () {
         ], done);
       });
       vit('2.1', 'should retrieve column information', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         client.execute(util.format(selectQuery, sampleId), function (err, result) {
           assert.ifError(err);
           assert.ok(result.columns);
@@ -597,10 +597,10 @@ describe('Client', function () {
         });
       });
       vit('2.1', 'should parse udt row', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         client.execute(util.format(selectQuery, sampleId), function (err, result) {
           assert.ifError(err);
-          var row = result.first();
+          const row = result.first();
           assert.ok(row);
           var phone = row['phone_col'];
           assert.ok(phone);
@@ -624,17 +624,17 @@ describe('Client', function () {
       vit('2.1', 'should allow udt parameter hints and retrieve metadata', function (done) {
         var phone = { alias: 'home2', number: '555 0000', country_code: 34, other: true};
         var address = {street: 'NightMan2', ZIP: 90987, phones: [{ 'alias': 'personal2', 'number': '555 0001'}, {alias: 'work2'}]};
-        var id = types.Uuid.random();
-        var client = setupInfo.client;
+        const id = types.Uuid.random();
+        const client = setupInfo.client;
         utils.series([
           function insert(next) {
-            var query = util.format(insertQuery, '?', '?', '?');
+            const query = util.format(insertQuery, '?', '?', '?');
             client.execute(query, [id, phone, address], { hints: [null, 'udt<phone>', 'udt<address>']}, next);
           },
           function select(next) {
             client.execute(util.format(selectQuery, '?'), [id], function (err, result) {
               assert.ifError(err);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.ok(row['phone_col']);
               assert.strictEqual(row['phone_col']['alias'], phone.alias);
@@ -653,18 +653,18 @@ describe('Client', function () {
         ], done);
       });
       vit('2.1', 'should allow tuple parameter hints', function (done) {
-        var client = setupInfo.client;
-        var id = types.Uuid.random();
+        const client = setupInfo.client;
+        const id = types.Uuid.random();
         var tuple = new types.Tuple('Surf Rider', 110, utils.allocBufferFromString('0f0f', 'hex'));
         utils.series([
           function insert(next) {
-            var query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
+            const query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
             client.execute(query, [id, tuple], { hints: [null, 'tuple<text, int,blob>']}, next);
           },
           function select(next) {
             client.execute(util.format('SELECT * FROM tbl_tuples WHERE id = ?'), [id], function (err, result) {
               assert.ifError(err);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.ok(row['tuple_col']);
               assert.strictEqual(row['tuple_col'].length, 3);
@@ -677,7 +677,7 @@ describe('Client', function () {
         ], done);
       });
       vit('2.2', 'should allow insertions as json', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         var o = {
           id: types.Uuid.random(),
           address_col: {
@@ -688,14 +688,14 @@ describe('Client', function () {
         };
         utils.series([
           function insert(next) {
-            var query = 'INSERT INTO tbl_udts JSON ?';
+            const query = 'INSERT INTO tbl_udts JSON ?';
             client.execute(query, [JSON.stringify(o)], next);
           },
           function select(next) {
-            var query = 'SELECT * FROM tbl_udts WHERE id = ?';
+            const query = 'SELECT * FROM tbl_udts WHERE id = ?';
             client.execute(query, [o.id], function (err, result) {
               assert.ifError(err);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.ok(row['address_col']);
               assert.strictEqual(row['address_col'].street, o.address_col.street);
@@ -708,27 +708,27 @@ describe('Client', function () {
     });
     describe('with named parameters', function () {
       vit('2.1', 'should allow named parameters', function (done) {
-        var query = util.format('INSERT INTO %s (id, text_sample, bigint_sample) VALUES (:id, :myText, :myBigInt)', table);
+        const query = util.format('INSERT INTO %s (id, text_sample, bigint_sample) VALUES (:id, :myText, :myBigInt)', table);
         var values = { id: types.Uuid.random(), myText: 'hello', myBigInt: types.Long.fromNumber(2)};
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         client.execute(query, values, function (err) {
           assert.ifError(err);
           verifyRow(table, values.id, 'text_sample, bigint_sample', [values.myText, values.myBigInt], done);
         });
       });
       vit('2.1', 'should use parameter hints', function (done) {
-        var query = util.format('INSERT INTO %s (id, int_sample, float_sample) VALUES (:id, :myInt, :myFloat)', table);
+        const query = util.format('INSERT INTO %s (id, int_sample, float_sample) VALUES (:id, :myInt, :myFloat)', table);
         var values = {id: types.Uuid.random(), myInt: 100, myFloat: 2.0999999046325684};
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         client.execute(query, values, { hints: {myFloat: 'float', myInt: {code: types.dataTypes.int}}}, function (err) {
           assert.ifError(err);
           verifyRow(table, values.id, 'int_sample, float_sample', [values.myInt, values.myFloat], done);
         });
       });
       vit('2.1', 'should allow parameters with different casings', function (done) {
-        var query = util.format('INSERT INTO %s (id, text_sample, list_sample2) VALUES (:ID, :MyText, :mylist)', table);
+        const query = util.format('INSERT INTO %s (id, text_sample, list_sample2) VALUES (:ID, :MyText, :mylist)', table);
         var values = { id: types.Uuid.random(), mytext: 'hello', myLIST: [ -1, 0, 500, 3]};
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         client.execute(query, values, { hints: { myLIST: 'list<int>'}}, function (err) {
           assert.ifError(err);
           verifyRow(table, values.id, 'text_sample, list_sample2', [values.mytext, values.myLIST], done);
@@ -736,11 +736,11 @@ describe('Client', function () {
       });
     });
     describe('with smallint and tinyint', function () {
-      var sampleId = types.Uuid.random();
+      const sampleId = types.Uuid.random();
       var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample, text_sample) VALUES (%s, %s, %s, %s)';
-      var selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
+      const selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
       before(function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         utils.series([
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_smallints (id uuid PRIMARY KEY, smallint_sample smallint, tinyint_sample tinyint, text_sample text)'),
           helper.toTask(client.execute, client, util.format(
@@ -748,13 +748,13 @@ describe('Client', function () {
         ], done);
       });
       vit('2.2', 'should retrieve smallint and tinyint values as Number', function (done) {
-        var query = util.format(selectQuery, sampleId);
-        var client = setupInfo.client;
+        const query = util.format(selectQuery, sampleId);
+        const client = setupInfo.client;
         client.execute(query, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
           assert.ok(result.rowLength);
-          var row = result.first();
+          const row = result.first();
           assert.ok(row);
           assert.strictEqual(row['text_sample'], 'two');
           assert.strictEqual(row['smallint_sample'], 0x0200);
@@ -763,16 +763,16 @@ describe('Client', function () {
         });
       });
       vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
-        var client = setupInfo.client;
-        var query = util.format(insertQuery, '?', '?', '?', '?');
-        var id = types.Uuid.random();
+        const client = setupInfo.client;
+        const query = util.format(insertQuery, '?', '?', '?', '?');
+        const id = types.Uuid.random();
         client.execute(query, [id, 10, 11, 'another text'], { hints: [null, 'smallint', 'tinyint']}, function (err) {
           assert.ifError(err);
           client.execute(util.format(selectQuery, id), function (err, result) {
             assert.ifError(err);
             assert.ok(result);
             assert.ok(result.rowLength);
-            var row = result.first();
+            const row = result.first();
             assert.ok(row);
             assert.strictEqual(row['text_sample'], 'another text');
             assert.strictEqual(row['smallint_sample'], 10);
@@ -783,12 +783,12 @@ describe('Client', function () {
       });
     });
     describe('with date and time types', function () {
-      var LocalDate = types.LocalDate;
-      var LocalTime = types.LocalTime;
+      const LocalDate = types.LocalDate;
+      const LocalTime = types.LocalTime;
       var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
-      var selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
+      const selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
       before(function (done) {
-        var query = 'CREATE TABLE tbl_datetimes ' +
+        const query = 'CREATE TABLE tbl_datetimes ' +
           '(id uuid PRIMARY KEY, date_sample date, time_sample time, text_sample text)';
         setupInfo.client.execute(query, done);
       });
@@ -800,7 +800,7 @@ describe('Client', function () {
           [types.Uuid.random(), new LocalDate(1983, 2, 24), new LocalTime(types.Long.fromString('86399999999999'))],
           [types.Uuid.random(), new LocalDate(-2147483648), new LocalTime(types.Long.fromString('6311999549933'))]
         ];
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         utils.eachSeries(values, function (params, next) {
           client.execute(insertQuery, params, function (err) {
             assert.ifError(err);
@@ -808,7 +808,7 @@ describe('Client', function () {
               assert.ifError(err);
               assert.ok(result);
               assert.ok(result.rowLength);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.strictEqual(row['id'].toString(), params[0].toString());
               helper.assertInstanceOf(row['date_sample'], LocalDate);
@@ -823,8 +823,8 @@ describe('Client', function () {
     });
     describe('with json support', function () {
       before(function (done) {
-        var client = setupInfo.client;
-        var query =
+        const client = setupInfo.client;
+        const query =
           'CREATE TABLE tbl_json (' +
           '  id uuid PRIMARY KEY,' +
           '  tid timeuuid,' +
@@ -838,7 +838,7 @@ describe('Client', function () {
         client.execute(query, done);
       });
       vit('2.2', 'should allow insert of all ECMAScript types as json', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         var o = {
           id: types.Uuid.random(),
           text_sample: 'hello json',
@@ -854,14 +854,14 @@ describe('Client', function () {
         };
         utils.series([
           function insert(next) {
-            var query = util.format('INSERT INTO %s JSON ?', table);
+            const query = util.format('INSERT INTO %s JSON ?', table);
             client.execute(query, [JSON.stringify(o)], next);
           },
           function select(next) {
-            var query = util.format('SELECT * FROM %s WHERE id = ?', table);
+            const query = util.format('SELECT * FROM %s WHERE id = ?', table);
             client.execute(query, [o.id], function (err, result) {
               assert.ifError(err);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.strictEqual(row['text_sample'], o.text_sample);
               assert.strictEqual(row['int_sample'], o.int_sample);
@@ -881,7 +881,7 @@ describe('Client', function () {
         ], done);
       });
       vit('2.2', 'should allow insert of all non - ECMAScript types as json', function (done) {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         var o = {
           id:   types.Uuid.random(),
           tid:  types.TimeUuid.now(),
@@ -895,14 +895,14 @@ describe('Client', function () {
         };
         utils.series([
           function insert(next) {
-            var query = 'INSERT INTO tbl_json JSON ?';
+            const query = 'INSERT INTO tbl_json JSON ?';
             client.execute(query, [JSON.stringify(o)], next);
           },
           function select(next) {
-            var query = 'SELECT * FROM tbl_json WHERE id = ?';
+            const query = 'SELECT * FROM tbl_json WHERE id = ?';
             client.execute(query, [o.id], function (err, result) {
               assert.ifError(err);
-              var row = result.first();
+              const row = result.first();
               assert.ok(row);
               assert.strictEqual(row['tid'].toString(), o.tid.toString());
               assert.strictEqual(row['dec'].toString(), o.dec.toString());
@@ -922,7 +922,7 @@ describe('Client', function () {
     });
     describe('with no callback specified', function () {
       vit('2.0', 'should return a promise with the result as a value', function () {
-        var client = newInstance();
+        const client = newInstance();
         return client.connect()
           .then(function () {
             // Only the query
@@ -937,7 +937,7 @@ describe('Client', function () {
           .then(function (result) {
             // With parameters and options
             helper.assertInstanceOf(result, types.ResultSet);
-            var options = { consistency: types.consistencies.localOne };
+            const options = { consistency: types.consistencies.localOne };
             return client.execute('select key from system.local WHERE key = ?', [ 'local' ], options);
           })
           .then(function () {
@@ -945,7 +945,7 @@ describe('Client', function () {
           });
       });
       it('should reject the promise when there is a syntax error', function () {
-        var client = setupInfo.client;
+        const client = setupInfo.client;
         return client.connect()
           .then(function () {
             return client.execute('SELECT INVALID QUERY');
@@ -959,10 +959,10 @@ describe('Client', function () {
       });
     });
     vdescribe('2.0', 'with lightweight transactions', function () {
-      var client = setupInfo.client;
-      var id = types.Uuid.random();
+      const client = setupInfo.client;
+      const id = types.Uuid.random();
       before(function (done) {
-        var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+        const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
         client.execute(query, [id, 'val' ], done);
       });
       [
@@ -991,16 +991,16 @@ function insertSelectTest(client, table, columns, values, hints, done) {
   utils.series([
     function (next) {
       var markers = '?';
-      for (var i = 1; i < columnsSplit.length; i++) {
+      for (let i = 1; i < columnsSplit.length; i++) {
         markers += ', ?';
       }
-      var query = util.format('INSERT INTO %s ' +
+      const query = util.format('INSERT INTO %s ' +
         '(%s) VALUES ' +
         '(%s)', table, columns, markers);
       client.execute(query, values, {prepare: 0, hints: hints}, next);
     },
     function (next) {
-      var query = util.format('SELECT %s FROM %s WHERE id = %s', columns, table, values[0]);
+      const query = util.format('SELECT %s FROM %s WHERE id = %s', columns, table, values[0]);
       client.execute(query, null, {prepare: 0}, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
@@ -1008,7 +1008,7 @@ function insertSelectTest(client, table, columns, values, hints, done) {
         var row = result.rows[0];
         assert.strictEqual(row.values().length, values.length);
         assert.strictEqual(row.keys().join(', '), columnsSplit.join(','));
-        for (var i = 0; i < values.length; i++) {
+        for (let i = 0; i < values.length; i++) {
           helper.assertValueEqual(values[i], row.get(i));
         }
         next();
@@ -1018,10 +1018,10 @@ function insertSelectTest(client, table, columns, values, hints, done) {
 }
 
 function verifyRow(table, id, fields, values, callback) {
-  var client = newInstance();
+  const client = newInstance();
   client.execute(util.format('SELECT %s FROM %s WHERE id = %s', fields, table, id), function (err, result) {
     assert.ifError(err);
-    var row = result.first();
+    const row = result.first();
     assert.ok(row, 'It should contain a row');
     helper.assertValueEqual(row.values(), values);
     callback();

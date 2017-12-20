@@ -40,7 +40,7 @@ describe('client read timeouts', function () {
     it('should move to next host for the initial prepare', getMoveNextHostTest(true, false));
     it('should callback in error when retryOnTimeout is false', function (done) {
       const client = newInstance({ socketOptions: { readTimeout: 3000 } });
-      const coordinators = {};
+      let coordinators = {};
       const errorsReceived = [];
       utils.series([
         client.connect.bind(client),
@@ -104,7 +104,7 @@ describe('client read timeouts', function () {
           }
         }
       });
-      const coordinators = {};
+      let coordinators = {};
       let connection;
       utils.series([
         client.connect.bind(client),
@@ -162,7 +162,7 @@ describe('client read timeouts', function () {
     });
     it('should move to next host for eachRow() executions', function (done) {
       const client = newInstance({ socketOptions: { readTimeout: 3000 } });
-      const coordinators = {};
+      let coordinators = {};
       utils.series([
         client.connect.bind(client),
         function warmup(next) {
@@ -257,7 +257,7 @@ describe('client read timeouts', function () {
         client.connect.bind(client),
         helper.toTask(helper.ccmHelper.pauseNode, null, 1),
         function checkPreparing(next) {
-          var queries = [{
+          const queries = [{
             query: 'INSERT INTO tbl1 (id, text_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 'one']
           }, {
@@ -288,7 +288,7 @@ describe('client read timeouts', function () {
         helper.toTask(helper.ccmHelper.pauseNode, null, 1),
         helper.toTask(helper.ccmHelper.pauseNode, null, 2),
         function checkPreparing(next) {
-          var queries = [{
+          const queries = [{
             query: 'INSERT INTO tbl2 (id, text_sample) VALUES (?, ?)',
             params: [types.Uuid.random(), 'one']
           }, {
@@ -298,7 +298,7 @@ describe('client read timeouts', function () {
           // It should be tried on all nodes and produce a NoHostAvailableError.
           client.batch(queries, { prepare: true, logged: false }, function (err) {
             helper.assertInstanceOf(err, errors.NoHostAvailableError);
-            var numErrors = Object.keys(err.innerErrors).length;
+            const numErrors = Object.keys(err.innerErrors).length;
             assert.strictEqual(numErrors, 2);
             next();
           });
@@ -343,7 +343,7 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
       }
       timeoutLogs.push(info);
     });
-    const coordinators = {};
+    let coordinators = {};
     utils.series([
       client.connect.bind(client),
       function warmup(next) {
@@ -363,7 +363,7 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
         assert.strictEqual(coordinators['1'], true);
         assert.strictEqual(coordinators['2'], true);
         coordinators = {};
-        var testAbortTimeout = setTimeout(function () {
+        const testAbortTimeout = setTimeout(function () {
           throw new Error('It should have been executed in the next (not paused) host.');
         }, expectedTimeoutMillis * 4);
         utils.times(10, function (n, timesNext) {
@@ -405,7 +405,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
 
   return (function timeoutErrorNotExpectedTest(done) {
     const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
-    const coordinators = {};
+    let coordinators = {};
     utils.series([
       client.connect.bind(client),
       function warmup(next) {
@@ -426,7 +426,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
         assert.strictEqual(coordinators['2'], true);
         coordinators = {};
         //execute 2 queries without waiting for the response
-        var cb = function (err, result) {
+        const cb = function (err, result) {
           assert.ifError(err);
           coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
         };

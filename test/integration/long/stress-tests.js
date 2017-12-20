@@ -14,10 +14,10 @@ describe('Client', function () {
     const client = newInstance({encoding: { copyBuffer: false}});
     //const client = newInstance();
     const keyspace = helper.getRandomName('ks');
-    var table = keyspace + '.' + helper.getRandomName('tbl');
+    const table = keyspace + '.' + helper.getRandomName('tbl');
     const selectQuery = 'SELECT * FROM ' + table;
-    var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
-    var times = 2000;
+    const insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
+    const times = 2000;
     utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
@@ -60,10 +60,10 @@ describe('Client', function () {
   it('should handle parallel insert and select with nodes failing', function (done) {
     const client = newInstance();
     const keyspace = helper.getRandomName('ks');
-    var table = keyspace + '.' + helper.getRandomName('tbl');
+    const table = keyspace + '.' + helper.getRandomName('tbl');
     const selectQuery = 'SELECT * FROM ' + table;
-    var insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
-    var times = 2000;
+    const insertQuery = util.format('INSERT INTO %s (id, text_sample, timestamp_sample) VALUES (?, ?, ?)', table);
+    const times = 2000;
     utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
@@ -112,11 +112,11 @@ describe('Client', function () {
     const client = newInstance();
     const keyspace = helper.getRandomName('ks');
     const table = helper.getRandomName('tbl');
-    var clientInsert = newInstance({keyspace: keyspace});
-    var clientSelect = newInstance({keyspace: keyspace});
+    const clientInsert = newInstance({keyspace: keyspace});
+    const clientSelect = newInstance({keyspace: keyspace});
     const selectQuery = 'SELECT * FROM ' + table + ' LIMIT 10';
-    var insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
-    var times = 500;
+    const insertQuery = util.format('INSERT INTO %s (id, double_sample, blob_sample) VALUES (?, ?, ?)', table);
+    const times = 500;
     utils.series([
       helper.ccmHelper.start(3),
       function createKs(next) {
@@ -136,7 +136,7 @@ describe('Client', function () {
         const options = {
           prepare: 1,
           consistency: types.consistencies.quorum};
-        var buf = utils.allocBuffer(i * 1024);
+        const buf = utils.allocBuffer(i * 1024);
         buf.write(i + ' dummy values ' + (new Array(100)).join(i.toString()));
         clientInsert.execute(insertQuery, [types.uuid(), buf.length, buf], options, next);
       }, callback);

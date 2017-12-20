@@ -11,8 +11,8 @@ describe('Client', function () {
   this.timeout(60000);
   context('with ssl enabled', function () {
     const keyspace = helper.getRandomName('ks');
-    var table = keyspace + '.' + helper.getRandomName('table');
-    var setupQueries = [
+    const table = keyspace + '.' + helper.getRandomName('table');
+    const setupQueries = [
       helper.createKeyspaceCql(keyspace, 1),
       helper.createTableCql(table)
     ];

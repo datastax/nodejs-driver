@@ -16,8 +16,8 @@ const commonKs = helper.getRandomName('ks');
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
-    var commonTable = commonKs + '.' + helper.getRandomName('table');
-    var commonTable2 = commonKs + '.' + helper.getRandomName('table');
+    const commonTable = commonKs + '.' + helper.getRandomName('table');
+    const commonTable2 = commonKs + '.' + helper.getRandomName('table');
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
       queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
@@ -56,20 +56,20 @@ describe('Client', function () {
     });
     it('should prepare and execute a queries in parallel', function (done) {
       const client = setupInfo.client;
-      var queries = [
+      const queries = [
         helper.queries.basic,
         helper.queries.basicNoResults,
         util.format('SELECT * FROM %s WHERE id1 = ?', commonTable),
         util.format('SELECT * FROM %s WHERE id1 IN (?, ?)', commonTable)
       ];
-      var params = [
+      const params = [
         null,
         null,
         [types.Uuid.random()],
         [types.Uuid.random(), types.Uuid.random()]
       ];
       utils.times(100, function (n, next) {
-        var index = n % 4;
+        const index = n % 4;
         client.execute(queries[index], params[index], {prepare: 1}, function (err, result) {
           assert.ifError(err);
           assert.ok(result);
@@ -124,20 +124,20 @@ describe('Client', function () {
       });
     });
     it('should serialize all guessed types', function (done) {
-      var values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, utils.allocBufferFromArray([1, 240]),
+      const values = [types.Uuid.random(), 'as', '111', null, new types.Long(0x1001, 0x0109AA), 1, utils.allocBufferFromArray([1, 240]),
         true, new Date(1221111111), types.InetAddress.fromString('10.12.0.1'), null, null, null];
-      var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
+      const columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, ' +
         'boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(setupInfo.client, values, columnNames, done);
     });
     it('should serialize all null values', function (done) {
-      var values = [types.Uuid.random(), null, null, null, null, null, null, null, null, null, null, null, null];
-      var columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
+      const values = [types.Uuid.random(), null, null, null, null, null, null, null, null, null, null, null, null];
+      const columnNames = 'id, ascii_sample, text_sample, int_sample, bigint_sample, double_sample, blob_sample, boolean_sample, timestamp_sample, inet_sample, timeuuid_sample, list_sample, set_sample';
       serializationTest(setupInfo.client, values, columnNames, done);
     });
     it('should use prepared metadata to determine the type of params in query', function (done) {
-      var values = [types.Uuid.random(), types.TimeUuid.now(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], types.InetAddress.fromString('192.168.1.1')];
-      var columnNames = 'id, timeuuid_sample, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
+      const values = [types.Uuid.random(), types.TimeUuid.now(), [1, 1000, 0], {k: '1'}, 1, -100019, ['arr'], types.InetAddress.fromString('192.168.1.1')];
+      const columnNames = 'id, timeuuid_sample, list_sample2, map_sample, int_sample, float_sample, set_sample, inet_sample';
       serializationTest(setupInfo.client, values, columnNames, done);
     });
     vit('2.0', 'should support IN clause with 1 marker', function (done) {
@@ -196,7 +196,7 @@ describe('Client', function () {
     });
     it('should encode and decode varint values', function (done) {
       const client = setupInfo.client;
-      var table = commonKs + '.' + helper.getRandomName('table');
+      const table = commonKs + '.' + helper.getRandomName('table');
       const expectedRows = {};
       utils.series([
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val varint)', table)),
@@ -204,7 +204,7 @@ describe('Client', function () {
           const query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
           utils.timesLimit(150, 100, function (n, next) {
             const id = types.uuid();
-            const value = types.Integer.fromNumber(n * 999);
+            let value = types.Integer.fromNumber(n * 999);
             value = value.multiply(types.Integer.fromString('9999901443'));
             if (n % 2 === 0) {
               //as a string also
@@ -219,7 +219,7 @@ describe('Client', function () {
             assert.ifError(err);
             result.rows.forEach(function (row) {
               helper.assertInstanceOf(row['val'], types.Integer);
-              var expectedValue = expectedRows[row['id']];
+              const expectedValue = expectedRows[row['id']];
               assert.ok(expectedValue);
               assert.strictEqual(row['val'].toString(), expectedValue.toString());
             });
@@ -230,7 +230,7 @@ describe('Client', function () {
     });
     it('should encode and decode decimal values', function (done) {
       const client = setupInfo.client;
-      var table = commonKs + '.' + helper.getRandomName('table');
+      const table = commonKs + '.' + helper.getRandomName('table');
       const expectedRows = {};
       utils.series([
         helper.toTask(client.execute, client, util.format('CREATE TABLE %s (id uuid primary key, val decimal)', table)),
@@ -238,7 +238,7 @@ describe('Client', function () {
           const query = util.format('INSERT INTO %s (id, val) VALUES (?, ?)', table);
           utils.timesLimit(150, 100, function (n, next) {
             const id = types.Uuid.random();
-            var value = (n * 999).toString() + '.' + (100 + n * 7).toString();
+            let value = (n * 999).toString() + '.' + (100 + n * 7).toString();
             if (n % 10 === 0) {
               value = '-' + value;
             }
@@ -255,7 +255,7 @@ describe('Client', function () {
             assert.ifError(err);
             result.rows.forEach(function (row) {
               helper.assertInstanceOf(row['val'], types.BigDecimal);
-              var expectedValue = expectedRows[row['id']];
+              const expectedValue = expectedRows[row['id']];
               assert.ok(expectedValue);
               assert.strictEqual(row['val'].toString(), expectedValue.toString());
             });
@@ -304,9 +304,9 @@ describe('Client', function () {
     });
     it('should encode and decode maps using Map polyfills', function (done) {
       const client = newInstance({ encoding: { map: helper.Map}});
-      var table = commonKs + '.' + helper.getRandomName('table');
+      const table = commonKs + '.' + helper.getRandomName('table');
       const MapPF = helper.Map;
-      var values = [
+      const values = [
         [
           //map1 to n with array of length 2 as values
           Uuid.random(),
@@ -317,7 +317,7 @@ describe('Client', function () {
           new MapPF([[types.timeuuid(), types.BigDecimal.fromString('1.20008')], [types.timeuuid(), types.BigDecimal.fromString('-9.26')]])
         ]
       ];
-      var createTableCql = util.format('CREATE TABLE %s ' +
+      const createTableCql = util.format('CREATE TABLE %s ' +
       '(id uuid primary key, ' +
       'map_text_text map<text,text>, ' +
       'map_int_date map<int,timestamp>, ' +
@@ -335,7 +335,7 @@ describe('Client', function () {
         },
         function selectData(seriesNext) {
           //Make ? markers C*1.2-compatible
-          var markers = values.map(function () { return '?'; }).join(',');
+          const markers = values.map(function () { return '?'; }).join(',');
           const query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
           client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
             assert.ifError(err);
@@ -356,9 +356,9 @@ describe('Client', function () {
     });
     it('should encode and decode sets using Set polyfills', function (done) {
       const client = newInstance({ encoding: { set: helper.Set}});
-      var table = commonKs + '.' + helper.getRandomName('table');
+      const table = commonKs + '.' + helper.getRandomName('table');
       const SetPF = helper.Set;
-      var values = [
+      const values = [
         [
           Uuid.random(),
           new SetPF(['k3', 'v33333122', 'z1', 'z2']),
@@ -376,7 +376,7 @@ describe('Client', function () {
           null
         ]
       ];
-      var createTableCql = util.format('CREATE TABLE %s ' +
+      const createTableCql = util.format('CREATE TABLE %s ' +
       '(id uuid primary key, ' +
       'set_text set<text>, ' +
       'set_timestamp set<timestamp>, ' +
@@ -394,7 +394,7 @@ describe('Client', function () {
         },
         function selectData(seriesNext) {
           //Make ? markers C*1.2-compatible
-          var markers = values.map(function () { return '?'; }).join(',');
+          const markers = values.map(function () { return '?'; }).join(',');
           const query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
           client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
             assert.ifError(err);
@@ -420,12 +420,12 @@ describe('Client', function () {
     });
     vit('2.1', 'should support protocol level timestamp', function (done) {
       const client = setupInfo.client;
-      var id = Uuid.random();
+      const id = Uuid.random();
       const timestamp = types.generateTimestamp(new Date(), 456);
       utils.series([
         function insert(next) {
           const query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
-          var params = [id, types.TimeUuid.now(), 'hello sample timestamp'];
+          const params = [id, types.TimeUuid.now(), 'hello sample timestamp'];
           client.execute(query, params, { timestamp: timestamp, prepare: 1}, next);
         },
         function select(next) {
@@ -444,16 +444,16 @@ describe('Client', function () {
       const client = newInstance({ keyspace: commonKs,
         queryOptions: { consistency: types.consistencies.quorum,
           prepare: true}});
-      var createTableCql = 'CREATE TABLE tbl_nested (' +
+      const createTableCql = 'CREATE TABLE tbl_nested (' +
         'id uuid PRIMARY KEY, ' +
         'map1 map<text, frozen<set<timeuuid>>>, ' +
         'list1 list<frozen<set<timeuuid>>>)';
-      var id = Uuid.random();
-      var map = {
+      const id = Uuid.random();
+      const map = {
         'key1': [types.TimeUuid.now(), types.TimeUuid.now()],
         'key2': [types.TimeUuid.now()]
       };
-      var list = [
+      const list = [
         [types.TimeUuid.now()],
         [types.TimeUuid.now(), types.TimeUuid.now()]
       ];
@@ -507,7 +507,7 @@ describe('Client', function () {
         commonTable,
         commonTable
       );
-      var params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 2562) };
+      const params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 2562) };
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);
@@ -520,7 +520,7 @@ describe('Client', function () {
     it('should support hardcoded parameters that are part of the routing key', function (done) {
       const client = setupInfo.client;
       const table = helper.getRandomName('tbl');
-      var createQuery = util.format('CREATE TABLE %s (a int, b int, c int, d int, ' +
+      const createQuery = util.format('CREATE TABLE %s (a int, b int, c int, d int, ' +
         'PRIMARY KEY ((a, b, c)))', table);
       utils.series([
         helper.toTask(client.execute, client, createQuery),
@@ -535,8 +535,8 @@ describe('Client', function () {
     });
     it('should allow undefined value as a null or unset depending on the protocol version', function (done) {
       const client1 = newInstance();
-      var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
-      var id = Uuid.random();
+      const client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
+      const id = Uuid.random();
       utils.series([
         client1.connect.bind(client1),
         client2.connect.bind(client2),
@@ -619,7 +619,7 @@ describe('Client', function () {
       // empty strings are an interesting case in collections as they have 0 length.
       const client = setupInfo.client;
       const tid = types.TimeUuid.now();
-      var id = Uuid.random();
+      const id = Uuid.random();
       const map = {};
       map[tid] = '';
       utils.series([
@@ -643,7 +643,7 @@ describe('Client', function () {
     });
     describe('with a different keyspace', function () {
       it('should fill in the keyspace in the query options passed to the lbp', function (done) {
-        var lbp = new loadBalancing.RoundRobinPolicy();
+        const lbp = new loadBalancing.RoundRobinPolicy();
         lbp.newQueryPlanOriginal = lbp.newQueryPlan;
         const queryOptionsArray = [];
         lbp.newQueryPlan = function (query, queryOptions, callback) {
@@ -658,7 +658,7 @@ describe('Client', function () {
           },
           client.shutdown.bind(client),
           function assertResults(next) {
-            var queryOptions = queryOptionsArray[queryOptionsArray.length - 1];
+            const queryOptions = queryOptionsArray[queryOptionsArray.length - 1];
             assert.strictEqual(queryOptions.keyspace, 'system');
             next();
           }
@@ -676,12 +676,12 @@ describe('Client', function () {
         ], done);
       });
       vit('2.1', 'should encode objects into udt', function (done) {
-        var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
+        const insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
         const selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
         const client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true }});
-        var id = Uuid.random();
-        var phone = { alias: 'work2', number: '555 9012', country_code: 54};
-        var address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
+        const id = Uuid.random();
+        const phone = { alias: 'work2', number: '555 9012', country_code: 54};
+        const address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
         utils.series([
           function insert(next) {
             client.execute(insertQuery, [id, phone, address], next);
@@ -690,12 +690,12 @@ describe('Client', function () {
             client.execute(selectQuery, [id], function (err, result) {
               assert.ifError(err);
               const row = result.first();
-              var phoneResult = row['phone_col'];
+              const phoneResult = row['phone_col'];
               assert.strictEqual(phoneResult.alias, phone.alias);
               assert.strictEqual(phoneResult.number, phone.number);
               assert.strictEqual(phoneResult.country_code, phone.country_code);
               assert.equal(phoneResult.other, phone.other);
-              var addressResult = row['address_col'];
+              const addressResult = row['address_col'];
               assert.strictEqual(addressResult.street, address.street);
               assert.strictEqual(addressResult.ZIP, address.ZIP);
               assert.strictEqual(addressResult.phones.length, 1);
@@ -708,12 +708,12 @@ describe('Client', function () {
         ], done);
       });
       vit('2.1', 'should encode and decode tuples', function (done) {
-        var insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
+        const insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
         const selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
         const client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
-        var id1 = Uuid.random();
-        var tuple1 = new types.Tuple('val1', 1);
-        var tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
+        const id1 = Uuid.random();
+        const tuple1 = new types.Tuple('val1', 1);
+        const tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
         utils.series([
           function insert1(next) {
             client.execute(insertQuery, [id1, tuple1, tuple2], next);
@@ -728,8 +728,8 @@ describe('Client', function () {
             client.execute(selectQuery, [id1], function (err, result) {
               assert.ifError(err);
               const row = result.first();
-              var tuple1Result = row['tuple_col1'];
-              var tuple2Result = row['tuple_col2'];
+              const tuple1Result = row['tuple_col1'];
+              const tuple2Result = row['tuple_col2'];
               assert.strictEqual(tuple1Result.length, 2);
               assert.strictEqual(tuple1Result.get(0), 'val1');
               assert.strictEqual(tuple1Result.get(0), tuple1.get(0));
@@ -745,7 +745,7 @@ describe('Client', function () {
       });
     });
     describe('with smallint and tinyint types', function () {
-      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample) VALUES (?, ?, ?)';
+      const insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample) VALUES (?, ?, ?)';
       const selectQuery = 'SELECT id, smallint_sample, tinyint_sample FROM tbl_smallints WHERE id = ?';
       before(function (done) {
         const query = 'CREATE TABLE tbl_smallints ' +
@@ -753,7 +753,7 @@ describe('Client', function () {
         setupInfo.client.execute(query, done);
       });
       vit('2.2', 'should encode and decode smallint and tinyint values as Number', function (done) {
-        var values = [
+        const values = [
           [Uuid.random(), 1, 1],
           [Uuid.random(), 0, 0],
           [Uuid.random(), -1, -2],
@@ -781,7 +781,7 @@ describe('Client', function () {
     describe('with date and time types', function () {
       const LocalDate = types.LocalDate;
       const LocalTime = types.LocalTime;
-      var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
+      const insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
       const selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
       before(function (done) {
         const query = 'CREATE TABLE tbl_datetimes ' +
@@ -789,7 +789,7 @@ describe('Client', function () {
         setupInfo.client.execute(query, done);
       });
       vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
-        var values = [
+        const values = [
           [Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
           [Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
           [Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
@@ -820,9 +820,9 @@ describe('Client', function () {
     describe('with unset', function () {
       vit('2.2', 'should allow unset as a valid value', function (done) {
         const client1 = newInstance();
-        var client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
-        var id1 = Uuid.random();
-        var id2 = Uuid.random();
+        const client2 = newInstance({ encoding: { useUndefinedAsUnset: true}});
+        const id1 = Uuid.random();
+        const id2 = Uuid.random();
         utils.series([
           client1.connect.bind(client1),
           client2.connect.bind(client2),
@@ -883,7 +883,7 @@ describe('Client', function () {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 10);
               // each key should be a multiple of 10.
-              var keys = result.rows.map(function(row) {
+              const keys = result.rows.map(function(row) {
                 assert.strictEqual(row['v'], 0);
                 return row['k'];
               }).sort();
@@ -910,7 +910,7 @@ describe('Client', function () {
             client.execute(query, [[20,19,18]], {prepare: 1}, function(err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 1);
-              var row = result.rows[0];
+              const row = result.rows[0];
               assert.strictEqual(row['k'], 21);
               assert.deepEqual(row['v'], [20,19,18]);
               seriesNext();
@@ -927,7 +927,7 @@ describe('Client', function () {
           function insertData(seriesNext) {
             const query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              var v = {
+              const v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };
@@ -943,8 +943,8 @@ describe('Client', function () {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 10);
               // each key should be a multiple of 10.
-              var keys = result.rows.map(function(row) {
-                var k = row['k'];
+              const keys = result.rows.map(function(row) {
+                const k = row['k'];
                 assert.deepEqual(row['v'], {'key1': k + 1, 'keyt10' : k * 10, 'by10' : k / 10});
                 return k;
               }).sort();
@@ -963,7 +963,7 @@ describe('Client', function () {
           function insertData(seriesNext) {
             const query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              var v = {
+              const v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };
@@ -975,7 +975,7 @@ describe('Client', function () {
             client.execute(query, [100], {prepare: 1}, function(err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 2);
-              var rows = result.rows.sort(function(a, b) {
+              const rows = result.rows.sort(function(a, b) {
                 return a['k'] - b['k'];
               });
 
@@ -997,7 +997,7 @@ describe('Client', function () {
           function insertData(seriesNext) {
             const query = util.format('INSERT INTO %s (k, v) VALUES (?, ?)', table);
             utils.times(100, function (n, next) {
-              var v = {
+              const v = {
                 'key1' : n + 1,
                 'keyt10' : n * 10
               };
@@ -1009,7 +1009,7 @@ describe('Client', function () {
             client.execute(query, ['key1', 100], {prepare: 1}, function(err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 1);
-              var rows = result.rows;
+              const rows = result.rows;
               assert.strictEqual(rows[0]['k'], 99);
               assert.deepEqual(rows[0]['v'], {'key1' : 100, 'keyt10' : 990});
               seriesNext();
@@ -1019,9 +1019,9 @@ describe('Client', function () {
       });
     });
     vdescribe('3.0', 'with materialized views', function () {
-      var keyspace = 'ks_view_prepared';
+      const keyspace = 'ks_view_prepared';
       before(function createTables(done) {
-        var queries = [
+        const queries = [
           "CREATE KEYSPACE ks_view_prepared WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}",
           "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
           "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
@@ -1035,12 +1035,12 @@ describe('Client', function () {
           contactPoints: helper.baseOptions.contactPoints
         });
         utils.timesSeries(10, function (n, timesNext) {
-          var game = n.toString();
+          const game = n.toString();
           const query = 'SELECT * FROM alltimehigh WHERE game = ?';
           client.execute(query, [game], { traceQuery: true, prepare: true}, function (err, result) {
             assert.ifError(err);
-            var coordinator = result.info.queriedHost;
-            var traceId = result.info.traceId;
+            const coordinator = result.info.queriedHost;
+            const traceId = result.info.traceId;
             client.metadata.getTrace(traceId, function (err, trace) {
               assert.ifError(err);
               trace.events.forEach(function (event) {
@@ -1067,13 +1067,13 @@ function newInstance(options) {
 }
 
 function serializationTest(client, values, columns, done) {
-  var table = commonKs + '.' + helper.getRandomName('table');
+  const table = commonKs + '.' + helper.getRandomName('table');
   const queryOptions = { prepare: true, consistency: types.consistencies.localQuorum };
   utils.series([
     helper.toTask(client.execute, client, helper.createTableCql(table)),
     function (next) {
-      var markers = '?';
-      var columnsSplit = columns.split(',');
+      let markers = '?';
+      const columnsSplit = columns.split(',');
       for (let i = 1; i < columnsSplit.length; i++) {
         markers += ', ?';
       }
@@ -1088,7 +1088,7 @@ function serializationTest(client, values, columns, done) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');
-        var row = result.rows[0];
+        const row = result.rows[0];
         assert.strictEqual(row.values().length, values.length);
         for (let i = 0; i < values.length; i++) {
           helper.assertValueEqual(values[i], row.get(i));

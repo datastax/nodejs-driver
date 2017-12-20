@@ -15,7 +15,7 @@ describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 0}, callback)', function () {
     const keyspace = helper.getRandomName('ks');
-    var table = keyspace + '.' + helper.getRandomName('table');
+    const table = keyspace + '.' + helper.getRandomName('table');
     const selectAllQuery = 'SELECT * FROM ' + table;
     const setupInfo = helper.setup(1, { keyspace: keyspace, queries: [ helper.createTableCql(table) ] });
     it('should execute a basic query', function (done) {
@@ -73,50 +73,50 @@ describe('Client', function () {
     });
     vit('2.0', 'should guess known types', function (done) {
       const client = setupInfo.client;
-      var columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
+      const columns = 'id, timeuuid_sample, text_sample, double_sample, timestamp_sample, blob_sample, list_sample';
       //a precision a float32 can represent
-      var values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), utils.allocBufferUnsafe(100), ['one', 'two']];
+      const values = [types.Uuid.random(), types.TimeUuid.now(), 'text sample 1', 133, new Date(121212211), utils.allocBufferUnsafe(100), ['one', 'two']];
       //no hint
       insertSelectTest(client, table, columns, values, null, done);
     });
     vit('2.0', 'should use parameter hints as number for simple types', function (done) {
       const client = setupInfo.client;
-      var columns = 'id, text_sample, float_sample, int_sample';
+      const columns = 'id, text_sample, float_sample, int_sample';
       //a precision a float32 can represent
-      var values = [types.Uuid.random(), 'text sample', 1000.0999755859375, -12];
-      var hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float, types.dataTypes.int];
+      const values = [types.Uuid.random(), 'text sample', 1000.0999755859375, -12];
+      const hints = [types.dataTypes.uuid, types.dataTypes.text, types.dataTypes.float, types.dataTypes.int];
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints as string for simple types', function (done) {
-      var columns = 'id, text_sample, float_sample, int_sample';
-      var values = [types.Uuid.random(), 'text sample', -9, 1];
-      var hints = [null, 'text', 'float', 'int'];
+      const columns = 'id, text_sample, float_sample, int_sample';
+      const values = [types.Uuid.random(), 'text sample', -9, 1];
+      const hints = [null, 'text', 'float', 'int'];
       const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints as string for complex types partial', function (done) {
-      var columns = 'id, map_sample, list_sample, set_sample';
-      var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
-      var hints = [null, 'map', 'list', 'set'];
+      const columns = 'id, map_sample, list_sample, set_sample';
+      const values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
+      const hints = [null, 'map', 'list', 'set'];
       const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints as string for complex types complete', function (done) {
-      var columns = 'id, map_sample, list_sample, set_sample';
-      var values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
+      const columns = 'id, map_sample, list_sample, set_sample';
+      const values = [types.Uuid.random(), {val1: 'text sample1'}, ['list_text1'], ['set_text1']];
       //complete info
-      var hints = [null, 'map<text, text>', 'list<text>', 'set<text>'];
+      const hints = [null, 'map<text, text>', 'list<text>', 'set<text>'];
       const client = setupInfo.client;
       insertSelectTest(client, table, columns, values, hints, done);
     });
     vit('2.0', 'should use parameter hints for custom map polyfills', function (done) {
-      var columns = 'id, map_sample';
-      var map = new helper.Map();
+      const columns = 'id, map_sample';
+      const map = new helper.Map();
       map.set('k1', 'value 1');
       map.set('k2', 'value 2');
-      var values = [types.Uuid.random(), map];
+      const values = [types.Uuid.random(), map];
       //complete info
-      var hints = [null, 'map<text, text>'];
+      const hints = [null, 'map<text, text>'];
       const client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
     });
@@ -194,13 +194,13 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rowLength, 25);
             // should not page
-            var iterator = result[Symbol.iterator]();
+            const iterator = result[Symbol.iterator]();
             let count = 0;
             const uuids = [];
             let item;
             for (item = iterator.next(); !item.done; item = iterator.next()) {
               assert.ok(item.value);
-              var id = item.value.id;
+              const id = item.value.id;
               // should not encounter same id twice.
               assert.strictEqual(uuids.indexOf(id), -1);
               uuids.push(item.value.id);
@@ -221,7 +221,7 @@ describe('Client', function () {
       const client = setupInfo.client;
       const query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
       //valid params
-      var params = [types.Uuid.random(), types.Uuid.random(), types.Uuid.random()];
+      const params = [types.Uuid.random(), types.Uuid.random(), types.Uuid.random()];
       utils.series([
         client.connect.bind(client),
         function hintsArrayAsObject(next) {
@@ -260,7 +260,7 @@ describe('Client', function () {
         setTimeout(function() {
           const query = util.format('SELECT * FROM %s WHERE list_sample CONTAINS ? AND list_sample CONTAINS ? ALLOW FILTERING', table);
           //valid params
-          var params = ['val1', 'val2'];
+          const params = ['val1', 'val2'];
           client.execute(query, params, function (err) {
             //it should not fail
             assert.ifError(err);
@@ -330,7 +330,7 @@ describe('Client', function () {
           '1': 1,
           '2': 0
         }}});
-      var execute = function (next) {
+      const execute = function (next) {
         client.execute(selectAllQuery, next);
       };
       utils.parallel([
@@ -349,7 +349,7 @@ describe('Client', function () {
     it('should return the column definitions', function (done) {
       const client = setupInfo.client;
       //insert at least 1 row
-      var insertQuery = util.format('INSERT INTO %s (id) VALUES (%s)', table, types.Uuid.random());
+      const insertQuery = util.format('INSERT INTO %s (id) VALUES (%s)', table, types.Uuid.random());
       utils.series([
         client.connect.bind(client),
         helper.toTask(client.execute, client, insertQuery),
@@ -403,7 +403,7 @@ describe('Client', function () {
           client.execute(query, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 1);
-            var row = result.rows[0];
+            const row = result.rows[0];
             const expected = util.format('{"id":"%s",' +
               '"timeuuid_sample":"%s",' +
               '"inet_sample":"::2233:0:0:bb",' +
@@ -543,7 +543,7 @@ describe('Client', function () {
     });
     describe('with udt and tuple', function () {
       const sampleId = types.Uuid.random();
-      var insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
+      const insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';
       const selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = %s';
       before(function (done) {
         const client = setupInfo.client;
@@ -567,7 +567,7 @@ describe('Client', function () {
           assert.ok(result.columns);
           assert.strictEqual(result.columns.length, 3);
           assert.strictEqual(result.columns[1].type.code, types.dataTypes.udt);
-          var phoneInfo = result.columns[1].type.info;
+          const phoneInfo = result.columns[1].type.info;
           assert.strictEqual(phoneInfo.name, 'phone');
           assert.strictEqual(phoneInfo.fields.length, 4);
           assert.strictEqual(phoneInfo.fields[0].name, 'alias');
@@ -575,7 +575,7 @@ describe('Client', function () {
           assert.strictEqual(phoneInfo.fields[2].name, 'country_code');
           assert.strictEqual(phoneInfo.fields[2].type.code, types.dataTypes.int);
           assert.strictEqual(result.columns[2].type.code, types.dataTypes.udt);
-          var addressInfo = result.columns[2].type.info;
+          const addressInfo = result.columns[2].type.info;
           assert.strictEqual(addressInfo.name, 'address');
           assert.strictEqual(addressInfo.fields.length, 3);
           assert.strictEqual(addressInfo.fields[0].name, 'street');
@@ -584,7 +584,7 @@ describe('Client', function () {
           assert.strictEqual(addressInfo.fields[2].name, 'phones');
           assert.strictEqual(addressInfo.fields[2].type.code, types.dataTypes.set);
           assert.strictEqual(addressInfo.fields[2].type.info.code, types.dataTypes.udt);
-          var subPhone = addressInfo.fields[2].type.info.info;
+          const subPhone = addressInfo.fields[2].type.info.info;
           assert.strictEqual(subPhone.name, 'phone');
           assert.strictEqual(subPhone.fields.length, 4);
           assert.strictEqual(subPhone.fields[0].name, 'alias');
@@ -602,13 +602,13 @@ describe('Client', function () {
           assert.ifError(err);
           const row = result.first();
           assert.ok(row);
-          var phone = row['phone_col'];
+          const phone = row['phone_col'];
           assert.ok(phone);
           assert.strictEqual(phone['alias'], 'home');
           assert.strictEqual(phone['number'], '555 1234');
           assert.strictEqual(phone['country_code'], 54);
           assert.strictEqual(phone['other'], null);
-          var address = row['address_col'];
+          const address = row['address_col'];
           assert.ok(address);
           assert.strictEqual(address['street'], 'NightMan');
           assert.strictEqual(address['ZIP'], 90988);
@@ -622,8 +622,8 @@ describe('Client', function () {
         });
       });
       vit('2.1', 'should allow udt parameter hints and retrieve metadata', function (done) {
-        var phone = { alias: 'home2', number: '555 0000', country_code: 34, other: true};
-        var address = {street: 'NightMan2', ZIP: 90987, phones: [{ 'alias': 'personal2', 'number': '555 0001'}, {alias: 'work2'}]};
+        const phone = { alias: 'home2', number: '555 0000', country_code: 34, other: true};
+        const address = {street: 'NightMan2', ZIP: 90987, phones: [{ 'alias': 'personal2', 'number': '555 0001'}, {alias: 'work2'}]};
         const id = types.Uuid.random();
         const client = setupInfo.client;
         utils.series([
@@ -655,7 +655,7 @@ describe('Client', function () {
       vit('2.1', 'should allow tuple parameter hints', function (done) {
         const client = setupInfo.client;
         const id = types.Uuid.random();
-        var tuple = new types.Tuple('Surf Rider', 110, utils.allocBufferFromString('0f0f', 'hex'));
+        const tuple = new types.Tuple('Surf Rider', 110, utils.allocBufferFromString('0f0f', 'hex'));
         utils.series([
           function insert(next) {
             const query ='INSERT INTO tbl_tuples (id, tuple_col) VALUES (?, ?)';
@@ -678,7 +678,7 @@ describe('Client', function () {
       });
       vit('2.2', 'should allow insertions as json', function (done) {
         const client = setupInfo.client;
-        var o = {
+        const o = {
           id: types.Uuid.random(),
           address_col: {
             street: 'whatever',
@@ -709,7 +709,7 @@ describe('Client', function () {
     describe('with named parameters', function () {
       vit('2.1', 'should allow named parameters', function (done) {
         const query = util.format('INSERT INTO %s (id, text_sample, bigint_sample) VALUES (:id, :myText, :myBigInt)', table);
-        var values = { id: types.Uuid.random(), myText: 'hello', myBigInt: types.Long.fromNumber(2)};
+        const values = { id: types.Uuid.random(), myText: 'hello', myBigInt: types.Long.fromNumber(2)};
         const client = setupInfo.client;
         client.execute(query, values, function (err) {
           assert.ifError(err);
@@ -718,7 +718,7 @@ describe('Client', function () {
       });
       vit('2.1', 'should use parameter hints', function (done) {
         const query = util.format('INSERT INTO %s (id, int_sample, float_sample) VALUES (:id, :myInt, :myFloat)', table);
-        var values = {id: types.Uuid.random(), myInt: 100, myFloat: 2.0999999046325684};
+        const values = {id: types.Uuid.random(), myInt: 100, myFloat: 2.0999999046325684};
         const client = setupInfo.client;
         client.execute(query, values, { hints: {myFloat: 'float', myInt: {code: types.dataTypes.int}}}, function (err) {
           assert.ifError(err);
@@ -727,7 +727,7 @@ describe('Client', function () {
       });
       vit('2.1', 'should allow parameters with different casings', function (done) {
         const query = util.format('INSERT INTO %s (id, text_sample, list_sample2) VALUES (:ID, :MyText, :mylist)', table);
-        var values = { id: types.Uuid.random(), mytext: 'hello', myLIST: [ -1, 0, 500, 3]};
+        const values = { id: types.Uuid.random(), mytext: 'hello', myLIST: [ -1, 0, 500, 3]};
         const client = setupInfo.client;
         client.execute(query, values, { hints: { myLIST: 'list<int>'}}, function (err) {
           assert.ifError(err);
@@ -737,7 +737,7 @@ describe('Client', function () {
     });
     describe('with smallint and tinyint', function () {
       const sampleId = types.Uuid.random();
-      var insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample, text_sample) VALUES (%s, %s, %s, %s)';
+      const insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample, text_sample) VALUES (%s, %s, %s, %s)';
       const selectQuery = 'SELECT id, smallint_sample, tinyint_sample, text_sample FROM tbl_smallints WHERE id = %s';
       before(function (done) {
         const client = setupInfo.client;
@@ -785,7 +785,7 @@ describe('Client', function () {
     describe('with date and time types', function () {
       const LocalDate = types.LocalDate;
       const LocalTime = types.LocalTime;
-      var insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
+      const insertQuery = 'INSERT INTO tbl_datetimes (id, date_sample, time_sample) VALUES (?, ?, ?)';
       const selectQuery = 'SELECT id, date_sample, time_sample FROM tbl_datetimes WHERE id = ?';
       before(function (done) {
         const query = 'CREATE TABLE tbl_datetimes ' +
@@ -793,7 +793,7 @@ describe('Client', function () {
         setupInfo.client.execute(query, done);
       });
       vit('2.2', 'should encode and decode date and time values as LocalDate and LocalTime', function (done) {
-        var values = [
+        const values = [
           [types.Uuid.random(), new LocalDate(1969, 10, 13), new LocalTime(types.Long.fromString('0'))],
           [types.Uuid.random(), new LocalDate(2010, 4, 29), LocalTime.fromString('15:01:02.1234')],
           [types.Uuid.random(), new LocalDate(2005, 8, 5), LocalTime.fromString('01:56:03.000501')],
@@ -839,7 +839,7 @@ describe('Client', function () {
       });
       vit('2.2', 'should allow insert of all ECMAScript types as json', function (done) {
         const client = setupInfo.client;
-        var o = {
+        const o = {
           id: types.Uuid.random(),
           text_sample: 'hello json',
           int_sample: 100,
@@ -882,7 +882,7 @@ describe('Client', function () {
       });
       vit('2.2', 'should allow insert of all non - ECMAScript types as json', function (done) {
         const client = setupInfo.client;
-        var o = {
+        const o = {
           id:   types.Uuid.random(),
           tid:  types.TimeUuid.now(),
           dec:  new types.BigDecimal(113, 2),
@@ -987,10 +987,10 @@ describe('Client', function () {
 });
 
 function insertSelectTest(client, table, columns, values, hints, done) {
-  var columnsSplit = columns.split(',');
+  const columnsSplit = columns.split(',');
   utils.series([
     function (next) {
-      var markers = '?';
+      let markers = '?';
       for (let i = 1; i < columnsSplit.length; i++) {
         markers += ', ?';
       }
@@ -1005,7 +1005,7 @@ function insertSelectTest(client, table, columns, values, hints, done) {
         assert.ifError(err);
         assert.ok(result);
         assert.ok(result.rows && result.rows.length > 0, 'There should be a row');
-        var row = result.rows[0];
+        const row = result.rows[0];
         assert.strictEqual(row.values().length, values.length);
         assert.strictEqual(row.keys().join(', '), columnsSplit.join(','));
         for (let i = 0; i < values.length; i++) {

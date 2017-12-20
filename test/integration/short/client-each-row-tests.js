@@ -65,8 +65,8 @@ describe('Client', function () {
     it('should call rowCallback per each row', function (done) {
       const client = setupInfo.client;
       const table = helper.getRandomName('table');
-      var length = 300;
-      var noop = function () {};
+      const length = 300;
+      const noop = function () {};
       let counter = 0;
       utils.series([
         function createTable(next) {
@@ -110,7 +110,7 @@ describe('Client', function () {
     vit('2.0', 'should autoPage', function (done) {
       const table = helper.getRandomName('table');
       const client = setupInfo.client;
-      var noop = function () {};
+      const noop = function () {};
       utils.series([
         function createTable(next) {
           client.eachRow(helper.createTableCql(table), [], noop, helper.waitSchema(client, next));
@@ -175,8 +175,8 @@ describe('Client', function () {
     it('should call rowCallback per each row', function (done) {
       const client = setupInfo.client;
       const table = helper.getRandomName('table');
-      var length = 500;
-      var noop = function () {};
+      const length = 500;
+      const noop = function () {};
       let counter = 0;
       utils.series([
         function createTable(next) {
@@ -201,7 +201,7 @@ describe('Client', function () {
     });
     it('should allow maps with float values NaN and infinite values', function (done) {
       const client = setupInfo.client;
-      var values = [
+      const values = [
         [ 'finite', { val: 1 }],
         [ 'NaN', { val: NaN }],
         [ 'Infinite', { val: Number.POSITIVE_INFINITY }],
@@ -240,10 +240,10 @@ describe('Client', function () {
     });
     vit('2.0', 'should autoPage on parallel different tables', function (done) {
       const keyspace = helper.getRandomName('ks');
-      var table1 = keyspace + '.' + helper.getRandomName('table');
-      var table2 = keyspace + '.' + helper.getRandomName('table');
+      const table1 = keyspace + '.' + helper.getRandomName('table');
+      const table2 = keyspace + '.' + helper.getRandomName('table');
       const client = newInstance({ queryOptions: { consistency: types.consistencies.quorum }});
-      var noop = function () {};
+      const noop = function () {};
       utils.series([
         function createKs(next) {
           client.eachRow(helper.createKeyspaceCql(keyspace, 3), [], noop, helper.waitSchema(client, next));
@@ -408,7 +408,7 @@ describe('Client', function () {
         queryOptions: { consistency: types.consistencies.quorum }
       });
       let counter = 0;
-      var rowLength = 10;
+      const rowLength = 10;
       utils.series([
         client.connect.bind(client),
         helper.toTask(insertTestData, null, client, table, rowLength),
@@ -494,7 +494,7 @@ describe('Client', function () {
         table,
         table
       );
-      var params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 2562) };
+      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 2562) };
       client.eachRow(query, params, { prepare: true }, utils.noop, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);
@@ -532,7 +532,7 @@ function insertTestData(client, table, length, callback) {
     },
     function insertData(seriesNext) {
       const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      var value = utils.stringRepeat('abcdefghij', 10);
+      const value = utils.stringRepeat('abcdefghij', 10);
       utils.timesLimit(length, 100, function (n, next) {
         client.eachRow(query, [types.Uuid.random(), value], {prepare: 1}, helper.noop, next);
       }, seriesNext);

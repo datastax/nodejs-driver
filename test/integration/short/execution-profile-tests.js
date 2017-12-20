@@ -20,7 +20,7 @@ describe('ProfileManager', function() {
    * init is called.
    */
   function decorateInitWithCounter(policy) {
-    var baseInit = policy.init;
+    const baseInit = policy.init;
     policy._initCalled = 0;
     policy.init = function () {
       policy._initCalled++;
@@ -31,15 +31,15 @@ describe('ProfileManager', function() {
 
   function createProfiles() {
     // A profile that targets dc1.
-    var dc1Profile = new ExecutionProfile('default', {
+    const dc1Profile = new ExecutionProfile('default', {
       loadBalancing: decorateInitWithCounter(new DCAwareRoundRobinPolicy('dc1'))
     });
     // A profile that targets 127.0.0.4 specifically.
-    var wlProfile = new ExecutionProfile('whitelist', {
+    const wlProfile = new ExecutionProfile('whitelist', {
       loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [helper.ipPrefix + '4:9042']))
     });
     // A profile with no defined lbp, it should fallback on the default profile's lbp.
-    var emptyProfile = new ExecutionProfile('empty');
+    const emptyProfile = new ExecutionProfile('empty');
 
     return [dc1Profile, wlProfile, emptyProfile];
   }
@@ -55,7 +55,7 @@ describe('ProfileManager', function() {
 
   function ensureOnlyHostsUsed(hostOctets, profile) {
     return (function test(done) {
-      var queryOptions = profile ? {executionProfile: profile} : {};
+      const queryOptions = profile ? {executionProfile: profile} : {};
       const hostsUsed = {};
 
       const client = newInstance();
@@ -101,15 +101,15 @@ describe('ProfileManager', function() {
     utils.series([
       client.connect.bind(client),
       function validateHostDistances(next) {
-        var hosts = client.hosts;
+        const hosts = client.hosts;
         assert.strictEqual(hosts.length, 4);
         hosts.forEach(function(h) {
           const n = helper.lastOctetOf(h);
-          var distance = client.profileManager.getDistance(h);
+          const distance = client.profileManager.getDistance(h);
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
           // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
           // so it should be considered remote.
-          var expectedDistance = n === '3' ? types.distance.remote : types.distance.local;
+          const expectedDistance = n === '3' ? types.distance.remote : types.distance.local;
           assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + n);
           assert.ok(h.isUp());
         });

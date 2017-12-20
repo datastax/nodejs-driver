@@ -16,13 +16,13 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should emit end when no rows', function (done) {
       const client = newInstance();
-      var stream = client.stream(helper.queries.basicNoResults, [], {prepare: false});
+      const stream = client.stream(helper.queries.basicNoResults, [], {prepare: false});
       stream
         .on('end', done)
         .on('readable', function () {
           //Node.js 0.10, readable is never called
           //Node.js 0.12, readable is called with null
-          var chunk = stream.read();
+          const chunk = stream.read();
           assert.strictEqual(chunk, null);
         })
         .on('error', done);
@@ -48,7 +48,7 @@ describe('Client', function () {
     });
     it('should be readable once when there is one row', function (done) {
       const client = newInstance();
-      var stream = client.stream(helper.queries.basic, []);
+      const stream = client.stream(helper.queries.basic, []);
       let counter = 0;
       stream
         .on('end', function () {
@@ -67,7 +67,7 @@ describe('Client', function () {
     });
     it('should emit response errors', function (done) {
       const client = newInstance();
-      var stream = client.stream('SELECT WILL FAIL', []);
+      const stream = client.stream('SELECT WILL FAIL', []);
       let errorCalled = false;
       stream
         .on('end', function () {
@@ -87,7 +87,7 @@ describe('Client', function () {
     });
     it('should not fail with autoPage when there isn\'t any data', function (done) {
       const client = newInstance({keyspace: 'system'});
-      var stream = client.stream(helper.queries.basicNoResults, [], {autoPage: true});
+      const stream = client.stream(helper.queries.basicNoResults, [], {autoPage: true});
       stream
         .on('end', function () {
           done();
@@ -103,7 +103,7 @@ describe('Client', function () {
     });
     it('should emit error if non-existent profile provided', function (done) {
       const client = newInstance();
-      var stream = client.stream(helper.queries.basicNoResults, [], {executionProfile: 'none'});
+      const stream = client.stream(helper.queries.basicNoResults, [], {executionProfile: 'none'});
       let errorCalled = false;
       stream
         .on('end', function () {
@@ -124,7 +124,7 @@ describe('Client', function () {
   });
   describe('#stream(query, params, {prepare: 1})', function () {
     const commonKs = helper.getRandomName('ks');
-    var commonTable = commonKs + '.' + helper.getRandomName('table');
+    const commonTable = commonKs + '.' + helper.getRandomName('table');
     before(function (done) {
       const client = newInstance();
       utils.series([
@@ -138,7 +138,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should prepare and emit end when no rows', function (done) {
       const client = newInstance();
-      var stream = client.stream(helper.queries.basicNoResults, [], { prepare: true });
+      const stream = client.stream(helper.queries.basicNoResults, [], { prepare: true });
       stream
         .on('end', function () {
           done();
@@ -155,8 +155,8 @@ describe('Client', function () {
     it('should prepare and emit the exact amount of rows', function (done) {
       const client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       const keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
-      var length = 1000;
+      const table = keyspace + '.' + helper.getRandomName('table');
+      const length = 1000;
       utils.series([
         client.connect.bind(client),
         function (next) {
@@ -167,7 +167,7 @@ describe('Client', function () {
         },
         function (next) {
           utils.timesLimit(length, 100, function (n, timesNext) {
-            const query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
+            let query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
             query = util.format(query, table, types.Uuid.random(), n, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
@@ -197,8 +197,8 @@ describe('Client', function () {
     it('should prepare and fetch paging the exact amount of rows', function (done) {
       const client = newInstance({queryOptions: {consistency: types.consistencies.quorum}});
       const keyspace = helper.getRandomName('ks');
-      var table = keyspace + '.' + helper.getRandomName('table');
-      var length = 350;
+      const table = keyspace + '.' + helper.getRandomName('table');
+      const length = 350;
       utils.series([
         client.connect.bind(client),
         function (next) {
@@ -209,7 +209,7 @@ describe('Client', function () {
         },
         function (next) {
           utils.timesLimit(length, 100, function (n, timesNext) {
-            const query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
+            let query = 'INSERT INTO %s (id, int_sample, bigint_sample) VALUES (%s, %d, %s)';
             query = util.format(query, table, types.Uuid.random(), n + 1, new types.Long(n, 0x090807).toString());
             client.execute(query, timesNext);
           }, next);
@@ -238,7 +238,7 @@ describe('Client', function () {
     });
     it('should emit argument parsing errors', function (done) {
       const client = newInstance();
-      var stream = client.stream(helper.queries.basic + ' WHERE key = ?', [{}], {prepare: 1});
+      const stream = client.stream(helper.queries.basic + ' WHERE key = ?', [{}], {prepare: 1});
       let errCalled = false;
       stream
         .on('error', function (err) {
@@ -257,7 +257,7 @@ describe('Client', function () {
     it('should emit other ResponseErrors', function (done) {
       const client = newInstance();
       //Invalid amount of parameters
-      var stream = client.stream(helper.queries.basic, ['param1'], {prepare: 1});
+      const stream = client.stream(helper.queries.basic, ['param1'], {prepare: 1});
       let errCalled = false;
       stream
         .on('readable', function () {
@@ -279,7 +279,7 @@ describe('Client', function () {
     it('should wait buffer until read', function (done) {
       const client = newInstance();
       let allRead = false;
-      var stream = client.stream(helper.queries.basic, null, {prepare: 1});
+      const stream = client.stream(helper.queries.basic, null, {prepare: 1});
       stream.
         on('end', function () {
           assert.strictEqual(allRead, true);
@@ -287,7 +287,7 @@ describe('Client', function () {
         })
         .on('error', helper.throwop)
         .on('readable', function () {
-          var streamContext = this;
+          const streamContext = this;
           setTimeout(function () {
             //delay all reading
             let row;
@@ -302,8 +302,8 @@ describe('Client', function () {
       const client = newInstance();
       const id = types.Uuid.random();
       const consistency = types.consistencies.quorum;
-      var rowsLength = 1000;
-      var fetchSize = 100;
+      const rowsLength = 1000;
+      const fetchSize = 100;
       utils.series([
         function insert(next) {
           const query = util.format('INSERT INTO %s (id1, id2, text_sample) VALUES (?, ?, ?)', commonTable);
@@ -313,7 +313,7 @@ describe('Client', function () {
         },
         function testBuffering(next) {
           const query = util.format('SELECT id2, text_sample from %s WHERE id1 = ?', commonTable);
-          var stream = client.stream(query, [id], { prepare: true, fetchSize: fetchSize, consistency: consistency});
+          const stream = client.stream(query, [id], { prepare: true, fetchSize: fetchSize, consistency: consistency});
           let rowsRead = 0;
           stream.
             on('end', function () {

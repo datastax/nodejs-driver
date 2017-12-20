@@ -12,7 +12,7 @@ const policies = require('../../../lib/policies');
 const RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
 const Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 const PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
-var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 
 describe('Client', function () {
@@ -133,7 +133,7 @@ describe('Client', function () {
         assert.ifError(err);
         //the 3 original hosts
         assert.strictEqual(client.hosts.length, 3);
-        var hosts = client.hosts.keys();
+        const hosts = client.hosts.keys();
         assert.strictEqual(hosts[0], contactPoints[0] + ':9042');
         assert.notEqual(hosts[1], contactPoints[1] + ':9042');
         assert.notEqual(hosts[2], contactPoints[1] + ':9042');
@@ -169,7 +169,7 @@ describe('Client', function () {
       client.connect(function (err) {
         assert.ifError(err);
         assert.ok(client.options.pooling.coreConnectionsPerHost);
-        var defaults = clientOptions.coreConnectionsPerHostV3;
+        let defaults = clientOptions.coreConnectionsPerHostV3;
         if (client.controlConnection.protocolVersion < 3) {
           defaults = clientOptions.coreConnectionsPerHostV2;
         }
@@ -211,7 +211,7 @@ describe('Client', function () {
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
-          var state = client.getState();
+          const state = client.getState();
           client.hosts.forEach(function (host) {
             assert.strictEqual(host.pool.connections.length, 3, 'For host ' + host.address);
             assert.strictEqual(state.getOpenConnections(host), 3);
@@ -221,7 +221,7 @@ describe('Client', function () {
       }, done);
     });
     it('should only warmup connections for hosts with local distance', function (done) {
-      var lbPolicy = new RoundRobinPolicy();
+      const lbPolicy = new RoundRobinPolicy();
       lbPolicy.getDistance = function (host) {
         const id = helper.lastOctetOf(host.address);
         if(id === '1') {
@@ -255,7 +255,7 @@ describe('Client', function () {
       });
     });
     it('should connect after unsuccessful attempt caused by a non-existent keyspace', function (done) {
-      var keyspace = 'ks_test_after_fail';
+      const keyspace = 'ks_test_after_fail';
       const client = newInstance({ keyspace: keyspace });
       utils.series([
         function tryConnect(next) {
@@ -355,7 +355,7 @@ describe('Client', function () {
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 1);
-          const expected = contactPoint + ':9042';
+          let expected = contactPoint + ':9042';
           if (contactPoint.indexOf('[') === 0) {
             expected = contactPoint.replace(/[[\]]/g, '');
           }
@@ -382,7 +382,7 @@ describe('Client', function () {
         function (next) {
           client.connect(function (err) {
             assert.ifError(err);
-            var hosts = client.hosts.values();
+            const hosts = client.hosts.values();
             assert.strictEqual(1, hosts.length);
             assert.strictEqual(typeof hosts[0].datacenter, 'string');
             assert.notEqual(hosts[0].datacenter.length, 0);
@@ -409,7 +409,7 @@ describe('Client', function () {
           helper.ccmHelper.start(2),
           client.connect.bind(client),
           function checkInitialState(next) {
-            var hosts = client.hosts.values();
+            const hosts = client.hosts.values();
             assert.ok(hosts[0].isUp());
             assert.ok(hosts[1].isUp());
             next();
@@ -501,7 +501,7 @@ describe('Client', function () {
           return done(err);
         }
         assert.strictEqual(client.hosts.length, 3);
-        var hosts = client.hosts.slice(0);
+        const hosts = client.hosts.slice(0);
         assert.strictEqual(hosts[0].pool.coreConnectionsLength, 3);
         assert.strictEqual(hosts[1].pool.coreConnectionsLength, 3);
         // wait for the pool to be the expected size
@@ -511,7 +511,7 @@ describe('Client', function () {
       });
     });
     it('should wait for schema agreement before calling back', function (done) {
-      var queries = [
+      const queries = [
         "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};",
         "CREATE TABLE ks1.tbl1 (id uuid PRIMARY KEY, value text)",
         "SELECT * FROM ks1.tbl1",
@@ -605,13 +605,13 @@ describe('Client', function () {
     });
     function changingDistancesTest(address) {
       return (function doTest(done) {
-        var lbp = new RoundRobinPolicy();
+        const lbp = new RoundRobinPolicy();
         let ignoredHost;
         let cc;
         lbp.getDistance = function (h) {
           return helper.lastOctetOf(h) === ignoredHost ? types.distance.ignored : types.distance.local;
         };
-        var connectionsPerHost = 5;
+        const connectionsPerHost = 5;
         const client = newInstance({
           policies: { loadBalancing: lbp },
           pooling: { coreConnectionsPerHost: { '0': connectionsPerHost } }
@@ -646,14 +646,14 @@ describe('Client', function () {
           }),
           queryAndCheckPool(500, function (coordinators) {
             // The pool for 1st and 3rd host should have the appropriate size by now.
-            var expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
+            const expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
             expectedPoolInfo[ignoredHost] = 0;
             assert.deepEqual(getPoolInfo(client), expectedPoolInfo );
             assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost;}));
           }),
           client.shutdown.bind(client),
           function checkPoolState(next) {
-            var expectedState = { '1': 0, '2': 0, '3': 0};
+            const expectedState = { '1': 0, '2': 0, '3': 0};
             assert.deepEqual(getPoolInfo(client), expectedState);
             setTimeout(function checkPoolStateDelayed() {
               assert.deepEqual(getPoolInfo(client), expectedState);
@@ -836,7 +836,7 @@ describe('Client', function () {
       ], done);
     });
     it('should reconnect in the background', function (done) {
-      var reconnectionDelay = 500;
+      const reconnectionDelay = 500;
       const client = newInstance({
         pooling: { heartBeatInterval: 0, warmup: true },
         policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) }
@@ -844,7 +844,7 @@ describe('Client', function () {
       utils.series([
         client.connect.bind(client),
         function (next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual('1', helper.lastOctetOf(client.controlConnection.host));
           assert.strictEqual(3, hosts.length);
           hosts.forEach(function (h) {
@@ -896,9 +896,9 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          var state = client.getState();
+          const state = client.getState();
           // Check the pools before shutting down
           hosts.forEach(function each(host) {
             assert.ok(state.getOpenConnections(host) > 0);
@@ -908,9 +908,9 @@ describe('Client', function () {
           client.shutdown(next);
         },
         function checkPool(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          var state = client.getState();
+          const state = client.getState();
           assert.deepEqual(state.getConnectedHosts(), []);
           hosts.forEach(function each(host) {
             assert.strictEqual(host.pool.connections.length, 0);
@@ -930,7 +930,7 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
           assert.ok(hosts[0].pool.connections.length > 0);
           assert.ok(!hosts[0].pool.shuttingDown);

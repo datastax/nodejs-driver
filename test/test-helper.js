@@ -13,7 +13,7 @@ const OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
-var helper = {
+const helper = {
   /**
    * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
    * @param {Number} nodeLength
@@ -28,7 +28,7 @@ var helper = {
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
     before(helper.ccmHelper.start(nodeLength || 1, options.ccmOptions));
-    var initClient = options.initClient !== false;
+    const initClient = options.initClient !== false;
     let client;
     let keyspace;
     if (initClient) {
@@ -73,8 +73,8 @@ var helper = {
    * Uses the last parameter as callback, invokes it via setImmediate
    */
   callbackNoop: function () {
-    var args = Array.prototype.slice.call(arguments);
-    var cb = args[args.length-1];
+    const args = Array.prototype.slice.call(arguments);
+    const cb = args[args.length-1];
     if (typeof cb !== 'function') {
       throw new Error('Helper method needs a callback as last parameter');
     }
@@ -108,7 +108,7 @@ var helper = {
     if (!prefix) {
       prefix = 'ab';
     }
-    var value = Math.floor(Math.random() * utils.maxInt);
+    const value = Math.floor(Math.random() * utils.maxInt);
     return prefix + ('000000000000000' + value.toString()).slice(-16);
   },
   ipPrefix: '127.0.0.',
@@ -163,7 +163,7 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      var args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+      const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         args.push('--quiet-windows');
       }
@@ -270,7 +270,7 @@ var helper = {
   },
   assertContains: function (value, searchValue, caseInsensitive) {
     assert.strictEqual(typeof value, 'string');
-    var message = 'String: "%s" does not contain "%s"';
+    const message = 'String: "%s" does not contain "%s"';
     if (caseInsensitive !== false) {
       value = value.toLowerCase();
       searchValue = searchValue.toLowerCase();
@@ -301,7 +301,7 @@ var helper = {
    * @returns {Function} A function with a single callback param, applying the fn with parameters
    */
   toTask: function (fn, context) {
-    var params = Array.prototype.slice.call(arguments, 2);
+    const params = Array.prototype.slice.call(arguments, 2);
     return (function (next) {
       params.push(next);
       fn.apply(context, params);
@@ -319,7 +319,7 @@ var helper = {
     });
   },
   getCassandraVersion: function() {
-    var version = process.env.TEST_CASSANDRA_VERSION;
+    let version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
       version = '3.0.5';
     }
@@ -331,10 +331,10 @@ var helper = {
    * @returns {Boolean}
    */
   isCassandraGreaterThan: function (version) {
-    var instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-    var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
+    const instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+    const compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
     for (let i = 0; i < compareVersion.length; i++) {
-      var compare = compareVersion[i] || 0;
+      const compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
         return true;
@@ -373,7 +373,7 @@ var helper = {
    */
   iteratorToArray: function (iterator) {
     const result = [];
-    var item = iterator.next();
+    let item = iterator.next();
     while (!item.done) {
       result.push(item.value);
       item = iterator.next();
@@ -391,7 +391,7 @@ var helper = {
       throw new TypeError('Array.prototype.find called on null or undefined');
     }
     if (typeof predicate === 'string') {
-      var propName = predicate;
+      const propName = predicate;
       predicate = function (item) {
         return (item && item[propName] === val);
       };
@@ -413,7 +413,7 @@ var helper = {
    * @param {Function }predicate
    */
   first: function (arr, predicate) {
-    var filterArr = arr.filter(predicate);
+    const filterArr = arr.filter(predicate);
     if (filterArr.length === 0) {
       throw new Error('Item not found: ' + predicate);
     }
@@ -425,7 +425,7 @@ var helper = {
    */
   values : function (obj) {
     const vals = [];
-    for (var key in obj) {
+    for (const key in obj) {
       if (!obj.hasOwnProperty(key)) {
         continue;
       }
@@ -479,8 +479,8 @@ var helper = {
    * @returns {string} Last octet of the host address.
    */
   lastOctetOf: function(host) {
-    var address = typeof host === "string" ? host : host.address;
-    var ipAddress = address.split(':')[0].split('.');
+    const address = typeof host === "string" ? host : host.address;
+    const ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
 
@@ -492,7 +492,7 @@ var helper = {
    * @returns {Host}
    */
   findHost: function(client, number) {
-    var host = undefined;
+    let host = undefined;
     const self = this;
     client.hosts.forEach(function(h) {
       if(self.lastOctetOf(h) === number.toString()) {
@@ -510,8 +510,8 @@ var helper = {
    */
   waitOnHostUp: function(client, number) {
     const self = this;
-    var hostIsUp = function() {
-      var host = self.findHost(client, number);
+    const hostIsUp = function() {
+      const host = self.findHost(client, number);
       return host === undefined ? false : host.isUp();
     };
 
@@ -526,8 +526,8 @@ var helper = {
    */
   waitOnHostDown: function(client, number) {
     const self = this;
-    var hostIsDown = function() {
-      var host = self.findHost(client, number);
+    const hostIsDown = function() {
+      const host = self.findHost(client, number);
       return host === undefined ? false : !host.isUp();
     };
 
@@ -542,8 +542,8 @@ var helper = {
    */
   waitOnHostGone: function(client, number) {
     const self = this;
-    var hostIsGone = function() {
-      var host = self.findHost(client, number);
+    const hostIsGone = function() {
+      const host = self.findHost(client, number);
       return host === undefined;
     };
 
@@ -640,7 +640,7 @@ var helper = {
     if (except) {
       props = props.slice(0);
       except.forEach(function (p) {
-        var index = props.indexOf(p);
+        const index = props.indexOf(p);
         if (index >= 0) {
           props.splice(index, 1);
         }
@@ -651,7 +651,7 @@ var helper = {
     });
   },
   getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
-    var pooling = {
+    const pooling = {
       heartBeatInterval: heartBeatInterval || 0,
       coreConnectionsPerHost: {}
     };
@@ -662,7 +662,7 @@ var helper = {
   },
   getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
     return hostsInfo.map(function (info, index) {
-      var h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      const h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
       h.isUp = function () {
         return !(info.isUp === false);
       };
@@ -689,7 +689,7 @@ var helper = {
             if (sendStreamCb) {
               return sendStreamCb(r, h, cb);
             }
-            var op = new OperationState(r, o, cb);
+            const op = new OperationState(r, o, cb);
             setImmediate(function () {
               op.setResult(null, {});
             });
@@ -705,7 +705,7 @@ var helper = {
     });
   },
   getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
-    var hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
+    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
     return ({
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
@@ -751,7 +751,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      var create = ['create', 'test', '-v', version];
+      let create = ['create', 'test', '-v', version];
       if (process.env.TEST_CASSANDRA_DIR) {
         create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
         helper.trace('With', create[2]);
@@ -782,7 +782,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       );
     },
     function (next) {
-      var populate = ['populate', '-n', nodeLength.toString()];
+      const populate = ['populate', '-n', nodeLength.toString()];
       if (options.vnodes) {
         populate.push('--vnodes');
       }
@@ -792,7 +792,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      var start = ['start', '--wait-for-binary-proto'];
+      const start = ['start', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         start.push('--quiet-windows');
       }
@@ -821,14 +821,14 @@ Ccm.prototype.spawn = function (processName, params, callback) {
     callback = function () {};
   }
   params = params || [];
-  var originalProcessName = processName;
+  const originalProcessName = processName;
   if (helper.isWin()) {
     params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
     processName = 'powershell.exe';
   }
-  var p = spawn(processName, params);
-  var stdoutArray= [];
-  var stderrArray= [];
+  const p = spawn(processName, params);
+  const stdoutArray= [];
+  const stderrArray= [];
   let closing = 0;
   p.stdout.setEncoding('utf8');
   p.stderr.setEncoding('utf8');
@@ -845,7 +845,7 @@ Ccm.prototype.spawn = function (processName, params, callback) {
       //avoid calling multiple times
       return;
     }
-    var info = {code: code, stdout: stdoutArray, stderr: stderrArray};
+    const info = {code: code, stdout: stdoutArray, stderr: stderrArray};
     let err = null;
     if (code !== 0) {
       err = new Error(
@@ -895,7 +895,7 @@ Ccm.prototype.waitForUp = function (callback) {
  * @param subPath
  */
 Ccm.prototype.getPath = function (subPath) {
-  var ccmPath = process.env.CCM_PATH;
+  let ccmPath = process.env.CCM_PATH;
   if (!ccmPath) {
     ccmPath = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
     ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
@@ -1001,11 +1001,11 @@ WhiteListPolicy.prototype.init = function (client, hosts, callback) {
 };
 
 WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
-  var list = this.list;
+  const list = this.list;
   this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
     callback(err, {
       next: function () {
-        var item = iterator.next();
+        let item = iterator.next();
         while (!item.done) {
           if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
             break;

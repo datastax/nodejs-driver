@@ -3,7 +3,7 @@
 const assert = require('assert');
 const util = require('util');
 let heapdump;
-var heapdumpPath = '/var/log/nodejs-driver';
+const heapdumpPath = '/var/log/nodejs-driver';
 try {
   // eslint-disable-next-line global-require
   heapdump = require('heapdump');
@@ -14,21 +14,21 @@ catch (e) {
 
 const helper = require('../../test-helper.js');
 const cassandra = require('../../../index.js');
-const client = cassandra.Client;
-var types = cassandra.types;
+const Client = cassandra.Client;
+const types = cassandra.types;
 const utils = require('../../../lib/utils');
 
-const client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
+let client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
 const keyspace = helper.getRandomName('ks');
-var table = keyspace + '.' + helper.getRandomName('tbl');
+const table = keyspace + '.' + helper.getRandomName('tbl');
 
 if (!global.gc) {
   console.log('You must run this test exposing the GC');
   return;
 }
 
-var totalLength = 100;
-var heapUsed = process.memoryUsage().heapUsed;
+const totalLength = 100;
+const heapUsed = process.memoryUsage().heapUsed;
 let totalByteLength = 0;
 const values = [];
 
@@ -49,7 +49,7 @@ utils.series([
     let callbackCounter = 0;
     global.gc();
     utils.timesLimit(totalLength, 500, function (v, timesNext) {
-      var n = counter++;
+      const n = counter++;
       const buffer = utils.allocBufferFromString(generateAsciiString(1024));
       client.execute(query, [types.uuid(), n, types.Long.fromNumber(n), buffer], {prepare: 1}, function (err) {
         if ((callbackCounter++) % 1000 === 0) {
@@ -81,7 +81,7 @@ utils.series([
     setImmediate(function () {
       client = null;
       global.gc();
-      var diff = process.memoryUsage().heapUsed - heapUsed;
+      const diff = process.memoryUsage().heapUsed - heapUsed;
       console.log('Byte length %s in %d values', formatLength(totalByteLength), values.length);
       console.log('Heap used difference', formatLength(diff));
       if (heapdump) {
@@ -94,7 +94,7 @@ utils.series([
 });
 
 function formatLength(value) {
-  var kbValues = Math.floor(value / 1024);
+  const kbValues = Math.floor(value / 1024);
   if (kbValues > 1024) {
     return (kbValues / 1024).toFixed(2) + 'MiB';
   }
@@ -102,9 +102,9 @@ function formatLength(value) {
 }
 
 function generateAsciiString(length) {
-  var text = '';
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for( var i=0; i < length; i++ ){
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for( let i=0; i < length; i++ ){
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;

@@ -13,7 +13,7 @@ describe('Client', function () {
   this.timeout(120000);
   vdescribe('2.2', 'with protocol v4 errors', function () {
     const failWritesKs = helper.getRandomName('ks');
-    var failWritesTable = failWritesKs + '.tbl1';
+    const failWritesTable = failWritesKs + '.tbl1';
     const setupInfo = helper.setup(2, {
       clientOptions: {
         policies: { retry: new helper.FallthroughRetryPolicy() }

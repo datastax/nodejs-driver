@@ -9,17 +9,17 @@ const Client = require('../../lib/client.js');
 
 const simulacronHelper = {
   _execute: function(processName, params, cb) {
-    var originalProcessName = processName;
+    const originalProcessName = processName;
 
     // If process hasn't completed in 10 seconds.
-    var timeout = undefined;
+    let timeout = undefined;
     if(cb) {
       timeout = setTimeout(function() {
         cb('Timed out while waiting for ' + processName + ' to complete.');
       }, 10000);
     }
 
-    var p = spawn(processName, params, {});
+    const p = spawn(processName, params, {});
     p.stdout.setEncoding('utf8');
     p.stderr.setEncoding('utf8');
     p.stdout.on('data', function (data) {
@@ -55,7 +55,7 @@ const simulacronHelper = {
    */
   start: function(cb) {
     const self = this;
-    var simulacronJarPath = process.env['SIMULACRON_PATH'];
+    let simulacronJarPath = process.env['SIMULACRON_PATH'];
     if (!simulacronJarPath) {
       simulacronJarPath = process.env['HOME'] + "/simulacron.jar";
       helper.trace("SIMULACRON_PATH not set, using " + simulacronJarPath);
@@ -64,11 +64,11 @@ const simulacronHelper = {
       throw new Error('Simulacron jar not found at: ' + simulacronJarPath);
     }
 
-    var processName = 'java';
-    var params = ['-jar', simulacronJarPath, '--ip', self.startingIp, '-p', this.defaultPort];
+    const processName = 'java';
+    const params = ['-jar', simulacronJarPath, '--ip', self.startingIp, '-p', this.defaultPort];
     let initialized = false;
 
-    var timeout = setTimeout(function() {
+    const timeout = setTimeout(function() {
       cb(new Error('Timed out while waiting for Simulacron server to start.'));
     }, 10000);
 
@@ -101,7 +101,7 @@ const simulacronHelper = {
         cb();
       } else {
         if (helper.isWin()) {
-          var params = ['Stop-Process', this.sProcess.pid];
+          const params = ['Stop-Process', this.sProcess.pid];
           this._execute('powershell', params, cb);
         } else {
           this.sProcess.on('close', function () {
@@ -128,9 +128,9 @@ const simulacronHelper = {
   setup: function (dcs, options) {
     const self = this;
     options = options || utils.emptyObject;
-    var clientOptions = options.clientOptions || {};
-    var simulacronCluster = new SimulacronCluster();
-    var initClient = options.initClient !== false;
+    const clientOptions = options.clientOptions || {};
+    const simulacronCluster = new SimulacronCluster();
+    const initClient = options.initClient !== false;
     let client;
     before(function (done) {
       self.start(function () {
@@ -169,8 +169,8 @@ const simulacronHelper = {
 function _makeRequest(options, callback) {
   const request = http.request(options, function(response) {
     // Continuously update stream with data
-    var body = '';
-    var statusCode = response.statusCode;
+    let body = '';
+    const statusCode = response.statusCode;
     response.on('data', function(d) {
       body += d;
     });
@@ -277,6 +277,7 @@ SimulacronTopic.prototype.clear = function(callback) {
  * Stops listening for connections and closes existing connections for all associated nodes.
  */
 SimulacronTopic.prototype.stop = function(callback) {
+  const stopNodePath = '/listener/%s?type=stop';
   const options = {
     host: this.baseAddress,
     path: encodeURI(util.format(stopNodePath, this.id)),
@@ -396,11 +397,12 @@ SimulacronCluster.prototype.unregister = function(callback) {
  */
 SimulacronCluster.prototype.node = function(key, datacenterIndex) {
   // if the first argument is a string, assume its an address.
+  let dc;
   if (typeof key === "string") {
     // iterate over DCs and their nodes looking for first node that matches.
     for (let dcIndex = 0; dcIndex < this.dcs.length; dcIndex++) {
-      var dc = this.dcs[dcIndex];
-      var node = dc.nodes.filter(function (n) {
+      dc = this.dcs[dcIndex];
+      const node = dc.nodes.filter(function (n) {
         return n.address === key;
       })[0];
       if (node) {
@@ -468,7 +470,7 @@ SimulacronDataCenter.prototype.node = function(id) {
   // if the first argument is a string, assume its an address.
   if (typeof id === "string") {
     for (let nodeIndex = 0; nodeIndex < this.nodes.length; nodeIndex++) {
-      var n = this.nodes[nodeIndex];
+      const n = this.nodes[nodeIndex];
       if (n.address === id) {
         return n;
       }

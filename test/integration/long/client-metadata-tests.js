@@ -12,7 +12,7 @@ describe('Client', function () {
   describe('#getReplicas() with MurmurPartitioner', function () {
     before(function (done) {
       const client = newInstance();
-      var createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";
+      const createQuery = "CREATE KEYSPACE %s WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : %d, 'dc2' : %d}";
       utils.series([
         helper.ccmHelper.start('4:4', {sleep: 1000}),
         function (next) {
@@ -48,7 +48,7 @@ describe('Client', function () {
       const client = newInstance({ isMetadataSyncEnabled: false });
       client.connect(function (err) {
         assert.ifError(err);
-        var replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
+        const replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
         assert.strictEqual(null, replicas);
         done();
       });
@@ -57,11 +57,11 @@ describe('Client', function () {
       const client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
-        var replicas = client.getReplicas(null, utils.allocBufferFromArray([0, 0, 0, 1]));
+        const replicas = client.getReplicas(null, utils.allocBufferFromArray([0, 0, 0, 1]));
         assert.ok(replicas);
         assert.strictEqual(replicas.length, 1);
         //pre-calculated based on murmur3
-        var lastOctets = replicas.map(helper.lastOctetOf);
+        const lastOctets = replicas.map(helper.lastOctetOf);
         assert.strictEqual(lastOctets[0], '3');
         done();
       });
@@ -76,7 +76,7 @@ describe('Client', function () {
     after(helper.ccmHelper.remove);
     it('should get the replica', function (done) {
       function compareReplicas(val, expectedReplica) {
-        var replicas = client.getReplicas(null, val);
+        const replicas = client.getReplicas(null, val);
         assert.ok(replicas);
         //2 replicas per each dc
         assert.strictEqual(replicas.length, 1);
@@ -87,8 +87,8 @@ describe('Client', function () {
       client.connect(function (err) {
         assert.ifError(err);
         for (let i = 0; i < client.metadata.ring.length; i++) {
-          var token = client.metadata.ring[i];
-          var replica = client.metadata.primaryReplicas[client.metadata.tokenizer.stringify(token)];
+          const token = client.metadata.ring[i];
+          const replica = client.metadata.primaryReplicas[client.metadata.tokenizer.stringify(token)];
           compareReplicas(token, replica);
         }
         done();
@@ -108,8 +108,8 @@ describe('Client', function () {
         helper.assertInstanceOf(client.metadata.tokenizer, tokenizer.RandomTokenizer);
         assert.ifError(err);
         for (let i = 0; i < client.metadata.ring.length; i++) {
-          var token = client.metadata.ring[i];
-          var position = utils.binarySearch(client.metadata.ring, token, client.metadata.tokenizer.compare);
+          const token = client.metadata.ring[i];
+          const position = utils.binarySearch(client.metadata.ring, token, client.metadata.tokenizer.compare);
           assert.ok(position >= 0);
         }
         client.execute('select key from system.local', [], { routingKey: utils.allocBufferUnsafe(2)}, function (err) {
@@ -122,14 +122,14 @@ describe('Client', function () {
 });
 
 function validateMurmurReplicas(client) {
-  var replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
+  let replicas = client.getReplicas('sampleks1', utils.allocBufferFromArray([0, 0, 0, 1]));
   assert.ok(replicas);
   //2 replicas per each dc
   assert.strictEqual(replicas.length, 4);
   assert.strictEqual(replicas.reduce(function (val, h) { return val + (h.datacenter === 'dc1' ? 1 : 0);}, 0), 2);
 
   //pre-calculated based on murmur3
-  var lastOctets = replicas.map(helper.lastOctetOf);
+  let lastOctets = replicas.map(helper.lastOctetOf);
   assert.strictEqual(lastOctets[0], '3');
   assert.strictEqual(lastOctets[1], '7');
   assert.strictEqual(lastOctets[2], '4');

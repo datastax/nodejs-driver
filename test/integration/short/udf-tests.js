@@ -10,10 +10,10 @@ const vdescribe = helper.vdescribe;
 vdescribe('2.2', 'Metadata', function () {
   this.timeout(60000);
   before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions:true']}));
-  var keyspace = 'ks_udf';
+  const keyspace = 'ks_udf';
   before(function createSchema(done) {
     const client = newInstance();
-    var queries = [
+    const queries = [
       "CREATE KEYSPACE  ks_udf WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
       "CREATE FUNCTION  ks_udf.return_one() RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return 1;'",
       "CREATE FUNCTION  ks_udf.plus(s int, v int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return s+v;'",
@@ -181,8 +181,8 @@ vdescribe('2.2', 'Metadata', function () {
     });
     it('should retrieve the most up to date metadata', function (done) {
       const client = newInstance({ keyspace: keyspace });
-      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
+      const nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      const clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
         nonSyncClient.connect.bind(nonSyncClient),
@@ -361,8 +361,8 @@ vdescribe('2.2', 'Metadata', function () {
     });
     it('should retrieve the most up to date metadata', function (done) {
       const client = newInstance({ keyspace: keyspace });
-      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
+      const nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      const clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
         nonSyncClient.connect.bind(nonSyncClient),

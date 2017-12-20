@@ -16,7 +16,7 @@ vdescribe('3.10', 'Duration', function () {
   const client = setupInfo.client;
   describe('serialization', function () {
     it('should serialize and deserialize duration type instances', function (done) {
-      var values = [
+      const values = [
         '1y2mo',
         '-1y2mo',
         '1Y2MO',
@@ -62,14 +62,14 @@ vdescribe('3.10', 'Duration', function () {
         utils.eachSeries(values, function (v, next) {
           const query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
           const id = types.Uuid.random();
-          var value = Duration.fromString(v);
+          const value = Duration.fromString(v);
           client.execute(query, [ id, value ], { prepare: prepare }, function (err) {
             assert.ifError(err);
             const query = 'SELECT pk, c1 FROM tbl_duration WHERE pk = ?';
             client.execute(query, [ id ], { prepare: prepare }, function (err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 1);
-              var actual = result.first()['c1'];
+              const actual = result.first()['c1'];
               helper.assertInstanceOf(actual, Duration);
               assert.ok(actual.equals(value), util.format('Assertion failed: %j !== %j', actual, value));
               next();
@@ -85,7 +85,7 @@ vdescribe('3.10', 'Duration', function () {
         assert.ifError(err);
         assert.ok(tableInfo);
         assert.strictEqual(tableInfo.columns.length, 2);
-        var c1 = tableInfo.columnsByName['c1'];
+        const c1 = tableInfo.columnsByName['c1'];
         assert.ok(c1);
         assert.strictEqual(c1.type.code, types.dataTypes.custom);
         assert.strictEqual(c1.type.info, 'org.apache.cassandra.db.marshal.DurationType');

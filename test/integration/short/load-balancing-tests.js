@@ -7,9 +7,9 @@ const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const loadBalancing = require('../../../lib/policies/load-balancing');
-var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
-var WhiteListPolicy = loadBalancing.WhiteListPolicy;
+const RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
+const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
+const WhiteListPolicy = loadBalancing.WhiteListPolicy;
 const vdescribe = helper.vdescribe;
 
 context('with a reusable 3 node cluster', function () {
@@ -110,7 +110,7 @@ function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
   const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
   const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
   utils.timesLimit(50, 16, function (n, timesNext) {
-    var params = [ n, n ];
+    const params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
       assertReplicas(result, client, expectedReplicas, timesNext);
@@ -122,7 +122,7 @@ function assertReplicas(result, client, expectedReplicas, next) {
   getTrace(client, result.info.traceId, function (err, trace) {
     assert.ifError(err);
     // Check where the events are coming from
-    var replicas = getReplicas(trace);
+    const replicas = getReplicas(trace);
     // Verify that only replicas were hit (coordinator + replica)
     assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
     next();
@@ -146,7 +146,7 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
   const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
   const results = [];
   utils.timesSeries(10, function (i, nextParameters) {
-    var params = [ i, i ];
+    const params = [ i, i ];
     const coordinators = {};
     let replicas;
     utils.timesLimit(100, 20, function (n, timesNext) {
@@ -215,7 +215,7 @@ function getReplicas(trace) {
   const regex = /\b(?:from|to) \/([\da-f:.]+)$/i;
   trace.events.forEach(function (event) {
     replicas[helper.lastOctetOf(event['source'].toString())] = true;
-    var activityMatches = regex.exec(event['activity']);
+    const activityMatches = regex.exec(event['activity']);
     if (activityMatches && activityMatches.length === 2) {
       replicas[helper.lastOctetOf(activityMatches[1])] = true;
     }

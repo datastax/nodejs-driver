@@ -44,7 +44,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
           assert.ok(keyspaceInfo.strategy);
           assert.equal(keyspaceInfo.strategyOptions.replication_factor, 3);
@@ -59,7 +59,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
           assert.equal(keyspaceInfo.strategyOptions.replication_factor, 2);
           next();
@@ -71,7 +71,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(!keyspaceInfo);
           next();
         },
@@ -100,9 +100,9 @@ describe('ControlConnection', function () {
         helper.toTask(helper.ccmHelper.stopNode, null, 2),
         helper.waitOnHostDown(cc, 2),
         function (next) {
-          var hosts = cc.hosts.slice(0);
+          const hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 2);
-          var countUp = hosts.reduce(function (value, host) {
+          const countUp = hosts.reduce(function (value, host) {
             value += host.isUp() ? 1 : 0;
             return value;
           }, 0);
@@ -124,8 +124,8 @@ describe('ControlConnection', function () {
         // wait for that to be the case.
         helper.waitOnHostUp(cc, 3),
         function (next) {
-          var hosts = cc.hosts.slice(0);
-          var countUp = hosts.reduce(function (value, host) {
+          const hosts = cc.hosts.slice(0);
+          const countUp = hosts.reduce(function (value, host) {
             value += host.isUp() ? 1 : 0;
             return value;
           }, 0);
@@ -142,7 +142,7 @@ describe('ControlConnection', function () {
         helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
         helper.waitOnHostGone(cc, 2),
         function (next) {
-          var hosts = cc.hosts.slice(0);
+          const hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 1);
           cc.shutdown();
           next();
@@ -163,7 +163,7 @@ describe('ControlConnection', function () {
           lbp.init({ log: utils.noop }, cc.hosts, next);
         },
         function ensureConnected(next) {
-          var hosts = cc.hosts.values();
+          const hosts = cc.hosts.values();
           hosts.forEach(function (h) {
             h.setDistance(lbp.getDistance(h));
           });
@@ -194,7 +194,7 @@ describe('ControlConnection', function () {
     });
     it('should reconnect when all hosts go down and back up', function (done) {
       const options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
-      var reconnectionDelay = 200;
+      const reconnectionDelay = 200;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay);
       const cc = newInstance(options, 1, 1);
       utils.series([
@@ -206,7 +206,7 @@ describe('ControlConnection', function () {
         },
         function setHostDistance(next) {
           // the control connection host should be local or remote to trigger DOWN events
-          var distance = options.policies.loadBalancing.getDistance(cc.host);
+          const distance = options.policies.loadBalancing.getDistance(cc.host);
           cc.host.setDistance(distance);
           next();
         },

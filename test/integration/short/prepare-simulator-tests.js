@@ -13,7 +13,7 @@ describe('Client', function () {
   this.timeout(20000);
   describe('Preparing statements on nodes behavior', function () {
     let sCluster = null;
-    const client = null;
+    let client = null;
     const query = util.format('SELECT * FROM ks.table1 WHERE id1 = ?');
     before(function (done) {
       simulacron.start(done);
@@ -62,7 +62,7 @@ describe('Client', function () {
             assert.ifError(err);
             let prepareQuery;
             for(let i = 0; i < logs.length; i++) {
-              var queryLog = logs[i];
+              const queryLog = logs[i];
               if (queryLog.type === "PREPARE" && queryLog.query === query) {
                 prepareQuery = queryLog;
               }
@@ -77,7 +77,7 @@ describe('Client', function () {
     });
     it('should re-prepare query when host go UP again', function (done) {
       const idRandom = types.Uuid.random();
-      var nodeDownAddress = sCluster.getContactPoints()[4];
+      const nodeDownAddress = sCluster.getContactPoints()[4];
       utils.series(
         [
           function stopLastNode(next) {
@@ -95,7 +95,7 @@ describe('Client', function () {
             }, next);
           },
           function verifyIfNodeIsMarkedDown(next) {
-            var nodeDown = client.hosts.get(nodeDownAddress);
+            const nodeDown = client.hosts.get(nodeDownAddress);
             assert(!nodeDown.isUp());
             next();
           },
@@ -114,7 +114,7 @@ describe('Client', function () {
                 assert.ifError(err);
                 let prepareQuery;
                 for(let i = 0; i < logs.length; i++) {
-                  var queryLog = logs[i];
+                  const queryLog = logs[i];
                   if (queryLog.type === "PREPARE" && queryLog.query === query) {
                     prepareQuery = queryLog;
                   }
@@ -129,7 +129,7 @@ describe('Client', function () {
             }, next);
           },
           function resumeLastNode(next) {
-            var nodeDown = client.hosts.get(nodeDownAddress);
+            const nodeDown = client.hosts.get(nodeDownAddress);
             nodeDown.on('up', function() {
               helper.trace("Node marked as UP");
               setTimeout(next, 1000); //give time for driver to re prepare statement
@@ -142,7 +142,7 @@ describe('Client', function () {
               assert.ifError(err);
               let prepareQuery;
               for(let i = 0; i < logs.length; i++) {
-                var queryLog = logs[i];
+                const queryLog = logs[i];
                 if (queryLog.type === "PREPARE" && queryLog.query === query) {
                   prepareQuery = queryLog;
                 }

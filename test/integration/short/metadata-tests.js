@@ -5,7 +5,6 @@ var helper = require('../../test-helper');
 var Client = require('../../../lib/client');
 var utils = require('../../../lib/utils');
 var types = require('../../../lib/types');
-var errors = require('../../../lib/errors');
 var vit = helper.vit;
 var vdescribe = helper.vdescribe;
 
@@ -127,9 +126,6 @@ describe('metadata', function () {
             }, next);
           },
           function testWithPromises(next) {
-            if (!helper.promiseSupport) {
-              return next();
-            }
             var m = client.metadata;
             utils.timesSeries(10, function (n, timesNext) {
               m.getUdt('ks1', 'udt_does_not_exists')
@@ -196,9 +192,6 @@ describe('metadata', function () {
             });
           },
           function checkAddressUdtWithPromises(next) {
-            if (!helper.promiseSupport) {
-              return next();
-            }
             var m = client.metadata;
             m.getUdt('ks_udt1', 'address')
               .then(function (udtInfo) {
@@ -281,22 +274,6 @@ describe('metadata', function () {
         ], done);
       });
       describe('with no callback specified', function () {
-        if (!helper.promiseSupport) {
-          it('should throw an ArgumentError', function (done) {
-            var client = newInstance();
-            utils.series([
-              client.connect.bind(client),
-              function (next) {
-                assert.throws(function () {
-                  client.metadata.getTrace(types.Uuid.random());
-                }, errors.ArgumentError);
-                next();
-              },
-              client.shutdown.bind(client)
-            ], done);
-          });
-          return;
-        }
         it('should return the trace in a promise', function () {
           var client = newInstance();
           return client.connect()
@@ -322,42 +299,38 @@ describe('metadata', function () {
     });
     describe('#refreshKeyspace()', function() {
       describe('with no callback specified', function () {
-        if(helper.promiseSupport) {
-          it('should return keyspace in a promise', function () {
-            var client = newInstance({isMetadataSyncEnabled: false});
-            return client.connect()
-              .then(function () {
-                var ks = client.metadata.keyspaces;
-                assert.ok(ks['system'] === undefined);
-                return client.metadata.refreshKeyspace('system');
-              })
-              .then(function (keyspace) {
-                assert.ok(keyspace);
-                assert.strictEqual(keyspace.name, 'system');
-                return client.shutdown();
-              });
-          });
-        }
+        it('should return keyspace in a promise', function () {
+          var client = newInstance({isMetadataSyncEnabled: false});
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspace('system');
+            })
+            .then(function (keyspace) {
+              assert.ok(keyspace);
+              assert.strictEqual(keyspace.name, 'system');
+              return client.shutdown();
+            });
+        });
       });
     });
     describe('#refreshKeyspaces()', function() {
       describe('with no callback specified', function () {
-        if(helper.promiseSupport) {
-          it('should return keyspaces in a promise', function () {
-            var client = newInstance({ isMetadataSyncEnabled: false });
-            return client.connect()
-              .then(function () {
-                var ks = client.metadata.keyspaces;
-                assert.ok(ks['system'] === undefined);
-                return client.metadata.refreshKeyspaces();
-              })
-              .then(function (data) {
-                assert.ok(data);
-                assert.ok(data['system']);
-                return client.shutdown();
-              });
-          });
-        }
+        it('should return keyspaces in a promise', function () {
+          var client = newInstance({ isMetadataSyncEnabled: false });
+          return client.connect()
+            .then(function () {
+              var ks = client.metadata.keyspaces;
+              assert.ok(ks['system'] === undefined);
+              return client.metadata.refreshKeyspaces();
+            })
+            .then(function (data) {
+              assert.ok(data);
+              assert.ok(data['system']);
+              return client.shutdown();
+            });
+        });
       });
     });
     describe('#getTable()', function () {
@@ -911,22 +884,6 @@ describe('metadata', function () {
         ], done);
       });
       describe('with no callback specified', function () {
-        if (!helper.promiseSupport) {
-          it('should throw an ArgumentError', function (done) {
-            var client = newInstance();
-            utils.series([
-              client.connect.bind(client),
-              function (next) {
-                assert.throws(function () {
-                  client.metadata.getTable(keyspace, 'tbl1');
-                }, errors.ArgumentError);
-                next();
-              },
-              client.shutdown.bind(client)
-            ], done);
-          });
-          return;
-        }
         it('should return the metadata in a promise', function () {
           var client = newInstance();
           return client.connect()
@@ -1101,22 +1058,6 @@ describe('metadata', function () {
         ], done);
       });
       describe('with no callback specified', function () {
-        if (!helper.promiseSupport) {
-          it('should throw an ArgumentError', function (done) {
-            var client = newInstance();
-            utils.series([
-              client.connect.bind(client),
-              function (next) {
-                assert.throws(function () {
-                  client.metadata.getMaterializedView(keyspace, 'dailyhigh');
-                }, errors.ArgumentError);
-                next();
-              },
-              client.shutdown.bind(client)
-            ], done);
-          });
-          return;
-        }
         it('should return the metadata in a promise', function () {
           var client = newInstance();
           return client.connect()

@@ -176,49 +176,47 @@ describe('Client', function () {
         }
       ], done);
     });
-    if(helper.iteratorSupport) {
-      vit('2.0', 'should return ResultSet compatible with @@iterator', function (done) {
-        var client = setupInfo.client;
-        utils.series([
-          function truncate(seriesNext) {
-            client.execute('TRUNCATE ' + table, seriesNext);
-          },
-          function insertData(seriesNext) {
-            var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-            utils.times(100, function (n, next) {
-              client.execute(query, [types.Uuid.random(), n.toString()], next);
-            }, seriesNext);
-          },
-          function selectData(seriesNext) {
-            //It should only return the first page and iteration should not invoke next page.
-            client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 25, autoPage: true}, function (err, result) {
-              assert.ifError(err);
-              assert.strictEqual(result.rowLength, 25);
-              // should not page
-              var iterator = result[Symbol.iterator]();
-              var count = 0;
-              var uuids = [];
-              var item;
-              for (item = iterator.next(); !item.done; item = iterator.next()) {
-                assert.ok(item.value);
-                var id = item.value.id;
-                // should not encounter same id twice.
-                assert.strictEqual(uuids.indexOf(id), -1);
-                uuids.push(item.value.id);
-                count++;
-              }
+    vit('2.0', 'should return ResultSet compatible with @@iterator', function (done) {
+      var client = setupInfo.client;
+      utils.series([
+        function truncate(seriesNext) {
+          client.execute('TRUNCATE ' + table, seriesNext);
+        },
+        function insertData(seriesNext) {
+          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          utils.times(100, function (n, next) {
+            client.execute(query, [types.Uuid.random(), n.toString()], next);
+          }, seriesNext);
+        },
+        function selectData(seriesNext) {
+          //It should only return the first page and iteration should not invoke next page.
+          client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 25, autoPage: true}, function (err, result) {
+            assert.ifError(err);
+            assert.strictEqual(result.rowLength, 25);
+            // should not page
+            var iterator = result[Symbol.iterator]();
+            var count = 0;
+            var uuids = [];
+            var item;
+            for (item = iterator.next(); !item.done; item = iterator.next()) {
+              assert.ok(item.value);
+              var id = item.value.id;
+              // should not encounter same id twice.
+              assert.strictEqual(uuids.indexOf(id), -1);
+              uuids.push(item.value.id);
+              count++;
+            }
 
-              // last item should be done with no value.
-              assert.strictEqual(item.done, true);
-              assert.strictEqual(item.value, undefined);
-              // should have only retrieved rows from first page.
-              assert.strictEqual(count, 25);
-              seriesNext();
-            });
-          }
-        ], done);
-      });
-    }
+            // last item should be done with no value.
+            assert.strictEqual(item.done, true);
+            assert.strictEqual(item.value, undefined);
+            // should have only retrieved rows from first page.
+            assert.strictEqual(count, 25);
+            seriesNext();
+          });
+        }
+      ], done);
+    });
     vit('2.0', 'should callback in err when wrong hints are provided', function (done) {
       var client = setupInfo.client;
       var query = util.format('SELECT * FROM %s WHERE id IN (?, ?, ?)', table);
@@ -923,9 +921,6 @@ describe('Client', function () {
       });
     });
     describe('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        return;
-      }
       vit('2.0', 'should return a promise with the result as a value', function () {
         var client = newInstance();
         return client.connect()

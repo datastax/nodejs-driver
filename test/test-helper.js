@@ -89,8 +89,6 @@ var helper = {
       return value;
     });
   },
-  promiseSupport: (typeof Promise === 'function'),
-  iteratorSupport: (typeof Symbol !== 'undefined' && typeof Symbol.iterator === 'symbol'),
   /**
    * @type {ClientOptions}
    */

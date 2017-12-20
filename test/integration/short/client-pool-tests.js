@@ -1,6 +1,5 @@
 "use strict";
 var assert = require('assert');
-var domain = require('domain');
 var dns = require('dns');
 
 var helper = require('../../test-helper');
@@ -11,7 +10,6 @@ var errors = require('../../../lib/errors');
 var types = require('../../../lib/types');
 var policies = require('../../../lib/policies');
 var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
-var EventEmitter = require('events').EventEmitter;
 var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
 var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
@@ -511,123 +509,6 @@ describe('Client', function () {
           return (hosts[0].pool.connections.length === 3 && hosts[1].pool.connections.length === 3);
         }, 1000, 20, done);
       });
-    });
-    it('should maintain the domain in the callbacks', function (done) {
-      var unexpectedErrors = [];
-      var errors = [];
-      var domains = [
-        // Use 2 domains and 2 clients to test prepared and unprepared executions
-        domain.create(),
-        domain.create()
-      ];
-      var client1 = new Client(helper.baseOptions);
-      var client2 = new Client(helper.baseOptions);
-      var clients = [ client1, client2 ];
-      utils.series([
-        client1.connect.bind(client1),
-        client2.connect.bind(client1),
-        function executeABunchOfTimes1(next) {
-          utils.times(20, function (n, timesNext) {
-            clients[n % 2].execute('SELECT * FROM system.local', timesNext);
-          }, next);
-        },
-        function blowEachDomain(next) {
-          utils.timesSeries(domains.length, function (n, timesNext) {
-            var waiting = 1;
-            var d = domains[n];
-            d.add(new EventEmitter());
-            d.on('error', function (err) {
-              errors.push([err.toString(), n.toString()]);
-              setImmediate(function () {
-                //OK, this line might result in an output message (!?)
-                d.dispose();
-              });
-            });
-            d.run(function() {
-              clients[n % 2].execute('SELECT * FROM system.local', [], { prepare: n % 2 }, function (err) {
-                waiting = 0;
-                if (err) {
-                  unexpectedErrors.push(err);
-                }
-                throw new Error('From domain ' + n);
-              });
-            });
-            function wait() {
-              if (waiting > 0) {
-                waiting++;
-                if (waiting > 20) {
-                  return timesNext(new Error('Timed out'));
-                }
-                return setTimeout(wait, 50);
-              }
-              // Delay to allow throw
-              setTimeout(function () {
-                timesNext();
-              }, 100);
-            }
-            wait();
-          }, next);
-        },
-        function assertResults(next) {
-          assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
-          assert.strictEqual(errors.length, domains.length);
-          errors.forEach(function (item) {
-            assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
-          });
-          next();
-        }
-      ], done);
-    });
-    it('should maintain nested domain in the callbacks', function (done) {
-      var unexpectedErrors = [];
-      var errors = [];
-      var fatherDomain = domain.create();
-      var childDomain = domain.create();
-      var client = new Client(helper.baseOptions);
-      utils.series([
-        client.connect.bind(client),
-        function executeABunchOfTimes1(next) {
-          utils.times(20, function (n, timesNext) {
-            client.execute('SELECT * FROM system.local', timesNext);
-          }, next);
-        },
-        function nestedDomain(next) {
-          var waiting = true;
-          fatherDomain.on('error', function (err) {
-            errors.push([err.toString(), 'father']);
-          });
-          fatherDomain.run(function () {
-            childDomain.on('error', function (err) {
-              errors.push([err.toString(), 'child']);
-            });
-            childDomain.run(function() {
-              client.execute('SELECT * FROM system.local', function (err) {
-                waiting = false;
-                if (err) {
-                  unexpectedErrors.push(err);
-                }
-                throw new Error('From domain child');
-              });
-            });
-          });
-          function wait() {
-            if (waiting) {
-              return setTimeout(wait, 50);
-            }
-            //Delay to allow throw
-            setTimeout(next, 100);
-          }
-          wait();
-        },
-        function assertResults(next) {
-          assert.strictEqual(unexpectedErrors.length, 0, 'Unexpected errors: ' + unexpectedErrors[0]);
-          assert.strictEqual(errors.length, 1);
-          errors.forEach(function (item) {
-            assert.strictEqual(item[0], 'Error: From domain ' + item[1]);
-          });
-          next();
-        }
-      ], done);
     });
     it('should wait for schema agreement before calling back', function (done) {
       var queries = [

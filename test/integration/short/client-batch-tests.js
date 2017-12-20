@@ -125,15 +125,6 @@ describe('Client', function () {
         }
       ];
 
-      if (!helper.promiseSupport) {
-        badArgumentCalls.push(function () {
-          return client.batch({}, {}, function () {});
-        });
-        badArgumentCalls.forEach(function (method) {
-          assert.throws(method, errors.ArgumentError);
-        });
-        return;
-      }
       var promises = badArgumentCalls.map(function (method) {
         return method()
           .then(function () {
@@ -297,9 +288,6 @@ describe('Client', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        return;
-      }
       vit('2.0', 'should return a promise when batch completes', function () {
         var insertQuery = 'INSERT INTO %s (id, text_sample) VALUES (%s, \'%s\')';
         var selectQuery = 'SELECT * FROM %s WHERE id = %s';

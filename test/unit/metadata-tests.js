@@ -1786,15 +1786,6 @@ describe('Metadata', function () {
   });
   describe('#getFunction()', function () {
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an ArgumentError', function () {
-          var metadata = newInstance();
-          assert.throws(function () {
-            metadata.getFunction('ks1', 'fn1', []);
-          }, errors.ArgumentError);
-        });
-        return;
-      }
       it('should return a Promise', function () {
         var metadata = newInstance();
         var p = metadata.getFunction('ks1', 'fn1', []);

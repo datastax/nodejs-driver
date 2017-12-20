@@ -15,6 +15,9 @@ function getJsFiles(dir, fileArray) {
   var files = fs.readdirSync(dir);
   fileArray = fileArray || [];
   files.forEach(function(file) {
+    if (file === 'node_modules') {
+      return;
+    }
     if (fs.statSync(dir + file).isDirectory()) {
       getJsFiles(dir + file + '/', fileArray);
       return;
@@ -36,7 +39,7 @@ var runnerFileName = path.basename(module.filename);
 var counter = 0;
 var failures = 0;
 async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
-  if (file.indexOf(runnerFileName) >= 0 || file.indexOf('node_modules') >= 0) {
+  if (file.indexOf(runnerFileName) >= 0) {
     return next();
   }
 

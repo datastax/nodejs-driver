@@ -16,7 +16,7 @@ describe('Parser', function () {
     it('should read a READY opcode', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.bodyLength, 0);
         assert.strictEqual(item.header.opcode, types.opcodes.ready);
         done();
@@ -26,7 +26,7 @@ describe('Parser', function () {
     it('should read a AUTHENTICATE response', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
         assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
         done();
@@ -36,14 +36,14 @@ describe('Parser', function () {
     it('should buffer a AUTHENTICATE response until complete', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authenticate);
         assert.ok(item.mustAuthenticate, 'it should return a mustAuthenticate return flag');
         assert.strictEqual(item.authenticatorName, 'abc');
         //mocha will fail if done is called multiple times
         done();
       });
-      var header = getFrameHeader(5, types.opcodes.authenticate);
+      const header = getFrameHeader(5, types.opcodes.authenticate);
       parser._transform({ header: header, chunk: utils.allocBufferFromArray([0, 3]), offset: 0}, null, doneIfError(done));
       parser._transform({ header: header, chunk: utils.allocBufferFromString('a'), offset: 0}, null, doneIfError(done));
       parser._transform({ header: header, chunk: utils.allocBufferFromString('bc'), offset: 0}, null, doneIfError(done));
@@ -51,7 +51,7 @@ describe('Parser', function () {
     it('should read a VOID result', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         done();
@@ -64,7 +64,7 @@ describe('Parser', function () {
     it('should read a VOID result with trace id', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         helper.assertInstanceOf(item.flags.traceId, types.Uuid);
@@ -82,12 +82,12 @@ describe('Parser', function () {
       const parser = newInstance();
       let responseCounter = 0;
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         responseCounter++;
       });
 
-      var body = Buffer.concat([
+      const body = Buffer.concat([
         utils.allocBufferUnsafe(16), //uuid
         utils.allocBufferFromArray([0, 0, 0, types.resultKind.voidResult])
       ]);
@@ -111,12 +111,12 @@ describe('Parser', function () {
       const parser = newInstance();
       let responseCounter = 0;
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         responseCounter++;
       });
 
-      var body = Buffer.concat([
+      const body = Buffer.concat([
         utils.allocBufferUnsafe(16), //uuid
         getBodyChunks(3, 1, 0, undefined, null).chunk
       ]);
@@ -140,7 +140,7 @@ describe('Parser', function () {
     it('should read a VOID result with warnings and custom payload', function (done) {
       const parser = newInstance();
 
-      var body = Buffer.concat([
+      const body = Buffer.concat([
         // 2 string list of warnings containing 'Hello', 'World'
         utils.allocBufferFromString('0002000548656c6c6f0005576f726c64', 'hex'),
         // Custom payload byte map of {a: 1, b: 2}
@@ -150,7 +150,7 @@ describe('Parser', function () {
       ]);
 
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.ok(!item.error);
         assert.strictEqual(item.header.bodyLength, body.length);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -162,7 +162,7 @@ describe('Parser', function () {
         done();
       });
 
-      var header = getFrameHeader(body.length, types.opcodes.result, 4, false, 12, true, true);
+      const header = getFrameHeader(body.length, types.opcodes.result, 4, false, 12, true, true);
       parser._transform({
         header: header,
         chunk: body,
@@ -172,13 +172,13 @@ describe('Parser', function () {
     it('should read a SET_KEYSPACE result', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         assert.strictEqual(item.keyspaceSet, 'ks1');
         done();
       });
       //kind + stringLength + string
-      var bodyLength = 4 + 2 + 3;
+      const bodyLength = 4 + 2 + 3;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
         chunk: utils.allocBufferFromArray([0, 0, 0, types.resultKind.setKeyspace]),
@@ -199,7 +199,7 @@ describe('Parser', function () {
       const parser = newInstance();
       const id = types.Uuid.random();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.ifError(item.error);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         helper.assertInstanceOf(item.id, Buffer);
@@ -210,14 +210,14 @@ describe('Parser', function () {
       // id length + id
       // metadata (flags + columnLength + ksname + tblname + column name + column type) +
       // result metadata (flags + columnLength + ksname + tblname + column name + column type)
-      var body = Buffer.concat([
+      const body = Buffer.concat([
         utils.allocBufferFromArray([0, 0, 0, types.resultKind.prepared]),
         utils.allocBufferFromArray([0, 16]),
         id.getBuffer(),
         utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text]),
         utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text])
       ]);
-      var bodyLength = body.length;
+      const bodyLength = body.length;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.result),
         chunk: body.slice(0, 22),
@@ -237,49 +237,49 @@ describe('Parser', function () {
     it('should read a STATUS_CHANGE UP EVENT response', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
         assert.ok(item.event, 'it should return the details of the event');
         assert.strictEqual(item.event.up, true);
         done();
       });
 
-      var eventData = getEventData('STATUS_CHANGE', 'UP');
+      const eventData = getEventData('STATUS_CHANGE', 'UP');
       parser._transform(eventData, null, doneIfError(done));
     });
     it('should read a STATUS_CHANGE DOWN EVENT response', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
         assert.ok(item.event, 'it should return the details of the event');
         assert.strictEqual(item.event.up, false);
         done();
       });
 
-      var eventData = getEventData('STATUS_CHANGE', 'DOWN');
+      const eventData = getEventData('STATUS_CHANGE', 'DOWN');
       parser._transform(eventData, null, doneIfError(done));
     });
     it('should read a STATUS_CHANGE DOWN EVENT response chunked', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.event);
         assert.ok(item.event, 'it should return the details of the event');
         assert.strictEqual(item.event.up, false);
         done();
       });
 
-      var eventData = getEventData('STATUS_CHANGE', 'DOWN');
-      var chunk1 = eventData.chunk.slice(0, 5);
-      var chunk2 = eventData.chunk.slice(5);
+      const eventData = getEventData('STATUS_CHANGE', 'DOWN');
+      const chunk1 = eventData.chunk.slice(0, 5);
+      const chunk2 = eventData.chunk.slice(5);
       parser._transform({header: eventData.header, chunk: chunk1, offset: 0}, null, doneIfError(done));
       parser._transform({header: eventData.header, chunk: chunk2, offset: 0}, null, doneIfError(done));
     });
     it('should read an ERROR response that includes warnings', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.error);
         assert.ok(item.error);
         helper.assertInstanceOf(item.error, errors.ResponseError);
@@ -288,12 +288,12 @@ describe('Parser', function () {
         done();
       });
 
-      var body = Buffer.concat([
+      const body = Buffer.concat([
         utils.allocBufferFromString('0002000548656c6c6f0005576f726c64', 'hex'), // 2 string list of warnings containing 'Hello', 'World'
         utils.allocBufferFromString('0000000000044661696c', 'hex') // Server Error Code (0x0000) with 4 length message 'Fail'
       ]);
-      var bodyLength = body.length;
-      var header = getFrameHeader(bodyLength, types.opcodes.error, 4, false, 12, true);
+      const bodyLength = body.length;
+      const header = getFrameHeader(bodyLength, types.opcodes.error, 4, false, 12, true);
       parser._transform({
         header: header,
         chunk: body.slice(0, 4),
@@ -696,7 +696,7 @@ describe('Parser', function () {
     it('should read a buffer until there is enough data', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.bodyLength, 4);
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         done();
@@ -715,7 +715,7 @@ describe('Parser', function () {
     it('should emit empty result one column no rows', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
         done();
@@ -730,7 +730,7 @@ describe('Parser', function () {
     it('should emit empty result two columns no rows', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         assert.ok(item.result && item.result.rows && item.result.rows.length === 0);
         done();
@@ -740,10 +740,10 @@ describe('Parser', function () {
     });
     it('should emit row when rows present', function (done) {
       const parser = newInstance();
-      var rowLength = 2;
+      const rowLength = 2;
       let rowCounter = 0;
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         assert.ok(item.row);
         if ((++rowCounter) === rowLength) {
@@ -782,23 +782,23 @@ describe('Parser', function () {
             { columnLength: 6, rowLength: 5 },
             { columnLength: 1, rowLength: 20 }
           ];
-          var items = expected.map(function (item, index) {
+          const items = expected.map(function (item, index) {
             parser.setOptions(index, { byRow: true });
             return getBodyChunks(item.columnLength, item.rowLength, 0, null, null, index);
           });
           function transformChunkedItem(i) {
-            var item = items[i];
-            var chunkedItem = {
+            const item = items[i];
+            const chunkedItem = {
               header: item.header,
               offset: 0
             };
             for (let j = 0; j < item.chunk.length; j = j + chunkLength) {
-              var end = j + chunkLength;
+              let end = j + chunkLength;
               if (end >= item.chunk.length) {
                 end = item.chunk.length;
                 chunkedItem.frameEnded = true;
               }
-              var start = j;
+              const start = j;
               if (start === 0) {
                 //sum a few bytes
                 chunkedItem.chunk = Buffer.concat([ utils.allocBufferUnsafe(9), item.chunk.slice(start, end) ]);
@@ -823,7 +823,7 @@ describe('Parser', function () {
       });
     });
     describe('with multiple chunk lengths piped', function () {
-      var protocol = new streams.Protocol({ objectMode: true });
+      const protocol = new streams.Protocol({ objectMode: true });
       const parser = newInstance();
       protocol.pipe(parser);
       let result;
@@ -851,12 +851,12 @@ describe('Parser', function () {
           result = {};
           const buffer = Buffer.concat(expected.map(function (expectedItem, index) {
             parser.setOptions(index, { byRow: true });
-            var item = getBodyChunks(expectedItem.columnLength, expectedItem.rowLength, 0, null, null, index);
+            const item = getBodyChunks(expectedItem.columnLength, expectedItem.rowLength, 0, null, null, index);
             return Buffer.concat([ item.header.toBuffer(), item.chunk ]);
           }));
 
           for (let j = 0; j < buffer.length; j = j + chunkLength) {
-            var end = j + chunkLength;
+            let end = j + chunkLength;
             if (end >= buffer.length) {
               end = buffer.length;
             }
@@ -882,7 +882,7 @@ describe('Parser', function () {
         const parser = newInstance();
         let rowCounter = 0;
         parser.on('readable', function () {
-          var item = parser.read();
+          const item = parser.read();
           assert.strictEqual(item.header.opcode, types.opcodes.result);
           assert.ok(item.row);
           if ((++rowCounter) === rowLength) {
@@ -895,7 +895,7 @@ describe('Parser', function () {
         const parser = newInstance();
         let rowCounter = 0;
         parser.on('readable', function () {
-          var item = parser.read();
+          const item = parser.read();
           assert.strictEqual(item.header.opcode, types.opcodes.result);
           assert.ok(item.row);
           if ((++rowCounter) === rowLength) {
@@ -909,7 +909,7 @@ describe('Parser', function () {
         const parser = newInstance();
         let rowCounter = 0;
         parser.on('readable', function () {
-          var item = parser.read();
+          const item = parser.read();
           assert.strictEqual(item.header.opcode, types.opcodes.result);
           assert.ok(item.row);
           if ((++rowCounter) === rowLength) {
@@ -930,7 +930,7 @@ describe('Parser', function () {
         const parser = newInstance();
         let rowCounter = 0;
         parser.on('readable', function () {
-          var item = parser.read();
+          const item = parser.read();
           assert.strictEqual(item.header.opcode, types.opcodes.result);
           assert.ok(item.row);
           if ((++rowCounter) === rowLength) {
@@ -944,13 +944,13 @@ describe('Parser', function () {
         parser._transform(getBodyChunks(1, rowLength, 150, 200, cellValue), null, doneIfError(done));
         parser._transform(getBodyChunks(1, rowLength, 200, null, cellValue), null, doneIfError(done));
       }, function (next) {
-        const cellValue = helper.fillArray(256, 74);
+        let cellValue = helper.fillArray(256, 74);
         //Add the length 256 of the value
         cellValue = [0, 0, 1, 0].concat(cellValue);
         const parser = newInstance();
         let rowCounter = 0;
         parser.on('readable', function () {
-          var item = parser.read();
+          const item = parser.read();
           assert.strictEqual(item.header.opcode, types.opcodes.result);
           assert.ok(item.row);
           if ((++rowCounter) === rowLength) {
@@ -967,14 +967,14 @@ describe('Parser', function () {
     it('should read a AUTH_CHALLENGE response', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.authChallenge);
         helper.assertValueEqual(item.token, utils.allocBufferFromArray([100, 100]));
         assert.strictEqual(item.authChallenge, true);
         done();
       });
       //Length + buffer
-      var bodyLength = 4 + 2;
+      const bodyLength = 4 + 2;
       parser._transform({
         header: getFrameHeader(bodyLength, types.opcodes.authChallenge),
         chunk: utils.allocBufferFromArray([255, 254, 0, 0, 0, 2]),
@@ -989,7 +989,7 @@ describe('Parser', function () {
     it('should buffer ERROR response until complete', function (done) {
       const parser = newInstance();
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.error);
         helper.assertInstanceOf(item.error, errors.ResponseError);
         assert.strictEqual(item.error.message, 'ERR');
@@ -998,7 +998,7 @@ describe('Parser', function () {
         done();
       });
       //streamId 33
-      var header = new types.FrameHeader(4, 0, 33, types.opcodes.error, 9);
+      const header = new types.FrameHeader(4, 0, 33, types.opcodes.error, 9);
       parser.setOptions(33, { byRow: true });
       assert.strictEqual(parser.frameState({ header: header}).byRow, true);
       parser._transform({ header: header, chunk: utils.allocBufferFromArray([255, 0, 0, 0, 0]), offset: 1}, null, doneIfError(done));
@@ -1007,10 +1007,10 @@ describe('Parser', function () {
     });
     it('should not buffer RESULT ROWS response when byRow is enabled', function (done) {
       const parser = newInstance();
-      var rowLength = 2;
+      const rowLength = 2;
       let rowCounter = 0;
       parser.on('readable', function () {
-        var item = parser.read();
+        const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
         assert.ok(item.row);
         rowCounter++;
@@ -1060,7 +1060,7 @@ function getFrameHeader(bodyLength, opcode, version, trace, streamId, warnings, 
  */
 function getBodyChunks(columnLength, rowLength, fromIndex, toIndex, cellValue, streamId) {
   let i;
-  var fullChunk = [
+  let fullChunk = [
     //kind
     0, 0, 0, types.resultKind.rows,
     //flags and column count
@@ -1116,8 +1116,8 @@ function getEventData(eventType, value) {
   //Port
   bodyArray.push(utils.allocBufferFromArray([0, 0, 0, 200]));
 
-  var body = Buffer.concat(bodyArray);
-  var header = new types.FrameHeader(2, 0, -1, types.opcodes.event, body.length);
+  const body = Buffer.concat(bodyArray);
+  const header = new types.FrameHeader(2, 0, -1, types.opcodes.event, body.length);
   return {header: header, chunk: body};
 }
 

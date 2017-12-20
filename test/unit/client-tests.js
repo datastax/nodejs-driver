@@ -68,7 +68,7 @@ describe('Client', function () {
           loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
         }
       });
-      var ccMock = getControlConnectionMock(null, options);
+      const ccMock = getControlConnectionMock(null, options);
       ccMock.prototype.init = function (cb) {
         initCounter++;
         //Async
@@ -121,7 +121,7 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.connect();
+        const p = client.connect();
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -139,10 +139,10 @@ describe('Client', function () {
       });
     });
     it('should build the routingKey based on routingNames', function (done) {
-      var requestHandlerMock = function (request, options) {
+      const requestHandlerMock = function (request, options) {
         this._options = options;
       };
-      var prepareHandlerMock = {
+      const prepareHandlerMock = {
         getPrepared: function (c, lbp, q, ks, cb) {
           cb(null, utils.allocBufferFromArray([1]), { columns: [
             { name: 'key1', type: { code: types.dataTypes.int} },
@@ -165,7 +165,7 @@ describe('Client', function () {
     });
     it('should fill parameter information for string hints', function (done) {
       let options;
-      var requestHandlerMock = function (r, o) {
+      const requestHandlerMock = function (r, o) {
         options = o;
       };
       const client = newConnectedInstance(requestHandlerMock);
@@ -208,7 +208,7 @@ describe('Client', function () {
       });
     });
     it('should callback with an argument error when the hints are not valid strings', function (done) {
-      var requestHandlerMock = function () {};
+      const requestHandlerMock = function () {};
       const client = newConnectedInstance(requestHandlerMock);
       requestHandlerMock.prototype.send = function (q, o, cb) {
         cb();
@@ -250,7 +250,7 @@ describe('Client', function () {
     });
     it('should use the default execution profile options', function () {
       const Client = require('../../lib/client');
-      var profile = new ExecutionProfile('default', {
+      const profile = new ExecutionProfile('default', {
         consistency: types.consistencies.three,
         readTimeout: 12345,
         retry: new policies.retry.RetryPolicy(),
@@ -267,7 +267,7 @@ describe('Client', function () {
     });
     it('should use the provided execution profile options', function () {
       const Client = require('../../lib/client');
-      var profile = new ExecutionProfile('profile1', {
+      const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
@@ -282,14 +282,14 @@ describe('Client', function () {
       // profile by name
       client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
       helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name']);
-      var previousQueryOptions = queryOptions;
+      const previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
     it('should override the provided execution profile options with provided options', function () {
       const Client = require('../../lib/client');
-      var profile = new ExecutionProfile('profile1', {
+      const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
@@ -305,14 +305,14 @@ describe('Client', function () {
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
       helper.compareProps(queryOptions, profile, Object.keys(profile), ['consistency', 'loadBalancing', 'name']);
       assert.strictEqual(queryOptions.consistency, types.consistencies.all);
-      var previousQueryOptions = queryOptions;
+      const previousQueryOptions = queryOptions;
       // profile by instance
       client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
       helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
     });
     it('should set the timestamp', function (done) {
       let actualOptions;
-      var handlerMock = function (r, o) {
+      const handlerMock = function (r, o) {
         actualOptions = o;
       };
       handlerMock.prototype.send = function (callback) {
@@ -337,7 +337,7 @@ describe('Client', function () {
     });
     it('should not set the timestamp when timestampGeneration is null', function (done) {
       let actualOptions;
-      var handlerMock = function (r, o) {
+      const handlerMock = function (r, o) {
         actualOptions = o;
       };
       handlerMock.prototype.send = function (callback) {
@@ -356,7 +356,7 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.execute('Q', [ 1, 2 ], { prepare: true });
+        const p = client.execute('Q', [ 1, 2 ], { prepare: true });
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -366,7 +366,7 @@ describe('Client', function () {
       it('should reject the promise when an ExecutionProfile is not found', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
+        const p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
@@ -377,7 +377,7 @@ describe('Client', function () {
   });
   describe('#eachRow()', function () {
     it('should pass optional parameters as null when not defined', function () {
-      var createQueryOptions = clientOptions.createQueryOptions;
+      const createQueryOptions = clientOptions.createQueryOptions;
       const client = newConnectedInstance();
       let params = null;
       client._innerExecute = function (q, p, o, c) {
@@ -397,7 +397,7 @@ describe('Client', function () {
   });
   describe('#batch()', function () {
     const Client = rewire('../../lib/client.js');
-    var requestHandlerMock = function () {};
+    const requestHandlerMock = function () {};
     requestHandlerMock.prototype.send = function noop (cb) {
       //make it async
       setTimeout(function () {
@@ -420,7 +420,7 @@ describe('Client', function () {
     });
     it('should set the timestamp', function (done) {
       let actualOptions;
-      var handlerMock = function (r, o) {
+      const handlerMock = function (r, o) {
         actualOptions = o;
       };
       handlerMock.prototype.send = function (callback) {
@@ -447,7 +447,7 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.batch(['Q'], null);
+        const p = client.batch(['Q'], null);
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -457,7 +457,7 @@ describe('Client', function () {
       it('should reject the promise when queries is not an Array', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.batch('Q', null);
+        const p = client.batch('Q', null);
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.ArgumentError);
@@ -488,11 +488,11 @@ describe('Client', function () {
       logEmitter: helper.noop
     });
     it('should set connected flag to false when hosts successfully shutdown', function(done) {
-      var hosts = new HostMap();
-      var h1 = new Host('192.1.1.1', 1, options);
+      const hosts = new HostMap();
+      const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
       h1.pool.connections = [{close: setImmediate}];
-      var h2 = new Host('192.1.1.2', 1, options);
+      const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
@@ -506,11 +506,11 @@ describe('Client', function () {
       });
     });
     it('should callback when called multiple times serially', function (done) {
-      var hosts = new HostMap();
-      var h1 = new Host('192.1.1.1', 1, options);
+      const hosts = new HostMap();
+      const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
       h1.pool.connections = [{close: setImmediate}];
-      var h2 = new Host('192.1.1.2', 1, options);
+      const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
@@ -528,11 +528,11 @@ describe('Client', function () {
       ], done);
     });
     it('should callback when called multiple times in parallel', function (done) {
-      var hosts = new HostMap();
-      var h1 = new Host('192.1.1.1', 1, options);
+      const hosts = new HostMap();
+      const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
       h1.pool.connections = [{close: setImmediate}];
-      var h2 = new Host('192.1.1.2', 1, options);
+      const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
@@ -550,7 +550,7 @@ describe('Client', function () {
       ], done);
     });
     it('should not attempt reconnection and log after shutdown', function (done) {
-      var rp = new policies.reconnection.ConstantReconnectionPolicy(50);
+      const rp = new policies.reconnection.ConstantReconnectionPolicy(50);
       const Client = require('../../lib/client');
       const client = new Client(utils.extend({}, helper.baseOptions, { policies: { reconnection: rp } }));
       const logEvents = [];
@@ -574,7 +574,7 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
-        var p = client.shutdown();
+        const p = client.shutdown();
         helper.assertInstanceOf(p, Promise);
         p.then(done);
       });
@@ -653,7 +653,7 @@ describe('Client', function () {
     it('should callback when there is an error retrieving versions', function (done) {
       const client = new Client(helper.baseOptions);
       client.hosts = {length: 3};
-      var dummyError = new Error('dummy error');
+      const dummyError = new Error('dummy error');
       client.metadata = {
         getLocalSchemaVersion: function (c, cb) {
           setImmediate(function () { cb(); });
@@ -707,7 +707,7 @@ describe('Client', function () {
       const client = new Client(helper.baseOptions);
       client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 2};
-      var meta = {
+      const meta = {
         columns: [
           { type: types.dataTypes.int },
           { type: types.dataTypes.text }
@@ -727,7 +727,7 @@ describe('Client', function () {
       const client = new Client(helper.baseOptions);
       client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 4};
-      var meta = {
+      const meta = {
         columns: [
           { type: types.dataTypes.uuid },
           { type: types.dataTypes.text }
@@ -752,7 +752,7 @@ describe('Client', function () {
       let metaCalled = 0;
       client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
       client.controlConnection = { protocolVersion: 3};
-      var meta = {
+      const meta = {
         keyspace: 'ks1',
         table: 'table1',
         columns: [
@@ -780,7 +780,7 @@ describe('Client', function () {
       };
       const options = { prepare: true};
       utils.timesSeries(20, function (n, next) {
-        var params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
+        const params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
         client._setQueryOptions(options, params, meta, function (err) {
           assert.ifError(err);
           assert.strictEqual(metaCalled, 1);

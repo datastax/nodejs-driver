@@ -5,7 +5,7 @@ const rewire = require('rewire');
 
 describe('StreamIdStack', function () {
   this.timeout(2000);
-  var osPrecision = 30;
+  const osPrecision = 30;
   it('should pop and push', function () {
     const stack = newInstance();
     assert.strictEqual(stack.pop(), 0);
@@ -24,10 +24,10 @@ describe('StreamIdStack', function () {
       [2, 128],
       [3, Math.pow(2, 15)]
     ].forEach(function (value) {
-      var version = value[0];
-      var maxSize = value[1];
-      var stack = newInstance(version);
-      var ids = pop(stack, maxSize + 20);
+      const version = value[0];
+      const maxSize = value[1];
+      const stack = newInstance(version);
+      const ids = pop(stack, maxSize + 20);
       assert.strictEqual(ids.length, maxSize + 20);
       for (let i = 0; i < maxSize + 20; i++) {
         if (i < maxSize) {
@@ -43,8 +43,8 @@ describe('StreamIdStack', function () {
     });
   });
   it('should yield the lowest available id', function () {
-    var stack = newInstance(3);
-    var ids = pop(stack, 128 * 3 - 1);
+    const stack = newInstance(3);
+    const ids = pop(stack, 128 * 3 - 1);
     assert.strictEqual(ids.length, 128 * 3 - 1);
     for (let i = 0; i < ids.length; i++) {
       assert.strictEqual(ids[i], i);
@@ -63,8 +63,8 @@ describe('StreamIdStack', function () {
     stack.clear();
   });
   it('should release unused groups', function (done) {
-    var releaseDelay = 100;
-    var stack = newInstance(3, releaseDelay);
+    const releaseDelay = 100;
+    const stack = newInstance(3, releaseDelay);
     //6 groups,
     pop(stack, 128 * 5 + 2);
     //return just 1 to the last group
@@ -83,8 +83,8 @@ describe('StreamIdStack', function () {
     }, releaseDelay + osPrecision);
   });
   it('should not release the current group', function (done) {
-    var releaseDelay = 100;
-    var stack = newInstance(3, releaseDelay);
+    const releaseDelay = 100;
+    const stack = newInstance(3, releaseDelay);
     //6 groups,
     pop(stack, 128 * 5 + 2);
     //return just 1 to the last group
@@ -101,8 +101,8 @@ describe('StreamIdStack', function () {
     }, releaseDelay + osPrecision);
   });
   it('should not release more than release size per time', function (done) {
-    var releaseDelay = 100;
-    var stack = newInstance(3, releaseDelay);
+    const releaseDelay = 100;
+    const stack = newInstance(3, releaseDelay);
     //12 groups,
     pop(stack, 128 * 11 + 2);
     assert.strictEqual(stack.groups.length, 12);
@@ -128,7 +128,7 @@ describe('StreamIdStack', function () {
 
 /** @returns {StreamIdStack}  */
 function newInstance(version, releaseDelay) {
-  var StreamIdStack = rewire('../../lib/stream-id-stack');
+  const StreamIdStack = rewire('../../lib/stream-id-stack');
   StreamIdStack.__set__("releaseDelay", releaseDelay || 100);
   return new StreamIdStack(version || 3);
 }

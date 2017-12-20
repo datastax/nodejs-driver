@@ -8,7 +8,7 @@ const EventDebouncer = require('../../lib/metadata/event-debouncer');
 describe('EventDebouncer', function () {
   describe('timeoutElapsed()', function () {
     it('should set the queue to null', function (done) {
-      var debouncer = newInstance(1);
+      const debouncer = newInstance(1);
       debouncer._queue = {
         mainEvent: { handler: helper.callbackNoop },
         callbacks: [ helper.noop ]
@@ -20,7 +20,7 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process the main event and invoke all the callbacks', function (done) {
-      var debouncer = newInstance(1);
+      const debouncer = newInstance(1);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer._queue = {
@@ -34,7 +34,7 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process each keyspace the main event and invoke all child the callbacks', function (done) {
-      var debouncer = newInstance(1);
+      const debouncer = newInstance(1);
       let callbackCounter = 0;
       let ksMainEventCalled = 0;
       function increaseCounter() { callbackCounter++; }
@@ -58,7 +58,7 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process each keyspace and invoke handlers and callbacks', function (done) {
-      var debouncer = newInstance(1);
+      const debouncer = newInstance(1);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       const handlersCalled = [];
@@ -86,7 +86,7 @@ describe('EventDebouncer', function () {
   });
   describe('#eventReceived()', function () {
     it('should invoke 1 handler and all the callbacks when one event is flagged as `all`', function (done) {
-      var debouncer = newInstance(20);
+      const debouncer = newInstance(20);
       let callbackCounter = 0;
       let mainEventHandlerCalled = 0;
       function increaseCounter() { callbackCounter++; }
@@ -108,7 +108,7 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should invoke 1 keyspace handler and all the callbacks when cqlObject is undefined', function (done) {
-      var debouncer = newInstance(30);
+      const debouncer = newInstance(30);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       const handlersCalled = [];
@@ -142,7 +142,7 @@ describe('EventDebouncer', function () {
       }, 50);
     });
     it('should not invoke handlers before time elapses', function (done) {
-      var debouncer = newInstance(200);
+      const debouncer = newInstance(200);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       const handlersCalled = [];
@@ -163,7 +163,7 @@ describe('EventDebouncer', function () {
       }, 30);
     });
     it('should process queue immediately when processNow is true', function (done) {
-      var debouncer = newInstance(40);
+      const debouncer = newInstance(40);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       const handlersCalled = [];
@@ -198,7 +198,7 @@ describe('EventDebouncer', function () {
   });
   describe('#shutdown()', function () {
     it('should invoke all callbacks', function (done) {
-      var debouncer = newInstance(20);
+      const debouncer = newInstance(20);
       let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer.eventReceived({ handler: helper.failop, callback: increaseCounter, keyspace: 'ks1' }, false);

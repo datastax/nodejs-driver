@@ -8,9 +8,9 @@ const MutableLong = require('../../lib/types/mutable-long');
 describe('MutableLong', function () {
   describe('fromNumber() and #toNumber()', function () {
     it('should convert from and to a Number', function () {
-      var values = [ 1, 2, -1, -999999, 256, 1024 * 1024, 1024 * 1025 + 13, Math.pow(2, 52), -1 * Math.pow(2, 52) ];
+      const values = [ 1, 2, -1, -999999, 256, 1024 * 1024, 1024 * 1025 + 13, Math.pow(2, 52), -1 * Math.pow(2, 52) ];
       values.forEach(function (value) {
-        var ml = MutableLong.fromNumber(value);
+        const ml = MutableLong.fromNumber(value);
         assert.strictEqual(ml.toNumber(), value);
       });
     });
@@ -44,8 +44,8 @@ describe('MutableLong', function () {
         [ -1, Math.pow(2, 43) ]
       ].forEach(function (item) {
         const expected = item[0] * item[1];
-        var a = MutableLong.fromNumber(item[0]);
-        var b = MutableLong.fromNumber(item[1]);
+        const a = MutableLong.fromNumber(item[0]);
+        const b = MutableLong.fromNumber(item[1]);
         assert.ok(a.multiply(b).equals(MutableLong.fromNumber(expected)), format('failed for value %d*%d',
           item[0], item[1]));
       });
@@ -60,9 +60,9 @@ describe('MutableLong', function () {
         [ MutableLong.fromBits(0xe084bca4, 0x28b1), MutableLong.fromBits(0xed558ccd, 0xff51afd7),
           MutableLong.fromBits(0xd7e8bf54, 0x9e9ed5ab)]
       ].forEach(function (item) {
-        var a = Long.fromBits(item[0].getLowBitsUnsigned(), item[0].getHighBitsUnsigned(), false);
-        var b = Long.fromBits(item[1].getLowBitsUnsigned(), item[1].getHighBitsUnsigned(), false);
-        var c = Long.fromBits(item[2].getLowBitsUnsigned(), item[2].getHighBitsUnsigned(), false);
+        const a = Long.fromBits(item[0].getLowBitsUnsigned(), item[0].getHighBitsUnsigned(), false);
+        const b = Long.fromBits(item[1].getLowBitsUnsigned(), item[1].getHighBitsUnsigned(), false);
+        const c = Long.fromBits(item[2].getLowBitsUnsigned(), item[2].getHighBitsUnsigned(), false);
         assert.ok(a.multiply(b).equals(c));
         assert.ok(item[0].multiply(item[1]).equals(item[2]));
       });
@@ -71,10 +71,10 @@ describe('MutableLong', function () {
   describe('#shiftRightUnsigned()', function () {
     it('should shift across int16 blocks', function () {
       for (let i = 1; i < 64; i++) {
-        var l = MutableLong.fromBits(0xffffffff, 0xffffffff).shiftRightUnsigned(i);
+        const l = MutableLong.fromBits(0xffffffff, 0xffffffff).shiftRightUnsigned(i);
 
-        var expectedHigh = 0xffffffff;
-        var expectedLow = 0xffffffff;
+        let expectedHigh = 0xffffffff;
+        let expectedLow = 0xffffffff;
         if (i < 32) {
           expectedLow = (expectedLow >>> i) | (expectedHigh << (32 - i));
           expectedHigh = expectedHigh >>> i;
@@ -92,7 +92,7 @@ describe('MutableLong', function () {
   describe('#shiftLeft()', function () {
     it('should shift across int16 blocks', function () {
       for (let i = 1; i < 64; i++) {
-        var l = MutableLong.fromBits(1, 0).shiftLeft(i);
+        const l = MutableLong.fromBits(1, 0).shiftLeft(i);
         let expectedHigh = 0;
         let expectedLow = 0;
         if (i < 32) {
@@ -124,8 +124,8 @@ describe('MutableLong', function () {
       });
     });
     it('should compare random numbers', function () {
-      var max = Math.pow(2, 52);
-      var length = 100;
+      const max = Math.pow(2, 52);
+      const length = 100;
       let i;
       const arr1 = new Array(length);
       const arr2 = new Array(length);

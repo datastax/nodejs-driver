@@ -15,7 +15,7 @@ describe('PrepareHandler', function () {
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[2].prepareCalled, 1);
         assert.strictEqual(hosts[3].prepareCalled, 0);
         done();
@@ -28,7 +28,7 @@ describe('PrepareHandler', function () {
         PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, next);
       }, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].prepareCalled, 1);
         done();
       });
@@ -40,7 +40,7 @@ describe('PrepareHandler', function () {
       });
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ok(err);
-        var host = lbp.getFixedQueryPlan()[0];
+        const host = lbp.getFixedQueryPlan()[0];
         assert.strictEqual(host.prepareCalled, 1);
         done();
       });
@@ -49,7 +49,7 @@ describe('PrepareHandler', function () {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function (q, h, cb) {
         if (h.address === '0') {
-          var err = new Error('Test prepare error');
+          const err = new Error('Test prepare error');
           err.isSocketError = true;
           return cb(err);
         }
@@ -57,7 +57,7 @@ describe('PrepareHandler', function () {
       });
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].prepareCalled, 1);
         assert.strictEqual(hosts[1].prepareCalled, 1);
         done();
@@ -68,7 +68,7 @@ describe('PrepareHandler', function () {
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[1].prepareCalled, 1);
         assert.strictEqual(hosts[2].prepareCalled, 1);
         assert.strictEqual(hosts[4].prepareCalled, 1);
@@ -81,7 +81,7 @@ describe('PrepareHandler', function () {
   describe('prepareAllQueries', function () {
     it('should switch keyspace per each keyspace and execute', function (done) {
       const host = helper.getHostsMock([ {} ])[0];
-      var preparedInfoArray = [
+      const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
         { keyspace: 'system_schema', query: 'query2' },
         { keyspace: null, query: 'query3' },
@@ -116,7 +116,7 @@ describe('PrepareHandler', function () {
         cb();
       }
       const host = helper.getHostsMock([ {} ], prepareOnce)[0];
-      var preparedInfoArray = [
+      const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
         { keyspace: null, query: 'query2' },
         { keyspace: 'system', query: 'query3' }
@@ -136,7 +136,7 @@ function getClient(options) {
     metadata: {
       _infos: {},
       getPreparedInfo: function (ks, q) {
-        var info = this._infos[ks + '.' + q];
+        let info = this._infos[ks + '.' + q];
         if (!info) {
           info = this._infos[ks + '.' + q] = new events.EventEmitter();
         }

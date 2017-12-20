@@ -26,7 +26,7 @@ describe('InetAddress', function () {
   });
   describe('#toString()', function () {
     it('should convert IPv6 to string representation', function () {
-      var val = new InetAddress(utils.allocBufferFromString('aabb0000eeff00112233445566778899', 'hex'));
+      let val = new InetAddress(utils.allocBufferFromString('aabb0000eeff00112233445566778899', 'hex'));
       assert.strictEqual(val.version, 6);
       assert.strictEqual(val.toString(), 'aabb::eeff:11:2233:4455:6677:8899');
       val = new InetAddress(utils.allocBufferFromString('aabbccddeeff00112233445566778899', 'hex'));
@@ -43,7 +43,7 @@ describe('InetAddress', function () {
       assert.strictEqual(val.toString(), '::1');
     });
     it('should convert IPv4 to string representation', function () {
-      var val = new InetAddress(utils.allocBufferFromArray([127, 0, 0, 1]));
+      let val = new InetAddress(utils.allocBufferFromArray([127, 0, 0, 1]));
       assert.strictEqual(val.version, 4);
       assert.strictEqual(val.toString(), '127.0.0.1');
       val = new InetAddress(utils.allocBufferFromArray([198, 168, 1, 1]));
@@ -54,11 +54,11 @@ describe('InetAddress', function () {
   });
   describe('#equals()', function () {
     it('should return true when the bytes are the same', function () {
-      var hex1 = 'aabb0000eeff00112233445566778899';
-      var hex2 = 'ffff0000eeff00112233445566778899';
-      var buf1 = utils.allocBufferFromString(hex1, 'hex');
-      var val1 = new InetAddress(buf1);
-      var val2 = new InetAddress(utils.allocBufferFromString(hex2, 'hex'));
+      const hex1 = 'aabb0000eeff00112233445566778899';
+      const hex2 = 'ffff0000eeff00112233445566778899';
+      const buf1 = utils.allocBufferFromString(hex1, 'hex');
+      const val1 = new InetAddress(buf1);
+      const val2 = new InetAddress(utils.allocBufferFromString(hex2, 'hex'));
       assert.ok(val1.equals(new InetAddress(buf1)));
       assert.ok(val1.equals(new InetAddress(utils.allocBufferFromString(hex1, 'hex'))));
       assert.ok(!val1.equals(val2));
@@ -78,13 +78,13 @@ describe('InetAddress', function () {
         '3ffe:0:0:1::a', // ensure furthest groups of 0-bytes are compressed when longest, but last non-0 bytes group is not truncated.
         '3ffe:0:0:1::' // ensure final groups of 0-bytes are compressed when longest and last group is also 0-bytes.
       ].forEach(function (item) {
-        var val = InetAddress.fromString(item);
+        const val = InetAddress.fromString(item);
         helper.assertInstanceOf(val, InetAddress);
         assert.strictEqual(val.toString(), item);
       });
     });
     it('should parse IPv4 string representation', function () {
-      var val = InetAddress.fromString('127.0.0.1');
+      let val = InetAddress.fromString('127.0.0.1');
       helper.assertInstanceOf(val, InetAddress);
       assert.strictEqual(val.toString(), '127.0.0.1');
       val = InetAddress.fromString('198.168.1.1');
@@ -101,7 +101,7 @@ describe('InetAddress', function () {
         ['::ffff:129.144.52.38',            '00000000000000000000ffff81903426'],
         ['::ffff:254.255.52.32',            '00000000000000000000fffffeff3420']
       ].forEach(function (item) {
-        var ip = InetAddress.fromString(item[0]);
+        const ip = InetAddress.fromString(item[0]);
         assert.strictEqual(ip.toString('hex'), item[1]);
       });
       /* eslint-enable no-multi-spaces */

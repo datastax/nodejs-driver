@@ -15,11 +15,11 @@ const OperationState = require('../../lib/operation-state');
 const defaultOptions = require('../../lib/client-options').defaultOptions;
 
 describe('RequestHandler', function () {
-  var queryRequest = new requests.QueryRequest('QUERY1');
+  const queryRequest = new requests.QueryRequest('QUERY1');
   describe('#send()', function () {
     it('should return a ResultSet', function (done) {
       const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ]);
-      var handler = newInstance(queryRequest, null, lbp);
+      const handler = newInstance(queryRequest, null, lbp);
       handler.send(function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
@@ -33,10 +33,10 @@ describe('RequestHandler', function () {
         }
         cb(null, {});
       });
-      var handler = newInstance(queryRequest, null, lbp, new TestRetryPolicy());
+      const handler = newInstance(queryRequest, null, lbp, new TestRetryPolicy());
       handler.send(function (err) {
         helper.assertInstanceOf(err, Error);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         done();
@@ -49,12 +49,12 @@ describe('RequestHandler', function () {
         }
         cb(null, {});
       });
-      var retryPolicy = new TestRetryPolicy();
-      var handler = newInstance(queryRequest, null, lbp, retryPolicy);
+      const retryPolicy = new TestRetryPolicy();
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy);
       handler.send(function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 1);
@@ -68,11 +68,11 @@ describe('RequestHandler', function () {
         }
         cb(null, {});
       });
-      var retryPolicy = new TestRetryPolicy(false);
-      var handler = newInstance(queryRequest, null, lbp, retryPolicy);
+      const retryPolicy = new TestRetryPolicy(false);
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy);
       handler.send(function (err) {
         helper.assertInstanceOf(err, errors.OperationTimedOutError);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 1);
@@ -81,24 +81,24 @@ describe('RequestHandler', function () {
     });
     context('when an UNPREPARED response is obtained', function () {
       it('should send a prepare request on the same connection', function (done) {
-        var queryId = utils.allocBufferFromString('123');
+        const queryId = utils.allocBufferFromString('123');
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
           if (h.sendStreamCalled === 1) {
             // Its the first request, send an error
-            var err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            const err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
             err.queryId = queryId;
             return cb(err);
           }
           cb(null, { });
         });
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         const client = newClient({
           getPreparedById: function (id) {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        var request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
-        var handler = newInstance(request, client, lbp);
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
           assert.ok(response);
@@ -110,7 +110,7 @@ describe('RequestHandler', function () {
         });
       });
       it('should move to next host when PREPARE response is an error', function (done) {
-        var queryId = utils.allocBufferFromString('123');
+        const queryId = utils.allocBufferFromString('123');
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function prepareCallback(q, h, cb) {
           if (h.address === '0') {
             return cb(new Error('Test error'));
@@ -119,20 +119,20 @@ describe('RequestHandler', function () {
         }, function sendFake(r, h, cb) {
           if (h.sendStreamCalled === 1) {
             // Its the first request, send an error
-            var err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            const err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
             err.queryId = queryId;
             return cb(err);
           }
           cb(null, { });
         });
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         const client = newClient({
           getPreparedById: function (id) {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        var request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
-        var handler = newInstance(request, client, lbp);
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
           assert.ok(response);
@@ -147,7 +147,7 @@ describe('RequestHandler', function () {
     context('with speculative executions', function () {
       it('should use the query plan to use next hosts as coordinators', function (done) {
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {}, {}], undefined, function sendStreamCb(r, h, cb) {
-          var op = new OperationState(r, null, cb);
+          const op = new OperationState(r, null, cb);
           if (h.address !== '2') {
             setTimeout(function () {
               op.setResult(null, {});
@@ -160,14 +160,14 @@ describe('RequestHandler', function () {
         const client = newClient(null, lbp);
         client.options.policies.speculativeExecution =
           new speculativeExecution.ConstantSpeculativeExecutionPolicy(20, 2);
-        var handler = newInstance(queryRequest, client, lbp, null, true);
+        const handler = newInstance(queryRequest, client, lbp, null, true);
         handler.send(function (err, result) {
           assert.ifError(err);
           helper.assertInstanceOf(result, types.ResultSet);
           // Used the third host to get the response
           assert.strictEqual(result.info.queriedHost, '2');
           assert.deepEqual(Object.keys(result.info.triedHosts), [ '0', '1', '2' ]);
-          var hosts = lbp.getFixedQueryPlan();
+          const hosts = lbp.getFixedQueryPlan();
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           assert.strictEqual(hosts[2].sendStreamCalled, 1);
@@ -176,7 +176,7 @@ describe('RequestHandler', function () {
       });
       it('should use the query plan to use next hosts as coordinators with zero delay', function (done) {
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
-          var op = new OperationState(r, null, cb);
+          const op = new OperationState(r, null, cb);
           if (h.address !== '1') {
             setTimeout(function () {
               op.setResult(null, {});
@@ -189,14 +189,14 @@ describe('RequestHandler', function () {
         const client = newClient(null, lbp);
         client.options.policies.speculativeExecution =
           new speculativeExecution.ConstantSpeculativeExecutionPolicy(0, 2);
-        var handler = newInstance(queryRequest, client, lbp, null, true);
+        const handler = newInstance(queryRequest, client, lbp, null, true);
         handler.send(function (err, result) {
           assert.ifError(err);
           helper.assertInstanceOf(result, types.ResultSet);
           // Used the second host to get the response
           assert.strictEqual(result.info.queriedHost, '1');
           assert.deepEqual(Object.keys(result.info.triedHosts), [ '0', '1' ]);
-          var hosts = lbp.getFixedQueryPlan();
+          const hosts = lbp.getFixedQueryPlan();
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           done();
@@ -204,7 +204,7 @@ describe('RequestHandler', function () {
       });
       it('should callback in error when any of execution responses is an error that cant be retried', function (done) {
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {}, {}], undefined, function sendStreamCb(r, h, cb) {
-          var op = new OperationState(r, null, cb);
+          const op = new OperationState(r, null, cb);
           if (h.address !== '0') {
             setTimeout(function () {
               op.setResult(null, {});
@@ -220,10 +220,10 @@ describe('RequestHandler', function () {
         const client = newClient(null, lbp);
         client.options.policies.speculativeExecution =
           new speculativeExecution.ConstantSpeculativeExecutionPolicy(20, 2);
-        var handler = newInstance(queryRequest, client, lbp, null, true);
+        const handler = newInstance(queryRequest, client, lbp, null, true);
         handler.send(function (err) {
           helper.assertInstanceOf(err, Error);
-          var hosts = lbp.getFixedQueryPlan();
+          const hosts = lbp.getFixedQueryPlan();
           // 3 hosts were queried but the first responded with an error
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);

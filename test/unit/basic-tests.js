@@ -63,7 +63,7 @@ describe('types', function () {
   describe('Integer', function () {
     const Integer = types.Integer;
     /* eslint-disable no-multi-spaces */
-    var values = [
+    const values = [
       //hex value                      |      string varint
       ['02000001',                            '33554433'],
       ['02000000',                            '33554432'],
@@ -93,7 +93,7 @@ describe('types', function () {
     it('should create from buffer', function () {
       values.forEach(function (item) {
         const buffer = utils.allocBufferFromString(item[0], 'hex');
-        var value = Integer.fromBuffer(buffer);
+        const value = Integer.fromBuffer(buffer);
         assert.strictEqual(value.toString(), item[1]);
       });
     });
@@ -108,7 +108,7 @@ describe('types', function () {
     const Tuple = types.Tuple;
     describe('#get()', function () {
       it('should return the element at position', function () {
-        var t = new Tuple('first', 'second');
+        const t = new Tuple('first', 'second');
         assert.strictEqual(t.get(0), 'first');
         assert.strictEqual(t.get(1), 'second');
         assert.strictEqual(t.get(2), undefined);
@@ -119,7 +119,7 @@ describe('types', function () {
       it('should return the string of the elements surrounded by parenthesis', function () {
         const id = types.Uuid.random();
         const decimal = types.BigDecimal.fromString('1.2');
-        var t = new Tuple(id, decimal, 0);
+        const t = new Tuple(id, decimal, 0);
         assert.strictEqual(t.toString(), '(' + id.toString() + ',' + decimal.toString() + ',0)');
       });
     });
@@ -127,15 +127,15 @@ describe('types', function () {
       it('should return the string of the elements surrounded by square brackets', function () {
         const id = types.TimeUuid.now();
         const decimal = types.BigDecimal.fromString('-1');
-        var t = new Tuple(id, decimal, 1, {z: 1});
+        const t = new Tuple(id, decimal, 1, {z: 1});
         assert.strictEqual(JSON.stringify(t), '["' + id.toString() + '","' + decimal.toString() + '",1,{"z":1}]');
       });
     });
     describe('#values()', function () {
       it('should return the Array representation of the Tuple', function () {
-        var t = new Tuple('first2', 'second2', 'third2');
+        const t = new Tuple('first2', 'second2', 'third2');
         assert.strictEqual(t.length, 3);
-        var values = t.values();
+        const values = t.values();
         assert.ok(util.isArray(values));
         assert.strictEqual(values.length, 3);
         assert.strictEqual(values[0], 'first2');
@@ -143,8 +143,8 @@ describe('types', function () {
         assert.strictEqual(values[2], 'third2');
       });
       it('when modifying the returned Array the Tuple should not change its values', function () {
-        var t = new Tuple('first3', 'second3', 'third3');
-        var values = t.values();
+        const t = new Tuple('first3', 'second3', 'third3');
+        const values = t.values();
         assert.strictEqual(values.length, 3);
         values[0] = 'whatever';
         values.shift();
@@ -179,9 +179,9 @@ describe('types', function () {
     });
     describe('#fromBuffer() and #toBuffer()', function () {
       it('should encode and decode a LocalDate', function () {
-        var value = new LocalDate(2010, 8, 5);
-        var encoded = value.toBuffer();
-        var decoded = LocalDate.fromBuffer(encoded);
+        const value = new LocalDate(2010, 8, 5);
+        const encoded = value.toBuffer();
+        const decoded = LocalDate.fromBuffer(encoded);
         assert.strictEqual(decoded.toString(), value.toString());
         assert.ok(decoded.equals(value));
         assert.ok(value.equals(decoded));
@@ -200,7 +200,7 @@ describe('types', function () {
           ['-1201-04-03', -1201, 4, 3],
           ['0-1-1', 0, 1, 1]
         ].forEach(function (item) {
-          var value = LocalDate.fromString(item[0]);
+          const value = LocalDate.fromString(item[0]);
           assert.strictEqual(value.year, item[1]);
           assert.strictEqual(value.month, item[2]);
           assert.strictEqual(value.day, item[3]);
@@ -214,7 +214,7 @@ describe('types', function () {
           ['-2147483648', '-2147483648'],
           ['-719162', '0001-01-01']
         ].forEach(function (item) {
-          var value = LocalDate.fromString(item[0]);
+          const value = LocalDate.fromString(item[0]);
           assert.strictEqual(value.toString(), item[1]);
         });
       });
@@ -238,7 +238,7 @@ describe('types', function () {
     const LocalTime = types.LocalTime;
     const Long = types.Long;
     /* eslint-disable no-multi-spaces */
-    var values = [
+    const values = [
       //Long value         |     string representation  |   hour/min/sec/nanos
       ['1000000001',             '00:00:01.000000001',      [0, 0, 1, 1]],
       ['0',                      '00:00:00',                [0, 0, 0, 0]],
@@ -262,7 +262,7 @@ describe('types', function () {
     describe('#toString()', function () {
       it('should return the string representation', function () {
         values.forEach(function (item) {
-          var val = new LocalTime(Long.fromString(item[0]));
+          const val = new LocalTime(Long.fromString(item[0]));
           assert.strictEqual(val.toString(), item[1]);
         });
       });
@@ -270,7 +270,7 @@ describe('types', function () {
     describe('#toJSON()', function () {
       it('should return the string representation', function () {
         values.forEach(function (item) {
-          var val = new LocalTime(Long.fromString(item[0]));
+          const val = new LocalTime(Long.fromString(item[0]));
           assert.strictEqual(val.toString(), item[1]);
         });
       });
@@ -278,7 +278,7 @@ describe('types', function () {
     describe('#fromString()', function () {
       it('should parse the string representation', function () {
         values.forEach(function (item) {
-          var val = LocalTime.fromString(item[1]);
+          const val = LocalTime.fromString(item[1]);
           assert.ok(new LocalTime(Long.fromString(item[0])).equals(val));
           assert.ok(new LocalTime(Long.fromString(item[0]))
             .getTotalNanoseconds()
@@ -288,9 +288,9 @@ describe('types', function () {
     });
     describe('#toBuffer() and fromBuffer()', function () {
       values.forEach(function (item) {
-        var val = new LocalTime(Long.fromString(item[0]));
-        var encoded = val.toBuffer();
-        var decoded = LocalTime.fromBuffer(encoded);
+        const val = new LocalTime(Long.fromString(item[0]));
+        const encoded = val.toBuffer();
+        const decoded = LocalTime.fromBuffer(encoded);
         assert.ok(decoded.equals(val));
         assert.strictEqual(val.toString(), decoded.toString());
       });
@@ -298,8 +298,8 @@ describe('types', function () {
     describe('#hour #minute #second #nanosecond', function () {
       it('should get the correct parts', function () {
         values.forEach(function (item) {
-          var val = new LocalTime(Long.fromString(item[0]));
-          var parts = item[2];
+          const val = new LocalTime(Long.fromString(item[0]));
+          const parts = item[2];
           assert.strictEqual(val.hour, parts[0]);
           assert.strictEqual(val.minute, parts[1]);
           assert.strictEqual(val.second, parts[2]);
@@ -309,8 +309,8 @@ describe('types', function () {
     });
     describe('fromDate()', function () {
       it('should use the local time', function () {
-        var date = new Date();
-        var time = LocalTime.fromDate(date, 1);
+        const date = new Date();
+        const time = LocalTime.fromDate(date, 1);
         assert.strictEqual(time.hour, date.getHours());
         assert.strictEqual(time.minute, date.getMinutes());
         assert.strictEqual(time.second, date.getSeconds());
@@ -319,7 +319,7 @@ describe('types', function () {
     });
     describe('fromMilliseconds', function () {
       it('should default nanoseconds to 0 when not provided', function () {
-        var time = LocalTime.fromMilliseconds(1);
+        const time = LocalTime.fromMilliseconds(1);
         assert.ok(time.equals(LocalTime.fromMilliseconds(1, 0)));
       });
     });
@@ -327,7 +327,7 @@ describe('types', function () {
   describe('ResultStream', function () {
     it('should be readable as soon as it has data', function (done) {
       const buf = [];
-      var stream = new types.ResultStream();
+      const stream = new types.ResultStream();
       
       stream.on('end', function streamEnd() {
         assert.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
@@ -347,7 +347,7 @@ describe('types', function () {
 
     it('should buffer until is read', function (done) {
       const buf = [];
-      var stream = new types.ResultStream();
+      const stream = new types.ResultStream();
       stream.add(utils.allocBufferFromString('Stringer'));
       stream.add(utils.allocBufferFromString(' '));
       stream.add(utils.allocBufferFromString('Bell'));
@@ -367,7 +367,7 @@ describe('types', function () {
 
     it('should be readable until the end', function (done) {
       const buf = [];
-      var stream = new types.ResultStream();
+      const stream = new types.ResultStream();
       stream.add(utils.allocBufferFromString('Omar'));
       stream.add(utils.allocBufferFromString(' '));
 
@@ -388,7 +388,7 @@ describe('types', function () {
 
     it('should be readable on objectMode', function (done) {
       const buf = [];
-      var stream = new types.ResultStream({objectMode: true});
+      const stream = new types.ResultStream({objectMode: true});
       //passing objects
       stream.add({toString: function (){return 'One';}});
       stream.add({toString: function (){return 'Two';}});
@@ -407,8 +407,8 @@ describe('types', function () {
   });
   describe('Row', function () {
     it('should get the value by column name or index', function () {
-      var columns = [{name: 'first', type: { code: dataTypes.varchar}}, {name: 'second', type: { code: dataTypes.varchar}}];
-      var row = new types.Row(columns);
+      const columns = [{name: 'first', type: { code: dataTypes.varchar}}, {name: 'second', type: { code: dataTypes.varchar}}];
+      const row = new types.Row(columns);
       row['first'] = 'hello';
       row['second'] = 'world';
       assert.ok(row.get, 'It should contain a get method');
@@ -419,16 +419,16 @@ describe('types', function () {
       assert.strictEqual(row.get(1), row['second']);
     });
     it('should enumerate only columns defined', function () {
-      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
-      var row = new types.Row(columns);
+      const columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      const row = new types.Row(columns);
       row['col1'] = 'val1';
       row['col2'] = 'val2';
       assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
     });
     it('should be serializable to json', function () {
       let i;
-      var columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
-      var row = new types.Row(columns, [utils.allocBufferFromString('val1'), utils.allocBufferFromString('val2')]);
+      let columns = [{name: 'col1', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.varchar}}];
+      let row = new types.Row(columns, [utils.allocBufferFromString('val1'), utils.allocBufferFromString('val2')]);
       row['col1'] = 'val1';
       row['col2'] = 'val2';
       assert.strictEqual(JSON.stringify(row), JSON.stringify({col1: 'val1', col2: 'val2'}));
@@ -439,7 +439,7 @@ describe('types', function () {
         {name: 'clong', type: { code: dataTypes.bigint}},
         {name: 'cvarint', type: { code: dataTypes.varint}}
       ];
-      var rowValues = [
+      let rowValues = [
         types.Uuid.random(),
         types.TimeUuid.now(),
         types.Long.fromNumber(1000),
@@ -469,8 +469,8 @@ describe('types', function () {
       assert.strictEqual(JSON.stringify(row), expected);
     });
     it('should have values that can be inspected', function () {
-      var columns = [{name: 'col10', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.int}}];
-      var row = new types.Row(columns);
+      const columns = [{name: 'col10', type: { code: dataTypes.varchar}}, {name: 'col2', type: { code: dataTypes.int}}];
+      const row = new types.Row(columns);
       row['col10'] = 'val1';
       row['col2'] = 2;
       helper.assertContains(util.inspect(row), util.inspect({col10: 'val1', col2: 2}));
@@ -486,7 +486,7 @@ describe('types', function () {
       assert.notEqual(val, types.uuid());
     });
     it('should fill in the values in a buffer', function () {
-      var buf = utils.allocBufferUnsafe(16);
+      const buf = utils.allocBufferUnsafe(16);
       const val = types.uuid(null, buf);
       assert.strictEqual(val, buf);
     });
@@ -501,7 +501,7 @@ describe('types', function () {
       assert.notEqual(val, types.timeuuid());
     });
     it('should fill in the values in a buffer', function () {
-      var buf = utils.allocBufferUnsafe(16);
+      const buf = utils.allocBufferUnsafe(16);
       const val = types.timeuuid(null, buf);
       assert.strictEqual(val, buf);
     });
@@ -538,7 +538,7 @@ describe('utils', function () {
   });
   describe('#funcCompare()', function () {
     it('should return a compare function valid for Array#sort', function () {
-      var values = [
+      const values = [
         {id: 1, getValue : function () { return 100;}},
         {id: 2, getValue : function () { return 3;}},
         {id: 3, getValue : function () { return 1;}}
@@ -551,7 +551,7 @@ describe('utils', function () {
   });
   describe('#binarySearch()', function () {
     it('should return the key index if found, or the bitwise compliment of the first larger value', function () {
-      var compareFunc = function (a, b) {
+      const compareFunc = function (a, b) {
         if (a > b) {
           return 1;
         }
@@ -607,7 +607,7 @@ describe('utils', function () {
       value = utils.deepExtend({z: 3}, null);
       assert.strictEqual(value.z, 3);
       //undefined
-      var o = undefined;
+      const o = undefined;
       value = utils.deepExtend({z: 4}, o);
       assert.strictEqual(value.z, 4);
     });
@@ -647,8 +647,8 @@ describe('clientOptions', function () {
       assert.notStrictEqual(options, clientOptions.defaultOptions());
     });
     it('should validate the policies', function () {
-      var policy1 = new loadBalancing.RoundRobinPolicy();
-      var policy2 = new retry.RetryPolicy();
+      const policy1 = new loadBalancing.RoundRobinPolicy();
+      const policy2 = new retry.RetryPolicy();
       const options = clientOptions.extend({
         contactPoints: ['host1'],
         policies: {
@@ -746,7 +746,7 @@ describe('writers', function () {
     it('should buffer until threshold is passed', function (done) {
       let itemCallbackCounter = 0;
       const buffers = [];
-      var socketMock = {
+      const socketMock = {
         write: function (buf, cb) {
           buffers.push(buf);
           setTimeout(cb, 50);
@@ -755,8 +755,8 @@ describe('writers', function () {
       const options = utils.extend({}, clientOptions.defaultOptions());
       options.socketOptions.coalescingThreshold = 50;
       const encoder = new Encoder(3, options);
-      var queue = new writers.WriteQueue(socketMock, encoder, options);
-      var request = {
+      const queue = new writers.WriteQueue(socketMock, encoder, options);
+      const request = {
         write: function () {
           return utils.allocBufferUnsafe(10);
         }

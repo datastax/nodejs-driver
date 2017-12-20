@@ -30,7 +30,7 @@ describe('Metadata', function () {
           }]});
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
@@ -38,7 +38,7 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
         assert.ok(metadata.keyspaces);
-        var ks = metadata.keyspaces['ks1'];
+        const ks = metadata.keyspaces['ks1'];
         assert.ok(ks);
         assert.strictEqual(ks.strategy, 'org.apache.cassandra.locator.SimpleStrategy');
         assert.ok(ks.strategyOptions);
@@ -57,7 +57,7 @@ describe('Metadata', function () {
           }]});
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
@@ -65,7 +65,7 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
         assert.ok(metadata.keyspaces);
-        var ks = metadata.keyspaces['ks2'];
+        const ks = metadata.keyspaces['ks2'];
         assert.ok(ks);
         assert.strictEqual(ks.strategy, 'org.apache.cassandra.locator.NetworkTopologyStrategy');
         assert.ok(ks.strategyOptions);
@@ -84,7 +84,7 @@ describe('Metadata', function () {
           }]});
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5];
@@ -93,7 +93,7 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
         assert.ok(metadata.keyspaces);
-        var ks = metadata.keyspaces['ks1'];
+        const ks = metadata.keyspaces['ks1'];
         assert.ok(ks);
         assert.strictEqual(ks.strategy, 'org.apache.cassandra.locator.SimpleStrategy');
         assert.ok(ks.strategyOptions);
@@ -112,7 +112,7 @@ describe('Metadata', function () {
           }]});
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5];
@@ -122,7 +122,7 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
         assert.ok(metadata.keyspaces);
-        var ks = metadata.keyspaces['ks2'];
+        const ks = metadata.keyspaces['ks2'];
         assert.ok(ks);
         assert.strictEqual(ks.strategy, 'org.apache.cassandra.locator.NetworkTopologyStrategy');
         assert.ok(ks.strategyOptions);
@@ -142,7 +142,7 @@ describe('Metadata', function () {
           }]});
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
       metadata.tokenizer.hash = function (b) { return b[0];};
@@ -153,7 +153,7 @@ describe('Metadata', function () {
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces();
-      var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+      let replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
       assert.ok(replicas);
       //Primary replica plus the 2 next tokens
       assert.strictEqual(replicas.length, 3);
@@ -175,9 +175,9 @@ describe('Metadata', function () {
         'strategy_options': '{"dc1": "3", "dc2": "1"}'
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.tokenizer = getTokenizer();
-      var racks = new utils.HashSet();
+      const racks = new utils.HashSet();
       racks.add('rack1');
       metadata.datacenters = {
         'dc1': { hostLength: 4, racks: racks },
@@ -187,14 +187,14 @@ describe('Metadata', function () {
       //load primary replicas
       metadata.primaryReplicas = {};
       for (let i = 0; i < metadata.ring.length; i ++) {
-        var h = new Host(i.toString(), 2, options);
+        const h = new Host(i.toString(), 2, options);
         h.datacenter = 'dc' + ((i % 2) + 1);
         h.rack = 'rack1';
         metadata.primaryReplicas[i.toString()] = h;
       }
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+        const replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         //3 replicas from dc1 and 1 replica from dc2
         assert.strictEqual(replicas.length, 4);
@@ -212,12 +212,12 @@ describe('Metadata', function () {
         'strategy_options': '{"dc1": "3", "dc2": "3", "non_existent_dc": "1"}'
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.tokenizer = getTokenizer();
-      var racksDc1 = new utils.HashSet();
+      const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
       racksDc1.add('dc1_r2');
-      var racksDc2 = new utils.HashSet();
+      const racksDc2 = new utils.HashSet();
       racksDc2.add('dc2_r1');
       racksDc2.add('dc2_r2');
       metadata.datacenters = {
@@ -229,14 +229,14 @@ describe('Metadata', function () {
       metadata.primaryReplicas = {};
       for (let i = 0; i < metadata.ring.length; i ++) {
         // Hosts with in alternate dc and alternate rack
-        var h = new Host(i.toString(), 2, options);
+        const h = new Host(i.toString(), 2, options);
         h.datacenter = 'dc' + ((i % 2) + 1);
         h.rack = h.datacenter + '_r' + ((i % 4) <= 1 ? 1 : 2);
         metadata.primaryReplicas[i.toString()] = h;
       }
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+        let replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '2', '3', '4', '5' ]);
         replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([1]));
@@ -255,12 +255,12 @@ describe('Metadata', function () {
         'strategy_options': '{"dc1": "3", "dc2": "2"}'
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.tokenizer = getTokenizer();
-      var racksDc1 = new utils.HashSet();
+      const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
       racksDc1.add('dc1_r2');
-      var racksDc2 = new utils.HashSet();
+      const racksDc2 = new utils.HashSet();
       racksDc2.add('dc2_r1');
       racksDc2.add('dc2_r2');
       metadata.datacenters = {
@@ -272,7 +272,7 @@ describe('Metadata', function () {
       metadata.primaryReplicas = {};
       for (let i = 0; i < metadata.ring.length; i ++) {
         // Hosts with in alternate dc and alternate rack
-        var h = new Host(i.toString(), 2, options);
+        const h = new Host(i.toString(), 2, options);
         h.datacenter = 'dc' + ((i % 2) + 1);
         h.rack = h.datacenter + '_r' + ((i % 4) <= 1 ? 1 : 2);
         metadata.primaryReplicas[i.toString()] = h;
@@ -284,7 +284,7 @@ describe('Metadata', function () {
       metadata.primaryReplicas['6'].rack = 'dc1_rack2';
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+        const replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         // For DC1, it should skip the replica with the same rack (node2) and add it at the end: 0, 4, 2
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '3', '4', '2' ]);
@@ -299,11 +299,11 @@ describe('Metadata', function () {
         'strategy_options': '{"dc1": "3", "dc2": "2"}'
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.tokenizer = getTokenizer();
-      var racksDc1 = new utils.HashSet();
+      const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
-      var racksDc2 = new utils.HashSet();
+      const racksDc2 = new utils.HashSet();
       racksDc2.add('dc2_r1');
       metadata.datacenters = {
         'dc1': {hostLength: 100, racks: racksDc1},
@@ -314,12 +314,12 @@ describe('Metadata', function () {
       // create ring with 100 replicas and 256 vnodes each.  place every replica in DC1.
       metadata.primaryReplicas = {};
       for (let r = 0; r < 100; r++) {
-        var h = new Host(r.toString(), 2, options);
+        const h = new Host(r.toString(), 2, options);
         h.datacenter = 'dc1';
         h.rack = 'dc1_r1';
         // 256 vnodes per replica.
         for (let v = 0; v < 256; v++) {
-          var token = (v * 256) + r;
+          const token = (v * 256) + r;
           metadata.ring.push(token);
           metadata.primaryReplicas[token.toString()] = h;
         }
@@ -335,7 +335,7 @@ describe('Metadata', function () {
       metadata.log = helper.noop;
       // Get the replicas of 5.  Since DC2 has 0 replicas, we only expect 3 replicas (the number of DC1).
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([5]));
+        const replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([5]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), ['5', '6', '7']);
         done();
@@ -349,11 +349,11 @@ describe('Metadata', function () {
         'strategy_options': '{"dc1": "3", "dc2": "2"}'
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.tokenizer = getTokenizer();
-      var racksDc1 = new utils.HashSet();
+      const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
-      var racksDc2 = new utils.HashSet();
+      const racksDc2 = new utils.HashSet();
       racksDc2.add('dc2_r1');
       metadata.datacenters = {
         'dc1': {hostLength: 100, racks: racksDc1},
@@ -364,7 +364,7 @@ describe('Metadata', function () {
       // create ring with 100 replicas and 256 vnodes each.  place every replica in DC1 except replica 0.
       metadata.primaryReplicas = {};
       for (let r = 0; r < 100; r++) {
-        var h = new Host(r.toString(), 2, options);
+        const h = new Host(r.toString(), 2, options);
         h.datacenter = 'dc1';
         h.rack = 'dc1_r1';
         // Place replica 0 in DC2.
@@ -374,7 +374,7 @@ describe('Metadata', function () {
         }
         // 256 vnodes per replica.
         for (let v = 0; v < 256; v++) {
-          var token = (v * 256) + r;
+          const token = (v * 256) + r;
           metadata.ring.push(token);
           metadata.primaryReplicas[token.toString()] = h;
         }
@@ -393,7 +393,7 @@ describe('Metadata', function () {
       // Get the replicas of 0.  Since token 0 is a replica in DC2 and DC2 only has 1, it should return 1 replica
       // in addition to the next 3 replicas from DC1.
       metadata.refreshKeyspaces(function () {
-        var replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+        let replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
         assert.deepEqual(replicas.map(getAddress), ['0', '1', '2', '3']);
         // Get the replicas for token 51752 which should resolve to primary replica 40 (202nd vnode, 212 * 256 + 40),
@@ -407,11 +407,11 @@ describe('Metadata', function () {
   });
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var info1 = metadata.getPreparedInfo(null, 'QUERY1');
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      const info1 = metadata.getPreparedInfo(null, 'QUERY1');
       // Should be created once
       assert.strictEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
-      var info2 = metadata.getPreparedInfo(null, 'QUERY2');
+      const info2 = metadata.getPreparedInfo(null, 'QUERY2');
       metadata.clearPrepared();
       assert.notEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
       assert.notEqual(info2, metadata.getPreparedInfo(null, 'QUERY2'));
@@ -419,25 +419,25 @@ describe('Metadata', function () {
   });
   describe('#getPreparedInfo()', function () {
     it('should create a new EventEmitter when the query has not been prepared', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var info = metadata.getPreparedInfo(null, 'query1');
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      let info = metadata.getPreparedInfo(null, 'query1');
       helper.assertInstanceOf(info, events.EventEmitter);
       info = metadata.getPreparedInfo(null, 'query2');
       helper.assertInstanceOf(info, events.EventEmitter);
     });
     it('should get the same EventEmitter when the query is the same', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var info1 = metadata.getPreparedInfo(null, 'query1');
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      const info1 = metadata.getPreparedInfo(null, 'query1');
       helper.assertInstanceOf(info1, events.EventEmitter);
-      var info2 = metadata.getPreparedInfo(null, 'query1');
+      const info2 = metadata.getPreparedInfo(null, 'query1');
       helper.assertInstanceOf(info2, events.EventEmitter);
       assert.strictEqual(info1, info2);
     });
     it('should create a new EventEmitter when the query is the same but the keyspace is different', function () {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var info0 = metadata.getPreparedInfo(null, 'query1');
-      var info1 = metadata.getPreparedInfo('ks1', 'query1');
-      var info2 = metadata.getPreparedInfo('ks2', 'query1');
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      const info0 = metadata.getPreparedInfo(null, 'query1');
+      const info1 = metadata.getPreparedInfo('ks1', 'query1');
+      const info2 = metadata.getPreparedInfo('ks2', 'query1');
       assert.notStrictEqual(info0, info1);
       assert.notStrictEqual(info0, info2);
       assert.notStrictEqual(info1, info2);
@@ -461,7 +461,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
         assert.ifError(err);
@@ -481,7 +481,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err) {
         helper.assertInstanceOf(err, Error);
@@ -497,7 +497,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
         assert.ifError(err);
@@ -519,7 +519,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
       metadata.keyspaces = {};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
@@ -544,7 +544,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
@@ -579,7 +579,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
@@ -607,7 +607,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
       utils.timesSeries(20, function (n, next) {
         metadata.getUdt('ks1', 'udt20', function (err, udtInfo) {
@@ -624,14 +624,14 @@ describe('Metadata', function () {
   });
   describe('#getTrace()', function () {
     it('should return the trace if its already stored', function (done) {
-      var sessionRow = {
+      const sessionRow = {
         request: 'request value',
         coordinator: types.InetAddress.fromString('10.10.10.1'),
         parameters: ['a', 'b'],
         started_at: new Date(),
         duration: 2002
       };
-      var eventRows = [ {
+      const eventRows = [ {
         event_id: types.TimeUuid.now(),
         activity: 'act 1',
         source: types.InetAddress.fromString('10.10.10.2'),
@@ -648,7 +648,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), types.consistencies.all, function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -663,7 +663,7 @@ describe('Metadata', function () {
       });
     });
     it('should parse the new client address column', function (done) {
-      var sessionRow = {
+      const sessionRow = {
         session_id: types.Uuid.fromString('69e37ff0-0475-11e5-9798-f3efee551757'),
         client: types.InetAddress.fromString('127.0.0.2'),
         command: 'QUERY',
@@ -676,7 +676,7 @@ describe('Metadata', function () {
         request: 'Execute CQL3 query',
         started_at: new Date()
       };
-      var eventRows = [ {
+      const eventRows = [ {
         event_id: types.TimeUuid.now(),
         activity: 'act 1',
         source: types.InetAddress.fromString('10.10.10.2'),
@@ -693,7 +693,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -709,14 +709,14 @@ describe('Metadata', function () {
       });
     });
     it('should retry if its not already stored', function (done) {
-      var sessionRow = {
+      const sessionRow = {
         request: 'request value',
         coordinator: types.InetAddress.fromString('10.10.10.1'),
         parameters: ['a', 'b'],
         started_at: new Date(),
         duration: null
       };
-      var eventRows = [ {
+      const eventRows = [ {
         event_id: types.TimeUuid.now(),
         activity: 'act 2',
         source: types.InetAddress.fromString('10.10.10.1'),
@@ -737,7 +737,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -753,7 +753,7 @@ describe('Metadata', function () {
       });
     });
     it('should stop retrying after a few attempts', function (done) {
-      var sessionRow = {
+      const sessionRow = {
         request: 'request value',
         coordinator: types.InetAddress.fromString('10.10.10.1'),
         parameters: ['a', 'b'],
@@ -774,7 +774,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {});}
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ok(err);
         assert.ok(!trace);
@@ -784,7 +784,7 @@ describe('Metadata', function () {
       });
     });
     it('should callback in error if there was an error retrieving the trace', function (done) {
-      var err = new Error('dummy err');
+      const err = new Error('dummy err');
       const cc = {
         query: function (r, cb) {
           setImmediate(function () {
@@ -792,7 +792,7 @@ describe('Metadata', function () {
           });
         }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (receivedErr, trace) {
         assert.ok(err);
         assert.strictEqual(receivedErr, err);
@@ -814,7 +814,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       metadata.getTable('ks_tbl_meta', 'tbl_does_not_exists', function (err, table) {
         assert.ifError(err);
@@ -823,7 +823,7 @@ describe('Metadata', function () {
       });
     });
     it('should be null when keyspace does not exists', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), {});
+      const metadata = new Metadata(clientOptions.defaultOptions(), {});
       metadata.keyspaces = { };
       metadata.getTable('ks_does_not_exists', 'tbl1', function (err, table) {
         assert.ifError(err);
@@ -832,11 +832,11 @@ describe('Metadata', function () {
       });
     });
     it('should query once when called in parallel', function (done) {
-      var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
+      const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
         column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
         comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
         key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
-      var columnRows = [
+      const columnRows = [
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' }
@@ -856,7 +856,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.map(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -872,11 +872,11 @@ describe('Metadata', function () {
       });
     });
     it('should query once if query the same table serially', function (done) {
-      var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
+      const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
         column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
         comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
         key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
-      var columnRows = [
+      const columnRows = [
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
         { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' }
@@ -896,7 +896,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -927,7 +927,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(1, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -943,15 +943,15 @@ describe('Metadata', function () {
       });
     });
     it('should query each time if metadata retrieval flag is false', function (done) {
-      var tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-      var columnRows = [
+      const tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+      const columnRows = [
         {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
         {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "text"}
       ];
       const options = utils.extend({}, clientOptions.defaultOptions());
       options.isMetadataSyncEnabled = false;
       const cc = getControlConnectionForTable(tableRow, columnRows);
-      var metadata = new Metadata(options, cc);
+      const metadata = new Metadata(options, cc);
       metadata.keyspaces = { };
       metadata.setCassandraVersion([3, 0]);
       utils.mapSeries(new Array(100), function (n, next) {
@@ -969,12 +969,12 @@ describe('Metadata', function () {
     });
     describe('with C*2.0 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
-        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
+        const customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.02, caching: 'KEYS_ONLY',
           column_aliases: '["ck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, index_interval: 128, is_dense: false,
           key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0.1, max_compaction_threshold: 32, memtable_flush_period_in_ms: 3000, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0, replicate_on_write: true, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: null };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'apk2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'ck', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'pk1', component_index: 0, index_name: null, index_options: null, index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
@@ -982,7 +982,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.BytesType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: customType }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1025,15 +1025,15 @@ describe('Metadata', function () {
         });
       });
       it('should parse table with compact storage with clustering key', function (done) {
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: '{"keys":"ALL", "rows_per_partition":"NONE"}', cf_id: types.Uuid.fromString('96c86920-ed84-11e4-8991-199e66562428'),
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: '{"keys":"ALL", "rows_per_partition":"NONE"}', cf_id: types.Uuid.fromString('96c86920-ed84-11e4-8991-199e66562428'),
           column_aliases: '["id2"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.TimeUUIDType', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.UTF8Type', dropped_columns: null, gc_grace_seconds: 864000, index_interval: null, is_dense: true, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0.1, max_compaction_threshold: 32, max_index_interval: 2048, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, min_index_interval: 128, read_repair_chance: 0, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard', value_alias: 'text1' };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'id1', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'id2', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'clustering_key', validator: 'org.apache.cassandra.db.marshal.TimeUUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text1', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'compact_value', validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1052,13 +1052,13 @@ describe('Metadata', function () {
         });
       });
       it('should parse table with compact storage', function (done) {
-        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
-        var columnRows = [
+        const tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        const columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"},
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text2","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1076,19 +1076,19 @@ describe('Metadata', function () {
         });
       });
       it('should parse custom index (legacy)', function (done) {
-        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
-        var columnRows = [
+        const tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        const columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
           assert.ok(table);
           assert.ok(table.indexes);
           assert.ok(table.indexes.length === 1);
-          var index = table.indexes[0];
+          const index = table.indexes[0];
           assert.ok(index, 'Index not found');
           assert.strictEqual(index.name, 'custom_index');
           assert.strictEqual(index.target, 'text1');
@@ -1102,19 +1102,19 @@ describe('Metadata', function () {
         });
       });
       it('should parse keys index (legacy)', function (done) {
-        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
-        var columnRows = [
+        const tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        const columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"index_keys": ""}',"index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
           assert.ifError(err);
           assert.ok(table);
           assert.ok(table.indexes);
           assert.ok(table.indexes.length === 1);
-          var index = table.indexes[0];
+          const index = table.indexes[0];
           assert.ok(index, 'Index not found');
           assert.strictEqual(index.name, 'custom_index');
           // target should be column name since we weren't able to parse index_keys from index_options.
@@ -1131,19 +1131,19 @@ describe('Metadata', function () {
         // lacks index_options, however the index_options value is a 'null' string rather than a null value.
         // DSE Analytics at some point did this with its cfs tables.
 
-        var tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
-        var columnRows = [
+        const tableRow = {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":"{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}","cf_id":"609f53a0-038b-11e5-be48-0d419bfb85c8","column_aliases":"[]","comment":"","compaction_strategy_class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy","compaction_strategy_options":"{}","comparator":"org.apache.cassandra.db.marshal.UTF8Type","compression_parameters":"{\"sstable_compression\":\"org.apache.cassandra.io.compress.LZ4Compressor\"}","default_time_to_live":0,"default_validator":"org.apache.cassandra.db.marshal.BytesType","dropped_columns":null,"gc_grace_seconds":864000,"index_interval":null,"is_dense":false,"key_aliases":"[\"id\"]","key_validator":"org.apache.cassandra.db.marshal.UUIDType","local_read_repair_chance":0.1,"max_compaction_threshold":32,"max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_compaction_threshold":4,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99.0PERCENTILE","subcomparator":null,"type":"Standard","value_alias":null};
+        const columnRows = [
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"id","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"partition_key","validator":"org.apache.cassandra.db.marshal.UUIDType"},
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"b@706172656e745f70617468","component_index":null,"index_name":"cfs_archive_parent_path","index_options":"\"null\"","index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
           assert.ifError(err);
           assert.ok(table);
           assert.ok(table.indexes);
           assert.ok(table.indexes.length === 1);
-          var index = table.indexes[0];
+          const index = table.indexes[0];
           assert.ok(index, 'Index not found');
           assert.strictEqual(index.name, 'cfs_archive_parent_path');
           // target should be column name since we weren't able to parse index_keys from index_options.
@@ -1158,17 +1158,17 @@ describe('Metadata', function () {
     });
     describe('with C*1.2 metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
-        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+        const customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '["zck"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
           key_aliases: '["pk1","apk2"]', key_validator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UUIDType,org.apache.cassandra.db.marshal.UTF8Type)', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: true, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'val2', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.BytesType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valz1', component_index: 1, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.Int32Type' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, validator: customType }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1196,11 +1196,11 @@ describe('Metadata', function () {
         });
       });
       it('should parse with no clustering keys', function (done) {
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '[]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}', comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null,
           key_aliases: '["id"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
-        var columnRows = [ { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text_sample', component_index: 0, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' } ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const columnRows = [ { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text_sample', component_index: 0, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' } ];
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1215,13 +1215,13 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage', function (done) {
         //1 pk, 1 ck and 1 val
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl5', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl5', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '["id2"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.TimeUUIDType', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}',
           default_validator: 'org.apache.cassandra.db.marshal.UTF8Type', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard',
           value_alias: 'text1' };
         const columnRows = [];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1237,14 +1237,14 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage with pk', function (done) {
         //1 pk, 2 val
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '[]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.UTF8Type', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text1', component_index: null, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text2', component_index: null, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1258,11 +1258,11 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage and all columns as clustering keys', function (done) {
         //1 pk, 2 ck
-        var tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
+        const tableRow = { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', bloom_filter_fp_chance: 0.01, caching: 'KEYS_ONLY',
           column_aliases: '["id2","text1"]', comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}',
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: '' };
         const columnRows = [];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1279,11 +1279,11 @@ describe('Metadata', function () {
     });
     describe('with C*2.2 metadata rows', function () {
       it('should parse new 2.2 types', function (done) {
-        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
-        var tableRow = {
+        const customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
+        const tableRow = {
           keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', bloom_filter_fp_chance: 0.03, caching: '{"keys":"ALL", "rows_per_partition":"NONE"}',
           cf_id: types.Uuid.fromString('c05f4c40-fe05-11e4-8481-277ff03b5030'), comment: '', compaction_strategy_class: 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', compaction_strategy_options: '{}', comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}', default_time_to_live: 0, default_validator: 'org.apache.cassandra.db.marshal.BytesType', dropped_columns: null, gc_grace_seconds: 864000, is_dense: false, key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0.1, max_compaction_threshold: 32, max_index_interval: 2048, memtable_flush_period_in_ms: 0, min_compaction_threshold: 4, min_index_interval: 128, read_repair_chance: 0, speculative_retry: '99.0PERCENTILE', subcomparator: null, type: 'Standard' };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'date_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.SimpleDateType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'id', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key', validator: 'org.apache.cassandra.db.marshal.UUIDType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'smallint_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.ShortType' },
@@ -1291,7 +1291,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'tinyint_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: 'org.apache.cassandra.db.marshal.ByteType' },
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'custom_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: customType }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl_c22', function (err, table) {
           assert.ifError(err);
@@ -1322,7 +1322,7 @@ describe('Metadata', function () {
     });
     describe('with C*3.0+ metadata rows', function () {
       it('should parse partition and clustering keys', function (done) {
-        var tableRow = {
+        const tableRow = {
           "keyspace_name":"ks_tbl_meta",
           "table_name":"tbl4",
           "bloom_filter_fp_chance":0.01,
@@ -1339,8 +1339,8 @@ describe('Metadata', function () {
           "max_index_interval":1024,
           "crc_check_chance": 0.8,
           "memtable_flush_period_in_ms":0,"min_index_interval":64,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-        var customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
-        var columnRows = [
+        const customType ="org.apache.cassandra.db.marshal.DynamicCompositeType(s=>org.apache.cassandra.db.marshal.UTF8Type, i=>org.apache.cassandra.db.marshal.Int32Type)";
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "apk2", "clustering_order": "none", "column_name_bytes": "0x61706b32", "kind": "partition_key", "position": 1, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "pk1", "clustering_order": "none", "column_name_bytes": "0x706b31", "kind": "partition_key", "position": 0, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "val2", "clustering_order": "none", "column_name_bytes": "0x76616c32", "kind": "regular", "position": -1, "type": "blob"},
@@ -1348,7 +1348,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "valcus3", "clustering_order": "none", "column_name_bytes": "0x76611663757333", "kind": "regular", "position": -1, "type": "'" + customType + "'"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "zck", "clustering_order": "asc", "column_name_bytes": "0x7a636b", "kind": "clustering", "position": 0, "type": "timeuuid"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl4', function (err, table) {
@@ -1378,12 +1378,12 @@ describe('Metadata', function () {
         });
       });
       it('should parse with no clustering keys', function (done) {
-        var tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-        var columnRows = [
+        const tableRow = {"keyspace_name":"ks_tbl_meta","table_name":"tbl1","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},"flags":["compound"],"gc_grace_seconds":864000,"id":"7e0e8bf0-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "text"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
@@ -1399,15 +1399,15 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage', function (done) {
         //1 pk, 1 ck and 1 val
-        var tableRow = {
+        const tableRow = {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl5","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":["dense"],"gc_grace_seconds":864000,"id":"80fd9590-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-        var columnRows = [
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "text"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl5', function (err, table) {
@@ -1424,18 +1424,18 @@ describe('Metadata', function () {
       });
       it('should parse with custom index', function (done) {
         //1 pk, 1 ck and 1 val
-        var tableRow = {
+        const tableRow = {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl5","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":["dense"],"gc_grace_seconds":864000,"id":"80fd9590-5862-11e5-84f8-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-        var columnRows = [
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "text"}
         ];
-        var indexRows = [
+        const indexRows = [
           {"index_name": "custom_index", "kind": "CUSTOM", "options": {"foo":"bar","class_name":"dummy.DummyIndex","target":"a, b, keys(c)"}}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows,indexRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows,indexRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl5', function (err, table) {
@@ -1443,7 +1443,7 @@ describe('Metadata', function () {
           assert.ok(table);
           assert.ok(table.indexes);
           assert.ok(table.indexes.length === 1);
-          var index = table.indexes[0];
+          const index = table.indexes[0];
           assert.ok(index, 'Index not found');
           assert.strictEqual(index.name, 'custom_index');
           assert.strictEqual(index.target, 'a, b, keys(c)');
@@ -1458,17 +1458,17 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage with pk', function (done) {
         //1 pk, 2 val
-        var tableRow = {
+        const tableRow = {
           "keyspace_name":"ks_tbl_meta","table_name":"tbl6","bloom_filter_fp_chance":0.01,"caching":{"keys":"ALL","rows_per_partition":"NONE"},"comment":"","compaction":{"min_threshold":"4","max_threshold":"32","class":"org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"},"compression":{"chunk_length_in_kb":"64","class":"org.apache.cassandra.io.compress.LZ4Compressor"},"dclocal_read_repair_chance":0.1,"default_time_to_live":0,"extensions":{},
           "flags":[],"gc_grace_seconds":864000,"id":"81a32460-5862-11e5-b0ce-c7d0c38d1d8d","max_index_interval":2048,"memtable_flush_period_in_ms":0,"min_index_interval":128,"read_repair_chance":0,"speculative_retry":"99PERCENTILE"};
-        var columnRows = [
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "column1", "clustering_order": "asc", "column_name_bytes": "0x636f6c756d6e31", "kind": "clustering", "position": 0, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "id", "clustering_order": "none", "column_name_bytes": "0x6964", "kind": "partition_key", "position": -1, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "static", "position": -1, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "text2", "clustering_order": "none", "column_name_bytes": "0x7465787432", "kind": "static", "position": -1, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "blob"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl6', function (err, table) {
@@ -1484,16 +1484,16 @@ describe('Metadata', function () {
       });
       it('should parse with compact storage and all columns as clustering keys', function (done) {
         //1 pk, 2 ck. similar to tbl5 but with id2 and text1 as ck
-        var tableRow = {
+        const tableRow = {
           "keyspace_name": "ks1", "table_name": "tbl10", "bloom_filter_fp_chance": 0.01, "caching": {"keys": "ALL", "rows_per_partition": "NONE"}, "comment": "", "compaction": {"min_threshold": "4", "max_threshold": "32", "class": "org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy"}, "compression": {"chunk_length_in_kb": "64", "class": "org.apache.cassandra.io.compress.LZ4Compressor"}, "dclocal_read_repair_chance": 0.1, "default_time_to_live": 0, "extensions": {},
           "flags": ["compound", "dense"], "gc_grace_seconds": 864000, "id": "b4d56ea0-5881-11e5-8326-c7d0c38d1d8d", "max_index_interval": 2048, "memtable_flush_period_in_ms": 0, "min_index_interval": 128, "read_repair_chance": 0.0, "speculative_retry": "99PERCENTILE"};
-        var columnRows = [
+        const columnRows = [
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id1", "clustering_order": "none", "column_name_bytes": "0x696431", "kind": "partition_key", "position": -1, "type": "uuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "id2", "clustering_order": "asc", "column_name_bytes": "0x696432", "kind": "clustering", "position": 0, "type": "timeuuid"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "text1", "clustering_order": "asc", "column_name_bytes": "0x7465787431", "kind": "clustering", "position": 1, "type": "text"},
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "empty"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
@@ -1511,7 +1511,7 @@ describe('Metadata', function () {
     });
     describe('with Thrift secondary index', function () {
       it('should parse tables from Thrift with secondary indexes', function (done) {
-        var tableRow = {
+        const tableRow = {
           keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', bloom_filter_fp_chance: null,
           caching: {"keys":"ALL", "rows_per_partition":"NONE"}, cf_id: "121d4950-41fd-11e7-ac8d-e1535f74c6ee",
           column_aliases: [], comparator: 'org.apache.cassandra.db.marshal.UTF8Type',
@@ -1519,7 +1519,7 @@ describe('Metadata', function () {
           compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.LZ4Compressor"}',
           default_validator: 'org.apache.cassandra.db.marshal.BytesType', key_aliases: '["key"]',
           key_validator: 'org.apache.cassandra.db.marshal.UTF8Type', type: 'Standard' };
-        var columnRows = [
+        const columnRows = [
           { keyspace_name: 'ks1', columnfamily_name: 'ThriftSecondaryIndexTest', column_name: 'ACCOUNT',
             component_index: null, index_name: 'ACCOUNT1', index_options: 'null', index_type: 'KEYS', type: 'regular',
             validator: 'org.apache.cassandra.db.marshal.UTF8Type' },
@@ -1530,7 +1530,7 @@ describe('Metadata', function () {
             component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'partition_key',
             validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
         metadata.setCassandraVersion([2, 1]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'ThriftSecondaryIndexTest', function (err, table) {
@@ -1552,7 +1552,7 @@ describe('Metadata', function () {
   });
   describe('#getFunctions()', function () {
     it('should return an empty array when not found', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
         assert.ifError(err);
@@ -1564,7 +1564,7 @@ describe('Metadata', function () {
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1576,7 +1576,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.times(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1592,7 +1592,7 @@ describe('Metadata', function () {
       });
       it('should query once when called serially', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1604,7 +1604,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1621,7 +1621,7 @@ describe('Metadata', function () {
       });
       it('should query the following times if was previously not found', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1637,7 +1637,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1660,7 +1660,7 @@ describe('Metadata', function () {
       });
       it('should query the following times if there was an error previously', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1676,7 +1676,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1698,11 +1698,11 @@ describe('Metadata', function () {
         });
       });
       it('should parse function metadata with 2 parameters', function (done) {
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"},
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
           assert.ifError(err);
@@ -1735,10 +1735,10 @@ describe('Metadata', function () {
         });
       });
       it('should parse a function metadata with no parameters', function (done) {
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'return_one', function (err, funcArray) {
           assert.ifError(err);
@@ -1757,10 +1757,10 @@ describe('Metadata', function () {
     });
     describe('with C* 3.0+ metadata rows', function () {
       it('should parse function metadata with 2 parameters', function (done) {
-        var rows = [
+        const rows = [
           {"keyspace_name": "ks_udf", "function_name": "plus", "argument_types": ["int", "int"], "argument_names": ["s", "v"], "body": "return s+v;", "called_on_null_input": false, "language": "java", "return_type": "int"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1787,12 +1787,12 @@ describe('Metadata', function () {
     context('with no callback specified', function () {
       it('should return a Promise', function () {
         const metadata = newInstance();
-        var p = metadata.getFunction('ks1', 'fn1', []);
+        const p = metadata.getFunction('ks1', 'fn1', []);
         helper.assertInstanceOf(p, Promise);
       });
     });
     it('should callback in error if keyspace or name are not provided', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', null, [], function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1800,7 +1800,7 @@ describe('Metadata', function () {
       });
     });
     it('should callback in error if signature is not an array', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'func1', {}, function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1808,7 +1808,7 @@ describe('Metadata', function () {
       });
     });
     it('should callback in error if signature types are not found', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'func1', [{code: 0x1000}], function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1817,7 +1817,7 @@ describe('Metadata', function () {
     });
     it('should query once when called in parallel', function (done) {
       let called = 0;
-      var rows = [
+      const rows = [
         {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
       ];
       const cc = {
@@ -1829,7 +1829,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(4, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
       utils.times(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
@@ -1845,7 +1845,7 @@ describe('Metadata', function () {
     });
     it('should query once when called serially', function (done) {
       let called = 0;
-      var rows = [
+      const rows = [
         {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
       ];
       const cc = {
@@ -1858,7 +1858,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(4, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
       utils.timesSeries(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
@@ -1874,7 +1874,7 @@ describe('Metadata', function () {
       });
     });
     it('should return null when not found', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'plus', [], function (err, func) {
         assert.ifError(err);
@@ -1883,11 +1883,11 @@ describe('Metadata', function () {
       });
     });
     it('should parse function metadata with 2 parameters', function (done) {
-      var rows = [
+      const rows = [
         {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"},
         {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
       ];
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'plus', ['int', 'int'], function (err, func) {
         assert.ifError(err);
@@ -1906,10 +1906,10 @@ describe('Metadata', function () {
       });
     });
     it('should parse a function metadata with no parameters', function (done) {
-      var rows = [
+      const rows = [
         {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
       ];
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'return_one', [], function (err, func) {
         assert.ifError(err);
@@ -1927,7 +1927,7 @@ describe('Metadata', function () {
   });
   describe('#getAggregates()', function () {
     it('should return an empty array when not found', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
       metadata.keyspaces['ks_udf'] = { aggregates: {}};
       metadata.getAggregates('ks_udf', 'plus', function (err, funcArray) {
         assert.ifError(err);
@@ -1939,7 +1939,7 @@ describe('Metadata', function () {
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1952,7 +1952,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
         utils.times(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
@@ -1968,7 +1968,7 @@ describe('Metadata', function () {
       });
       it('should query once when called serially', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -1980,7 +1980,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
@@ -1997,7 +1997,7 @@ describe('Metadata', function () {
       });
       it('should query the following times if was previously not found', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -2013,7 +2013,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
@@ -2036,7 +2036,7 @@ describe('Metadata', function () {
       });
       it('should query the following times if there was an error previously', function (done) {
         let called = 0;
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         const cc = {
@@ -2053,7 +2053,7 @@ describe('Metadata', function () {
           },
           getEncoder: function () { return new Encoder(4, {}); }
         };
-        var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
@@ -2075,11 +2075,11 @@ describe('Metadata', function () {
         });
       });
       it('should parse aggregate metadata with 1 parameter', function (done) {
-        var rows = [
+        const rows = [
           {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"},
           {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.keyspaces['ks_udf1'] = { aggregates: {}};
         metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
           assert.ifError(err);
@@ -2118,11 +2118,11 @@ describe('Metadata', function () {
     });
     describe('with C* 3.0+ metadata rows', function () {
       it('should parse aggregate metadata with 1 parameter', function (done) {
-        var rows = [
+        const rows = [
           {"keyspace_name": "ks_udf1", "aggregate_name": "sum", "argument_types": ["bigint"], "final_func": null, "initcond": '2', "return_type": "bigint", "state_func": "plus", "state_type": "bigint"},
           {"keyspace_name": "ks_udf1", "aggregate_name": "sum", "argument_types": ["int"], "final_func": null, "initcond": '1', "return_type": "int", "state_func": "plus", "state_type": "int"}
         ];
-        var metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces['ks_udf1'] = { aggregates: {}};
         metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
@@ -2163,7 +2163,7 @@ describe('Metadata', function () {
     });
   });
   describe('#getMaterializedView()', function () {
-    var scoresTableMetadata = new TableMetadata('scores');
+    const scoresTableMetadata = new TableMetadata('scores');
     scoresTableMetadata.columnsByName = {
       'score': { type: { code: types.dataTypes.int}, name: 'score' },
       'user': { type: { code: types.dataTypes.text}, name: 'user' },
@@ -2182,7 +2182,7 @@ describe('Metadata', function () {
         },
         getEncoder: function () { return new Encoder(4, {}); }
       };
-      var metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.setCassandraVersion([3, 0]);
       metadata.keyspaces['ks_mv'] = { views: {}};
       metadata.getMaterializedView('ks_mv', 'not_found', function (err, view) {
@@ -2192,7 +2192,7 @@ describe('Metadata', function () {
       });
     });
     it('should callback in error when cassandra version is lower than 3.0', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), {});
+      const metadata = new Metadata(clientOptions.defaultOptions(), {});
       metadata.setCassandraVersion([2, 1]);
       metadata.keyspaces['ks_mv'] = { views: {}};
       metadata.getTable = function (ksName, name, cb) {
@@ -2206,15 +2206,15 @@ describe('Metadata', function () {
   });
   describe('#buildTokens', function() {
     it('should set sorted tokens from a single host', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var tokenizer = getTokenizer();
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      const tokenizer = getTokenizer();
       metadata.tokenizer = tokenizer;
-      var hosts = new HostMap();
-      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      const hosts = new HostMap();
+      const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
       h1.tokens = ['10', '20', '400', '15', '25', '5'];
       hosts.push(h1.address, h1);
       metadata.buildTokens(hosts);
-      var sortedTokens = ['5', '10', '15', '20', '25', '400'];
+      const sortedTokens = ['5', '10', '15', '20', '25', '400'];
       const sortedParsedTokens = [];
       sortedTokens.forEach(function (token) {
         sortedParsedTokens.push(tokenizer.parse(token));
@@ -2224,18 +2224,18 @@ describe('Metadata', function () {
       done();
     });
     it('should set sorted tokens from multiple hosts', function (done) {
-      var metadata = new Metadata(clientOptions.defaultOptions(), null);
-      var tokenizer = getTokenizer();
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      const tokenizer = getTokenizer();
       metadata.tokenizer = tokenizer;
-      var hosts = new HostMap();
-      var h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      const hosts = new HostMap();
+      const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
       h1.tokens = ['10', '400', '25', '5'];
       hosts.push(h1.address, h1);
-      var h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
+      const h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
       h2.tokens = ['13', '203', '18', '8'];
       hosts.push(h2.address, h2);
       metadata.buildTokens(hosts);
-      var sortedTokens = ['5', '8', '10', '13', '18', '25', '203', '400'];
+      const sortedTokens = ['5', '8', '10', '13', '18', '25', '203', '400'];
       const sortedParsedTokens = [];
       sortedTokens.forEach(function (token) {
         sortedParsedTokens.push(tokenizer.parse(token));
@@ -2248,29 +2248,29 @@ describe('Metadata', function () {
 
 });
 describe('SchemaParser', function () {
-  var isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
+  const isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
   describe('isDoneForToken()', function () {
     it('should skip if dc not included in topology', function () {
-      var replicationFactors = { 'dc1': 3, 'dc2': 1 };
+      const replicationFactors = { 'dc1': 3, 'dc2': 1 };
       //dc2 does not exist
-      var datacenters = {
+      const datacenters = {
         'dc1': { hostLength: 6 }
       };
       assert.strictEqual(false, isDoneForToken(replicationFactors, datacenters, {}));
     });
     it('should skip if rf equals to 0', function () {
       //rf 0 for dc2
-      var replicationFactors = { 'dc1': 4, 'dc2': 0 };
-      var datacenters = {
+      const replicationFactors = { 'dc1': 4, 'dc2': 0 };
+      const datacenters = {
         'dc1': { hostLength: 6 },
         'dc2': { hostLength: 6 }
       };
       assert.strictEqual(true, isDoneForToken(replicationFactors, datacenters, { 'dc1': 4 }));
     });
     it('should return false for undefined replicasByDc[dcName]', function () {
-      var replicationFactors = { 'dc1': 3, 'dc2': 1 };
+      const replicationFactors = { 'dc1': 3, 'dc2': 1 };
       //dc2 does not exist
-      var datacenters = {
+      const datacenters = {
         'dc1': { hostLength: 6 }
       };
       assert.strictEqual(false, isDoneForToken(replicationFactors, datacenters, {}));
@@ -2325,7 +2325,7 @@ function getAddress(h) {
  * @returns {Murmur3Tokenizer}
  */
 function getTokenizer() {
-  var t = new tokenizer.Murmur3Tokenizer();
+  const t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
   t.hash = function (b) { return b[0];};
   t.compare = function (a, b) { return a - b; };

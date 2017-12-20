@@ -817,8 +817,7 @@ describe('Client', function () {
           });
           client.connect(function (err) {
             assert.ifError(err);
-            assert.strictEqual(warnings.length, 1);
-            assert.ok(warnings[0].indexOf('pool') >= 0, 'warning does not contains the word pool: ' + warnings[0]);
+            assert.strictEqual(warnings.filter(w => w.indexOf('pool') >= 0).length, 1);
             client.shutdown(next);
           });
         }

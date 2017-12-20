@@ -449,6 +449,48 @@ describe('DCAwareRoundRobinPolicy', function () {
     ], done);
 
   });
+  it('should warn on init when no local DC was configured', function (done) {
+    var policy = new DCAwareRoundRobinPolicy();
+    var client = new Client(helper.baseOptions);
+    var logEvents = [];
+    client.on('log', function(level, className, message, furtherInfo) {
+      logEvents.push({level: level, className: className, message: message, furtherInfo: furtherInfo});
+    });
+    var hosts = new HostMap();
+    hosts.set('1', createHost('1', client.options));
+    utils.series([
+      function initPolicy(next) {
+        policy.init(client, hosts, next);
+      },
+      function checkLogs(next) {
+        assert.strictEqual(logEvents.length, 1);
+        var event = logEvents[0];
+        assert.strictEqual(event.level, 'warning');
+        assert.strictEqual(event.message, 'No local Data Center was provided with DCAwareRoundRobinPolicy.' +
+          '  Using discovered DC \'dc1\' from host 1.  Future releases will require local DC to be specified.');
+        next();
+      }
+    ], done);
+  });
+  it('should not warn on init when local DC was configured', function (done) {
+    var policy = new DCAwareRoundRobinPolicy('dc1');
+    var client = new Client(helper.baseOptions);
+    var logEvents = [];
+    client.on('log', function(level, className, message, furtherInfo) {
+      logEvents.push({level: level, className: className, message: message, furtherInfo: furtherInfo});
+    });
+    var hosts = new HostMap();
+    hosts.set('1', createHost('1', client.options));
+    utils.series([
+      function initPolicy(next) {
+        policy.init(client, hosts, next);
+      },
+      function checkLogs(next) {
+        assert.strictEqual(logEvents.length, 0);
+        next();
+      }
+    ], done);
+  });
 });
 describe('TokenAwarePolicy', function () {
   it('should use the childPolicy when no routingKey provided', function (done) {

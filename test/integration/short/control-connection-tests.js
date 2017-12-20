@@ -160,7 +160,7 @@ describe('ControlConnection', function () {
         cc.init.bind(cc),
         function initLbp(next) {
           lbp = cc.options.policies.loadBalancing;
-          lbp.init(null, cc.hosts, next);
+          lbp.init({ log: utils.noop }, cc.hosts, next);
         },
         function ensureConnected(next) {
           var hosts = cc.hosts.values();
@@ -202,7 +202,7 @@ describe('ControlConnection', function () {
         function initLbp(next) {
           assert.ok(cc.host);
           assert.strictEqual(helper.lastOctetOf(cc.host), '1');
-          cc.options.policies.loadBalancing.init(null, cc.hosts, next);
+          cc.options.policies.loadBalancing.init({ log: utils.noop }, cc.hosts, next);
         },
         function setHostDistance(next) {
           // the control connection host should be local or remote to trigger DOWN events

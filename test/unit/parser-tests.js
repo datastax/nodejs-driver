@@ -310,6 +310,389 @@ describe('Parser', function () {
         offset: 0
       }, null, doneIfError(done));
     });
+    it('should read an UNAVAILABLE', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.unavailableException);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.localQuorum);
+        assert.strictEqual(msg.error.required, 5);
+        assert.strictEqual(msg.error.alive, 4);
+        assert.strictEqual(msg.error.message, 'Not enough replicas available for query at consistency LOCAL_QUORUM (5 required but only 4 alive)');
+        done();
+      });
+
+      // Unavailable at LOCAL_QUORUM with 5 required and 4 alive.
+      const bodyArray = [];
+      // Unavailable (0x1000)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x10, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // LOCAL_QUORUM, with 5 required and 4 alive.
+      bodyArray.push(utils.allocBufferFromArray([0, 6, 0, 0, 0, 5, 0, 0, 0, 4]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a READ_TIMEOUT with not enough received', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.two);
+        assert.strictEqual(msg.error.received, 1);
+        assert.strictEqual(msg.error.blockFor, 2);
+        assert.strictEqual(msg.error.isDataPresent, 0);
+        assert.strictEqual(msg.error.message, 'Server timeout during read query at consistency TWO (1 replica(s) responded over 2 required)');
+        done();
+      });
+
+      // Read Timeout at TWO with 1 received 2 block for and no data present
+      const bodyArray = [];
+      // Read Timeout (0x1200)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // TWO, 1 received, 2 block for, no data
+      bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a READ_TIMEOUT with no data present', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.two);
+        assert.strictEqual(msg.error.received, 2);
+        assert.strictEqual(msg.error.blockFor, 2);
+        assert.strictEqual(msg.error.isDataPresent, 0);
+        assert.strictEqual(msg.error.message, 'Server timeout during read query at consistency TWO (the replica queried for the data didn\'t respond)');
+        done();
+      });
+
+      // Read Timeout at TWO with 2 received 2 block for and no data present
+      const bodyArray = [];
+      // Read Timeout (0x1200)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // TWO, 2 received, 2 block for, no data
+      bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a READ_TIMEOUT with repair timeout', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.two);
+        assert.strictEqual(msg.error.received, 2);
+        assert.strictEqual(msg.error.blockFor, 2);
+        assert.strictEqual(msg.error.isDataPresent, 1);
+        assert.strictEqual(msg.error.message, 'Server timeout during read query at consistency TWO (timeout while waiting for repair of inconsistent replica)');
+        done();
+      });
+
+      // Read Timeout at TWO with 2 received 2 block for and no data present
+      const bodyArray = [];
+      // Read Timeout (0x1200)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // TWO, 2 received, 2 block for, data present
+      bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a READ_FAILURE', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.readFailure);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.eachQuorum);
+        assert.strictEqual(msg.error.received, 3);
+        assert.strictEqual(msg.error.blockFor, 5);
+        assert.strictEqual(msg.error.failures, 2);
+        assert.strictEqual(msg.error.isDataPresent, 1);
+        assert.strictEqual(msg.error.message, 'Server failure during read query at consistency EACH_QUORUM (5 responses were required but only 3 replicas responded, 2 failed)');
+        done();
+      });
+
+      // Read Timeout at TWO with 2 received 2 block for and no data present
+      const bodyArray = [];
+      // Read Failure (0x1300)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x13, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // EACH_QUORUM, 3 received, 5 block for, 2 failures, data present
+      bodyArray.push(utils.allocBufferFromArray([0, 7, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 2, 1]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a SIMPLE WRITE_TIMEOUT', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.writeTimeout);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.quorum);
+        assert.strictEqual(msg.error.received, 1);
+        assert.strictEqual(msg.error.blockFor, 3);
+        assert.strictEqual(msg.error.writeType, 'SIMPLE');
+        assert.strictEqual(msg.error.message, 'Server timeout during write query at consistency QUORUM (1 peer(s) acknowledged the write over 3 required)');
+        done();
+      });
+
+      // write timeout at consistency quorum with 1 of 3 replicas responding.
+      const bodyArray = [];
+      // Write Timeout (0x1100)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x11, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // Quorum, with 1 received and 3 block for
+      bodyArray.push(utils.allocBufferFromArray([0, 4, 0, 0, 0, 1, 0, 0, 0, 3]));
+      // Write Type 'SIMPLE'
+      bodyArray.push(utils.allocBufferFromArray([0, 'SIMPLE'.length]));
+      bodyArray.push(utils.allocBufferFromString('SIMPLE'));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a BATCH_LOG WRITE_TIMEOUT', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.writeTimeout);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.one);
+        assert.strictEqual(msg.error.received, 0);
+        assert.strictEqual(msg.error.blockFor, 1);
+        assert.strictEqual(msg.error.writeType, 'BATCH_LOG');
+        assert.strictEqual(msg.error.message, 'Server timeout during batchlog write at consistency ONE (0 peer(s) acknowledged the write over 1 required)');
+        done();
+      });
+
+      // batchlog write timeout at consistency quorum with 0 of 1 replicas responding.
+      const bodyArray = [];
+      // Write Timeout (0x1100)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x11, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // ONE, with 0 received and 1 block for
+      bodyArray.push(utils.allocBufferFromArray([0, 1, 0, 0, 0, 0, 0, 0, 0, 1]));
+      // Write Type 'BATCH_LOG'
+      bodyArray.push(utils.allocBufferFromArray([0, 'BATCH_LOG'.length]));
+      bodyArray.push(utils.allocBufferFromString('BATCH_LOG'));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a WRITE_FAILURE', function (done) {
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.writeFailure);
+        assert.strictEqual(msg.error.consistencies, types.consistencies.three);
+        assert.strictEqual(msg.error.received, 2);
+        assert.strictEqual(msg.error.blockFor, 3);
+        assert.strictEqual(msg.error.failures, 1);
+        assert.strictEqual(msg.error.writeType, 'COUNTER');
+        assert.strictEqual(msg.error.message, 'Server failure during write query at consistency THREE (3 responses were required but only 2 replicas responded, 1 failed)');
+        done();
+      });
+
+      // batchlog write timeout at consistency quorum with 0 of 1 replicas responding.
+      const bodyArray = [];
+      // Write Timeout (0x1500)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x15, 0]));
+      // No Message
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      // THREE, with 2 received, 3 block for, 1 failures
+      bodyArray.push(utils.allocBufferFromArray([0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 1]));
+      // Write Type 'COUNTER'
+      bodyArray.push(utils.allocBufferFromArray([0, 'COUNTER'.length]));
+      bodyArray.push(utils.allocBufferFromString('COUNTER'));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read an UNPREPARED', function (done) {
+      const message = 'No query prepared with ID 0x8675';
+      const id = utils.allocBufferFromArray([0x86, 0x75]);
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.unprepared);
+        assert.deepEqual(msg.error.queryId, id);
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Unprepared with ID 0x8675
+      const bodyArray = [];
+      // Unprepared (0x2500)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x25, 0]));
+      // ID 0x8675 was Not Prepared
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // 0x8675
+      bodyArray.push(utils.allocBufferFromArray([0, 2]));
+      bodyArray.push(id);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a FUNCTION_FAILURE', function (done) {
+      const message = "Could not execute function";
+      const keyspace = 'myks';
+      const functionName = 'foo';
+      const argTypes = ['int', 'varchar', 'blob'];
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.functionFailure);
+        assert.strictEqual(msg.error.keyspace, keyspace);
+        assert.strictEqual(msg.error.functionName, functionName);
+        assert.deepEqual(msg.error.argTypes, argTypes);
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Unprepared with ID 0x8675
+      const bodyArray = [];
+      // Function Failure 0x1400)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x14, 0]));
+      // Error Message
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // Keyspace
+      bodyArray.push(utils.allocBufferFromArray([0, keyspace.length]));
+      bodyArray.push(utils.allocBufferFromString(keyspace));
+      // Function Name
+      bodyArray.push(utils.allocBufferFromArray([0, functionName.length]));
+      bodyArray.push(utils.allocBufferFromString(functionName));
+      // Arguments
+      bodyArray.push(utils.allocBufferFromArray([0, argTypes.length]));
+      argTypes.forEach(function (arg) {
+        bodyArray.push(utils.allocBufferFromArray([0, arg.length]));
+        bodyArray.push(utils.allocBufferFromString(arg));
+      });
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read an ALREADY_EXISTS for Table', function (done) {
+      const message = 'Table already exists!';
+      const keyspace = 'myks';
+      const table = 'tbl';
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.alreadyExists);
+        assert.strictEqual(msg.error.keyspace, keyspace);
+        assert.strictEqual(msg.error.table, table);
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Already Exists for Table
+      const bodyArray = [];
+      // Already Exists 0x2400)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x24, 0]));
+      // Error Message
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // Keyspace
+      bodyArray.push(utils.allocBufferFromArray([0, keyspace.length]));
+      bodyArray.push(utils.allocBufferFromString(keyspace));
+      // Table
+      bodyArray.push(utils.allocBufferFromArray([0, table.length]));
+      bodyArray.push(utils.allocBufferFromString(table));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read an ALREADY_EXISTS for Keyspace', function (done) {
+      const message = 'Keyspace already exists!';
+      const keyspace = 'myks';
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.alreadyExists);
+        assert.strictEqual(msg.error.keyspace, keyspace);
+        assert.ifError(msg.error.table); // table should not be present.
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Already Exists for Keyspace
+      const bodyArray = [];
+      // Already Exists 0x2400)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x24, 0]));
+      // Error Message
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // Keyspace
+      bodyArray.push(utils.allocBufferFromArray([0, keyspace.length]));
+      bodyArray.push(utils.allocBufferFromString(keyspace));
+      // Table (empty string)
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
     it('should read a buffer until there is enough data', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {
@@ -736,6 +1119,15 @@ function getEventData(eventType, value) {
   var body = Buffer.concat(bodyArray);
   var header = new types.FrameHeader(2, 0, -1, types.opcodes.event, body.length);
   return {header: header, chunk: body};
+}
+
+function buildParserAndExpect(validationFn) {
+  var parser = newInstance();
+  parser.on('readable', function () {
+    var item = parser.read();
+    validationFn(item);
+  });
+  return parser;
 }
 
 /**

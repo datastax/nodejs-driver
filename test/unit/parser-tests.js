@@ -311,7 +311,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read an UNAVAILABLE', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.unavailableException);
@@ -323,15 +323,15 @@ describe('Parser', function () {
       });
 
       // Unavailable at LOCAL_QUORUM with 5 required and 4 alive.
-      var bodyArray = [];
+      const bodyArray = [];
       // Unavailable (0x1000)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x10, 0]));
       // No Message
       bodyArray.push(utils.allocBufferFromArray([0, 0]));
       // LOCAL_QUORUM, with 5 required and 4 alive.
       bodyArray.push(utils.allocBufferFromArray([0, 6, 0, 0, 0, 5, 0, 0, 0, 4]));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -339,7 +339,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a READ_TIMEOUT with not enough received', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
@@ -352,15 +352,15 @@ describe('Parser', function () {
       });
 
       // Read Timeout at TWO with 1 received 2 block for and no data present
-      var bodyArray = [];
+      const bodyArray = [];
       // Read Timeout (0x1200)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
       // No Message
       bodyArray.push(utils.allocBufferFromArray([0, 0]));
       // TWO, 1 received, 2 block for, no data
       bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0]));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -368,7 +368,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a READ_TIMEOUT with no data present', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
@@ -381,15 +381,15 @@ describe('Parser', function () {
       });
 
       // Read Timeout at TWO with 2 received 2 block for and no data present
-      var bodyArray = [];
+      const bodyArray = [];
       // Read Timeout (0x1200)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
       // No Message
       bodyArray.push(utils.allocBufferFromArray([0, 0]));
       // TWO, 2 received, 2 block for, no data
       bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0]));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -397,7 +397,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a READ_TIMEOUT with repair timeout', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.readTimeout);
@@ -410,15 +410,15 @@ describe('Parser', function () {
       });
 
       // Read Timeout at TWO with 2 received 2 block for and no data present
-      var bodyArray = [];
+      const bodyArray = [];
       // Read Timeout (0x1200)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x12, 0]));
       // No Message
       bodyArray.push(utils.allocBufferFromArray([0, 0]));
       // TWO, 2 received, 2 block for, data present
       bodyArray.push(utils.allocBufferFromArray([0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1]));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -426,7 +426,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a READ_FAILURE', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.readFailure);
@@ -440,15 +440,15 @@ describe('Parser', function () {
       });
 
       // Read Timeout at TWO with 2 received 2 block for and no data present
-      var bodyArray = [];
+      const bodyArray = [];
       // Read Failure (0x1300)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x13, 0]));
       // No Message
       bodyArray.push(utils.allocBufferFromArray([0, 0]));
       // EACH_QUORUM, 3 received, 5 block for, 2 failures, data present
       bodyArray.push(utils.allocBufferFromArray([0, 7, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 2, 1]));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -456,7 +456,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a SIMPLE WRITE_TIMEOUT', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.writeTimeout);
@@ -469,7 +469,7 @@ describe('Parser', function () {
       });
 
       // write timeout at consistency quorum with 1 of 3 replicas responding.
-      var bodyArray = [];
+      const bodyArray = [];
       // Write Timeout (0x1100)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x11, 0]));
       // No Message
@@ -479,8 +479,8 @@ describe('Parser', function () {
       // Write Type 'SIMPLE'
       bodyArray.push(utils.allocBufferFromArray([0, 'SIMPLE'.length]));
       bodyArray.push(utils.allocBufferFromString('SIMPLE'));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -488,7 +488,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a BATCH_LOG WRITE_TIMEOUT', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.writeTimeout);
@@ -501,7 +501,7 @@ describe('Parser', function () {
       });
 
       // batchlog write timeout at consistency quorum with 0 of 1 replicas responding.
-      var bodyArray = [];
+      const bodyArray = [];
       // Write Timeout (0x1100)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x11, 0]));
       // No Message
@@ -511,8 +511,8 @@ describe('Parser', function () {
       // Write Type 'BATCH_LOG'
       bodyArray.push(utils.allocBufferFromArray([0, 'BATCH_LOG'.length]));
       bodyArray.push(utils.allocBufferFromString('BATCH_LOG'));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -520,7 +520,7 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a WRITE_FAILURE', function (done) {
-      var parser = buildParserAndExpect(function (msg) {
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.writeFailure);
@@ -534,7 +534,7 @@ describe('Parser', function () {
       });
 
       // batchlog write timeout at consistency quorum with 0 of 1 replicas responding.
-      var bodyArray = [];
+      const bodyArray = [];
       // Write Timeout (0x1500)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x15, 0]));
       // No Message
@@ -544,8 +544,8 @@ describe('Parser', function () {
       // Write Type 'COUNTER'
       bodyArray.push(utils.allocBufferFromArray([0, 'COUNTER'.length]));
       bodyArray.push(utils.allocBufferFromString('COUNTER'));
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -553,9 +553,9 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read an UNPREPARED', function (done) {
-      var message = 'No query prepared with ID 0x8675';
-      var id = utils.allocBufferFromArray([0x86, 0x75]);
-      var parser = buildParserAndExpect(function (msg) {
+      const message = 'No query prepared with ID 0x8675';
+      const id = utils.allocBufferFromArray([0x86, 0x75]);
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.unprepared);
@@ -565,7 +565,7 @@ describe('Parser', function () {
       });
 
       // Unprepared with ID 0x8675
-      var bodyArray = [];
+      const bodyArray = [];
       // Unprepared (0x2500)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x25, 0]));
       // ID 0x8675 was Not Prepared
@@ -574,8 +574,8 @@ describe('Parser', function () {
       // 0x8675
       bodyArray.push(utils.allocBufferFromArray([0, 2]));
       bodyArray.push(id);
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,
@@ -583,11 +583,11 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a FUNCTION_FAILURE', function (done) {
-      var message = "Could not execute function";
-      var keyspace = 'myks';
-      var functionName = 'foo';
-      var argTypes = ['int', 'varchar', 'blob'];
-      var parser = buildParserAndExpect(function (msg) {
+      const message = "Could not execute function";
+      const keyspace = 'myks';
+      const functionName = 'foo';
+      const argTypes = ['int', 'varchar', 'blob'];
+      const parser = buildParserAndExpect(function (msg) {
         assert.ok(msg.error);
         helper.assertInstanceOf(msg.error, errors.ResponseError);
         assert.strictEqual(msg.error.code, types.responseErrorCodes.functionFailure);
@@ -599,7 +599,7 @@ describe('Parser', function () {
       });
 
       // Unprepared with ID 0x8675
-      var bodyArray = [];
+      const bodyArray = [];
       // Function Failure 0x1400)
       bodyArray.push(utils.allocBufferFromArray([0, 0, 0x14, 0]));
       // Error Message
@@ -617,8 +617,8 @@ describe('Parser', function () {
         bodyArray.push(utils.allocBufferFromArray([0, arg.length]));
         bodyArray.push(utils.allocBufferFromString(arg));
       });
-      var body = Buffer.concat(bodyArray);
-      var header = getFrameHeader(body.length, types.opcodes.error, 4);
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
       parser._transform({
         header: header,
         chunk: body,

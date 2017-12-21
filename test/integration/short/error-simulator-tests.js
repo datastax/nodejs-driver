@@ -12,6 +12,7 @@ const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalan
 const query = "select * from data";
 
 describe('Client', function() {
+  this.timeout(10000);
   const setupInfo = simulacron.setup([3], { initClient: false });
   const cluster = setupInfo.cluster;
 
@@ -27,7 +28,7 @@ describe('Client', function() {
   after(client.shutdown.bind(client));
 
   function errorResultTest(primeResult, assertFn) {
-    return function (done) {
+    return (done) => {
       utils.series([
         primeWithResult(cluster, primeResult),
         function executeQuery(next) {
@@ -50,7 +51,7 @@ describe('Client', function() {
     alive: 4,
     required: 5,
     consistency_level: 'LOCAL_QUORUM'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.unavailableException);
@@ -65,7 +66,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: false
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -81,7 +82,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: false
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -97,7 +98,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: true
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -117,7 +118,7 @@ describe('Client', function() {
       '127.0.0.1': 'READ_TOO_MANY_TOMBSTONES',
       '127.0.0.2': 'UNKNOWN'
     },
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readFailure);
@@ -134,7 +135,7 @@ describe('Client', function() {
     block_for: 3,
     consistency_level: 'QUORUM',
     write_type: 'SIMPLE'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeTimeout);
@@ -150,7 +151,7 @@ describe('Client', function() {
     block_for: 1,
     consistency_level: 'ONE',
     write_type: 'BATCH_LOG'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeTimeout);
@@ -169,7 +170,7 @@ describe('Client', function() {
     },
     consistency_level: 'THREE',
     write_type: 'COUNTER'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeFailure);
@@ -186,7 +187,7 @@ describe('Client', function() {
     function: 'foo',
     arg_types: ['int', 'varchar', 'blob'],
     detail: 'Could not execute function'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
@@ -200,7 +201,7 @@ describe('Client', function() {
     message: 'The table already exists!',
     keyspace: 'myks',
     table: 'myTbl'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.alreadyExists);
@@ -213,7 +214,7 @@ describe('Client', function() {
     message: 'The keyspace already exists!',
     keyspace: 'myks',
     table: ''
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.alreadyExists);
@@ -224,7 +225,7 @@ describe('Client', function() {
   it ('should error with configError', errorResultTest({
     result: 'config_error',
     message: 'Invalid Configuration!'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.configError);
@@ -233,7 +234,7 @@ describe('Client', function() {
   it ('should error with invalid', errorResultTest({
     result: 'invalid',
     message: 'Invalid Query!'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.invalid);
@@ -242,7 +243,7 @@ describe('Client', function() {
   it ('should error with protocolError', errorResultTest({
     result: 'protocol_error',
     message: 'Protocol Error!'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.protocolError);
@@ -251,7 +252,7 @@ describe('Client', function() {
   it ('should error with serverError', errorResultTest({
     result: 'server_error',
     message: 'Server Error!',
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.serverError);
@@ -260,7 +261,7 @@ describe('Client', function() {
   it ('should error with syntaxError', errorResultTest({
     result: 'syntax_error',
     message: 'Invalid Syntax!',
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
@@ -269,7 +270,7 @@ describe('Client', function() {
   it ('should error with unauthorized', errorResultTest({
     result: 'unauthorized',
     message: 'Unauthorized!',
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.unauthorized);
@@ -279,11 +280,12 @@ describe('Client', function() {
   it ('should error with isBootstrapping', errorResultTest({
     result: 'is_bootstrapping',
     message: 'Bootstrapping!'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);
-    Object.values(err.innerErrors).forEach(e => {
+    Object.keys(err.innerErrors).forEach(key => {
+      const e = err.innerErrors[key];
       helper.assertInstanceOf(e, errors.ResponseError);
       assert.strictEqual(e.code, types.responseErrorCodes.isBootstrapping);
       assert.strictEqual(e.message, 'Bootstrapping!');
@@ -292,11 +294,12 @@ describe('Client', function() {
   it ('should error with overloaded', errorResultTest({
     result: 'overloaded',
     message: 'Overloaded!'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);
-    Object.values(err.innerErrors).forEach(e => {
+    Object.keys(err.innerErrors).forEach(key => {
+      const e = err.innerErrors[key];
       helper.assertInstanceOf(e, errors.ResponseError);
       assert.strictEqual(e.code, types.responseErrorCodes.overloaded);
       assert.strictEqual(e.message, 'Overloaded!');
@@ -305,11 +308,12 @@ describe('Client', function() {
   it ('should error with truncateError', errorResultTest({
     result: 'truncate_error',
     message: 'Timeout while truncating table'
-  }, function (err, result) {
+  }, (err, result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);
-    Object.values(err.innerErrors).forEach(e => {
+    Object.keys(err.innerErrors).forEach(key => {
+      const e = err.innerErrors[key];
       helper.assertInstanceOf(e, errors.ResponseError);
       assert.strictEqual(e.code, types.responseErrorCodes.truncateError);
       assert.strictEqual(e.message, 'Timeout while truncating table');

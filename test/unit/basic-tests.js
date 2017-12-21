@@ -733,6 +733,9 @@ describe('clientOptions', function () {
     it('should set LOCAL_QUORUM as default consistency level', function () {
       assert.strictEqual(types.consistencies.localOne, options.queryOptions.consistency);
     });
+    it('should set True to warmup option', function () {
+      assert.strictEqual(options.pooling.warmup, true);
+    });
     it('should set 12secs as default read timeout', function () {
       assert.strictEqual(12000, options.socketOptions.readTimeout);
     });

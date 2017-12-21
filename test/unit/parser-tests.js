@@ -1122,11 +1122,8 @@ function getEventData(eventType, value) {
 }
 
 function buildParserAndExpect(validationFn) {
-  var parser = newInstance();
-  parser.on('readable', function () {
-    var item = parser.read();
-    validationFn(item);
-  });
+  const parser = newInstance();
+  parser.on('readable', () => validationFn(parser.read()));
   return parser;
 }
 

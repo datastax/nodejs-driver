@@ -625,6 +625,74 @@ describe('Parser', function () {
         offset: 0
       }, null, doneIfError(done));
     });
+    it('should read an ALREADY_EXISTS for Table', function (done) {
+      const message = 'Table already exists!';
+      const keyspace = 'myks';
+      const table = 'tbl';
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.alreadyExists);
+        assert.strictEqual(msg.error.keyspace, keyspace);
+        assert.strictEqual(msg.error.table, table);
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Already Exists for Table
+      const bodyArray = [];
+      // Already Exists 0x2400)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x24, 0]));
+      // Error Message
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // Keyspace
+      bodyArray.push(utils.allocBufferFromArray([0, keyspace.length]));
+      bodyArray.push(utils.allocBufferFromString(keyspace));
+      // Table
+      bodyArray.push(utils.allocBufferFromArray([0, table.length]));
+      bodyArray.push(utils.allocBufferFromString(table));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read an ALREADY_EXISTS for Keyspace', function (done) {
+      const message = 'Keyspace already exists!';
+      const keyspace = 'myks';
+      const parser = buildParserAndExpect(function (msg) {
+        assert.ok(msg.error);
+        helper.assertInstanceOf(msg.error, errors.ResponseError);
+        assert.strictEqual(msg.error.code, types.responseErrorCodes.alreadyExists);
+        assert.strictEqual(msg.error.keyspace, keyspace);
+        assert.ifError(msg.error.table); // table should not be present.
+        assert.strictEqual(msg.error.message, message);
+        done();
+      });
+
+      // Already Exists for Keyspace
+      const bodyArray = [];
+      // Already Exists 0x2400)
+      bodyArray.push(utils.allocBufferFromArray([0, 0, 0x24, 0]));
+      // Error Message
+      bodyArray.push(utils.allocBufferFromArray([0, message.length]));
+      bodyArray.push(utils.allocBufferFromString(message));
+      // Keyspace
+      bodyArray.push(utils.allocBufferFromArray([0, keyspace.length]));
+      bodyArray.push(utils.allocBufferFromString(keyspace));
+      // Table (empty string)
+      bodyArray.push(utils.allocBufferFromArray([0, 0]));
+      const body = Buffer.concat(bodyArray);
+      const header = getFrameHeader(body.length, types.opcodes.error, 4);
+      parser._transform({
+        header: header,
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
+    });
     it('should read a buffer until there is enough data', function (done) {
       var parser = newInstance();
       parser.on('readable', function () {

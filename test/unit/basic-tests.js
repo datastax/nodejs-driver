@@ -158,14 +158,14 @@ describe('types', function () {
     const LocalDate = types.LocalDate;
     describe('new LocalDate', function (){
       it('should refuse to create LocalDate from invalid values.', function () {
-        assert.throws(function () { return new types.LocalDate(); }, Error);
-        assert.throws(function () { return new types.LocalDate(undefined); }, Error);
+        assert.throws(() => new types.LocalDate(), Error);
+        assert.throws(() => new types.LocalDate(undefined), Error);
         // Outside of ES5 Date range.
-        assert.throws(function () { return new types.LocalDate(-271821, 4, 19); }, Error);
-        assert.throws(function () { return new types.LocalDate(275760, 9, 14); }, Error);
+        assert.throws(() => new types.LocalDate(-271821, 4, 19), Error);
+        assert.throws(() => new types.LocalDate(275760, 9, 14), Error);
         // Outside of LocalDate range.
-        assert.throws(function () { return new types.LocalDate(-2147483649); }, Error);
-        assert.throws(function () { return new types.LocalDate(2147483648); }, Error);
+        assert.throws(() => new types.LocalDate(-2147483649), Error);
+        assert.throws(() => new types.LocalDate(2147483648), Error);
 
       });
     });
@@ -252,11 +252,11 @@ describe('types', function () {
     describe('new LocalTime', function () {
       it('should refuse to create LocalTime from invalid values.', function () {
         // Not a long.
-        assert.throws(function () { return new types.LocalTime(23.0); }, Error);
+        assert.throws(() => new types.LocalTime(23.0), Error);
         // < 0
-        assert.throws(function () { return new types.LocalTime(types.Long(-1)); }, Error);
+        assert.throws(() => new types.LocalTime(types.Long(-1)), Error);
         // > maxNanos
-        assert.throws(function () { return new types.LocalTime(Long.fromString('86400000000000')); }, Error);
+        assert.throws(() => new types.LocalTime(Long.fromString('86400000000000')), Error);
       });
     });
     describe('#toString()', function () {
@@ -539,9 +539,9 @@ describe('utils', function () {
   describe('#funcCompare()', function () {
     it('should return a compare function valid for Array#sort', function () {
       const values = [
-        {id: 1, getValue : function () { return 100;}},
-        {id: 2, getValue : function () { return 3;}},
-        {id: 3, getValue : function () { return 1;}}
+        {id: 1, getValue : () => 100},
+        {id: 2, getValue : () => 3},
+        {id: 3, getValue : () => 1}
       ];
       values.sort(utils.funcCompare('getValue'));
       assert.strictEqual(values[0].id, 3);

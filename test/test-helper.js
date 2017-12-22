@@ -331,8 +331,8 @@ const helper = {
    * @returns {Boolean}
    */
   isCassandraGreaterThan: function (version) {
-    const instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-    const compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
+    const instanceVersion = this.getCassandraVersion().split('.').map(x => parseInt(x, 10));
+    const compareVersion = version.split('.').map(x => parseInt(x, 10) || 0);
     for (let i = 0; i < compareVersion.length; i++) {
       const compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
@@ -911,7 +911,7 @@ function MapPolyFill(arr) {
   this.arr = arr || [];
   const self = this;
   Object.defineProperty(this, 'size', {
-    get: function() { return self.arr.length; },
+    get: () => self.arr.length,
     configurable: false
   });
 }

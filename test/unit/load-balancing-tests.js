@@ -784,5 +784,5 @@ function toHost(address) {
 }
 
 function toFunc(val) {
-  return (function () { return val; });
+  return (() => val);
 }

@@ -335,13 +335,13 @@ describe('Client', function () {
         },
         function selectData(seriesNext) {
           //Make ? markers C*1.2-compatible
-          const markers = values.map(function () { return '?'; }).join(',');
+          const markers = values.map(() => '?').join(',');
           const query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
-          client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
+          client.execute(query, values.map(x => x[0]), {prepare: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {
-              const expectedValues = helper.first(values, function (item) { return item[0].equals(row.id); });
+              const expectedValues = helper.first(values, item => item[0].equals(row.id));
               helper.assertInstanceOf(row['map_text_text'], MapPF);
               assert.strictEqual(row['map_text_text'].toString(), expectedValues[1].toString());
               assert.strictEqual(row['map_int_date'].toString(), expectedValues[2].toString());
@@ -394,13 +394,13 @@ describe('Client', function () {
         },
         function selectData(seriesNext) {
           //Make ? markers C*1.2-compatible
-          const markers = values.map(function () { return '?'; }).join(',');
+          const markers = values.map(() => '?').join(',');
           const query = util.format('SELECT * FROM %s WHERE id IN (' + markers + ')', table);
-          client.execute(query, values.map(function (x) { return x[0]; }), {prepare: true}, function (err, result) {
+          client.execute(query, values.map(x => x[0]), {prepare: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result.rows.length);
             result.rows.forEach(function (row) {
-              const expectedValues = helper.first(values, function (item) { return item[0].equals(row.id); });
+              const expectedValues = helper.first(values, item => item[0].equals(row.id));
               helper.assertInstanceOf(row['set_text'], SetPF);
               assert.strictEqual(row['set_text'].toString(), expectedValues[1].toString());
               assert.strictEqual(row['set_timestamp'].toString(), expectedValues[2].toString());

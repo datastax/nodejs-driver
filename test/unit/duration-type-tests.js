@@ -1,12 +1,12 @@
 'use strict';
-var assert = require('assert');
-var util = require('util');
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
-var Duration = types.Duration;
-var Long = types.Long;
+const assert = require('assert');
+const util = require('util');
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
+const Duration = types.Duration;
+const Long = types.Long;
 
-var values = [
+const values = [
   // [ Duration representation, hex value, standard format, ISO 8601, ISO 8601 Week
   [ new Duration(0, 0, Long.fromNumber(1)), '000002', '1ns'],
   [ new Duration(0, 0, Long.fromNumber(128)), '00008100', '128ns'],
@@ -50,7 +50,7 @@ describe('Duration', function () {
       ['should parse ISO 8601 week format', 4]
     ].forEach(function (testInfo) {
       it(testInfo[0], function () {
-        var index = testInfo[1];
+        const index = testInfo[1];
         values.forEach(function (item) {
           if (!item[index]) {
             return;

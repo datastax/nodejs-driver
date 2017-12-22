@@ -1,9 +1,7 @@
 "use strict";
-var cassandra = require('cassandra-driver');
-var async = require('async');
-var assert = require('assert');
+const cassandra = require('cassandra-driver');
 
-var client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Creates a table with a Tuple type, inserts a row and selects a row.

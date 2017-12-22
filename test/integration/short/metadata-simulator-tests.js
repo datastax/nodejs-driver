@@ -1,23 +1,23 @@
 'use strict';
-var assert = require('assert');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types/index');
-var simulacron = require('../simulacron');
-var util = require('util');
+const assert = require('assert');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types/index');
+const simulacron = require('../simulacron');
+const util = require('util');
 
 describe('Metadata', function () {
   this.timeout(20000);
   describe("#getTrace()", function () {
-    var setupInfo = simulacron.setup('3', null);
-    var sCluster = setupInfo.cluster;
-    var client = setupInfo.client;
+    const setupInfo = simulacron.setup('3', null);
+    const sCluster = setupInfo.cluster;
+    const client = setupInfo.client;
 
     it('should set consistency level', function (done) {
-      var traceId = types.Uuid.random();
-      var sessionQuery = util.format('SELECT * FROM system_traces.sessions WHERE session_id=%s', traceId);
-      var eventsQuery = util.format('SELECT * FROM system_traces.events WHERE session_id=%s', traceId);
+      const traceId = types.Uuid.random();
+      const sessionQuery = util.format('SELECT * FROM system_traces.sessions WHERE session_id=%s', traceId);
+      const eventsQuery = util.format('SELECT * FROM system_traces.events WHERE session_id=%s', traceId);
 
-      var resultSessions = {
+      const resultSessions = {
         result: 'success',
         delay_in_ms: 0,
         rows: [
@@ -40,7 +40,7 @@ describe('Metadata', function () {
           started_at: "timestamp"
         }
       };
-      var resultEvents = {
+      const resultEvents = {
         result: 'success',
         delay_in_ms: 0,
         rows: [
@@ -88,13 +88,13 @@ describe('Metadata', function () {
           });
         },
         function getTraceWithConsistency(next) {
-          var node0 = sCluster.node(0);
+          const node0 = sCluster.node(0);
           node0.getLogs(function (err, logs) {
             assert.ifError(err);
             assert.notEqual(logs, null);
-            var verifyQuery = function(logsToSearch, query, consistency) {
-              for (var i = 0; i < logsToSearch.length; i++) {
-                var log = logsToSearch[i];
+            const verifyQuery = function(logsToSearch, query, consistency) {
+              for (let i = 0; i < logsToSearch.length; i++) {
+                const log = logsToSearch[i];
                 if (log.type === "QUERY" && log.query === query && log.consistency_level === consistency) {
                   return true;
                 }

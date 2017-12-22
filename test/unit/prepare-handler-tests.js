@@ -1,55 +1,55 @@
 'use strict';
 
-var assert = require('assert');
-var events = require('events');
-var helper = require('../test-helper');
-var PrepareHandler = require('../../lib/prepare-handler');
-var defaultOptions = require('../../lib/client-options').defaultOptions;
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
+const assert = require('assert');
+const events = require('events');
+const helper = require('../test-helper');
+const PrepareHandler = require('../../lib/prepare-handler');
+const defaultOptions = require('../../lib/client-options').defaultOptions;
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
 
 describe('PrepareHandler', function () {
   describe('getPrepared()', function () {
     it('should make request when not already prepared', function (done) {
-      var client = getClient({ prepareOnAllHosts: false });
-      var lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
+      const client = getClient({ prepareOnAllHosts: false });
+      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[2].prepareCalled, 1);
         assert.strictEqual(hosts[3].prepareCalled, 0);
         done();
       });
     });
     it('should make the same prepare request once and queue the rest', function (done) {
-      var client = getClient();
-      var lbp = helper.getLoadBalancingPolicyFake([ { } ]);
+      const client = getClient();
+      const lbp = helper.getLoadBalancingPolicyFake([ { } ]);
       utils.times(100, function (n, next) {
         PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, next);
       }, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].prepareCalled, 1);
         done();
       });
     });
     it('should callback in error if request send fails', function (done) {
-      var client = getClient();
-      var lbp = helper.getLoadBalancingPolicyFake([ {} ], function (q, h, cb) {
+      const client = getClient();
+      const lbp = helper.getLoadBalancingPolicyFake([ {} ], function (q, h, cb) {
         cb(new Error('Test prepare error'));
       });
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ok(err);
-        var host = lbp.getFixedQueryPlan()[0];
+        const host = lbp.getFixedQueryPlan()[0];
         assert.strictEqual(host.prepareCalled, 1);
         done();
       });
     });
     it('should retry on next host if request send fails due to socket error', function (done) {
-      var client = getClient();
-      var lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function (q, h, cb) {
+      const client = getClient();
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function (q, h, cb) {
         if (h.address === '0') {
-          var err = new Error('Test prepare error');
+          const err = new Error('Test prepare error');
           err.isSocketError = true;
           return cb(err);
         }
@@ -57,18 +57,18 @@ describe('PrepareHandler', function () {
       });
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].prepareCalled, 1);
         assert.strictEqual(hosts[1].prepareCalled, 1);
         done();
       });
     });
     it('should prepare on all UP hosts not ignored', function (done) {
-      var client = getClient({ prepareOnAllHosts: true });
-      var lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
+      const client = getClient({ prepareOnAllHosts: true });
+      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
       PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
         assert.ifError(err);
-        var hosts = lbp.getFixedQueryPlan();
+        const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[1].prepareCalled, 1);
         assert.strictEqual(hosts[2].prepareCalled, 1);
         assert.strictEqual(hosts[4].prepareCalled, 1);
@@ -80,8 +80,8 @@ describe('PrepareHandler', function () {
   });
   describe('prepareAllQueries', function () {
     it('should switch keyspace per each keyspace and execute', function (done) {
-      var host = helper.getHostsMock([ {} ])[0];
-      var preparedInfoArray = [
+      const host = helper.getHostsMock([ {} ])[0];
+      const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
         { keyspace: 'system_schema', query: 'query2' },
         { keyspace: null, query: 'query3' },
@@ -99,7 +99,7 @@ describe('PrepareHandler', function () {
       PrepareHandler.prepareAllQueries({}, [], done);
     });
     it('should callback in error when there is an error borrowing a connection', function (done) {
-      var host = helper.getHostsMock([ {} ])[0];
+      const host = helper.getHostsMock([ {} ])[0];
       host.borrowConnection = function (cb) {
         cb(new Error('Test error'));
       };
@@ -115,8 +115,8 @@ describe('PrepareHandler', function () {
         }
         cb();
       }
-      var host = helper.getHostsMock([ {} ], prepareOnce)[0];
-      var preparedInfoArray = [
+      const host = helper.getHostsMock([ {} ], prepareOnce)[0];
+      const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
         { keyspace: null, query: 'query2' },
         { keyspace: 'system', query: 'query3' }
@@ -136,7 +136,7 @@ function getClient(options) {
     metadata: {
       _infos: {},
       getPreparedInfo: function (ks, q) {
-        var info = this._infos[ks + '.' + q];
+        let info = this._infos[ks + '.' + q];
         if (!info) {
           info = this._infos[ks + '.' + q] = new events.EventEmitter();
         }

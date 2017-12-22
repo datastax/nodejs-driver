@@ -98,7 +98,7 @@ It can be **piped** downstream and provides automatic pause/resume logic (it buf
 client.stream('SELECT time, val FROM temperature WHERE station_id=', [ 'abc' ])
   .on('readable', function () {
     // 'readable' is emitted as soon a row is received and parsed
-    var row;
+    let row;
     while (row = this.read()) {
       console.log('time %s and value %s', row.time, row.val);
     }

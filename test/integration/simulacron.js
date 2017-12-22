@@ -1,25 +1,25 @@
 'use strict';
-var helper = require('../test-helper');
-var http = require('http');
-var spawn = require('child_process').spawn;
-var util = require('util');
-var fs = require('fs');
-var utils = require('../../lib/utils.js');
-var Client = require('../../lib/client.js');
+const helper = require('../test-helper');
+const http = require('http');
+const spawn = require('child_process').spawn;
+const util = require('util');
+const fs = require('fs');
+const utils = require('../../lib/utils.js');
+const Client = require('../../lib/client.js');
 
-var simulacronHelper = {
+const simulacronHelper = {
   _execute: function(processName, params, cb) {
-    var originalProcessName = processName;
+    const originalProcessName = processName;
 
     // If process hasn't completed in 10 seconds.
-    var timeout = undefined;
+    let timeout = undefined;
     if(cb) {
       timeout = setTimeout(function() {
         cb('Timed out while waiting for ' + processName + ' to complete.');
       }, 10000);
     }
 
-    var p = spawn(processName, params, {});
+    const p = spawn(processName, params, {});
     p.stdout.setEncoding('utf8');
     p.stderr.setEncoding('utf8');
     p.stdout.on('data', function (data) {
@@ -54,8 +54,8 @@ var simulacronHelper = {
    * @param {Function} cb Callback to be executed when completed, raised with Error if fails.
    */
   start: function(cb) {
-    var self = this;
-    var simulacronJarPath = process.env['SIMULACRON_PATH'];
+    const self = this;
+    let simulacronJarPath = process.env['SIMULACRON_PATH'];
     if (!simulacronJarPath) {
       simulacronJarPath = process.env['HOME'] + "/simulacron.jar";
       helper.trace("SIMULACRON_PATH not set, using " + simulacronJarPath);
@@ -64,11 +64,11 @@ var simulacronHelper = {
       throw new Error('Simulacron jar not found at: ' + simulacronJarPath);
     }
 
-    var processName = 'java';
-    var params = ['-jar', simulacronJarPath, '--ip', self.startingIp, '-p', this.defaultPort];
-    var initialized = false;
+    const processName = 'java';
+    const params = ['-jar', simulacronJarPath, '--ip', self.startingIp, '-p', this.defaultPort];
+    let initialized = false;
 
-    var timeout = setTimeout(function() {
+    const timeout = setTimeout(function() {
       cb(new Error('Timed out while waiting for Simulacron server to start.'));
     }, 10000);
 
@@ -101,7 +101,7 @@ var simulacronHelper = {
         cb();
       } else {
         if (helper.isWin()) {
-          var params = ['Stop-Process', this.sProcess.pid];
+          const params = ['Stop-Process', this.sProcess.pid];
           this._execute('powershell', params, cb);
         } else {
           this.sProcess.on('close', function () {
@@ -126,12 +126,12 @@ var simulacronHelper = {
    * @param {Object} [options.clientOptions] The options to use to initialize the client.
    */
   setup: function (dcs, options) {
-    var self = this;
+    const self = this;
     options = options || utils.emptyObject;
-    var clientOptions = options.clientOptions || {};
-    var simulacronCluster = new SimulacronCluster();
-    var initClient = options.initClient !== false;
-    var client;
+    const clientOptions = options.clientOptions || {};
+    const simulacronCluster = new SimulacronCluster();
+    const initClient = options.initClient !== false;
+    let client;
     before(function (done) {
       self.start(function () {
         simulacronCluster.register(dcs, clientOptions, function() {
@@ -140,7 +140,7 @@ var simulacronHelper = {
       });
     });
     if (initClient) {
-      var baseOptions = { contactPoints: [self.startingIp] };
+      const baseOptions = { contactPoints: [self.startingIp] };
       client = new Client(utils.extend({}, options.clientOptions, baseOptions));
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));
@@ -167,10 +167,10 @@ var simulacronHelper = {
 };
 
 function _makeRequest(options, callback) {
-  var request = http.request(options, function(response) {
+  const request = http.request(options, function(response) {
     // Continuously update stream with data
-    var body = '';
-    var statusCode = response.statusCode;
+    let body = '';
+    const statusCode = response.statusCode;
     response.on('data', function(d) {
       body += d;
     });
@@ -203,7 +203,7 @@ function SimulacronTopic() {
  * @returns {Array} query log entries for the given topic.
  */
 SimulacronTopic.prototype.getLogs = function(callback) {
-  var self = this;
+  const self = this;
   _makeRequest(this._getOptions('log', this.id, 'GET'), function(err, data) {
     if (err) {
       callback(err);
@@ -229,7 +229,7 @@ SimulacronTopic.prototype.clearLogs = function(callback) {
  * @param {Function} callback
  */
 SimulacronTopic.prototype.prime = function(body, callback) {
-  var request = _makeRequest(this._getOptions('prime', this.id, 'POST'), function(err, data) {
+  const request = _makeRequest(this._getOptions('prime', this.id, 'POST'), function(err, data) {
     callback(err, data);
   });
   request.write(JSON.stringify(body));
@@ -266,7 +266,7 @@ SimulacronTopic.prototype.clearPrimes = function(callback) {
  * Clears all primes and activity logs associated with this topic.  Also clears data for underlying members.
  */
 SimulacronTopic.prototype.clear = function(callback) {
-  var self = this;
+  const self = this;
   utils.parallel([
     self.clearPrimes.bind(self), 
     self.clearLogs.bind(self)
@@ -277,8 +277,8 @@ SimulacronTopic.prototype.clear = function(callback) {
  * Stops listening for connections and closes existing connections for all associated nodes.
  */
 SimulacronTopic.prototype.stop = function(callback) {
-  var stopNodePath = '/listener/%s?type=stop';
-  var options = {
+  const stopNodePath = '/listener/%s?type=stop';
+  const options = {
     host: this.baseAddress,
     path: encodeURI(util.format(stopNodePath, this.id)),
     port: this.port,
@@ -293,8 +293,8 @@ SimulacronTopic.prototype.stop = function(callback) {
  * Resume listening for connections for all associated nodes.
  */
 SimulacronTopic.prototype.start = function(callback) {
-  var resumeNodePath = '/listener/%s';
-  var options = {
+  const resumeNodePath = '/listener/%s';
+  const options = {
     host: this.baseAddress,
     path: encodeURI(util.format(resumeNodePath, this.id)),
     port: this.port,
@@ -311,7 +311,7 @@ SimulacronTopic.prototype._filterLogs = function(data) {
 };
 
 SimulacronTopic.prototype._getPath = function (endpoint, id) {
-  var path = '/' + endpoint + '/' + id;
+  const path = '/' + endpoint + '/' + id;
   return encodeURI(path);
 };
 
@@ -346,15 +346,15 @@ util.inherits(SimulacronCluster, SimulacronTopic);
  * @param {Function} callback
  */
 SimulacronCluster.prototype.register = function(dcs, options, callback) {
-  var self = this;
-  var createClusterPath = '/cluster?data_centers=%s&cassandra_version=%s&dse_version=%s&name=%s&activity_log=%s&num_tokens=%d';
+  const self = this;
+  const createClusterPath = '/cluster?data_centers=%s&cassandra_version=%s&dse_version=%s&name=%s&activity_log=%s&num_tokens=%d';
 
   options = utils.extend({}, simulacronHelper.baseOptions, options);
 
-  var urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
+  const urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
     options.clusterName, options.activityLog, options.numTokens));
 
-  var requestOptions = {
+  const requestOptions = {
     host: self.baseAddress,
     port: self.port,
     path: urlPath,
@@ -397,11 +397,12 @@ SimulacronCluster.prototype.unregister = function(callback) {
  */
 SimulacronCluster.prototype.node = function(key, datacenterIndex) {
   // if the first argument is a string, assume its an address.
+  let dc;
   if (typeof key === "string") {
     // iterate over DCs and their nodes looking for first node that matches.
-    for (var dcIndex = 0; dcIndex < this.dcs.length; dcIndex++) {
-      var dc = this.dcs[dcIndex];
-      var node = dc.nodes.filter(function (n) {
+    for (let dcIndex = 0; dcIndex < this.dcs.length; dcIndex++) {
+      dc = this.dcs[dcIndex];
+      const node = dc.nodes.filter(function (n) {
         return n.address === key;
       })[0];
       if (node) {
@@ -450,7 +451,7 @@ function SimulacronDataCenter(cluster, dc) {
   this.data = dc;
   this.localId = dc.id;
   this.id = cluster.id + '/' + dc.id;
-  var self = this;
+  const self = this;
   this.nodes = dc.nodes.map(function(node) {
     return new SimulacronNode(self, node);
   });
@@ -468,8 +469,8 @@ util.inherits(SimulacronDataCenter, SimulacronTopic);
 SimulacronDataCenter.prototype.node = function(id) {
   // if the first argument is a string, assume its an address.
   if (typeof id === "string") {
-    for (var nodeIndex = 0; nodeIndex < this.nodes.length; nodeIndex++) {
-      var n = this.nodes[nodeIndex];
+    for (let nodeIndex = 0; nodeIndex < this.nodes.length; nodeIndex++) {
+      const n = this.nodes[nodeIndex];
       if (n.address === id) {
         return n;
       }

@@ -1,24 +1,24 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper.js');
-var Client = require('../../../lib/client.js');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils');
-var errors = require('../../../lib/errors');
-var reconnection = require('../../../lib/policies/reconnection');
+const helper = require('../../test-helper.js');
+const Client = require('../../../lib/client.js');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
+const reconnection = require('../../../lib/policies/reconnection');
 
 describe('reconnection', function () {
   this.timeout(120000);
   describe('when a node is back UP', function () {
     it('should re-prepare on demand', function (done) {
-      var dummyClient = new Client(helper.baseOptions);
-      var keyspace = helper.getRandomName('ks');
-      var table = helper.getRandomName('tbl');
-      var insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      var insertQuery2 = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table);
-      var client = new Client(utils.extend({
+      const dummyClient = new Client(helper.baseOptions);
+      const keyspace = helper.getRandomName('ks');
+      const table = helper.getRandomName('tbl');
+      const insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      const insertQuery2 = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table);
+      const client = new Client(utils.extend({
         keyspace: keyspace,
         contactPoints: helper.baseOptions.contactPoints,
         policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)}
@@ -74,11 +74,11 @@ describe('reconnection', function () {
       ], done);
     });
     it('should reconnect and re-prepare once there is an available host', function (done) {
-      var dummyClient = new Client(helper.baseOptions);
-      var keyspace = helper.getRandomName('ks');
-      var table = helper.getRandomName('tbl');
-      var insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      var client = new Client({
+      const dummyClient = new Client(helper.baseOptions);
+      const keyspace = helper.getRandomName('ks');
+      const table = helper.getRandomName('tbl');
+      const insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      const client = new Client({
         keyspace: keyspace,
         contactPoints: helper.baseOptions.contactPoints,
         policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)}
@@ -143,13 +143,13 @@ describe('reconnection', function () {
       ], done);
     });
     it('should re-prepare and execute batches of prepared queries', function (done) {
-      var dummyClient = new Client(helper.baseOptions);
-      var keyspace = helper.getRandomName('ks');
-      var table = helper.getRandomName('tbl');
-      var insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-      var insertQuery2 = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table);
-      var queriedHosts = {};
-      var client = new Client(utils.extend({
+      const dummyClient = new Client(helper.baseOptions);
+      const keyspace = helper.getRandomName('ks');
+      const table = helper.getRandomName('tbl');
+      const insertQuery1 = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+      const insertQuery2 = util.format('INSERT INTO %s (id, int_sample) VALUES (?, ?)', table);
+      const queriedHosts = {};
+      const client = new Client(utils.extend({
         keyspace: keyspace,
         contactPoints: helper.baseOptions.contactPoints,
         policies: { reconnection: new reconnection.ConstantReconnectionPolicy(100)},
@@ -175,7 +175,7 @@ describe('reconnection', function () {
         },
         function insert1(next) {
           utils.times(10, function (n, timesNext) {
-            var queries = [
+            const queries = [
               { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
               { query: insertQuery2, params: [types.Uuid.random(), n]}
             ];
@@ -186,7 +186,7 @@ describe('reconnection', function () {
         helper.toTask(helper.ccmHelper.exec, null, ['node2', 'start']),
         function insertAfterRestart(next) {
           utils.times(15, function (n, timesNext) {
-            var queries = [
+            const queries = [
               { query: insertQuery1, params: [types.Uuid.random(), n.toString()]},
               { query: insertQuery2, params: [types.Uuid.random(), n]}
             ];
@@ -203,7 +203,7 @@ describe('reconnection', function () {
   describe('when connections are silently dropped', function () {
     it('should callback in err the next request', function (done) {
       //never reconnect
-      var client = new Client(utils.extend({}, helper.baseOptions, {policies: {reconnection: new reconnection.ConstantReconnectionPolicy(Number.MAX_VALUE)}}));
+      const client = new Client(utils.extend({}, helper.baseOptions, {policies: {reconnection: new reconnection.ConstantReconnectionPolicy(Number.MAX_VALUE)}}));
       utils.series([
         helper.ccmHelper.start(1),
         client.connect.bind(client),
@@ -233,7 +233,7 @@ describe('reconnection', function () {
   });
   describe('when a node is killed during connection initialization', function() {
     it('should properly abort the connection and retry', function(done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         helper.ccmHelper.start(2),
         function pauseNode2(next) {
@@ -266,7 +266,7 @@ describe('reconnection', function () {
         },
         function isUp(next) {
           // Ensure all hosts are up.
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
           hosts.forEach(function(host) {
             assert.ok(host.isUp());

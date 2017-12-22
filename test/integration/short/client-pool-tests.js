@@ -1,24 +1,24 @@
 "use strict";
-var assert = require('assert');
-var dns = require('dns');
+const assert = require('assert');
+const dns = require('dns');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var clientOptions = require('../../../lib/client-options');
-var utils = require('../../../lib/utils');
-var errors = require('../../../lib/errors');
-var types = require('../../../lib/types');
-var policies = require('../../../lib/policies');
-var RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
-var Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
-var PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
-var ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
-var OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const clientOptions = require('../../../lib/client-options');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
+const types = require('../../../lib/types');
+const policies = require('../../../lib/policies');
+const RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
+const Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
+const PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
+const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 
 describe('Client', function () {
   this.timeout(120000);
   describe('#connect()', function () {
-    var useLocalhost;
+    let useLocalhost;
     before(helper.ccmHelper.start(3));
     before(function (done) {
       dns.resolve('localhost', function (err) {
@@ -28,7 +28,7 @@ describe('Client', function () {
     });
     after(helper.ccmHelper.remove);
     it('should discover all hosts in the ring and hosts object can be serializable', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         if (err) {
           return done(err);
@@ -44,7 +44,7 @@ describe('Client', function () {
       });
     });
     it('should retrieve the cassandra version of the hosts', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         if (err) {
           return done(err);
@@ -60,7 +60,7 @@ describe('Client', function () {
       });
     });
     it('should fail if the contact points can not be resolved', function (done) {
-      var client = newInstance({contactPoints: ['not-a-host']});
+      const client = newInstance({contactPoints: ['not-a-host']});
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -71,7 +71,7 @@ describe('Client', function () {
       });
     });
     it('should fail if the contact points can not be reached', function (done) {
-      var client = newInstance({contactPoints: ['1.1.1.1']});
+      const client = newInstance({contactPoints: ['1.1.1.1']});
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -79,7 +79,7 @@ describe('Client', function () {
       });
     });
     it('should select a tokenizer', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         if (err) {return done(err);}
         helper.assertInstanceOf(client.metadata.tokenizer, Murmur3Tokenizer);
@@ -87,7 +87,7 @@ describe('Client', function () {
       });
     });
     it('should allow multiple parallel calls to connect', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.times(100, function (n, next) {
         client.connect(next);
       }, function (err) {
@@ -99,7 +99,7 @@ describe('Client', function () {
       if (!useLocalhost) {
         return done();
       }
-      var client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
+      const client = new Client(utils.extend({}, helper.baseOptions, {contactPoints: ['localhost']}));
       client.connect(function (err) {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 3);
@@ -110,7 +110,7 @@ describe('Client', function () {
       });
     });
     it('should fail if the keyspace does not exists', function (done) {
-      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'not-existent-ks'}));
+      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'not-existent-ks'}));
       utils.times(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
@@ -125,15 +125,15 @@ describe('Client', function () {
       });
     });
     it('should not use contactPoints that are not part of peers', function (done) {
-      var contactPoints = helper.baseOptions.contactPoints.slice(0);
+      const contactPoints = helper.baseOptions.contactPoints.slice(0);
       contactPoints.push('host-not-existent-not-peer');
       contactPoints.push('1.1.1.1');
-      var client = newInstance({contactPoints: contactPoints});
+      const client = newInstance({contactPoints: contactPoints});
       client.connect(function (err) {
         assert.ifError(err);
         //the 3 original hosts
         assert.strictEqual(client.hosts.length, 3);
-        var hosts = client.hosts.keys();
+        const hosts = client.hosts.keys();
         assert.strictEqual(hosts[0], contactPoints[0] + ':9042');
         assert.notEqual(hosts[1], contactPoints[1] + ':9042');
         assert.notEqual(hosts[2], contactPoints[1] + ':9042');
@@ -143,7 +143,7 @@ describe('Client', function () {
       });
     });
     it('should use the default pooling options according to the protocol version', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.connect(function (err) {
         assert.ifError(err);
         assert.ok(client.options.pooling.coreConnectionsPerHost);
@@ -163,13 +163,13 @@ describe('Client', function () {
       });
     });
     it('should override default pooling options when specified', function (done) {
-      var client = newInstance({ pooling: {
+      const client = newInstance({ pooling: {
         coreConnectionsPerHost: { '0': 4 }
       }});
       client.connect(function (err) {
         assert.ifError(err);
         assert.ok(client.options.pooling.coreConnectionsPerHost);
-        var defaults = clientOptions.coreConnectionsPerHostV3;
+        let defaults = clientOptions.coreConnectionsPerHostV3;
         if (client.controlConnection.protocolVersion < 3) {
           defaults = clientOptions.coreConnectionsPerHostV2;
         }
@@ -192,7 +192,7 @@ describe('Client', function () {
       });
     });
     it('should not fail when switching keyspace and a contact point is not valid', function (done) {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['1.1.1.1', helper.baseOptions.contactPoints[0]],
         keyspace: 'system'
       });
@@ -204,14 +204,14 @@ describe('Client', function () {
     it('should open connections to all hosts when warmup is set', function (done) {
       // do it multiple times
       utils.timesSeries(300, function (n, next) {
-        var connectionsPerHost = {};
+        const connectionsPerHost = {};
         connectionsPerHost[types.distance.local] = 3;
         connectionsPerHost[types.distance.remote] = 1;
-        var client = newInstance({pooling: {warmup: true, coreConnectionsPerHost: connectionsPerHost}});
+        const client = newInstance({pooling: {warmup: true, coreConnectionsPerHost: connectionsPerHost}});
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 3);
-          var state = client.getState();
+          const state = client.getState();
           client.hosts.forEach(function (host) {
             assert.strictEqual(host.pool.connections.length, 3, 'For host ' + host.address);
             assert.strictEqual(state.getOpenConnections(host), 3);
@@ -221,9 +221,9 @@ describe('Client', function () {
       }, done);
     });
     it('should only warmup connections for hosts with local distance', function (done) {
-      var lbPolicy = new RoundRobinPolicy();
+      const lbPolicy = new RoundRobinPolicy();
       lbPolicy.getDistance = function (host) {
-        var id = helper.lastOctetOf(host.address);
+        const id = helper.lastOctetOf(host.address);
         if(id === '1') {
           return types.distance.local;
         }
@@ -233,10 +233,10 @@ describe('Client', function () {
         return types.distance.ignored;
       };
 
-      var connectionsPerHost = {};
+      const connectionsPerHost = {};
       connectionsPerHost[types.distance.local] = 3;
       connectionsPerHost[types.distance.remote] = 1;
-      var client = newInstance({
+      const client = newInstance({
         policies: { loadBalancing: lbPolicy },
         pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}
       });
@@ -244,7 +244,7 @@ describe('Client', function () {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 3);
         client.hosts.forEach(function (host) {
-          var id = helper.lastOctetOf(host);
+          const id = helper.lastOctetOf(host);
           if(id === '1') {
             assert.strictEqual(host.pool.connections.length, 3);
           } else {
@@ -255,8 +255,8 @@ describe('Client', function () {
       });
     });
     it('should connect after unsuccessful attempt caused by a non-existent keyspace', function (done) {
-      var keyspace = 'ks_test_after_fail';
-      var client = newInstance({ keyspace: keyspace });
+      const keyspace = 'ks_test_after_fail';
+      const client = newInstance({ keyspace: keyspace });
       utils.series([
         function tryConnect(next) {
           client.connect(function (err) {
@@ -265,7 +265,7 @@ describe('Client', function () {
           });
         },
         function createKeyspace(next) {
-          var tempClient = newInstance();
+          const tempClient = newInstance();
           tempClient.execute(helper.createKeyspaceCql(keyspace), function (err) {
             assert.ifError(err);
             tempClient.shutdown(next);
@@ -291,8 +291,8 @@ describe('Client', function () {
     }));
     after(helper.ccmHelper.remove);
     it('should connect using the plain text authenticator', function (done) {
-      var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')};
-      var client = newInstance(options);
+      const options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra')};
+      const client = newInstance(options);
       utils.times(100, function (n, next) {
         client.connect(next);
       }, function (err) {
@@ -300,8 +300,8 @@ describe('Client', function () {
       });
     });
     it('should connect using the plain text authenticator when calling execute', function (done) {
-      var options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
-      var client = newInstance(options);
+      const options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
+      const client = newInstance(options);
       utils.times(100, function (n, next) {
         client.execute('SELECT * FROM local', next);
       }, function (err) {
@@ -309,8 +309,8 @@ describe('Client', function () {
       });
     });
     it('should return an AuthenticationError', function (done) {
-      var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
-      var client = newInstance(options);
+      const options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
+      const client = newInstance(options);
       utils.timesSeries(10, function (n, next) {
         client.connect(function (err) {
           assert.ok(err);
@@ -322,8 +322,8 @@ describe('Client', function () {
       }, done);
     });
     it('should return an AuthenticationError when calling execute', function (done) {
-      var options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
-      var client = newInstance(options);
+      const options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
+      const client = newInstance(options);
       utils.times(10, function (n, next) {
         client.execute('SELECT * FROM local', function (err) {
           assert.ok(err);
@@ -351,11 +351,11 @@ describe('Client', function () {
         }
       ], done);
       function testConnect(contactPoint, testDone) {
-        var client = newInstance({ contactPoints: [ contactPoint ] });
+        const client = newInstance({ contactPoints: [ contactPoint ] });
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 1);
-          var expected = contactPoint + ':9042';
+          let expected = contactPoint + ':9042';
           if (contactPoint.indexOf('[') === 0) {
             expected = contactPoint.replace(/[[\]]/g, '');
           }
@@ -369,7 +369,7 @@ describe('Client', function () {
   });
   describe('#connect() with nodes failing', function () {
     it('should connect after a failed attempt', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         helper.ccmHelper.removeIfAny,
         function (next) {
@@ -382,7 +382,7 @@ describe('Client', function () {
         function (next) {
           client.connect(function (err) {
             assert.ifError(err);
-            var hosts = client.hosts.values();
+            const hosts = client.hosts.values();
             assert.strictEqual(1, hosts.length);
             assert.strictEqual(typeof hosts[0].datacenter, 'string');
             assert.notEqual(hosts[0].datacenter.length, 0);
@@ -396,7 +396,7 @@ describe('Client', function () {
     function getReceiveNotificationTest(nodeNumber) {
       return (function receiveNotificationTest(done) {
         // Should receive notification when a node gracefully closes connections
-        var client = newInstance({
+        const client = newInstance({
           pooling: {
             warmup: true,
             heartBeatInterval: 0,
@@ -409,7 +409,7 @@ describe('Client', function () {
           helper.ccmHelper.start(2),
           client.connect.bind(client),
           function checkInitialState(next) {
-            var hosts = client.hosts.values();
+            const hosts = client.hosts.values();
             assert.ok(hosts[0].isUp());
             assert.ok(hosts[1].isUp());
             next();
@@ -437,7 +437,7 @@ describe('Client', function () {
     before(helper.ccmHelper.start(3));
     after(helper.ccmHelper.remove);
     it('should use the keyspace provided', function (done) {
-      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
+      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
       //on all hosts
       utils.times(10, function (n, next) {
         assert.strictEqual(client.keyspace, 'system');
@@ -451,7 +451,7 @@ describe('Client', function () {
       }, done);
     });
     it('should fail to execute if the keyspace does not exists', function (done) {
-      var client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
+      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
       // Execute on all hosts, some executions in parallel and some serial
       utils.timesLimit(12, 6, function (n, next) {
         //No matter what, the keyspace does not exists
@@ -462,7 +462,7 @@ describe('Client', function () {
       }, done);
     });
     it('should change the active keyspace after USE statement', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.execute('USE system', function (err) {
         if (err) {
           return done(err);
@@ -475,7 +475,7 @@ describe('Client', function () {
       });
     });
     it('should return ResponseError when executing USE with a wrong keyspace', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       client.execute('USE ks_not_exist', function (err) {
         assert.ok(err instanceof errors.ResponseError);
         assert.equal(client.keyspace, null);
@@ -483,7 +483,7 @@ describe('Client', function () {
       });
     });
     it('should create the amount of connections determined by the options', function (done) {
-      var options = {
+      const options = {
         pooling: {
           coreConnectionsPerHost: {
             '0': 3,
@@ -492,7 +492,7 @@ describe('Client', function () {
           }
         }
       };
-      var client = new Client(utils.extend({}, helper.baseOptions, options));
+      const client = new Client(utils.extend({}, helper.baseOptions, options));
       //execute a couple of queries
       utils.timesLimit(100, 50, function (n, next) {
         client.execute(helper.queries.basic, next);
@@ -501,7 +501,7 @@ describe('Client', function () {
           return done(err);
         }
         assert.strictEqual(client.hosts.length, 3);
-        var hosts = client.hosts.slice(0);
+        const hosts = client.hosts.slice(0);
         assert.strictEqual(hosts[0].pool.coreConnectionsLength, 3);
         assert.strictEqual(hosts[1].pool.coreConnectionsLength, 3);
         // wait for the pool to be the expected size
@@ -511,7 +511,7 @@ describe('Client', function () {
       });
     });
     it('should wait for schema agreement before calling back', function (done) {
-      var queries = [
+      const queries = [
         "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};",
         "CREATE TABLE ks1.tbl1 (id uuid PRIMARY KEY, value text)",
         "SELECT * FROM ks1.tbl1",
@@ -528,7 +528,7 @@ describe('Client', function () {
         "SELECT * FROM ks2.tbl4",
         "SELECT * FROM ks2.tbl4"
       ];
-      var client = newInstance();
+      const client = newInstance();
       //warmup first
       utils.timesSeries(10, function (n, next) {
         client.execute('SELECT key FROM system.local', next);
@@ -553,7 +553,7 @@ describe('Client', function () {
           helper.ccmHelper.resumeNode(2, done);
         });
         it('should wait until is completed on the first node', function (done) {
-          var client = newInstance({
+          const client = newInstance({
             pooling: { warmup: true },
             policies: {
               speculativeExecution: policy,
@@ -579,7 +579,7 @@ describe('Client', function () {
               }, function (err, results) {
                 assert.ifError(err);
                 assert.strictEqual(results.length, 2);
-                var expectedHost;
+                let expectedHost;
                 if (policy instanceof ConstantSpeculativeExecutionPolicy) {
                   // Use the next one in a speculative execution
                   expectedHost = client.hosts.keys()[1];
@@ -605,20 +605,20 @@ describe('Client', function () {
     });
     function changingDistancesTest(address) {
       return (function doTest(done) {
-        var lbp = new RoundRobinPolicy();
-        var ignoredHost;
-        var cc;
+        const lbp = new RoundRobinPolicy();
+        let ignoredHost;
+        let cc;
         lbp.getDistance = function (h) {
           return helper.lastOctetOf(h) === ignoredHost ? types.distance.ignored : types.distance.local;
         };
-        var connectionsPerHost = 5;
-        var client = newInstance({
+        const connectionsPerHost = 5;
+        const client = newInstance({
           policies: { loadBalancing: lbp },
           pooling: { coreConnectionsPerHost: { '0': connectionsPerHost } }
         });
         function queryAndCheckPool(limit, assertions) {
           return (function executeSomeQueries(next) {
-            var coordinators = {};
+            const coordinators = {};
             utils.timesLimit(limit, 3, function (n, timesNext) {
               client.execute(helper.queries.basic, function (err, result) {
                 if (!err) {
@@ -646,14 +646,14 @@ describe('Client', function () {
           }),
           queryAndCheckPool(500, function (coordinators) {
             // The pool for 1st and 3rd host should have the appropriate size by now.
-            var expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
+            const expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
             expectedPoolInfo[ignoredHost] = 0;
             assert.deepEqual(getPoolInfo(client), expectedPoolInfo );
             assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost;}));
           }),
           client.shutdown.bind(client),
           function checkPoolState(next) {
-            var expectedState = { '1': 0, '2': 0, '3': 0};
+            const expectedState = { '1': 0, '2': 0, '3': 0};
             assert.deepEqual(getPoolInfo(client), expectedState);
             setTimeout(function checkPoolStateDelayed() {
               assert.deepEqual(getPoolInfo(client), expectedState);
@@ -676,9 +676,9 @@ describe('Client', function () {
     beforeEach(helper.ccmHelper.start(3));
     afterEach(helper.ccmHelper.remove);
     it('should failover after a node goes down', function (done) {
-      var client = newInstance();
-      var hosts = {};
-      var hostsDown = [];
+      const client = newInstance();
+      const hosts = {};
+      const hostsDown = [];
       utils.series([
         client.connect.bind(client),
         function (next) {
@@ -739,7 +739,7 @@ describe('Client', function () {
       ], done);
     });
     it('should failover when a node goes down with some outstanding requests', function (done) {
-      var options = utils.extend({}, helper.baseOptions);
+      const options = utils.extend({}, helper.baseOptions);
       options.pooling = {
         coreConnectionsPerHost: {
           '0': 1,
@@ -747,9 +747,9 @@ describe('Client', function () {
           '2': 0
         }
       };
-      var client = new Client(options);
-      var hosts = {};
-      var query = helper.queries.basic;
+      const client = new Client(options);
+      const hosts = {};
+      const query = helper.queries.basic;
       utils.series([
         function (next) {
           // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2
@@ -768,7 +768,7 @@ describe('Client', function () {
         function testCase(seriesNext) {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
-          var killed = false;
+          let killed = false;
           utils.timesLimit(500, 20, function (n, next) {
             if (n === 10) {
               //kill a node when there are some outstanding requests
@@ -807,8 +807,8 @@ describe('Client', function () {
       utils.series([
         helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
         function (next) {
-          var warnings = [];
-          var client = newInstance({ pooling: { warmup: true } });
+          const warnings = [];
+          const client = newInstance({ pooling: { warmup: true } });
           client.on('log', function (level, className, message) {
             if (level !== 'warning' || className !== 'Client') {
               return;
@@ -827,7 +827,7 @@ describe('Client', function () {
       utils.series([
         helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
         function (next) {
-          var client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
+          const client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
           client.connect(function (err) {
             assert.ifError(err);
             client.shutdown(next);
@@ -836,15 +836,15 @@ describe('Client', function () {
       ], done);
     });
     it('should reconnect in the background', function (done) {
-      var reconnectionDelay = 500;
-      var client = newInstance({
+      const reconnectionDelay = 500;
+      const client = newInstance({
         pooling: { heartBeatInterval: 0, warmup: true },
         policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) }
       });
       utils.series([
         client.connect.bind(client),
         function (next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual('1', helper.lastOctetOf(client.controlConnection.host));
           assert.strictEqual(3, hosts.length);
           hosts.forEach(function (h) {
@@ -886,7 +886,7 @@ describe('Client', function () {
     before(helper.ccmHelper.start(2));
     after(helper.ccmHelper.remove);
     it('should close all connections to all hosts', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function makeSomeQueries(next) {
@@ -896,9 +896,9 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          var state = client.getState();
+          const state = client.getState();
           // Check the pools before shutting down
           hosts.forEach(function each(host) {
             assert.ok(state.getOpenConnections(host) > 0);
@@ -908,9 +908,9 @@ describe('Client', function () {
           client.shutdown(next);
         },
         function checkPool(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
-          var state = client.getState();
+          const state = client.getState();
           assert.deepEqual(state.getConnectedHosts(), []);
           hosts.forEach(function each(host) {
             assert.strictEqual(host.pool.connections.length, 0);
@@ -921,7 +921,7 @@ describe('Client', function () {
       ], done);
     });
     it('should not leak any connection when connection pool is still growing', function (done) {
-      var client = newInstance({ pooling: { coreConnectionsPerHost: { '0': 4 }}});
+      const client = newInstance({ pooling: { coreConnectionsPerHost: { '0': 4 }}});
       utils.series([
         client.connect.bind(client),
         function makeSomeQueries(next) {
@@ -930,7 +930,7 @@ describe('Client', function () {
           }, next);
         },
         function shutDown(next) {
-          var hosts = client.hosts.values();
+          const hosts = client.hosts.values();
           assert.strictEqual(hosts.length, 2);
           assert.ok(hosts[0].pool.connections.length > 0);
           assert.ok(!hosts[0].pool.shuttingDown);
@@ -951,7 +951,7 @@ describe('Client', function () {
       ], done);
     });
     it('should callback after a NoHostAvailableError', function (done) {
-      var client = newInstance({ contactPoints: [ '::1', '::2'] });
+      const client = newInstance({ contactPoints: [ '::1', '::2'] });
       client.connect(function (err) {
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.strictEqual(client.hosts.length, 0);
@@ -963,7 +963,7 @@ describe('Client', function () {
       });
     });
     it('should close all connections after connecting with an invalid keyspace', function (done) {
-      var client = newInstance({ keyspace: 'KS_DOES_NOT_EXIST' });
+      const client = newInstance({ keyspace: 'KS_DOES_NOT_EXIST' });
       client.connect(function (err) {
         helper.assertInstanceOf(err, errors.ResponseError);
         assert.strictEqual(client.hosts.length, 0);
@@ -986,7 +986,7 @@ function newInstance(options) {
  * Returns a dictionary containing the last octet of the address as keys and the pool size as values.
  */
 function getPoolInfo(client) {
-  var info = {};
+  const info = {};
   client.hosts.forEach(function (h, address) {
     info[helper.lastOctetOf(address)] = h.pool.connections.length;
   });

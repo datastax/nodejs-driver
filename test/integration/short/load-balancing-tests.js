@@ -1,16 +1,16 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var loadBalancing = require('../../../lib/policies/load-balancing');
-var RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-var TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
-var WhiteListPolicy = loadBalancing.WhiteListPolicy;
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const loadBalancing = require('../../../lib/policies/load-balancing');
+const RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
+const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
+const WhiteListPolicy = loadBalancing.WhiteListPolicy;
+const vdescribe = helper.vdescribe;
 
 context('with a reusable 3 node cluster', function () {
   this.timeout(180000);
@@ -31,12 +31,12 @@ context('with a reusable 3 node cluster', function () {
   });
   vdescribe('2.0', 'WhiteListPolicy', function () {
     it('should use the hosts in the white list only', function (done) {
-      var policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
-      var client = newInstance(policy);
+      const policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
+      const client = newInstance(policy);
       utils.timesLimit(100, 20, function (n, next) {
         client.execute(helper.queries.basic, function (err, result) {
           assert.ifError(err);
-          var lastOctet = helper.lastOctetOf(result.info.queriedHost);
+          const lastOctet = helper.lastOctetOf(result.info.queriedHost);
           assert.ok(lastOctet === '1' || lastOctet === '2');
           next();
         });
@@ -64,13 +64,13 @@ context('with a reusable 3 node cluster', function () {
       testNoHops('ks_simple_rp1', 'ks_network_rp2.table_c', 2, done);
     });
     it('should target correct replica for composite routing key', function (done) {
-      var client = new Client({
+      const client = new Client({
         policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
         keyspace: 'ks_network_rp2',
         contactPoints: helper.baseOptions.contactPoints
       });
-      var query = 'INSERT INTO table_composite (id1, id2) VALUES (?, ?)';
-      var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+      const query = 'INSERT INTO table_composite (id1, id2) VALUES (?, ?)';
+      const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
       utils.mapSeries([
         utils.stringRepeat('a', 1),
         utils.stringRepeat('b', 0x3fff),
@@ -102,15 +102,15 @@ context('with a reusable 3 node cluster', function () {
  * @param {Function} done
  */
 function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
-  var client = new Client({
+  const client = new Client({
     policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
     keyspace: loggedKeyspace,
     contactPoints: helper.baseOptions.contactPoints
   });
-  var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
-  var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+  const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
+  const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
   utils.timesLimit(50, 16, function (n, timesNext) {
-    var params = [ n, n ];
+    const params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
       assertReplicas(result, client, expectedReplicas, timesNext);
@@ -122,7 +122,7 @@ function assertReplicas(result, client, expectedReplicas, next) {
   getTrace(client, result.info.traceId, function (err, trace) {
     assert.ifError(err);
     // Check where the events are coming from
-    var replicas = getReplicas(trace);
+    const replicas = getReplicas(trace);
     // Verify that only replicas were hit (coordinator + replica)
     assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
     next();
@@ -137,18 +137,18 @@ function assertReplicas(result, client, expectedReplicas, next) {
  * @param {Function} done
  */
 function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedReplicas, done) {
-  var client = new Client({
+  const client = new Client({
     policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
     keyspace: loggedKeyspace,
     contactPoints: helper.baseOptions.contactPoints
   });
-  var query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
-  var queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-  var results = [];
+  const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
+  const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+  const results = [];
   utils.timesSeries(10, function (i, nextParameters) {
-    var params = [ i, i ];
-    var coordinators = {};
-    var replicas;
+    const params = [ i, i ];
+    const coordinators = {};
+    let replicas;
     utils.timesLimit(100, 20, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
@@ -186,9 +186,9 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
  * Gets the query trace retrying additional times if it fails.
  */
 function getTrace(client, traceId, callback) {
-  var attempts = 0;
-  var trace;
-  var error;
+  let attempts = 0;
+  let trace;
+  let error;
   if (!traceId) {
     throw new Error('traceid was not provided');
   }
@@ -211,11 +211,11 @@ function getTrace(client, traceId, callback) {
 }
 
 function getReplicas(trace) {
-  var replicas = {};
-  var regex = /\b(?:from|to) \/([\da-f:.]+)$/i;
+  const replicas = {};
+  const regex = /\b(?:from|to) \/([\da-f:.]+)$/i;
   trace.events.forEach(function (event) {
     replicas[helper.lastOctetOf(event['source'].toString())] = true;
-    var activityMatches = regex.exec(event['activity']);
+    const activityMatches = regex.exec(event['activity']);
     if (activityMatches && activityMatches.length === 2) {
       replicas[helper.lastOctetOf(activityMatches[1])] = true;
     }
@@ -224,6 +224,6 @@ function getReplicas(trace) {
 }
 
 function newInstance(policy) {
-  var options = utils.deepExtend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
+  const options = utils.deepExtend({}, helper.baseOptions, { policies: { loadBalancing: policy}});
   return new Client(options);
 }

@@ -1,7 +1,7 @@
 "use strict";
-var assert = require('assert');
-var utils = require('../../lib/utils');
-var helper = require('../test-helper');
+const assert = require('assert');
+const utils = require('../../lib/utils');
+const helper = require('../test-helper');
 
 describe('utils', function () {
   describe('timesLimit()', function () {
@@ -16,17 +16,17 @@ describe('utils', function () {
   });
   describe('allocBuffer', function () {
     it('should return a buffer filled with zeros', function () {
-      var b = utils.allocBuffer(256);
+      const b = utils.allocBuffer(256);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.length, 256);
-      for (var i = 0; i < b.length; i++) {
+      for (let i = 0; i < b.length; i++) {
         assert.strictEqual(b[i], 0);
       }
     });
   });
   describe('allocBufferUnsafe', function () {
     it('should return a Buffer with the correct length', function () {
-      var b = utils.allocBuffer(256);
+      const b = utils.allocBuffer(256);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.length, 256);
     });
@@ -50,8 +50,8 @@ describe('utils', function () {
       }, TypeError);
     });
     it('should return a Buffer representing the string value', function () {
-      var text = 'Hello safe buffer';
-      var b = utils.allocBufferFromString(text);
+      const text = 'Hello safe buffer';
+      const b = utils.allocBufferFromString(text);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.toString(), text);
     });
@@ -75,11 +75,11 @@ describe('utils', function () {
       }, TypeError);
     });
     it('should return a Buffer representing the string value', function () {
-      var arr = [ 0xff, 0, 0x1a ];
-      var b = utils.allocBufferFromArray(arr);
+      const arr = [ 0xff, 0, 0x1a ];
+      const b = utils.allocBufferFromArray(arr);
       helper.assertInstanceOf(b, Buffer);
       assert.strictEqual(b.length, arr.length);
-      for (var i = 0; i < b.length; i++) {
+      for (let i = 0; i < b.length; i++) {
         assert.strictEqual(b[i], arr[i]);
       }
     });

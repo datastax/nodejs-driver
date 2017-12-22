@@ -92,7 +92,9 @@ module.exports = {
     "no-void": "error",
     "no-with": "error",
     "no-buffer-constructor": "error",
-    radix: "error"
+    radix: "error",
+    "no-var": "error",
+    "prefer-const": "error"
   },
   "globals": {
     "Buffer": false,

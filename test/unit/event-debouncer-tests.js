@@ -1,19 +1,18 @@
 "use strict";
 
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../test-helper');
-var EventDebouncer = require('../../lib/metadata/event-debouncer');
+const helper = require('../test-helper');
+const EventDebouncer = require('../../lib/metadata/event-debouncer');
 
 describe('EventDebouncer', function () {
   describe('timeoutElapsed()', function () {
     it('should set the queue to null', function (done) {
-      var debouncer = newInstance(1);
+      const debouncer = newInstance(1);
       debouncer._queue = {
         mainEvent: { handler: helper.callbackNoop },
         callbacks: [ helper.noop ]
       };
-      //noinspection JSAccessibilityCheck
       debouncer._slideDelay(1);
       setTimeout(function () {
         assert.strictEqual(debouncer._queue, null);
@@ -21,14 +20,13 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process the main event and invoke all the callbacks', function (done) {
-      var debouncer = newInstance(1);
-      var callbackCounter = 0;
+      const debouncer = newInstance(1);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer._queue = {
         mainEvent: { handler: helper.callbackNoop },
         callbacks: helper.fillArray(10, increaseCounter)
       };
-      //noinspection JSAccessibilityCheck
       debouncer._slideDelay(1);
       setTimeout(function () {
         assert.strictEqual(callbackCounter, 10);
@@ -36,9 +34,9 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process each keyspace the main event and invoke all child the callbacks', function (done) {
-      var debouncer = newInstance(1);
-      var callbackCounter = 0;
-      var ksMainEventCalled = 0;
+      const debouncer = newInstance(1);
+      let callbackCounter = 0;
+      let ksMainEventCalled = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer._queue = {
         callbacks: [ assert.fail ],
@@ -52,7 +50,6 @@ describe('EventDebouncer', function () {
           }
         }
       };
-      //noinspection JSAccessibilityCheck
       debouncer._slideDelay(1);
       setTimeout(function () {
         assert.strictEqual(callbackCounter, 2);
@@ -61,10 +58,10 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should process each keyspace and invoke handlers and callbacks', function (done) {
-      var debouncer = newInstance(1);
-      var callbackCounter = 0;
+      const debouncer = newInstance(1);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
-      var handlersCalled = [];
+      const handlersCalled = [];
       function getHandler(name) {
         return (function() { handlersCalled.push(name); });
       }
@@ -79,7 +76,6 @@ describe('EventDebouncer', function () {
           }
         }
       };
-      //noinspection JSAccessibilityCheck
       debouncer._slideDelay(1);
       setTimeout(function () {
         assert.strictEqual(callbackCounter, 2);
@@ -90,9 +86,9 @@ describe('EventDebouncer', function () {
   });
   describe('#eventReceived()', function () {
     it('should invoke 1 handler and all the callbacks when one event is flagged as `all`', function (done) {
-      var debouncer = newInstance(20);
-      var callbackCounter = 0;
-      var mainEventHandlerCalled = 0;
+      const debouncer = newInstance(20);
+      let callbackCounter = 0;
+      let mainEventHandlerCalled = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer.eventReceived({ handler: helper.failop, callback: increaseCounter, keyspace: 'ks1' }, false);
       debouncer.eventReceived({ handler: helper.failop, callback: increaseCounter, keyspace: 'ks1', cqlObject: 'abc' },
@@ -112,10 +108,10 @@ describe('EventDebouncer', function () {
       }, 40);
     });
     it('should invoke 1 keyspace handler and all the callbacks when cqlObject is undefined', function (done) {
-      var debouncer = newInstance(30);
-      var callbackCounter = 0;
+      const debouncer = newInstance(30);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
-      var handlersCalled = [];
+      const handlersCalled = [];
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
@@ -146,10 +142,10 @@ describe('EventDebouncer', function () {
       }, 50);
     });
     it('should not invoke handlers before time elapses', function (done) {
-      var debouncer = newInstance(200);
-      var callbackCounter = 0;
+      const debouncer = newInstance(200);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
-      var handlersCalled = [];
+      const handlersCalled = [];
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
@@ -167,10 +163,10 @@ describe('EventDebouncer', function () {
       }, 30);
     });
     it('should process queue immediately when processNow is true', function (done) {
-      var debouncer = newInstance(40);
-      var callbackCounter = 0;
+      const debouncer = newInstance(40);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
-      var handlersCalled = [];
+      const handlersCalled = [];
       function getHandler(name) {
         return (function(cb) {
           handlersCalled.push(name);
@@ -202,8 +198,8 @@ describe('EventDebouncer', function () {
   });
   describe('#shutdown()', function () {
     it('should invoke all callbacks', function (done) {
-      var debouncer = newInstance(20);
-      var callbackCounter = 0;
+      const debouncer = newInstance(20);
+      let callbackCounter = 0;
       function increaseCounter() { callbackCounter++; }
       debouncer.eventReceived({ handler: helper.failop, callback: increaseCounter, keyspace: 'ks1' }, false);
       debouncer.eventReceived({ handler: helper.failop, callback: increaseCounter, keyspace: 'ks1', cqlObject: '1a' },

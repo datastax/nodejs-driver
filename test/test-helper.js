@@ -1,19 +1,19 @@
 "use strict";
-var assert = require('assert');
-var util = require('util');
-var path = require('path');
-var policies = require('../lib/policies');
-var types = require('../lib/types');
-var utils = require('../lib/utils.js');
-var spawn = require('child_process').spawn;
-var Client = require('../lib/client');
-var defaultOptions = require('../lib/client-options').defaultOptions;
-var Host = require('../lib/host').Host;
-var OperationState = require('../lib/operation-state');
+const assert = require('assert');
+const util = require('util');
+const path = require('path');
+const policies = require('../lib/policies');
+const types = require('../lib/types');
+const utils = require('../lib/utils.js');
+const spawn = require('child_process').spawn;
+const Client = require('../lib/client');
+const defaultOptions = require('../lib/client-options').defaultOptions;
+const Host = require('../lib/host').Host;
+const OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
-var helper = {
+const helper = {
   /**
    * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
    * @param {Number} nodeLength
@@ -28,9 +28,9 @@ var helper = {
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
     before(helper.ccmHelper.start(nodeLength || 1, options.ccmOptions));
-    var initClient = options.initClient !== false;
-    var client;
-    var keyspace;
+    const initClient = options.initClient !== false;
+    let client;
+    let keyspace;
     if (initClient) {
       client = new Client(utils.extend({}, options.clientOptions, helper.baseOptions));
       before(client.connect.bind(client));
@@ -73,8 +73,8 @@ var helper = {
    * Uses the last parameter as callback, invokes it via setImmediate
    */
   callbackNoop: function () {
-    var args = Array.prototype.slice.call(arguments);
-    var cb = args[args.length-1];
+    const args = Array.prototype.slice.call(arguments);
+    const cb = args[args.length-1];
     if (typeof cb !== 'function') {
       throw new Error('Helper method needs a callback as last parameter');
     }
@@ -108,7 +108,7 @@ var helper = {
     if (!prefix) {
       prefix = 'ab';
     }
-    var value = Math.floor(Math.random() * utils.maxInt);
+    const value = Math.floor(Math.random() * utils.maxInt);
     return prefix + ('000000000000000' + value.toString()).slice(-16);
   },
   ipPrefix: '127.0.0.',
@@ -147,7 +147,7 @@ var helper = {
      * @param {Function} callback
      */
     bootstrapNode: function (nodeIndex, callback) {
-      var ipPrefix = helper.ipPrefix;
+      const ipPrefix = helper.ipPrefix;
       new Ccm().exec([
         'add',
         'node' + nodeIndex,
@@ -163,7 +163,7 @@ var helper = {
      * @param {Function} callback
      */
     startNode: function (nodeIndex, callback) {
-      var args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+      const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         args.push('--quiet-windows');
       }
@@ -270,7 +270,7 @@ var helper = {
   },
   assertContains: function (value, searchValue, caseInsensitive) {
     assert.strictEqual(typeof value, 'string');
-    var message = 'String: "%s" does not contain "%s"';
+    const message = 'String: "%s" does not contain "%s"';
     if (caseInsensitive !== false) {
       value = value.toLowerCase();
       searchValue = searchValue.toLowerCase();
@@ -301,7 +301,7 @@ var helper = {
    * @returns {Function} A function with a single callback param, applying the fn with parameters
    */
   toTask: function (fn, context) {
-    var params = Array.prototype.slice.call(arguments, 2);
+    const params = Array.prototype.slice.call(arguments, 2);
     return (function (next) {
       params.push(next);
       fn.apply(context, params);
@@ -319,8 +319,7 @@ var helper = {
     });
   },
   getCassandraVersion: function() {
-    //noinspection JSUnresolvedVariable
-    var version = process.env.TEST_CASSANDRA_VERSION;
+    let version = process.env.TEST_CASSANDRA_VERSION;
     if (!version) {
       version = '3.0.5';
     }
@@ -332,10 +331,10 @@ var helper = {
    * @returns {Boolean}
    */
   isCassandraGreaterThan: function (version) {
-    var instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
-    var compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
-    for (var i = 0; i < compareVersion.length; i++) {
-      var compare = compareVersion[i] || 0;
+    const instanceVersion = this.getCassandraVersion().split('.').map(function (x) { return parseInt(x, 10);});
+    const compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
+    for (let i = 0; i < compareVersion.length; i++) {
+      const compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
         return true;
@@ -354,7 +353,6 @@ var helper = {
     }
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
-        //noinspection JSUnresolvedVariable
         // eslint-disable-next-line no-console, no-undef
         console.log.apply(console, arguments);
       }
@@ -364,8 +362,8 @@ var helper = {
    * @returns {Array}
    */
   fillArray: function (length, val) {
-    var result = new Array(length);
-    for (var i = 0; i < length; i++) {
+    const result = new Array(length);
+    for (let i = 0; i < length; i++) {
       result[i] = val;
     }
     return result;
@@ -374,8 +372,8 @@ var helper = {
    * @returns {Array}
    */
   iteratorToArray: function (iterator) {
-    var result = [];
-    var item = iterator.next();
+    const result = [];
+    let item = iterator.next();
     while (!item.done) {
       result.push(item.value);
       item = iterator.next();
@@ -393,7 +391,7 @@ var helper = {
       throw new TypeError('Array.prototype.find called on null or undefined');
     }
     if (typeof predicate === 'string') {
-      var propName = predicate;
+      const propName = predicate;
       predicate = function (item) {
         return (item && item[propName] === val);
       };
@@ -401,8 +399,8 @@ var helper = {
     if (typeof predicate !== 'function') {
       throw new TypeError('predicate must be a function');
     }
-    var value;
-    for (var i = 0; i < arr.length; i++) {
+    let value;
+    for (let i = 0; i < arr.length; i++) {
       value = arr[i];
       if (predicate.call(null, value, i, arr)) {
         return value;
@@ -415,7 +413,7 @@ var helper = {
    * @param {Function }predicate
    */
   first: function (arr, predicate) {
-    var filterArr = arr.filter(predicate);
+    const filterArr = arr.filter(predicate);
     if (filterArr.length === 0) {
       throw new Error('Item not found: ' + predicate);
     }
@@ -426,8 +424,8 @@ var helper = {
    * @param {Object} obj
    */
   values : function (obj) {
-    var vals = [];
-    for (var key in obj) {
+    const vals = [];
+    for (const key in obj) {
       if (!obj.hasOwnProperty(key)) {
         continue;
       }
@@ -481,8 +479,8 @@ var helper = {
    * @returns {string} Last octet of the host address.
    */
   lastOctetOf: function(host) {
-    var address = typeof host === "string" ? host : host.address;
-    var ipAddress = address.split(':')[0].split('.');
+    const address = typeof host === "string" ? host : host.address;
+    const ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
 
@@ -494,8 +492,8 @@ var helper = {
    * @returns {Host}
    */
   findHost: function(client, number) {
-    var host = undefined;
-    var self = this;
+    let host = undefined;
+    const self = this;
     client.hosts.forEach(function(h) {
       if(self.lastOctetOf(h) === number.toString()) {
         host = h;
@@ -511,9 +509,9 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostUp: function(client, number) {
-    var self = this;
-    var hostIsUp = function() {
-      var host = self.findHost(client, number);
+    const self = this;
+    const hostIsUp = function() {
+      const host = self.findHost(client, number);
       return host === undefined ? false : host.isUp();
     };
 
@@ -527,9 +525,9 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostDown: function(client, number) {
-    var self = this;
-    var hostIsDown = function() {
-      var host = self.findHost(client, number);
+    const self = this;
+    const hostIsDown = function() {
+      const host = self.findHost(client, number);
       return host === undefined ? false : !host.isUp();
     };
 
@@ -543,9 +541,9 @@ var helper = {
    * @param {Number} number last octet of requested host.
    */
   waitOnHostGone: function(client, number) {
-    var self = this;
-    var hostIsGone = function() {
-      var host = self.findHost(client, number);
+    const self = this;
+    const hostIsGone = function() {
+      const host = self.findHost(client, number);
       return host === undefined;
     };
 
@@ -592,7 +590,7 @@ var helper = {
    * @param {Function} done
    */
   setIntervalUntil: function (condition, delay, maxAttempts, done) {
-    var attempts = 0;
+    let attempts = 0;
     utils.whilst(
       function whilstCondition() {
         return !condition();
@@ -614,7 +612,7 @@ var helper = {
    * @param {Number} maxAttempts
    */
   setIntervalUntilTask: function (condition, delay, maxAttempts) {
-    var self = this;
+    const self = this;
     return (function setIntervalUntilHandler(done) {
       self.setIntervalUntil(condition, delay, maxAttempts, done);
     });
@@ -642,7 +640,7 @@ var helper = {
     if (except) {
       props = props.slice(0);
       except.forEach(function (p) {
-        var index = props.indexOf(p);
+        const index = props.indexOf(p);
         if (index >= 0) {
           props.splice(index, 1);
         }
@@ -653,7 +651,7 @@ var helper = {
     });
   },
   getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
-    var pooling = {
+    const pooling = {
       heartBeatInterval: heartBeatInterval || 0,
       coreConnectionsPerHost: {}
     };
@@ -664,7 +662,7 @@ var helper = {
   },
   getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
     return hostsInfo.map(function (info, index) {
-      var h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      const h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
       h.isUp = function () {
         return !(info.isUp === false);
       };
@@ -691,7 +689,7 @@ var helper = {
             if (sendStreamCb) {
               return sendStreamCb(r, h, cb);
             }
-            var op = new OperationState(r, o, cb);
+            const op = new OperationState(r, o, cb);
             setImmediate(function () {
               op.setResult(null, {});
             });
@@ -707,7 +705,7 @@ var helper = {
     });
   },
   getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
-    var hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
+    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
     return ({
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
@@ -740,9 +738,9 @@ function Ccm() {
  * @param {Function} callback
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
-  var self = this;
+  const self = this;
   options = options || {};
-  var version = helper.getCassandraVersion();
+  const version = helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   utils.series([
     function (next) {
@@ -753,7 +751,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      var create = ['create', 'test', '-v', version];
+      let create = ['create', 'test', '-v', version];
       if (process.env.TEST_CASSANDRA_DIR) {
         create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
         helper.trace('With', create[2]);
@@ -772,7 +770,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
         return next();
       }
       helper.trace('With conf', options.yaml);
-      var i = 0;
+      let i = 0;
       utils.whilst(
         function condition() {
           return i < options.yaml.length;
@@ -784,7 +782,7 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       );
     },
     function (next) {
-      var populate = ['populate', '-n', nodeLength.toString()];
+      const populate = ['populate', '-n', nodeLength.toString()];
       if (options.vnodes) {
         populate.push('--vnodes');
       }
@@ -794,14 +792,14 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       self.exec(populate, helper.wait(options.sleep, next));
     },
     function (next) {
-      var start = ['start', '--wait-for-binary-proto'];
+      const start = ['start', '--wait-for-binary-proto'];
       if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
         start.push('--quiet-windows');
       }
       if (util.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
           // Windows requires jvm arguments to be quoted, while *nix requires unquoted.
-          var jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
+          const jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
           start.push('--jvm_arg', jvmArg);
         }, this);
         helper.trace('With jvm args', options.jvmArgs);
@@ -823,15 +821,15 @@ Ccm.prototype.spawn = function (processName, params, callback) {
     callback = function () {};
   }
   params = params || [];
-  var originalProcessName = processName;
+  const originalProcessName = processName;
   if (helper.isWin()) {
     params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
     processName = 'powershell.exe';
   }
-  var p = spawn(processName, params);
-  var stdoutArray= [];
-  var stderrArray= [];
-  var closing = 0;
+  const p = spawn(processName, params);
+  const stdoutArray= [];
+  const stderrArray= [];
+  let closing = 0;
   p.stdout.setEncoding('utf8');
   p.stderr.setEncoding('utf8');
   p.stdout.on('data', function (data) {
@@ -847,8 +845,8 @@ Ccm.prototype.spawn = function (processName, params, callback) {
       //avoid calling multiple times
       return;
     }
-    var info = {code: code, stdout: stdoutArray, stderr: stderrArray};
-    var err = null;
+    const info = {code: code, stdout: stdoutArray, stderr: stderrArray};
+    let err = null;
     if (code !== 0) {
       err = new Error(
         'Error executing ' + originalProcessName + ':\n' +
@@ -870,9 +868,9 @@ Ccm.prototype.remove = function (callback) {
  * @param callback
  */
 Ccm.prototype.waitForUp = function (callback) {
-  var started = false;
-  var retryCount = 0;
-  var self = this;
+  let started = false;
+  let retryCount = 0;
+  const self = this;
   utils.whilst(function () {
     return !started && retryCount < 10;
   }, function iterator (next) {
@@ -880,7 +878,7 @@ Ccm.prototype.waitForUp = function (callback) {
       if (err) {
         return next(err);
       }
-      var regex = /Starting listening for CQL clients/mi;
+      const regex = /Starting listening for CQL clients/mi;
       started = regex.test(info.stdout.join(''));
       retryCount++;
       if (!started) {
@@ -897,7 +895,7 @@ Ccm.prototype.waitForUp = function (callback) {
  * @param subPath
  */
 Ccm.prototype.getPath = function (subPath) {
-  var ccmPath = process.env.CCM_PATH;
+  let ccmPath = process.env.CCM_PATH;
   if (!ccmPath) {
     ccmPath = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
     ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
@@ -911,7 +909,7 @@ Ccm.prototype.getPath = function (subPath) {
  */
 function MapPolyFill(arr) {
   this.arr = arr || [];
-  var self = this;
+  const self = this;
   Object.defineProperty(this, 'size', {
     get: function() { return self.arr.length; },
     configurable: false
@@ -1003,13 +1001,12 @@ WhiteListPolicy.prototype.init = function (client, hosts, callback) {
 };
 
 WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
-  var list = this.list;
+  const list = this.list;
   this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
     callback(err, {
       next: function () {
-        var item = iterator.next();
+        let item = iterator.next();
         while (!item.done) {
-          //noinspection JSCheckFunctionSignatures
           if (list.indexOf(helper.lastOctetOf(item.value)) >= 0) {
             break;
           }

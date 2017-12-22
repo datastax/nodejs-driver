@@ -83,14 +83,14 @@ BlackListPolicy.prototype.getDistance = function (host) {
 };
 
 BlackListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
-  var self = this;
+  const self = this;
   this.childPolicy.newQueryPlan(keyspace, queryOptions, function (iterator) {
     callback(self.filter(iterator));
   });
-}
+};
 
 BlackListPolicy.prototype.filter = function (childIterator) {
-  var self = this;
+  const self = this;
   return {
     next: function () {
       var item = childIterator.next();

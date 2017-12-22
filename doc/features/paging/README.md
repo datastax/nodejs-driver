@@ -17,7 +17,7 @@ retrieving the following page after the previous rows were read (throttling).
 client.stream(query, parameters, options)
   .on('readable', function () {
     // readable is emitted as soon a row is received and parsed
-    var row;
+    let row;
     while (row = this.read()) {
       // process row
     }

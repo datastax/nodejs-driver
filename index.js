@@ -1,12 +1,15 @@
-var clientOptions = require('./lib/client-options');
+'use strict';
+
+const clientOptions = require('./lib/client-options');
 exports.Client = require('./lib/client');
 exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
 exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
+const Metadata = require('./lib/metadata');
 exports.metadata = {
-  Metadata: require('./lib/metadata')
+  Metadata: Metadata
 };
 exports.Encoder = require('./lib/encoder');
 /**

@@ -98,7 +98,6 @@ module.exports = {
     "arrow-body-style": ["error", "as-needed"],
     "arrow-spacing": "error",
     "no-confusing-arrow": ["error", { "allowParens": true }],
-    "class-methods-use-this": "error",
     "yoda": "error",
     "constructor-super": "error"
   },

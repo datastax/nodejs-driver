@@ -339,9 +339,7 @@ describe('Client', function () {
         },
         function (parallelNext) {
           utils.times(200, function (n, next) {
-            setTimeout(function () {
-              execute(next);
-            }, n * 5 + 50);
+            setTimeout(() => execute(next), n * 5 + 50);
           }, parallelNext);
         }
       ], helper.finish(client, done));

@@ -13,14 +13,14 @@ describe('ControlConnection', function() {
   before(simulacron.start.bind(simulacron));
   after(simulacron.stop.bind(simulacron));
 
-  describe.skip("#init", function() {
+  describe("#init", function() {
     it('should downgrade to protocol v3 with versions 3.0 & 2.1', testWithNodes(['3.0.13', '2.1.17'], 3));
     it('should downgrade to protocol v3 with versions 2.2 & 2.1', testWithNodes(['2.2.11', '2.1.17'], 3));
     it('should downgrade to protocol v2 with versions 2.2 & 2.0', testWithNodes(['2.2.11', '2.0.17'], 2));
     it('should downgrade to protocol v1 with versions 2.2 & 1.2', testWithNodes(['2.2.11', '1.2.19'], 1));
-    it('should downgrade to protocol v2 with versions 2.1 & 2.0', testWithNodes(['2.1.17', '2.0.17'], 2));
-    it('should downgrade to protocol v1 with versions 2.1 & 1.2', testWithNodes(['2.1.17', '1.2.19'], 1));
-    it('should downgrade to protocol v1 with versions 2.0 & 1.2', testWithNodes(['2.0.17', '1.2.19'], 1));
+    it('should downgrade to protocol v2 with versions 2.1 & 2.0', testWithNodes(['2.1.17', '2.0.17'], 2, 3));
+    it('should downgrade to protocol v1 with versions 2.1 & 1.2', testWithNodes(['2.1.17', '1.2.19'], 1, 3));
+    it('should downgrade to protocol v1 with versions 2.0 & 1.2', testWithNodes(['2.0.17', '1.2.19'], 1, 3));
     // no need to downgrade since both support protocol V4.
     it('should not downgrade with versions 3.0 & 2.2', testWithNodes(['3.0.13', '3.0.11', '2.2.9'], 4));
     // can't downgrade because C* 3.0 does not support protocol V2.
@@ -74,11 +74,10 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
       },
       function connect(next) {
         client.connect(function (err, result) {
-          // TODO: Check for downgrade.
           if (expectedProtocolVersion < 3) {
             // An error is expected here since simulacron can't connect with < protocol v3.
             assert.ok(err);
-            cleanUp();
+            next();
           } else {
             assert.ifError(err);
             next();
@@ -100,15 +99,24 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
           remainingLogs.forEach((log) => {
             assert.strictEqual(log.frame.protocol_version, expectedProtocolVersion);
           });
-          // If downgraded, expect an additional startup message.
-          // 2 other messages, schema query and register.
-          if (expectedProtocolVersion !== usedMaxVersion) {
-            assert.strictEqual(remainingLogs[0].frame.message.type, 'STARTUP');
-            assert.strictEqual(remainingLogs.length, 3);
+
+          if (expectedProtocolVersion >= 3) {
+            // If downgraded, expect an additional startup message.
+            // 2 other messages, schema query and register.
+            if (expectedProtocolVersion !== usedMaxVersion) {
+              assert.strictEqual(remainingLogs[0].frame.message.type, 'STARTUP');
+              assert.strictEqual(remainingLogs.length, 3);
+            } else {
+              assert.strictEqual(remainingLogs.length, 2);
+            }
+            next();
           } else {
-            assert.strictEqual(remainingLogs.length, 2);
+            // Since simulacron does not support < V3, check that older version was tried
+            // and that's it.
+            assert.strictEqual(remainingLogs[0].frame.message.type, 'STARTUP');
+            assert.strictEqual(remainingLogs.length, 1);
+            cleanUp();
           }
-          next();
         });
       },
       cluster.clearLogs.bind(cluster),

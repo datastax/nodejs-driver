@@ -66,6 +66,9 @@ describe('Client', function () {
         contactPoints: helper.baseOptions.contactPoints,
         policies: {
           loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
+        },
+        pooling: {
+          warmup: false
         }
       });
       const ccMock = getControlConnectionMock(null, options);
@@ -95,6 +98,9 @@ describe('Client', function () {
         contactPoints: helper.baseOptions.contactPoints,
         policies: {
           loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
+        },
+        pooling: {
+          warmup: false
         }
       });
       const client = new Client(options);

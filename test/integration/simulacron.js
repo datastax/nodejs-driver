@@ -148,8 +148,7 @@ const simulacronHelper = {
   },
   baseOptions: (function () {
     return {
-      //required
-      cassandraVersion: helper.getCassandraVersion(),
+      cassandraVersion: helper.getSimulatedCassandraVersion(),
       dseVersion: '',
       clusterName: 'testCluster',
       activityLog: true,

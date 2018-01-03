@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const VersionNumber = require('../../lib/types').VersionNumber;
+const VersionNumber = require('../../lib/types/version-number');
 
 describe('VersionNumber', () => {
   describe('#parse()', () => {

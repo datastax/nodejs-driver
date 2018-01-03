@@ -96,11 +96,10 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
             assert.strictEqual(log.frame.protocol_version, usedMaxVersion);
           });
           const remainingLogs = logs.slice(3);
-          remainingLogs.forEach((log) => {
-            assert.strictEqual(log.frame.protocol_version, expectedProtocolVersion);
-          });
-
           if (expectedProtocolVersion >= 3) {
+            remainingLogs.forEach((log) => {
+              assert.strictEqual(log.frame.protocol_version, expectedProtocolVersion);
+            });
             // If downgraded, expect an additional startup message.
             // 2 other messages, schema query and register.
             if (expectedProtocolVersion !== usedMaxVersion) {
@@ -112,9 +111,10 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
             next();
           } else {
             // Since simulacron does not support < V3, check that older version was tried
-            // and that's it.
+            // and that's it.  We don't validate additional remaining logs as the driver
+            // will try connecting at even lower protocol versions.
             assert.strictEqual(remainingLogs[0].frame.message.type, 'STARTUP');
-            assert.strictEqual(remainingLogs.length, 1);
+            assert.strictEqual(remainingLogs[0].frame.protocol_version, expectedProtocolVersion);
             cleanUp();
           }
         });

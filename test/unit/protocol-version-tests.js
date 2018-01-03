@@ -29,14 +29,10 @@ describe('protocolVersion', function () {
 });
 
 function testWithHosts(hostVersions, expectedProtocolVersion, connectionProtocolVersion) {
-  const logs = [];
   const mockConnection = {
     address: '192.1.1.0',
     port: 9042,
     protocolVersion: connectionProtocolVersion || protocolVersion.maxSupported,
-    log: function () {
-      logs.push(arguments);
-    }
   };
   const hosts = [];
   for (let i = 0; i < hostVersions.length; i++) {

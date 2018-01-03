@@ -748,7 +748,7 @@ function Ccm() {
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   const self = this;
   options = options || {};
-  const version = helper.getCassandraVersion();
+  const version = options.version || helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   utils.series([
     function (next) {

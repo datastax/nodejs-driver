@@ -106,6 +106,7 @@ module.exports = {
     "Promise": true,
     "Symbol": false,
     "Uint16Array": false,
+    "Int8Array": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,

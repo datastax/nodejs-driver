@@ -5,22 +5,21 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var errors = require('../../../lib/errors');
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const vdescribe = helper.vdescribe;
 
 vdescribe('2.2', 'Metadata', function () {
   this.timeout(60000);
   before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions:true']}));
-  var keyspace = 'ks_udf';
+  const keyspace = 'ks_udf';
   before(function createSchema(done) {
-    var client = newInstance();
-    var queries = [
+    const client = newInstance();
+    const queries = [
       "CREATE KEYSPACE  ks_udf WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
       "CREATE FUNCTION  ks_udf.return_one() RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return 1;'",
       "CREATE FUNCTION  ks_udf.plus(s int, v int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS 'return s+v;'",
@@ -33,7 +32,7 @@ vdescribe('2.2', 'Metadata', function () {
   after(helper.ccmHelper.remove);
   describe('#getFunctions()', function () {
     it('should retrieve the metadata of cql functions', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -48,7 +47,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should retrieve the metadata for a cql function without arguments', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -63,7 +62,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return an empty array when not found', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -77,7 +76,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return an empty array when the keyspace does not exists', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -91,24 +90,8 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getFunctions(keyspace, 'plus');
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return functions in a promise', function () {
-        var client = newInstance();
+        const client = newInstance();
         return client.connect()
           .then(function () {
             return client.metadata.getFunctions(keyspace, 'plus');
@@ -122,7 +105,7 @@ vdescribe('2.2', 'Metadata', function () {
   });
   describe('#getFunction()', function () {
     it('should retrieve the metadata of a cql function', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -142,7 +125,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should retrieve the metadata for a cql function without arguments', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -161,7 +144,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when not found', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -175,7 +158,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when not found by signature', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -189,7 +172,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when the keyspace does not exists', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -203,9 +186,9 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should retrieve the most up to date metadata', function (done) {
-      var client = newInstance({ keyspace: keyspace });
-      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
+      const client = newInstance({ keyspace: keyspace });
+      const nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      const clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
         nonSyncClient.connect.bind(nonSyncClient),
@@ -238,24 +221,8 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getFunction(keyspace, 'plus', ['int', 'int']);
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return function in a promise', function () {
-        var client = newInstance();
+        const client = newInstance();
         return client.connect()
           .then(function () {
             return client.metadata.getFunction(keyspace, 'plus', ['int', 'int']);
@@ -274,7 +241,7 @@ vdescribe('2.2', 'Metadata', function () {
   });
   describe('#getAggregates()', function () {
     it('should retrieve the metadata of cql aggregates', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -291,7 +258,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return an empty array when not found', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -305,7 +272,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return an empty array when the keyspace does not exists', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -319,24 +286,8 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getAggregates(keyspace, 'sum');
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return aggregates in a promise', function () {
-        var client = newInstance();
+        const client = newInstance();
         return client.connect()
           .then(function () {
             return client.metadata.getAggregates(keyspace, 'sum');
@@ -352,7 +303,7 @@ vdescribe('2.2', 'Metadata', function () {
   });
   describe('#getAggregate()', function () {
     it('should retrieve the metadata of a cql aggregate', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -373,7 +324,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when not found', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -387,7 +338,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when not found by signature', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -401,7 +352,7 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should return null when the keyspace does not exists', function (done) {
-      var client = newInstance();
+      const client = newInstance();
       utils.series([
         client.connect.bind(client),
         function checkMeta(next) {
@@ -415,9 +366,9 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     it('should retrieve the most up to date metadata', function (done) {
-      var client = newInstance({ keyspace: keyspace });
-      var nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
-      var clients = [client, nonSyncClient];
+      const client = newInstance({ keyspace: keyspace });
+      const nonSyncClient = newInstance({ keyspace: keyspace, isMetadataSyncEnabled: false });
+      const clients = [client, nonSyncClient];
       utils.series([
         client.connect.bind(client),
         nonSyncClient.connect.bind(nonSyncClient),
@@ -451,24 +402,8 @@ vdescribe('2.2', 'Metadata', function () {
       ], done);
     });
     describe('with no callback specified', function () {
-      if(!helper.promiseSupport) {
-        it('should throw an ArgumentError', function (done) {
-          var client = newInstance();
-          utils.series([
-            client.connect.bind(client),
-            function (next) {
-              assert.throws(function () {
-                client.metadata.getAggregate(keyspace, 'sum', ['int']);
-              }, errors.ArgumentError);
-              next();
-            },
-            client.shutdown.bind(client)
-          ], done);
-        });
-        return;
-      }
       it('should return aggregate in a promise', function () {
-        var client = newInstance();
+        const client = newInstance();
         return client.connect()
           .then(function () {
             return client.metadata.getAggregate(keyspace, 'sum', ['int']);

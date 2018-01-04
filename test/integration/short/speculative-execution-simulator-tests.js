@@ -5,32 +5,32 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var responseErrorCodes = require('../../../lib/types').responseErrorCodes;
-var simulacron = require('../simulacron');
-var helper = require('../../test-helper');
-var utils = require('../../../lib/utils');
+const assert = require('assert');
+const responseErrorCodes = require('../../../lib/types').responseErrorCodes;
+const simulacron = require('../simulacron');
+const helper = require('../../test-helper');
+const utils = require('../../../lib/utils');
 
-var Client = require('../../../lib/client.js');
-var ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
-var NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
-var OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
+const Client = require('../../../lib/client.js');
+const ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
+const NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
+const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
 
-var query = "select * from data";
-var delay = 100;
+const query = "select * from data";
+const delay = 100;
 
 describe('Client', function() {
 
   this.timeout(20000);
-  var setupInfo = simulacron.setup([3], { initClient: false });
-  var cluster = setupInfo.cluster;
-  var assertQueryCount = function (nodeCounts, cb) {
+  const setupInfo = simulacron.setup([3], { initClient: false });
+  const cluster = setupInfo.cluster;
+  const assertQueryCount = function (nodeCounts, cb) {
     utils.times(nodeCounts.length, function(index, next) {
-      var node = cluster.node(index);
-      var expectedCount = nodeCounts[index];
+      const node = cluster.node(index);
+      const expectedCount = nodeCounts[index];
       node.getLogs(function(err, queries) {
         assert.ifError(err);
-        var matches = queries.filter(function (el) {
+        const matches = queries.filter(function (el) {
           return el.query === query;
         });
         assert.strictEqual(matches.length, expectedCount, "For node " + node.id);
@@ -39,7 +39,7 @@ describe('Client', function() {
     }, cb);
   };
 
-  var node0, node1, node2;
+  let node0, node1, node2;
   before(function done() {
     node0 = cluster.node(0);
     node1 = cluster.node(1);
@@ -51,7 +51,7 @@ describe('Client', function() {
     {title: 'with NoSpeculativeExecutionPolicy', policy: new NoSpeculativeExecutionPolicy()}
   ].forEach(function (data) {
     describe(data.title, function () {
-      var clientOptions = {
+      const clientOptions = {
         contactPoints: [simulacron.startingIp],
         policies: { 
           loadBalancing: new OrderedLoadBalancingPolicy()
@@ -62,7 +62,7 @@ describe('Client', function() {
         clientOptions.policies.speculativeExecution = data.policy;
       }
 
-      var client = new Client(clientOptions);
+      const client = new Client(clientOptions);
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));
 
@@ -76,7 +76,7 @@ describe('Client', function() {
               assert.strictEqual(Object.keys(result.info.triedHosts).length, 1);
 
               // Should have got response from 0th node.
-              var queriedHost = cluster.node(result.info.queriedHost);
+              const queriedHost = cluster.node(result.info.queriedHost);
               assert.strictEqual(queriedHost, node0);
 
               // Should have only sent request to 0th node.
@@ -88,7 +88,7 @@ describe('Client', function() {
     });
   });
   describe('with ConstantSpeculativeExecutionPolicy', function () {
-    var clientOptions = {
+    const clientOptions = {
       contactPoints: [simulacron.startingIp],
       policies: { 
         speculativeExecution: new ConstantSpeculativeExecutionPolicy(delay, 3), 
@@ -96,7 +96,7 @@ describe('Client', function() {
       }
     };
 
-    var client = new Client(clientOptions);
+    const client = new Client(clientOptions);
     before(client.connect.bind(client));
     after(client.shutdown.bind(client));
 
@@ -110,7 +110,7 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 1);
             
             // Should have queried 0th node.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node0);
            
             // Should have only sent request to node 0.
@@ -129,7 +129,7 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 2);
 
             // Should have got response from 1st node.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node1);
 
             // Should have sent requests to node 0 and 1.
@@ -148,7 +148,7 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 3);
 
             // Should have got response from 0th node, the initial query.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node0);
 
             // Should have sent requests to all nodes.
@@ -168,7 +168,7 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 3);
 
             // Should have got response from 2nd node, the second speculative execution.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node2);
 
             // Should have sent requests to all nodes.
@@ -187,12 +187,12 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 2);
 
             // Should have got response from 1st node, the retry from the first error.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node1);
 
             // Expect isBootstrapping error on host that failed.
-            var failureHost = node0.address;
-            var code = result.info.triedHosts[failureHost].code;
+            const failureHost = node0.address;
+            const code = result.info.triedHosts[failureHost].code;
             assert.strictEqual(code, responseErrorCodes.isBootstrapping, "Expected isBootstrapping");
 
             // Should have sent requests to two nodes.
@@ -212,12 +212,12 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 3);
 
             // Should have got response from 2nd node, the retry after the speculative execution.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node2);
 
             // Expect isBootstrapping error on host that failed.
-            var failureHost = node1.address;
-            var code = result.info.triedHosts[failureHost].code;
+            const failureHost = node1.address;
+            const code = result.info.triedHosts[failureHost].code;
             assert.strictEqual(code, responseErrorCodes.isBootstrapping, "Expected isBootstrapping");
 
             // Should have sent requests to all nodes.
@@ -248,13 +248,13 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 3);
 
             // Should have got response from 0th node.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node0);
 
             // Expect isBootstrapping error on both hosts that failed.
             [1, 2].forEach(function(id) {
-              var failureHost = cluster.node(id).address;
-              var code = result.info.triedHosts[failureHost].code;
+              const failureHost = cluster.node(id).address;
+              const code = result.info.triedHosts[failureHost].code;
               assert.strictEqual(code, responseErrorCodes.isBootstrapping, "Expected isBootstrapping");
             });
 
@@ -290,8 +290,8 @@ describe('Client', function() {
 
             // Expect isBootstrapping error on both hosts that failed.
             [0, 1, 2].forEach(function(id) {
-              var failureHost = cluster.node(id).address;
-              var code = err.innerErrors[failureHost].code;
+              const failureHost = cluster.node(id).address;
+              const code = err.innerErrors[failureHost].code;
               assert.strictEqual(code, responseErrorCodes.isBootstrapping, "Expected isBootstrapping");
             });
 
@@ -302,13 +302,13 @@ describe('Client', function() {
       ], done);
     });
     it('should allow zero delay', function (done) {
-      var clientOptions = {
+      const clientOptions = {
         contactPoints: cluster.getContactPoints(0),
         policies: { 
           speculativeExecution: new ConstantSpeculativeExecutionPolicy(0, 3),
         }
       };
-      var client = new Client(clientOptions);
+      const client = new Client(clientOptions);
 
       utils.series([
         client.connect.bind(client),
@@ -322,7 +322,7 @@ describe('Client', function() {
             assert.strictEqual(Object.keys(result.info.triedHosts).length, 3);
 
             // Should have got response from 2nd node, since it had the lowest delay.
-            var queriedHost = cluster.node(result.info.queriedHost);
+            const queriedHost = cluster.node(result.info.queriedHost);
             assert.strictEqual(queriedHost, node2);
 
             // Should have sent requests to all nodes.

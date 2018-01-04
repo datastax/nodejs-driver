@@ -5,17 +5,17 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client.js');
-var ControlConnection = require('../../../lib/control-connection');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var clientOptions = require('../../../lib/client-options');
-var policies = require('../../../lib/policies');
-var ProfileManager = require('../../../lib/execution-profile').ProfileManager;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client.js');
+const ControlConnection = require('../../../lib/control-connection');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const clientOptions = require('../../../lib/client-options');
+const policies = require('../../../lib/policies');
+const ProfileManager = require('../../../lib/execution-profile').ProfileManager;
 
 describe('ControlConnection', function () {
   this.timeout(120000);
@@ -23,7 +23,7 @@ describe('ControlConnection', function () {
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should retrieve local host and peers', function (done) {
-      var cc = newInstance();
+      const cc = newInstance();
       cc.init(function (err) {
         assert.ifError(err);
         assert.strictEqual(cc.hosts.length, 2);
@@ -39,8 +39,8 @@ describe('ControlConnection', function () {
       });
     });
     it('should subscribe to SCHEMA_CHANGE events and refresh keyspace information', function (done) {
-      var cc = newInstance({ refreshSchemaDelay: 100 });
-      var otherClient = new Client(helper.baseOptions);
+      const cc = newInstance({ refreshSchemaDelay: 100 });
+      const otherClient = new Client(helper.baseOptions);
       utils.series([
         cc.init.bind(cc),
         helper.toTask(otherClient.execute, otherClient, "CREATE KEYSPACE sample_change_1 WITH replication = " +
@@ -51,7 +51,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
           assert.ok(keyspaceInfo.strategy);
           assert.equal(keyspaceInfo.strategyOptions.replication_factor, 3);
@@ -66,7 +66,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(keyspaceInfo);
           assert.equal(keyspaceInfo.strategyOptions.replication_factor, 2);
           next();
@@ -78,7 +78,7 @@ describe('ControlConnection', function () {
           }, 200, 10, next);
         },
         function (next) {
-          var keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
+          const keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
           assert.ok(!keyspaceInfo);
           next();
         },
@@ -97,7 +97,7 @@ describe('ControlConnection', function () {
       TestLoadBalancing.prototype.getDistance = function (h) {
         return (helper.lastOctetOf(h) === '2' ? types.distance.ignored : types.distance.local);
       };
-      var cc = newInstance({ policies: { loadBalancing: new TestLoadBalancing() } });
+      const cc = newInstance({ policies: { loadBalancing: new TestLoadBalancing() } });
       utils.series([
         cc.init.bind(cc),
         helper.delay(2000 + (helper.isWin() ? 13000 : 0)),
@@ -107,9 +107,9 @@ describe('ControlConnection', function () {
         helper.toTask(helper.ccmHelper.stopNode, null, 2),
         helper.waitOnHostDown(cc, 2),
         function (next) {
-          var hosts = cc.hosts.slice(0);
+          const hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 2);
-          var countUp = hosts.reduce(function (value, host) {
+          const countUp = hosts.reduce(function (value, host) {
             value += host.isUp() ? 1 : 0;
             return value;
           }, 0);
@@ -120,9 +120,9 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
-      var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+      const options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
-      var cc = newInstance(options, 1, 1);
+      const cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
         helper.toTask(helper.ccmHelper.bootstrapNode, null, 3),
@@ -131,8 +131,8 @@ describe('ControlConnection', function () {
         // wait for that to be the case.
         helper.waitOnHostUp(cc, 3),
         function (next) {
-          var hosts = cc.hosts.slice(0);
-          var countUp = hosts.reduce(function (value, host) {
+          const hosts = cc.hosts.slice(0);
+          const countUp = hosts.reduce(function (value, host) {
             value += host.isUp() ? 1 : 0;
             return value;
           }, 0);
@@ -143,13 +143,13 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should subscribe to TOPOLOGY_CHANGE remove events and refresh ring info', function (done) {
-      var cc = newInstance();
+      const cc = newInstance();
       utils.series([
         cc.init.bind(cc),
         helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
         helper.waitOnHostGone(cc, 2),
         function (next) {
-          var hosts = cc.hosts.slice(0);
+          const hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 1);
           cc.shutdown();
           next();
@@ -157,20 +157,20 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should reconnect when host used goes down', function (done) {
-      var options = clientOptions.extend(
+      const options = clientOptions.extend(
         utils.extend({ pooling: helper.getPoolingOptions(1, 1, 500) }, helper.baseOptions));
-      var cc = new ControlConnection(options, new ProfileManager(options));
-      var host1;
-      var host2;
-      var lbp;
+      const cc = new ControlConnection(options, new ProfileManager(options));
+      let host1;
+      let host2;
+      let lbp;
       utils.series([
         cc.init.bind(cc),
         function initLbp(next) {
           lbp = cc.options.policies.loadBalancing;
-          lbp.init(null, cc.hosts, next);
+          lbp.init({ log: utils.noop }, cc.hosts, next);
         },
         function ensureConnected(next) {
-          var hosts = cc.hosts.values();
+          const hosts = cc.hosts.values();
           hosts.forEach(function (h) {
             h.setDistance(lbp.getDistance(h));
           });
@@ -200,20 +200,20 @@ describe('ControlConnection', function () {
       ], done);
     });
     it('should reconnect when all hosts go down and back up', function (done) {
-      var options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
-      var reconnectionDelay = 200;
+      const options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+      const reconnectionDelay = 200;
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay);
-      var cc = newInstance(options, 1, 1);
+      const cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
         function initLbp(next) {
           assert.ok(cc.host);
           assert.strictEqual(helper.lastOctetOf(cc.host), '1');
-          cc.options.policies.loadBalancing.init(null, cc.hosts, next);
+          cc.options.policies.loadBalancing.init({ log: utils.noop }, cc.hosts, next);
         },
         function setHostDistance(next) {
           // the control connection host should be local or remote to trigger DOWN events
-          var distance = options.policies.loadBalancing.getDistance(cc.host);
+          const distance = options.policies.loadBalancing.getDistance(cc.host);
           cc.host.setDistance(distance);
           next();
         },
@@ -250,7 +250,7 @@ describe('ControlConnection', function () {
     before(helper.ccmHelper.start(3, {vnodes: true}));
     after(helper.ccmHelper.remove);
     it('should contain keyspaces information', function (done) {
-      var cc = newInstance();
+      const cc = newInstance();
       cc.init(function () {
         assert.equal(cc.hosts.length, 3);
         assert.ok(cc.metadata);

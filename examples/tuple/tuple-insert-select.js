@@ -1,8 +1,8 @@
 "use strict";
-var dse = require('dse-driver');
-var assert = require('assert');
+const dse = require('dse-driver');
+const assert = require('assert');
 
-var client = new dse.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Creates a table with a Tuple type, inserts a row and selects a row.

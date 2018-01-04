@@ -5,22 +5,22 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils');
-var errors = require('../../../lib/errors');
-var protocolVersion = types.protocolVersion;
-var vdescribe = helper.vdescribe;
+const helper = require('../../test-helper');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
+const protocolVersion = types.protocolVersion;
+const vdescribe = helper.vdescribe;
 
 describe('Client', function () {
   this.timeout(120000);
   vdescribe('2.2', 'with protocol v4 errors', function () {
-    var failWritesKs = helper.getRandomName('ks');
-    var failWritesTable = failWritesKs + '.tbl1';
-    var setupInfo = helper.setup(2, {
+    const failWritesKs = helper.getRandomName('ks');
+    const failWritesTable = failWritesKs + '.tbl1';
+    const setupInfo = helper.setup(2, {
       clientOptions: {
         policies: { retry: new helper.FallthroughRetryPolicy() }
       },
@@ -40,11 +40,11 @@ describe('Client', function () {
       }
     });
     it('should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       utils.series([
         function generateTombstones(next) {
           utils.timesSeries(2000, function (n, timesNext) {
-            var query = 'INSERT INTO read_fail_tbl (pk, cc, v) VALUES (?, ?, ?)';
+            const query = 'INSERT INTO read_fail_tbl (pk, cc, v) VALUES (?, ?, ?)';
             client.execute(query, [ 1, n, null ], { prepare: true }, timesNext);
           }, next);
         },
@@ -67,8 +67,8 @@ describe('Client', function () {
         }], done);
     });
     it('should callback with writeFailure error when encountered', function (done) {
-      var client = setupInfo.client;
-      var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', failWritesTable);
+      const client = setupInfo.client;
+      const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', failWritesTable);
       client.execute(query, [ types.Uuid.random(), '1' ], { consistency: types.consistencies.all }, function (err) {
         helper.assertInstanceOf(err, errors.ResponseError);
         assert.strictEqual(err.code, types.responseErrorCodes.writeFailure);
@@ -87,7 +87,7 @@ describe('Client', function () {
       });
     });
     it('should callback with functionFailure error when the cql function throws an error', function (done) {
-      var client = setupInfo.client;
+      const client = setupInfo.client;
       client.execute('SELECT ks_func.div(v1,v2) FROM ks_func.tbl1 where id = 1', function (err) {
         helper.assertInstanceOf(err, errors.ResponseError);
         assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);

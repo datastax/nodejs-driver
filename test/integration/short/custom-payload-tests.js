@@ -5,24 +5,24 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var helper = require('../../test-helper');
-var Client = require('../../../lib/client');
-var utils = require('../../../lib/utils');
-var types = require('../../../lib/types');
-var vit = helper.vit;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
+const vit = helper.vit;
 
 describe('custom payload', function () {
   this.timeout(60000);
-  var keyspace = helper.getRandomName('ks');
-  var table = keyspace + '.' + helper.getRandomName('tbl');
+  const keyspace = helper.getRandomName('ks');
+  const table = keyspace + '.' + helper.getRandomName('tbl');
   before(helper.ccmHelper.start(1, {
     jvmArgs: ['-Dcassandra.custom_query_handler_class=org.apache.cassandra.cql3.CustomPayloadMirroringQueryHandler']
   }));
   before(function (done) {
-    var client = newInstance();
+    const client = newInstance();
     utils.series([
       client.connect.bind(client),
       helper.toTask(client.execute, client, helper.createKeyspaceCql(keyspace)),
@@ -33,8 +33,8 @@ describe('custom payload', function () {
   after(helper.ccmHelper.remove);
   describe('using Client#execute(query, params, { prepare: 0 }, callback)', function () {
     vit('2.2', 'should encode and decode the payload with rows response', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key1': utils.allocBufferFromString('val1')
       };
       utils.series([
@@ -53,14 +53,14 @@ describe('custom payload', function () {
       ], done);
     });
     vit('2.2', 'should encode and decode the payload with void response', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key2': utils.allocBufferFromString('val2')
       };
       utils.series([
         client.connect.bind(client),
         function insert(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           client.execute(query, [types.Uuid.random(), 'text1'], { customPayload: payload}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -74,14 +74,14 @@ describe('custom payload', function () {
       ], done);
     });
     vit('2.2', 'should encode and decode the payload and trace', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key3': utils.allocBufferFromString('val3')
       };
       utils.series([
         client.connect.bind(client),
         function insert(next) {
-          var query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           client.execute(query, [types.Uuid.random(), 'text3'], { customPayload: payload, traceQuery: true}, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
@@ -98,8 +98,8 @@ describe('custom payload', function () {
   });
   describe('using Client#execute(query, params, { prepare: 1 }, callback)', function () {
     vit('2.2', 'should encode and decode the payload with rows response', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key-prep1': utils.allocBufferFromString('val-prep1'),
         'key-prep2': utils.allocBufferFromString('val-prep2')
       };
@@ -123,15 +123,15 @@ describe('custom payload', function () {
   });
   describe('using Client#batch(queries, { prepare: 0 }, callback)', function () {
     vit('2.2', 'should encode and decode the payload', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key-batch1': utils.allocBufferFromString('val-batch1')
       };
       utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
-          var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          var queries = [
+          const q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch1'] },
             { query: q, params: [types.Uuid.random(), 'text-batch2'] }
           ];
@@ -148,15 +148,15 @@ describe('custom payload', function () {
       ], done);
     });
     vit('2.2', 'should encode and decode the payload with warnings', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key-batch2': utils.allocBufferFromString('val-batch2')
       };
       utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
-          var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          var queries = [
+          const q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch2'] },
             { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 64 * 1024)] }
           ];
@@ -178,15 +178,15 @@ describe('custom payload', function () {
   });
   describe('using Client#batch(queries, { prepare: 1 }, callback)', function () {
     vit('2.2', 'should encode and decode the payload', function (done) {
-      var client = newInstance();
-      var payload = {
+      const client = newInstance();
+      const payload = {
         'key-batch-prep1': utils.allocBufferFromString('val-batch-prep1')
       };
       utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
-          var q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          var queries = [
+          const q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
+          const queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch1'] },
             { query: q, params: [types.Uuid.random(), 'text-batch2'] }
           ];

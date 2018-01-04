@@ -3,15 +3,10 @@ node_js:
   - "8"
   - "6"
   - "4"
-  - "0.12"
-  - "0.10"
 sudo: false
 cache:
   directories:
     - node_modules
 script:
-  - if [ "$TRAVIS_NODE_VERSION" != "0.10" ] && [ "$TRAVIS_NODE_VERSION" != "0.12" ]; then
-      npm install -g eslint@4;
-      npm run eslint;
-    fi
+  - npm install -g eslint@4; npm run eslint;
   - npm test

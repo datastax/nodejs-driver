@@ -5,24 +5,23 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
+const assert = require('assert');
 
-var helper = require('../../test-helper');
-var Host = require('../../../lib/host').Host;
-var utils = require('../../../lib/utils');
+const helper = require('../../test-helper');
+const Host = require('../../../lib/host').Host;
+const utils = require('../../../lib/utils');
 
-var Client = require('../../../lib/client');
+const Client = require('../../../lib/client');
 
 describe('Client', function () {
   describe('events', function () {
-    //noinspection JSPotentiallyInvalidUsageOfThis
     this.timeout(600000);
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should emit hostUp hostDown', function (done) {
-      var client = newInstance();
-      var hostsWentUp = [];
-      var hostsWentDown = [];
+      const client = newInstance();
+      const hostsWentUp = [];
+      const hostsWentDown = [];
       utils.series([
         client.connect.bind(client),
         function addListeners(next) {
@@ -46,7 +45,7 @@ describe('Client', function () {
             // Set a timeout of 10 seconds to call next at which point
             // things will likely fail if the hostUp event has not been
             // surfaced yet.
-            var timeout = setTimeout(next, 10000);
+            const timeout = setTimeout(next, 10000);
             client.on('hostUp', function() {
               // Call next on a timeout since this callback may be invoked
               // before the one that adds to hostsWentUp.
@@ -73,9 +72,9 @@ describe('Client', function () {
       ], done);
     });
     it('should emit hostAdd hostRemove', function (done) {
-      var client = newInstance();
-      var hostsAdded = [];
-      var hostsRemoved = [];
+      const client = newInstance();
+      const hostsAdded = [];
+      const hostsRemoved = [];
       function trace(message) {
         return (function (next) {
           helper.trace(message);

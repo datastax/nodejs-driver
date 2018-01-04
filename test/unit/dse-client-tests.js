@@ -40,15 +40,6 @@ describe('Client', function () {
   });
   describe('#connect()', function () {
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an ArgumentError', function () {
-          var client = new Client(helper.baseOptions);
-          assert.throws(function () {
-            client.connect();
-          }, errors.ArgumentError);
-        });
-        return;
-      }
       it('should return a promise', function (done) {
         var client = new Client(helper.baseOptions);
         var p = client.connect();
@@ -671,20 +662,6 @@ describe('Client', function () {
       });
     });
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        it('should throw an ArgumentError', function () {
-          var client = new Client(helper.baseOptions);
-          var called = 0;
-          client.execute = function () {
-            called++;
-          };
-          assert.throws(function () {
-            client.executeGraph('g.V()');
-          }, errors.ArgumentError);
-          assert.strictEqual(called, 0);
-        });
-        return;
-      }
       it('should return a promise', function () {
         var client = new Client(helper.baseOptions);
         var called = 0;

@@ -5,22 +5,22 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
+const assert = require('assert');
+const util = require('util');
 
-var Client = require('../../../lib/client');
-var types = require('../../../lib/types/index');
-var utils = require('../../../lib/utils');
-var helper = require('../../test-helper');
-var reconnection = require('../../../lib/policies/reconnection');
-var simulacron = require('../simulacron');
+const Client = require('../../../lib/client');
+const types = require('../../../lib/types/index');
+const utils = require('../../../lib/utils');
+const helper = require('../../test-helper');
+const reconnection = require('../../../lib/policies/reconnection');
+const simulacron = require('../simulacron');
 
 describe('Client', function () {
   this.timeout(20000);
   describe('Preparing statements on nodes behavior', function () {
-    var sCluster = null;
-    var client = null;
-    var query = util.format('SELECT * FROM ks.table1 WHERE id1 = ?');
+    let sCluster = null;
+    let client = null;
+    const query = util.format('SELECT * FROM ks.table1 WHERE id1 = ?');
     before(function (done) {
       simulacron.start(done);
     });
@@ -32,7 +32,7 @@ describe('Client', function () {
             sCluster.register([5], {}, next);
           },
           function connectCluster(next) {
-            var poolingOptions = {};
+            const poolingOptions = {};
             poolingOptions[types.distance.local] = 1;
             client = new Client({
               contactPoints: [sCluster.getContactPoints()[0]],
@@ -57,7 +57,7 @@ describe('Client', function () {
       simulacron.stop(done);
     });
     it('should prepare query on all hosts', function (done) {
-      var idRandom = types.Uuid.random();
+      const idRandom = types.Uuid.random();
       client.execute(query, [idRandom], {prepare: 1}, function (err, result) {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 5);
@@ -66,9 +66,9 @@ describe('Client', function () {
         utils.eachSeries(client.hosts.values(), function(host, next) {
           sCluster.node(host.address).getLogs(function(err, logs) {
             assert.ifError(err);
-            var prepareQuery;
-            for(var i = 0; i < logs.length; i++) {
-              var queryLog = logs[i];
+            let prepareQuery;
+            for(let i = 0; i < logs.length; i++) {
+              const queryLog = logs[i];
               if (queryLog.type === "PREPARE" && queryLog.query === query) {
                 prepareQuery = queryLog;
               }
@@ -82,8 +82,8 @@ describe('Client', function () {
       });
     });
     it('should re-prepare query when host go UP again', function (done) {
-      var idRandom = types.Uuid.random();
-      var nodeDownAddress = sCluster.getContactPoints()[4];
+      const idRandom = types.Uuid.random();
+      const nodeDownAddress = sCluster.getContactPoints()[4];
       utils.series(
         [
           function stopLastNode(next) {
@@ -101,7 +101,7 @@ describe('Client', function () {
             }, next);
           },
           function verifyIfNodeIsMarkedDown(next) {
-            var nodeDown = client.hosts.get(nodeDownAddress);
+            const nodeDown = client.hosts.get(nodeDownAddress);
             assert(!nodeDown.isUp());
             next();
           },
@@ -117,9 +117,10 @@ describe('Client', function () {
           function verifyLogs(next) {
             utils.eachSeries(client.hosts.values(), function(host, nextHost) {
               sCluster.node(host.address).getLogs(function(err, logs) {
-                var prepareQuery;
-                for(var i = 0; i < logs.length; i++) {
-                  var queryLog = logs[i];
+                assert.ifError(err);
+                let prepareQuery;
+                for(let i = 0; i < logs.length; i++) {
+                  const queryLog = logs[i];
                   if (queryLog.type === "PREPARE" && queryLog.query === query) {
                     prepareQuery = queryLog;
                   }
@@ -134,7 +135,7 @@ describe('Client', function () {
             }, next);
           },
           function resumeLastNode(next) {
-            var nodeDown = client.hosts.get(nodeDownAddress);
+            const nodeDown = client.hosts.get(nodeDownAddress);
             nodeDown.on('up', function() {
               helper.trace("Node marked as UP");
               setTimeout(next, 1000); //give time for driver to re prepare statement
@@ -144,9 +145,10 @@ describe('Client', function () {
           },
           function verifyPrepareQueryOnLastNode(next) {
             sCluster.node(nodeDownAddress).getLogs(function(err, logs) {
-              var prepareQuery;
-              for(var i = 0; i < logs.length; i++) {
-                var queryLog = logs[i];
+              assert.ifError(err);
+              let prepareQuery;
+              for(let i = 0; i < logs.length; i++) {
+                const queryLog = logs[i];
                 if (queryLog.type === "PREPARE" && queryLog.query === query) {
                   prepareQuery = queryLog;
                 }

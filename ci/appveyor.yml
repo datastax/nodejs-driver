@@ -4,11 +4,9 @@ environment:
     - nodejs_version: 6
       TEST_CASSANDRA_VERSION: 3.0.10
       ci_type: ci
-    - nodejs_version: 7
+    - nodejs_version: 8
     - nodejs_version: 4
-    - nodejs_version: 0.12
-    - nodejs_version: 0.10
-os: Previous Visual Studio 2015
+image: Visual Studio 2017
 platform:
   - x64
 install:

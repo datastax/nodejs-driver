@@ -5,24 +5,24 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
-var helper = require('../../test-helper');
-var types = require('../../../lib/types');
-var utils = require('../../../lib/utils');
+const assert = require('assert');
+const util = require('util');
+const helper = require('../../test-helper');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils');
 
-var vdescribe = helper.vdescribe;
-var Duration = types.Duration;
+const vdescribe = helper.vdescribe;
+const Duration = types.Duration;
 
 vdescribe('3.10', 'Duration', function () {
   this.timeout('30000');
-  var setupInfo = helper.setup(1, {
+  const setupInfo = helper.setup(1, {
     queries: ['CREATE TABLE tbl_duration (pk uuid PRIMARY KEY, c1 duration)']
   });
-  var client = setupInfo.client;
+  const client = setupInfo.client;
   describe('serialization', function () {
     it('should serialize and deserialize duration type instances', function (done) {
-      var values = [
+      const values = [
         '1y2mo',
         '-1y2mo',
         '1Y2MO',
@@ -66,16 +66,16 @@ vdescribe('3.10', 'Duration', function () {
       ];
       utils.eachSeries([ true, false ], function (prepare, prepareNext) {
         utils.eachSeries(values, function (v, next) {
-          var query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
-          var id = types.Uuid.random();
-          var value = Duration.fromString(v);
+          const query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
+          const id = types.Uuid.random();
+          const value = Duration.fromString(v);
           client.execute(query, [ id, value ], { prepare: prepare }, function (err) {
             assert.ifError(err);
-            var query = 'SELECT pk, c1 FROM tbl_duration WHERE pk = ?';
+            const query = 'SELECT pk, c1 FROM tbl_duration WHERE pk = ?';
             client.execute(query, [ id ], { prepare: prepare }, function (err, result) {
               assert.ifError(err);
               assert.strictEqual(result.rowLength, 1);
-              var actual = result.first()['c1'];
+              const actual = result.first()['c1'];
               helper.assertInstanceOf(actual, Duration);
               assert.ok(actual.equals(value), util.format('Assertion failed: %j !== %j', actual, value));
               next();
@@ -91,7 +91,7 @@ vdescribe('3.10', 'Duration', function () {
         assert.ifError(err);
         assert.ok(tableInfo);
         assert.strictEqual(tableInfo.columns.length, 2);
-        var c1 = tableInfo.columnsByName['c1'];
+        const c1 = tableInfo.columnsByName['c1'];
         assert.ok(c1);
         assert.strictEqual(c1.type.code, types.dataTypes.duration);
         assert.strictEqual(c1.type.info, null);

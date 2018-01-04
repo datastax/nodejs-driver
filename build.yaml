@@ -4,10 +4,10 @@ schedules:
     schedule: per_commit
     matrix:
       exclude:
-        # Exclude all 0.12 and 4 builds.
-        - nodejs: ['0.12', '4']
-        # Only build with latest for 0.10
-        - nodejs: '0.10'
+        # Exclude all builds for 6.x.
+        - nodejs: ['6']
+        # Only build with latest for 4.x
+        - nodejs: '4'
           cassandra: ['dse-4.8', 'dse-5.0']
   nightly:
     # Run full suite nightly on change for all primary branches if they have changes.
@@ -21,10 +21,9 @@ schedules:
     branches:
       exclude: ["/((\\d+(\\.[\\dx]+)+)|dse|master)/"]
 nodejs:
-  - "0.10"
-  - "0.12"
-  - "4"
-  - "6"
+  - '4'
+  - '6'
+  - '8'
 os:
   - ubuntu/trusty64
 cassandra:

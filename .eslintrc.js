@@ -1,6 +1,7 @@
 module.exports = {
   "env": {
-    "commonjs": true
+    "commonjs": true,
+    "es6": true
   },
   "extends": "eslint:recommended",
   "rules": {
@@ -91,7 +92,14 @@ module.exports = {
     "no-void": "error",
     "no-with": "error",
     "no-buffer-constructor": "error",
-    radix: "error"
+    radix: "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "arrow-body-style": ["error", "as-needed"],
+    "arrow-spacing": "error",
+    "no-confusing-arrow": ["error", { "allowParens": true }],
+    "yoda": "error",
+    "constructor-super": "error"
   },
   "globals": {
     "Buffer": false,
@@ -99,6 +107,7 @@ module.exports = {
     "Symbol": false,
     "Uint16Array": false,
     "Int32Array": false,
+    "Int8Array": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,
@@ -112,5 +121,6 @@ module.exports = {
     "afterEach": false,
     "before": false,
     "beforeEach": false,
+    "__filename": false
   }
 };

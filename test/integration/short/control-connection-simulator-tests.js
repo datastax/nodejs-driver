@@ -129,9 +129,8 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
         cluster.getLogs(function (err, logs) {
           const nodes = logs.data_centers[0].nodes;
           assert.strictEqual(nodes.length, nodeVersions.length);
-          const queries = nodes.reduce((queries, node) => {
-            return queries.concat(node.queries);
-          }, []).filter((q) => q.frame.message.type === 'QUERY');
+          const queries = nodes.reduce((queries, node) => queries.concat(node.queries), [])
+            .filter((q) => q.frame.message.type === 'QUERY');
           assert.strictEqual(queries.length, nodeVersions.length * 3);
           queries.forEach((log) => {
             assert.strictEqual(log.frame.protocol_version, expectedProtocolVersion);

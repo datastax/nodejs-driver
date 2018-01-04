@@ -148,8 +148,7 @@ const simulacronHelper = {
   },
   baseOptions: (function () {
     return {
-      //required
-      cassandraVersion: helper.getCassandraVersion(),
+      cassandraVersion: helper.getSimulatedCassandraVersion(),
       dseVersion: '',
       clusterName: 'testCluster',
       activityLog: true,
@@ -368,6 +367,38 @@ SimulacronCluster.prototype.register = function(dcs, options, callback) {
     });
     callback(null, self);
   }).end();
+};
+
+/**
+ * Registers and starts cluster with given body.
+ * 
+ * @param {Object} Request payload body.
+ * @param {Function} callback
+ */
+SimulacronCluster.prototype.registerWithBody = function(body, callback) {
+  const self = this;
+  const requestOptions = {
+    host: self.baseAddress,
+    port: self.port,
+    path: encodeURI('/cluster'),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  };
+  
+  const request = _makeRequest(requestOptions, function(err, data) {
+    if (err) {
+      return callback(err);
+    }
+    self.name = data.name;
+    self.id = data.id;
+    self.data = data;
+    self.dcs = data.data_centers.map(function(dc) {
+      return new SimulacronDataCenter(self, dc);
+    });
+    callback(null, self);
+  });
+  request.write(JSON.stringify(body));
+  request.end();
 };
 
 /**

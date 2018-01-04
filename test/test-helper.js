@@ -325,6 +325,14 @@ const helper = {
     }
     return version;
   },
+  getSimulatedCassandraVersion: function() {
+    let version = this.getCassandraVersion();
+    // simulacron does not support protocol V2 and V1, so cap at 2.1.
+    if (version < '2.1') {
+      version = '2.1.19';
+    }
+    return version;
+  },
   /**
    * Determines if the current Cassandra instance version is greater than or equals to the version provided
    * @param {String} version The version in string format, dot separated.
@@ -740,7 +748,7 @@ function Ccm() {
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   const self = this;
   options = options || {};
-  const version = helper.getCassandraVersion();
+  const version = options.version || helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   utils.series([
     function (next) {

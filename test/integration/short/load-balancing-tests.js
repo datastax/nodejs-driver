@@ -12,6 +12,8 @@ const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 const WhiteListPolicy = loadBalancing.WhiteListPolicy;
 const vdescribe = helper.vdescribe;
 
+const maxInFlightRequests = 16;
+
 context('with a reusable 3 node cluster', function () {
   this.timeout(180000);
   // pass in 3:0 to exercise CCM dc set up logic which will use a consistent data center name
@@ -33,7 +35,7 @@ context('with a reusable 3 node cluster', function () {
     it('should use the hosts in the white list only', function (done) {
       const policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
       const client = newInstance(policy);
-      utils.timesLimit(100, 20, function (n, next) {
+      utils.timesLimit(100, maxInFlightRequests, function (n, next) {
         client.execute(helper.queries.basic, function (err, result) {
           assert.ifError(err);
           const lastOctet = helper.lastOctetOf(result.info.queriedHost);
@@ -77,7 +79,7 @@ context('with a reusable 3 node cluster', function () {
         utils.stringRepeat('c', 0x7fff),
         utils.stringRepeat('d', 0xffe0),
       ], function eachValue(value, next) {
-        utils.timesLimit(32, 16, function eachTime(n, timesNext) {
+        utils.timesLimit(32, maxInFlightRequests, function eachTime(n, timesNext) {
           client.execute(query, [ value, n.toString() ], queryOptions, function (err, result) {
             assert.ifError(err);
             assertReplicas(result, client, 2, timesNext);
@@ -108,6 +110,40 @@ context('with a reusable 3 node cluster', function () {
         });
       }, helper.finish(client, done));
     });
+    it('should target the correct replica using batches', function (done) {
+      const replicasLength = 2;
+      const client = new Client({
+        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+        keyspace: 'ks_network_rp2',
+        contactPoints: helper.baseOptions.contactPoints
+      });
+      const query = 'INSERT INTO table_c (id, name) VALUES (?, ?)';
+      const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
+      utils.timesLimit(50, maxInFlightRequests, function (n, timesNext) {
+        const params = [ n, n ];
+        client.batch([{ query, params }], queryOptions, function (err, result) {
+          assert.ifError(err);
+          assertReplicas(result, client, replicasLength, timesNext);
+        });
+      }, helper.finish(client, done));
+    });
+    it('should target the correct replica using routing indexes', function (done) {
+      const replicasLength = 2;
+      const client = new Client({
+        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+        keyspace: 'ks_network_rp2',
+        contactPoints: helper.baseOptions.contactPoints
+      });
+      const query = 'INSERT INTO table_composite (id2, id1) VALUES (?, ?)';
+      const queryOptions = { traceQuery: true, consistency: types.consistencies.all, routingIndexes: [ 1, 0] };
+      utils.timesLimit(100, maxInFlightRequests, function (n, timesNext) {
+        const params = [ 'a' + n, 'b' ];
+        client.execute(query, params, queryOptions, function (err, result) {
+          assert.ifError(err);
+          assertReplicas(result, client, replicasLength, timesNext);
+        });
+      }, helper.finish(client, done));
+    });
   });
 });
 
@@ -126,7 +162,7 @@ function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
   });
   const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
   const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-  utils.timesLimit(50, 16, function (n, timesNext) {
+  utils.timesLimit(50, maxInFlightRequests, function (n, timesNext) {
     const params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
@@ -166,7 +202,7 @@ function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedRepl
     const params = [ i, i ];
     const coordinators = {};
     let replicas;
-    utils.timesLimit(100, 20, function (n, timesNext) {
+    utils.timesLimit(100, maxInFlightRequests, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
         coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;

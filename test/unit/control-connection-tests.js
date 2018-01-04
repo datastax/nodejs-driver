@@ -38,15 +38,15 @@ describe('ControlConnection', function () {
       const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
         queryResults: { 'system\\.peers': {
           rows: expectedHosts
-            .filter(function (address) { return address !== '1:9042'; })
-            .map(function (address) { return { 'rpc_address': address.split(':')[0] }; })
+            .filter(address => address !== '1:9042')
+            .map(address => ({'rpc_address': address.split(':')[0] }))
         }}
       }));
       cc.init(function (err) {
         const hosts = cc.hosts.values();
         cc.shutdown();
         assert.ifError(err);
-        assert.deepEqual(hosts.map(function (h) { return h.address; }), expectedHosts);
+        assert.deepEqual(hosts.map(h => h.address), expectedHosts);
         done();
       });
     }
@@ -60,7 +60,7 @@ describe('ControlConnection', function () {
         assert.ifError(err);
         const hosts = cc.hosts.values();
         assert.strictEqual(hosts.length, 2);
-        assert.deepEqual(hosts.map(function (h) { return h.address; }).sort(), [ '127.0.0.1:9042', '::1:9042' ]);
+        assert.deepEqual(hosts.map(h => h.address).sort(), [ '127.0.0.1:9042', '::1:9042' ]);
         done();
       });
     });
@@ -74,7 +74,7 @@ describe('ControlConnection', function () {
         assert.ifError(err);
         const hosts = cc.hosts.values();
         assert.ok(hosts.length >= 1);
-        assert.strictEqual(hosts.filter(function (h) { return h.address === '127.0.0.1:9999'; }).length, 1);
+        assert.strictEqual(hosts.filter(h => h.address === '127.0.0.1:9999').length, 1);
         done();
       });
     });

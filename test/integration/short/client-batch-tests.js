@@ -180,7 +180,7 @@ describe('Client', function () {
           assert.ifError(err);
           assert.ok(result && result.rows);
           assert.strictEqual(result.rows.length, 2);
-          assert.strictEqual(helper.find(result.rows, function (row) { return row.id.equals(id2); })['int_sample'], -1);
+          assert.strictEqual(helper.find(result.rows, row => row.id.equals(id2))['int_sample'], -1);
           done();
         });
       });

@@ -400,7 +400,7 @@ describe('metadata', function () {
             assert.ok(table.caching);
             assert.strictEqual(typeof table.caching, 'string');
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id', 'text_sample']);
             assert.strictEqual(table.isCompact, false);
@@ -421,7 +421,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.strictEqual(table.columns.length, 2);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id', 'text_sample']);
             assert.strictEqual(table.isCompact, false);
@@ -443,7 +443,7 @@ describe('metadata', function () {
             assert.ok(table.caching);
             assert.strictEqual(table.columns.length, 2);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id', 'text_sample']);
             assert.strictEqual(table.isCompact, false);
@@ -468,7 +468,7 @@ describe('metadata', function () {
             assert.ok(table.caching);
             assert.strictEqual(table.columns.length, 4);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id1', 'id3', 'int_sample', 'zid2']);
             assert.strictEqual(table.isCompact, false);
@@ -493,7 +493,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.strictEqual(table.columns.length, 3);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id', 'rating_value', 'rating_votes']);
             assert.strictEqual(table.isCompact, false);
@@ -520,7 +520,7 @@ describe('metadata', function () {
             assert.ok(table.caching);
             assert.strictEqual(table.columns.length, 3);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id', 'text1', 'text2']);
             assert.strictEqual(table.isCompact, true);
@@ -540,7 +540,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.strictEqual(table.columns.length, 3);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['id1', 'id2', 'text1']);
             assert.strictEqual(table.isCompact, true);
@@ -560,7 +560,7 @@ describe('metadata', function () {
             assert.ifError(err);
             assert.ok(table);
             const columns = table.columns
-              .map(function (c) { return c.name; })
+              .map(c => c.name)
               .sort();
             helper.assertValueEqual(columns, ['ck', 'id', 'int_sample', 'list_sample', 'map_sample', 'set_sample']);
             assert.strictEqual(table.isCompact, false);
@@ -602,7 +602,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.ok(table.indexes);
             assert.ok(table.indexes.length > 0);
-            const index = table.indexes.filter(function (x) { return x.name === 'map_keys_index'; })[0];
+            const index = table.indexes.filter(x => x.name === 'map_keys_index')[0];
             assert.ok(index, 'Index not found');
             assert.strictEqual(index.name, 'map_keys_index');
             assert.strictEqual(index.target, 'keys(map_keys)');
@@ -623,7 +623,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.ok(table.indexes);
             assert.ok(table.indexes.length > 0);
-            const index = table.indexes.filter(function (x) { return x.name === 'map_values_index'; })[0];
+            const index = table.indexes.filter(x => x.name === 'map_values_index')[0];
             assert.ok(index, 'Index not found');
             assert.strictEqual(index.name, 'map_values_index');
             assert.strictEqual(index.target, is3 ? 'values(map_values)' : 'map_values');
@@ -644,7 +644,7 @@ describe('metadata', function () {
             assert.ok(table);
             assert.ok(table.indexes);
             assert.ok(table.indexes.length > 0);
-            const index = table.indexes.filter(function (x) { return x.name === 'map_entries_index'; })[0];
+            const index = table.indexes.filter(x => x.name === 'map_entries_index')[0];
             assert.ok(index, 'Index not found');
             assert.strictEqual(index.name, 'map_entries_index');
             assert.strictEqual(index.target, 'entries(map_entries)');
@@ -673,7 +673,7 @@ describe('metadata', function () {
             ];
 
             indexes.forEach(function(idx) {
-              const index = table.indexes.filter(function (x) { return x.name === idx.name; })[0];
+              const index = table.indexes.filter(x => x.name === idx.name)[0];
               assert.ok(index, 'Index not found');
               assert.strictEqual(index.name, idx.name);
               assert.strictEqual(index.target, idx.target);
@@ -739,7 +739,7 @@ describe('metadata', function () {
             client.metadata.getTable(keyspace, 'tbl_udts1', function (err, table) {
               assert.ifError(err);
               assert.ok(table);
-              assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id', 'udt_sample']);
+              assert.deepEqual(table.columns.map(c => c.name), ['id', 'udt_sample']);
               const udtColumn = table.columnsByName['udt_sample'];
               assert.ok(udtColumn);
               assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
@@ -760,7 +760,7 @@ describe('metadata', function () {
             client.metadata.getTable(keyspace, 'tbl_udts2', function (err, table) {
               assert.ifError(err);
               assert.ok(table);
-              assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id']);
+              assert.deepEqual(table.columns.map(c => c.name), ['id']);
               const udtColumn = table.columns[0];
               assert.ok(udtColumn);
               assert.strictEqual(table.partitionKeys[0], udtColumn);
@@ -821,7 +821,7 @@ describe('metadata', function () {
             client.metadata.getTable(keyspace, 'tbl_udts_with_quoted', function (err, table) {
               assert.ifError(err);
               assert.ok(table);
-              assert.deepEqual(table.columns.map(function (c) { return c.name; }), ['id', 'udt_sample']);
+              assert.deepEqual(table.columns.map(c => c.name), ['id', 'udt_sample']);
               const udtColumn = table.columnsByName['udt_sample'];
               assert.ok(udtColumn);
               assert.strictEqual(udtColumn.type.code, types.dataTypes.udt);
@@ -932,7 +932,7 @@ describe('metadata', function () {
               assert.strictEqual(view.clusteringKeys[0].name, 'score');
               assert.strictEqual(view.clusteringKeys[1].name, 'user');
               assert.strictEqual(view.partitionKeys.length, 4);
-              assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month, day');
+              assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'game, year, month, day');
               next();
             });
           },
@@ -957,8 +957,8 @@ describe('metadata', function () {
                 assert.ifError(err);
                 assert.ok(view);
                 assert.strictEqual(view.partitionKeys.length, 3);
-                assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'game, year, month');
-                assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'score, user, day');
+                assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'game, year, month');
+                assert.strictEqual(view.clusteringKeys.map(x => x.name).join(', '), 'score, user, day');
                 helper.assertContains(view.compactionClass, 'SizeTieredCompactionStrategy');
                 eachNext();
               });
@@ -1008,8 +1008,8 @@ describe('metadata', function () {
             client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function (err, view) {
               assert.ifError(err);
               assert.ok(view);
-              assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
-              assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+              assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'first_name');
+              assert.strictEqual(view.clusteringKeys.map(x => x.name).join(', '), 'user');
               // includeAllColumns should be true since 'select *' was used.
               assert.strictEqual(view.includeAllColumns, true);
               next();
@@ -1019,8 +1019,8 @@ describe('metadata', function () {
             client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
               assert.ifError(err);
               assert.ok(view);
-              assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
-              assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+              assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'first_name');
+              assert.strictEqual(view.clusteringKeys.map(x => x.name).join(', '), 'user');
               assert.strictEqual(view.includeAllColumns, false);
               next();
             });
@@ -1031,8 +1031,8 @@ describe('metadata', function () {
             client.metadata.getMaterializedView('ks_view_meta', 'users_by_first_all', function(err, view) {
               assert.ifError(err);
               assert.ok(view);
-              assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
-              assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+              assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'first_name');
+              assert.strictEqual(view.clusteringKeys.map(x => x.name).join(', '), 'user');
               assert.ok(view.columnsByName['last_name']);
               assert.ok(view.columnsByName['last_name'].type.code === types.dataTypes.varchar ||
                 view.columnsByName['last_name'].type.code === types.dataTypes.text);
@@ -1046,8 +1046,8 @@ describe('metadata', function () {
             client.metadata.getMaterializedView('ks_view_meta', 'users_by_first', function (err, view) {
               assert.ifError(err);
               assert.ok(view);
-              assert.strictEqual(view.partitionKeys.map(function (x) { return x.name;}).join(', '), 'first_name');
-              assert.strictEqual(view.clusteringKeys.map(function (x) { return x.name;}).join(', '), 'user');
+              assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'first_name');
+              assert.strictEqual(view.clusteringKeys.map(x => x.name).join(', '), 'user');
               assert.strictEqual(view.columnsByName['last_name'], undefined);
               assert.strictEqual(view.columns.length, 2);
               assert.strictEqual(view.includeAllColumns, false);

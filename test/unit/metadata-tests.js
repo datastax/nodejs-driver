@@ -145,8 +145,8 @@ describe('Metadata', function () {
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
       //Use the value as token
-      metadata.tokenizer.hash = function (b) { return b[0];};
-      metadata.tokenizer.compare = function (a, b) { return a - b; };
+      metadata.tokenizer.hash = (b) => b[0];
+      metadata.tokenizer.compare = (a, b) => a - b;
       metadata.tokenizer.stringify = stringifyDefault;
       metadata.ring = [0, 1, 2, 3, 4, 5];
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
@@ -459,7 +459,7 @@ describe('Metadata', function () {
             }));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
@@ -479,7 +479,7 @@ describe('Metadata', function () {
             cb(new Error('Test error'));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
@@ -495,7 +495,7 @@ describe('Metadata', function () {
             cb(null, new types.ResultSet({ rows: [], flags: utils.emptyObject}));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
@@ -517,7 +517,7 @@ describe('Metadata', function () {
             }));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
@@ -542,7 +542,7 @@ describe('Metadata', function () {
             }));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
@@ -577,7 +577,7 @@ describe('Metadata', function () {
             }));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
@@ -605,7 +605,7 @@ describe('Metadata', function () {
             cb(null, new types.ResultSet({ rows: [], flags: utils.emptyObject}));
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks1: { udts: {}}};
@@ -646,7 +646,7 @@ describe('Metadata', function () {
             cb(null, { rows: eventRows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), types.consistencies.all, function (err, trace) {
@@ -691,7 +691,7 @@ describe('Metadata', function () {
             cb(null, { rows: eventRows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
@@ -735,7 +735,7 @@ describe('Metadata', function () {
             cb(null, { rows: eventRows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
@@ -772,7 +772,7 @@ describe('Metadata', function () {
             cb(null, { rows: rows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {});}
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
@@ -812,7 +812,7 @@ describe('Metadata', function () {
             cb(null, {rows: []});
           });
         },
-        getEncoder: function () { return new Encoder(1, {}); }
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -854,7 +854,7 @@ describe('Metadata', function () {
             cb(null, {rows: columnRows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {}); }
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -894,7 +894,7 @@ describe('Metadata', function () {
             cb(null, {rows: columnRows});
           });
         },
-        getEncoder: function () { return new Encoder(1, {}); }
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -925,7 +925,7 @@ describe('Metadata', function () {
             cb(null, {rows: []});
           });
         },
-        getEncoder: function () { return new Encoder(1, {}); }
+        getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
@@ -1366,7 +1366,7 @@ describe('Metadata', function () {
           //not present, default
           assert.strictEqual(table.populateCacheOnFlush, false);
           assert.strictEqual(table.columns.length, 6);
-          assert.deepEqual(table.columns.map(function (x) { return x.type.code; }),
+          assert.deepEqual(table.columns.map(x => x.type.code),
             [dataTypes.text, dataTypes.uuid, dataTypes.blob, dataTypes.int, dataTypes.custom, dataTypes.timeuuid]);
           assert.strictEqual(table.partitionKeys.length, 2);
           assert.strictEqual(table.partitionKeys[0].name, 'pk1');
@@ -1574,7 +1574,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1602,7 +1602,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1635,7 +1635,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1674,7 +1674,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1827,7 +1827,7 @@ describe('Metadata', function () {
             cb(null, {rows: rows});
           });
         },
-        getEncoder: function () { return new Encoder(4, {}); }
+        getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1856,7 +1856,7 @@ describe('Metadata', function () {
             cb(null, {rows: rows});
           });
         },
-        getEncoder: function () { return new Encoder(4, {}); }
+        getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.keyspaces['ks_udf'] = { functions: {}};
@@ -1950,7 +1950,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
@@ -1978,7 +1978,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
@@ -2011,7 +2011,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
@@ -2051,7 +2051,7 @@ describe('Metadata', function () {
               cb(null, {rows: rows});
             });
           },
-          getEncoder: function () { return new Encoder(4, {}); }
+          getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
@@ -2180,7 +2180,7 @@ describe('Metadata', function () {
             cb(null, {rows: []});
           });
         },
-        getEncoder: function () { return new Encoder(4, {}); }
+        getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.setCassandraVersion([3, 0]);
@@ -2298,7 +2298,7 @@ function getControlConnectionForTable(tableRow, columnRows, indexRows) {
         cb(null, {rows: columnRows});
       });
     },
-    getEncoder: function () { return new Encoder(1, {}); }
+    getEncoder: () => new Encoder(1, {})
   };
 }
 
@@ -2312,7 +2312,7 @@ function getControlConnectionForRows(rows, protocolVersion) {
         cb(null, {rows: rows});
       });
     },
-    getEncoder: function () { return new Encoder(protocolVersion || 4, {}); }
+    getEncoder: () => new Encoder(protocolVersion || 4, {})
   };
 }
 
@@ -2327,8 +2327,8 @@ function getAddress(h) {
 function getTokenizer() {
   const t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
-  t.hash = function (b) { return b[0];};
-  t.compare = function (a, b) { return a - b; };
+  t.hash = (b => b[0]);
+  t.compare = ((a, b) => a - b);
   t.stringify = stringifyDefault;
   t.parse = function (b) {
     return parseInt(b, 10);

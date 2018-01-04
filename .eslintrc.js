@@ -94,7 +94,12 @@ module.exports = {
     "no-buffer-constructor": "error",
     radix: "error",
     "no-var": "error",
-    "prefer-const": "error"
+    "prefer-const": "error",
+    "arrow-body-style": ["error", "as-needed"],
+    "arrow-spacing": "error",
+    "no-confusing-arrow": ["error", { "allowParens": true }],
+    "yoda": "error",
+    "constructor-super": "error"
   },
   "globals": {
     "Buffer": false,

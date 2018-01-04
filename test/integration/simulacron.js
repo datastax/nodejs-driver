@@ -14,9 +14,7 @@ const simulacronHelper = {
     // If process hasn't completed in 10 seconds.
     let timeout = undefined;
     if(cb) {
-      timeout = setTimeout(function() {
-        cb('Timed out while waiting for ' + processName + ' to complete.');
-      }, 10000);
+      timeout = setTimeout(() => cb('Timed out while waiting for ' + processName + ' to complete.'), 10000);
     }
 
     const p = spawn(processName, params, {});
@@ -68,9 +66,7 @@ const simulacronHelper = {
     const params = ['-jar', simulacronJarPath, '--ip', self.startingIp, '-p', this.defaultPort];
     let initialized = false;
 
-    const timeout = setTimeout(function() {
-      cb(new Error('Timed out while waiting for Simulacron server to start.'));
-    }, 10000);
+    const timeout = setTimeout(() => cb(new Error('Timed out while waiting for Simulacron server to start.')), 10000);
 
     self.sProcess = self._execute(processName, params, function() {
       if(!initialized) {
@@ -306,7 +302,6 @@ SimulacronTopic.prototype.start = function(callback) {
 };
 
 SimulacronTopic.prototype._filterLogs = function(data) {
-  // TODO implement for cluster and dc.
   return data;
 };
 

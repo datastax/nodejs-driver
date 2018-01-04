@@ -126,7 +126,7 @@ function validateMurmurReplicas(client) {
   assert.ok(replicas);
   //2 replicas per each dc
   assert.strictEqual(replicas.length, 4);
-  assert.strictEqual(replicas.reduce(function (val, h) { return val + (h.datacenter === 'dc1' ? 1 : 0);}, 0), 2);
+  assert.strictEqual(replicas.reduce((val, h) => (val + (h.datacenter === 'dc1' ? 1 : 0)), 0), 2);
 
   //pre-calculated based on murmur3
   let lastOctets = replicas.map(helper.lastOctetOf);
@@ -139,7 +139,7 @@ function validateMurmurReplicas(client) {
   assert.ok(replicas);
   //2 replicas per each dc
   assert.strictEqual(replicas.length, 4);
-  assert.strictEqual(replicas.reduce(function (val, h) { return val + (h.datacenter === 'dc1' ? 1 : 0);}, 0), 2);
+  assert.strictEqual(replicas.reduce((val, h) => (val + (h.datacenter === 'dc1' ? 1 : 0)), 0), 2);
   //pre-calculated based on murmur3
   lastOctets = replicas.map(helper.lastOctetOf);
   assert.strictEqual(lastOctets[0], '1');

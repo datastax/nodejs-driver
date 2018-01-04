@@ -649,7 +649,7 @@ describe('Client', function () {
             const expectedPoolInfo = { '1': connectionsPerHost, '2': connectionsPerHost, '3': connectionsPerHost};
             expectedPoolInfo[ignoredHost] = 0;
             assert.deepEqual(getPoolInfo(client), expectedPoolInfo );
-            assert.deepEqual(coordinators, [ '1', '2', '3'].filter(function (x) { return x !== ignoredHost;}));
+            assert.deepEqual(coordinators, [ '1', '2', '3'].filter(x => x !== ignoredHost));
           }),
           client.shutdown.bind(client),
           function checkPoolState(next) {

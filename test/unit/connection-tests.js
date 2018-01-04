@@ -160,7 +160,7 @@ describe('Connection', function () {
         // Only 4 request were sent, no idle query
         assert.deepEqual(sent.map(function (op) {
           return op.request.query;
-        }), Array.apply(null, new Array(4)).map(function (x, i) { return 'QUERY' + i; }));
+        }), Array.apply(null, new Array(4)).map((x, i) => 'QUERY' + i));
         c.close();
         done();
       }, 40);

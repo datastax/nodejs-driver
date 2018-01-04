@@ -688,7 +688,7 @@ describe('Client', function () {
       const Client = rewire('../../lib/client');
       const client = new Client(helper.baseOptions);
       let metaCalled = 0;
-      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
+      client._getEncoder = () => ({ setRoutingKey: helper.noop});
       client.controlConnection = { protocolVersion: 2};
       client.metadata = {
         adaptUserHints: function (ks, h, cb) {
@@ -711,7 +711,7 @@ describe('Client', function () {
     it('should use meta columns', function (done) {
       const Client = rewire('../../lib/client');
       const client = new Client(helper.baseOptions);
-      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
+      client._getEncoder = () => ({ setRoutingKey: helper.noop});
       client.controlConnection = { protocolVersion: 2};
       const meta = {
         columns: [
@@ -731,7 +731,7 @@ describe('Client', function () {
     it('should use the meta partition keys to fill the routingIndexes', function (done) {
       const Client = rewire('../../lib/client');
       const client = new Client(helper.baseOptions);
-      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
+      client._getEncoder = () => ({ setRoutingKey: helper.noop});
       client.controlConnection = { protocolVersion: 4};
       const meta = {
         columns: [
@@ -756,7 +756,7 @@ describe('Client', function () {
       const Client = rewire('../../lib/client');
       const client = new Client(helper.baseOptions);
       let metaCalled = 0;
-      client._getEncoder = function () { return { setRoutingKey: helper.noop}; };
+      client._getEncoder = () => ({ setRoutingKey: helper.noop});
       client.controlConnection = { protocolVersion: 3};
       const meta = {
         keyspace: 'ks1',
@@ -831,7 +831,7 @@ function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
   Client.__set__("RequestHandler", requestHandlerMock || function () {});
   Client.__set__("PrepareHandler", prepareHandlerMock || function () {});
   const client = new Client(utils.extend({}, helper.baseOptions, options));
-  client._getEncoder = function () { return new Encoder(2, {});};
+  client._getEncoder = () => new Encoder(2, {});
   client.connect = helper.callbackNoop;
   return client;
 }

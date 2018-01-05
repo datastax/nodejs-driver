@@ -870,7 +870,8 @@ vdescribe('dse-5.0', 'Client with down node', function () {
     function expectFailAtAll(done) {
       return (function(err, result) {
         assert.ok(err);
-        assert.strictEqual(err.message, "Cannot achieve consistency level ALL");
+        assert.strictEqual(
+          err.message, 'Not enough replicas available for query at consistency ALL (3 required but only 2 alive)');
         assert.strictEqual(result, undefined);
         done();
       });

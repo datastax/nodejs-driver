@@ -23,7 +23,10 @@
   "devDependencies": {
     "mocha": "~2.5.3",
     "rewire": ">= 2.1.0",
-    "temp": ">= 0.8.3"
+    "temp": ">= 0.8.3",
+    "mocha-jenkins-reporter": ">= 0.1.9",
+    "mocha-appveyor-reporter": ">= 0.2.1",
+    "mocha-multi": ">= 0.8.0"
   },
   "repository": {
     "type" : "git",
@@ -36,6 +39,7 @@
   "scripts":  {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
     "ci": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter",
+    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {

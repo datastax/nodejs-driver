@@ -13,7 +13,7 @@ const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
 const dataTypes = types.dataTypes;
 const helper = require('../test-helper');
-var encoderExtensions = require('../../lib/encoder-extensions');
+const encoderExtensions = require('../../lib/encoder-extensions');
 encoderExtensions.register(Encoder);
 
 describe('encoder', function () {

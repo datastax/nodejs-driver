@@ -5,23 +5,23 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var utils = require('../../lib/utils');
-var clientOptions = require('../../lib/client-options');
-var Client = require('../../lib/dse-client');
-var helper = require('../test-helper');
+const assert = require('assert');
+const utils = require('../../lib/utils');
+const clientOptions = require('../../lib/client-options');
+const Client = require('../../lib/dse-client');
+const helper = require('../test-helper');
 
 describe('clientOptions', function () {
   describe('createQueryOptions()', function () {
     it('should set payload when executeAs is provided', function () {
-      var options = clientOptions.createQueryOptions(new Client(helper.baseOptions), { executeAs: 'bob' });
+      const options = clientOptions.createQueryOptions(new Client(helper.baseOptions), { executeAs: 'bob' });
       assert.ok(options);
       assert.ok(options.customPayload);
       helper.assertBufferString(options.customPayload[clientOptions.proxyExecuteKey], 'bob');
     });
     it('should clone payload when payload and executeAs are provided', function () {
-      var userOptions = { executeAs: 'bob2', customPayload: { 'first': utils.allocBufferFromString('one') }};
-      var options = clientOptions.createQueryOptions(new Client(helper.baseOptions), userOptions);
+      const userOptions = { executeAs: 'bob2', customPayload: { 'first': utils.allocBufferFromString('one') }};
+      const options = clientOptions.createQueryOptions(new Client(helper.baseOptions), userOptions);
       assert.ok(options);
       assert.ok(options.customPayload);
       assert.notStrictEqual(options.customPayload, userOptions.customPayload);
@@ -29,7 +29,7 @@ describe('clientOptions', function () {
       helper.assertBufferString(options.customPayload[clientOptions.proxyExecuteKey], 'bob2');
     });
     it('should set the payload to undefined when not provided', function () {
-      var options = clientOptions.createQueryOptions(new Client(helper.baseOptions), { prepare: true });
+      const options = clientOptions.createQueryOptions(new Client(helper.baseOptions), { prepare: true });
       assert.ok(options);
       assert.strictEqual(options.customPayload, undefined);
     });

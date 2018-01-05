@@ -5,16 +5,16 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var helper = require('../../../test-helper');
-var DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
-var DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
-var Client = require('../../../../lib/dse-client');
-var utils = require('../../../../lib/utils');
-var errors = require('../../../../lib/errors');
-var types = require('../../../../lib/types');
-var vdescribe = helper.vdescribe;
-var ads = helper.ads;
+const assert = require('assert');
+const helper = require('../../../test-helper');
+const DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
+const DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
+const Client = require('../../../../lib/dse-client');
+const utils = require('../../../../lib/utils');
+const errors = require('../../../../lib/errors');
+const types = require('../../../../lib/types');
+const vdescribe = helper.vdescribe;
+const ads = helper.ads;
 
 vdescribe('dse-5.1', 'Proxy Authentication', function () {
   this.timeout(60000);
@@ -22,7 +22,7 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
     utils.series([
       ads.start.bind(ads),
       function startCcm (next) {
-        var ccmOptions = {
+        const ccmOptions = {
           yaml: [
             'authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator',
             'authorizer:com.datastax.bdp.cassandra.auth.DseAuthorizer',
@@ -51,10 +51,10 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
     ], done);
   });
   before(function (done) {
-    var client = new Client(helper.getOptions({
+    const client = new Client(helper.getOptions({
       authProvider: new DsePlainTextAuthProvider('cassandra', 'cassandra')
     }));
-    var queries = [
+    const queries = [
       "CREATE ROLE IF NOT EXISTS alice WITH PASSWORD = 'alice' AND LOGIN = FALSE",
       "CREATE ROLE IF NOT EXISTS ben WITH PASSWORD = 'ben' AND LOGIN = TRUE",
       "CREATE ROLE IF NOT EXISTS 'bob@DATASTAX.COM' WITH LOGIN = TRUE",
@@ -90,7 +90,7 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
     it('should not allow plain text unauthorized user to login as', function (done) {
       connectAndQuery(new DsePlainTextAuthProvider('steve', 'steve', 'alice'), null, function (err) {
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        var innerErrors = utils.objectValues(err.innerErrors);
+        const innerErrors = utils.objectValues(err.innerErrors);
         assert.strictEqual(innerErrors.length, 1);
         helper.assertInstanceOf(innerErrors[0], errors.AuthenticationError);
         done();
@@ -137,7 +137,7 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
         function (next) {
           connectAndQuery(new DseGssapiAuthProvider({ authorizationId: 'alice' }), null, function (err) {
             helper.assertInstanceOf(err, errors.NoHostAvailableError);
-            var innerErrors = utils.objectValues(err.innerErrors);
+            const innerErrors = utils.objectValues(err.innerErrors);
             assert.strictEqual(innerErrors.length, 1);
             helper.assertInstanceOf(innerErrors[0], errors.AuthenticationError);
             next();
@@ -163,10 +163,10 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
 });
 
 function connectAndQuery(authProvider, executeAs, callback) {
-  var client = new Client(helper.getOptions({
+  const client = new Client(helper.getOptions({
     authProvider: authProvider
   }));
-  var options = { executeAs: executeAs };
+  const options = { executeAs: executeAs };
   client.execute('SELECT * FROM aliceks.alicetable', null, options, function (err, result) {
     client.shutdown();
     callback(err, result && result.first());

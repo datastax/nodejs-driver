@@ -6,17 +6,17 @@
  */
 'use strict';
 
-var assert = require('assert');
-var util = require('util');
-var helper = require('../../test-helper');
-var dateRangeModule = require('../../../lib/search/date-range');
-var DateRange = dateRangeModule.DateRange;
-var DateRangeBound = dateRangeModule.DateRangeBound;
-var unbounded = dateRangeModule.unbounded;
-var precision = dateRangeModule.dateRangePrecision;
+const assert = require('assert');
+const util = require('util');
+const helper = require('../../test-helper');
+const dateRangeModule = require('../../../lib/search/date-range');
+const DateRange = dateRangeModule.DateRange;
+const DateRangeBound = dateRangeModule.DateRangeBound;
+const unbounded = dateRangeModule.unbounded;
+const precision = dateRangeModule.dateRangePrecision;
 
 describe('DateRange', function () {
-  var values = [
+  const values = [
     [ '[2010 TO 2011-12]', getDateRange(getUtcDate(2010), precision.year, getUtcDate(2011, 12, 31, 23, 59, 59, 999), precision.month) ],
     [ '[* TO 2011-8]', getDateRange(null, null, getUtcDate(2011, 8, 31, 23, 59, 59, 999), precision.month), '[* TO 2011-08]' ],
     [ '[2015-01 TO *]', new DateRange(
@@ -41,14 +41,14 @@ describe('DateRange', function () {
   describe('fromString()', function () {
     it('should parse valid values', function () {
       values.forEach(function (item) {
-        var actual = DateRange.fromString(item[0]);
+        const actual = DateRange.fromString(item[0]);
         helper.assertInstanceOf(actual, DateRange);
         assert.ok(actual.equals(item[1]),
           util.format('Parsed value "%s" not equals to expected: %j, got: %j', item[0], item[1], actual));
       });
     });
     it('should throw when the string is not a valid date', function () {
-      var invalidValues = [
+      const invalidValues = [
         '2015-01T03:02.001',
         '2012-1-2T12:',
         '2015-01T03.001',
@@ -67,7 +67,7 @@ describe('DateRange', function () {
   describe('#toString()', function () {
     it('should return the string representation', function () {
       values.forEach(function (item) {
-        var expected = item[2] || item[0];
+        const expected = item[2] || item[0];
         assert.strictEqual(item[1].toString(), expected);
       });
     });
@@ -75,10 +75,10 @@ describe('DateRange', function () {
   describe('#toBuffer() and fromBuffer()', function () {
     it('should serialize and deserialize the values', function () {
       values.forEach(function (item) {
-        var dateRange = item[1];
-        var serialized = dateRange.toBuffer();
+        const dateRange = item[1];
+        const serialized = dateRange.toBuffer();
         helper.assertInstanceOf(serialized, Buffer);
-        var deserialized = DateRange.fromBuffer(serialized);
+        const deserialized = DateRange.fromBuffer(serialized);
         helper.assertInstanceOf(deserialized, DateRange);
         assert.ok(deserialized.equals(dateRange),
           util.format('Serialization or deserialization failed for %j', dateRange));
@@ -87,9 +87,9 @@ describe('DateRange', function () {
   });
 });
 describe('DateRangeBound', function () {
-  var date = getUtcDate(2017, 1, 20, 6, 54, 1, 578);
-  var bcDate = getUtcDate(-2001, 11, 20, 16, 5, 1, 999);
-  var values = [
+  const date = getUtcDate(2017, 1, 20, 6, 54, 1, 578);
+  const bcDate = getUtcDate(-2001, 11, 20, 16, 5, 1, 999);
+  const values = [
     [ new DateRangeBound(date, precision.year), '2017' ],
     [ new DateRangeBound(date, precision.month), '2017-01' ],
     [ new DateRangeBound(date, precision.day), '2017-01-20' ],
@@ -114,8 +114,8 @@ describe('DateRangeBound', function () {
 
 /** @return {Date} */
 function getUtcDate() {
-  var month = arguments[1] || 1;
-  var date = new Date(0);
+  const month = arguments[1] || 1;
+  const date = new Date(0);
   date.setUTCFullYear(arguments[0], month - 1, arguments[2] || 1);
   date.setUTCHours(arguments[3] || 0, arguments[4] || 0, arguments[5] || 0, arguments[6] || 0);
   return date;
@@ -129,8 +129,8 @@ function getUtcDate() {
  * @return {module:search.DateRange}
  */
 function getDateRange(date1, precision1, date2, precision2) {
-  var lowerBound = date1 ? new DateRangeBound(date1, precision1) : DateRangeBound.unbounded;
-  var upperBound = null;
+  const lowerBound = date1 ? new DateRangeBound(date1, precision1) : DateRangeBound.unbounded;
+  let upperBound = null;
   if (date2) {
     upperBound = new DateRangeBound(date2, precision2);
   }

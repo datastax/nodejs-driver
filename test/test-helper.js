@@ -21,6 +21,12 @@ const OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
+const cassandraVersionByDse = {
+  '4.8': '2.1',
+  '5.0': '3.0',
+  '5.1': '3.10'
+};
+
 const helper = {
   /**
    * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
@@ -254,7 +260,7 @@ const helper = {
     });
   },
   getDseVersion: function() {
-    var version = process.env['TEST_DSE_VERSION'];
+    let version = process.env['TEST_DSE_VERSION'];
     if (!version) {
       version = '4.8.11';
     }
@@ -291,8 +297,8 @@ const helper = {
     }
     const instanceVersion = instanceVersionStr.split('.').map(function (x) { return parseInt(x, 10);});
     const compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
-    for (var i = 0; i < compareVersion.length; i++) {
-      var compare = compareVersion[i] || 0;
+    for (let i = 0; i < compareVersion.length; i++) {
+      const compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
         return expected.indexOf(1) >= 0;
@@ -714,8 +720,8 @@ const helper = {
    * @param {ResultSet} result
    */
   keyedById: function (result) {
-    var map = {};
-    var columnKeys = result.columns.map(function (c) { return c.name;});
+    const map = {};
+    const columnKeys = result.columns.map(function (c) { return c.name;});
     if (columnKeys.indexOf('id') < 0 || columnKeys.indexOf('value') < 0) {
       throw new Error('ResultSet must contain the columns id and value');
     }
@@ -730,7 +736,7 @@ const helper = {
    * @param {Function} callback
    */
   connectAndQuery: function (client, callback) {
-    var self = this;
+    const self = this;
     utils.series([
       client.connect.bind(client),
       function doSomeQueries(next) {
@@ -752,8 +758,8 @@ const helper = {
       if(err) {
         callback(err);
       }
-      var row = result.first();
-      var host = row.result.ip;
+      const row = result.first();
+      const host = row.result.ip;
       callback(null, host);
     });
   },
@@ -773,29 +779,29 @@ const helper = {
    */
   waitForWorkers: function(client, expectedWorkers, callback) {
     helper.trace("Waiting for %d spark workers", expectedWorkers);
-    var workerRE = /Alive Workers:.*(\d+)<\/li>/;
-    var numWorkers = 0;
-    var attempts = 0;
-    var maxAttempts = 1000;
+    const workerRE = /Alive Workers:.*(\d+)<\/li>/;
+    let numWorkers = 0;
+    let attempts = 0;
+    const maxAttempts = 1000;
     utils.whilst(
       function checkWorkers() {
         return numWorkers < expectedWorkers && attempts++ < maxAttempts;
       },
       function(cb) {
         setTimeout(function() {
-          var errored = false;
+          let errored = false;
           // resolve master each time in oft chance it changes (highly unlikely).
           helper.findSparkMaster(client, function(err, master) {
             if(err) {
               cb();
             }
-            var req = http.get({host: master, port: 7080, path: '/'}, function(response) {
-              var body = '';
+            const req = http.get({host: master, port: 7080, path: '/'}, function(response) {
+              let body = '';
               response.on('data', function (data) {
                 body += data;
               });
               response.on('end', function () {
-                var match = body.match(workerRE);
+                const match = body.match(workerRE);
                 if (match) {
                   numWorkers = parseFloat(match[1]);
                   helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
@@ -830,7 +836,7 @@ const helper = {
  */
 function MapPolyFill(arr) {
   this.arr = arr || [];
-  var self = this;
+  const self = this;
   Object.defineProperty(this, 'size', {
     get: function() { return self.arr.length; },
     configurable: false
@@ -967,7 +973,7 @@ helper.ccm.start = function (nodeLength, options) {
  * @param {Function} callback
  */
 helper.ccm.bootstrapNode = function (nodeIndex, callback) {
-  var ipPrefix = helper.ipPrefix;
+  const ipPrefix = helper.ipPrefix;
   helper.trace('bootstrapping node', nodeIndex);
   helper.ccm.exec([
     'add',
@@ -983,7 +989,7 @@ helper.ccm.bootstrapNode = function (nodeIndex, callback) {
 
 helper.ccm.decommissionNode = function (nodeIndex, callback) {
   helper.trace('decommissioning node', nodeIndex);
-  var args = ['node' + nodeIndex, 'decommission'];
+  const args = ['node' + nodeIndex, 'decommission'];
   // Special case for C* 3.12+, DSE 5.1+, force decommission (see CASSANDRA-12510)
   if (helper.isDseGreaterThan('5.1')) {
     args.push('--force');
@@ -1129,7 +1135,7 @@ helper.ccm.getPath = function (subPath) {
 };
 
 helper.ads._execute = function(processName, params, cb) {
-  var originalProcessName = processName;
+  const originalProcessName = processName;
   if (process.platform.indexOf('win') === 0) {
     params = ['/c', processName].concat(params);
     processName = 'cmd.exe';
@@ -1137,14 +1143,14 @@ helper.ads._execute = function(processName, params, cb) {
   helper.trace('Executing: ' + processName + ' ' + params.join(" "));
 
   // If process hasn't completed in 10 seconds.
-  var timeout = undefined;
+  let timeout = undefined;
   if(cb) {
     timeout = setTimeout(function() {
       cb("Timed out while waiting for " + processName + " to complete.");
     }, 10000);
   }
 
-  var p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
+  const p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
   p.stdout.setEncoding('utf8');
   p.stderr.setEncoding('utf8');
   p.stdout.on('data', function (data) {
@@ -1188,7 +1194,7 @@ helper.ads.start = function(cb) {
     const params = ['-jar', jarFile, '-k', '--confdir', self.dir];
     let initialized = false;
 
-    var timeout = setTimeout(function() {
+    const timeout = setTimeout(function() {
       cb(new Error("Timed out while waiting for ADS server to start."));
     }, 10000);
 
@@ -1229,11 +1235,11 @@ helper.ads.listTickets = function(cb) {
  * @param {Function} cb Callback to invoke on completion.
  */
 helper.ads.acquireTicket = function(username, principal, cb) {
-  var keytab = this.getKeytabPath(username);
+  const keytab = this.getKeytabPath(username);
 
   // Use ktutil on windows, kinit otherwise.
-  var processName = 'kinit';
-  var params = ['-t', keytab, '-k', principal];
+  const processName = 'kinit';
+  const params = ['-t', keytab, '-k', principal];
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
@@ -1253,8 +1259,8 @@ helper.ads.destroyTicket = function(principal, cb) {
   }
 
   // Use ktutil on windows, kdestroy otherwise.
-  var processName = 'kdestroy';
-  var params = [];
+  const processName = 'kdestroy';
+  const params = [];
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
@@ -1286,7 +1292,7 @@ helper.ads.stop = function(cb) {
  * Gets the path of the embedded-ads jar.  Resolved from ADS_JAR environment variable or $HOME/embedded-ads.jar.
  */
 helper.ads.getJar = function () {
-  var adsJar = process.env.ADS_JAR;
+  let adsJar = process.env.ADS_JAR;
   if (!adsJar) {
     helper.trace("ADS_JAR environment variable not set, using $HOME/embedded-ads.jar");
     adsJar = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
@@ -1398,10 +1404,10 @@ FallthroughRetryPolicy.prototype.onRequestError = FallthroughRetryPolicy.prototy
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  var serverVersion = helper.getDseVersion();
+  let serverVersion = helper.getDseVersion();
   if (testVersion.indexOf('dse-') !== 0) {
     // Its comparing C* db engine versions
-    var dseVersion = serverVersion.split('.').slice(0, 2).join('.');
+    const dseVersion = serverVersion.split('.').slice(0, 2).join('.');
     serverVersion = cassandraVersionByDse[dseVersion];
     if (!serverVersion && !warnedDseVersion) {
       warnedDseVersion = true;
@@ -1419,13 +1425,7 @@ function executeIfVersion (testVersion, func, args) {
   }
 }
 
-var warnedDseVersion = false;
-
-var cassandraVersionByDse = {
-  '4.8': '2.1',
-  '5.0': '3.0',
-  '5.1': '3.10'
-};
+let warnedDseVersion = false;
 
 /**
  * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].

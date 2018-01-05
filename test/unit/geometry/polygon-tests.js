@@ -5,13 +5,13 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var rewire = require('rewire');
-var helper = require('../../test-helper');
-var utils = require('../../../lib/utils');
-var Point = require('../../../lib/geometry/point');
-var moduleName = '../../../lib/geometry/polygon';
-var Polygon = require(moduleName);
+const assert = require('assert');
+const rewire = require('rewire');
+const helper = require('../../test-helper');
+const utils = require('../../../lib/utils');
+const Point = require('../../../lib/geometry/point');
+const moduleName = '../../../lib/geometry/polygon';
+const Polygon = require(moduleName);
 
 describe('Polygon', function () {
   describe('constructor', function () {
@@ -32,7 +32,7 @@ describe('Polygon', function () {
         [new Point(0, 1), new Point(3, 4)]
       ]
         .forEach(function (ring) {
-          var polygon = new Polygon(ring);
+          const polygon = new Polygon(ring);
           assert.strictEqual(polygon.rings.length, 1);
           assert.strictEqual(polygon.rings[0].length, ring.length);
           assert.strictEqual(JSON.stringify(polygon.rings[0]), JSON.stringify(ring));
@@ -55,7 +55,7 @@ describe('Polygon', function () {
           [new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)]]
       ]
         .forEach(function (item) {
-          var polygon = Polygon.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
+          const polygon = Polygon.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
           assert.strictEqual(polygon.rings.length, 1);
           polygon.rings[0].forEach(function (p, i) {
             assert.strictEqual(p.toString(), item[1][i].toString());
@@ -65,7 +65,7 @@ describe('Polygon', function () {
   });
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
-      var BEPolygon = rewire(moduleName);
+      const BEPolygon = rewire(moduleName);
       [
         [ [new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)],
           '00000000030000000100000004' +
@@ -79,28 +79,28 @@ describe('Polygon', function () {
           '4008000000000000']
       ]
         .forEach(function (item) {
-          var polygon = new BEPolygon(item[0]);
+          const polygon = new BEPolygon(item[0]);
           polygon.useBESerialization = function () {
             return true;
           };
-          var buffer = polygon.toBuffer();
+          const buffer = polygon.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
         });
     });
     it('should return WKB in a little-endian OS', function () {
-      var LEPolygon = rewire(moduleName);
+      const LEPolygon = rewire(moduleName);
       [
         [ [ new Point(0, 3), new Point(3, 1), new Point(3, 6), new Point(0, 3)],
           '01030000000100000004000000000000000000000000000000000008400000000000000840000000000000f03f0000000000000840000000000000184000000000000000000000000000000840'
         ]
       ]
         .forEach(function (item) {
-          var polygon = new LEPolygon(item[0]);
+          const polygon = new LEPolygon(item[0]);
           polygon.useBESerialization = function () {
             return false;
           };
-          var buffer = polygon.toBuffer();
+          const buffer = polygon.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
         });
@@ -156,14 +156,14 @@ describe('Polygon', function () {
           [[35, 10, 45, 45, 15, 40, 10, 20, 35, 10], [20, 30.1, 35, 35, 30.1, 20, 20, 30.1]]
         ]
       ].forEach(function (item) {
-        var shape = Polygon.fromString(item[0]);
-        var rings = item[1];
+        const shape = Polygon.fromString(item[0]);
+        const rings = item[1];
         assert.strictEqual(shape.rings.length, rings.length);
         rings.forEach(function (ringPoints, ringIndex) {
-          var shapeRing = shape.rings[ringIndex];
+          const shapeRing = shape.rings[ringIndex];
           assert.strictEqual(shapeRing.length, ringPoints.length / 2);
-          for (var i = 0; i < ringPoints.length / 2; i++) {
-            var p = shapeRing[i];
+          for (let i = 0; i < ringPoints.length / 2; i++) {
+            const p = shapeRing[i];
             assert.strictEqual(p.x, ringPoints[i*2]);
             assert.strictEqual(p.y, ringPoints[i*2+1]);
           }

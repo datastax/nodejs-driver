@@ -5,12 +5,12 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var helper = require('../../../test-helper');
-var DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
-var Client = require('../../../../lib/dse-client');
-var ads = helper.ads;
-var cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
+const assert = require('assert');
+const helper = require('../../../test-helper');
+const DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
+const Client = require('../../../../lib/dse-client');
+const ads = helper.ads;
+const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 cDescribe('DseGssapiAuthProvider', function () {
   this.timeout(60000);
@@ -22,13 +22,13 @@ cDescribe('DseGssapiAuthProvider', function () {
   });
   after(ads.stop.bind(ads));
   it('should authenticate against DSE instance using Kerberos', function (done) {
-    var v5 = helper.versionCompare(helper.getDseVersion(), '5.0');
+    const v5 = helper.versionCompare(helper.getDseVersion(), '5.0');
     // Set authenticator based on DSE version.
-    var authenticator = v5 ?
+    const authenticator = v5 ?
       'authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator' :
       'authenticator:com.datastax.bdp.cassandra.auth.KerberosAuthenticator';
 
-    var yamlOptions = [
+    const yamlOptions = [
       'kerberos_options.keytab:' + ads.getKeytabPath('dse'),
       'kerberos_options.service_principal:dse/_HOST@DATASTAX.COM',
       'kerberos_options.http_principal:dse/_HOST@DATASTAX.COM',
@@ -43,7 +43,7 @@ cDescribe('DseGssapiAuthProvider', function () {
       );
     }
 
-    var testClusterOptions = {
+    const testClusterOptions = {
       yaml: authenticator,
       dseYaml: yamlOptions,
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0', '-Djava.security.krb5.conf=' + ads.getKrb5ConfigPath()]
@@ -51,8 +51,8 @@ cDescribe('DseGssapiAuthProvider', function () {
 
     helper.ccm.startAll(1, testClusterOptions, function (err) {
       assert.ifError(err);
-      var authProvider = new DseGssapiAuthProvider();
-      var clientOptions = helper.getOptions({ authProvider: authProvider });
+      const authProvider = new DseGssapiAuthProvider();
+      const clientOptions = helper.getOptions({ authProvider: authProvider });
       helper.connectAndQuery(new Client(clientOptions), done);
     });
   });

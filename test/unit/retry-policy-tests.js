@@ -158,38 +158,38 @@ describe('IdempotenceAwareRetryPolicy', function () {
 describe('FallthroughRetryPolicy', function () {
   describe('constructor', function () {
     it('should create instance of RetryPolicy', function () {
-      var policy = new FallthroughRetryPolicy();
+      const policy = new FallthroughRetryPolicy();
       helper.assertInstanceOf(policy, RetryPolicy);
     });
   });
   describe('#onReadTimeout()', function () {
     it('should return  rethrow decision', function () {
-      var policy = new FallthroughRetryPolicy();
-      var decisionInfo = policy.onReadTimeout();
+      const policy = new FallthroughRetryPolicy();
+      const decisionInfo = policy.onReadTimeout();
       assert.ok(decisionInfo);
       assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
     });
   });
   describe('#onRequestError()', function () {
     it('should return  rethrow decision', function () {
-      var policy = new FallthroughRetryPolicy();
-      var decisionInfo = policy.onRequestError();
+      const policy = new FallthroughRetryPolicy();
+      const decisionInfo = policy.onRequestError();
       assert.ok(decisionInfo);
       assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
     });
   });
   describe('#onUnavailable()', function () {
     it('should return  rethrow decision', function () {
-      var policy = new FallthroughRetryPolicy();
-      var decisionInfo = policy.onUnavailable();
+      const policy = new FallthroughRetryPolicy();
+      const decisionInfo = policy.onUnavailable();
       assert.ok(decisionInfo);
       assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
     });
   });
   describe('#onWriteTimeout()', function () {
     it('should return  rethrow decision', function () {
-      var policy = new FallthroughRetryPolicy();
-      var decisionInfo = policy.onWriteTimeout();
+      const policy = new FallthroughRetryPolicy();
+      const decisionInfo = policy.onWriteTimeout();
       assert.ok(decisionInfo);
       assert.strictEqual(decisionInfo.decision, RetryPolicy.retryDecision.rethrow);
     });

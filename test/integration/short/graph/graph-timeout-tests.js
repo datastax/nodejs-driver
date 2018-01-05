@@ -5,14 +5,14 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var errors = require('../../../../lib/errors');
-var helper = require('../../../test-helper');
-var vdescribe = helper.vdescribe;
-var utils = require('../../../../lib/utils');
-var Client = require('../../../../lib/dse-client');
-var ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
-var DefaultRetryPolicy = require('../../../../lib/policies/retry').RetryPolicy;
+const assert = require('assert');
+const errors = require('../../../../lib/errors');
+const helper = require('../../../test-helper');
+const vdescribe = helper.vdescribe;
+const utils = require('../../../../lib/utils');
+const Client = require('../../../../lib/dse-client');
+const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
+const DefaultRetryPolicy = require('../../../../lib/policies/retry').RetryPolicy;
 
 vdescribe('dse-5.0', 'graph query client timeouts', function () {
   this.timeout(120000);
@@ -24,14 +24,14 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
     ];
   }
   before(function (done) {
-    var client = newInstance();
+    const client = newInstance();
     utils.series([
       function startCcm(next) {
         helper.ccm.startAll(1, {workloads: ['graph']}, next);
       },
       client.connect.bind(client),
       function createGraph(next) {
-        var query = 'system.graph("name1").ifNotExists().create()';
+        const query = 'system.graph("name1").ifNotExists().create()';
         client.executeGraph(query, null, { graphName: null}, next);
       },
       client.shutdown.bind(client)
@@ -62,9 +62,9 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
   });
   describe('when readTimeout not set on profile or graphOptions', function() {
     it('should not encounter a client timeout and instead depend on server timeout', function (done) {
-      var serverTimeoutErrRE = /^script evaluation exceeded.*\s+(\d+) ms/i;
+      const serverTimeoutErrRE = /^script evaluation exceeded.*\s+(\d+) ms/i;
       // the read timeout on socket options should be completely ignored.
-      var client = newInstance({socketOptions: {readTimeout: 1000}, graphOptions: {name: 'name1', source: '1sectimeout'}});
+      const client = newInstance({socketOptions: {readTimeout: 1000}, graphOptions: {name: 'name1', source: '1sectimeout'}});
       utils.series([
         client.connect.bind(client),
         function setTimeoutOnSource (next) {
@@ -75,7 +75,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
             assert.ok(err);
             helper.assertInstanceOf(err, errors.ResponseError);
             // check that the error message indicates a timeout on the server side.
-            var match = err.message.match(serverTimeoutErrRE);
+            const match = err.message.match(serverTimeoutErrRE);
             assert.ok(match);
             assert.ok(match[1]);
             assert.strictEqual(parseFloat(match[1]), 1002);
@@ -88,7 +88,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
   });
   describe('when readTimeout elapses', function () {
     it('should not retry and callback with OperationTimedOutError', function (done) {
-      var client = newInstance({ graphOptions: {name: 'name1'}});
+      const client = newInstance({ graphOptions: {name: 'name1'}});
       utils.series([
         client.connect.bind(client),
         function executeQuery (next) {
@@ -104,7 +104,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
       ], done);
     });
     it('should retry on timeout when using profile with DefaultRetryPolicy', function(done) {
-      var client = newInstance({ graphOptions: {name: 'name1'} , profiles: profiles()});
+      const client = newInstance({ graphOptions: {name: 'name1'} , profiles: profiles()});
       utils.series([
         client.connect.bind(client),
         function executeQuery (next) {
@@ -119,7 +119,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
       ], done);
     });
     it('should retry on timeout when default profile uses DefaultRetryPolicy', function(done) {
-      var client = newInstance({ graphOptions: {name: 'name1'} , profiles: [ new ExecutionProfile('default',
+      const client = newInstance({ graphOptions: {name: 'name1'} , profiles: [ new ExecutionProfile('default',
         {readTimeout: 100, retry: new DefaultRetryPolicy() })]});
       utils.series([
         client.connect.bind(client),
@@ -150,9 +150,9 @@ function newInstance(options) {
  * @param {DseClientOptions} [clientOptions] options to use on client.
  */
 function getTimeoutTest(expectedTimeoutMillis, queryOptions, clientOptions) {
-  var operationTimeoutRE = /.*The host .* did not reply before timeout (\d+) ms.*/;
+  const operationTimeoutRE = /.*The host .* did not reply before timeout (\d+) ms.*/;
   return (function timeoutTest (done) {
-    var client = newInstance(clientOptions);
+    const client = newInstance(clientOptions);
     utils.series([
       client.connect.bind(client),
       function executeQuery (next) {
@@ -162,7 +162,7 @@ function getTimeoutTest(expectedTimeoutMillis, queryOptions, clientOptions) {
           // Having a NoHostAvailableError means that the retry policy insisted on retrying (but there is just 1 node)
           // Graph statements should not be retried
           assert.ok(!(err instanceof errors.NoHostAvailableError), 'Error should be rethrown by the retry policy');
-          var match = err.message.match(operationTimeoutRE);
+          const match = err.message.match(operationTimeoutRE);
           assert.ok(match[1]);
           assert.strictEqual(parseFloat(match[1]), expectedTimeoutMillis);
           next();

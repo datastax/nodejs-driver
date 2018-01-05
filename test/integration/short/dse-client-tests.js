@@ -5,11 +5,11 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var version = require('../../../index').version;
-var helper = require('../../test-helper');
-var Client = require('../../../lib/dse-client');
-var utils = require('../../../lib/utils');
+const assert = require('assert');
+const version = require('../../../index').version;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/dse-client');
+const utils = require('../../../lib/utils');
 
 describe('Client', function() {
   this.timeout(60000);
@@ -18,12 +18,12 @@ describe('Client', function() {
   });
   after(helper.ccm.remove.bind(helper.ccm));
   it('should log the module versions on first connect only', function(done) {
-    var client = new Client(helper.getOptions());
-    var versionLogRE = /^Using DSE driver v(.+)$/;
-    var versionMessage = undefined;
+    const client = new Client(helper.getOptions());
+    const versionLogRE = /^Using DSE driver v(.+)$/;
+    let versionMessage = undefined;
 
     client.on('log', function(level, className, message) {
-      var match = message.match(versionLogRE);
+      const match = message.match(versionLogRE);
       if(match) {
         versionMessage = { level: level, match: match };
       }

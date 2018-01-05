@@ -6,19 +6,19 @@
  */
 'use strict';
 
-var assert = require('assert');
-var util = require('util');
-var helper = require('../test-helper');
-var GraphSONReader = require('../../lib/encoder-extensions').GraphSONReader;
-var graphModule = require('../../lib/graph');
-var types = require('../../lib/types');
-var utils = require('../../lib/utils');
-var geometry = require('../../lib/geometry');
+const assert = require('assert');
+const util = require('util');
+const helper = require('../test-helper');
+const GraphSONReader = require('../../lib/encoder-extensions').GraphSONReader;
+const graphModule = require('../../lib/graph');
+const types = require('../../lib/types');
+const utils = require('../../lib/utils');
+const geometry = require('../../lib/geometry');
 
 describe('GraphSONReader', function () {
   describe('#read()', function () {
-    var reader = new GraphSONReader();
-    var buffer = utils.allocBufferFromString('010203', 'hex');
+    const reader = new GraphSONReader();
+    const buffer = utils.allocBufferFromString('010203', 'hex');
     (function defineObjectTest() {
       [
         [ 'g:UUID', types.Uuid, types.Uuid.random() ],
@@ -32,11 +32,11 @@ describe('GraphSONReader', function () {
         [ 'dse:Polygon', geometry.Polygon, new geometry.Polygon.fromString('POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))')]
       ].forEach(function (item) {
         it('should read ' + item[0], function () {
-          var obj = {
+          const obj = {
             "@type": item[0],
             "@value": item[2]
           };
-          var result = reader.read(obj);
+          const result = reader.read(obj);
           helper.assertInstanceOf(result, item[1]);
           if (result.equals) {
             assert.ok(result.equals(item[3] || item[2]));
@@ -61,25 +61,25 @@ describe('GraphSONReader', function () {
           "@value": 31.2
         }, 31.2]
       ].forEach(function (item) {
-        var result = reader.read(item[0]);
+        const result = reader.read(item[0]);
         assert.strictEqual(result, item[1]);
         assert.strictEqual(typeof result, 'number');
       });
     });
     it('should read a Date', function () {
-      var obj = {
+      const obj = {
         "@type": "gx:Instant",
         "@value": 123
       };
-      var result = reader.read(obj);
+      const result = reader.read(obj);
       helper.assertInstanceOf(result, Date);
       assert.strictEqual(result.getTime(), 123);
     });
     it('should read Vertex with nested properties', function () {
-      var obj = {"@type":"g:Vertex", "@value":{"id":{"@type":"g:Int32","@value":1}, "label":"person",
+      const obj = {"@type":"g:Vertex", "@value":{"id":{"@type":"g:Int32","@value":1}, "label":"person",
         "properties":{"name":[{"id":{"@type":"g:Int64","@value":0},"value":"marko"}],
           "age":[{"id":{"@type":"g:Int64","@value":1},"value":{"@type":"g:Int32","@value":29}}]}}};
-      var result = reader.read(obj);
+      const result = reader.read(obj);
       assert.ok(result instanceof graphModule.Vertex);
       assert.strictEqual(result.label, 'person');
       assert.strictEqual(typeof result.id, 'number');
@@ -93,12 +93,12 @@ describe('GraphSONReader', function () {
       assert.strictEqual(result.properties['age'][0].value, 29);
     });
     it('should read a Path', function () {
-      var obj = {"@type":"g:Path","@value":{"labels":[["a"],["b","c"],[]],"objects":[
+      const obj = {"@type":"g:Path","@value":{"labels":[["a"],["b","c"],[]],"objects":[
         {"@type":"g:Vertex","@value":{"id":{"@type":"g:Int32","@value":1},"label":"person","properties":{"name":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"g:Int64","@value":0},"value":"marko","label":"name"}}],"age":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"g:Int64","@value":1},"value":{"@type":"g:Int32","@value":29},"label":"age"}}]}}},
         {"@type":"g:Vertex","@value":{"id":{"@type":"g:Int32","@value":3},"label":"software","properties":{"name":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"g:Int64","@value":4},"value":"lop","label":"name"}}],"lang":[{"@type":"g:VertexProperty","@value":{"id":{"@type":"g:Int64","@value":5},"value":"java","label":"lang"}}]}}},
         "lop"
       ]}};
-      var result = reader.read(obj);
+      const result = reader.read(obj);
       assert.ok(result);
       assert.ok(result.objects);
       assert.ok(result.labels);

@@ -5,13 +5,13 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var rewire = require('rewire');
-var helper = require('../../test-helper');
-var utils = require('../../../lib/utils');
-var Point = require('../../../lib/geometry/point');
-var moduleName = '../../../lib/geometry/line-string';
-var LineString = require(moduleName);
+const assert = require('assert');
+const rewire = require('rewire');
+const helper = require('../../test-helper');
+const utils = require('../../../lib/utils');
+const Point = require('../../../lib/geometry/point');
+const moduleName = '../../../lib/geometry/line-string';
+const LineString = require(moduleName);
 
 describe('LineString', function () {
   describe('constructor', function () {
@@ -32,7 +32,7 @@ describe('LineString', function () {
         [new Point(0, 1), new Point(3, 4)]
       ]
         .forEach(function (points) {
-          var line = new LineString(points);
+          const line = new LineString(points);
           assert.strictEqual(line.points.length, points.length);
         });
     });
@@ -48,7 +48,7 @@ describe('LineString', function () {
           [ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111)]]
       ]
         .forEach(function (item) {
-          var line = LineString.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
+          const line = LineString.fromBuffer(utils.allocBufferFromString(item[0], 'hex'));
           assert.strictEqual(line.points.length, item[1].length);
           line.points.forEach(function (p, i) {
             assert.strictEqual(p.toString(), item[1][i].toString());
@@ -58,7 +58,7 @@ describe('LineString', function () {
   });
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
-      var BELineString = rewire(moduleName);
+      const BELineString = rewire(moduleName);
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '000000000200000002000000000000000000000000000000003ff0000000000000bff3333333333333'],
@@ -70,17 +70,17 @@ describe('LineString', function () {
           '000000000200000003408490000000000040203f35b771f1b53ff00000000000004008000000000000bff0000000000000405bc00000000000']
       ]
         .forEach(function (item) {
-          var line = new BELineString(item[0]);
+          const line = new BELineString(item[0]);
           line.useBESerialization = function () {
             return true;
           };
-          var buffer = line.toBuffer();
+          const buffer = line.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
         });
     });
     it('should return WKB in a little-endian OS', function () {
-      var LELineString = rewire(moduleName);
+      const LELineString = rewire(moduleName);
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '01020000000200000000000000000000000000000000000000000000000000f03f333333333333f3bf'],
@@ -92,11 +92,11 @@ describe('LineString', function () {
           '0102000000030000000000000000908440b5f171b7353f2040000000000000f03f0000000000000840000000000000f0bf0000000000c05b40']
       ]
         .forEach(function (item) {
-          var line = new LELineString(item[0]);
+          const line = new LELineString(item[0]);
           line.useBESerialization = function () {
             return false;
           };
-          var buffer = line.toBuffer();
+          const buffer = line.toBuffer();
           helper.assertInstanceOf(buffer, Buffer);
           assert.strictEqual(buffer.toString('hex'), item[1]);
         });
@@ -109,7 +109,7 @@ describe('LineString', function () {
         [[ new Point(658, 8.1234567), new Point(1, 3), new Point(-1, 111) ], 'LINESTRING (658 8.1234567, 1 3, -1 111)']
       ]
         .forEach(function (item) {
-          var p = new LineString(item[0]);
+          const p = new LineString(item[0]);
           assert.strictEqual(p.toString(), item[1]);
         });
     });
@@ -122,11 +122,11 @@ describe('LineString', function () {
         ['LINESTRING (-10 20.9,30  40)', [-10, 20.9, 30, 40]],
         ['LINESTRING (10 20, 30 40, -50.1 -60.1)', [10, 20, 30, 40, -50.1, -60.1]]
       ].forEach(function (item) {
-        var l = LineString.fromString(item[0]);
-        var coordinates = item[1];
+        const l = LineString.fromString(item[0]);
+        const coordinates = item[1];
         assert.strictEqual(l.points.length, coordinates.length / 2);
-        for (var i = 0; i < coordinates.length / 2; i++) {
-          var p = l.points[i];
+        for (let i = 0; i < coordinates.length / 2; i++) {
+          const p = l.points[i];
           assert.strictEqual(p.x, coordinates[i*2]);
           assert.strictEqual(p.y, coordinates[i*2+1]);
         }

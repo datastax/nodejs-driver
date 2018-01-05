@@ -5,17 +5,17 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var Client = require('../../lib/dse-client');
-var clientOptions = require('../../lib/client-options');
-var ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-var helper = require('../test-helper');
-var types = require('../../lib/types');
-var Long = types.Long;
-var utils = require('../../lib/utils');
-var policies = require('../../lib/policies');
-var errors = require('../../lib/errors');
-var DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
+const assert = require('assert');
+const Client = require('../../lib/dse-client');
+const clientOptions = require('../../lib/client-options');
+const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
+const helper = require('../test-helper');
+const types = require('../../lib/types');
+const Long = types.Long;
+const utils = require('../../lib/utils');
+const policies = require('../../lib/policies');
+const errors = require('../../lib/errors');
+const DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
 
 describe('Client', function () {
   describe('constructor', function () {
@@ -26,9 +26,9 @@ describe('Client', function () {
       }, errors.ArgumentError);
     });
     it('should set DseLoadBalancingPolicy as default', function () {
-      var client = new Client({ contactPoints: ['host1'] });
+      let client = new Client({ contactPoints: ['host1'] });
       helper.assertInstanceOf(client.options.policies.loadBalancing, DseLoadBalancingPolicy);
-      var retryPolicy = new policies.retry.RetryPolicy();
+      const retryPolicy = new policies.retry.RetryPolicy();
       client = new Client({
         contactPoints: ['host1'],
         // with some of the policies specified
@@ -41,8 +41,8 @@ describe('Client', function () {
   describe('#connect()', function () {
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
-        var client = new Client(helper.baseOptions);
-        var p = client.connect();
+        const client = new Client(helper.baseOptions);
+        const p = client.connect();
         helper.assertInstanceOf(p, Promise);
         p.catch(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
@@ -53,8 +53,8 @@ describe('Client', function () {
   });
   describe('#executeGraph()', function () {
     it('should allow optional parameters', function () {
-      var client = new Client({ contactPoints: ['host1']});
-      var parameters = {};
+      const client = new Client({ contactPoints: ['host1']});
+      let parameters = {};
       client.execute = function (query, params, options, callback) {
         parameters = {
           query: query,
@@ -77,7 +77,7 @@ describe('Client', function () {
       assert.strictEqual(typeof parameters.callback, 'function');
     });
     it('should not allow a namespace of type different than string', function () {
-      var client = new Client({ contactPoints: ['host1']});
+      const client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       assert.doesNotThrow(function () {
         client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop);
@@ -87,7 +87,7 @@ describe('Client', function () {
       }, TypeError);
     });
     it('should not allow a array query parameters', function () {
-      var client = new Client({ contactPoints: ['host1']});
+      const client = new Client({ contactPoints: ['host1']});
       client.execute = helper.noop;
       client.executeGraph('Q1', [], { }, function (err) {
         helper.assertInstanceOf(err, TypeError);
@@ -95,7 +95,7 @@ describe('Client', function () {
       });
     });
     it('should execute with query and callback parameters', function (done) {
-      var client = new Client({ contactPoints: ['host1']});
+      const client = new Client({ contactPoints: ['host1']});
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q2');
         assert.strictEqual(params, null);
@@ -106,7 +106,7 @@ describe('Client', function () {
       client.executeGraph('Q2', helper.noop);
     });
     it('should execute with query, parameters and callback parameters', function (done) {
-      var client = new Client({ contactPoints: ['host1']});
+      const client = new Client({ contactPoints: ['host1']});
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q3');
         assert.deepEqual(params, [JSON.stringify({ a: 1})]);
@@ -117,8 +117,8 @@ describe('Client', function () {
       client.executeGraph('Q3', { a: 1}, helper.throwop);
     });
     it('should execute with all parameters defined', function (done) {
-      var client = new Client({ contactPoints: ['host1']});
-      var optionsParameter = { k: { } };
+      const client = new Client({ contactPoints: ['host1']});
+      const optionsParameter = { k: { } };
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q4');
         assert.deepEqual(params, [JSON.stringify({ a: 2})]);
@@ -130,8 +130,8 @@ describe('Client', function () {
       client.executeGraph('Q4', { a: 2}, optionsParameter, helper.throwop);
     });
     it('should set the same default options when not set', function (done) {
-      var client = new Client({ contactPoints: ['host1']});
-      var optionsArray = [];
+      const client = new Client({ contactPoints: ['host1']});
+      const optionsArray = [];
       client.execute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q5');
         assert.deepEqual(params, [JSON.stringify({ z: 3})]);
@@ -146,7 +146,7 @@ describe('Client', function () {
       done();
     });
     it('should set the default payload for the executions', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           name: 'name1',
@@ -154,8 +154,8 @@ describe('Client', function () {
           readConsistency: types.consistencies.localOne
         }
       });
-      var optionsParameter = { anotherOption: { k: 'v'}};
-      var actualOptions = null;
+      const optionsParameter = { anotherOption: { k: 'v'}};
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -172,14 +172,14 @@ describe('Client', function () {
     });
     it('should set the default readTimeout in the payload', function () {
       //noinspection JSCheckFunctionSignatures
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           source: 'x',
           writeConsistency: types.consistencies.two
         }
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (q, p, options) {
         actualOptions = options;
       };  
@@ -218,13 +218,13 @@ describe('Client', function () {
       assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
     });
     it('should set the read and write consistency levels', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           name: 'name10'
         }
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -234,7 +234,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name10');
       assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
       assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
-      var optionsParameter = {
+      let optionsParameter = {
         graphReadConsistency: types.consistencies.localQuorum
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
@@ -258,9 +258,9 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
     });
     it('should reuse the default payload for the executions', function (done) {
-      var client = new Client({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
-      var optionsParameter = { anotherOption: { k: 'v2'}};
-      var actualOptions = [];
+      const client = new Client({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
+      const optionsParameter = { anotherOption: { k: 'v2'}};
+      const actualOptions = [];
       client.execute = function (query, params, options) {
         //do not use the actual object
         assert.notStrictEqual(optionsParameter, options);
@@ -277,12 +277,12 @@ describe('Client', function () {
       done();
     });
     it('should set the payload with the options provided', function (done) {
-      var client = new Client({ contactPoints: ['host1'], graphOptions: {
+      const client = new Client({ contactPoints: ['host1'], graphOptions: {
         language: 'groovy2',
         source: 'another-source',
         name: 'namespace2'
       }});
-      var optionsParameter = { anotherOption: { k: 'v3'}};
+      const optionsParameter = { anotherOption: { k: 'v3'}};
       client.execute = function (query, params, options) {
         //do not use the actual object
         assert.notStrictEqual(optionsParameter, options);
@@ -297,10 +297,10 @@ describe('Client', function () {
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwop);
     });
     it('should set the payload with the user/role provided', function () {
-      var client = new Client({ contactPoints: ['host1'], graphOptions: {
+      const client = new Client({ contactPoints: ['host1'], graphOptions: {
         name: 'name2'
       }});
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (q, p, options) {
         actualOptions = options;
       };
@@ -309,7 +309,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name2');
       assert.strictEqual(actualOptions.customPayload[clientOptions.proxyExecuteKey], undefined);
-      var previousPayload = actualOptions.customPayload;
+      const previousPayload = actualOptions.customPayload;
       client.executeGraph('Q5', { 'x': 1 }, { executeAs: 'alice' }, helper.throwop);
       assert.notStrictEqual(previousPayload, actualOptions.customPayload);
       helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
@@ -317,7 +317,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload[clientOptions.proxyExecuteKey], 'alice');
     });
     it('should set the options according to default profile', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           language: 'groovy1',
@@ -333,7 +333,7 @@ describe('Client', function () {
           })
         ]
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -347,7 +347,7 @@ describe('Client', function () {
       helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
     });
     it('should set the options according to specified profile', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           source: 'source1',
@@ -370,8 +370,8 @@ describe('Client', function () {
           })
         ]
       });
-      var optionsParameter = { executionProfile: 'graph-olap' };
-      var actualOptions = null;
+      const optionsParameter = { executionProfile: 'graph-olap' };
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -383,7 +383,7 @@ describe('Client', function () {
       helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'THREE');
       helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
       assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(99000)));
-      var lastOptions = actualOptions;
+      const lastOptions = actualOptions;
       client.executeGraph('Q2', { 'x': 2 }, optionsParameter, helper.throwop);
       assert.notStrictEqual(actualOptions, lastOptions);
       // Reusing same customPayload instance
@@ -394,7 +394,7 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.retry, optionsParameter.retry);
     });
     it('should let the core driver deal with profile specified not found', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
           source: 'source1'
@@ -407,8 +407,8 @@ describe('Client', function () {
           })
         ]
       });
-      var optionsParameter = { executionProfile: 'profile-x' };
-      var actualOptions = null;
+      const optionsParameter = { executionProfile: 'profile-x' };
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -418,10 +418,10 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.executionProfile, 'profile-x');
     });
     it('should use the retry policy from the default profile when specified', function () {
-      var retryPolicy1 = new policies.retry.RetryPolicy();
-      var retryPolicy2 = new policies.retry.FallthroughRetryPolicy();
-      var retryPolicy3 = new policies.retry.FallthroughRetryPolicy();
-      var client = new Client({
+      const retryPolicy1 = new policies.retry.RetryPolicy();
+      const retryPolicy2 = new policies.retry.FallthroughRetryPolicy();
+      const retryPolicy3 = new policies.retry.FallthroughRetryPolicy();
+      const client = new Client({
         contactPoints: ['host1'],
         profiles: [
           new ExecutionProfile('default', {
@@ -432,7 +432,7 @@ describe('Client', function () {
           })
         ]
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -450,9 +450,9 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.retry, retryPolicy3);
     });
     it('should use specific retry policy when not specified in the default profile', function () {
-      var retryPolicy1 = new policies.retry.RetryPolicy();
-      var retryPolicy2 = new policies.retry.RetryPolicy();
-      var client = new Client({
+      const retryPolicy1 = new policies.retry.RetryPolicy();
+      const retryPolicy2 = new policies.retry.RetryPolicy();
+      const client = new Client({
         contactPoints: ['host1'],
         profiles: [
           new ExecutionProfile('default'),
@@ -461,7 +461,7 @@ describe('Client', function () {
           })
         ]
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -482,9 +482,9 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
     it('should use specific retry policy when no default profile specified', function () {
-      var retryPolicy1 = new policies.retry.RetryPolicy();
-      var retryPolicy2 = new policies.retry.RetryPolicy();
-      var client = new Client({
+      const retryPolicy1 = new policies.retry.RetryPolicy();
+      const retryPolicy2 = new policies.retry.RetryPolicy();
+      const client = new Client({
         contactPoints: ['host1'],
         profiles: [
           new ExecutionProfile('graph-olap', {
@@ -492,7 +492,7 @@ describe('Client', function () {
           })
         ]
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -513,7 +513,7 @@ describe('Client', function () {
       assert.strictEqual(actualOptions.retry, retryPolicy2);
     });
     it('should use the graph language provided in the profile', function () {
-      var client = new Client({
+      const client = new Client({
         contactPoints: ['host1'],
         profiles: [
           new ExecutionProfile('graph-olap', {
@@ -521,7 +521,7 @@ describe('Client', function () {
           })
         ]
       });
-      var actualOptions = null;
+      let actualOptions = null;
       client.execute = function (query, params, options) {
         actualOptions = options;
       };
@@ -534,11 +534,11 @@ describe('Client', function () {
     });
     context('with analytics queries', function () {
       it('should query for analytics master', function (done) {
-        var client = new Client({ contactPoints: ['host1'], graphOptions: {
+        const client = new Client({ contactPoints: ['host1'], graphOptions: {
           source: 'a',
           name: 'name1'
         }});
-        var actualOptions;
+        let actualOptions;
         client.execute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
@@ -572,7 +572,7 @@ describe('Client', function () {
         ], done);
       });
       it('should query for analytics master when using execution profile', function (done) {
-        var client = new Client({
+        const client = new Client({
           contactPoints: ['host1'],
           profiles: [
             new ExecutionProfile('analytics', {
@@ -582,7 +582,7 @@ describe('Client', function () {
             })
           ]
         });
-        var actualOptions;
+        let actualOptions;
         client.execute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
@@ -603,13 +603,13 @@ describe('Client', function () {
         });
       });
       it('should call address translator', function (done) {
-        var translatorCalled = 0;
-        var translator = new policies.addressResolution.AddressTranslator();
+        let translatorCalled = 0;
+        const translator = new policies.addressResolution.AddressTranslator();
         translator.translate = function (ip, port, cb) {
           translatorCalled++;
           cb(ip + ':' + port);
         };
-        var client = new Client({
+        const client = new Client({
           contactPoints: ['host1'], 
           graphOptions: { 
             source: 'a', 
@@ -619,7 +619,7 @@ describe('Client', function () {
             addressResolution: translator
           }
         });
-        var actualOptions;
+        let actualOptions;
         client.execute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
@@ -641,11 +641,11 @@ describe('Client', function () {
         });
       });
       it('should set preferredHost to null when RPC errors', function (done) {
-        var client = new Client({ contactPoints: ['host1'], graphOptions: {
+        const client = new Client({ contactPoints: ['host1'], graphOptions: {
           source: 'a',
           name: 'name1'
         }});
-        var actualOptions;
+        let actualOptions;
         client.execute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(new Error('Test error'));
@@ -663,11 +663,11 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function () {
-        var client = new Client(helper.baseOptions);
-        var called = 0;
-        var callback;
-        var options;
-        var params;
+        const client = new Client(helper.baseOptions);
+        let called = 0;
+        let callback;
+        let options;
+        let params;
         client.execute = function (query, p, o, cb) {
           called++;
           params = p;
@@ -675,16 +675,16 @@ describe('Client', function () {
           callback = cb;
           cb(null, { rows: [] });
         };
-        var expectedParams = { id: {} };
-        var expectedOptions = { consistency: types.consistencies.three };
-        var p = client.executeGraph('g.V()');
+        const expectedParams = { id: {} };
+        const expectedOptions = { consistency: types.consistencies.three };
+        const p = client.executeGraph('g.V()');
         helper.assertInstanceOf(p, Promise);
         return p
           .then(function () {
             // Should use a callback internally
             assert.strictEqual(typeof callback, 'function');
             assert.strictEqual(called, 1);
-            var p = client.executeGraph('g.V(id)', expectedParams);
+            const p = client.executeGraph('g.V(id)', expectedParams);
             helper.assertInstanceOf(p, Promise);
             return p;
           })
@@ -693,7 +693,7 @@ describe('Client', function () {
             assert.ok(params);
             // Single parameter with json parameters
             assert.strictEqual(params[0], JSON.stringify(expectedParams));
-            var p = client.executeGraph('g.V(id)', expectedParams, expectedOptions);
+            const p = client.executeGraph('g.V(id)', expectedParams, expectedOptions);
             helper.assertInstanceOf(p, Promise);
             return p;
           })

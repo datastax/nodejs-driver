@@ -5,10 +5,10 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var api = require('../../index');
-var auth = require('../../lib/auth');
-var helper = require('../test-helper');
+const assert = require('assert');
+const api = require('../../index');
+const auth = require('../../lib/auth');
+const helper = require('../test-helper');
 
 describe('API', function () {
   it('should expose auth module', function () {

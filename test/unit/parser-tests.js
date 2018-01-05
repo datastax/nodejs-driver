@@ -116,7 +116,7 @@ describe('Parser', function () {
     it('should read a RESULT result with trace id chunked', function (done) {
       const parser = newInstance();
       let responseCounter = 0;
-      var byRowCompleted = false;
+      let byRowCompleted = false;
       parser.on('readable', function () {
         const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -770,7 +770,7 @@ describe('Parser', function () {
     describe('with multiple chunk lengths', function () {
       const parser = newInstance();
       let result;
-      var byRowCompleted;
+      let byRowCompleted;
       parser.on('readable', function () {
         let item;
         while ((item = parser.read())) {
@@ -845,7 +845,7 @@ describe('Parser', function () {
       const parser = newInstance();
       protocol.pipe(parser);
       let result;
-      var byRowCompleted;
+      let byRowCompleted;
       parser.on('readable', function () {
         let item;
         while ((item = parser.read())) {
@@ -1033,7 +1033,7 @@ describe('Parser', function () {
       const parser = newInstance();
       const rowLength = 2;
       let rowCounter = 0;
-      var byRowCompleted = false;
+      let byRowCompleted = false;
       parser.on('readable', function () {
         const item = parser.read();
         assert.strictEqual(item.header.opcode, types.opcodes.result);

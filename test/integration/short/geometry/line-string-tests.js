@@ -5,30 +5,30 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 'use strict';
-var assert = require('assert');
-var util = require('util');
-var helper = require('../../../test-helper');
-var Client = require('../../../../lib/dse-client');
-var vdescribe = helper.vdescribe;
-var geometry = require('../../../../lib/geometry');
-var types = require('../../../../lib/types');
-var utils = require('../../../../lib/utils');
-var Point = geometry.Point;
-var LineString = geometry.LineString;
-var Uuid = types.Uuid;
-var Tuple = types.Tuple;
+const assert = require('assert');
+const util = require('util');
+const helper = require('../../../test-helper');
+const Client = require('../../../../lib/dse-client');
+const vdescribe = helper.vdescribe;
+const geometry = require('../../../../lib/geometry');
+const types = require('../../../../lib/types');
+const utils = require('../../../../lib/utils');
+const Point = geometry.Point;
+const LineString = geometry.LineString;
+const Uuid = types.Uuid;
+const Tuple = types.Tuple;
 
 vdescribe('dse-5.0', 'LineString', function () {
   this.timeout(120000);
   before(function (done) {
-    var client = new Client(helper.getOptions());
+    const client = new Client(helper.getOptions());
     utils.series([
       function (next) {
         helper.ccm.startAll(1, {}, next);
       },
       client.connect.bind(client),
       function createAll(next) {
-        var queries = [
+        const queries = [
           "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1} and durable_writes = false",
           "use ks1",
           "CREATE TABLE lines (id text, value 'LineStringType', PRIMARY KEY (id))",
@@ -47,13 +47,13 @@ vdescribe('dse-5.0', 'LineString', function () {
     ], done);
   });
   it('should parse lines', function (done) {
-    var client = new Client(helper.getOptions());
+    const client = new Client(helper.getOptions());
     utils.series([
       client.connect.bind(client),
       function test(next) {
         client.execute('SELECT * FROM ks1.lines', function (err, result) {
           assert.ifError(err);
-          var map = helper.keyedById(result);
+          const map = helper.keyedById(result);
           [
             ['LINESTRING (0 0, 1 1)', new LineString(new Point(0, 0), new Point(1, 1))],
             ['LINESTRING (1 3, 2 6, 3 9)', new LineString(new Point(1, 3), new Point(2, 6), new Point(3, 9))],
@@ -61,11 +61,11 @@ vdescribe('dse-5.0', 'LineString', function () {
             ['LINESTRING EMPTY', new LineString()]
           ]
             .forEach(function (item) {
-              var l = map[item[0]];
+              const l = map[item[0]];
               helper.assertInstanceOf(l, LineString);
               assert.strictEqual(l.points.length, item[1].points.length);
               l.points.forEach(function (p1, i) {
-                var p2 = item[1].points[i];
+                const p2 = item[1].points[i];
                 assert.strictEqual(p1.x, p2.x);
                 assert.strictEqual(p1.y, p2.y);
               });
@@ -78,30 +78,30 @@ vdescribe('dse-5.0', 'LineString', function () {
     ], done);
   });
   [0, 1].forEach(function (prepare) {
-    var name = prepare ? 'prepared' : 'simple';
+    const name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode lines for %s queries', name), function (done) {
-      var client = new Client(helper.getOptions());
+      const client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function test(next) {
-          var values = [
+          const values = [
             new LineString(new Point(1.2, 3.9), new Point(6.2, 18.9)),
             new LineString(new Point(-1.2, 1.9), new Point(111, 22)),
             new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9))
           ];
-          var insertQuery = 'INSERT INTO ks1.lines (id, value) VALUES (?, ?)';
-          var selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.lines WHERE id = ?';
-          var counter = 0;
+          const insertQuery = 'INSERT INTO ks1.lines (id, value) VALUES (?, ?)';
+          const selectQuery = 'SELECT toJSON(value) as json_value FROM ks1.lines WHERE id = ?';
+          let counter = 0;
           utils.each(values, function (line, eachNext) {
-            var id = util.format('%s-%d', name, ++counter);
+            const id = util.format('%s-%d', name, ++counter);
             client.execute(insertQuery, [id, line], { prepare: prepare }, function (err) {
               assert.ifError(err);
               client.execute(selectQuery, [id], function (err, result) {
                 assert.ifError(err);
-                var row = result.first();
+                const row = result.first();
                 assert.ok(row);
                 //use json value to avoid decoding client side in this test
-                var value = JSON.parse(row['json_value']);
+                const value = JSON.parse(row['json_value']);
                 assert.deepEqual(value.coordinates, line.points.map(function (p) {
                   return [p.x, p.y];
                 }));
@@ -114,15 +114,15 @@ vdescribe('dse-5.0', 'LineString', function () {
       ], done);
     });
     it(util.format('should be able to retrieve data where line is partition key for %s queries', name), function (done) {
-      var client = new Client(helper.getOptions());
-      var id = new LineString(new Point(0, 0), new Point(1, 1));
+      const client = new Client(helper.getOptions());
+      const id = new LineString(new Point(0, 0), new Point(1, 1));
       utils.series([
         client.connect.bind(client),
         function (next) {
-          var selectQuery = 'SELECT value FROM ks1.keyed WHERE id = ?';
+          const selectQuery = 'SELECT value FROM ks1.keyed WHERE id = ?';
           client.execute(selectQuery, [id], function (err, result) {
             assert.ifError(err);
-            var row = result.first();
+            const row = result.first();
             assert.ok(row);
             assert.strictEqual(row['value'], 'hello');
             next();
@@ -133,14 +133,14 @@ vdescribe('dse-5.0', 'LineString', function () {
     });
   });
   describe('with collections, tuples and udts', function () {
-    var line = new LineString(new Point(0, 0), new Point(1, 1));
-    var line2 = new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9));
+    const line = new LineString(new Point(0, 0), new Point(1, 1));
+    const line2 = new LineString(new Point(0.21222, 32.9), new Point(10.21222, 312.9111), new Point(4.21222, 6122.9));
     before(function (done) {
-      var client = new Client(helper.getOptions());
+      const client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),
         function createAll(next) {
-          var queries = [
+          const queries = [
             "use ks1",
             "CREATE TYPE linet (f text, v 'LineStringType')",
             "CREATE TABLE tbl_udts (id uuid PRIMARY KEY, udt_col frozen<linet>)",
@@ -157,13 +157,13 @@ vdescribe('dse-5.0', 'LineString', function () {
       ], done);
     });
     [0, 1].forEach(function (prepare) {
-      var name = prepare ? 'prepared' : 'simple';
+      const name = prepare ? 'prepared' : 'simple';
       it(util.format('should create and retrieve lines in a udt for %s queries', name), function (done) {
-        var client = new Client(helper.getOptions());
-        var insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
-        var selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
-        var id = Uuid.random();
-        var udt = { f: 'hello', v: line};
+        const client = new Client(helper.getOptions());
+        const insertQuery = 'INSERT INTO ks1.tbl_udts (id, udt_col) values (?, ?)';
+        const selectQuery = 'SELECT udt_col FROM ks1.tbl_udts WHERE id = ?';
+        const id = Uuid.random();
+        const udt = { f: 'hello', v: line};
 
         utils.series([
           client.connect.bind(client),
@@ -172,7 +172,7 @@ vdescribe('dse-5.0', 'LineString', function () {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);
-                var row = result.first();
+                const row = result.first();
                 assert.ok(row);
                 assert.deepEqual(row['udt_col'], udt);
                 next();
@@ -182,18 +182,18 @@ vdescribe('dse-5.0', 'LineString', function () {
           client.shutdown.bind(client)
         ], done);
       });
-      var tupleTestCase = it;
+      let tupleTestCase = it;
       if (prepare === 0) {
         //tuples are not supported in simple statements in the core driver
         //mark it as pending
         tupleTestCase = xit;
       }
       tupleTestCase(util.format('should create and retrieve lines in a tuple for %s queries', name), function (done) {
-        var client = new Client(helper.getOptions());
-        var insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
-        var selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
-        var id = Uuid.random();
-        var tuple = new Tuple(0, line);
+        const client = new Client(helper.getOptions());
+        const insertQuery = 'INSERT INTO ks1.tbl_tuple (id, tuple_col) values (?, ?)';
+        const selectQuery = 'SELECT tuple_col FROM ks1.tbl_tuple WHERE id = ?';
+        const id = Uuid.random();
+        const tuple = new Tuple(0, line);
 
         utils.series([
           client.connect.bind(client),
@@ -202,7 +202,7 @@ vdescribe('dse-5.0', 'LineString', function () {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);
-                var row = result.first();
+                const row = result.first();
                 assert.ok(row);
                 assert.deepEqual(row['tuple_col'], tuple);
                 next();
@@ -214,11 +214,11 @@ vdescribe('dse-5.0', 'LineString', function () {
       });
       ['list', 'set'].forEach(function (colType) {
         it(util.format('should create and retrieve lines in a %s for %s queries', colType, name), function (done) {
-          var client = new Client(helper.getOptions());
-          var insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
-          var selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
-          var id = Uuid.random();
-          var data = [line, line2];
+          const client = new Client(helper.getOptions());
+          const insertQuery = util.format('INSERT INTO ks1.tbl_%s (id, %s_col) values (?, ?)', colType, colType);
+          const selectQuery = util.format('SELECT %s_col FROM ks1.tbl_%s WHERE id = ?', colType, colType);
+          const id = Uuid.random();
+          const data = [line, line2];
           utils.series([
             client.connect.bind(client),
             function (next) {
@@ -226,7 +226,7 @@ vdescribe('dse-5.0', 'LineString', function () {
                 assert.ifError(err);
                 client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                   assert.ifError(err);
-                  var row = result.first();
+                  const row = result.first();
                   assert.ok(row);
                   assert.deepEqual(row[util.format('%s_col', colType)], data);
                   next();
@@ -238,11 +238,11 @@ vdescribe('dse-5.0', 'LineString', function () {
         });
       });
       it(util.format('should create and retrieve lines in a map for %s queries', name), function (done) {
-        var client = new Client(helper.getOptions());
-        var insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
-        var selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
-        var id = Uuid.random();
-        var map = { line : line };
+        const client = new Client(helper.getOptions());
+        const insertQuery = 'INSERT INTO ks1.tbl_map (id, map_col) values (?, ?)';
+        const selectQuery = 'SELECT map_col FROM ks1.tbl_map WHERE id = ?';
+        const id = Uuid.random();
+        const map = { line : line };
 
         utils.series([
           client.connect.bind(client),
@@ -251,7 +251,7 @@ vdescribe('dse-5.0', 'LineString', function () {
               assert.ifError(err);
               client.execute(selectQuery, [id], {prepare: prepare}, function (err, result) {
                 assert.ifError(err);
-                var row = result.first();
+                const row = result.first();
                 assert.ok(row);
                 assert.deepEqual(row['map_col'], map);
                 next();

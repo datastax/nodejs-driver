@@ -2,6 +2,7 @@
 const assert = require('assert');
 
 const tokenizer = require('../../lib/tokenizer');
+const token = require('../../lib/token');
 const Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 const RandomTokenizer = tokenizer.RandomTokenizer;
 const types = require('../../lib/types');
@@ -72,7 +73,7 @@ describe('Murmur3Tokenizer', function () {
         [[226, 231, 226, 231, 226, 231, 1], '2222373981930033306']
       ].forEach(function (item) {
         const v = t.hash(item[0]);
-        assert.ok(v.equals(MutableLong.fromString(item[1])));
+        assert.ok(v.getValue().equals(MutableLong.fromString(item[1])));
       });
     });
   });
@@ -93,8 +94,9 @@ describe('Murmur3Tokenizer', function () {
     describe('#parse()', function () {
       it('should return the Integer representation', function () {
         const val = t.parse('141904934057871337334287797400233978956');
-        helper.assertInstanceOf(val, types.Integer);
-        assert.ok(val.equals(types.Integer.fromString('141904934057871337334287797400233978956')));
+        helper.assertInstanceOf(val, token.RandomToken);
+        helper.assertInstanceOf(val.getValue(), types.Integer);
+        assert.ok(val.getValue().equals(types.Integer.fromString('141904934057871337334287797400233978956')));
       });
     });
   });

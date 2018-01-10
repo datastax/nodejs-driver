@@ -10,6 +10,7 @@ const Host = require('../../lib/host.js').Host;
 const HostMap = require('../../lib/host').HostMap;
 const Metadata = require('../../lib/metadata');
 const TableMetadata = require('../../lib/metadata/table-metadata');
+const token = require('../../lib/token');
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
 const dataTypes = types.dataTypes;
@@ -2331,7 +2332,7 @@ function getTokenizer() {
   t.compare = ((a, b) => a - b);
   t.stringify = stringifyDefault;
   t.parse = function (b) {
-    return parseInt(b, 10);
+    return new token.Murmur3Token(parseInt(b, 10), t);
   };
   return t;
 }

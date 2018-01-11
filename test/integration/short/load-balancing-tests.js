@@ -91,6 +91,23 @@ context('with a reusable 3 node cluster', function () {
     it('should balance between replicas on a different keyspace', function (done) {
       testAllReplicasAreUsedAsCoordinator('ks_simple_rp1', 'ks_network_rp2.table_c', 2, done);
     });
+    it('should target the correct replicas for routing keys of different length', function (done) {
+      const replicasLength = 2;
+      const client = new Client({
+        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+        keyspace: 'ks_network_rp2',
+        contactPoints: helper.baseOptions.contactPoints
+      });
+      const query = 'INSERT INTO table_composite (id1, id2) VALUES (?, ?)';
+      const queryOptions = { traceQuery: true, consistency: types.consistencies.all, prepare: true };
+      utils.timesLimit(100, 20, function (n, timesNext) {
+        const params = [ 'abc', utils.stringRepeat('a', n + 1) ];
+        client.execute(query, params, queryOptions, function (err, result) {
+          assert.ifError(err);
+          assertReplicas(result, client, replicasLength, timesNext);
+        });
+      }, helper.finish(client, done));
+    });
   });
 });
 

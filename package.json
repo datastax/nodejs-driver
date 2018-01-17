@@ -23,7 +23,7 @@
     "rewire": ">= 2.1.0",
     "mocha-jenkins-reporter": ">= 0.1.9",
     "mocha-appveyor-reporter": ">= 0.2.1",
-    "mocha-multi": ">= 0.8.0"
+    "mocha-multi": "~0.11.0"
   },
   "repository": {
     "type" : "git",

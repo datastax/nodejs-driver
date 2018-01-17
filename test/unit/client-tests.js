@@ -145,41 +145,60 @@ describe('Client', function () {
       });
     });
     it('should build the routingKey based on routingNames', function (done) {
-      const requestHandlerMock = function (request, options) {
-        this._options = options;
+      const requestHandlerMock = {
+        send: function (request, options, client, cb) {
+          assert.ok(options);
+          assert.ok(options.routingKey);
+          // eslint-disable-next-line no-useless-concat
+          assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
+          cb();
+          done();
+        }
       };
       const prepareHandlerMock = {
         getPrepared: function (c, lbp, q, ks, cb) {
-          cb(null, utils.allocBufferFromArray([1]), { columns: [
-            { name: 'key1', type: { code: types.dataTypes.int} },
-            { name: 'key2', type: { code: types.dataTypes.int} }
-          ]});
+          cb(null, utils.allocBufferFromArray([1]), {
+            columns: [
+              { name: 'key1', type: { code: types.dataTypes.int} },
+              { name: 'key2', type: { code: types.dataTypes.int} }
+            ],
+            partitionKeys: [0, 1]
+          });
         }
       };
       const client = newConnectedInstance(requestHandlerMock, null, prepareHandlerMock);
-      requestHandlerMock.prototype.send = function (cb) {
-        assert.ok(this._options);
-        assert.ok(this._options.routingKey);
-        // eslint-disable-next-line no-useless-concat
-        assert.strictEqual(this._options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
-        cb();
-        done();
-      };
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
-      const queryOptions = { prepare: true, routingNames: ['key1', 'key2']};
-      client.execute(query, {key2: 2, key1: 1}, queryOptions, helper.throwop);
+      const queryOptions = { prepare: true };
+      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
+    });
+    it('should build the routingKey based on routingNames for query requests', function (done) {
+      const requestHandlerMock = {
+        send: function (request, options, client, cb) {
+          assert.ok(options);
+          assert.ok(options.routingKey);
+          // eslint-disable-next-line no-useless-concat
+          assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
+          cb();
+          done();
+        }
+      };
+      const client = newConnectedInstance(requestHandlerMock, null);
+      client.controlConnection = { protocolVersion: types.protocolVersion.maxSupported };
+      const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+      const queryOptions = { routingNames: ['key1', 'key2'], hints: { key1: 'int', key2: 'int' } };
+      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
     });
     it('should fill parameter information for string hints', function (done) {
       let options;
-      const requestHandlerMock = function (r, o) {
-        options = o;
+      const requestHandlerMock = {
+        send: function (r, o, client, cb) {
+          options = o;
+          cb();
+        }
       };
       const client = newConnectedInstance(requestHandlerMock);
       client.metadata.getUdt = function (ks, n, cb) {
         cb(null, {keyspace: ks, name: n});
-      };
-      requestHandlerMock.prototype.send = function (cb) {
-        cb();
       };
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
@@ -214,11 +233,12 @@ describe('Client', function () {
       });
     });
     it('should callback with an argument error when the hints are not valid strings', function (done) {
-      const requestHandlerMock = function () {};
-      const client = newConnectedInstance(requestHandlerMock);
-      requestHandlerMock.prototype.send = function (q, o, cb) {
-        cb();
+      const requestHandlerMock = {
+        send: function (request, o, client, cb) {
+          cb();
+        }
       };
+      const client = newConnectedInstance(requestHandlerMock);
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       utils.series([
         function (next) {
@@ -318,11 +338,11 @@ describe('Client', function () {
     });
     it('should set the timestamp', function (done) {
       let actualOptions;
-      const handlerMock = function (r, o) {
-        actualOptions = o;
-      };
-      handlerMock.prototype.send = function (callback) {
-        callback(null, {});
+      const handlerMock = {
+        send: function (r, o, client, cb) {
+          actualOptions = o;
+          cb(null, {});
+        }
       };
       const client = newConnectedInstance(handlerMock);
       utils.eachSeries([1, 2, 3, 4], function (version, next) {
@@ -343,11 +363,11 @@ describe('Client', function () {
     });
     it('should not set the timestamp when timestampGeneration is null', function (done) {
       let actualOptions;
-      const handlerMock = function (r, o) {
-        actualOptions = o;
-      };
-      handlerMock.prototype.send = function (callback) {
-        callback(null, {});
+      const handlerMock = {
+        send: function (r, o, client, cb) {
+          actualOptions = o;
+          cb(null, {});
+        }
       };
       const client = newConnectedInstance(handlerMock, { policies: { timestampGeneration: null }});
       client.controlConnection.protocolVersion = 4;
@@ -403,12 +423,13 @@ describe('Client', function () {
   });
   describe('#batch()', function () {
     const Client = rewire('../../lib/client.js');
-    const requestHandlerMock = function () {};
-    requestHandlerMock.prototype.send = function noop (cb) {
-      //make it async
-      setTimeout(function () {
-        cb(null, {meta: {}});
-      }, 50);
+    const requestHandlerMock = {
+      send: function (r, o, client, cb) {
+        // Make it async
+        setTimeout(function () {
+          cb(null, {meta: {}});
+        }, 50);
+      }
     };
     Client.__set__("RequestHandler", requestHandlerMock);
     it('should internally call to connect', function (done) {
@@ -426,11 +447,11 @@ describe('Client', function () {
     });
     it('should set the timestamp', function (done) {
       let actualOptions;
-      const handlerMock = function (r, o) {
-        actualOptions = o;
-      };
-      handlerMock.prototype.send = function (callback) {
-        callback(null, {});
+      const handlerMock = {
+        send: function (r, o, client, cb) {
+          actualOptions = o;
+          cb(null, {});
+        }
       };
       const client = newConnectedInstance(handlerMock);
       utils.eachSeries([1, 2, 3, 4], function (version, next) {
@@ -672,135 +693,6 @@ describe('Client', function () {
         assert.strictEqual(err, dummyError);
         done();
       });
-    });
-  });
-  describe('#_setQueryOptions()', function () {
-    it('should not allow named parameters when protocol version is lower than 3 and the query is not prepared', function (done) {
-      const Client = rewire('../../lib/client');
-      const client = new Client(helper.baseOptions);
-      client.controlConnection = { protocolVersion: 2};
-      client._setQueryOptions({ prepare: false}, { named: 'val'}, null, function (err) {
-        assert.ok(err);
-        done();
-      });
-    });
-    it('should adapt user hints using table metadata', function (done) {
-      const Client = rewire('../../lib/client');
-      const client = new Client(helper.baseOptions);
-      let metaCalled = 0;
-      client._getEncoder = () => ({ setRoutingKey: helper.noop});
-      client.controlConnection = { protocolVersion: 2};
-      client.metadata = {
-        adaptUserHints: function (ks, h, cb) {
-          metaCalled++;
-          setImmediate(function () {
-            h[1] = types.dataTypes.text;
-            cb();
-          });
-        }
-      };
-      const options = { prepare: false, hints: [null, 'text']};
-      client._setQueryOptions(options, ['one', 'two'], null, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(options.hints.length, 2);
-        assert.strictEqual(options.hints[1], types.dataTypes.text);
-        assert.strictEqual(metaCalled, 1);
-        done();
-      });
-    });
-    it('should use meta columns', function (done) {
-      const Client = rewire('../../lib/client');
-      const client = new Client(helper.baseOptions);
-      client._getEncoder = () => ({ setRoutingKey: helper.noop});
-      client.controlConnection = { protocolVersion: 2};
-      const meta = {
-        columns: [
-          { type: types.dataTypes.int },
-          { type: types.dataTypes.text }
-        ]
-      };
-      const options = { prepare: true, routingKey: utils.allocBufferUnsafe(2)};
-      client._setQueryOptions(options, [1, 'two'], meta, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(options.hints.length, 2);
-        assert.strictEqual(options.hints[0], types.dataTypes.int);
-        assert.strictEqual(options.hints[1], types.dataTypes.text);
-        done();
-      });
-    });
-    it('should use the meta partition keys to fill the routingIndexes', function (done) {
-      const Client = rewire('../../lib/client');
-      const client = new Client(helper.baseOptions);
-      client._getEncoder = () => ({ setRoutingKey: helper.noop});
-      client.controlConnection = { protocolVersion: 4};
-      const meta = {
-        columns: [
-          { type: types.dataTypes.uuid },
-          { type: types.dataTypes.text }
-        ],
-        partitionKeys: [1, 0]
-      };
-      const options = { prepare: true};
-      client._setQueryOptions(options, [types.Uuid.random(), 'another'], meta, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(options.hints.length, 2);
-        assert.strictEqual(options.hints[0], types.dataTypes.uuid);
-        assert.strictEqual(options.hints[1], types.dataTypes.text);
-        assert.ok(options.routingIndexes);
-        assert.strictEqual(options.routingIndexes[0], 1);
-        assert.strictEqual(options.routingIndexes[1], 0);
-        done();
-      });
-    });
-    it('should use the table metadata to fill in the routing indexes', function (done) {
-      const Client = rewire('../../lib/client');
-      const client = new Client(helper.baseOptions);
-      let metaCalled = 0;
-      client._getEncoder = () => ({ setRoutingKey: helper.noop});
-      client.controlConnection = { protocolVersion: 3};
-      const meta = {
-        keyspace: 'ks1',
-        table: 'table1',
-        columns: [
-          { type: types.dataTypes.uuid },
-          { type: types.dataTypes.text },
-          { type: types.dataTypes.timeuuid }
-        ]
-      };
-      meta.columnsByName = {
-        'val': 1,
-        'id1': 0,
-        'id2': 2
-      };
-      client.metadata = {
-        getTable: function (ks, tbl, cb) {
-          assert.strictEqual(ks, meta.keyspace);
-          assert.strictEqual(tbl, meta.table);
-          setImmediate(function () {
-            metaCalled++;
-            cb(null, {
-              partitionKeys: [ { name: 'id1'}, { name: 'id2'} ]
-            });
-          });
-        }
-      };
-      const options = { prepare: true};
-      utils.timesSeries(20, function (n, next) {
-        const params = [types.Uuid.random(), 'hello', types.TimeUuid.now()];
-        client._setQueryOptions(options, params, meta, function (err) {
-          assert.ifError(err);
-          assert.strictEqual(metaCalled, 1);
-          assert.strictEqual(options.hints.length, 3);
-          assert.strictEqual(options.hints[0], types.dataTypes.uuid);
-          assert.strictEqual(options.hints[1], types.dataTypes.text);
-          assert.strictEqual(options.hints[2], types.dataTypes.timeuuid);
-          assert.ok(options.routingIndexes);
-          assert.strictEqual(options.routingIndexes.length, 2);
-          assert.strictEqual(options.routingIndexes[0], 0);
-          assert.strictEqual(options.routingIndexes[1], 2);
-          next();
-        });
-      }, done);
     });
   });
 });

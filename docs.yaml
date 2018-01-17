@@ -14,19 +14,21 @@ sections:
     prefix:   /getting-started
     type:     markdown
     files:    'doc/getting-started/**/*.md'
+  - title:    Changelog
+    prefix:   /changelog
+    type:     markdown
+    files:    'doc/changelog/**/*.md'
   - title:    API docs
     prefix:   /api
     type:     jsdoc
     config:   doc/jsdoc.json
 links:
-  - title: Code
-    href:  https://github.com/datastax/nodejs-dse-driver/
   - title: Issues
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
   - title: Mailing List
     href:  https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-  - title: IRC Channel
-    href:  irc://irc.freenode.net/datastax-drivers
+  - title: Slack Channel
+    href:  https://academy.datastax.com/slack
   - title: Npm
     href:  https://www.npmjs.org/package/dse-driver
 versions:

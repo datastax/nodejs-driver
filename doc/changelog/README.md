@@ -1,4 +1,6 @@
-# ChangeLog - DataStax Enterprise Node.js Driver
+# Changelog
+
+Changelog for the DataStax Enterprise Node.js Driver.
 
 ## 1.4.0
 

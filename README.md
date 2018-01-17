@@ -16,9 +16,6 @@ The DataStax Enterprise Node.js Driver can be used solely with DataStax Enterpri
 npm install dse-driver
 ```
 
-[![Build Status](https://travis-ci.org/datastax/nodejs-dse-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-dse-driver) [![Build status](https://ci.appveyor.com/api/projects/status/v8v0q14g3x7p2iho/branch/master?svg=true)](https://ci.appveyor.com/project/DataStax/nodejs-dse-driver/branch/master)
-
-
 ## Documentation
 
 - [Documentation index][doc-index]
@@ -286,7 +283,7 @@ Note: DataStax products do not support big-endian systems.
 
 ## License
 
-Copyright 2016-2017 DataStax
+Copyright 2016-2018 DataStax
 
 http://www.datastax.com/terms/datastax-dse-driver-license-terms
 
@@ -294,7 +291,7 @@ http://www.datastax.com/terms/datastax-dse-driver-license-terms
 [dse]: http://www.datastax.com/products/datastax-enterprise
 [cassandra-driver]: https://github.com/datastax/nodejs-driver
 [iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
-[modern-graph]: http://tinkerpop.apache.org/docs/3.2.4/reference/#_the_graph_structure
+[modern-graph]: http://tinkerpop.apache.org/docs/3.2.7/reference/#_the_graph_structure
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/

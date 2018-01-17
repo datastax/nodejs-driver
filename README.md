@@ -277,7 +277,7 @@ The `level` values passed to the listener can be `verbose`, `info`, `warning` or
 ## Compatibility
 
 - DataStax Enterprise versions 4.5 and above.
-- Node.js versions 0.10 and above.
+- Node.js versions 4 and above.
 
 Note: DataStax products do not support big-endian systems.
 

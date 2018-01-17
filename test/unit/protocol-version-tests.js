@@ -31,6 +31,16 @@ describe('protocolVersion', function () {
     // disregard connection protocol version if highest common is lower, this should not happen in practice.
     // this is technically covered by other tests, but good to validate explicitly.
     it('should use highest common even if connection protocol version is greater', testWithHosts(['2.1.17', '2.0.17'], 2, 4));
+    // DSE specific tests
+    // should downgrade when detects older dse version that doesn't support DSE protocol versions so falls back on C* version.
+    it('should downgrade to protocol v4 with dse versions 5.1 & 5.0', testWithHosts([['3.11.0', '5.1.5'], ['3.10.0', '5.0.11']], 4));
+    it('should downgrade to protocol v3 with dse versions 5.1 & 4.8', testWithHosts([['3.11.0', '5.1.5'], ['2.1.17', '4.8.12']], 3));
+    // DSE nodes should interop with C* nodes
+    it('should downgrade to protocol v4 with dse version 5.1 & cassandra 3.11', testWithHosts([['3.11.0', '5.1.5'], '3.11.0'], 4));
+    // can't downgrade because DSE 5.0+ (C* 3.0+) does not support protocol V2.
+    it('should not downgrade with dse versions 5.1 & 4.6', testWithHosts([['3.11.0', '5.1.5'], ['2.0.17', '4.6.14']], protocolVersion.dseV1));
+    // since connection uses protocol v4, we should stick with v4 even if highest common is a dse protocol version.
+    it('should use connection protocol version even if highest common is a dse protocol version', testWithHosts([['3.11.0', '5.1.5']], 4, 4));
   });
 });
 
@@ -43,7 +53,12 @@ function testWithHosts(hostVersions, expectedProtocolVersion, connectionProtocol
   const hosts = [];
   for (let i = 0; i < hostVersions.length; i++) {
     const host = new Host('192.1.1.' + i, protocolVersion.maxSupported, options);
-    host.cassandraVersion = hostVersions[i];
+    if (typeof hostVersions[i] === 'string') {
+      host.cassandraVersion = hostVersions[i];
+    } else {
+      host.cassandraVersion = hostVersions[i][0];
+      host.dseVersion = hostVersions[i][1];
+    }
     hosts.push(host);
   }
 

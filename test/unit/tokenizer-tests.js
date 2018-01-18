@@ -5,6 +5,7 @@ const tokenizer = require('../../lib/tokenizer');
 const token = require('../../lib/token');
 const Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 const RandomTokenizer = tokenizer.RandomTokenizer;
+const ByteOrderedTokenizer = tokenizer.ByteOrderedTokenizer;
 const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 const MutableLong = require('../../lib/types/mutable-long');
@@ -97,6 +98,23 @@ describe('Murmur3Tokenizer', function () {
         helper.assertInstanceOf(val, token.RandomToken);
         helper.assertInstanceOf(val.getValue(), types.Integer);
         assert.ok(val.getValue().equals(types.Integer.fromString('141904934057871337334287797400233978956')));
+      });
+    });
+  });
+  describe('ByteOrderedTokenizer', function() {
+    const t = new ByteOrderedTokenizer();
+    describe('#parse()', function() {
+      it('should strip trailing 0-bytes', function () {
+        const val = t.parse('040000');
+        helper.assertInstanceOf(val, token.ByteOrderedToken);
+        helper.assertInstanceOf(val.getValue(), Buffer);
+        assert.strictEqual(val.toString(), '04');
+      });
+      it('should not strip trailing bytes that are not 0', function () {
+        const val = t.parse('04000007');
+        helper.assertInstanceOf(val, token.ByteOrderedToken);
+        helper.assertInstanceOf(val.getValue(), Buffer);
+        assert.strictEqual(val.toString(), '04000007');
       });
     });
   });

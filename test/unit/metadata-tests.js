@@ -13,6 +13,7 @@ const TableMetadata = require('../../lib/metadata/table-metadata');
 const token = require('../../lib/token');
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
+const MutableLong = require('../../lib/types/mutable-long');
 const dataTypes = types.dataTypes;
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
@@ -2329,10 +2330,9 @@ function getTokenizer() {
   const t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
   t.hash = (b => b[0]);
-  t.compare = ((a, b) => a - b);
   t.stringify = stringifyDefault;
   t.parse = function (b) {
-    return new token.Murmur3Token(parseInt(b, 10), t);
+    return new token.Murmur3Token(MutableLong.fromNumber(parseInt(b, 10)), t);
   };
   return t;
 }

@@ -10,7 +10,7 @@ const Host = require('../../lib/host.js').Host;
 const HostMap = require('../../lib/host').HostMap;
 const Metadata = require('../../lib/metadata');
 const TableMetadata = require('../../lib/metadata/table-metadata');
-const token = require('../../lib/token');
+const Murmur3Token = require('../../lib/token').Murmur3Token;
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
 const MutableLong = require('../../lib/types/mutable-long');
@@ -33,8 +33,8 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
-      metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.tokenizer = getTokenizer();
+      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
@@ -60,8 +60,8 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
-      metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.tokenizer = getTokenizer();
+      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
@@ -87,9 +87,9 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
+      metadata.tokenizer = getTokenizer();
       metadata.setCassandraVersion([3, 0]);
-      metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
@@ -115,9 +115,9 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
+      metadata.tokenizer = getTokenizer();
       metadata.setCassandraVersion([3, 0]);
-      metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
@@ -145,12 +145,8 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
-      metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
-      //Use the value as token
-      metadata.tokenizer.hash = (b) => b[0];
-      metadata.tokenizer.compare = (a, b) => a - b;
-      metadata.tokenizer.stringify = stringifyDefault;
-      metadata.ring = [0, 1, 2, 3, 4, 5];
+      metadata.tokenizer = getTokenizer();
+      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
       metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
       metadata.log = helper.noop;
@@ -184,7 +180,7 @@ describe('Metadata', function () {
       metadata.datacenters = {
         'dc1': { hostLength: 4, racks: racks },
         'dc2': { hostLength: 4, racks: racks }};
-      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
@@ -225,7 +221,7 @@ describe('Metadata', function () {
       metadata.datacenters = {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
-      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
@@ -268,7 +264,7 @@ describe('Metadata', function () {
       metadata.datacenters = {
         'dc1': { hostLength: 4, racks: racksDc1 },
         'dc2': { hostLength: 4, racks: racksDc2 }};
-      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7];
+      metadata.ring = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5', '6', '7'];
       //load primary replicas
       metadata.primaryReplicas = {};
@@ -321,9 +317,9 @@ describe('Metadata', function () {
         h.rack = 'dc1_r1';
         // 256 vnodes per replica.
         for (let v = 0; v < 256; v++) {
-          const token = (v * 256) + r;
-          metadata.ring.push(token);
-          metadata.primaryReplicas[token.toString()] = h;
+          const t = (v * 256) + r;
+          metadata.ring.push(token(t));
+          metadata.primaryReplicas[t.toString()] = h;
         }
       }
       metadata.ring.sort(function (a, b) {
@@ -376,9 +372,9 @@ describe('Metadata', function () {
         }
         // 256 vnodes per replica.
         for (let v = 0; v < 256; v++) {
-          const token = (v * 256) + r;
-          metadata.ring.push(token);
-          metadata.primaryReplicas[token.toString()] = h;
+          const t = (v * 256) + r;
+          metadata.ring.push(token(t));
+          metadata.primaryReplicas[t.toString()] = h;
         }
       }
       // sort the ring so the tokens are in order (this is done in metadata buildTokens, but it accounts for
@@ -2329,12 +2325,13 @@ function getAddress(h) {
 function getTokenizer() {
   const t = new tokenizer.Murmur3Tokenizer();
   //Use the first byte as token
-  t.hash = (b => b[0]);
+  t.hash = (b) => new Murmur3Token(MutableLong.fromNumber(b[0]));
   t.stringify = stringifyDefault;
-  t.parse = function (b) {
-    return new token.Murmur3Token(MutableLong.fromNumber(parseInt(b, 10)), t);
-  };
   return t;
+}
+
+function token(val) {
+  return new Murmur3Token(MutableLong.fromNumber(val));
 }
 
 function stringifyDefault(v) {

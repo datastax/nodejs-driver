@@ -11,6 +11,7 @@ const HostMap = require('../../lib/host').HostMap;
 const Metadata = require('../../lib/metadata');
 const TableMetadata = require('../../lib/metadata/table-metadata');
 const Murmur3Token = require('../../lib/token').Murmur3Token;
+const TokenRange = require('../../lib/token').TokenRange;
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
 const MutableLong = require('../../lib/types/mutable-long');
@@ -18,6 +19,11 @@ const dataTypes = types.dataTypes;
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
 const Encoder = require('../../lib/encoder');
+
+function expectRanges(metadata, keyspace, host, expectedRanges) {
+  const eRanges = new Set(expectedRanges.map((tokens) => new TokenRange(token(tokens[0]), token(tokens[1]), metadata.tokenizer)));
+  assert.deepEqual(metadata.getTokenRangesForHost(keyspace, host), eRanges);
+}
 
 describe('Metadata', function () {
   describe('#refreshKeyspaces()', function () {
@@ -34,8 +40,21 @@ describe('Metadata', function () {
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = getTokenizer();
-      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
-      metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
+      const hosts = new HostMap();
+      const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      const h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
+      const h3 = new Host('127.0.0.3', 2, clientOptions.defaultOptions());
+      const h4 = new Host('127.0.0.4', 2, clientOptions.defaultOptions());
+      const h5 = new Host('127.0.0.5', 2, clientOptions.defaultOptions());
+      const h6 = new Host('127.0.0.6', 2, clientOptions.defaultOptions());
+      h1.tokens = ['0'];
+      h2.tokens = ['1'];
+      h3.tokens = ['2'];
+      h4.tokens = ['3'];
+      h5.tokens = ['4'];
+      h6.tokens = ['5'];
+      [h1, h2, h3, h4, h5, h6].forEach((h) => hosts.push(h.address, h));
+      metadata.buildTokens(hosts);
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
@@ -46,6 +65,11 @@ describe('Metadata', function () {
         assert.ok(ks.strategyOptions);
         assert.strictEqual(ks.strategyOptions['replication_factor'], 3);
         assert.strictEqual(ks.durableWrites, false);
+        expectRanges(metadata, 'ks1', h1, [[3, 4],[4, 5],[5, 0]]);
+        expectRanges(metadata, 'ks1', h2, [[4, 5],[5, 0],[0, 1]]);
+        expectRanges(metadata, 'ks1', h3, [[5, 0],[0, 1],[1, 2]]);
+        expectRanges(metadata, 'ks1', h4, [[0, 1],[1, 2],[2, 3]]);
+        expectRanges(metadata, 'ks1', h5, [[1, 2],[2, 3],[3, 4]]);
         done();
       });
     });
@@ -61,8 +85,33 @@ describe('Metadata', function () {
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       metadata.tokenizer = getTokenizer();
-      metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
-      metadata.primaryReplicas = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5'};
+      const hosts = new HostMap();
+      const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
+      const h2 = new Host('127.0.0.2', 2, clientOptions.defaultOptions());
+      const h3 = new Host('127.0.0.3', 2, clientOptions.defaultOptions());
+      const h4 = new Host('127.0.0.4', 2, clientOptions.defaultOptions());
+      const h5 = new Host('127.0.0.5', 2, clientOptions.defaultOptions());
+      const h6 = new Host('127.0.0.6', 2, clientOptions.defaultOptions());
+      h1.tokens = ['0'];
+      h1.datacenter = 'dc1';
+      h1.rack = 'rack1';
+      h2.tokens = ['1'];
+      h2.datacenter = 'dc1';
+      h2.rack = 'rack2';
+      h3.tokens = ['2'];
+      h3.datacenter = 'dc2';
+      h3.rack = 'rack1';
+      h4.tokens = ['3'];
+      h4.datacenter = 'dc1';
+      h4.rack = 'rack3';
+      h5.tokens = ['4'];
+      h5.datacenter = 'dc1';
+      h5.rack = 'rack4';
+      h6.tokens = ['5'];
+      h6.datacenter = 'dc2';
+      h6.rack = 'rack2';
+      [h1, h2, h3, h4, h5, h6].forEach((h) => hosts.push(h.address, h));
+      metadata.buildTokens(hosts);
       metadata.log = helper.noop;
       metadata.refreshKeyspaces(function (err) {
         assert.ifError(err);
@@ -73,6 +122,20 @@ describe('Metadata', function () {
         assert.ok(ks.strategyOptions);
         assert.strictEqual(ks.strategyOptions['dc1'], 3);
         assert.strictEqual(ks.strategyOptions['dc2'], 1);
+        // For DC1, when next node is DC1, expect 5 ranges, when next node is DC2 expect 4 ranges.
+        // For DC2, each node will have 3 ranges (since next DC2 node is always 3 nodes away)
+        // all ranges except ]0, 1]
+        expectRanges(metadata, 'ks2', h1, [[1, 2], [2, 3], [3, 4], [4, 5], [5, 0]]);
+        // all ranges except ]1, 2], ]2, 3]
+        expectRanges(metadata, 'ks2', h2, [[0, 1], [3, 4], [4, 5], [5, 0]]);
+        // ]5, 2] (1/2 ring)
+        expectRanges(metadata, 'ks2', h3, [[0, 1], [1, 2], [5, 0]]);
+        // all nodes except ]3, 4]
+        expectRanges(metadata, 'ks2', h4, [[0, 1], [1, 2], [2, 3], [4, 5], [5, 0]]);
+        // ann nodes except ]4, 5], ]5, 0]
+        expectRanges(metadata, 'ks2', h5, [[0, 1], [1, 2], [2, 3], [3, 4]]);
+        // ]2, 5] (1/2 ring)
+        expectRanges(metadata, 'ks2', h6, [[2, 3], [3, 4], [4, 5]]);
         done();
       });
     });
@@ -2219,6 +2282,11 @@ describe('Metadata', function () {
       });
       assert.deepEqual(metadata.ring, sortedParsedTokens);
       assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
+      const ranges = metadata.getTokenRanges();
+      const expectedRanges = new Set([ [5, 10], [10, 15], [15, 20], [20, 25], [25, 400], [400, 5] ].map((r) => 
+        new TokenRange(token(r[0]), token(r[1]), tokenizer)
+      ));
+      assert.deepEqual(ranges, expectedRanges);
       done();
     });
     it('should set sorted tokens from multiple hosts', function (done) {
@@ -2240,6 +2308,12 @@ describe('Metadata', function () {
       });
       assert.deepEqual(metadata.ringTokensAsStrings, sortedTokens);
       assert.deepEqual(metadata.ring, sortedParsedTokens);
+
+      const ranges = metadata.getTokenRanges();
+      const expectedRanges = new Set([ [5, 8], [8, 10], [10, 13], [13, 18], [18, 25], [25, 203], [203, 400], [400, 5] ].map((r) => 
+        new TokenRange(token(r[0]), token(r[1]), tokenizer)
+      ));
+      assert.deepEqual(ranges, expectedRanges);
       done();
     });
   });

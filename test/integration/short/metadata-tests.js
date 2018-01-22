@@ -110,6 +110,47 @@ describe('metadata', function () {
         });
       });
     });
+    describe('#getTokenRanges()', function () {
+      it('should return 512 ranges', function (done) {
+        // as vnodes are enabled and there are 2 nodes, expect 512 (2* 256) ranges.
+        const client = newInstance();
+        utils.series([
+          client.connect.bind(client),
+          function getRanges(next) {
+            const ranges = client.metadata.getTokenRanges();
+            assert.strictEqual(ranges.size, 512);
+            next();
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+    });
+    describe('#getTokenRangesForHost()', function () {
+      it('should return the expected number of ranges per host', function (done) {
+        const client = newInstance();
+        utils.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ksrf1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"),
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ksrf2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ksntsrf2 WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1' : 2}"),
+          function getRanges(next) {
+            const host1 = helper.findHost(client, 1);
+            const host2 = helper.findHost(client, 2);
+            // the sum of ranges between host1 and host2 should be the total number of tokens.
+            // we can't make an exact assertion here because token assignment is not exact.
+            const rf1Ranges = client.metadata.getTokenRangesForHost('ksrf1', host1).size + client.metadata.getTokenRangesForHost('ksrf1', host2).size;
+            assert.strictEqual(rf1Ranges, 512);
+            // expect 512 ranges for each host (2 replica = 512 tokens)
+            assert.strictEqual(client.metadata.getTokenRangesForHost('ksrf2', host1).size, 512);
+            assert.strictEqual(client.metadata.getTokenRangesForHost('ksrf2', host2).size, 512);
+            assert.strictEqual(client.metadata.getTokenRangesForHost('ksntsrf2', host1).size, 512);
+            assert.strictEqual(client.metadata.getTokenRangesForHost('ksntsrf2', host2).size, 512);
+            next();
+          },
+          client.shutdown.bind(client)
+        ], done);
+      });
+    });
     vdescribe('2.1', '#getUdt()', function () {
       it('should return null if it does not exists', function (done) {
         const client = newInstance();

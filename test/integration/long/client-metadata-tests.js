@@ -89,7 +89,7 @@ describe('Client', function () {
         assert.ifError(err);
         for (let i = 0; i < client.metadata.ring.length; i++) {
           const token = client.metadata.ring[i];
-          const replica = client.metadata.primaryReplicas[client.metadata.tokenizer.stringify(token.getValue())];
+          const replica = client.metadata.primaryReplicas[client.metadata.tokenizer.stringify(token)];
           compareReplicas(token, replica);
         }
         done();

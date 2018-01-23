@@ -9,6 +9,7 @@ const ByteOrderedTokenizer = tokenizer.ByteOrderedTokenizer;
 const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 const MutableLong = require('../../lib/types/mutable-long');
+const Long = require('long');
 const helper = require('../test-helper');
 
 describe('Murmur3Tokenizer', function () {
@@ -74,7 +75,7 @@ describe('Murmur3Tokenizer', function () {
         [[226, 231, 226, 231, 226, 231, 1], '2222373981930033306']
       ].forEach(function (item) {
         const v = t.hash(item[0]);
-        assert.ok(v.getValue().equals(MutableLong.fromString(item[1])));
+        assert.ok(v.getValue().equals(Long.fromString(item[1])));
       });
     });
   });

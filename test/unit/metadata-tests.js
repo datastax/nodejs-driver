@@ -15,6 +15,7 @@ const TokenRange = require('../../lib/token').TokenRange;
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
 const MutableLong = require('../../lib/types/mutable-long');
+const Long = require('long');
 const dataTypes = types.dataTypes;
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
@@ -215,6 +216,11 @@ describe('Metadata', function () {
       metadata.log = helper.noop;
       metadata.refreshKeyspaces();
       let replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
+
+      const t = metadata.newToken(utils.allocBufferFromArray([0]));
+      const replicasByToken = metadata.getReplicas('dummy', t);
+      assert.deepEqual(replicasByToken, replicas);
+
       assert.ok(replicas);
       //Primary replica plus the 2 next tokens
       assert.strictEqual(replicas.length, 3);
@@ -257,6 +263,9 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function () {
         const replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
+        const t = metadata.newToken(utils.allocBufferFromArray([0]));
+        const replicasByToken = metadata.getReplicas('dummy', t);
+        assert.deepEqual(replicasByToken, replicas);
         //3 replicas from dc1 and 1 replica from dc2
         assert.strictEqual(replicas.length, 4);
         assert.strictEqual(replicas[0].address, '0');
@@ -299,6 +308,9 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function () {
         let replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
+        const t = metadata.newToken(utils.allocBufferFromArray([0]));
+        const replicasByToken = metadata.getReplicas('dummy', t);
+        assert.deepEqual(replicasByToken, replicas);
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '2', '3', '4', '5' ]);
         replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([1]));
         assert.ok(replicas);
@@ -347,6 +359,9 @@ describe('Metadata', function () {
       metadata.refreshKeyspaces(function () {
         const replicas = metadata.getReplicas('dummy', utils.allocBufferFromArray([0]));
         assert.ok(replicas);
+        const t = metadata.newToken(utils.allocBufferFromArray([0]));
+        const replicasByToken = metadata.getReplicas('dummy', t);
+        assert.deepEqual(replicasByToken, replicas);
         // For DC1, it should skip the replica with the same rack (node2) and add it at the end: 0, 4, 2
         assert.deepEqual(replicas.map(getAddress), [ '0', '1', '3', '4', '2' ]);
         done();
@@ -2287,6 +2302,9 @@ describe('Metadata', function () {
         new TokenRange(token(r[0]), token(r[1]), tokenizer)
       ));
       assert.deepEqual(ranges, expectedRanges);
+
+      // Replicas for a range should be h1 since there is only that host.
+      assert.deepEqual(metadata.getReplicas(null, Array.from(ranges)[0]), [h1]);
       done();
     });
     it('should set sorted tokens from multiple hosts', function (done) {
@@ -2314,10 +2332,50 @@ describe('Metadata', function () {
         new TokenRange(token(r[0]), token(r[1]), tokenizer)
       ));
       assert.deepEqual(ranges, expectedRanges);
+
+      // Replicas for first range should h2 since it owns ]5,8]
+      assert.deepEqual(metadata.getReplicas(null, Array.from(ranges)[0]), [h2]);
       done();
     });
   });
-
+  describe('#newToken()', function (done) {
+    const metadata = new Metadata(clientOptions.defaultOptions(), null);
+    metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
+    it('should create newToken from Buffer', function () {
+      const token = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 1]));
+      assert.deepEqual(token.getValue(), Long.fromString('-4069959284402364209'));
+    });
+    it('should create newToken from multiple Buffer components', function () {
+      const token = metadata.newToken([utils.allocBufferFromArray([0, 0, 0, 1]), utils.allocBufferFromArray([0,0,0,2])]);
+      assert.deepEqual(token.getValue(), Long.fromString('-5168409507470576865'));
+    });
+    it('should create newToken from String', function () {
+      const token = metadata.newToken('-4069959284402364209');
+      assert.deepEqual(token.getValue(), Long.fromString('-4069959284402364209'));
+    });
+    it('should throw an error if tokenizer isn\'t set yet', function () {
+      const metadataNoTokenizer = new Metadata(clientOptions.defaultOptions(), null);
+      assert.throws(function () {
+        metadataNoTokenizer.newToken('-4069959284402364209');
+      }, Error);
+    });
+  });
+  describe('#newTokenRange()', function (done) {
+    const metadata = new Metadata(clientOptions.defaultOptions(), null);
+    metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
+    const token0 = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 1]));
+    const token1 = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 2]));
+    it('should create TokenRange', function () {
+      const range = metadata.newTokenRange(token0, token1);
+      assert.deepEqual(range, new TokenRange(token0, token1, tokenizer));
+    });
+    it('should throw an error if tokenizer isn\'t set yet', function () {
+      const metadataNoTokenizer = new Metadata(clientOptions.defaultOptions(), null);
+      assert.throws(function () {
+        metadataNoTokenizer.newTokenRange(token0, token1, tokenizer);
+      }, Error);
+    });
+  });
 });
 describe('SchemaParser', function () {
   const isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');

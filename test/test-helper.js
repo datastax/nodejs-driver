@@ -742,7 +742,7 @@ function Ccm() {
 /**
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
- * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number, ipFormat: String}} options
+ * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number, ipFormat: String, partitioner: String}} options
  * @param {Function} callback
  */
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
@@ -770,6 +770,10 @@ Ccm.prototype.startAll = function (nodeLength, options, callback) {
       }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
+      }
+      if (options.partitioner) {
+        create.push('-p');
+        create.push(options.partitioner);
       }
       self.exec(create, helper.wait(options.sleep, next));
     },

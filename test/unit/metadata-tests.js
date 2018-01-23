@@ -2467,7 +2467,7 @@ function token(val) {
 }
 
 function stringifyDefault(v) {
-  return v.toString();
+  return v.getValue().toString();
 }
 
 /** @returns {Metadata} */

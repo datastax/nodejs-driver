@@ -15,7 +15,6 @@ const TokenRange = require('../../lib/token').TokenRange;
 const tokenizer = require('../../lib/tokenizer');
 const types = require('../../lib/types');
 const MutableLong = require('../../lib/types/mutable-long');
-const Long = require('long');
 const dataTypes = types.dataTypes;
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
@@ -2338,20 +2337,24 @@ describe('Metadata', function () {
       done();
     });
   });
-  describe('#newToken()', function (done) {
+  describe('#newToken()', function () {
     const metadata = new Metadata(clientOptions.defaultOptions(), null);
     metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
+    it('should be an instance of Murmur3Token when tokenizer is Murmur3Tokenizer', function () {
+      const token = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 1]));
+      helper.assertInstanceOf(token, Murmur3Token);
+    });
     it('should create newToken from Buffer', function () {
       const token = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 1]));
-      assert.deepEqual(token.getValue(), Long.fromString('-4069959284402364209'));
+      assert.strictEqual(token.getValue().toString(), '-4069959284402364209');
     });
     it('should create newToken from multiple Buffer components', function () {
       const token = metadata.newToken([utils.allocBufferFromArray([0, 0, 0, 1]), utils.allocBufferFromArray([0,0,0,2])]);
-      assert.deepEqual(token.getValue(), Long.fromString('-5168409507470576865'));
+      assert.strictEqual(token.getValue().toString(), '-5168409507470576865');
     });
     it('should create newToken from String', function () {
       const token = metadata.newToken('-4069959284402364209');
-      assert.deepEqual(token.getValue(), Long.fromString('-4069959284402364209'));
+      assert.strictEqual(token.getValue().toString(), '-4069959284402364209');
     });
     it('should throw an error if tokenizer isn\'t set yet', function () {
       const metadataNoTokenizer = new Metadata(clientOptions.defaultOptions(), null);
@@ -2360,7 +2363,7 @@ describe('Metadata', function () {
       }, Error);
     });
   });
-  describe('#newTokenRange()', function (done) {
+  describe('#newTokenRange()', function () {
     const metadata = new Metadata(clientOptions.defaultOptions(), null);
     metadata.tokenizer = new tokenizer.Murmur3Tokenizer();
     const token0 = metadata.newToken(utils.allocBufferFromArray([0, 0, 0, 1]));

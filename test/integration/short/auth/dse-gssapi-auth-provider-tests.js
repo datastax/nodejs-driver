@@ -13,7 +13,7 @@ const ads = helper.ads;
 const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 cDescribe('DseGssapiAuthProvider', function () {
-  this.timeout(60000);
+  this.timeout(180000);
   before(function (done) {
     ads.start(function(err) {
       assert.ifError(err);

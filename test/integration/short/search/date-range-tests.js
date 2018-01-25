@@ -71,7 +71,7 @@ vdescribe('dse-5.1', 'DateRange', function () {
           const u = { i: 0, range: DateRange.fromString('[2017-02 TO 2017-03]') };
           const uf = { i: 4, range: DateRange.fromString('[2016-02-04 TO 2016-05]')};
           const t = new types.Tuple(DateRange.fromString('*'), 3);
-          const tf = new types.Tuple(DateRange.fromString('[* TO *]', 9));
+          const tf = new types.Tuple(DateRange.fromString('[* TO *]'), 9);
           const query = 'INSERT INTO tbl_udt_tuple (k, u, uf, t, tf) VALUES (?, ?, ?, ?, ?)';
           const options = { prepare: prepare };
 

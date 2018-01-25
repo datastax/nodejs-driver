@@ -10,7 +10,7 @@ const vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
   this.timeout(60000);
-  const setupInfo = helper.setup(2, { ccmOptions: {
+  const setupInfo = helper.setup('2:0', { ccmOptions: {
     vnodes: true,
     yaml: helper.isCassandraGreaterThan('3.10') ? ['cdc_enabled:true'] : null
   }});
@@ -47,12 +47,12 @@ describe('metadata', function () {
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks3 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"),
-          helper.toTask(client.execute, client, "CREATE KEYSPACE ks4 WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1' : 1}"),
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ks4 WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : 1}"),
           function checkKeyspaces(next) {
             checkKeyspace(client, 'ks1', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '3');
             checkKeyspace(client, 'ks2', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '2');
             checkKeyspace(client, 'ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
-            checkKeyspace(client, 'ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1', '1');
+            checkKeyspace(client, 'ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
 
             // There should be no keyspace metadata for the non sync client until its fetched via refreshKeyspaces.
             const ks = nonSyncClient.metadata.keyspaces;
@@ -66,7 +66,7 @@ describe('metadata', function () {
               checkKeyspace(nonSyncClient, 'ks1', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '3');
               checkKeyspace(nonSyncClient, 'ks2', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '2');
               checkKeyspace(nonSyncClient, 'ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
-              checkKeyspace(nonSyncClient, 'ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1', '1');
+              checkKeyspace(nonSyncClient, 'ks4', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
               next();
             });
           },
@@ -132,7 +132,7 @@ describe('metadata', function () {
           client.connect.bind(client),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ksrf1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"),
           helper.toTask(client.execute, client, "CREATE KEYSPACE ksrf2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2}"),
-          helper.toTask(client.execute, client, "CREATE KEYSPACE ksntsrf2 WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1' : 2}"),
+          helper.toTask(client.execute, client, "CREATE KEYSPACE ksntsrf2 WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1' : 2}"),
           function getRanges(next) {
             const host1 = helper.findHost(client, 1);
             const host2 = helper.findHost(client, 2);

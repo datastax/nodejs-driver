@@ -25,7 +25,8 @@ describe('QueryRequest', function () {
 
 describe('ExecuteRequest', function () {
   describe('#clone()', function () {
-    const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], { });
+    const meta = { columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]};
+    const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
     testClone(request);
   });
 });

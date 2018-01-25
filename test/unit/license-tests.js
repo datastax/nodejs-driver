@@ -9,16 +9,8 @@ const assert = require("assert");
 const path = require("path");
 const fs = require("fs");
 
-const licenseHeader = "/**\n\
- * Copyright (C) 2016 DataStax, Inc.\n\
- *\n\
- * Please see the license for details:\n\
- * http://www.datastax.com/terms/datastax-dse-driver-license-terms\n\
- */\n";
-
-//var licenseHeaderRegex = new RegExp('^\\/\\*\\*\n \\* Copyright (C) \\d{4} DataStax, Inc.\\n\\*\\n');
 const licenseHeaderRegex = new RegExp(
-  '^\\/\\*\\*\n \\* Copyright \\(C\\) (?:\\d{4}(?:\\-\\d{4})? )?DataStax, Inc\\.\\n \\*\\n' +
+  '^\\/\\*\\*\n \\* Copyright (?:\\(C\\) )?(?:\\d{4}(?:\\-\\d{4})? )?DataStax, Inc\\.\\n \\*\\n' +
   ' \\* Please see the license for details:\\n' +
   ' \\* http://www.datastax.com/terms/datastax-dse-driver-license-terms');
 
@@ -39,11 +31,6 @@ describe('All source files', function() {
         }
         else if (file.charAt(0) !== '.' && file.match(candidateRE) && file !== 'integer.js') {
           const data = fs.readFileSync(filePath, 'utf8');
-          assert.ok(data.length >= licenseHeader.length,
-            filePath + ' does not contain license header, contents:\n' + data);
-          // var dataHeader = data.substring(0, licenseHeader.length);
-          // assert.strictEqual(dataHeader, licenseHeader,
-          //   'Beginning of ' + filePath + ' does not start with license header.');
           assert.ok(licenseHeaderRegex.test(data), 'Beginning of ' + filePath + ' does not start with license header.');
         }
       });

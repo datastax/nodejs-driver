@@ -887,7 +887,7 @@ helper.ccmHelper = helper.ccm;
  * Removes previous and creates a new cluster (create, populate and start)
  * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
  * @param {{[vnodes]: Boolean, [yaml]: Array.<String>, [jvmArgs]: Array.<String>, [ssl]: Boolean,
- *  [dseYaml]: Array.<String>, [workloads]: Array.<String>, [sleep]: Number, [ipFormat]: String}|null} options
+ *  [dseYaml]: Array.<String>, [workloads]: Array.<String>, [sleep]: Number, [ipFormat]: String|null, partitioner: String}} options
  * @param {Function} callback
  */
 helper.ccm.startAll = function (nodeLength, options, callback) {
@@ -911,6 +911,10 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       }
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
+      }
+      if (options.partitioner) {
+        create.push('-p');
+        create.push(options.partitioner);
       }
       self.exec(create, helper.wait(options.sleep, next));
     },

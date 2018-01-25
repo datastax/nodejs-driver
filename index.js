@@ -12,6 +12,11 @@ exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
+const token = require('./lib/token');
+exports.token = {
+  Token: token.Token,
+  TokenRange: token.TokenRange
+};
 const Metadata = require('./lib/metadata');
 exports.metadata = {
   Metadata: Metadata

@@ -137,12 +137,12 @@ function partitionerSuite(partitionerName) {
             vnodes: vnodes
           };
 
-          const setupInfo = helper.setup(3, {
+          const setupInfo = helper.setup('3:0', {
             ccmOptions: ccmOptions,
             queries: [
               'CREATE KEYSPACE ks_simple_rf1 WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': 1}',
               'CREATE KEYSPACE ks_simple_rf2 WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': 2}',
-              'CREATE KEYSPACE ks_nts_rf2 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'datacenter1\' : 2}',
+              'CREATE KEYSPACE ks_nts_rf2 WITH replication = {\'class\': \'NetworkTopologyStrategy\', \'dc1\' : 2}',
               'CREATE TABLE ks_simple_rf1.foo (i int primary key)',
               'INSERT INTO ks_simple_rf1.foo (i) VALUES (1)',
               'INSERT INTO ks_simple_rf1.foo (i) VALUES (2)',

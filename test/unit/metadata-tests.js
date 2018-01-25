@@ -367,7 +367,7 @@ describe('Metadata', function () {
       });
     });
     it('should return quickly with many replicas and 0 nodes in one DC.', function (done) {
-      this.timeout(2000);
+      this.timeout(5000);
       const cc = getControlConnectionForRows([{
         'keyspace_name': 'dummy',
         'strategy_class': 'NetworkTopologyStrategy',
@@ -417,7 +417,7 @@ describe('Metadata', function () {
       });
     });
     it('should return quickly with many replicas and not enough nodes in a DC to satisfy RF.', function (done) {
-      this.timeout(2000);
+      this.timeout(5000);
       const cc = getControlConnectionForRows([{
         'keyspace_name': 'dummy',
         'strategy_class': 'NetworkTopologyStrategy',

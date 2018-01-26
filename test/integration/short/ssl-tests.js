@@ -30,14 +30,14 @@ describe('Client', function () {
       });
     });
     describe('#execute()', function () {
-      it('should handle multiple requests in parallel with queueing', function (done) {
-        const parallelLimit = helper.isCassandraGreaterThan('2.0') ? 2100 : 200;
+      it('should handle multiple requests in parallel', function (done) {
+        const parallelLimit = helper.isCassandraGreaterThan('2.0') ? 800 : 120;
         const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function insert(next) {
             const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-            utils.timesLimit(40000, parallelLimit, function (n, timesNext) {
+            utils.timesLimit(20000, parallelLimit, function (n, timesNext) {
               client.execute(query, [ types.Uuid.random(), 'value ' + n ], { prepare: true }, timesNext);
             }, next);
           }

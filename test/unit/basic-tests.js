@@ -752,8 +752,13 @@ describe('writers', function () {
       const socketMock = {
         write: function (buf, cb) {
           buffers.push(buf);
-          setTimeout(cb, 50);
-        }
+          if (cb) {
+            setTimeout(cb, 50);
+          }
+        },
+        on: utils.noop,
+        cork: utils.noop,
+        uncork: utils.noop
       };
       const options = utils.extend({}, clientOptions.defaultOptions());
       options.socketOptions.coalescingThreshold = 50;
@@ -771,15 +776,9 @@ describe('writers', function () {
         queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
       setTimeout(function () {
-        //10 frames
-        assert.strictEqual(itemCallbackCounter, 10);
-        assert.strictEqual(buffers.length, 3);
-        //first part is only 1 message
-        assert.strictEqual(buffers[0].length, 10);
-        //second part contains 5 messages
-        assert.strictEqual(buffers[1].length, 50);
-        //second part contains 4 messages
-        assert.strictEqual(buffers[2].length, 40);
+        // 5 frames
+        assert.strictEqual(itemCallbackCounter, 5);
+        assert.strictEqual(buffers.length, 5);
         done();
       }, 500);
     });

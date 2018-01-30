@@ -52,9 +52,9 @@ describe('Client', function () {
         done();
       });
     });
-    it('should handle 500 parallel queries', function (done) {
+    it('should handle 250 parallel queries', function (done) {
       const client = setupInfo.client;
-      utils.times(500, function (n, next) {
+      utils.times(250, function (n, next) {
         client.execute(helper.queries.basic, [], next);
       }, done);
     });

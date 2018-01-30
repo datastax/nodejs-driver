@@ -134,8 +134,8 @@ describe('HostConnectionPool', function () {
       });
     });
     it('should balance between connections avoiding busy ones', function (done) {
-      const maxRequestsPerConnection = clientOptions.defaultOptions().pooling.maxRequestsPerConnection;
-      const hostPool = newHostConnectionPoolInstance();
+      const maxRequestsPerConnection = clientOptions.maxRequestsPerConnectionV3;
+      const hostPool = newHostConnectionPoolInstance({ pooling: { maxRequestsPerConnection }});
       hostPool.coreConnectionsLength = 4;
       hostPool.connections = [
         { getInFlight: helper.functionOf(maxRequestsPerConnection) },
@@ -154,8 +154,8 @@ describe('HostConnectionPool', function () {
           return done(err);
         }
         // Second and third connections should be selected
-        assert.strictEqual(6, result.filter(c => c === hostPool.connections[2]).length);
-        assert.strictEqual(2, result.filter(c => c === hostPool.connections[3]).length);
+        const expectedConnections = hostPool.connections.slice(2);
+        assert.strictEqual(8, result.filter(c => expectedConnections.indexOf(c) >= 0).length);
         done();
       });
     });

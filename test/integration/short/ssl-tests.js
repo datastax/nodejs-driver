@@ -4,6 +4,7 @@ const util = require('util');
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
+const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 
@@ -25,6 +26,15 @@ describe('Client', function () {
         client.connect(function (err) {
           assert.ifError(err);
           assert.strictEqual(client.hosts.length, 1);
+          helper.finish(client, done)();
+        });
+      });
+      it('should callback in error when rejecting unauthorized', function (done) {
+        const client = newInstance({ sslOptions: { rejectUnauthorized: true }});
+        client.connect(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.strictEqual(Object.keys(err.innerErrors).length, 1);
+          helper.assertInstanceOf(helper.values(err.innerErrors)[0], Error);
           helper.finish(client, done)();
         });
       });

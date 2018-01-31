@@ -756,7 +756,7 @@ describe('writers', function () {
           buffers.push(buf);
           totalLength += buf.length;
           if (cb) {
-            setTimeout(cb, 50);
+            setTimeout(cb, 20);
           }
           return (totalLength < coalescingThreshold);
         },
@@ -779,12 +779,14 @@ describe('writers', function () {
       for (let i = 0; i < 10; i++) {
         queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
-      setTimeout(function () {
-        // 5 frames
-        assert.strictEqual(itemCallbackCounter, 5);
-        assert.strictEqual(buffers.length, 5);
+      helper.setIntervalUntil(() => itemCallbackCounter === 10, 100, 50, () => {
+        // 10 frames
+        assert.strictEqual(itemCallbackCounter, 10);
+        // 10 frames coalesced into 2 buffers of 50b each
+        assert.strictEqual(buffers.length, 2);
+        buffers.forEach(b => assert.strictEqual(b.length, 50));
         done();
-      }, 500);
+      });
     });
   });
 });

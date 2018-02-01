@@ -133,6 +133,32 @@ describe('HostConnectionPool', function () {
         done();
       });
     });
+    it('should balance between connections avoiding busy ones', function (done) {
+      const maxRequestsPerConnection = clientOptions.maxRequestsPerConnectionV3;
+      const hostPool = newHostConnectionPoolInstance({ pooling: { maxRequestsPerConnection }});
+      hostPool.coreConnectionsLength = 4;
+      hostPool.connections = [
+        { getInFlight: helper.functionOf(maxRequestsPerConnection) },
+        { getInFlight: helper.functionOf(maxRequestsPerConnection) },
+        { getInFlight: helper.functionOf(0) },
+        { getInFlight: helper.functionOf(0) },
+      ];
+      const result = [];
+      utils.times(8, (n, next) => {
+        hostPool.borrowConnection((err, c) => {
+          result.push(c);
+          next(err);
+        });
+      }, err => {
+        if (err) {
+          return done(err);
+        }
+        // Second and third connections should be selected
+        const expectedConnections = hostPool.connections.slice(2);
+        assert.strictEqual(8, result.filter(c => expectedConnections.indexOf(c) >= 0).length);
+        done();
+      });
+    });
   });
   describe('#drainAndShutdown()', function () {
     it('should wait for connections to drain before shutting down', function (done) {
@@ -262,7 +288,7 @@ describe('HostConnectionPool', function () {
     });
   });
   describe('minInFlight()', function () {
-    it('should round robin with between connections with the same amount of in-flight requests', function () {
+    it('should round robin between connections with the same amount of in-flight requests', function () {
       /** @type {Array.<Connection>} */
       const connections = [];
       for (let i = 0; i < 3; i++) {
@@ -576,9 +602,7 @@ describe('Host', function () {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 4;
-      host.pool._createConnection = function () {
-        return { open: helper.callbackNoop };
-      };
+      host.pool._createConnection = () => newConnectionMock({ open: helper.callbackNoop });
       host.borrowConnection(function (err) {
         assert.ifError(err);
         host.warmupPool(function (err) {
@@ -595,11 +619,7 @@ describe('Host', function () {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 3;
-      host.pool._createConnection = function () {
-        return ({ open: function open(cb) {
-          setTimeout(cb, 20);
-        }});
-      };
+      host.pool._createConnection = () => newConnectionMock({ open: (cb) => setTimeout(cb, 20)});
       host.borrowConnection(function (err) {
         assert.ifError(err);
         host.warmupPool(function (err) {
@@ -616,9 +636,7 @@ describe('Host', function () {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 4;
-      host.pool._createConnection = function () {
-        return { open: helper.callbackNoop };
-      };
+      host.pool._createConnection = () => newConnectionMock({ open: helper.callbackNoop });
       host.warmupPool(function (err) {
         assert.ifError(err);
         assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
@@ -632,11 +650,7 @@ describe('Host', function () {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 3;
-      host.pool._createConnection = function () {
-        return ({ open: function open(cb) {
-          setTimeout(cb, 20);
-        }});
-      };
+      host.pool._createConnection = () => newConnectionMock({ open: (cb) => setTimeout(cb, 20)});
       host.warmupPool(function (err) {
         assert.ifError(err);
         assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
@@ -703,8 +717,9 @@ function newHostInstance(options) {
 /**
  * @returns {Connection}
  */
-function newConnectionMock() {
-  return ({
-    close: helper.noop
-  });
+function newConnectionMock(properties) {
+  return utils.extend({
+    close: helper.noop,
+    getInFlight: helper.functionOf(0)
+  }, properties);
 }

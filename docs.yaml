@@ -25,8 +25,6 @@ sections:
 links:
   - title: Code
     href:  https://github.com/datastax/nodejs-driver/
-  - title: Docs
-    href:  http://datastax.github.io/nodejs-driver/
   - title: Issues
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
   - title: Mailing List
@@ -36,8 +34,10 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/cassandra-driver
 versions:
-  - name: '3.3'
+  - name: '3.4'
     ref: 'master'
+  - name: '3.3'
+    ref: '3.3'
   - name: '3.2'
     ref: '3.2'
   - name: '3.1'

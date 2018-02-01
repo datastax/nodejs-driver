@@ -10,7 +10,6 @@ const util = require('util');
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
-const Connection = require('../../../lib/connection');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const errors = require('../../../lib/errors');
@@ -99,7 +98,7 @@ describe('client read timeouts', function () {
       const client = newInstance({
         socketOptions: {
           readTimeout: 3000,
-          defunctReadTimeoutThreshold: 32
+          defunctReadTimeoutThreshold: 16
         },
         //1 connection per host to simply it
         poolingOptions: {
@@ -111,7 +110,9 @@ describe('client read timeouts', function () {
         }
       });
       let coordinators = {};
-      let connection;
+      let hostDown = null;
+      // The driver should mark the host as down when the pool closes all connections
+      client.on('hostDown', h => hostDown = h);
       utils.series([
         client.connect.bind(client),
         function warmup(next) {
@@ -125,24 +126,13 @@ describe('client read timeouts', function () {
             });
           }, next);
         },
-        function identifyConnection(next) {
-          connection = client.hosts.values()
-            .filter(function (h) {
-              return helper.lastOctetOf(h) === '2';
-            })[0]
-            .pool
-            .connections[0];
-          helper.assertInstanceOf(connection, Connection);
-          assert.strictEqual(connection.netClient.writable, true);
-          next();
-        },
         helper.toTask(helper.ccmHelper.pauseNode, null, 2),
         function checkTimeouts(next) {
           assert.strictEqual(Object.keys(coordinators).length, 2);
           assert.strictEqual(coordinators['1'], true);
           assert.strictEqual(coordinators['2'], true);
           coordinators = {};
-          utils.times(500, function (n, timesNext) {
+          utils.timesLimit(500, 64, function (n, timesNext) {
             client.execute('SELECT key FROM system.local', function (err, result) {
               if (err) {
                 return timesNext(err);
@@ -156,9 +146,8 @@ describe('client read timeouts', function () {
             }
             assert.strictEqual(Object.keys(coordinators).length, 1);
             assert.strictEqual(coordinators['1'], true);
-            //we check using an internal property of socket which is lame
-            //and might break
-            assert.strictEqual(connection.netClient.writable, false);
+            assert.ok(hostDown);
+            assert.strictEqual(helper.lastOctetOf(hostDown), '2');
             next();
           });
         },

@@ -16,12 +16,10 @@ const vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
   this.timeout(60000);
-  const setupInfo = helper.setup('2:0', {
-    ccmOptions: {
-      vnodes: true,
-      yaml: helper.isDseGreaterThan('6') ? ['cdc_enabled:true'] : null
-    }
-  });
+  const setupInfo = helper.setup('2:0', { ccmOptions: {
+    vnodes: true,
+    yaml: helper.isDseGreaterThan('6') ? ['cdc_enabled:true'] : null
+  }});
   describe('Metadata', function () {
     describe('#keyspaces', function () {
       it('should keep keyspace information up to date', function (done) {

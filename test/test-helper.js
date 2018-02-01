@@ -30,7 +30,8 @@ const cassandraVersionByDse = {
 const helper = {
   /**
    * Creates a ccm cluster, initializes a Client instance the before() and after() hooks, create
-   * @param {Number} nodeLength
+   * @param {Number|String} nodeLength A number representing the amount of nodes in a single datacenter or a string
+   * representing the amount of nodes in each datacenter, ie: "3:4".
    * @param {Object} [options]
    * @param {Object} [options.ccmOptions]
    * @param {Boolean} [options.initClient] Determines whether to create a Client instance.

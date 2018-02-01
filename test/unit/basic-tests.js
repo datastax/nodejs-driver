@@ -754,15 +754,24 @@ describe('writers', function () {
   describe('WriteQueue', function () {
     it('should buffer until threshold is passed', function (done) {
       let itemCallbackCounter = 0;
+      const coalescingThreshold = 50;
       const buffers = [];
+      let totalLength = 0;
       const socketMock = {
         write: function (buf, cb) {
           buffers.push(buf);
-          setTimeout(cb, 50);
-        }
+          totalLength += buf.length;
+          if (cb) {
+            setTimeout(cb, 20);
+          }
+          return (totalLength < coalescingThreshold);
+        },
+        on: utils.noop,
+        cork: utils.noop,
+        uncork: utils.noop
       };
       const options = utils.extend({}, clientOptions.defaultOptions());
-      options.socketOptions.coalescingThreshold = 50;
+      options.socketOptions.coalescingThreshold = coalescingThreshold;
       const encoder = new Encoder(3, options);
       const queue = new writers.WriteQueue(socketMock, encoder, options);
       const request = {
@@ -776,18 +785,14 @@ describe('writers', function () {
       for (let i = 0; i < 10; i++) {
         queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
-      setTimeout(function () {
-        //10 frames
+      helper.setIntervalUntil(() => itemCallbackCounter === 10, 100, 50, () => {
+        // 10 frames
         assert.strictEqual(itemCallbackCounter, 10);
-        assert.strictEqual(buffers.length, 3);
-        //first part is only 1 message
-        assert.strictEqual(buffers[0].length, 10);
-        //second part contains 5 messages
-        assert.strictEqual(buffers[1].length, 50);
-        //second part contains 4 messages
-        assert.strictEqual(buffers[2].length, 40);
+        // 10 frames coalesced into 2 buffers of 50b each
+        assert.strictEqual(buffers.length, 2);
+        buffers.forEach(b => assert.strictEqual(b.length, 50));
         done();
-      }, 500);
+      });
     });
   });
 });

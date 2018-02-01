@@ -10,6 +10,7 @@ const util = require('util');
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
+const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 
@@ -34,16 +35,25 @@ describe('Client', function () {
           helper.finish(client, done)();
         });
       });
+      it('should callback in error when rejecting unauthorized', function (done) {
+        const client = newInstance({ sslOptions: { rejectUnauthorized: true }});
+        client.connect(function (err) {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.strictEqual(Object.keys(err.innerErrors).length, 1);
+          helper.assertInstanceOf(helper.values(err.innerErrors)[0], Error);
+          helper.finish(client, done)();
+        });
+      });
     });
     describe('#execute()', function () {
-      it('should handle multiple requests in parallel with queueing', function (done) {
-        const parallelLimit = 2100;
+      it('should handle multiple requests in parallel', function (done) {
+        const parallelLimit = 800;
         const client = newInstance();
         utils.series([
           client.connect.bind(client),
           function insert(next) {
             const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-            utils.timesLimit(40000, parallelLimit, function (n, timesNext) {
+            utils.timesLimit(20000, parallelLimit, function (n, timesNext) {
               client.execute(query, [ types.Uuid.random(), 'value ' + n ], { prepare: true }, timesNext);
             }, next);
           }

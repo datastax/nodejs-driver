@@ -150,7 +150,7 @@ describe('Connection', function () {
       ], done);
     });
   });
-  describe('#execute()', function () {
+  describe('#sendStream()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
     it('should queue pending if there is not an available stream id', function (done) {
@@ -196,6 +196,39 @@ describe('Connection', function () {
           }, seriesNext);
         },
         connection.close.bind(connection)
+      ], done);
+    });
+    it('should not consume streamIds for requests that cant be serialized', function (done) {
+      const options = utils.extend({}, defaultOptions);
+      options.socketOptions.readTimeout = 0;
+      options.policies.retry = new helper.RetryMultipleTimes(3);
+      const connection = newInstance(null, null, options);
+      const testError = new Error('Dummy serialization error');
+      utils.series([
+        next => connection.open(next),
+        next => {
+          setImmediate(() => {
+            assert.strictEqual(connection.getInFlight(), 0);
+            next();
+          });
+        },
+        seriesNext => {
+          utils.timesSeries(1, function (n, next) {
+            const request = getRequest(helper.queries.basic);
+            request.write = () => { throw testError; };
+            connection.sendStream(request, null, err => {
+              assert.strictEqual(err, testError);
+              next();
+            });
+          }, seriesNext);
+        },
+        next => {
+          setImmediate(() => {
+            assert.strictEqual(connection.getInFlight(), 0);
+            next();
+          });
+        },
+        next => connection.close(next)
       ], done);
     });
   });

@@ -1,5 +1,33 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.4.0
+
+2018-02-05
+
+### Features
+
+- [NODEJS-95] - Expose node token and range information
+- [NODEJS-335] - Avoid using Object.defineProperty() for type representations
+- [NODEJS-344] - Verbose logging on Connection overhead
+- [NODEJS-363] - Drop support for Node.js v0.10 and v0.12
+- [NODEJS-378] - DCAwareRoundRobinPolicy: Warn when the local datacenter is not specified
+- [NODEJS-388] - Drop support for domains
+- [NODEJS-400] - Modify the message for batch log write failures
+- [NODEJS-402] - Batch: Use routing key from first statement
+- [NODEJS-404] - Use pooling.warmup to true as default
+- [NODEJS-405] - Use system.peers in protocol negotiation
+- [NODEJS-406] - Use ES2015 - Modernize codebase
+- [NODEJS-409] - alreadyExists error does not include keyspace and table attributes
+- [NODEJS-417] - Handle network stream backpressure when writing and limit write queue
+
+### Bug Fixes
+
+- [NODEJS-390] - Buffer.from() fails in older versions of Node.js v4 (lower than v4.5)
+- [NODEJS-403] - NoHostAvailableError does not call super DriverError constructor
+- [NODEJS-415] - Incorrect Murmur3 hashing of tokens which byte length satisfy length & 15 >= 12
+- [NODEJS-419] - Token to Replica map can omit replicas for vnodes
+
+
 ## 3.3.0
 
 2017-09-19

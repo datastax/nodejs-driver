@@ -701,7 +701,7 @@ describe('encoder', function () {
     });
     it('should not affect Token routing keys', function () {
       const token = new tokenizer.Murmur3Tokenizer().hash('4611686018427387904');
-      let options = {
+      const options = {
         routingIndexes: [1],
         routingKey: token
       };
@@ -713,7 +713,7 @@ describe('encoder', function () {
       const start = murmur3.hash('-9223372036854775808');
       const end = murmur3.hash('4611686018427387904');
       const range = new token.TokenRange(start, end, murmur3);
-      let options = {
+      const options = {
         routingIndexes: [1],
         routingKey: range
       };

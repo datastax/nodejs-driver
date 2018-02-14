@@ -145,10 +145,10 @@ context('with a reusable 3 node cluster', function () {
       }, helper.finish(client, done));
     });
     it('should target the correct replica using user-provided Buffer routingKey', function (done) {
-      testWithQueryOptions((client) => {
-        // Use [0] which should map to host 1.
-        return { routingKey: Buffer.from([0]) };
-      }, '1', done);
+      // Use [0] which should map to node 1
+      testWithQueryOptions((client) => ({
+        routingKey: Buffer.from([0])
+      }), '1', done);
     });
     it('should target the correct replica using user-provided Token routingKey', function (done) {
       testWithQueryOptions((client) => {

@@ -641,6 +641,26 @@ describe('Client', function () {
         }
       ], done);
     });
+
+    it('should callback with response error when partition key parameter is invalid', done => {
+      const client = setupInfo.client;
+      const query = util.format('SELECT * FROM %s WHERE id2 = ? AND id1 = ?', commonTable);
+
+      function validateResponseError(callback) {
+        return (err => {
+          helper.assertInstanceOf(err, errors.ResponseError);
+          assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+          callback();
+        });
+      }
+
+      utils.series([
+        next => client.execute(query, [], { prepare: true }, validateResponseError(next)),
+        next => client.execute(query, [ types.TimeUuid.now() ], { prepare: true }, validateResponseError(next)),
+        next => client.execute(query, [ types.TimeUuid.now(), null ], { prepare: true }, validateResponseError(next))
+      ], done);
+    });
+
     describe('with a different keyspace', function () {
       it('should fill in the keyspace in the query options passed to the lbp', function (done) {
         const lbp = new loadBalancing.RoundRobinPolicy();

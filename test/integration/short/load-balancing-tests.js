@@ -168,20 +168,17 @@ context('with a reusable 3 node cluster', function () {
         return { routingKey: range };
       }, '3', done);
     });
-    it('should throw TypeError if invalid routingKey type is provided', function () {
+    it('should throw TypeError if invalid routingKey type is provided', function (done) {
       const client = new Client({
         policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
         keyspace: 'ks_network_rp1',
         contactPoints: helper.baseOptions.contactPoints
       });
       const query = 'select * from system.local';
-      return client.execute(query, [], { routingKey: 'this is not valid' })
-        .then((result) => assert.ifError(result))
-        .catch((err) => {
-          assert.ok(err);
-          helper.assertInstanceOf(err, TypeError);
-        })
-        .then(() => client.shutdown());
+      client.execute(query, [], { routingKey: 'this is not valid' }, err => {
+        helper.assertInstanceOf(err, TypeError);
+        client.shutdown(done);
+      });
     });
   });
 });

@@ -150,8 +150,65 @@ context('with a reusable 3 node cluster', function () {
         });
       }, helper.finish(client, done));
     });
+    it('should target the correct replica using user-provided Buffer routingKey', function (done) {
+      // Use [0] which should map to node 1
+      testWithQueryOptions((client) => ({
+        routingKey: Buffer.from([0])
+      }), '1', done);
+    });
+    it('should target the correct replica using user-provided Token routingKey', function (done) {
+      testWithQueryOptions((client) => {
+        // Find TokenRange for host 2 and use the end token (which is inclusive).
+        const host = helper.findHost(client, 2);
+        const ranges = client.metadata.getTokenRangesForHost('ks_network_rp1', host);
+        const range = ranges.values().next().value;
+        return { routingKey: range.end };
+      }, '2', done);
+    });
+    it('should target the correct replica using user-provided TokenRange routingKey', function (done) {
+      testWithQueryOptions((client) => {
+        // Find TokenRange for host 3 and use it.
+        const host = helper.findHost(client, 3);
+        const ranges = client.metadata.getTokenRangesForHost('ks_network_rp1', host);
+        const range = ranges.values().next().value;
+        return { routingKey: range };
+      }, '3', done);
+    });
+    it('should throw TypeError if invalid routingKey type is provided', function (done) {
+      const client = new Client({
+        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+        keyspace: 'ks_network_rp1',
+        contactPoints: helper.baseOptions.contactPoints
+      });
+      const query = 'select * from system.local';
+      client.execute(query, [], { routingKey: 'this is not valid' }, err => {
+        helper.assertInstanceOf(err, TypeError);
+        client.shutdown(done);
+      });
+    });
   });
 });
+
+function testWithQueryOptions(optionsFn, expectedHostOctet, done) {
+  const client = new Client({
+    policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
+    keyspace: 'ks_network_rp1',
+    contactPoints: helper.baseOptions.contactPoints
+  });
+  client.connect(() => {
+    const query = 'select * from system.local';
+    const queryOptions = optionsFn(client);
+    utils.timesLimit(100, maxInFlightRequests, function (n, timesNext) {
+      client.execute(query, [], queryOptions, function (err, result) {
+        assert.ifError(err);
+        const hosts = Object.keys(result.info.triedHosts);
+        assert.strictEqual(hosts.length, 1);
+        assert.strictEqual(helper.lastOctetOf(hosts[0]), expectedHostOctet);
+        timesNext();
+      });
+    }, helper.finish(client, done));
+  });
+}
 
 /**
  * Check that the trace event sources only shows nodes that are replicas to fulfill a consistency ALL query.

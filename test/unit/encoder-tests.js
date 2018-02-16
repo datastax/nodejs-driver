@@ -8,6 +8,8 @@
 const assert = require('assert');
 const util = require('util');
 const utils = require('../../lib/utils');
+const tokenizer = require('../../lib/tokenizer');
+const token = require('../../lib/token');
 
 const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
@@ -705,6 +707,27 @@ describe('encoder', function () {
       //The routing key should take precedence over routingIndexes
       assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
     });
+    it('should not affect Token routing keys', function () {
+      const token = new tokenizer.Murmur3Tokenizer().hash('4611686018427387904');
+      const options = {
+        routingIndexes: [1],
+        routingKey: token
+      };
+      encoder.setRoutingKeyFromUser([1, 'text'], options);
+      assert.strictEqual(options.routingKey, token);
+    });
+    it('should not affect TokenRange routing keys', function () {
+      const murmur3 = new tokenizer.Murmur3Tokenizer();
+      const start = murmur3.hash('-9223372036854775808');
+      const end = murmur3.hash('4611686018427387904');
+      const range = new token.TokenRange(start, end, murmur3);
+      const options = {
+        routingIndexes: [1],
+        routingKey: range
+      };
+      encoder.setRoutingKeyFromUser([1, 'text'], options);
+      assert.strictEqual(options.routingKey, range);
+    });
     it('should build routing key based on routingIndexes', function () {
       /** @type {QueryOptions} */
       let options = {
@@ -777,6 +800,11 @@ describe('encoder', function () {
           routingIndexes: [0]
         };
         encoder.setRoutingKeyFromUser(['this is text'], options);
+      }, TypeError);
+    });
+    it('should throw TypeError if invalid routingKey type is provided', function () {
+      assert.throws(() => { 
+        encoder.setRoutingKeyFromUser([1, 'text'], { routingKey: 123 });
       }, TypeError);
     });
   });

@@ -41,7 +41,7 @@ describe('Client', function () {
     });
     describe('#execute()', function () {
       it('should handle multiple requests in parallel', function (done) {
-        const parallelLimit = helper.isCassandraGreaterThan('2.0') ? 800 : 120;
+        const parallelLimit = helper.isCassandraGreaterThan('2.1') ? 800 : 120;
         const client = newInstance();
         utils.series([
           client.connect.bind(client),

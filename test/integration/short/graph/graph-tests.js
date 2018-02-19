@@ -830,7 +830,7 @@ vdescribe('dse-5.0', 'Client', function () {
 
 // DSP-15333 prevents this suite to be tested against DSE 5.0
 vdescribe('dse-5.1', 'Client with down node', function () {
-  this.timeout(240000);
+  this.timeout(270000);
   before(function (done) {
     const client = new Client(helper.getOptions());
     utils.series([
@@ -859,6 +859,8 @@ vdescribe('dse-5.1', 'Client with down node', function () {
       function stopNode(next) {
         helper.ccm.stopNode(2, next);
       },
+      // Wait for the down node to be marked as unavailable by the other nodes
+      helper.delay(30000),
       client.shutdown.bind(client)
     ], done);
   });
@@ -871,9 +873,9 @@ vdescribe('dse-5.1', 'Client with down node', function () {
     function expectFailAtAll(done) {
       return (function(err, result) {
         assert.ok(err);
-        assert.strictEqual(err.code, types.responseErrorCodes.unavailableException);
         assert.strictEqual(
           err.message, 'Not enough replicas available for query at consistency ALL (3 required but only 2 alive)');
+        assert.strictEqual(err.code, types.responseErrorCodes.unavailableException);
         assert.strictEqual(result, undefined);
         done();
       });

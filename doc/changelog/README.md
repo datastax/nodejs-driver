@@ -2,6 +2,15 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 1.5.1
+
+2018-02-20
+
+### Bug Fixes
+
+- [NODEJS-429] - Additional validation needed in Encoder.setRoutingKeyFromUser to ensure provided routing key is valid
+- [NODEJS-430] - Unexpected error when query execution doesn't include parameters which are part of the partition key
+
 ## 1.5.0
 
 2018-02-05

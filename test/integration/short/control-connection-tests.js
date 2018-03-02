@@ -18,7 +18,7 @@ const policies = require('../../../lib/policies');
 const ProfileManager = require('../../../lib/execution-profile').ProfileManager;
 
 describe('ControlConnection', function () {
-  this.timeout(120000);
+  this.timeout(240000);
   describe('#init()', function () {
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);

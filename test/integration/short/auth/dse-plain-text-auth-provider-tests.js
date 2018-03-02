@@ -12,7 +12,7 @@ const Client = require('../../../../lib/dse-client');
 const vit = helper.vit;
 
 describe('DsePlainTextAuthProvider', function () {
-  this.timeout(60000);
+  this.timeout(180000);
   it('should authenticate against DSE daemon instance', function (done) {
     const testClusterOptions = {
       yaml: ['authenticator:PasswordAuthenticator'],

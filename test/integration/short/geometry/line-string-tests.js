@@ -80,6 +80,10 @@ vdescribe('dse-5.0', 'LineString', function () {
   [0, 1].forEach(function (prepare) {
     const name = prepare ? 'prepared' : 'simple';
     it(util.format('should encode lines for %s queries', name), function (done) {
+      // Re-enable test when DSP-15650 is fixed.
+      if (helper.isDseGreaterThan('6')) {
+        this.skip();
+      }
       const client = new Client(helper.getOptions());
       utils.series([
         client.connect.bind(client),

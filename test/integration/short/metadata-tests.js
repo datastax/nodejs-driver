@@ -15,7 +15,7 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
-  this.timeout(60000);
+  this.timeout(240000);
   const setupInfo = helper.setup('2:0', { ccmOptions: {
     vnodes: true,
     yaml: helper.isDseGreaterThan('6') ? ['cdc_enabled:true'] : null
@@ -76,17 +76,17 @@ describe('metadata', function () {
               next();
             });
           },
-          helper.toTask(client.execute, client, "ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'dc2' : 1}"),
+          helper.toTask(client.execute, client, "ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'dc1' : 1}"),
           function checkAlteredKeyspace(next) {
             // rf strategy should have changed on client.
-            checkKeyspace(client, 'ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc2', '1');
+            checkKeyspace(client, 'ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
 
             // rf strategy should not have changed yet on nonSyncClient without refreshing explicitly.
             checkKeyspace(nonSyncClient, 'ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
 
             nonSyncClient.metadata.refreshKeyspace('ks3', function (err, ks) {
               assert.ifError(err);
-              checkKeyspaceWithInfo(ks, 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc2', '1');
+              checkKeyspaceWithInfo(ks, 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
               next();
             });
           },
@@ -396,8 +396,6 @@ describe('metadata', function () {
           "CREATE TABLE tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
           "CREATE TABLE tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
           "CREATE TABLE tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
-          "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
-          "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
           "CREATE TABLE tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
           "CREATE TABLE tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
           "CREATE TABLE tbl9 (id uuid, c1 'DynamicCompositeType(s => UTF8Type, i => Int32Type)', c2 'ReversedType(CompositeType(UTF8Type, Int32Type))', c3 'Int32Type', PRIMARY KEY (id, c1, c2))",
@@ -433,6 +431,12 @@ describe('metadata', function () {
           queries.push(
             'CREATE TABLE tbl_cdc_true (a int PRIMARY KEY, b text) WITH cdc=TRUE',
             'CREATE TABLE tbl_cdc_false (a int PRIMARY KEY, b text) WITH cdc=FALSE'
+          );
+        } else {
+          // COMPACT STORAGE is not supported by DSE 6.0 / C* 4.0.
+          queries.push(
+            "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
+            "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE"
           );
         }
         utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
@@ -558,6 +562,9 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table', function (done) {
+        if (helper.isDseGreaterThan('6')) {
+          this.skip();
+        }
         const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
@@ -580,6 +587,9 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table with clustering key', function (done) {
+        if (helper.isDseGreaterThan('6')) {
+          this.skip();
+        }
         const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);

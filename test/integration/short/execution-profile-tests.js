@@ -17,7 +17,7 @@ const WhiteListPolicy = loadBalancing.WhiteListPolicy;
 const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 
 describe('ProfileManager', function() {
-  this.timeout(120000);
+  this.timeout(240000);
   before(helper.ccmHelper.start('2:2'));
   after(helper.ccmHelper.remove);
 

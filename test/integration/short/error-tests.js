@@ -16,7 +16,7 @@ const protocolVersion = types.protocolVersion;
 const vdescribe = helper.vdescribe;
 
 describe('Client', function () {
-  this.timeout(120000);
+  this.timeout(240000);
   vdescribe('2.2', 'with protocol v4 errors', function () {
     const failWritesKs = helper.getRandomName('ks');
     const failWritesTable = failWritesKs + '.tbl1';

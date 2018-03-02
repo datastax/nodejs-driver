@@ -57,7 +57,7 @@ const modernGraph =
   'peter.addEdge("created", lop, "weight", 0.2f);';
 
 vdescribe('dse-5.0', 'Client', function () {
-  this.timeout(60000);
+  this.timeout(120000);
   before(function (done) {
     const client = new Client(helper.getOptions());
     utils.series([
@@ -383,7 +383,7 @@ vdescribe('dse-5.0', 'Client', function () {
               client.executeGraph(schemaQuery, next);
             },
             function createVertex (next) {
-              const query = "g.addV(label, 'graphson2_meta_v', 'graphson2_meta_prop', 'hello')";
+              const query = "g.addV('graphson2_meta_v').property('graphson2_meta_prop', 'hello')";
               client.executeGraph(query, function (err, result) {
                 assert.ifError(err);
                 assert.ok(result);
@@ -574,7 +574,7 @@ vdescribe('dse-5.0', 'Client', function () {
           client.executeGraph(schemaQuery, next);
         },
         function createVertex (next) {
-          const query = "g.addV(label, 'multi_v', 'multi_prop', 'Hello', 'multi_prop', 'Sweet', 'multi_prop', 'World')";
+          const query = "g.addV('multi_v').property('multi_prop', 'Hello').property('multi_prop', 'Sweet').property('multi_prop', 'World')";
           client.executeGraph(query, function (err, result) {
             assert.ok(result);
             assert.strictEqual(result.length, 1);
@@ -613,7 +613,7 @@ vdescribe('dse-5.0', 'Client', function () {
           client.executeGraph(schemaQuery, next);
         },
         function createVertex (next) {
-          client.executeGraph("g.addV(label, 'meta_v', 'meta_prop', 'hello')", function (err, result) {
+          client.executeGraph("g.addV('meta_v').property('meta_prop', 'hello')", function (err, result) {
             assert.ifError(err);
             assert.ok(result);
             assert.strictEqual(result.length, 1);
@@ -652,7 +652,7 @@ vdescribe('dse-5.0', 'Client', function () {
       ], done);
     }));
     it('should handle multiple vertex creation queries simultaneously', wrapClient(function(client, done) {
-      const addQuery = "g.addV(label, 'simu', 'username', username, 'uuid', uuid, 'number', number)";
+      const addQuery = "g.addV('simu').property('username', username).property('uuid', uuid).property('number', number)";
       const vertexCount = 100;
       const users = [];
 
@@ -804,7 +804,7 @@ vdescribe('dse-5.0', 'Client', function () {
               const value = input[index];
               const params = {vertexLabel: vertexLabel, propertyName: propertyName, val: value};
               // Add vertex and ensure it is properly decoded.
-              client.executeGraph("g.addV(label, vertexLabel, propertyName, val)", params, null, function (err, result) {
+              client.executeGraph("g.addV(vertexLabel).property(propertyName, val)", params, null, function (err, result) {
                 assert.ifError(err);
                 validateVertexResult(result, expected[index], vertexLabel, propertyName);
 

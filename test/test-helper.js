@@ -24,7 +24,8 @@ util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 const cassandraVersionByDse = {
   '4.8': '2.1',
   '5.0': '3.0',
-  '5.1': '3.10'
+  '5.1': '3.11',
+  '6.0': '4.0'
 };
 
 const helper = {
@@ -263,18 +264,22 @@ const helper = {
   getDseVersion: function() {
     let version = process.env['TEST_DSE_VERSION'];
     if (!version) {
-      version = '4.8.11';
+      version = '5.1.6';
     }
     return version;
   },
   getCassandraVersion: function () {
-    return cassandraVersionByDse[this.getDseVersion()];
+    const dseVersion = this.getDseVersion().split('.').slice(0, 2).join('.');
+    return cassandraVersionByDse[dseVersion];
   },
   getSimulatedCassandraVersion: function() {
     let version = this.getCassandraVersion();
     // simulacron does not support protocol V2 and V1, so cap at 2.1.
     if (version < '2.1') {
       version = '2.1.19';
+    } else if (version >= '4.0') {
+      // simulacron does not support protocol V5, so cap at 3.11
+      version = '3.11.2';
     }
     return version;
   },

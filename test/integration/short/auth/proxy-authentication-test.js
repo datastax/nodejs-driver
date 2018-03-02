@@ -17,7 +17,7 @@ const vdescribe = helper.vdescribe;
 const ads = helper.ads;
 
 vdescribe('dse-5.1', 'Proxy Authentication', function () {
-  this.timeout(60000);
+  this.timeout(180000);
   before(function (done) {
     utils.series([
       ads.start.bind(ads),

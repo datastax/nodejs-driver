@@ -8,7 +8,7 @@ schedules:
         - nodejs: ['6']
         # Only build with latest for 4.x
         - nodejs: '4'
-          cassandra: ['dse-4.8', 'dse-5.0']
+          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1']
   nightly:
     # Run full suite nightly on change for all primary branches if they have changes.
     schedule: nightly
@@ -30,6 +30,7 @@ cassandra:
   - dse-4.8
   - dse-5.0
   - dse-5.1
+  - dse-6.0
 build:
   - npm: install
   - script: |

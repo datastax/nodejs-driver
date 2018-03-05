@@ -539,6 +539,55 @@ describe('Client', function () {
         done();
       });
     });
+    vdescribe('3.0.16', 'with noCompact', function () {
+      before(function (done) {
+        // C* 4.0 does not support compact storage
+        if (helper.isCassandraGreaterThan('4.0')) {
+          this.skip();
+        }
+        const client = newInstance({keyspace: keyspace, protocolOptions: { noCompact: true }});
+        utils.series([
+          client.connect.bind(client),
+          helper.toTask(client.execute, client, 'CREATE TABLE tbl_cs (key blob PRIMARY KEY, bar int, baz uuid) WITH COMPACT STORAGE'),
+          helper.toTask(client.execute, client, "INSERT INTO tbl_cs (key, bar, baz, column1, value) values (0xc0, 10, 33cb65d4-6721-4ca8-854f-1f020c5353cb, 'yak', 0xcafedead)"),
+        ], done);
+      });
+      it('set to true should reveal non-schema columns', () => {
+        const client = newInstance({keyspace: keyspace, protocolOptions: { noCompact: true }});
+        return client.execute('select * from tbl_cs')
+          .then(result => {
+            assert.strictEqual(result.columns.length, 5);
+            const row = result.first();
+            assert.ok(row.column1, 'column1 should be present');
+            assert.ok(row.value, 'value should be present');
+            assert.strictEqual(row.column1, 'yak');
+            assert.deepEqual(row.value, utils.allocBufferFromArray([0xca, 0xfe, 0xde, 0xad]));
+            return client.shutdown();
+          });
+      });
+      it('set to false should not reveal non-schema columns', () => {
+        const client = newInstance({keyspace: keyspace, protocolOptions: { noCompact: false }});
+        return client.execute('select * from tbl_cs')
+          .then(result => {
+            assert.strictEqual(result.columns.length, 3);
+            const row = result.first();
+            assert.ifError(row.column1, 'column1 should not be present');
+            assert.ifError(row.value, 'value should not be present');
+            return client.shutdown();
+          });
+      });
+      it('unset should not reveal non-schema columns', () => {
+        const client = newInstance({keyspace: keyspace});
+        return client.execute('select * from tbl_cs')
+          .then(result => {
+            assert.strictEqual(result.columns.length, 3);
+            const row = result.first();
+            assert.ifError(row.column1, 'column1 should not be present');
+            assert.ifError(row.value, 'value should not be present');
+            return client.shutdown();
+          });
+      });
+    });
     describe('with udt and tuple', function () {
       const sampleId = types.Uuid.random();
       const insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (%s, %s, %s)';

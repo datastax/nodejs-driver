@@ -430,7 +430,9 @@ describe('metadata', function () {
         if (helper.isDseGreaterThan('6')) {
           queries.push(
             'CREATE TABLE tbl_cdc_true (a int PRIMARY KEY, b text) WITH cdc=TRUE',
-            'CREATE TABLE tbl_cdc_false (a int PRIMARY KEY, b text) WITH cdc=FALSE'
+            'CREATE TABLE tbl_cdc_false (a int PRIMARY KEY, b text) WITH cdc=FALSE',
+            "CREATE TABLE tbl_nodesync_true (a int PRIMARY KEY, b text) WITH nodesync={'enabled': 'true', 'deadline_target_sec': '86400'}",
+            "CREATE TABLE tbl_nodesync_false (a int PRIMARY KEY, b text) WITH nodesync={'enabled': 'false'}" 
           );
         } else {
           // COMPACT STORAGE is not supported by DSE 6.0 / C* 4.0.
@@ -912,6 +914,20 @@ describe('metadata', function () {
           });
         }, done);
       });
+      vit('dse-6', 'should retrieve the nodesync information of a table metadata', function (done) {
+        const client = setupInfo.client;
+        utils.mapSeries([
+          ['tbl_nodesync_true', {'enabled': 'true', 'deadline_target_sec': '86400'}],
+          ['tbl_nodesync_false', {'enabled': 'false'}],
+          ['tbl1', null]
+        ], function mapEach(item, next) {
+          client.metadata.getTable(keyspace, item[0], function (err, table) {
+            assert.ifError(err);
+            assert.deepEqual(table.nodesync, item[1]);
+            next();
+          });
+        }, done);
+      });
       it('should retrieve the updated metadata after a schema change', function (done) {
         const client = newInstance();
         const nonSyncClient = newInstance({isMetadataSyncEnabled: false});
@@ -972,6 +988,9 @@ describe('metadata', function () {
           "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
           "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC)"
         ];
+        if (helper.isDseGreaterThan('6')) {
+          queries.push("CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh_nodesync AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC) AND nodesync = { 'enabled': 'true', 'deadline_target_sec': '86400'}");
+        }
         utils.eachSeries(queries, client.execute.bind(client), function (err) {
           client.shutdown();
           if (err) {
@@ -997,11 +1016,25 @@ describe('metadata', function () {
               assert.strictEqual(view.clusteringKeys[1].name, 'user');
               assert.strictEqual(view.partitionKeys.length, 4);
               assert.strictEqual(view.partitionKeys.map(x => x.name).join(', '), 'game, year, month, day');
+              assert.strictEqual(view.nodesync, null);
               next();
             });
           },
           client.shutdown.bind(client)
         ], done);
+      });
+      vit('dse-6', 'should retrieve the nodesync information of a materialized view metadata', function (done) {
+        const client = setupInfo.client;
+        utils.mapSeries([
+          ['dailyhigh_nodesync', {'enabled': 'true', 'deadline_target_sec': '86400'}],
+          ['dailyhigh', null]
+        ], function mapEach(item, next) {
+          client.metadata.getMaterializedView(keyspace, item[0], function (err, table) {
+            assert.ifError(err);
+            assert.deepEqual(table.nodesync, item[1]);
+            next();
+          });
+        }, done);
       });
       it('should refresh the view metadata via events', function (done) {
         const client = newInstance({keyspace: 'ks_view_meta', refreshSchemaDelay: 50});

@@ -541,9 +541,12 @@ describe('Client', function () {
     });
     vdescribe('3.0.16', 'with noCompact', function () {
       before(function (done) {
-        // C* 4.0 does not support compact storage
+        // While C* 4.0 supports the NO_COMPACT option, there is no way to create
+        // COMPACT STORAGE tables other than creating with an older C* version and
+        // then upgrading which is outside the scope of this test.
         if (helper.isCassandraGreaterThan('4.0')) {
           this.skip();
+          return;
         }
         const client = newInstance({keyspace: keyspace, protocolOptions: { noCompact: true }});
         utils.series([

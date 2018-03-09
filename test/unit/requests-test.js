@@ -79,6 +79,24 @@ describe('Startup', function() {
   });
 });
 
+describe('options', () => {
+  describe('#write()', () => {
+    it('should have empty body', () => {
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.maxSupported, // protocol version
+        0, 0, 0, 5, // flags + stream id + opcode (5 = options)
+        0, 0, 0, 0 // body length 0
+      ]);
+      assert.deepEqual(requests.options.write(encoder, 0), expectedBuffer);
+    });
+  });
+  describe('#clone()', () => {
+    it('should return the same instance', () => {
+      assert.strictEqual(requests.options.clone(), requests.options);
+    });
+  });
+});
+
 function testClone(request) {
   it('should return a new instance with the same properties', function () {
     const cloned = request.clone();

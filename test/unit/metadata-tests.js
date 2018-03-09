@@ -26,7 +26,25 @@ function expectRanges(metadata, keyspace, host, expectedRanges) {
 }
 
 describe('Metadata', function () {
+  describe('#refreshKeyspace()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.refreshKeyspace('ks1')
+        .catch((err) => {
+          helper.assertInstanceOf(err, Error);
+          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
+        });
+    });
+  });
   describe('#refreshKeyspaces()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.refreshKeyspaces()
+        .catch((err) => {
+          helper.assertInstanceOf(err, Error);
+          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
+        });
+    });
     it('should parse C*2 keyspace metadata for simple strategy', function (done) {
       const cc = {
         query: function (q, w, cb) {
@@ -727,6 +745,14 @@ describe('Metadata', function () {
     });
   });
   describe('#getTrace()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getTrace(types.Uuid.random(), types.consistencies.all)
+        .catch((err) => {
+          helper.assertInstanceOf(err, Error);
+          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
+        });
+    });
     it('should return the trace if its already stored', function (done) {
       const sessionRow = {
         request: 'request value',

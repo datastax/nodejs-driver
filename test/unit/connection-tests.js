@@ -17,8 +17,6 @@ const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
 const helper = require('../test-helper');
 
-const idleQuery = 'SELECT key from system.local';
-
 describe('Connection', function () {
   describe('constructor', function () {
     it('should parse host endpoint into address and port', function () {
@@ -131,10 +129,13 @@ describe('Connection', function () {
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 20 } }, writeQueueFake);
       c.sendStream(new requests.QueryRequest('QUERY1'), null, utils.noop);
       setTimeout(function () {
-        // 2 requests were sent, the user query plus the idle query
+        // 2 requests were sent, the user query plus the idle 'options' query
         assert.deepEqual(sent.map(function (op) {
-          return op.request.query;
-        }), [ 'QUERY1', idleQuery ]);
+          if (op.request instanceof requests.QueryRequest) {
+            return op.request.query;
+          }
+          return op.request;
+        }), [ 'QUERY1', requests.options ]);
         c.close();
         done();
       }, 30);
@@ -147,7 +148,10 @@ describe('Connection', function () {
       setTimeout(function () {
         // Only 1 request was sent, no idle query
         assert.deepEqual(sent.map(function (op) {
-          return op.request.query;
+          if (op.request instanceof requests.QueryRequest) {
+            return op.request.query;
+          }
+          return op.request;
         }), [ 'QUERY1' ]);
         c.close();
         done();
@@ -165,7 +169,10 @@ describe('Connection', function () {
       setTimeout(function () {
         // Only 4 request were sent, no idle query
         assert.deepEqual(sent.map(function (op) {
-          return op.request.query;
+          if (op.request instanceof requests.QueryRequest) {
+            return op.request.query;
+          }
+          return op.request;
         }), Array.apply(null, new Array(4)).map((x, i) => 'QUERY' + i));
         c.close();
         done();

@@ -26,13 +26,28 @@ const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
 const Encoder = require('../../lib/encoder');
 
-function expectRanges(metadata, keyspace, host, expectedRanges) {
-  const eRanges = new Set(expectedRanges.map((tokens) => new TokenRange(token(tokens[0]), token(tokens[1]), metadata.tokenizer)));
-  assert.deepEqual(metadata.getTokenRangesForHost(keyspace, host), eRanges);
-}
-
 describe('Metadata', function () {
+  describe('#refreshKeyspace()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.refreshKeyspace('ks1')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.refreshKeyspace('ks1', validateMetadataErr(done));
+    });
+  });
   describe('#refreshKeyspaces()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.refreshKeyspaces()
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.refreshKeyspaces(validateMetadataErr(done));
+    });
     it('should parse C*2 keyspace metadata for simple strategy', function (done) {
       const cc = {
         query: function (q, w, cb) {
@@ -45,6 +60,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const hosts = new HostMap();
       const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
@@ -90,6 +106,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const hosts = new HostMap();
       const h1 = new Host('127.0.0.1', 2, clientOptions.defaultOptions());
@@ -156,6 +173,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
@@ -184,6 +202,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       metadata.setCassandraVersion([3, 0]);
       metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
@@ -214,6 +233,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       metadata.ring = [0, 1, 2, 3, 4, 5].map((t) => token(t));
       metadata.ringTokensAsStrings = ['0', '1', '2', '3', '4', '5'];
@@ -248,6 +268,7 @@ describe('Metadata', function () {
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const racks = new utils.HashSet();
       racks.add('rack1');
@@ -288,6 +309,7 @@ describe('Metadata', function () {
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
@@ -334,6 +356,7 @@ describe('Metadata', function () {
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
@@ -381,6 +404,7 @@ describe('Metadata', function () {
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
@@ -431,6 +455,7 @@ describe('Metadata', function () {
       }]);
       const options = clientOptions.extend({}, helper.baseOptions);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.tokenizer = getTokenizer();
       const racksDc1 = new utils.HashSet();
       racksDc1.add('dc1_r1');
@@ -489,6 +514,7 @@ describe('Metadata', function () {
   describe('#clearPrepared()', function () {
     it('should clear the internal state', function () {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.initialized = true;
       const info1 = metadata.getPreparedInfo(null, 'QUERY1');
       // Should be created once
       assert.strictEqual(info1, metadata.getPreparedInfo(null, 'QUERY1'));
@@ -501,6 +527,7 @@ describe('Metadata', function () {
   describe('#getPreparedInfo()', function () {
     it('should create a new EventEmitter when the query has not been prepared', function () {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.initialized = true;
       let info = metadata.getPreparedInfo(null, 'query1');
       helper.assertInstanceOf(info, events.EventEmitter);
       info = metadata.getPreparedInfo(null, 'query2');
@@ -508,6 +535,7 @@ describe('Metadata', function () {
     });
     it('should get the same EventEmitter when the query is the same', function () {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.initialized = true;
       const info1 = metadata.getPreparedInfo(null, 'query1');
       helper.assertInstanceOf(info1, events.EventEmitter);
       const info2 = metadata.getPreparedInfo(null, 'query1');
@@ -516,6 +544,7 @@ describe('Metadata', function () {
     });
     it('should create a new EventEmitter when the query is the same but the keyspace is different', function () {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.initialized = true;
       const info0 = metadata.getPreparedInfo(null, 'query1');
       const info1 = metadata.getPreparedInfo('ks1', 'query1');
       const info2 = metadata.getPreparedInfo('ks2', 'query1');
@@ -543,6 +572,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
         assert.ifError(err);
@@ -552,6 +582,15 @@ describe('Metadata', function () {
         assert.strictEqual(udtInfo.fields.length, 3);
         done();
       });
+    });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getUdt('ks1', 'udt1')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getUdt('ks1', 'udt1', validateMetadataErr(done));
     });
     it('should callback in err when there is an error', function (done) {
       const cc = {
@@ -563,6 +602,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err) {
         helper.assertInstanceOf(err, Error);
@@ -579,6 +619,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
         assert.ifError(err);
@@ -601,6 +642,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       //no keyspace named ks1 in metadata
       metadata.keyspaces = {};
       metadata.getUdt('ks1', 'udt1', function (err, udtInfo) {
@@ -627,6 +669,7 @@ describe('Metadata', function () {
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
       utils.times(50, function (n, next) {
@@ -662,6 +705,7 @@ describe('Metadata', function () {
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
       //no keyspace named ks1 in metadata
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       //Invoke multiple times in parallel
       utils.timesSeries(50, function (n, next) {
@@ -689,6 +733,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks1: { udts: {}}};
       utils.timesSeries(20, function (n, next) {
         metadata.getUdt('ks1', 'udt20', function (err, udtInfo) {
@@ -704,6 +749,15 @@ describe('Metadata', function () {
     });
   });
   describe('#getTrace()', function () {
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getTrace(types.Uuid.random(), types.consistencies.all)
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getTrace(types.Uuid.random(), types.consistencies.all, validateMetadataErr(done));
+    });
     it('should return the trace if its already stored', function (done) {
       const sessionRow = {
         request: 'request value',
@@ -730,6 +784,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.getTrace(types.Uuid.random(), types.consistencies.all, function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -775,6 +830,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -819,6 +875,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ifError(err);
         assert.ok(trace);
@@ -856,6 +913,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.getTrace(types.Uuid.random(), function (err, trace) {
         assert.ok(err);
         assert.ok(!trace);
@@ -874,6 +932,7 @@ describe('Metadata', function () {
         }
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.getTrace(types.Uuid.random(), function (receivedErr, trace) {
         assert.ok(err);
         assert.strictEqual(receivedErr, err);
@@ -896,6 +955,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       metadata.getTable('ks_tbl_meta', 'tbl_does_not_exists', function (err, table) {
         assert.ifError(err);
@@ -903,8 +963,18 @@ describe('Metadata', function () {
         done();
       });
     });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getTable('ks1', 'tbl1')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getTable('ks1', 'tbl1', validateMetadataErr(done));
+    });
     it('should be null when keyspace does not exists', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), {});
+      metadata.initialized = true;
       metadata.keyspaces = { };
       metadata.getTable('ks_does_not_exists', 'tbl1', function (err, table) {
         assert.ifError(err);
@@ -938,6 +1008,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.map(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -978,6 +1049,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -1009,6 +1081,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(1, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
       utils.mapSeries(new Array(100), function (n, next) {
         metadata.getTable('ks_tbl_meta', 'tbl1', next);
@@ -1033,6 +1106,7 @@ describe('Metadata', function () {
       options.isMetadataSyncEnabled = false;
       const cc = getControlConnectionForTable(tableRow, columnRows);
       const metadata = new Metadata(options, cc);
+      metadata.initialized = true;
       metadata.keyspaces = { };
       metadata.setCassandraVersion([3, 0]);
       utils.mapSeries(new Array(100), function (n, next) {
@@ -1064,6 +1138,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, type: 'regular', validator: customType }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1115,6 +1190,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text1', component_index: null, index_name: null, index_options: 'null', index_type: null, type: 'compact_value', validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1140,6 +1216,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text2","component_index":null,"index_name":null,"index_options":"null","index_type":null,"type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1163,6 +1240,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"foo":"bar", "class_name":"dummy.DummyIndex"}',"index_type":"CUSTOM","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1189,6 +1267,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"text1","component_index":null,"index_name":"custom_index","index_options":'{"index_keys": ""}',"index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
           assert.ifError(err);
@@ -1218,6 +1297,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_tbl_meta","columnfamily_name":"tbl1","column_name":"b@706172656e745f70617468","component_index":null,"index_name":"cfs_archive_parent_path","index_options":"\"null\"","index_type":"KEYS","type":"regular","validator":"org.apache.cassandra.db.marshal.UTF8Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'b@706172656e745f70617468', function (err, table) {
           assert.ifError(err);
@@ -1250,6 +1330,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'valcus3', component_index: 1, index_name: null, index_options: null, index_type: null, validator: customType }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1282,6 +1363,7 @@ describe('Metadata', function () {
           key_aliases: '["id"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: null };
         const columnRows = [ { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text_sample', component_index: 0, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' } ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1303,6 +1385,7 @@ describe('Metadata', function () {
           value_alias: 'text1' };
         const columnRows = [];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1326,6 +1409,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl1', column_name: 'text2', component_index: null, index_name: null, index_options: null, index_type: null, validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1344,6 +1428,7 @@ describe('Metadata', function () {
           comparator: 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.TimeUUIDType,org.apache.cassandra.db.marshal.UTF8Type)', compression_parameters: '{"sstable_compression":"org.apache.cassandra.io.compress.SnappyCompressor"}', default_validator: 'org.apache.cassandra.db.marshal.BytesType', gc_grace_seconds: 864000, id: null, key_alias: null, key_aliases: '["id1"]', key_validator: 'org.apache.cassandra.db.marshal.UUIDType', local_read_repair_chance: 0, max_compaction_threshold: 32, min_compaction_threshold: 4, populate_io_cache_on_flush: false, read_repair_chance: 0.1, replicate_on_write: true, subcomparator: null, type: 'Standard', value_alias: '' };
         const columnRows = [];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
           assert.ifError(err);
@@ -1373,6 +1458,7 @@ describe('Metadata', function () {
           { keyspace_name: 'ks_tbl_meta', columnfamily_name: 'tbl_c22', column_name: 'custom_sample', component_index: 0, index_name: null, index_options: 'null', index_type: null, type: 'regular', validator: customType }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl_c22', function (err, table) {
           assert.ifError(err);
@@ -1430,6 +1516,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl4", "column_name": "zck", "clustering_order": "asc", "column_name_bytes": "0x7a636b", "kind": "clustering", "position": 0, "type": "timeuuid"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl4', function (err, table) {
@@ -1465,6 +1552,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl1", "column_name": "text_sample", "clustering_order": "none", "column_name_bytes": "0x746578745f73616d706c65", "kind": "regular", "position": -1, "type": "text"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
@@ -1489,6 +1577,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl5", "column_name": "text1", "clustering_order": "none", "column_name_bytes": "0x7465787431", "kind": "regular", "position": -1, "type": "text"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl5', function (err, table) {
@@ -1517,6 +1606,7 @@ describe('Metadata', function () {
           {"index_name": "custom_index", "kind": "CUSTOM", "options": {"foo":"bar","class_name":"dummy.DummyIndex","target":"a, b, keys(c)"}}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows,indexRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl5', function (err, table) {
@@ -1550,6 +1640,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl6", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "blob"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl6', function (err, table) {
@@ -1575,6 +1666,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_tbl_meta", "table_name": "tbl10", "column_name": "value", "clustering_order": "none", "column_name_bytes": "0x76616c7565", "kind": "regular", "position": -1, "type": "empty"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'tbl1', function (err, table) {
@@ -1612,6 +1704,7 @@ describe('Metadata', function () {
             validator: 'org.apache.cassandra.db.marshal.UTF8Type' }
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForTable(tableRow, columnRows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([2, 1]);
         metadata.keyspaces = { ks_tbl_meta: { tables: {}}};
         metadata.getTable('ks_tbl_meta', 'ThriftSecondaryIndexTest', function (err, table) {
@@ -1634,6 +1727,7 @@ describe('Metadata', function () {
   describe('#getFunctions()', function () {
     it('should return an empty array when not found', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
         assert.ifError(err);
@@ -1641,6 +1735,15 @@ describe('Metadata', function () {
         assert.strictEqual(funcArray.length, 0);
         done();
       });
+    });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getFunctions('ks_udf', 'plus')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getFunctions('ks_udf', 'plus', validateMetadataErr(done));
     });
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
@@ -1658,6 +1761,7 @@ describe('Metadata', function () {
           getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.times(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1686,6 +1790,7 @@ describe('Metadata', function () {
           getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1719,6 +1824,7 @@ describe('Metadata', function () {
           getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1758,6 +1864,7 @@ describe('Metadata', function () {
           getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         utils.timesSeries(10, function (n, next) {
           metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1784,6 +1891,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
           assert.ifError(err);
@@ -1820,6 +1928,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'return_one', function (err, funcArray) {
           assert.ifError(err);
@@ -1842,6 +1951,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_udf", "function_name": "plus", "argument_types": ["int", "int"], "argument_names": ["s", "v"], "body": "return s+v;", "called_on_null_input": false, "language": "java", "return_type": "int"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces['ks_udf'] = { functions: {}};
         metadata.getFunctions('ks_udf', 'plus', function (err, funcArray) {
@@ -1868,12 +1978,23 @@ describe('Metadata', function () {
     context('with no callback specified', function () {
       it('should return a Promise', function () {
         const metadata = newInstance();
+        metadata.initialized = true;
         const p = metadata.getFunction('ks1', 'fn1', []);
         helper.assertInstanceOf(p, Promise);
       });
     });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getFunction('ks1', 'fn1', [])
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getFunction('ks1', 'fn1', [], validateMetadataErr(done));
+    });
     it('should callback in error if keyspace or name are not provided', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', null, [], function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1882,6 +2003,7 @@ describe('Metadata', function () {
     });
     it('should callback in error if signature is not an array', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'func1', {}, function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1890,6 +2012,7 @@ describe('Metadata', function () {
     });
     it('should callback in error if signature types are not found', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'func1', [{code: 0x1000}], function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
@@ -1911,6 +2034,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       utils.times(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
@@ -1940,6 +2064,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       utils.timesSeries(10, function (n, next) {
         metadata.getFunction('ks_udf', 'plus', ['bigint', 'bigint'], function (err, func) {
@@ -1956,6 +2081,7 @@ describe('Metadata', function () {
     });
     it('should return null when not found', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'plus', [], function (err, func) {
         assert.ifError(err);
@@ -1969,6 +2095,7 @@ describe('Metadata', function () {
         {"keyspace_name":"ks_udf","function_name":"plus","signature":["int","int"],"argument_names":["arg1","arg2"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type","org.apache.cassandra.db.marshal.Int32Type"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
       ];
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'plus', ['int', 'int'], function (err, func) {
         assert.ifError(err);
@@ -1991,6 +2118,7 @@ describe('Metadata', function () {
         {"keyspace_name":"ks_udf","function_name":"return_one","signature":[],"argument_names":null,"argument_types":null,"body":"return 1;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.Int32Type"}
       ];
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { functions: {}};
       metadata.getFunction('ks_udf', 'return_one', [], function (err, func) {
         assert.ifError(err);
@@ -2009,6 +2137,7 @@ describe('Metadata', function () {
   describe('#getAggregates()', function () {
     it('should return an empty array when not found', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+      metadata.initialized = true;
       metadata.keyspaces['ks_udf'] = { aggregates: {}};
       metadata.getAggregates('ks_udf', 'plus', function (err, funcArray) {
         assert.ifError(err);
@@ -2016,6 +2145,15 @@ describe('Metadata', function () {
         assert.strictEqual(funcArray.length, 0);
         done();
       });
+    });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getAggregates('ks_udf', 'plus')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getAggregates('ks_udf', 'plus', validateMetadataErr(done));
     });
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
@@ -2034,6 +2172,7 @@ describe('Metadata', function () {
           getEncoder: () => new Encoder(4, {})
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
         utils.times(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
@@ -2063,6 +2202,7 @@ describe('Metadata', function () {
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        metadata.initialized = true;
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
@@ -2096,6 +2236,7 @@ describe('Metadata', function () {
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        metadata.initialized = true;
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             assert.ifError(err);
@@ -2136,6 +2277,7 @@ describe('Metadata', function () {
         };
         const metadata = new Metadata(clientOptions.defaultOptions(), cc);
         metadata.keyspaces['ks_udf'] = { aggregates: {}};
+        metadata.initialized = true;
         utils.timesSeries(10, function (n, next) {
           metadata.getAggregates('ks_udf', 'sum', function (err, funcArray) {
             if (n < 5) {
@@ -2161,6 +2303,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_udf1","aggregate_name":"sum","signature":["int"],"argument_types":["org.apache.cassandra.db.marshal.Int32Type"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.Int32Type","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.Int32Type"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.initialized = true;
         metadata.keyspaces['ks_udf1'] = { aggregates: {}};
         metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
           assert.ifError(err);
@@ -2204,6 +2347,7 @@ describe('Metadata', function () {
           {"keyspace_name": "ks_udf1", "aggregate_name": "sum", "argument_types": ["int"], "final_func": null, "initcond": '1', "return_type": "int", "state_func": "plus", "state_type": "int"}
         ];
         const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows(rows));
+        metadata.initialized = true;
         metadata.setCassandraVersion([3, 0]);
         metadata.keyspaces['ks_udf1'] = { aggregates: {}};
         metadata.getAggregates('ks_udf1', 'sum', function (err, aggregatesArray) {
@@ -2264,6 +2408,7 @@ describe('Metadata', function () {
         getEncoder: () => new Encoder(4, {})
       };
       const metadata = new Metadata(clientOptions.defaultOptions(), cc);
+      metadata.initialized = true;
       metadata.setCassandraVersion([3, 0]);
       metadata.keyspaces['ks_mv'] = { views: {}};
       metadata.getMaterializedView('ks_mv', 'not_found', function (err, view) {
@@ -2272,8 +2417,18 @@ describe('Metadata', function () {
         done();
       });
     });
+    it('should reject if have not connected yet', () => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      return metadata.getMaterializedView('ks_mv', 'view1')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getMaterializedView('ks_mv', 'view1', validateMetadataErr(done));
+    });
     it('should callback in error when cassandra version is lower than 3.0', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), {});
+      metadata.initialized = true;
       metadata.setCassandraVersion([2, 1]);
       metadata.keyspaces['ks_mv'] = { views: {}};
       metadata.getTable = function (ksName, name, cb) {
@@ -2482,4 +2637,20 @@ function stringifyDefault(v) {
 /** @returns {Metadata} */
 function newInstance() {
   return new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+}
+
+function expectRanges(metadata, keyspace, host, expectedRanges) {
+  const eRanges = new Set(expectedRanges.map((tokens) => new TokenRange(token(tokens[0]), token(tokens[1]), metadata.tokenizer)));
+  assert.deepEqual(metadata.getTokenRangesForHost(keyspace, host), eRanges);
+}
+
+function validateMetadataErr(done) {
+  return (err) => {
+    assert.ok(err);
+    helper.assertInstanceOf(err, Error);
+    assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
+    if (done) {
+      done();
+    }
+  };
 }

@@ -86,9 +86,17 @@ describe('RequestHandler', function () {
       });
     });
     context('when an UNPREPARED response is obtained', function () {
-      it('should send a prepare request on the same connection', function (done) {
+      it('should send a prepare request on the same connection and update the cache', function (done) {
         const queryId = utils.allocBufferFromString('123');
-        const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
+        const resultId = utils.allocBufferFromString('8675');
+        const metadata = { resultId: resultId };
+        let executeRequest;
+        const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function prepareCallback(q, h, cb) {
+          // mock prepare returning metadata different than what is already cached.
+          cb(null, { meta: metadata });
+        }, function sendCallback(r, h, cb) {
+          // capture final execute request to ensure new metadata was propagated.
+          executeRequest = r;
           if (h.sendStreamCalled === 1) {
             // Its the first request, send an error
             const err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
@@ -98,9 +106,11 @@ describe('RequestHandler', function () {
           cb(null, { });
         });
         const hosts = lbp.getFixedQueryPlan();
+        const preparedCacheData = { query: 'QUERY1', meta: {}};
         const client = newClient({
           getPreparedById: function (id) {
-            return { query: 'QUERY1', id: id };
+            preparedCacheData.id = id;
+            return preparedCacheData;
           }
         }, lbp);
         const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
@@ -112,6 +122,11 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 2);
           assert.strictEqual(hosts[1].prepareCalled, 0);
           assert.strictEqual(hosts[1].sendStreamCalled, 0);
+          // metadata should be updated when reprepared.
+          const info = client.metadata.getPreparedById(1);
+          assert.deepEqual(info.meta, metadata);
+          // metadata should have been propagated to subsequent execute request.
+          assert.deepEqual(executeRequest.meta, metadata);
           done();
         });
       });
@@ -181,7 +196,7 @@ describe('RequestHandler', function () {
           if (h.address === '0') {
             return cb(new Error('Test error'));
           }
-          cb();
+          cb(null, { });
         }, function sendFake(r, h, cb) {
           if (h.sendStreamCalled === 1) {
             // Its the first request, send an error
@@ -206,6 +221,37 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].prepareCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 2);
+          done();
+        });
+      });
+      it('should update prepared cache when rows response received with new result id', function (done) {
+        const queryId = utils.allocBufferFromString('123');
+        const resultId = utils.allocBufferFromString('8675');
+        const newResultId = utils.allocBufferFromString('309');
+        const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
+          // mock a result having meta with a newResultId
+          cb(null, { meta: { newResultId: newResultId } });
+        });
+        const hosts = lbp.getFixedQueryPlan();
+        const preparedCacheData = { query: 'QUERY1', meta: { resultId: resultId }};
+        const client = newClient({
+          getPreparedById: function (id) {
+            preparedCacheData.id = id;
+            return preparedCacheData;
+          }
+        }, lbp);
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const handler = newInstance(request, client, lbp);
+        handler.send(function (err, response) {
+          assert.ifError(err);
+          assert.ok(response);
+          assert.strictEqual(hosts[0].prepareCalled, 0);
+          assert.strictEqual(hosts[0].sendStreamCalled, 1);
+          assert.strictEqual(hosts[1].prepareCalled, 0);
+          assert.strictEqual(hosts[1].sendStreamCalled, 0);
+          // metadata should be updated by newResultId detected in result.
+          const info = client.metadata.getPreparedById(1);
+          assert.deepEqual(info.meta.resultId, newResultId);
           done();
         });
       });

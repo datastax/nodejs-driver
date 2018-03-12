@@ -519,6 +519,71 @@ describe('Client', function () {
         insertSelectTest(setupInfo.keyspace + '.' + table, 50000, 2000, 10, { prepare: true, traceQuery: true }, done);
       });
     }
+    describe('With schema changes made while querying', () => {
+      // See client-execute-prepared-tests equivalent tests for explanation of test methodology
+      // used here with verifying prepared metadata.
+      const client = setupInfo.client;
+      let table;
+      const compareMetadata = helper.isDseGreaterThan('6.0');
+      beforeEach((done) => {
+        table = setupInfo.keyspace + '.' + helper.getRandomName('table');
+        const queries = [
+          util.format('CREATE TABLE %s (k int, a int, c int, primary key (k, a))', table)
+        ];
+
+        for(let i = 0; i < 10; i++) {
+          queries.push(util.format('INSERT INTO %s (k, a, c) values (%d,%d,%d)', table, 0, i, i));
+        }
+        utils.eachSeries(queries, client.execute.bind(client), done);
+      });
+      it('should be resilient to schema change made between paging', (done) => {
+        const query = util.format('select * from %s', table);
+        let schemaChangeMade = false;
+        let originalResultId;
+        client.eachRow(query, null, {prepare: true, fetchSize: 6}, (n, row) => {
+          // if on next page, offset index by fetch size.
+          const offset = schemaChangeMade ? 6 : 0;
+          // columns k, a, and c should always be present with expected values.
+          assert.strictEqual(row.k, 0);
+          assert.strictEqual(row.a, n + offset);
+          assert.strictEqual(row.c, n + offset);
+          // first 6 rows are received before schema change and thus should lack column 'b'.
+          if (!schemaChangeMade) {
+            assert.strictEqual(Object.keys(row).length, 3);
+            if (compareMetadata && !originalResultId) {
+              // capture current metadata resultId to compare after schema change is made.
+              const info = client.metadata.getPreparedInfo(setupInfo.keyspace, query);
+              originalResultId = info.meta.resultId;
+            }
+          } else {
+            // column b should be added as this data comes in page after schema change.
+            assert.strictEqual(Object.keys(row).length, 4);
+            assert.strictEqual(row.b, null);
+            if (compareMetadata) {
+              // result id should have changed as schema change would have provoked
+              // a reprepare.
+              const info = client.metadata.getPreparedInfo(setupInfo.keyspace, query);
+              const finalResultId = info.meta.resultId;
+              assert.notDeepEqual(finalResultId, originalResultId);
+            }
+          }
+        }, (err, result) => {
+          assert.ifError(err);
+          assert.ok(result);
+          if (result.nextPage) {
+            // make schema change.
+            client.execute(util.format('alter table %s add b int', table), (sErr, sResult) => {
+              assert.ifError(sErr);
+              schemaChangeMade = true;
+              // retrieve next page after schema change is made.
+              result.nextPage();
+            });
+          } else {
+            done();
+          }
+        });
+      });
+    });
   });
 });
 

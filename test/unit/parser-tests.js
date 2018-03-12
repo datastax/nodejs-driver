@@ -206,6 +206,53 @@ describe('Parser', function () {
       }, null, doneIfError(done));
     });
     it('should read a PREPARE result', function (done) {
+      const version = types.protocolVersion.dseV2;
+      const parser = newInstance(version);
+      const id = types.Uuid.random();
+      const resultMetaId = types.Uuid.random();
+      parser.on('readable', function () {
+        const item = parser.read();
+        assert.ifError(item.error);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        helper.assertInstanceOf(item.id, Buffer);
+        assert.strictEqual(item.id.toString('hex'), id.getBuffer().toString('hex'));
+        helper.assertInstanceOf(item.meta.resultId, Buffer);
+        assert.strictEqual(item.meta.resultId.toString('hex'), resultMetaId.getBuffer().toString('hex'));
+        assert.deepEqual(item.meta.partitionKeys, [4]);
+        done();
+      });
+      //kind +
+      // id length + id
+      // meta id length + id
+      // metadata (flags + columnLength + partitionKeyLength + partition key index + ksname + tblname + column name + column type) +
+      // result metadata (flags + columnLength + ksname + tblname + column name + column type)
+      const body = Buffer.concat([
+        utils.allocBufferFromArray([0, 0, 0, types.resultKind.prepared]),
+        utils.allocBufferFromArray([0, 16]),
+        id.getBuffer(),
+        utils.allocBufferFromArray([0, 16]),
+        resultMetaId.getBuffer(),
+        utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text]),
+        utils.allocBufferFromArray([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 62, 0, 1, 63, 0, 1, 61, 0, types.dataTypes.text])
+      ]);
+      const bodyLength = body.length;
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result, version),
+        chunk: body.slice(0, 22),
+        offset: 0
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result, version),
+        chunk: body.slice(22, 41),
+        offset: 0
+      }, null, doneIfError(done));
+      parser._transform({
+        header: getFrameHeader(bodyLength, types.opcodes.result, version),
+        chunk: body.slice(41),
+        offset: 0
+      }, null, doneIfError(done));
+    });
+    it('should read a PREPARE V2 result', function (done) {
       const parser = newInstance();
       const id = types.Uuid.random();
       parser.on('readable', function () {
@@ -766,6 +813,38 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 37), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 37, null), null, doneIfError(done));
+    });
+    it('should parse new_metadata_id in ROWS result', function (done) {
+      // Note: Given that the driver does not currently use skipMetadata, this should not be encountered
+      // in practice until NODEJS-433 is implemented.
+      const version = types.protocolVersion.dseV2;
+      const parser = newInstance(version);
+      const newId = types.Uuid.random();
+
+      parser.on('readable', function () {
+        const item = parser.read();
+        assert.ifError(item.error);
+        assert.strictEqual(item.header.opcode, types.opcodes.result);
+        helper.assertInstanceOf(item.result.meta.newResultId, Buffer);
+        assert.strictEqual(item.result.meta.newResultId.toString('hex'), newId.getBuffer().toString('hex'));
+        done();
+      });
+
+      const body = Buffer.concat([
+        utils.allocBufferFromArray([0, 0, 0, types.resultKind.rows]),
+        utils.allocBufferFromArray([0, 0, 0, 9]), // flags = metadata changed, global table spec
+        utils.allocBufferFromArray([0, 0, 0, 1]), // column count = 1
+        utils.allocBufferFromArray([0, 16]), // id length
+        newId.getBuffer(),
+        utils.allocBufferFromArray([0, 1, 0x62, 0, 1, 0x63, 0, 1, 0x61, 0, types.dataTypes.text]), // keyspace, table, column (of type text)
+        utils.allocBufferFromArray([0, 0, 0, 0]) // 0 rows.
+      ]);
+
+      parser._transform({
+        header: getFrameHeader(body.length, types.opcodes.result, version),
+        chunk: body,
+        offset: 0
+      }, null, doneIfError(done));
     });
     describe('with multiple chunk lengths', function () {
       const parser = newInstance();

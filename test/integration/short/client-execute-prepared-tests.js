@@ -1098,6 +1098,126 @@ describe('Client', function () {
           helper.assertInstanceOf(err, errors.ResponseError);
         });
     });
+    describe('With schema changes made while querying', () => {
+      // Note: Since the driver does not make use of result metadata on prepared statement
+      // it should inheritently be resilient to schema changes since it uses the metadata
+      // in the rows responses.  However, if NODEJS-433 is implemented the driver will
+      // need to be more deliberate in handling schema changes made at runtime.
+      const compareMetadata = helper.isDseGreaterThan('6.0');
+
+      // Test with two clients to ensure that a client can handle update the prepared metadata cache
+      // in the following the following cases:
+      //  1) it reprepares the statement on schema change and that updates the cache
+      //  2) server responds with rows response containing new_metadata_id that prompts updating
+      //      the cache. 
+      const client = setupInfo.client;
+      const client2 = newInstance({keyspace: commonKs});
+      let table;
+      beforeEach((done) => {
+        table = commonKs + '.' + helper.getRandomName('table');
+        const queries = [
+          util.format('CREATE TABLE %s (k int, a int, c int, primary key (k, a))', table)
+        ];
+
+        for(let i = 0; i < 10; i++) {
+          queries.push(util.format('INSERT INTO %s (k, a, c) values (%d,%d,%d)', table, 0, i, i));
+        }
+        utils.eachSeries(queries, client.execute.bind(client), done);
+      });
+      after((done) => client2.shutdown(done));
+      it('should be resilient to schema change between queries', (done) => {
+        const query = util.format('select * from %s', table);
+        let pageState;
+        let originalResultId;
+        let originalResultId2;
+        let finalResultId2;
+
+        utils.series([
+          (next) => {
+            client.execute(query, null, {prepare: true, fetchSize: 5}, (err, result) => {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.pageState);
+              pageState = result.pageState;
+              assert.strictEqual(result.columns.length, 3); // columns k, a, and c should be present.
+              assert.strictEqual(result.rows.length, 5);
+              // data should be present with expected values.
+              result.rows.forEach((row, index) => {
+                assert.strictEqual(row.k, 0);
+                assert.strictEqual(row.a, index);
+                assert.strictEqual(row.c, index);
+              });
+              if (compareMetadata) {
+                // capture current metadata resultId to compare after schema change is made.
+                const info = client.metadata.getPreparedInfo(commonKs, query);
+                originalResultId = info.meta.resultId;
+              }
+              next();
+            });
+          },
+          (next) => {
+            client2.execute(query, null, {prepare: true}, (err, result) => {
+              assert.ok(result);
+              if (compareMetadata) {
+                const info = client2.metadata.getPreparedInfo(commonKs, query);
+                originalResultId2 = info.meta.resultId;
+              }
+              next();
+            });
+          },
+          (next) => {
+            client.execute(util.format('alter table %s add b int', table), next);
+          },
+          (seriesNext) => {
+            // execute query 3 times, so reprepare is done on each node.
+            utils.times(3, function (n, next) {
+              client2.execute(query, null, {prepare: true}, (err, result) => {
+                assert.ifError(err);
+                assert.ok(result);
+                next();
+              });
+            }, () => {
+              if (compareMetadata) {
+                // We expect the metadata resultId to have changed as result of
+                // the server's prepared statement cache being cleared, causing
+                // a reprepare and update of the prepared statement cache for
+                // the client.
+                const info = client2.metadata.getPreparedInfo(commonKs, query);
+                finalResultId2 = info.meta.resultId;
+                assert.notDeepEqual(finalResultId2, originalResultId2);
+              }
+              seriesNext();
+            });
+          },
+          (next) => {
+            // execute query on client, should receive new metadata id since prepared statement
+            // cache is stale.
+            client.execute(query, null, {prepare: true, pageState: pageState}, (err, result) => {
+              assert.ok(result);
+              assert.strictEqual(result.columns.length, 4); // columns k, a, b, and c should be present.
+              assert.strictEqual(result.rows.length, 5);
+              // data should be present with expected values.
+              result.rows.forEach((row, index) => {
+                assert.strictEqual(row.k, 0);
+                assert.strictEqual(row.a, index+5); // offset index by 5 since we're starting from 5th row.
+                assert.strictEqual(row.b, null); // b shall be present but null as no values are present.
+                assert.strictEqual(row.c, index+5);
+              });
+              if (compareMetadata) {
+                // We expect the metadata resultId to have changed as result of
+                // the rows response containing new_metadata_id which should
+                // provoke the client cache to be updated.
+                const info = client.metadata.getPreparedInfo(commonKs, query);
+                const finalResultId = info.meta.resultId;
+                assert.deepEqual(finalResultId, finalResultId2);
+                assert.notDeepEqual(finalResultId, originalResultId);
+              }
+              next();
+            });
+          }
+        ], done);
+      });
+    });
   });
 });
 

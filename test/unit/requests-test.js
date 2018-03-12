@@ -15,12 +15,39 @@ const QueryRequest = requests.QueryRequest;
 const ExecuteRequest = requests.ExecuteRequest;
 const BatchRequest = requests.BatchRequest;
 const StartupRequest = requests.StartupRequest;
+const PrepareRequest = requests.PrepareRequest;
 const encoder = new Encoder(types.protocolVersion.maxSupported, {});
+const dseV1Encoder = new Encoder(types.protocolVersion.dseV1, {});
 
 describe('QueryRequest', function () {
   describe('#clone()', function () {
     const request = new QueryRequest('Q1', [ 1, 2 ], { consistency: 1, hints: [] });
     testClone(request);
+  });
+  describe('#write()', function () {
+    it('should include keyspace from options', function () {
+      const request = new QueryRequest('Q1', [ ], { keyspace: 'ks1' } );
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.maxSupported,
+        0, 0, 0, 0x7, // flags + stream id + opcode (0x7 = query)
+        0, 0, 0, 0x11, // length
+        0, 0, 0, 2, 0x51, 0x31, // query, length = 2, 'Q1'
+        0, 1, 0, 0, 0, 0x80, // consistency level + flags (0x80 = with keyspace)
+        0, 3, 0x6b, 0x73, 0x31 // length = 3, 'ks1'
+      ]);
+      assert.deepEqual(request.write(encoder, 0), expectedBuffer);
+    });
+    it('should exclude keyspace from options for older protocols', function () {
+      const request = new QueryRequest('Q1', [ ], { keyspace: 'ks1' } );
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.dseV1,
+        0, 0, 0, 0x7, // flags + stream id + opcode (0x7 = query)
+        0, 0, 0, 0xc, // length
+        0, 0, 0, 2, 0x51, 0x31, // query, length = 2, 'Q1'
+        0, 1, 0, 0, 0, 0, // consistency level + flags
+      ]);
+      assert.deepEqual(request.write(dseV1Encoder, 0), expectedBuffer);
+    });
   });
 });
 
@@ -29,6 +56,48 @@ describe('ExecuteRequest', function () {
     const meta = { id: utils.allocBufferFromString('R1'), columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]};
     const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
     testClone(request);
+  });
+  describe('#write()', function() {
+    it('should not include keyspace from options', function () {
+      const meta = { id: utils.allocBufferFromString('R1'), columns: [ { } ] };
+      const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [], {keyspace: 'myks'}, meta);
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.maxSupported,
+        0, 0, 0, 0xA, // flags + stream id + opcode (0xA = execute)
+        0, 0, 0, 0xE, // length
+        0, 2, 0x51, 0x31, // id length = 2 + id (Q1)
+        0, 2, 0x52, 0x31, // result id length = 2 + id (Q1)
+        0, 1, 0, 0, 0, 0, // consistency level + flags
+      ]);
+      assert.deepEqual(request.write(encoder, 0), expectedBuffer);
+    });
+  });
+});
+
+describe('PrepareRequest', function () {
+  describe('#write()', function () {
+    it('should include keyspace from options', function () {
+      const request = new PrepareRequest('Q1', 'ks1');
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.maxSupported,
+        0, 0, 0, 0x9, // flags + stream id + opcode (0x9 = prepare)
+        0, 0, 0, 0xf, // length
+        0, 0, 0, 2, 0x51, 0x31, // query, length = 2, 'Q1'
+        0, 0, 0, 0x1, // flags (0x1 = with keyspace)
+        0, 3, 0x6b, 0x73, 0x31 // length = 3, 'ks1'
+      ]);
+      assert.deepEqual(request.write(encoder, 0), expectedBuffer);
+    });
+    it('should exclude keyspace from options for older protocols', function () {
+      const request = new PrepareRequest('Q1', 'ks1');
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.dseV1,
+        0, 0, 0, 0x9, // flags + stream id + opcode (0x9 = prepare)
+        0, 0, 0, 0x6, // length
+        0, 0, 0, 2, 0x51, 0x31, // query, length = 2, 'Q1'
+      ]);
+      assert.deepEqual(request.write(dseV1Encoder, 0), expectedBuffer);
+    });
   });
 });
 
@@ -39,6 +108,41 @@ describe('BatchRequest', function () {
       { query: 'Q2', params: [] }
     ], { logged: false, consistency: 1 });
     testClone(request);
+  });
+  it('should include keyspace from options', function () {
+    const request = new BatchRequest([
+      { query: 'Q1', params: [] },
+      { query: 'Q2', params: [] }
+    ], { logged: false, consistency: 1, keyspace: 'ks1' });
+    const expectedBuffer = utils.allocBufferFromArray([
+      types.protocolVersion.maxSupported,
+      0, 0, 0, 0xd, // flags + stream id + opcode (0x7 = batch)
+      0, 0, 0, 0x20, // length
+      1, 0, 2, // 1 = logged, 2 queries
+      0, 0, 0, 0, 2, 0x51, 0x31, 0, 0, // simple query, length = 2, 'Q1', 0 values
+      0, 0, 0, 0, 2, 0x51, 0x32, 0, 0, // simple query, length = 2, 'Q2', 0 values
+      0, 1, 0, 0, 0, 0x80, // consistency level + flags (0x80 = with keyspace)
+      0, 3, 0x6b, 0x73, 0x31 // length = 3, 'ks1'
+    ]);
+    assert.deepEqual(request.write(encoder, 0), expectedBuffer);
+  });
+  describe('#write()', function () {
+    it('should exclude keyspace from options for older protocols', function () {
+      const request = new BatchRequest([
+        { query: 'Q1', params: [] },
+        { query: 'Q2', params: [] }
+      ], { logged: false, consistency: 1, keyspace: 'ks1' });
+      const expectedBuffer = utils.allocBufferFromArray([
+        types.protocolVersion.dseV1,
+        0, 0, 0, 0xd, // flags + stream id + opcode (0x7 = batch)
+        0, 0, 0, 0x1b, // length
+        1, 0, 2, // 1 = logged, 2 queries
+        0, 0, 0, 0, 2, 0x51, 0x31, 0, 0, // simple query, length = 2, 'Q1', 0 values
+        0, 0, 0, 0, 2, 0x51, 0x32, 0, 0, // simple query, length = 2, 'Q2', 0 values
+        0, 1, 0, 0, 0, 0, // consistency level + flags
+      ]);
+      assert.deepEqual(request.write(dseV1Encoder, 0), expectedBuffer);
+    });
   });
 });
 

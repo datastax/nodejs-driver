@@ -115,6 +115,66 @@ describe('RequestHandler', function () {
           done();
         });
       });
+      it('should allow prepared statement keyspace different than connection keyspace', function (done) {
+        const queryId = utils.allocBufferFromString('123');
+        const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
+          if (h.sendStreamCalled === 1) {
+            // Its the first request, send an error
+            const err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            err.queryId = queryId;
+            return cb(err);
+          }
+          cb(null, { });
+        });
+        const hosts = lbp.getFixedQueryPlan();
+        const client = newClient({
+          getPreparedById: function (id) {
+            return { query: 'QUERY1', id: id, keyspace: 'ks1'};
+          }
+        }, lbp);
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const handler = newInstance(request, client, lbp);
+        handler.send(function (err, response) {
+          assert.ifError(err);
+          assert.ok(response);
+          // should have been initial request, unprepared sent back, and error raised before preparing.
+          assert.strictEqual(hosts[0].prepareCalled, 1);
+          assert.strictEqual(hosts[0].sendStreamCalled, 2);
+          assert.strictEqual(hosts[1].prepareCalled, 0);
+          assert.strictEqual(hosts[1].sendStreamCalled, 0);
+          done();
+        });
+      });
+      it('should throw an error if prepared statement was on different keyspace than connection with older protocol version', function (done) {
+        const queryId = utils.allocBufferFromString('123');
+        const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendCallback(r, h, cb) {
+          if (h.sendStreamCalled === 1) {
+            // Its the first request, send an error
+            const err = new errors.ResponseError(types.responseErrorCodes.unprepared, 'Test error');
+            err.queryId = queryId;
+            return cb(err);
+          }
+          cb(null, { });
+        }, types.protocolVersion.dseV1);
+        const hosts = lbp.getFixedQueryPlan();
+        const client = newClient({
+          getPreparedById: function (id) {
+            return { query: 'QUERY1', id: id, keyspace: 'ks1'};
+          }
+        }, lbp);
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const handler = newInstance(request, client, lbp);
+        handler.send(function (err, response) {
+          helper.assertInstanceOf(err, Error);
+          helper.assertContains(err.message, 'Query was prepared on keyspace ks1');
+          // should have been initial request, unprepared sent back, and error raised before preparing.
+          assert.strictEqual(hosts[0].prepareCalled, 0);
+          assert.strictEqual(hosts[0].sendStreamCalled, 1);
+          assert.strictEqual(hosts[1].prepareCalled, 0);
+          assert.strictEqual(hosts[1].sendStreamCalled, 0);
+          done();
+        });
+      });
       it('should move to next host when PREPARE response is an error', function (done) {
         const queryId = utils.allocBufferFromString('123');
         const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function prepareCallback(q, h, cb) {

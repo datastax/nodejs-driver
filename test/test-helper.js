@@ -630,9 +630,10 @@ const helper = {
     pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
     return pooling;
   },
-  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
+  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {
     return hostsInfo.map(function (info, index) {
-      const h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      protocolVersion = protocolVersion || types.protocolVersion.maxSupported;
+      const h = new Host(index.toString(), protocolVersion, defaultOptions(), {});
       h.isUp = function () {
         return !(info.isUp === false);
       };
@@ -647,7 +648,9 @@ const helper = {
           return cb(new Error('This host should not be used'));
         }
         cb(null, {
-          prepareOnce: function (q, cb) {
+          protocolVersion: protocolVersion,
+          keyspace: 'ks',
+          prepareOnce: function (q, ks, cb) {
             h.prepareCalled++;
             if (prepareQueryCb) {
               return prepareQueryCb(q, h, cb);
@@ -674,8 +677,8 @@ const helper = {
       return h;
     });
   },
-  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
-    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
+  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {
+    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion);
     return ({
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));

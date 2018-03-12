@@ -1039,6 +1039,26 @@ describe('Client', function () {
         });
       });
     });
+    vit('dse-6.0', 'should use keyspace if set on options', () => {
+      const client = setupInfo.client;
+      return client.execute('select * from local', null, {keyspace: 'system'})
+        .then((result) => {
+          assert.ok(result);
+        });
+    });
+    it('should not use keyspace if set on options for lower protocol versions', function () {
+      if (helper.isDseGreaterThan('6.0')) {
+        return this.skip();
+      }
+      const client = setupInfo.client;
+      return client.execute('select * from local', null, {keyspace: 'system'})
+        .then((result) => {
+          throw new Error('should have failed');
+        })
+        .catch(function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+        });
+    });
   });
 });
 

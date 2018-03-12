@@ -20,30 +20,27 @@ const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
 const Encoder = require('../../lib/encoder');
 
-function expectRanges(metadata, keyspace, host, expectedRanges) {
-  const eRanges = new Set(expectedRanges.map((tokens) => new TokenRange(token(tokens[0]), token(tokens[1]), metadata.tokenizer)));
-  assert.deepEqual(metadata.getTokenRangesForHost(keyspace, host), eRanges);
-}
-
 describe('Metadata', function () {
   describe('#refreshKeyspace()', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.refreshKeyspace('ks1')
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.refreshKeyspace('ks1', validateMetadataErr(done));
     });
   });
   describe('#refreshKeyspaces()', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.refreshKeyspaces()
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.refreshKeyspaces(validateMetadataErr(done));
     });
     it('should parse C*2 keyspace metadata for simple strategy', function (done) {
       const cc = {
@@ -583,10 +580,11 @@ describe('Metadata', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.getUdt('ks1', 'udt1')
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getUdt('ks1', 'udt1', validateMetadataErr(done));
     });
     it('should callback in err when there is an error', function (done) {
       const cc = {
@@ -748,10 +746,11 @@ describe('Metadata', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.getTrace(types.Uuid.random(), types.consistencies.all)
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getTrace(types.Uuid.random(), types.consistencies.all, validateMetadataErr(done));
     });
     it('should return the trace if its already stored', function (done) {
       const sessionRow = {
@@ -961,10 +960,11 @@ describe('Metadata', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.getTable('ks1', 'tbl1')
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getTable('ks1', 'tbl1', validateMetadataErr(done));
     });
     it('should be null when keyspace does not exists', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), {});
@@ -1733,10 +1733,11 @@ describe('Metadata', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.getFunctions('ks_udf', 'plus')
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getFunctions('ks_udf', 'plus', validateMetadataErr(done));
     });
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
@@ -1979,10 +1980,11 @@ describe('Metadata', function () {
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
       return metadata.getFunction('ks1', 'fn1', [])
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getFunction('ks1', 'fn1', [], validateMetadataErr(done));
     });
     it('should callback in error if keyspace or name are not provided', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
@@ -2140,11 +2142,12 @@ describe('Metadata', function () {
     });
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
-      return metadata.getAggregates('ks_udf', 'plus', [])
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+      return metadata.getAggregates('ks_udf', 'plus')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getAggregates('ks_udf', 'plus', validateMetadataErr(done));
     });
     describe('with C* 2.2 metadata rows', function () {
       it('should query once when called in parallel', function (done) {
@@ -2410,11 +2413,12 @@ describe('Metadata', function () {
     });
     it('should reject if have not connected yet', () => {
       const metadata = new Metadata(clientOptions.defaultOptions(), null);
-      return metadata.getMaterializedView('ks_mv', 'view1', [])
-        .catch((err) => {
-          helper.assertInstanceOf(err, Error);
-          assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
-        });
+      return metadata.getMaterializedView('ks_mv', 'view1')
+        .catch(validateMetadataErr());
+    });
+    it('should callback in error if have not connected yet', (done) => {
+      const metadata = new Metadata(clientOptions.defaultOptions(), null);
+      metadata.getMaterializedView('ks_mv', 'view1', validateMetadataErr(done));
     });
     it('should callback in error when cassandra version is lower than 3.0', function (done) {
       const metadata = new Metadata(clientOptions.defaultOptions(), {});
@@ -2627,4 +2631,20 @@ function stringifyDefault(v) {
 /** @returns {Metadata} */
 function newInstance() {
   return new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+}
+
+function expectRanges(metadata, keyspace, host, expectedRanges) {
+  const eRanges = new Set(expectedRanges.map((tokens) => new TokenRange(token(tokens[0]), token(tokens[1]), metadata.tokenizer)));
+  assert.deepEqual(metadata.getTokenRangesForHost(keyspace, host), eRanges);
+}
+
+function validateMetadataErr(done) {
+  return (err) => {
+    assert.ok(err);
+    helper.assertInstanceOf(err, Error);
+    assert.strictEqual(err.message, 'Metadata has not been initialized.  This could only happen if you have not connected yet.');
+    if (done) {
+      done();
+    }
+  };
 }

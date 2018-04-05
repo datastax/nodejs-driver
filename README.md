@@ -254,6 +254,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#udts
 [survey]: http://goo.gl/forms/f216tY3Ebr
-[dse-driver]: https://github.com/datastax/nodejs-dse-driver
+[dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [slack]: https://academy.datastax.com/slack
 [dse]: https://www.datastax.com/products/datastax-enterprise

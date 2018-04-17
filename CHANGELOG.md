@@ -1,5 +1,24 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 3.5.0
+
+2018-04-17
+
+### Features
+
+- [NODEJS-407] - Add NO\_COMPACT option
+- [NODEJS-412] - Log driver version on Client.connect
+- [NODEJS-431] - Consider using OPTIONS for heatbeats instead of 'select key from system.local'
+
+### Bug fixes
+
+- [NODEJS-412] - Methods to retrieve schema metadata should reject promise when not connected
+- [NODEJS-418] - Add jsdoc for each response error code
+- [NODEJS-428] - Connection associated with reconnect is not fully closed when STARTUP times out on node that is unresponsive
+- #271 - Use all columns from peers in ControlConnection
+- #276 - Remove buffers `noAssert` argument
+
+
 ## 3.4.1
 
 2018-02-20

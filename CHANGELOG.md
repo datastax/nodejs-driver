@@ -8,7 +8,7 @@
 
 - [NODEJS-407] - Add NO\_COMPACT option
 - [NODEJS-412] - Log driver version on Client.connect
-- [NODEJS-431] - Consider using OPTIONS for heatbeats instead of 'select key from system.local'
+- [NODEJS-431] - Consider using OPTIONS for heartbeats instead of 'select key from system.local'
 
 ### Bug fixes
 

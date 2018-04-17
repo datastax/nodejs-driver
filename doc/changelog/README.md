@@ -12,7 +12,7 @@ Changelog for the DataStax Enterprise Node.js Driver.
 - [NODEJS-394] - Include hash of result set metadata in prepared statement id
 - [NODEJS-395] - Per-query (and per-batch) keyspace support
 - [NODEJS-407] - Add NO\_COMPACT option
-- [NODEJS-412] - Log driver version on Client.connect
+- [NODEJS-426] - Log driver version on Client.connect
 - [NODEJS-431] - Consider using OPTIONS for heartbeats instead of 'select key from system.local'
 - [NODEJS-434] - DETERMINISTIC and MONOTONIC Clauses for Function and Aggregate
 

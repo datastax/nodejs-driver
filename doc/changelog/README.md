@@ -2,6 +2,29 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 1.6.0
+
+2018-04-17
+
+### Features
+
+- [NODEJS-384] - Support new 'nodesync' option in table metadata
+- [NODEJS-394] - Include hash of result set metadata in prepared statement id
+- [NODEJS-395] - Per-query (and per-batch) keyspace support
+- [NODEJS-407] - Add NO\_COMPACT option
+- [NODEJS-412] - Log driver version on Client.connect
+- [NODEJS-431] - Consider using OPTIONS for heatbeats instead of 'select key from system.local'
+- [NODEJS-434] - DETERMINISTIC and MONOTONIC Clauses for Function and Aggregate
+
+### Bug fixes
+
+- [NODEJS-412] - Methods to retrieve schema metadata should reject promise when not connected
+- [NODEJS-418] - Add jsdoc for each response error code
+- [NODEJS-428] - Connection associated with reconnect is not fully closed when STARTUP times out on node that is unresponsive
+- Use all columns from peers in ControlConnection
+- Remove buffers `noAssert` argument
+
+
 ## 1.5.1
 
 2018-02-20

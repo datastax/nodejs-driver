@@ -8,10 +8,10 @@ schedules:
         - nodejs: ['6']
         # Only build with latest for 4.x
         - nodejs: '4'
-          cassandra: ['1.2', '2.0', '2.1', '2.2', '3.0']
-        # Only build with 1.2 and latest for 8.x
+          cassandra: ['2.1', '2.2', '3.0']
+        # Only build with 2.1 and latest for 8.x
         - nodejs: '8'
-          cassandra: ['2.0', '2.1', '2.2', '3.0']
+          cassandra: ['2.2', '3.0']
   nightly:
     # nightly job for primary branches to run all configs.
     schedule: nightly
@@ -30,8 +30,6 @@ nodejs:
 os:
   - ubuntu/trusty64
 cassandra:
-  - '1.2'
-  - '2.0'
   - '2.1'
   - '2.2'
   - '3.0'

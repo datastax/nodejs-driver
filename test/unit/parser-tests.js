@@ -95,17 +95,22 @@ describe('Parser', function () {
         header: getFrameHeader(4, types.opcodes.result, 2, true),
         chunk: body
       }, null, doneIfError(done));
-      assert.strictEqual(responseCounter, 1);
-      parser.setOptions(88, { byRow: true });
-      for (let i = 0; i < body.length; i++) {
-        parser._transform({
-          header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
-          chunk: body.slice(i, i + 1),
-          offset: 0
-        }, null, doneIfError(done));
-      }
-      assert.strictEqual(responseCounter, 2);
-      done();
+
+      process.nextTick(() => {
+        assert.strictEqual(responseCounter, 1);
+        parser.setOptions(88, { byRow: true });
+        for (let i = 0; i < body.length; i++) {
+          parser._transform({
+            header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
+            chunk: body.slice(i, i + 1),
+            offset: 0
+          }, null, doneIfError(done));
+        }
+        process.nextTick(() => {
+          assert.strictEqual(responseCounter, 2);
+          done();
+        });
+      });
     });
     it('should read a RESULT result with trace id chunked', function (done) {
       const parser = newInstance();
@@ -125,17 +130,21 @@ describe('Parser', function () {
         chunk: body,
         offset: 0
       }, null, doneIfError(done));
-      assert.strictEqual(responseCounter, 1);
-      parser.setOptions(88, { byRow: true });
-      for (let i = 0; i < body.length; i++) {
-        parser._transform({
-          header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
-          chunk: body.slice(i, i + 1),
-          offset: 0
-        }, null, doneIfError(done));
-      }
-      assert.strictEqual(responseCounter, 2);
-      done();
+      process.nextTick(() => {
+        assert.strictEqual(responseCounter, 1);
+        parser.setOptions(88, { byRow: true });
+        for (let i = 0; i < body.length; i++) {
+          parser._transform({
+            header: getFrameHeader(4, types.opcodes.result, 2, true, 88),
+            chunk: body.slice(i, i + 1),
+            offset: 0
+          }, null, doneIfError(done));
+        }
+        process.nextTick(() => {
+          assert.strictEqual(responseCounter, 2);
+          done();
+        });
+      });
     });
     it('should read a VOID result with warnings and custom payload', function (done) {
       const parser = newInstance();
@@ -743,11 +752,16 @@ describe('Parser', function () {
       const rowLength = 2;
       let rowCounter = 0;
       parser.on('readable', function () {
-        const item = parser.read();
-        assert.strictEqual(item.header.opcode, types.opcodes.result);
-        assert.ok(item.row);
-        if ((++rowCounter) === rowLength) {
-          done();
+        let item;
+        while ((item = parser.read())) {
+          if (!item.row && item.frameEnded) {
+            continue;
+          }
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          assert.ok(item.row);
+          if ((++rowCounter) === rowLength) {
+            done();
+          }
         }
       });
       parser.setOptions(33, { byRow: true });
@@ -773,7 +787,7 @@ describe('Parser', function () {
         }
       });
       [1, 3, 5, 13].forEach(function (chunkLength) {
-        it('should emit rows chunked with chunk length of ' + chunkLength, function () {
+        it('should emit rows chunked with chunk length of ' + chunkLength, function (done) {
           result = {};
           const expected = [
             { columnLength: 3, rowLength: 10 },
@@ -814,10 +828,13 @@ describe('Parser', function () {
           for (let i = 0; i < items.length; i++) {
             transformChunkedItem(i);
           }
-          //assert result
-          expected.forEach(function (expectedItem, index) {
-            assert.ok(result[index], 'Result not found for index ' + index);
-            assert.strictEqual(result[index].length, expectedItem.rowLength);
+          process.nextTick(() => {
+            //assert result
+            expected.forEach(function (expectedItem, index) {
+              assert.ok(result[index], 'Result not found for index ' + index);
+              assert.strictEqual(result[index].length, expectedItem.rowLength);
+            });
+            done();
           });
         });
       });
@@ -847,7 +864,7 @@ describe('Parser', function () {
         { columnLength: 1, rowLength: 20 }
       ];
       [1, 2, 7, 11].forEach(function (chunkLength) {
-        it('should emit rows chunked with chunk length of ' + chunkLength, function () {
+        it('should emit rows chunked with chunk length of ' + chunkLength, function (done) {
           result = {};
           const buffer = Buffer.concat(expected.map(function (expectedItem, index) {
             parser.setOptions(index, { byRow: true });
@@ -862,11 +879,14 @@ describe('Parser', function () {
             }
             protocol._transform(buffer.slice(j, end), null, helper.throwop);
           }
-          //assert result
-          expected.forEach(function (expectedItem, index) {
-            assert.ok(result[index], 'Result not found for index ' + index);
-            assert.strictEqual(result[index].length, expectedItem.rowLength);
-            assert.strictEqual(result[index][0].keys().length, expectedItem.columnLength);
+          process.nextTick(() => {
+            //assert result
+            expected.forEach(function (expectedItem, index) {
+              assert.ok(result[index], 'Result not found for index ' + index);
+              assert.strictEqual(result[index].length, expectedItem.rowLength);
+              assert.strictEqual(result[index][0].keys().length, expectedItem.columnLength);
+            });
+            done();
           });
         });
       });
@@ -1021,10 +1041,14 @@ describe('Parser', function () {
       parser._transform(getBodyChunks(3, rowLength, 0, 10), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 10, 32), null, doneIfError(done));
       parser._transform(getBodyChunks(3, rowLength, 32, 55), null, doneIfError(done));
-      assert.strictEqual(rowCounter, 1);
-      parser._transform(getBodyChunks(3, rowLength, 55, null), null, doneIfError(done));
-      assert.strictEqual(rowCounter, 2);
-      done();
+      process.nextTick(() => {
+        assert.strictEqual(rowCounter, 1);
+        parser._transform(getBodyChunks(3, rowLength, 55, null), null, doneIfError(done));
+        process.nextTick(() => {
+          assert.strictEqual(rowCounter, 2);
+          done();
+        });
+      });
     });
   });
 });

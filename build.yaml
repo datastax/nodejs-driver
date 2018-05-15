@@ -6,8 +6,8 @@ schedules:
       exclude:
         # Exclude all builds for 6.x.
         - nodejs: ['6']
-        # Only build with latest for 4.x
-        - nodejs: '4'
+        # Only build with latest for 4.x and 10.x
+        - nodejs: ['4','10']
           cassandra: ['2.1', '2.2', '3.0']
         # Only build with 2.1 and latest for 8.x
         - nodejs: '8'
@@ -21,14 +21,15 @@ schedules:
   adhoc:
     # adhoc job for non-primary braches that doesn't have a schedule but may be used to run all configs.
     schedule: adhoc
-    branches: 
+    branches:
       exclude: ["/((\\d+(\\.[\\dx]+)+)|master)/"]
 nodejs:
   - '4'
   - '6'
   - '8'
+  - '10'
 os:
-  - ubuntu/trusty64
+  - ubuntu/bionic64/nodejs-driver
 cassandra:
   - '2.1'
   - '2.2'

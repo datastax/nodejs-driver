@@ -2,10 +2,11 @@ environment:
   appveyor_build_worker_cloud: gce
   ci_type: ci_unit
   matrix:
-    - nodejs_version: 6
+    - nodejs_version: 8
       TEST_CASSANDRA_VERSION: 3.11.2
       ci_type: ci
-    - nodejs_version: 8
+    - nodejs_version: 10
+    - nodejs_version: 6 
     - nodejs_version: 4
 image: Visual Studio 2017
 platform:

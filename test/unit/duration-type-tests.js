@@ -69,7 +69,10 @@ describe('Duration', function () {
         '-PW',
         '-PTW',
       ].forEach(function (testInfo) {
-        assert.throws(function() { Duration.fromString(testInfo); }, 'Unable to convert \'' + testInfo + '\' to a duration');
+        const expectedError = testInfo.startsWith('-') ? testInfo.substr(1) : testInfo;
+        assert.throws(function() { Duration.fromString(testInfo); }, (err) => 
+          err instanceof TypeError && err.message === 'Unable to convert \'' + expectedError + '\' to a duration'
+        );
       });
     });
   });

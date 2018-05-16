@@ -167,7 +167,9 @@ describe('TokenRange', () => {
       ]));
       it('should not allow split on minToken', () => {
         const range = new token.TokenRange(_tokenizer.minToken(), _tokenizer.minToken(), _tokenizer);
-        assert.throws(() => range.splitEvenly(2), 'Cannot split whole ring with ordered partitioner');
+        assert.throws(() => range.splitEvenly(2), (err) =>
+          err instanceof Error && err.message === 'Cannot split whole ring with ordered partitioner'
+        );
       });
     });
     describe('#compare()', () => {

@@ -16,8 +16,8 @@ describe('EC2MultiRegionTranslator', function () {
   describe('#translate()', function () {
     it('should return the same address when it could not be resolved', function (done) {
       const t = new EC2MultiRegionTranslator();
-      t.translate('127.100.100.1', 9042, function (endPoint) {
-        assert.strictEqual(endPoint, '127.100.100.1:9042');
+      t.translate('192.0.2.1', 9042, function (endPoint) {
+        assert.strictEqual(endPoint, '192.0.2.1:9042');
         done();
       });
     });

@@ -6,8 +6,8 @@ schedules:
       exclude:
         # Exclude all builds for 6.x.
         - nodejs: ['6']
-        # Only build with latest for 4.x
-        - nodejs: '4'
+        # Only build with latest for 4.x and 10.x
+        - nodejs: ['4', '10']
           cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1']
   nightly:
     # Run full suite nightly on change for all primary branches if they have changes.
@@ -24,8 +24,9 @@ nodejs:
   - '4'
   - '6'
   - '8'
+  - '10'
 os:
-  - ubuntu/trusty64
+  - ubuntu/bionic64/nodejs-driver
 cassandra:
   - dse-4.8
   - dse-5.0

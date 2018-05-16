@@ -12,7 +12,7 @@ const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 
 describe('Protocol', function () {
-  it('should emit a single frame with 0-length body', function () {
+  it('should emit a single frame with 0-length body', function (done) {
     const p = newInstance();
     const items = [];
     p.on('readable', function () {
@@ -23,10 +23,13 @@ describe('Protocol', function () {
     });
     const buffer = generateBuffer(4, [ 0 ]);
     p.readItems(buffer);
-    assert.strictEqual(items.length, 1);
-    assert.strictEqual(items[0].header.bodyLength, 0);
+    process.nextTick(() => {
+      assert.strictEqual(items.length, 1);
+      assert.strictEqual(items[0].header.bodyLength, 0);
+      done();
+    });
   });
-  it('should emit a single frame with 0-length body chunked', function () {
+  it('should emit a single frame with 0-length body chunked', function (done) {
     const p = newInstance();
     const items = [];
     p.on('readable', function () {
@@ -38,10 +41,13 @@ describe('Protocol', function () {
     const buffer = generateBuffer(4, [ 0 ]);
     p.readItems(buffer.slice(0, 2));
     p.readItems(buffer.slice(2));
-    assert.strictEqual(items.length, 1);
-    assert.strictEqual(items[0].header.bodyLength, 0);
+    process.nextTick(() => {
+      assert.strictEqual(items.length, 1);
+      assert.strictEqual(items[0].header.bodyLength, 0);
+      done();
+    });
   });
-  it('should emit multiple frames from a single chunk', function () {
+  it('should emit multiple frames from a single chunk', function (done) {
     const p = newInstance();
     const items = [];
     p.on('readable', function () {
@@ -53,12 +59,15 @@ describe('Protocol', function () {
     const bodyLengths = [ 0, 10, 0, 20, 30, 0];
     const buffer = generateBuffer(4, bodyLengths);
     p.readItems(buffer);
-    assert.strictEqual(items.length, bodyLengths.length);
-    bodyLengths.forEach(function (length, index) {
-      assert.strictEqual(items[index].header.bodyLength, length);
+    process.nextTick(() => {
+      assert.strictEqual(items.length, bodyLengths.length);
+      bodyLengths.forEach(function (length, index) {
+        assert.strictEqual(items[index].header.bodyLength, length);
+      });
+      done();
     });
   });
-  it('should emit multiple frames from multiples chunks', function () {
+  it('should emit multiple frames from multiples chunks', function (done) {
     const p = newInstance();
     const items = {};
     p.on('readable', function () {
@@ -76,17 +85,20 @@ describe('Protocol', function () {
     p.readItems(buffer.slice(33, 45));
     p.readItems(buffer.slice(45, 65));
     p.readItems(buffer.slice(65));
-    bodyLengths.forEach(function (length, index) {
-      const item = items[index];
-      assert.ok(item);
-      assert.ok(item.length);
-      const sumLength = item.reduce(function (previousValue, subItem) {
-        return previousValue + subItem.chunk.length - subItem.offset;
-      }, 0);
-      assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
+    process.nextTick(() => {
+      bodyLengths.forEach(function (length, index) {
+        const item = items[index];
+        assert.ok(item);
+        assert.ok(item.length);
+        const sumLength = item.reduce(function (previousValue, subItem) {
+          return previousValue + subItem.chunk.length - subItem.offset;
+        }, 0);
+        assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
+      });
+      done();
     });
   });
-  it('should emit multiple frames from multiples small chunks', function () {
+  it('should emit multiple frames from multiples small chunks', function (done) {
     const p = newInstance();
     const items = {};
     p.on('readable', function () {
@@ -105,14 +117,17 @@ describe('Protocol', function () {
       }
       p.readItems(buffer.slice(i, i + 2));
     }
-    bodyLengths.forEach(function (length, index) {
-      const item = items[index];
-      assert.ok(item);
-      assert.ok(item.length);
-      const sumLength = item.reduce(function (previousValue, subItem) {
-        return previousValue + subItem.chunk.length - subItem.offset;
-      }, 0);
-      assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
+    process.nextTick(() => {
+      bodyLengths.forEach(function (length, index) {
+        const item = items[index];
+        assert.ok(item);
+        assert.ok(item.length);
+        const sumLength = item.reduce(function (previousValue, subItem) {
+          return previousValue + subItem.chunk.length - subItem.offset;
+        }, 0);
+        assert.ok(sumLength >= length, sumLength + ' >= ' + length + ' failed');
+      });
+      done();
     });
   });
 });

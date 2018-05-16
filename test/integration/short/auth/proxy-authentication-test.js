@@ -15,6 +15,7 @@ const errors = require('../../../../lib/errors');
 const types = require('../../../../lib/types');
 const vdescribe = helper.vdescribe;
 const ads = helper.ads;
+const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 vdescribe('dse-5.1', 'Proxy Authentication', function () {
   this.timeout(180000);
@@ -104,7 +105,7 @@ vdescribe('dse-5.1', 'Proxy Authentication', function () {
       });
     });
   });
-  describe('with DseGssapiAuthProvider', function () {
+  cDescribe('with DseGssapiAuthProvider', function () {
     afterEach(function(done) {
       // clear out ticket cache between tests.
       ads.destroyTicket(null, done);

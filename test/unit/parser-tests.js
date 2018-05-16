@@ -123,10 +123,15 @@ describe('Parser', function () {
       let responseCounter = 0;
       let byRowCompleted = false;
       parser.on('readable', function () {
-        const item = parser.read();
-        assert.strictEqual(item.header.opcode, types.opcodes.result);
-        byRowCompleted = item.byRowCompleted;
-        responseCounter++;
+        let item;
+        while ((item = parser.read())) {
+          if (!item.row && item.frameEnded) {
+            continue;
+          }
+          assert.strictEqual(item.header.opcode, types.opcodes.result);
+          byRowCompleted = item.byRowCompleted;
+          responseCounter++;
+        }
       });
 
       const body = Buffer.concat([
@@ -150,8 +155,8 @@ describe('Parser', function () {
           }, null, doneIfError(done));
         }
         process.nextTick(() => {
-          assert.strictEqual(responseCounter, 2);
-          assert.notEqual(byRowCompleted, true);
+          assert.strictEqual(responseCounter, 3);
+          assert.ok(byRowCompleted);
           done();
         });
       });

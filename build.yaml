@@ -45,7 +45,7 @@ build:
       npm install kerberos
       npm install mocha-jenkins-reporter
       if [ "$NODEJS_VERSION" != "0.10" ] && [ "$NODEJS_VERSION" != "0.12" ]; then
-        npm install -g eslint;
+        npm install -g eslint@4;
         npm run eslint;
       fi
       npm run ci || true

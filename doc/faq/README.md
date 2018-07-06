@@ -2,7 +2,7 @@
 
 ### Which versions of DSE does the driver support?
 
-The driver supports versions from 4.8 to 5 of [DataStax Enterprise][dse].
+The driver supports [DataStax Enterprise][dse] versions from 4.8 to the latest version.
 
 ### How can I upgrade from the Cassandra driver to the DSE driver?
 

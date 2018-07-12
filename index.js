@@ -7,6 +7,8 @@ exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
+exports.tracker = require('./lib/tracker');
+
 const token = require('./lib/token');
 exports.token = {
   Token: token.Token,

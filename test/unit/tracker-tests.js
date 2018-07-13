@@ -110,7 +110,7 @@ describe('RequestLogger', () => {
       const logger = new RequestLogger({ slowThreshold: 200, requestSizeThreshold: 500 });
 
       let message;
-      let otherMessages;
+      const otherMessages = [];
       const handler = (m) => otherMessages.push(m);
 
       logger.emitter.on('normal', m => message = m);
@@ -120,7 +120,7 @@ describe('RequestLogger', () => {
 
       beforeEach(() => {
         message = null;
-        otherMessages = [];
+        otherMessages.length = 0;
       });
 
       it('should not log normal requests by default', () => {

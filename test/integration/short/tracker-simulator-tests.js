@@ -4,9 +4,12 @@ const assert = require('assert');
 const helper = require('../../test-helper');
 const tracker = require('../../../lib/tracker');
 const errors = require('../../../lib/errors');
+const utils = require('../../../lib/utils');
 const Client = require('../../../lib/client');
 const Host = require('../../../lib/host').Host;
 const simulacron = require('../simulacron');
+
+const queryDelayed = 'INSERT INTO delayed (id) VALUES (?)';
 
 describe('tracker', function () {
   this.timeout(5000);
@@ -18,6 +21,11 @@ describe('tracker', function () {
       result: 'syntax_error',
       message: 'Invalid Syntax!',
     }
+  }, done));
+
+  beforeEach(done => setupInfo.cluster.prime({
+    when: { query: queryDelayed },
+    then: { result: 'success', delay_in_ms: 200 }
   }, done));
 
   describe('RequestTracker', function () {
@@ -114,7 +122,68 @@ describe('tracker', function () {
   });
 
   describe('RequestLogger', function () {
+    const logger = new tracker.RequestLogger({ slowThreshold: 50, requestSizeThreshold: 1000 });
+    const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker: logger });
 
+    before(() => client.connect());
+    after(() => client.shutdown());
+
+    const slowMessages = [];
+    const largeMessages = [];
+
+    beforeEach(() => {
+      slowMessages.length = 0;
+      largeMessages.length = 0;
+    });
+
+    logger.emitter.on('slow', m => slowMessages.push(m));
+    logger.emitter.on('large', m => largeMessages.push(m));
+
+    context('when using execute()', () => {
+      it('should log slow queries', () => client.execute(queryDelayed, [ 1 ], { prepare: true })
+        .then(() => {
+          assert.strictEqual(slowMessages.length, 1);
+          assert.strictEqual(largeMessages.length, 0);
+          helper.assertContains(slowMessages[0], 'Slow request, took');
+          helper.assertContains(slowMessages[0], queryDelayed + ' [1]');
+        })
+      );
+
+      it('should log large queries', () => {
+        const query = 'INSERT INTO table1 (id) VALUES (?)';
+        const params = [ utils.stringRepeat('a', 2000) ];
+
+        return client.execute(query, params, { prepare: true })
+          .then(() => {
+            assert.strictEqual(slowMessages.length, 0);
+            assert.strictEqual(largeMessages.length, 1);
+            helper.assertContains(largeMessages[0], 'Request exceeded length');
+            helper.assertContains(largeMessages[0], query);
+          });
+      });
+    });
+
+    context('when using batch()', () => {
+      [true, false].forEach(logged => {
+        it('should log large ' + (logged ? 'logged' : 'unlogged') + ' batches', () => {
+          const query = 'INSERT INTO table1 (id) VALUES (?)';
+          const queries = [{ query, params: [ utils.stringRepeat('a', 2000) ] }];
+
+          return client.batch(queries, { prepare: true, logged })
+            .then(() => {
+              assert.strictEqual(slowMessages.length, 0);
+              assert.strictEqual(largeMessages.length, 1);
+              helper.assertContains(largeMessages[0], 'Request exceeded length');
+              if (logged) {
+                helper.assertContains(largeMessages[0], ': LOGGED BATCH w/ 1 queries (' + query);
+              }
+              else {
+                helper.assertContains(largeMessages[0], ': BATCH w/ 1 queries (' + query);
+              }
+            });
+        });
+      });
+    });
   });
 });
 

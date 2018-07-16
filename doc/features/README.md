@@ -10,6 +10,7 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution Profiles (experimental)](execution-profiles)
+- [Logging](logging)
 - [Cluster and schema metadata](metadata)
 - [Native protocol](native-protocol)
 - [Fetching large result sets](paging)

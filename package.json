@@ -30,10 +30,10 @@
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
-    "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-jenkins-reporter --exit",
-    "ci_appveyor": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-appveyor-reporter --exit",
-    "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit -R mocha-appveyor-reporter --exit",
+    "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
+    "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter --exit",
+    "ci_appveyor": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
+    "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit --recursive -R mocha-appveyor-reporter --exit",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {

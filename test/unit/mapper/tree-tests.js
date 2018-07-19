@@ -10,6 +10,8 @@ describe('Tree', function () {
     it('should reuse existing branches', () => {
       const tree = new Tree();
       assert.strictEqual(tree.getOrCreate(['a', 'b', 'c'], () => true), true);
+      assert.strictEqual(tree.edges.length, 1);
+      assertNode(tree.edges[0], ['a', 'b', 'c'], true, 0);
       assert.strictEqual(tree.getOrCreate(['a', 'b', 'c'], () => false), true);
       assert.strictEqual(tree.edges.length, 1);
     });

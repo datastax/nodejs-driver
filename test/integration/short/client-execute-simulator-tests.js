@@ -23,6 +23,7 @@ describe('Client', () => {
       client = new Client({
         contactPoints: [simulacron.startingIp],
         policies: {
+          // define an LBP that includes all nodes except node 3
           loadBalancing: new WhiteListPolicy(new DCAwareRoundRobinPolicy(), [
             cluster.node(0).address,
             cluster.node(1).address,
@@ -73,11 +74,15 @@ describe('Client', () => {
     });
   
     it('should throw an error if host used in options is ignored by load balancing policy', () => {
+      // since node 3 is not included in our LBP, the request should fail as we have no
+      // connectivity to that node.
       const node = cluster.node(3);
       const host = client.hosts.get(node.address);
       return client.execute(query, [], { host: host })
         .catch((err) => {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          // no hosts should have been attempted.
+          assert.deepEqual(Object.keys(err.innerErrors), []);
         });
     });
   });

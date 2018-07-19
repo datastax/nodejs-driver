@@ -12,7 +12,8 @@ const WhiteListPolicy = require('../../../lib/policies').loadBalancing.WhiteList
 
 const query = "select * from data";
 
-describe('Client', () => {
+describe('Client', function() {
+  this.timeout(30000);
   describe('#execute(query, params, {host: h})', () => {
 
     const setupInfo = simulacron.setup([4], { initClient: false });

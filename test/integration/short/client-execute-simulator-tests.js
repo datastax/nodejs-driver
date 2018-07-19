@@ -3,7 +3,6 @@ const assert = require('assert');
 const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
-const util = require('util');
 const errors = require('../../../lib/errors');
 
 const responseErrorCodes = require('../../../lib/types').responseErrorCodes;

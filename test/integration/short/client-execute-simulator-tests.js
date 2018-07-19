@@ -6,9 +6,10 @@ const utils = require('../../../lib/utils');
 const util = require('util');
 const errors = require('../../../lib/errors');
 
+const responseErrorCodes = require('../../../lib/types').responseErrorCodes;
 const Client = require('../../../lib/client.js');
-const { responseErrorCodes } = require('../../../lib/types');
-const { WhiteListPolicy, DCAwareRoundRobinPolicy } = require('../../../lib/policies').loadBalancing;
+const DCAwareRoundRobinPolicy = require('../../../lib/policies').loadBalancing.DCAwareRoundRobinPolicy;
+const WhiteListPolicy = require('../../../lib/policies').loadBalancing.WhiteListPolicy;
 
 const query = "select * from data";
 

@@ -51,11 +51,10 @@ describe('Client', () => {
       }, done);
     });
 
-    it('should throw an error if host used raises an error', () => {
+    it('should throw an error if host used raises an error', (done) => {
       const node = cluster.node(0);
       const host = client.hosts.get(node.address);
-      const prime = util.promisify(node.prime.bind(node));
-      return prime({
+      node.prime({
         when: {
           query: query
         },
@@ -64,14 +63,17 @@ describe('Client', () => {
           alive: 0,
           required: 1,
           consistency_level: 'LOCAL_ONE'
-        }})
-        .then(() => client.execute(query, [], { host: host }))
-        .catch((err) => {
+        }
+      }, () => {
+        client.execute(query, [], { host: host }, (err, result) => {
+          assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           assert.deepEqual(Object.keys(err.innerErrors), [node.address]);
           const nodeError = err.innerErrors[node.address];
           assert.strictEqual(nodeError.code, responseErrorCodes.unavailableException);
+          done();
         });
+      });
     });
   
     it('should throw an error if host used in options is ignored by load balancing policy', () => {

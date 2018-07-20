@@ -823,6 +823,9 @@ describe('exports', function () {
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');
     helper.assertInstanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
     assert.strictEqual(api.auth, require('../../lib/auth'));
+    assert.ok(api.mapper);
+    assert.strictEqual(typeof api.mapper.Mapper, 'function');
+    assert.strictEqual(typeof api.mapper.ModelMapper, 'function');
     //metadata module with classes
     assert.ok(api.metadata);
     assert.strictEqual(typeof api.metadata.Metadata, 'function');

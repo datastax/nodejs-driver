@@ -7,6 +7,7 @@ exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
+exports.mapper = require('./lib/mapper');
 exports.tracker = require('./lib/tracker');
 exports.metrics = require('./lib/metrics');
 

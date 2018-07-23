@@ -68,7 +68,7 @@ describe('Client', function() {
         client.execute(query, [], { host: host }, (err, result) => {
           assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
-          assert.deepEqual(Object.keys(err.innerErrors), [node.address]);
+          assert.strictEqual(Object.keys(err.innerErrors).length, 1);
           const nodeError = err.innerErrors[node.address];
           assert.strictEqual(nodeError.code, responseErrorCodes.unavailableException);
           done();
@@ -81,12 +81,15 @@ describe('Client', function() {
       // connectivity to that node.
       const node = cluster.node(3);
       const host = client.hosts.get(node.address);
+      let caughtErr = null;
       return client.execute(query, [], { host: host })
         .catch((err) => {
+          caughtErr = err;
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           // no hosts should have been attempted.
-          assert.deepEqual(Object.keys(err.innerErrors), []);
-        });
+          assert.strictEqual(Object.keys(err.innerErrors).length, 0);
+        })
+        .then(() => assert.ok(caughtErr));
     });
   });
 });

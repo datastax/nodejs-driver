@@ -141,7 +141,7 @@ describe('metadata', function () {
           (next) => {
             // Use global refreshKeyspaces and ensure that a previously unfetched virtual keyspace is fetched.
             const ks = nonSyncClient.metadata.keyspaces;
-            assert.ok(ks['system_virtual_schema'] == undefined);
+            assert.ok(ks['system_virtual_schema'] === undefined);
             nonSyncClient.metadata.refreshKeyspaces((err) => {
               assert.ifError(err);
               checkVirtualKeyspace(nonSyncClient.metadata.keyspaces['system_virtual_schema']);

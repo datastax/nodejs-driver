@@ -676,7 +676,8 @@ describe('Client', function () {
     beforeEach(helper.ccmHelper.start(3));
     afterEach(helper.ccmHelper.remove);
     it('should failover after a node goes down', function (done) {
-      const client = newInstance();
+      // treat queries as idempotent so they can be safely retried on another node
+      const client = newInstance({ queryOptions: { isIdempotent: true } });
       const hosts = {};
       const hostsDown = [];
       utils.series([

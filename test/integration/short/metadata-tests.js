@@ -25,6 +25,7 @@ describe('metadata', function () {
           assert.strictEqual(ks.strategy, strategy);
           assert.ok(ks.strategyOptions);
           assert.strictEqual(ks.strategyOptions[optionName], optionValue);
+          assert.strictEqual(ks.virtual, false);
         }
 
         function checkKeyspace(client, name, strategy, optionName, optionValue) {
@@ -42,6 +43,7 @@ describe('metadata', function () {
             assert.ok(m.keyspaces);
             assert.ok(m.keyspaces['system']);
             assert.ok(m.keyspaces['system'].strategy);
+            assert.strictEqual(m.keyspaces['system'].virtual, false);
             next();
           },
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
@@ -498,6 +500,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 0);
             assert.strictEqual(table.clusteringOrder.length, 0);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -518,6 +521,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys.length, 2);
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.partitionKeys[1].name, 'text_sample');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -543,6 +547,7 @@ describe('metadata', function () {
             assert.strictEqual(table.clusteringKeys[0].name, 'text_sample');
             assert.strictEqual(table.clusteringOrder.length, 1);
             assert.strictEqual(table.clusteringOrder[0], 'ASC');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -570,6 +575,7 @@ describe('metadata', function () {
             assert.strictEqual(table.clusteringOrder.length, 2);
             assert.strictEqual(table.clusteringOrder[0], 'ASC');
             assert.strictEqual(table.clusteringOrder[1], 'DESC');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -595,6 +601,7 @@ describe('metadata', function () {
             assert.strictEqual(table.columnsByName['rating_votes'].type.code, types.dataTypes.counter);
             //true counter tables
             assert.strictEqual(table.replicateOnWrite, true);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -620,6 +627,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys.length, 1);
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 0);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -644,6 +652,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id1');
             assert.strictEqual(table.clusteringKeys.length, 1);
             assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -664,6 +673,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 1);
             assert.strictEqual(table.clusteringKeys[0].name, 'ck');
+            assert.strictEqual(table.virtual, false);
             client.shutdown(done);
           });
         });

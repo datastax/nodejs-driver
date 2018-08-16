@@ -13,26 +13,35 @@ const encoder = new Encoder(types.protocolVersion.maxSupported, {});
 
 describe('QueryRequest', function () {
   describe('#clone()', function () {
-    const request = new QueryRequest('Q1', [ 1, 2 ], { consistency: 1, hints: [] });
+    const request = getQueryRequest();
     testClone(request);
+  });
+
+  describe('#write()', function () {
+    testRequestLength(getQueryRequest);
   });
 });
 
 describe('ExecuteRequest', function () {
   describe('#clone()', function () {
-    const meta = { columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]};
-    const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
+    const request = getExecuteRequest();
     testClone(request);
+  });
+
+  describe('#write()', function () {
+    testRequestLength(getExecuteRequest);
   });
 });
 
 describe('BatchRequest', function () {
+
   describe('#clone()', function () {
-    const request = new BatchRequest([
-      { query: 'Q1', params: [] },
-      { query: 'Q2', params: [] }
-    ], { logged: false, consistency: 1 });
+    const request = getBatchRequest();
     testClone(request);
+  });
+
+  describe('#write()', function () {
+    testRequestLength(getBatchRequest);
   });
 });
 
@@ -112,4 +121,31 @@ function testClone(request) {
       cloned.write(encoder, 1).toString()
     );
   });
+}
+
+function testRequestLength(requestGetter) {
+  it('should set the length of the body of the request', () => {
+    const request = requestGetter();
+
+    assert.strictEqual(request.length, 0);
+    request.write(encoder, 0);
+    assert.ok(request.length > 0);
+  });
+}
+
+function getQueryRequest() {
+  return new QueryRequest('Q1', [ 1, 2 ], { consistency: 1, hints: [] });
+}
+
+function getBatchRequest() {
+  return new BatchRequest(
+    [
+      { query: 'Q1', params: [] },
+      { query: 'Q2', params: [] }
+    ], { logged: false, consistency: 1 });
+}
+
+function getExecuteRequest() {
+  const meta = { columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]};
+  return new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
 }

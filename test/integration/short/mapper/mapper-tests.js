@@ -172,6 +172,35 @@ describe('Mapper', function () {
           });
       });
     });
+
+    describe('#update()', () => {
+      it('should update on all tables where the partition and clustering keys are specified');
+
+      it('should update on some of the tables when those keys are not specified');
+
+      it('should insert a single table when it only matches one table');
+
+      it('should consider fields filter');
+
+      it('should support conditional statements', () => {
+        const doc = {
+          id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video cond 1',
+          description: 'description 1', yyyymmdd: new Date().toISOString().substr(0, 10) };
+
+        const docUpdated = { id: doc.id, description: 'description updated' };
+
+        return insertVideoRows(client, doc)
+          .then(() => videoMapper.update(docUpdated, { when: { name: 'video cond 1'}}))
+          .then(() => getVideoRows(client, docUpdated, 'videoid, description'))
+          .then(rows => {
+            assertRowMatchesDoc(rows[0], docUpdated);
+          });
+      });
+    });
+
+    describe('#remove()', () => {
+
+    });
   });
 });
 
@@ -205,22 +234,43 @@ function assertRowMatchesDoc(row, doc) {
   });
 }
 
-/** @returns {Promise<Array<Row>>} */
-function getVideoRows(client, doc) {
+/**
+ * Gets the rows matching the doc
+ * @param {Client} client
+ * @param {Object} doc
+ * @param {String} [columns='*']
+ * @returns {Promise<Array<Row>>}
+ */
+function getVideoRows(client, doc, columns) {
+  columns = columns || '*';
+
   const queries = [
-    ['SELECT * FROM videos WHERE videoid = ?', [doc.id]]
+    [`SELECT ${columns} FROM videos WHERE videoid = ?`, [doc.id]]
   ];
 
   if (doc.userId && doc.addedDate) {
-    queries.push(['SELECT * FROM user_videos WHERE userid = ? AND added_date = ? AND videoid = ?',
+    queries.push([`SELECT ${columns} FROM user_videos WHERE userid = ? AND added_date = ? AND videoid = ?`,
       [doc.userId, doc.addedDate, doc.id]]);
   }
 
   if (doc.yyyymmdd && doc.addedDate) {
-    queries.push(['SELECT * FROM latest_videos WHERE yyyymmdd = ? AND added_date = ? AND videoid = ?',
+    queries.push([`SELECT ${columns} FROM latest_videos WHERE yyyymmdd = ? AND added_date = ? AND videoid = ?`,
       [doc.yyyymmdd, doc.addedDate, doc.id]]);
   }
 
   return Promise.all(queries.map(q => client.execute(q[0], q[1], {prepare: true})))
     .then(results => results.map(rs => rs.first()));
+}
+
+function insertVideoRows(client, doc) {
+  const queries = [
+    { query: 'INSERT INTO videos (videoid, userid, added_date, name, description) VALUES (?, ?, ?, ?, ?)',
+      params: [doc.id, doc.userId, doc.addedDate, doc.name, doc.description ] },
+    { query: 'INSERT INTO user_videos (videoid, userid, added_date, name) VALUES (?, ?, ?, ?)',
+      params: [doc.id, doc.userId, doc.addedDate, doc.name] },
+    { query: 'INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name) VALUES (?, ?, ?, ?)',
+      params: [doc.yyyymmdd, doc.id, doc.addedDate, doc.name] }
+  ];
+
+  return client.batch(queries, { prepare: true });
 }

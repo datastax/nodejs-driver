@@ -8,6 +8,7 @@ const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const Mapper = require('../../../../lib/mapper/mapper');
 const TableMappingInfo = require('../../../../lib/mapper/table-mapping-info');
+const q = require('../../../../lib/mapper/q').q;
 
 const colsToProps = new Map([
   ['videoid', 'id'], ['userid', 'userId'], ['added_date', 'addedDate'], ['location_type', 'locationType'],
@@ -30,22 +31,18 @@ describe('Mapper', function () {
      added_date) VALUES (99051fe9-6a9c-46c2-b949-38ef78858dd0,'My funny cat',
      d0f60aa8-54a9-4840-b70c-fe562b68842b, 'My cat likes to play the piano! So funny.',
      '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401',1,{'10':'/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401'},
-     {'cats','piano','lol'},'2012-06-01 08:00:00')`,
+     {'cats','piano','lol'},'2012-06-01 06:00:00Z')`,
     `INSERT INTO user_videos (userid, videoid, added_date, name, preview_image_location) VALUES 
-     (d0f60aa8-54a9-4840-b70c-fe562b68842b,99051fe9-6a9c-46c2-b949-38ef78858dd0,'2012-06-01 08:00:00','My funny cat',
+     (d0f60aa8-54a9-4840-b70c-fe562b68842b,99051fe9-6a9c-46c2-b949-38ef78858dd0,'2012-06-01 06:00:00Z','My funny cat',
      '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401')`,
     `INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name, preview_image_location) VALUES ('2012-06-01',
-     99051fe9-6a9c-46c2-b949-38ef78858dd0,'2012-06-01 08:00:00','My funny cat',
+     99051fe9-6a9c-46c2-b949-38ef78858dd0,'2012-06-01 06:00:00Z','My funny cat',
      '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401');`
   ];
 
-  const videoIds = [
-    types.Uuid.fromString('99051fe9-6a9c-46c2-b949-38ef78858dd0')
-  ];
-
-  const userIds = [
-    types.Uuid.fromString('d0f60aa8-54a9-4840-b70c-fe562b68842b')
-  ];
+  const videoIds = [ Uuid.fromString('99051fe9-6a9c-46c2-b949-38ef78858dd0') ];
+  const userIds = [ Uuid.fromString('d0f60aa8-54a9-4840-b70c-fe562b68842b') ];
+  const yyyymmddBuckets = ['2012-06-01'];
 
   const setupInfo = helper.setup(1, { queries });
 
@@ -78,6 +75,34 @@ describe('Mapper', function () {
           .then(result => {
             assert.strictEqual(result.first(), null);
           });
+      });
+
+      it('should support query operators', () => {
+        const testItems = [
+          { op: q.in_, value: [new Date('2012-06-01 06:00:00Z')], expected: 1 },
+          { op: q.gt, value: new Date('2012-06-01 05:00:00Z'), expected: 1 },
+          { op: q.gt, value: new Date('2012-06-01 06:00:00Z'), expected: 0 },
+          { op: q.gt, value: new Date('2012-06-01 07:00:00Z'), expected: 0 },
+          { op: q.gte, value: new Date('2012-06-01 05:00:00Z'), expected: 1 },
+          { op: q.gte, value: new Date('2012-06-01 06:00:00Z'), expected: 1 },
+          { op: q.gte, value: new Date('2012-06-01 07:00:00Z'), expected: 0 },
+          { op: q.lt, value: new Date('2012-06-01 05:00:00Z'), expected: 0 },
+          { op: q.lt, value: new Date('2012-06-01 06:00:00Z'), expected: 0 },
+          { op: q.lt, value: new Date('2012-06-01 07:00:00Z'), expected: 1 },
+          { op: q.lte, value: new Date('2012-06-01 05:00:00Z'), expected: 0 },
+          { op: q.lte, value: new Date('2012-06-01 06:00:00Z'), expected: 1 },
+          { op: q.lte, value: new Date('2012-06-01 07:00:00Z'), expected: 1 }
+        ];
+
+        return Promise.all(testItems.map((item, index) => {
+          const doc = { yyyymmdd: yyyymmddBuckets[0], addedDate: item.op(item.value) };
+          return videoMapper.find(doc, 'default')
+            .then(result => {
+              assert.strictEqual(result.toArray().length, item.expected,
+                `Failed for g.${item.op.name}(), item at index ${index}: expected ${item.expected}; ` +
+                `obtained ${result.toArray().length}`);
+            });
+        }));
       });
     });
 

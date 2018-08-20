@@ -11,5 +11,11 @@ describe('MappingHandler', () => {
     it('should support limit');
 
     it('should support specifying fields');
+
+    it('should support relational operators');
+  });
+
+  describe('#getUpdateExecutor()', () => {
+    it('should support relational operators for conditional updates');
   });
 });

@@ -242,7 +242,47 @@ describe('Mapper', function () {
     });
 
     describe('#remove()', () => {
+      it('should delete on all tables where the partition and clustering keys are specified');
 
+      it('should delete on some of the tables when those keys are not specified');
+
+      it('should delete a single table when it only matches one table');
+
+      it('should consider fields filter');
+
+      it('should support conditional statements on a single table', () => {
+        const doc = { id: Uuid.random(), userId: Uuid.random(), name: 'video to delete' };
+
+        return insertVideoRows(client, doc)
+          .then(() => getVideoRows(client, doc))
+          // It was inserted on 1 table
+          .then(rows => {
+            assert.strictEqual(rows.length, 1);
+            assert.notEqual(rows[0], null);
+          })
+          .then(() => videoMapper.remove(doc, { when: { name: 'video to delete' }, fields: ['id']}))
+          .then(() => getVideoRows(client, doc))
+          .then(rows => {
+            assert.strictEqual(rows.length, 1);
+            assert.strictEqual(rows[0], null);
+          });
+      });
+
+      it('should fail when conditional statements affect multiple tables', () => {
+        const doc = {
+          id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video to delete',
+          description: 'desc', yyyymmdd: new Date().toISOString().substr(0, 10) };
+
+        let error;
+
+        return insertVideoRows(client, doc)
+          .then(() => videoMapper.remove(doc, { when: { name: 'video to delete'}}))
+          .catch(err => error = err)
+          .then(() => {
+            helper.assertInstanceOf(error, Error);
+            assert.strictEqual(error.message, 'Batch with when or ifExists conditions cannot span multiple tables');
+          });
+      });
     });
   });
 });
@@ -306,16 +346,23 @@ function getVideoRows(client, doc, columns) {
 }
 
 function insertVideoRows(client, doc) {
-  const queries = [
-    { query: 'INSERT INTO videos (videoid, userid, added_date, name, description) VALUES (?, ?, ?, ?, ?)',
-      params: [doc.id, doc.userId, doc.addedDate, doc.name, doc.description ] },
-    { query: 'INSERT INTO user_videos (videoid, userid, added_date, name) VALUES (?, ?, ?, ?)',
-      params: [doc.id, doc.userId, doc.addedDate, doc.name] }
-  ];
+  const queries = [{
+    query: 'INSERT INTO videos (videoid, userid, added_date, name, description) VALUES (?, ?, ?, ?, ?)',
+    params: [doc.id, doc.userId, doc.addedDate, doc.name, doc.description ]
+  }];
+
+  if (doc.addedDate && doc.userId) {
+    queries.push({
+      query: 'INSERT INTO user_videos (videoid, userid, added_date, name) VALUES (?, ?, ?, ?)',
+      params: [doc.id, doc.userId, doc.addedDate, doc.name]
+    });
+  }
 
   if (doc.yyyymmdd) {
-    queries.push({ query: 'INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name) VALUES (?, ?, ?, ?)',
-      params: [doc.yyyymmdd, doc.id, doc.addedDate, doc.name] });
+    queries.push({
+      query: 'INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name) VALUES (?, ?, ?, ?)',
+      params: [doc.yyyymmdd, doc.id, doc.addedDate, doc.name]
+    });
   }
 
   return client.batch(queries, { prepare: true });

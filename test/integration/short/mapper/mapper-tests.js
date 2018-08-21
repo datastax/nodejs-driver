@@ -171,6 +171,34 @@ describe('Mapper', function () {
             rows.slice(0, 2).forEach(row => assertRowMatchesDoc(row, expectedDoc));
           });
       });
+
+      it('should support conditional statements on a single table', () => {
+        // Description column is only present on a table
+        const doc = { id: Uuid.random(), name: 'Conditional inserted', description: 'description inserted' };
+
+        return videoMapper.insert(doc, { ifNotExists: true })
+          .then(() => getVideoRows(client, doc, 'videoid, name, description'))
+          .then(rows => {
+            assertRowMatchesDoc(rows[0], doc);
+          });
+      });
+
+      it('should fail when conditional statements affect multiple tables', () => {
+        const doc = {
+          id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video insert conditional',
+          description: 'description insert 5', yyyymmdd: new Date().toISOString().substr(0, 10), locationType: 1,
+          preview: 'a/preview/c'
+        };
+
+        let error;
+
+        return videoMapper.insert(doc, { ifNotExists: true }, 'default')
+          .catch(err => error = err)
+          .then(() => {
+            helper.assertInstanceOf(error, Error);
+            assert.strictEqual(error.message, 'Batch with ifNotExists conditions cannot span multiple tables');
+          });
+      });
     });
 
     describe('#update()', () => {
@@ -182,7 +210,7 @@ describe('Mapper', function () {
 
       it('should consider fields filter');
 
-      it('should support conditional statements', () => {
+      it('should support conditional statements on a single table', () => {
         const doc = {
           id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video cond 1',
           description: 'description 1', yyyymmdd: new Date().toISOString().substr(0, 10) };
@@ -194,6 +222,21 @@ describe('Mapper', function () {
           .then(() => getVideoRows(client, docUpdated, 'videoid, description'))
           .then(rows => {
             assertRowMatchesDoc(rows[0], docUpdated);
+          });
+      });
+
+      it('should fail when conditional statements affect multiple tables', () => {
+        const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video cond 2' };
+        const docUpdated = { id: doc.id, userId: doc.userId, addedDate: doc.addedDate, name: 'name updated' };
+
+        let error;
+
+        return insertVideoRows(client, doc)
+          .then(() => videoMapper.update(docUpdated, { when: { name: 'video cond 2'}}))
+          .catch(err => error = err)
+          .then(() => {
+            helper.assertInstanceOf(error, Error);
+            assert.strictEqual(error.message, 'Batch with when or ifExists conditions cannot span multiple tables');
           });
       });
     });
@@ -267,10 +310,13 @@ function insertVideoRows(client, doc) {
     { query: 'INSERT INTO videos (videoid, userid, added_date, name, description) VALUES (?, ?, ?, ?, ?)',
       params: [doc.id, doc.userId, doc.addedDate, doc.name, doc.description ] },
     { query: 'INSERT INTO user_videos (videoid, userid, added_date, name) VALUES (?, ?, ?, ?)',
-      params: [doc.id, doc.userId, doc.addedDate, doc.name] },
-    { query: 'INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name) VALUES (?, ?, ?, ?)',
-      params: [doc.yyyymmdd, doc.id, doc.addedDate, doc.name] }
+      params: [doc.id, doc.userId, doc.addedDate, doc.name] }
   ];
+
+  if (doc.yyyymmdd) {
+    queries.push({ query: 'INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name) VALUES (?, ?, ?, ?)',
+      params: [doc.yyyymmdd, doc.id, doc.addedDate, doc.name] });
+  }
 
   return client.batch(queries, { prepare: true });
 }

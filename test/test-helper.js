@@ -25,6 +25,7 @@ const helper = {
    * @param {String} [options.keyspace] Name of the keyspace to create.
    * @param {Number} [options.replicationFactor] Keyspace replication factor.
    * @param {Array<String>} [options.queries] Queries to run after client creation.
+   * @param {Boolean} [options.removeClusterAfter=true] Determines whether ccm remove should be called on after().
    */
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
@@ -47,7 +48,10 @@ const helper = {
       }
       after(client.shutdown.bind(client));
     }
-    after(helper.ccmHelper.remove);
+    if (options.removeClusterAfter !== false) {
+      after(helper.ccmHelper.remove);
+    }
+
     return {
       client: client,
       keyspace: keyspace

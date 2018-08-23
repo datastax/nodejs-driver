@@ -212,6 +212,8 @@ describe('ModelMapper', function () {
 
     it('should consider fields filter');
 
+    it('should remove only columns when specified');
+
     it('should support conditional statements on a single table', () => {
       const doc = { id: Uuid.random(), userId: Uuid.random(), name: 'video to delete' };
 

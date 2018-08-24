@@ -43,6 +43,7 @@ const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks
 const query = 'SELECT name, email FROM users WHERE key = ?';
 client.execute(query, [ 'someone' ])
   .then(result => console.log('User with email %s', result.rows[0].email));
+client.shutdown()
 ```
 
 Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
@@ -52,6 +53,7 @@ client.execute(query, [ 'someone' ], function(err, result) {
   assert.ifError(err);
   console.log('User with email %s', result.rows[0].email);
 });
+client.shutdown();
 ```
 
 ### Prepare your queries

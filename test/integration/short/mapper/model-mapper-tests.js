@@ -7,6 +7,8 @@ const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const q = require('../../../../lib/mapper/q').q;
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
+const Result = require('../../../../lib/mapper/result');
+const vit = helper.vit;
 
 describe('ModelMapper', function () {
 
@@ -15,6 +17,7 @@ describe('ModelMapper', function () {
   const mapper = mapperTestHelper.getMapper();
   const client = mapper.client;
   const videoMapper = mapper.forModel('Video', mapperTestHelper.getVideosMappingInfo());
+  const userMapper = mapperTestHelper.getUserModelMapper(mapper);
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -39,7 +42,7 @@ describe('ModelMapper', function () {
         });
     });
 
-    it('should support query operators', () => {
+    vit('3.0', 'should support query operators', () => {
       const testItems = [
         { op: q.in_, value: [new Date('2012-06-01 06:00:00Z')], expected: 1 },
         { op: q.gt, value: new Date('2012-06-01 05:00:00Z'), expected: 1 },
@@ -181,6 +184,11 @@ describe('ModelMapper', function () {
 
       return mapperTestHelper.insertVideoRows(client, doc)
         .then(() => videoMapper.update(docUpdated, { when: { name: 'video cond 1'}}))
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), true);
+          assert.strictEqual(result.length, 0);
+        })
         .then(() => mapperTestHelper.getVideoRows(client, docUpdated, 'videoid, description'))
         .then(rows => {
           assertRowMatchesDoc(rows[0], docUpdated);
@@ -199,6 +207,31 @@ describe('ModelMapper', function () {
         .then(() => {
           helper.assertInstanceOf(error, Error);
           assert.strictEqual(error.message, 'Batch with when or ifExists conditions cannot span multiple tables');
+        });
+    });
+
+    it('should adapt results of a LWT operation', () => {
+      const doc = { id: Uuid.random(), firstName: 'hey', lastName: 'joe', email: 'hey@example.com' };
+
+      const insertQuery = 'INSERT INTO users (userid, firstname, lastname, email) VALUES (?, ?, ?, ?)';
+
+      return client.execute(insertQuery, [ doc.id, doc.firstName, doc.lastName, doc.email ], { prepare: true })
+        .then(() => userMapper.update(doc, { when: { firstName: 'a' }}))
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), false);
+          assert.strictEqual(result.length, 1);
+          const lwtDoc = result.first();
+          assert.strictEqual(lwtDoc.firstName, doc.firstName);
+        })
+        .then(() => userMapper.update(doc, { when: { firstName: 'a', lastName: 'b' }}))
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), false);
+          assert.strictEqual(result.length, 1);
+          const lwtDoc = result.first();
+          assert.strictEqual(lwtDoc.firstName, doc.firstName);
+          assert.strictEqual(lwtDoc.lastName, doc.lastName);
         });
     });
   });

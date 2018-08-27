@@ -5,7 +5,8 @@ const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
-
+const helper = require('../../../test-helper');
+const Result = require('../../../../lib/mapper/result');
 
 describe('Mapper', function () {
 
@@ -22,6 +23,11 @@ describe('Mapper', function () {
       const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'hello!' };
 
       return mapper.batch([ videoMapper.batching.update(doc) ])
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.ok(result.wasApplied());
+          assert.strictEqual(result.length, 0);
+        })
         .then(() => mapperTestHelper.getVideoRows(client, doc, 'videoid, userid, added_date, name'))
         .then(rows => {
           assert.strictEqual(rows.length, 2);
@@ -74,6 +80,11 @@ describe('Mapper', function () {
           videoMapper.batching.update(videoDoc),
           userMapper.batching.update(userDoc)
         ])
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.ok(result.wasApplied());
+          assert.strictEqual(result.length, 0);
+        })
         .then(() => Promise.all([
           mapperTestHelper.getVideoRows(client, videoDoc, 'videoid, userid, added_date, name'),
           client.execute('SELECT * FROM users WHERE userid = ?', [ userDoc.id ], { prepare: true })
@@ -86,6 +97,39 @@ describe('Mapper', function () {
           const userRows = results[1];
           assert.strictEqual(userRows.length, 1);
           assert.strictEqual(userRows[0]['firstname'], userDoc.firstName);
+        });
+    });
+
+    it('should return a Result instance containing applied information of a LWT operation', () => {
+      const userDoc = { id: Uuid.random(), firstName: 'Neil', lastName: 'Young', email: 'info@example.com' };
+
+      return mapper
+        .batch([
+          userMapper.batching.update(userDoc, { ifExists: true })
+        ])
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), false);
+          assert.strictEqual(result.length, 0);
+        });
+    });
+
+    it('should adapt results of a LWT operation', () => {
+      const doc = { id: Uuid.random(), firstName: 'hey', lastName: 'joe', email: 'hey@example.com' };
+
+      const insertQuery = 'INSERT INTO users (userid, firstname, lastname, email) VALUES (?, ?, ?, ?)';
+
+      return client.execute(insertQuery, [doc.id, doc.firstName, doc.lastName, doc.email], { prepare: true })
+        .then(() => mapper.batch([
+          userMapper.batching.update(doc, { when: { firstName: 'a', lastName: 'b' }})
+        ]))
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), false);
+          assert.strictEqual(result.length, 1);
+          const lwtDoc = result.first();
+          assert.strictEqual(lwtDoc.firstName, doc.firstName);
+          assert.strictEqual(lwtDoc.lastName, doc.lastName);
         });
     });
   });

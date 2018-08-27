@@ -2,9 +2,11 @@
 
 const assert = require('assert');
 const types = require('../../../../lib/types');
+const Result = require('../../../../lib/mapper/result');
 const Uuid = types.Uuid;
 const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
+const helper = require('../../../test-helper');
 
 describe('ModelMapper', function () {
   mapperTestHelper.setupOnce(this);
@@ -37,8 +39,12 @@ describe('ModelMapper', function () {
         d => [ d.name, d.description, d.id ]);
 
       return executor(doc, { prepare: true })
-        .then(results => {
-          assert.strictEqual(results.wasApplied(), false);
+        .then(result => {
+          helper.assertInstanceOf(result, Result);
+          assert.strictEqual(result.wasApplied(), false);
+          // The empty doc should be hidden
+          assert.strictEqual(result.length, 0);
+          assert.deepStrictEqual(result.toArray(), []);
           return mapperTestHelper.getVideoRows(client, doc, 'videoid, name, description');
         })
         .then(rows => {

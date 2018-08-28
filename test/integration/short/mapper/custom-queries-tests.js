@@ -14,7 +14,7 @@ describe('ModelMapper', function () {
   describe('#mapWithQuery()', () => {
     const mapper = mapperTestHelper.getMapper();
     const client = mapper.client;
-    const videoMapper = mapper.forModel('Video', mapperTestHelper.getVideosMappingInfo());
+    const videoMapper = mapper.forModel('Video');
 
     it('should map the result for a given SELECT query', () => {
       const id = mapperTestHelper.videoIds[0];

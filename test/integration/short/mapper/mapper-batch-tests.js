@@ -16,8 +16,8 @@ describe('Mapper', function () {
 
     const mapper = mapperTestHelper.getMapper();
     const client = mapper.client;
-    const videoMapper = mapper.forModel('Video', mapperTestHelper.getVideosMappingInfo());
-    const userMapper = mapperTestHelper.getUserModelMapper(mapper);
+    const videoMapper = mapper.forModel('Video');
+    const userMapper = mapper.forModel('User');
 
     it('should execute a batch containing updates to multiple tables from the same doc', () => {
       const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'hello!' };

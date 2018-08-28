@@ -4,12 +4,13 @@ const assert = require('assert');
 const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const helper = require('../../../test-helper');
-const TableMappingInfo = require('../../../../lib/mapper/table-mapping-info');
+const tableMappingsModule = require('../../../../lib/mapper/table-mappings');
+const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
 const Mapper = require('../../../../lib/mapper/mapper');
 const Client = require('../../../../lib/client');
 const utils = require('../../../../lib/utils');
 
-const colsToProps = new Map([ ['videoid', 'id'], ['userid', 'userId'], ['added_date', 'addedDate'],
+const videoColumnsToProperties = new Map([ ['videoid', 'id'], ['userid', 'userId'], ['added_date', 'addedDate'],
   ['location_type', 'locationType'], ['preview_image_location', 'preview'], ['preview_thumbnails', 'thumbnails']]);
 
 let hasBeenSetup = false;
@@ -110,37 +111,40 @@ const mapperHelper = module.exports = {
     return client.batch(queries, { prepare: true });
   },
 
-  getMapper: function () {
+  getMapper: function (options) {
     const keyspace = mapperHelper.keyspace;
     const client = new Client(utils.extend({ keyspace }, helper.baseOptions));
     before(() => client.connect());
     after(() => client.shutdown());
-    return new Mapper(client);
-  },
 
-  getVideosMappingInfo: function () {
-    const tables = [
-      { name: 'videos', isView: false },
-      { name: 'user_videos', isView: false },
-      { name: 'latest_videos', isView: false }
-    ];
+    const videoColumns = {};
+    videoColumnsToProperties.forEach((v, k) => videoColumns[k] = v);
 
-    return new TableMappingInfo(mapperHelper.keyspace, tables, null, colsToProps);
-  },
-
-  getUserModelMapper(mapper) {
-    const tables = [
-      { name: 'users', isView: false }
-    ];
-
-    const cols = new Map([['videoid', 'id'], ['userid', 'id'], ['created_date', 'createdDate'],
-      ['firstname', 'firstName'], ['lastname', 'lastName']]);
-
-    return mapper.forModel('User', new TableMappingInfo(mapperHelper.keyspace, tables, null, cols));
+    return new Mapper(client, options || {
+      models: {
+        'Video': {
+          tables: [
+            { name: 'videos', isView: false },
+            { name: 'user_videos', isView: false },
+            { name: 'latest_videos', isView: false }
+          ],
+          columns: videoColumns
+        },
+        'User': {
+          tables: [{ name: 'users', isView: false }],
+          columns: {
+            'userid': 'id',
+            'firstname': 'firstName',
+            'lastname': 'lastName'
+          },
+          mappings: new UnderscoreCqlToCamelCaseMappings()
+        }
+      }
+    });
   },
 
   getPropertyName: function (columnName) {
-    const mappedName = colsToProps.get(columnName);
+    const mappedName = videoColumnsToProperties.get(columnName);
     return mappedName === undefined ? columnName : mappedName;
   },
 

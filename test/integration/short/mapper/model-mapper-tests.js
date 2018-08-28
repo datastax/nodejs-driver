@@ -16,8 +16,8 @@ describe('ModelMapper', function () {
 
   const mapper = mapperTestHelper.getMapper();
   const client = mapper.client;
-  const videoMapper = mapper.forModel('Video', mapperTestHelper.getVideosMappingInfo());
-  const userMapper = mapperTestHelper.getUserModelMapper(mapper);
+  const videoMapper = mapper.forModel('Video');
+  const userMapper = mapper.forModel('User');
 
   describe('#find()', () => {
     it('should use the correct table', () => {

@@ -234,6 +234,19 @@ describe('ModelMapper', function () {
           assert.strictEqual(lwtDoc.lastName, doc.lastName);
         });
     });
+
+    it('should add new items to a set', () => {
+      const doc = { id: Uuid.random(), name: 'hello', tags: ['a', 'b', 'c']};
+      return client
+        .execute('INSERT INTO videos (videoid, name, tags) VALUES (?, ?, ?)', [ doc.id, doc.name, doc.tags ],
+          { prepare: true })
+        .then(() => videoMapper.update({ id: doc.id, tags: q.append(['d', 'e']) }))
+        .then(() => mapperTestHelper.getVideoRows(client, { id: doc.id }))
+        .then(rows => {
+          assert.strictEqual(rows.length, 1);
+          assert.deepStrictEqual(rows[0]['tags'], doc.tags.concat('d', 'e'));
+        });
+    });
   });
 
   describe('#remove()', () => {

@@ -39,6 +39,7 @@ const mapperHelper = module.exports = {
       WITH CLUSTERING ORDER BY (added_date DESC, videoid ASC)`,
       `CREATE TABLE users (userid uuid, firstname varchar, lastname varchar, email text, created_date timestamp,
       PRIMARY KEY (userid))`,
+      `CREATE TABLE video_rating (videoid uuid, rating_counter counter, rating_total counter, PRIMARY KEY (videoid))`,
 
       // Insert test data
       `INSERT INTO videos (videoid, name, userid, description, location, location_type, preview_thumbnails, tags,
@@ -136,6 +137,13 @@ const mapperHelper = module.exports = {
             'userid': 'id',
             'firstname': 'firstName',
             'lastname': 'lastName'
+          },
+          mappings: new UnderscoreCqlToCamelCaseMappings()
+        },
+        'VideoRating': {
+          tables: ['video_rating'],
+          columns: {
+            'videoid': 'id'
           },
           mappings: new UnderscoreCqlToCamelCaseMappings()
         }

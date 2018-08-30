@@ -7,6 +7,7 @@ const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
 const helper = require('../../../test-helper');
 const Result = require('../../../../lib/mapper/result');
+const q = require('../../../../lib/mapper/q').q;
 
 describe('Mapper', function () {
 
@@ -18,6 +19,7 @@ describe('Mapper', function () {
     const client = mapper.client;
     const videoMapper = mapper.forModel('Video');
     const userMapper = mapper.forModel('User');
+    const ratingsMapper = mapper.forModel('VideoRating');
 
     it('should execute a batch containing updates to multiple tables from the same doc', () => {
       const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'hello!' };
@@ -130,6 +132,28 @@ describe('Mapper', function () {
           const lwtDoc = result.first();
           assert.strictEqual(lwtDoc.firstName, doc.firstName);
           assert.strictEqual(lwtDoc.lastName, doc.lastName);
+        });
+    });
+
+    it('should support updating counters in batch', () => {
+      const doc1 = { id: Uuid.random(), ratingCounter: q.incr(1), ratingTotal: q.incr(5) };
+      const doc2 = { id: Uuid.random(), ratingCounter: q.incr(2), ratingTotal: q.incr(8) };
+      const selectQuery = 'SELECT * FROM video_rating WHERE videoid = ?';
+
+      const items = [
+        ratingsMapper.batching.update(doc1),
+        ratingsMapper.batching.update(doc2)
+      ];
+
+      return mapper.batch(items)
+        .then(() => Promise.all([doc1.id, doc2.id].map(id => client.execute(selectQuery, [ id ], { prepare: true }))))
+        .then(results => {
+          const expected = [ [1, 5], [2, 8] ];
+          results.forEach((rs, index) => {
+            const row = rs.first();
+            assert.equal(row['rating_counter'], expected[index][0]);
+            assert.equal(row['rating_total'], expected[index][1]);
+          });
         });
     });
   });

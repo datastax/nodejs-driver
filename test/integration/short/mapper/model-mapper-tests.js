@@ -71,6 +71,12 @@ describe('ModelMapper', function () {
     });
   });
 
+  describe('#get()', () => {
+    it('should return the first document that matches the query');
+
+    it('should support an array parameter to select');
+  });
+
   describe('#insert()', () => {
     it('should insert on all tables where the partition and clustering keys are specified', () => {
       const doc = {
@@ -211,6 +217,12 @@ describe('ModelMapper', function () {
     });
 
     it('should adapt results of a LWT operation', () => {
+      function assertNotApplied(result) {
+        helper.assertInstanceOf(result, Result);
+        assert.strictEqual(result.wasApplied(), false);
+        assert.strictEqual(result.length, 1);
+      }
+
       const doc = { id: Uuid.random(), firstName: 'hey', lastName: 'joe', email: 'hey@example.com' };
 
       const insertQuery = 'INSERT INTO users (userid, firstname, lastname, email) VALUES (?, ?, ?, ?)';
@@ -218,17 +230,20 @@ describe('ModelMapper', function () {
       return client.execute(insertQuery, [ doc.id, doc.firstName, doc.lastName, doc.email ], { prepare: true })
         .then(() => userMapper.update(doc, { when: { firstName: 'a' }}))
         .then(result => {
-          helper.assertInstanceOf(result, Result);
-          assert.strictEqual(result.wasApplied(), false);
-          assert.strictEqual(result.length, 1);
+          assertNotApplied(result);
           const lwtDoc = result.first();
           assert.strictEqual(lwtDoc.firstName, doc.firstName);
         })
         .then(() => userMapper.update(doc, { when: { firstName: 'a', lastName: 'b' }}))
         .then(result => {
-          helper.assertInstanceOf(result, Result);
-          assert.strictEqual(result.wasApplied(), false);
-          assert.strictEqual(result.length, 1);
+          assertNotApplied(result);
+          const lwtDoc = result.first();
+          assert.strictEqual(lwtDoc.firstName, doc.firstName);
+          assert.strictEqual(lwtDoc.lastName, doc.lastName);
+        })
+        .then(() => userMapper.update(doc, { when: { firstName: 'a', lastName: q.notEq(doc.lastName) }}))
+        .then(result => {
+          assertNotApplied(result);
           const lwtDoc = result.first();
           assert.strictEqual(lwtDoc.firstName, doc.firstName);
           assert.strictEqual(lwtDoc.lastName, doc.lastName);

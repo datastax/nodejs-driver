@@ -265,14 +265,17 @@ const helper = {
     }
     assert.strictEqual(val1, val2);
   },
+
   assertInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+
   assertNotInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+
   assertContains: function (value, searchValue, caseInsensitive) {
     const originalValue = value;
     const originalSearchValue = searchValue;
@@ -284,6 +287,25 @@ const helper = {
     }
     assert.ok(value.indexOf(searchValue) >= 0, util.format(message, originalValue, originalSearchValue));
   },
+
+  /**
+   * Asserts that the value has some properties defined and the value of those properties
+   * @param {Object} value
+   * @param {Object} expectedProperties
+   * @param {Boolean} [strictEquality=true]
+   */
+  assertProperties: (value, expectedProperties, strictEquality) => {
+    const properties = Object.keys(expectedProperties);
+    if (properties.length === 0) {
+      throw new Error('expectedProperties should be defined as an object');
+    }
+    assert.ok(value, 'value should be defined');
+
+    const assertFn = strictEquality !== false ? assert.strictEqual : assert.equal;
+
+    properties.forEach(key => assertFn(value[key], expectedProperties[key]));
+  },
+
   /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client

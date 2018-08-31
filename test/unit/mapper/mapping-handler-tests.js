@@ -7,12 +7,6 @@ describe('MappingHandler', () => {
     it('should generate executor once and cache it');
 
     it('should obtain the parameters each time');
-
-    it('should support limit');
-
-    it('should support specifying fields');
-
-    it('should support relational operators');
   });
 
   describe('#getUpdateExecutor()', () => {

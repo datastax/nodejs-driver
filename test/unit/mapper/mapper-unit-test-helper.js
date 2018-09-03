@@ -23,15 +23,16 @@ module.exports = {
       ? columns.slice(primaryKeys[0], primaryKeys[1] + primaryKeys[0])
       : [];
 
-    const table = { name: 'table1', partitionKeys, clusteringKeys, columnsByName: {}, columns };
-    table.columns.forEach(c => table.columnsByName[c.name] = c);
-
     const result = {
       executions: [],
       client: {
         keyspace: keyspace === undefined ? 'ks1' : keyspace,
         metadata: {
-          getTable: (ks, name) => Promise.resolve(table),
+          getTable: (ks, name) => {
+            const table = { name, partitionKeys, clusteringKeys, columnsByName: {}, columns };
+            table.columns.forEach(c => table.columnsByName[c.name] = c);
+            return Promise.resolve(table);
+          },
         },
         execute: function (query, params, options) {
           result.executions.push({ query, params, options });
@@ -43,8 +44,18 @@ module.exports = {
   },
 
   getModelMapper: function (clientInfo) {
-    const mapper = new Mapper(clientInfo.client);
-    return mapper.forModel('User');
+    const mapper = new Mapper(clientInfo.client, {
+      models: {
+        'Sample': {
+          tables: [ 'table1' ],
+          columns: {
+            'location_type': 'locationType'
+          }
+        }
+      }
+    });
+
+    return mapper.forModel('Sample');
   },
 
   testParameters: function (methodName, handlerMethodName) {

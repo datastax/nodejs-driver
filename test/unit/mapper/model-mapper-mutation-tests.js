@@ -41,13 +41,24 @@ describe('ModelMapper', () => {
         });
     });
 
-    it('should throw an error when no property is defined');
+    it('should throw an error when the table metadata retrieval fails');
 
-    it('should throw an error when the table does not exist');
-
-    it('should throw an error when the table metadata fails');
-
-    it('should throw an error when the no table is selected');
+    it('should throw an error when filter or conditions are not valid', () => testErrors('insert', [
+      {
+        doc: { id1: 'x', notAValidProp: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
+      }, {
+        doc: { id1: 'x'},
+        docInfo: { fields: ['notAValidProp'] },
+        message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
+      }, {
+        doc: { id1: 'x', name: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
+      }, {
+        doc: {},
+        message: 'Expected object with keys'
+      }
+    ]));
   });
 
   describe('#update()', () => {
@@ -126,43 +137,71 @@ describe('ModelMapper', () => {
       })));
     });
 
-    it('should throw an error when filter or conditions are not valid', () =>
-      Promise.all([
-        {
-          doc: { id1: 'x', notAValidProp: 'y' },
-          message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
-        }, {
-          doc: { id1: 'x'},
-          docInfo: { fields: ['notAValidProp'] },
-          message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
-        }, {
-          doc: { id1: 'x', name: 'y' },
-          message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
-        }, {
-          doc: { id1: 'x', id2: 'y', name: 'z'},
-          docInfo: { when: { notAValidProp: 'm'} },
-          message: 'No table matches (all PKs have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
-        }
-      ].map(item => {
-        const columns = [ 'id1', 'id2', 'name'];
-        const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1');
-        const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
-
-        let catchCalled = false;
-
-        return modelMapper.update(item.doc, item.docInfo)
-          .catch(err => {
-            catchCalled = true;
-            helper.assertInstanceOf(err, Error);
-            assert.strictEqual(err.message, item.message);
-          })
-          .then(() => assert.strictEqual(catchCalled, true));
-      })));
+    it('should throw an error when filter or conditions are not valid', () => testErrors('update', [
+      {
+        doc: { id1: 'x', notAValidProp: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
+      }, {
+        doc: { id1: 'x'},
+        docInfo: { fields: ['notAValidProp'] },
+        message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
+      }, {
+        doc: { id1: 'x', name: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
+      }, {
+        doc: { id1: 'x', id2: 'y', name: 'z'},
+        docInfo: { when: { notAValidProp: 'm'} },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
+      }, {
+        doc: {},
+        message: 'Expected object with keys'
+      }
+    ]));
 
     it('should use fields when specified');
   });
 
   describe('#remove()', () => {
     mapperTestHelper.testParameters('remove');
+
+    it('should throw an error when filter or conditions are not valid', () => testErrors('remove', [
+      {
+        doc: { id1: 'x', notAValidProp: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
+      }, {
+        doc: { id1: 'x'},
+        docInfo: { fields: ['notAValidProp'] },
+        message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
+      }, {
+        doc: { id1: 'x', name: 'y' },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
+      }, {
+        doc: { id1: 'x', id2: 'y', name: 'z'},
+        docInfo: { when: { notAValidProp: 'm'} },
+        message: 'No table matches (all PKs have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
+      }, {
+        doc: {},
+        message: 'Expected object with keys'
+      }
+    ]));
   });
 });
+
+function testErrors(methodName, items) {
+  return Promise.all(items.map(item => {
+    const columns = [ 'id1', 'id2', 'name'];
+    const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1');
+    const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
+
+    let catchCalled = false;
+
+    return modelMapper[methodName](item.doc, item.docInfo)
+      .catch(err => {
+        catchCalled = true;
+        helper.assertInstanceOf(err, Error);
+        assert.strictEqual(err.message, item.message);
+      })
+      .then(() => assert.strictEqual(catchCalled, true));
+  }));
+}
+

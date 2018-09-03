@@ -42,6 +42,8 @@ describe('ModelMapper', function () {
         });
     });
 
+    it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
     vit('3.0', 'should support query operators', () => {
       const testItems = [
         { op: q.in_, value: [new Date('2012-06-01 06:00:00Z')], expected: 1 },
@@ -75,6 +77,8 @@ describe('ModelMapper', function () {
     it('should return the first document that matches the query');
 
     it('should support an array parameter to select');
+
+    it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'get'));
   });
 
   describe('#insert()', () => {
@@ -170,6 +174,8 @@ describe('ModelMapper', function () {
           assert.strictEqual(error.message, 'Batch with ifNotExists conditions cannot span multiple tables');
         });
     });
+
+    it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
   });
 
   describe('#update()', () => {
@@ -262,6 +268,8 @@ describe('ModelMapper', function () {
           assert.deepStrictEqual(rows[0]['tags'], doc.tags.concat('d', 'e'));
         });
     });
+
+    it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
   });
 
   describe('#remove()', () => {
@@ -308,5 +316,20 @@ describe('ModelMapper', function () {
           assert.strictEqual(error.message, 'Batch with when or ifExists conditions cannot span multiple tables');
         });
     });
+
+    it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
   });
 });
+
+function testTableNotFound(mapper, methodName) {
+  const modelMapper = mapper.forModel('TableDoesNotExist');
+  let catchCalled = false;
+
+  return modelMapper[methodName]({id: 1})
+    .catch(err => {
+      catchCalled = true;
+      helper.assertInstanceOf(err, Error);
+      assert.strictEqual(err.message, 'Table "TableDoesNotExist" could not be retrieved');
+    })
+    .then(() => assert.strictEqual(catchCalled, true));
+}

@@ -57,9 +57,39 @@ describe('ModelMapper', () => {
         params: [ 'value1', 'e', 20 ]
       }]));
 
-    it('should throw an error when fields do not match');
+    it('should throw an error when filter, fields or orderBy are not valid', () =>
+      Promise.all([
+        {
+          doc: { id1: 'x', notAValidProp: 'y' },
+          message: 'No table matches the columns filter (PKs): [id1,notAValidProp]'
+        }, {
+          doc: { id1: 'x'},
+          docInfo: { fields: ['notAValidProp'] },
+          message: 'No table matches the columns filter (PKs): [id1]; fields: [notAValidProp]'
+        }, {
+          doc: { id1: 'x', name: 'y' },
+          message: 'No table matches the columns filter (PKs): [id1,name]'
+        }, {
+          doc: { id1: 'x'},
+          docInfo: { orderBy: { 'notAValidProp': 'asc' } },
+          message: 'No table matches the columns filter (PKs): [id1]; orderBy: [notAValidProp]'
+        }
+      ].map(item => {
+        const columns = [ 'id1', 'id2', 'name'];
+        const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1', emptyResponse);
+        const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
-    it('should throw an error when filter columns do not match');
+        let catchCalled = false;
+
+        return modelMapper.find(item.doc, item.docInfo)
+          .catch(err => {
+            catchCalled = true;
+            helper.assertInstanceOf(err, Error);
+            assert.strictEqual(err.message, item.message);
+          })
+          .then(() => assert.strictEqual(catchCalled, true));
+      }))
+    );
   });
 
   describe('#get()', () => {

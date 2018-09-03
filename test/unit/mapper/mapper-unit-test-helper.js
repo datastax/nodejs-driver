@@ -62,7 +62,8 @@ module.exports = {
     const handlerParameters = {
       select: { executor: null, executorCall: null },
       insert: { executor: null, executorCall: null },
-      update: { executor: null, executorCall: null }
+      update: { executor: null, executorCall: null },
+      remove: { executor: null, executorCall: null }
     };
 
     const instance = new ModelMapper('abc', {
@@ -77,6 +78,13 @@ module.exports = {
         handlerParameters.update.executor = { doc, docInfo };
         return Promise.resolve((doc, docInfo, executionOptions) => {
           handlerParameters.update.executorCall = { doc, docInfo, executionOptions};
+          return {};
+        });
+      },
+      getDeleteExecutor: (doc, docInfo) => {
+        handlerParameters.remove.executor = { doc, docInfo };
+        return Promise.resolve((doc, docInfo, executionOptions) => {
+          handlerParameters.remove.executorCall = { doc, docInfo, executionOptions};
           return {};
         });
       },

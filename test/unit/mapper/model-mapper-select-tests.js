@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const q = require('../../../lib/mapper/q').q;
+const types = require('../../../lib/types');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 
@@ -104,6 +105,19 @@ describe('ModelMapper', () => {
         assert.strictEqual(execution.query, 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?');
       });
     });
+
+    it('should set the consistency level', () => testQueries([
+      types.consistencies.localOne,
+      types.consistencies.localQuorum,
+      undefined,
+      1
+    ].map(consistency => ({
+      doc: { id1: 'value1' },
+      executionOptions: { consistency },
+      query: 'SELECT * FROM ks1.table1 WHERE id1 = ?',
+      params: [ 'value1' ],
+      consistency
+    }))));
   });
 
   describe('#get()', () => {
@@ -116,11 +130,16 @@ function testQueries(items) {
   const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1', emptyResponse);
   const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
-  return Promise.all(items.map((item, index) => modelMapper.find(item.doc, item.docInfo).then(() => {
-    assert.strictEqual(clientInfo.executions.length, items.length);
-    const execution = clientInfo.executions[index];
-    assert.strictEqual(execution.query, item.query);
-    assert.deepStrictEqual(execution.params, item.params);
-    helper.assertProperties(execution.options, { prepare: true, isIdempotent: true });
-  })));
+  return Promise.all(items.map((item, index) =>
+    modelMapper.find(item.doc, item.docInfo, item.executionOptions).then(() => {
+      assert.strictEqual(clientInfo.executions.length, items.length);
+      const execution = clientInfo.executions[index];
+      assert.strictEqual(execution.query, item.query);
+      assert.deepStrictEqual(execution.params, item.params);
+      const expectedOptions = { prepare: true, isIdempotent: true };
+      if (item.consistency !== undefined) {
+        expectedOptions.consistency = item.consistency;
+      }
+      helper.assertProperties(execution.options, expectedOptions);
+    })));
 }

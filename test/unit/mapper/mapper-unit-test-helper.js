@@ -7,14 +7,14 @@ const ResultSet = types.ResultSet;
 const dataTypes = types.dataTypes;
 const Mapper = require('../../../lib/mapper/mapper');
 
-module.exports = {
+const mapperHelper = module.exports = {
   /**
    * Gets a fake client instance that returns metadata for a single table
    * @param {Array} columns
    * @param {Array} primaryKeys
    * @param {String} [keyspace]
    * @param {Object} [response]
-   * @return {{executions: Array, client: Client}}
+   * @return {{executions: Array, batchExecutions: Array, client: Client}}
    */
   getClient: function (columns, primaryKeys, keyspace, response) {
     columns = columns.map(c => (typeof c === 'string' ? { name: c, type: { code: dataTypes.text }} : c));
@@ -25,6 +25,7 @@ module.exports = {
 
     const result = {
       executions: [],
+      batchExecutions: [],
       client: {
         keyspace: keyspace === undefined ? 'ks1' : keyspace,
         metadata: {
@@ -37,6 +38,10 @@ module.exports = {
         execute: function (query, params, options) {
           result.executions.push({ query, params, options });
           return Promise.resolve(new ResultSet(response || {}, '10.1.1.1:9042', {}, 1, 1));
+        },
+        batch: function (queries, options) {
+          result.batchExecutions.push({ queries, options });
+          return Promise.resolve(new ResultSet(response || {}, '10.1.1.1:9042', {}, 1, 1));
         }
       }
     };
@@ -44,7 +49,12 @@ module.exports = {
   },
 
   getModelMapper: function (clientInfo) {
-    const mapper = new Mapper(clientInfo.client, {
+    const mapper = mapperHelper.getMapper(clientInfo);
+    return mapper.forModel('Sample');
+  },
+
+  getMapper: function (clientInfo) {
+    return new Mapper(clientInfo.client, {
       models: {
         'Sample': {
           tables: [ 'table1' ],
@@ -54,8 +64,6 @@ module.exports = {
         }
       }
     });
-
-    return mapper.forModel('Sample');
   },
 
   testParameters: function (methodName, handlerMethodName) {

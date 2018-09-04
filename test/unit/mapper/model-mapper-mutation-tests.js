@@ -6,6 +6,8 @@ const types = require('../../../lib/types');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 const dataTypes = types.dataTypes;
+const localOne = types.consistencies.localOne;
+const localQuorum = types.consistencies.localQuorum;
 
 describe('ModelMapper', () => {
   describe('#insert()', () => {
@@ -44,6 +46,19 @@ describe('ModelMapper', () => {
         params: [ 'value2', 'value1', 'name1', 1000 ]
       }
     ]));
+
+    it('should set the consistency level', () => testQueries('insert', [
+      localQuorum,
+      localOne,
+      undefined,
+      1
+    ].map(consistency => ({
+      doc: { id2: 'value2' , id1: 'value1' },
+      executionOptions: { consistency },
+      query: 'INSERT INTO ks1.table1 (id2, id1) VALUES (?, ?)',
+      params: [ 'value2', 'value1'],
+      consistency
+    }))));
 
     it('should throw an error when the table metadata retrieval fails');
 
@@ -85,7 +100,7 @@ describe('ModelMapper', () => {
         isIdempotent: false
       }]));
 
-    it('should append/prepend to a list XYZ', () => testQueries('update', [
+    it('should append/prepend to a list', () => testQueries('update', [
       {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1', list1: q.append(['a', 'b']) },
         query: 'UPDATE ks1.table1 SET name = ?, list1 = list1 + ? WHERE id2 = ? AND id1 = ?',
@@ -140,6 +155,19 @@ describe('ModelMapper', () => {
       }
     ]));
 
+    it('should set the consistency level', () => testQueries('update', [
+      localQuorum,
+      localOne,
+      undefined,
+      1
+    ].map(consistency => ({
+      doc: { id1: 'value1', id2: 'value2', name: 'x' },
+      executionOptions: { consistency },
+      query: 'UPDATE ks1.table1 SET name = ? WHERE id1 = ? AND id2 = ?',
+      params: [ 'x', 'value1', 'value2' ],
+      consistency
+    }))));
+
     it('should use fields when specified');
   });
 
@@ -191,6 +219,19 @@ describe('ModelMapper', () => {
         params: [ 'x', 'y' ]
       }
     ]));
+
+    it('should set the consistency level', () => testQueries('remove', [
+      localQuorum,
+      localOne,
+      undefined,
+      1
+    ].map(consistency => ({
+      doc: { id1: 'value1', id2: 'value2' },
+      executionOptions: { consistency },
+      query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+      params: [ 'value1', 'value2' ],
+      consistency
+    }))));
   });
 });
 
@@ -217,12 +258,16 @@ function testQueries(methodName, items) {
   const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ]);
   const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
-  return Promise.all(items.map((item, index) => modelMapper[methodName](item.doc, item.docInfo)
+  return Promise.all(items.map((item, index) => modelMapper[methodName](item.doc, item.docInfo, item.executionOptions)
     .then(() => {
       assert.strictEqual(clientInfo.executions.length, items.length);
       const execution = clientInfo.executions[index];
       assert.strictEqual(execution.query, item.query);
       assert.deepStrictEqual(execution.params, item.params);
-      helper.assertProperties(execution.options, {prepare: true, isIdempotent: item.isIdempotent !== false});
+      const expectedOptions = { prepare: true, isIdempotent: item.isIdempotent !== false };
+      if (item.consistency !== undefined) {
+        expectedOptions.consistency = item.consistency;
+      }
+      helper.assertProperties(execution.options, expectedOptions);
     })));
 }

@@ -59,6 +59,7 @@ const mapperHelper = module.exports = {
   },
   videoIds: [ Uuid.fromString('99051fe9-6a9c-46c2-b949-38ef78858dd0') ],
   userIds: [ Uuid.fromString('d0f60aa8-54a9-4840-b70c-fe562b68842b') ],
+  addedDates: [ new Date('2012-06-01T06:00:00Z') ],
   yyyymmddBuckets: ['2012-06-01'],
   keyspace: 'ks_mapper_killrvideo',
 

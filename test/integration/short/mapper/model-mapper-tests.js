@@ -73,12 +73,64 @@ describe('ModelMapper', function () {
     });
   });
 
-  describe('#get()', () => {
-    it('should return the first document that matches the query');
+  describe('#findAll()', () => {
+    it('should query without filter', () => videoMapper.findAll()
+      .then(result => {
+        helper.assertInstanceOf(result, Result);
+        assert.ok(result.length > 0);
+        assert.strictEqual(typeof result.first().name, 'string');
+      }));
 
-    it('should support an array parameter to select');
+    it('should support fields and limit', () => videoMapper.findAll({ fields: [ 'id', 'addedDate' ], limit: 1 })
+      .then(result => {
+        helper.assertInstanceOf(result, Result);
+        assert.strictEqual(result.length, 1);
+        assert.strictEqual(result.first().name, undefined);
+        helper.assertInstanceOf(result.first().addedDate, Date);
+      }));
+  });
+
+  describe('#get()', () => {
+    it('should return the first match on a table with a single partition key', () => {
+      const doc = { id: mapperTestHelper.videoIds[0] };
+      return videoMapper.get(doc).then(resultDoc => {
+        assert.ok(resultDoc);
+        assert.strictEqual(resultDoc.constructor, Object);
+        assert.strictEqual(resultDoc.id.toString(), doc.id.toString());
+      });
+    });
+
+    it('should return the first match on a table with composite primary key', () => {
+      const doc = {
+        id: mapperTestHelper.videoIds[0],
+        userId: mapperTestHelper.userIds[0],
+        addedDate: mapperTestHelper.addedDates[0]
+      };
+
+      return videoMapper.get(doc).then(resultDoc => {
+        assert.ok(resultDoc);
+        assert.strictEqual(resultDoc.userId.toString(), doc.userId.toString());
+        // "preview_image_location" is only defined on the user_videos table
+        assert.ok(resultDoc.preview);
+      });
+    });
+
+    it('should return null when not found', () =>
+      videoMapper.get({id: Uuid.random()}).then(resultDoc => assert.strictEqual(resultDoc, null)));
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'get'));
+
+    it('should throw an error when the filter is empty', () => {
+      let catchCalled = false;
+
+      return videoMapper.get({})
+        .catch(err => {
+          catchCalled = true;
+          helper.assertInstanceOf(err, Error);
+          assert.strictEqual(err.message, 'Expected object with keys');
+        })
+        .then(() => assert.strictEqual(catchCalled, true));
+    });
   });
 
   describe('#insert()', () => {

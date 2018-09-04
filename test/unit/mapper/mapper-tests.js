@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const Mapper = require('../../../lib/mapper/mapper');
+const helper = require('../../test-helper');
 
 describe('Mapper', () => {
   describe('constructor', () => {
@@ -43,6 +44,32 @@ describe('Mapper', () => {
       const mapper = new Mapper({});
       assert.throws(() => mapper.forModel('Sample'),
         /You must set the Client keyspace or specify the keyspace of the model in the MappingOptions/);
+    });
+  });
+
+  describe('#batch()', () => {
+    it('should throw when the parameters are not valid', () => {
+      const mapper = new Mapper({ keyspace: 'ks1' });
+      const message1 = 'First parameter items should be an Array with 1 or more ModelBatchItem instances';
+      const message2 = 'Batch items must be instances of ModelBatchItem, use modelMapper.batching object to create' +
+        ' each item';
+
+      Promise.all([
+        [ [], message1 ],
+        [ null, message1 ],
+        [ {}, message1 ],
+        [ [ 'a' ], message2 ],
+        [ [ 'a', 'b' ], message2 ]
+      ].map(item => {
+        let catchCalled = false;
+        return mapper.batch(item[0])
+          .catch(err => {
+            catchCalled = true;
+            helper.assertInstanceOf(err, Error);
+            assert.strictEqual(err.message, item[1]);
+          })
+          .then(() => assert.strictEqual(catchCalled, true));
+      }));
     });
   });
 });

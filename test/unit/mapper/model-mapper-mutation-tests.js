@@ -155,21 +155,24 @@ describe('ModelMapper', () => {
     it('should throw an error when filter or conditions are not valid', () => testErrors('update', [
       {
         doc: { id1: 'x', notAValidProp: 'y' },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
+        message: 'No table matches (all PKs and columns to set have to be specified) fields: [id1,notAValidProp]'
       }, {
         doc: { id1: 'x'},
         docInfo: { fields: ['notAValidProp'] },
-        message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
+        message: 'No table matches (all PKs and columns to set have to be specified) fields: [notAValidProp]'
       }, {
         doc: { id1: 'x', name: 'y' },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
+        message: 'No table matches (all PKs and columns to set have to be specified) fields: [id1,name]'
       }, {
         doc: { id1: 'x', id2: 'y', name: 'z'},
         docInfo: { when: { notAValidProp: 'm'} },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
+        message: 'No table matches (all PKs and columns to set have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
       }, {
         doc: {},
         message: 'Expected object with keys'
+      }, {
+        doc: { id1: 'x', id2: 'y' },
+        message: 'No table matches (all PKs and columns to set have to be specified) fields: [id1,id2]'
       }
     ]));
 

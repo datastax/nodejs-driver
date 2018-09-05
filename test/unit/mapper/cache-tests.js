@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const Cache = require('../../../lib/mapper/cache');
+const q = require('../../../lib/mapper/q').q;
 
 describe('Cache', function() {
   this.timeout(5000);
@@ -65,14 +66,106 @@ describe('Cache', function() {
       assert.notDeepEqual(key1WithFieldsD, key1WithOrderByD);
     });
 
-    it('should consider doc values when those provide a hashKey');
+    testQueryOperators(getKey);
 
-    it('should not collide when including fields', () => {
-      const key1 = getKey(['prop1', 'prop2'], {});
-      const key2 = getKey(['prop1'], {}, { fields: ['prop2'] });
-      assert.notDeepEqual(key1, key2);
-    });
+    testFields(getKey);
+  });
 
-    it('should consider query operators');
+  describe('getUpdateKey()', () => {
+    const getKey = (docKeys, doc, docInfo) => Array.from(Cache.getUpdateKey(docKeys, doc, docInfo));
+
+    testQueryOperators(getKey);
+
+    testWhenOperators(getKey);
+
+    testFields(getKey);
+
+    testDocInfoProperties(getKey, [
+      { ifExists: true },
+      { ttl: 1000 }
+    ]);
+  });
+
+  describe('getRemoveKey', () => {
+    const getKey = (docKeys, doc, docInfo) => Array.from(Cache.getRemoveKey(docKeys, doc, docInfo));
+
+    testQueryOperators(getKey);
+
+    testWhenOperators(getKey);
+
+    testFields(getKey);
+
+    testDocInfoProperties(getKey, [
+      { ifExists: true },
+      { deleteOnlyColumns: true }
+    ]);
+  });
+
+  describe('getInsertKey', () => {
+    const getKey = (docKeys, doc, docInfo) => Array.from(Cache.getInsertKey(docKeys, docInfo));
+
+    testFields(getKey);
+
+    testDocInfoProperties(getKey, [
+      { ifNotExists: true },
+      { ttl: 20 }
+    ]);
   });
 });
+
+function testQueryOperators(getKey) {
+  it('should consider query operators', () => {
+    const key1 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: q.lt(10) });
+    const key2 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: 10 });
+    assert.notDeepEqual(key1, key2);
+  });
+
+  it('should consider nested query operators', () => {
+    const key1 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: q.and(1, q.lt(10)) });
+    const key2 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: q.and(1, 10) });
+    assert.notDeepEqual(key1, key2);
+  });
+}
+
+function testWhenOperators(getKey) {
+  it('should consider when condition', () => {
+    const key1 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 3 }, { when: { prop1: 1, prop2: q.lt(10) }});
+    const key2 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 3 }, { when: { prop1: 1, prop2: 10 }});
+    assert.notDeepEqual(key1, key2);
+  });
+
+  it('should consider nested query operators on when conditions', () => {
+    const key1 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: q.and(1, q.lt(10)) });
+    const key2 = getKey(['prop1', 'prop2', 'prop3'], { prop1: 1, prop2: q.and(1, 10) });
+    assert.notDeepEqual(key1, key2);
+  });
+}
+
+function testFields(getKey) {
+  it('should not collide when including fields', () => {
+    const key1 = getKey(['prop1', 'prop2'], {});
+    const key2 = getKey(['prop1'], {}, { fields: ['prop2'] });
+    const key3 = getKey(['prop1', 'prop2'], {}, { fields: ['prop2'] });
+    assert.notDeepEqual(key1, key2);
+    assert.notDeepEqual(key1, key3);
+    assert.notDeepEqual(key2, key3);
+  });
+}
+
+function testDocInfoProperties(getKey, items) {
+  it('should consider docInfo properties', () => {
+    items.forEach(docInfo => {
+      const key = getKey(['prop1'], { prop1: 1}, docInfo);
+      // Compare to a key without docInfo
+      assert.notDeepEqual(key, getKey(['prop1'], { prop1: 1}, undefined));
+
+      // Compare to each other
+      items.forEach(compareDocInfo => {
+        if (compareDocInfo === docInfo) {
+          return;
+        }
+        assert.notDeepEqual(key, getKey(['prop1'], { prop1: 1}, compareDocInfo));
+      });
+    });
+  });
+}

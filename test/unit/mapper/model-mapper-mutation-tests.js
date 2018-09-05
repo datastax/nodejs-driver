@@ -60,7 +60,25 @@ describe('ModelMapper', () => {
       consistency
     }))));
 
-    it('should throw an error when the table metadata retrieval fails');
+    it('should throw an error when the table metadata retrieval fails', () => {
+      const error = new Error('test error');
+      const client = {
+        keyspace: 'ks1',
+        metadata: {
+          getTable: () => Promise.reject(error)
+        }
+      };
+      const modelMapper = mapperTestHelper.getModelMapper({ client });
+
+      let catchCalled = false;
+
+      return modelMapper.insert({ id1: 'value1' })
+        .catch(err => {
+          catchCalled = true;
+          assert.strictEqual(err, error);
+        })
+        .then(() => assert.strictEqual(catchCalled, true));
+    });
 
     it('should throw an error when filter or conditions are not valid', () => testErrors('insert', [
       {
@@ -168,7 +186,13 @@ describe('ModelMapper', () => {
       consistency
     }))));
 
-    it('should use fields when specified');
+    it('should use fields when specified', () => testQueries('update', [
+      {
+        doc: { id2: 'value2', id1: 'value1', name: 'name1', description: 'description1' },
+        docInfo: { fields: [ 'id1', 'id2', 'description' ] },
+        query: 'UPDATE ks1.table1 SET description = ? WHERE id1 = ? AND id2 = ?',
+        params: ['description1', 'value1', 'value2']
+      }]));
   });
 
   describe('#remove()', () => {
@@ -254,7 +278,7 @@ function testErrors(methodName, items) {
 }
 
 function testQueries(methodName, items) {
-  const columns = [ 'id1', 'id2', 'name', { name: 'list1', type: { code: dataTypes.list }}];
+  const columns = [ 'id1', 'id2', 'name', { name: 'list1', type: { code: dataTypes.list }}, 'description'];
   const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ]);
   const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 

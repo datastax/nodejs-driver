@@ -231,13 +231,54 @@ describe('ModelMapper', function () {
   });
 
   describe('#update()', () => {
-    it('should update on all tables where the partition and clustering keys are specified');
+    it('should update on all tables where the partition and clustering keys are specified', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video all 1',
+        description: 'description 1', yyyymmdd: new Date().toISOString().substr(0, 10) };
 
-    it('should update on some of the tables when those keys are not specified');
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => doc.name = 'updated all 1')
+        .then(() => videoMapper.update(doc))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => rows.forEach(row => assertRowMatchesDoc(row, doc)));
+    });
 
-    it('should insert a single table when it only matches one table');
+    it('should update a single table when it only matches one table', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'video single 1',
+        description: 'description 1', yyyymmdd: new Date().toISOString().substr(0, 10) };
 
-    it('should consider fields filter');
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => videoMapper.update({ id: doc.id, name: 'updated single 1'}))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 3);
+          // Only the first table was updated
+          assert.strictEqual(rows[0]['name'], 'updated single 1');
+          assert.strictEqual(rows[1]['name'], doc.name);
+          assert.strictEqual(rows[2]['name'], doc.name);
+        });
+    });
+
+    it('should consider fields filter', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'filter test', description: 'my desc'
+      };
+
+      return videoMapper.update(doc, { fields: [ 'id', 'userId', 'addedDate', 'name' ] })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 2);
+          rows.forEach(row => {
+            assert.ok(row);
+            assert.strictEqual(row['videoid'].toString(), doc.id.toString());
+            assert.strictEqual(row['name'], doc.name);
+          });
+
+          // Description was not included in the fields
+          assert.strictEqual(rows[0]['description'], null);
+        });
+    });
 
     it('should support conditional statements on a single table', () => {
       const doc = {
@@ -325,15 +366,61 @@ describe('ModelMapper', function () {
   });
 
   describe('#remove()', () => {
-    it('should delete on all tables where the partition and clustering keys are specified');
+    it('should delete on all tables where the partition and clustering keys are specified', () => {
+      const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'to delete 1' };
 
-    it('should delete on some of the tables when those keys are not specified');
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        // Inserted on 2 tables
+        .then(rows => assert.strictEqual(rows.length, 2))
+        .then(() => videoMapper.remove(doc))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 2);
+          // Deleted on the 2 tables
+          assert.deepStrictEqual(rows, [ null, null ]);
+        });
+    });
 
-    it('should delete a single table when it only matches one table');
+    it('should delete on some of the tables when those keys are not specified', () => {
+      const doc = { id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'to delete 1' };
 
-    it('should consider fields filter');
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        // Inserted on 2 tables
+        .then(rows => assert.strictEqual(rows.length, 2))
+        // Just provide the primary keys of 1 table
+        .then(() => videoMapper.remove({ id: doc.id }))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 2);
+          // Deleted on the 1 of the tables
+          assert.strictEqual(rows[0], null);
+          mapperTestHelper.assertRowMatchesDoc(rows[1], doc);
+        });
+    });
 
-    it('should remove only columns when specified');
+    it('should consider fields filter when deleteOnlyColumns is specified', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'to delete 3', description: 'desc 3'
+      };
+
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => videoMapper
+          .remove(doc, { fields: [ 'id', 'userId', 'addedDate', 'name' ], deleteOnlyColumns: true }))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 2);
+          // Deleted only the cell on both tables
+          rows.forEach(row => {
+            assert.ok(row);
+            assert.strictEqual(row['videoid'].toString(), doc.id.toString());
+            assert.strictEqual(row['name'], null);
+          });
+
+          assert.strictEqual(rows[0]['description'], doc.description);
+        });
+    });
 
     it('should support conditional statements on a single table', () => {
       const doc = { id: Uuid.random(), userId: Uuid.random(), name: 'video to delete' };

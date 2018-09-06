@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const tableMappingsModule = require('../../../lib/mapper/table-mappings');
+const tableMappingsModule = require('../../../lib/mapping/table-mappings');
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
 
 describe('UnderscoreCqlToCamelCaseMappings', () => {

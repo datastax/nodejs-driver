@@ -6,8 +6,8 @@ const Uuid = types.Uuid;
 const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
 const helper = require('../../../test-helper');
-const Result = require('../../../../lib/mapper/result');
-const q = require('../../../../lib/mapper/q').q;
+const Result = require('../../../../lib/mapping/result');
+const q = require('../../../../lib/mapping/q').q;
 
 describe('Mapper', function () {
 

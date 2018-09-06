@@ -2,10 +2,10 @@
 
 const assert = require('assert');
 const types = require('../../../lib/types');
-const ModelMapper = require('../../../lib/mapper/model-mapper');
+const ModelMapper = require('../../../lib/mapping/model-mapper');
 const ResultSet = types.ResultSet;
 const dataTypes = types.dataTypes;
-const Mapper = require('../../../lib/mapper/mapper');
+const Mapper = require('../../../lib/mapping/mapper');
 
 const mapperHelper = module.exports = {
   /**

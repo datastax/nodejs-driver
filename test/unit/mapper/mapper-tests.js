@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const Mapper = require('../../../lib/mapper/mapper');
+const Mapper = require('../../../lib/mapping/mapper');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 const types = require('../../../lib/types');

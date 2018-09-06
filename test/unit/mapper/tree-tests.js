@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const Tree = require('../../../lib/mapper/tree');
+const Tree = require('../../../lib/mapping/tree');
 
 describe('Tree', function () {
   this.timeout(20000);

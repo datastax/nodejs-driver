@@ -4,9 +4,9 @@ const assert = require('assert');
 const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const helper = require('../../../test-helper');
-const tableMappingsModule = require('../../../../lib/mapper/table-mappings');
+const tableMappingsModule = require('../../../../lib/mapping/table-mappings');
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
-const Mapper = require('../../../../lib/mapper/mapper');
+const Mapper = require('../../../../lib/mapping/mapper');
 const Client = require('../../../../lib/client');
 const utils = require('../../../../lib/utils');
 

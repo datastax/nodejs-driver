@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const types = require('../../../../lib/types');
-const Result = require('../../../../lib/mapper/result');
+const Result = require('../../../../lib/mapping/result');
 const Uuid = types.Uuid;
 const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;

@@ -1,8 +1,8 @@
 'use strict';
 
 const assert = require('assert');
-const Cache = require('../../../lib/mapper/cache');
-const q = require('../../../lib/mapper/q').q;
+const Cache = require('../../../lib/mapping/cache');
+const q = require('../../../lib/mapping/q').q;
 
 describe('Cache', function() {
   this.timeout(5000);

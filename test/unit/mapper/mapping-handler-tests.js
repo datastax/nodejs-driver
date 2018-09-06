@@ -2,10 +2,10 @@
 
 const assert = require('assert');
 const mapperTestHelper = require('./mapper-unit-test-helper');
-const MappingHandler = require('../../../lib/mapper/mapping-handler');
-const ModelMappingInfo = require('../../../lib/mapper/model-mapping-info');
-const DefaultTableMappings = require('../../../lib/mapper/table-mappings').DefaultTableMappings;
-const q = require('../../../lib/mapper/q').q;
+const MappingHandler = require('../../../lib/mapping/mapping-handler');
+const ModelMappingInfo = require('../../../lib/mapping/model-mapping-info');
+const DefaultTableMappings = require('../../../lib/mapping/table-mappings').DefaultTableMappings;
+const q = require('../../../lib/mapping/q').q;
 
 describe('MappingHandler', () => {
   describe('#getSelectExecutor()', () => {

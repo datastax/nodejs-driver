@@ -5,9 +5,9 @@ const helper = require('../../../test-helper');
 const mapperTestHelper = require('./mapper-test-helper');
 const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
-const q = require('../../../../lib/mapper/q').q;
+const q = require('../../../../lib/mapping/q').q;
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
-const Result = require('../../../../lib/mapper/result');
+const Result = require('../../../../lib/mapping/result');
 const vit = helper.vit;
 
 describe('ModelMapper', function () {

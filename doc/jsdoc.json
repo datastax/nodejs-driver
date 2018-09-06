@@ -4,6 +4,7 @@
       "lib/types",
       "lib/auth",
       "lib/policies",
+      "lib/mapping",
       "lib/metadata",
       "lib/client.js",
       "lib/execution-profile.js",

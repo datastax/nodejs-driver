@@ -106,6 +106,18 @@ describe('ModelMapper', () => {
       });
     });
 
+    it('should use the default table name based on the model name', () => {
+      const columns = [ 'id1', 'id2', 'name'];
+      const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1', emptyResponse);
+      const mapper = mapperTestHelper.getMapper(clientInfo);
+      const modelMapper = mapper.forModel('NoTableSpecified');
+
+      return modelMapper.find({ id1: 'x', id2: 'y'}).then(() => {
+        const execution = clientInfo.executions[0];
+        assert.strictEqual(execution.query, 'SELECT * FROM ks1.NoTableSpecified WHERE id1 = ? AND id2 = ?');
+      });
+    });
+
     it('should set the consistency level', () => testQueries('find', [
       types.consistencies.localOne,
       types.consistencies.localQuorum,

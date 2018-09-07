@@ -42,6 +42,31 @@ describe('ModelMapper', function () {
         });
     });
 
+    it('should support manual paging', () => {
+      const userId = Uuid.random();
+      const videoIds = [ Uuid.random(), Uuid.random(), Uuid.random(), Uuid.random(), Uuid.random() ];
+      const videosResult = [];
+      let pageState;
+      return Promise
+        .all(videoIds.map((id, i) =>
+          mapperTestHelper.insertVideoRows(client, { id, userId, addedDate: new Date(), name: `video${i}` })))
+        .then(() => videoMapper.find({ userId }, null, { fetchSize: 3 }))
+        .then(result => {
+          assert.strictEqual(result.length, 3);
+          assert.ok(result.pageState);
+          pageState = result.pageState;
+          videosResult.push.apply(videosResult, result.toArray());
+        })
+        .then(() => videoMapper.find({ userId }, null, { fetchSize: 3, pageState }))
+        .then(result => {
+          assert.strictEqual(result.length, 2);
+          videosResult.push.apply(videosResult, result.toArray());
+          videosResult.map(v => v.name).sort().forEach((name, i) => assert.strictEqual(name, `video${i}`));
+          videosResult.forEach(v => assert.ok(
+            videoIds.reduce((acc, id) => acc + (v.id.toString() === id.toString() ? 1 : 0), 0) === 1));
+        });
+    });
+
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
 
     vit('3.0', 'should support query operators', () => {
@@ -86,7 +111,7 @@ describe('ModelMapper', function () {
         helper.assertInstanceOf(result, Result);
         assert.strictEqual(result.length, 1);
         assert.strictEqual(result.first().name, undefined);
-        helper.assertInstanceOf(result.first().addedDate, Date);
+        assert.notStrictEqual(result.first().addedDate, undefined);
       }));
   });
 

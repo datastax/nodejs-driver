@@ -63,6 +63,7 @@ describe('ModelMapper', () => {
     it('should throw an error when the table metadata retrieval fails', () => {
       const error = new Error('test error');
       const client = {
+        connect: () => Promise.resolve(),
         keyspace: 'ks1',
         metadata: {
           getTable: () => Promise.reject(error)

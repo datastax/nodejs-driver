@@ -27,6 +27,7 @@ const mapperHelper = module.exports = {
       executions: [],
       batchExecutions: [],
       client: {
+        connect: () => Promise.resolve(),
         keyspace: keyspace === undefined ? 'ks1' : keyspace,
         metadata: {
           getTable: (ks, name) => {

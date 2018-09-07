@@ -2,6 +2,9 @@
 
 const assert = require('assert');
 const types = require('../../../../lib/types');
+const utils = require('../../../../lib/utils');
+const Client = require('../../../../lib/client');
+const Mapper = require('../../../../lib/mapping/Mapper');
 const Uuid = types.Uuid;
 const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
@@ -155,6 +158,31 @@ describe('Mapper', function () {
             assert.equal(row['rating_total'], expected[index][1]);
           });
         });
+    });
+  });
+
+  describe('#forModel()', () => {
+    it('should be able to query on a Client instance not connected', () => {
+      const userid = Uuid.random();
+      const items = [
+        ['insert', { userid }], ['remove', { userid }], ['update', { userid, email: 'info@example.com' }],
+        ['find', { userid }], ['findAll'] ];
+
+      return Promise.all(items.map(item => {
+        const client = new Client(utils.extend({ keyspace: mapperTestHelper.keyspace }, helper.baseOptions));
+        const mapper = new Mapper(client, { models: { 'User': { tables: ['users'] }}});
+        const userMapper = mapper.forModel('User');
+
+        const methodName = item[0];
+
+        return userMapper[methodName](item[1])
+          .then(result => {
+            helper.assertInstanceOf(result, Result);
+            assert.strictEqual(typeof result.length, 'number');
+            assert.strictEqual(result.wasApplied(), true);
+          })
+          .then(() => client.shutdown());
+      }));
     });
   });
 });

@@ -42,3 +42,15 @@ const mapper = new Mapper(client, {
   }
 });
 ```
+
+### How can I set the consistency level of a Mapper execution
+
+The last parameter of the `ModelMapper` execution methods is the [execution profile](../../execution-profiles). The 
+execution profiles allow you define a group of options (consistency level, timeouts, ...) and reuse them on different
+ execution invocations.
+
+```javascript
+await videoMapper.find({ userId }, { fields: [ 'name', 'addedDate' ]}, 'my-exec-profile');
+```
+
+You can read the Mapper documentation on [execution options](../queries/#execution-options) for more information.

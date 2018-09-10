@@ -66,10 +66,10 @@ example, you can shutdown your `Client` before exiting your application by calli
 mapper.client.shutdown();
 ```
 
-You can look at the [Queries documentation](../queries/) for more examples for retrieving and saving 
-objects and you continue reading the [Mappings documentation](../defining-mappings/) to understand how 
+You can look at the [Queries documentation](../queries/) for more examples of retrieving and saving 
+objects and you read the [Mappings documentation](../defining-mappings/) to understand how 
 tables and columns are mapped into properties.
 
-_Note that throughout the Mapper documentation the [killrvideo schema][killrvideo] is used._ 
+*Note that throughout the Mapper documentation the [killrvideo schema][killrvideo] is used.* 
 
 [killrvideo]: https://github.com/pmcfadin/killrvideo-sample-schema

@@ -1,4 +1,4 @@
-# Execution Profiles (experimental)
+# Execution Profiles
 
 Execution profiles provide a mechanism to group together a set of configuration options and reuse them across different 
 query executions. These options include:
@@ -9,8 +9,7 @@ query executions. These options include:
 - Per-host request timeout
 
 Execution profiles API is being introduced to help deal with the exploding number of configuration options, especially
-as the database platform evolves into more complex workloads. It is first introduced in an experimental capacity, in
-order to take advantage of it in existing projects, and to gauge interest and feedback in the community.
+as the database platform evolves into more complex workloads.
 
 This document explains how Execution Profiles relate to existing settings, and shows how to use the new profiles for
 request execution.

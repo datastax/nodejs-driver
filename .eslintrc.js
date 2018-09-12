@@ -107,6 +107,7 @@ module.exports = {
     "Symbol": false,
     "Uint16Array": false,
     "Int8Array": false,
+    "BigInt": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,

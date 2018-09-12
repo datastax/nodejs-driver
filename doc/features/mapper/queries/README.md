@@ -71,7 +71,7 @@ const result = await videoMapper.find({ userId }, { fields: ['name', 'descriptio
 
 #### Get objects with a specific order
 
-Get all videos posted by a user
+Get all videos posted by a user sorted by added date in descending order.
 
 ```javascript
 const result = await videoMapper.find({ userId }, { orderBy: { 'addedDate': 'desc' }});
@@ -85,7 +85,7 @@ When a model is mapped to multiple tables, it will insert a row in each table wh
  grouped in a logged batch (either all or none of the insert operations will succeed).
 
 Additionally, `insert()` supports conditional clause for [lightweight transactions (CAS)][lwt] that allows to 
-insert only if the row doesn't exist. Please note that using IF conditions will incur a non negligible performance 
+insert only if the row doesn't exist. Please note that using IF conditions will incur a non-negligible performance 
 cost on the server-side so this should be used sparingly.
 
 ### Usage examples
@@ -106,7 +106,7 @@ Insert only the id, the name and the added date, regardless of the other propert
 await videoMapper.insert(video, { fields: ['videoId', 'name', 'description'] });
 ```
 
-#### Insert an object if it doesn't exit
+#### Insert an object if it doesn't exist
 
 Insert a video when there isn't a video with the same id.
 
@@ -123,7 +123,7 @@ When a model is mapped to multiple tables, it will update a row in each table wh
 
 Additionally, `update()` supports conditional clause for [lightweight transactions (CAS)][lwt] that allows to 
 specify the condition that has to be met for the update to occur. Please note that using IF conditions will incur a 
-non negligible performance cost on the server-side so this should be used sparingly.
+non-negligible performance cost on the server-side so this should be used sparingly.
 
 ### Usage examples
 
@@ -160,7 +160,7 @@ When a model is mapped to multiple tables, it will delete the row on each table 
 
 Additionally, `remove()` supports conditional clause for [lightweight transactions (CAS)][lwt] that allows to 
 specify the condition that has to be met for the delete to occur. Please note that using IF conditions will incur a 
-non negligible performance cost on the server-side so this should be used sparingly.
+non-negligible performance cost on the server-side so this should be used sparingly.
 
 ### Usage examples
 
@@ -226,6 +226,9 @@ Once you created a new `ModelMapper` method, you can use it in your application.
 const result = await videoMapper.getCount({ userId });
 console.log(result.first().videoCount);
 ```
+
+Note that when bypassing query generation, the result will still be an instance of `Result` with the columns mapped 
+to the property name according to the configuration.
 
 ### Execution options
 

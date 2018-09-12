@@ -21,6 +21,17 @@ const mappingOptions = {
 const mapper = new Mapper(client, mappingOptions);
 ```
 
+Currently, there are two `TableMappings` implementation:
+
+- `UnderscoreCqlToCamelCaseMappings`, that converts CQL column names with all-lowercase identifiers 
+containing underscores (snake case) to camel case (initial lowercase letter) property names. For example: Converts 
+`video_count` to `videoCount` and vice versa.
+- `DefaultTableMappings`, that as the name indicates is the default when is left unspecified and it doesn't perform 
+any name conversion.
+
+You can implement your own `TableMappings` to represent your custom naming convention by extending one of the existent 
+classes or implementing the `TableMappings` interface.
+
 When a certain column or property doesn't match the naming convention, you can specify each column name and property 
 name key-value pair, for example:
 

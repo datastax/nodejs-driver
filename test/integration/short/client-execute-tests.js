@@ -10,6 +10,7 @@ const utils = require('../../../lib/utils.js');
 const errors = require('../../../lib/errors.js');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
+const bigIntTests = require('./bigint-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -1061,6 +1062,8 @@ describe('Client', function () {
         });
       });
     });
+
+    bigIntTests(keyspace, false);
   });
 });
 

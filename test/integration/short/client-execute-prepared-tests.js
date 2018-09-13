@@ -12,7 +12,7 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
-const bigIntTests = require('./bigint-tests');
+const bigIntTests = require('./es-bigint-tests');
 
 describe('Client', function () {
   this.timeout(120000);

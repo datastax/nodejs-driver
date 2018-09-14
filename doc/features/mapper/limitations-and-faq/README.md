@@ -14,7 +14,7 @@ There are some limitations in the Mapper design:
     - Deleting an individual map key/value pair is not supported, as in `DELETE favs['author'] FROM ...`
     - Updating single UDT fields map key/values is not supported, e.g: `id.field = 3`
 
-Note that some limitations can be overcome by using [Custom Queries](#custom-queries).
+Note that some limitations can be overcome by using [Custom Queries](../queries/#custom-queries).
 
 ## FAQ
 

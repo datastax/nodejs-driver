@@ -26,6 +26,7 @@ const mapperHelper = module.exports = {
     const result = {
       executions: [],
       batchExecutions: [],
+      logMessages: [],
       client: {
         connect: () => Promise.resolve(),
         keyspace: keyspace === undefined ? 'ks1' : keyspace,
@@ -43,9 +44,13 @@ const mapperHelper = module.exports = {
         batch: function (queries, options) {
           result.batchExecutions.push({ queries, options });
           return Promise.resolve(new ResultSet(response || {}, '10.1.1.1:9042', {}, 1, 1));
+        },
+        log: function (level, message) {
+          result.logMessages.push({ level, message });
         }
       }
     };
+
     return result;
   },
 

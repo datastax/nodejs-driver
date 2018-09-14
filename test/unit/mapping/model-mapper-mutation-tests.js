@@ -6,8 +6,6 @@ const types = require('../../../lib/types');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 const dataTypes = types.dataTypes;
-const localOne = types.consistencies.localOne;
-const localQuorum = types.consistencies.localQuorum;
 
 describe('ModelMapper', () => {
   describe('#insert()', () => {
@@ -47,19 +45,6 @@ describe('ModelMapper', () => {
       }
     ]));
 
-    it('should set the consistency level', () => testQueries('insert', [
-      localQuorum,
-      localOne,
-      undefined,
-      1
-    ].map(consistency => ({
-      doc: { id2: 'value2' , id1: 'value1' },
-      executionOptions: { consistency },
-      query: 'INSERT INTO ks1.table1 (id2, id1) VALUES (?, ?)',
-      params: [ 'value2', 'value1'],
-      consistency
-    }))));
-
     it('should throw an error when the table metadata retrieval fails', () => {
       const error = new Error('test error');
       const client = {
@@ -97,6 +82,29 @@ describe('ModelMapper', () => {
         message: 'Expected object with keys'
       }
     ]));
+
+    it('should warn when cache reaches 100 different queries', () => {
+      const clientInfo = mapperTestHelper.getClient(['id1'], [ 1 ], 'ks1');
+      const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
+
+      const cacheHighWaterMark = 100;
+      const promises = [];
+
+      for (let i = 0; i < 2 * cacheHighWaterMark; i++) {
+        promises.push(modelMapper.insert({ id1: 1, [`col${i % (cacheHighWaterMark-1)}`]: 1}));
+      }
+
+      return Promise.all(promises)
+        // No warnings logged when there are 99 different queries
+        .then(() => assert.strictEqual(clientInfo.logMessages.length, 0))
+        // One more query
+        .then(() => modelMapper.insert({ id1: 1, anotherColumn: 1 }))
+        .then(() => {
+          assert.strictEqual(clientInfo.logMessages.length, 1);
+          assert.strictEqual(clientInfo.logMessages[0].level, 'warning');
+          helper.assertContains(clientInfo.logMessages[0].message, `ModelMapper cache reached ${cacheHighWaterMark}`);
+        });
+    });
   });
 
   describe('#update()', () => {
@@ -177,19 +185,6 @@ describe('ModelMapper', () => {
       }
     ]));
 
-    it('should set the consistency level', () => testQueries('update', [
-      localQuorum,
-      localOne,
-      undefined,
-      1
-    ].map(consistency => ({
-      doc: { id1: 'value1', id2: 'value2', name: 'x' },
-      executionOptions: { consistency },
-      query: 'UPDATE ks1.table1 SET name = ? WHERE id1 = ? AND id2 = ?',
-      params: [ 'x', 'value1', 'value2' ],
-      consistency
-    }))));
-
     it('should use fields when specified', () => testQueries('update', [
       {
         doc: { id2: 'value2', id1: 'value1', name: 'name1', description: 'description1' },
@@ -247,19 +242,6 @@ describe('ModelMapper', () => {
         params: [ 'x', 'y' ]
       }
     ]));
-
-    it('should set the consistency level', () => testQueries('remove', [
-      localQuorum,
-      localOne,
-      undefined,
-      1
-    ].map(consistency => ({
-      doc: { id1: 'value1', id2: 'value2' },
-      executionOptions: { consistency },
-      query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
-      params: [ 'value1', 'value2' ],
-      consistency
-    }))));
   });
 });
 
@@ -293,9 +275,6 @@ function testQueries(methodName, items) {
       assert.strictEqual(execution.query, item.query);
       assert.deepStrictEqual(execution.params, item.params);
       const expectedOptions = { prepare: true, isIdempotent: item.isIdempotent !== false };
-      if (item.consistency !== undefined) {
-        expectedOptions.consistency = item.consistency;
-      }
       helper.assertProperties(execution.options, expectedOptions);
     })));
 }

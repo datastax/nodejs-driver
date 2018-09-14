@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const q = require('../../../lib/mapping/q').q;
-const types = require('../../../lib/types');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 
@@ -117,19 +116,6 @@ describe('ModelMapper', () => {
         assert.strictEqual(execution.query, 'SELECT * FROM ks1.NoTableSpecified WHERE id1 = ? AND id2 = ?');
       });
     });
-
-    it('should set the consistency level', () => testQueries('find', [
-      types.consistencies.localOne,
-      types.consistencies.localQuorum,
-      undefined,
-      1
-    ].map(consistency => ({
-      doc: { id1: 'value1' },
-      executionOptions: { consistency },
-      query: 'SELECT * FROM ks1.table1 WHERE id1 = ?',
-      params: [ 'value1' ],
-      consistency
-    }))));
   });
 
   describe('#get()', () => {
@@ -182,6 +168,34 @@ describe('ModelMapper', () => {
         params: [ 20 ]
       }]));
   });
+
+  describe('#mapWithQuery', () => {
+    it('should warn when cache reaches 100 different queries', () => {
+      const clientInfo = mapperTestHelper.getClient(['id1'], [ 1 ], 'ks1', emptyResponse);
+      const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
+
+      const cacheHighWaterMark = 100;
+      const promises = [];
+
+      for (let i = 0; i < 2 * cacheHighWaterMark; i++) {
+        const executor = modelMapper.mapWithQuery(`query-${i % (cacheHighWaterMark - 1)}`, () => []);
+        promises.push(executor());
+      }
+
+      return Promise.all(promises)
+        // No warnings logged when there are 99 different queries
+        .then(() => assert.strictEqual(clientInfo.logMessages.length, 0))
+        // One more query
+        .then(() => modelMapper.mapWithQuery(`query-limit`, () => [])())
+        .then(() => {
+          assert.strictEqual(clientInfo.logMessages.length, 1);
+          assert.strictEqual(clientInfo.logMessages[0].level, 'warning');
+          assert.strictEqual(clientInfo.logMessages[0].message,
+            `Custom queries cache reached ${cacheHighWaterMark} items, this could be caused by ` +
+            `hard-coding parameter values inside the query, which should be avoided`);
+        });
+    });
+  });
 });
 
 function testQueries(methodName, items) {
@@ -200,9 +214,6 @@ function testQueries(methodName, items) {
       assert.strictEqual(execution.query, item.query);
       assert.deepStrictEqual(execution.params, item.params);
       const expectedOptions = {prepare: true, isIdempotent: true};
-      if (item.consistency !== undefined) {
-        expectedOptions.consistency = item.consistency;
-      }
       helper.assertProperties(execution.options, expectedOptions);
     });
   }));

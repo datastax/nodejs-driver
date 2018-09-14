@@ -4,7 +4,8 @@ const assert = require('assert');
 const Mapper = require('../../../lib/mapping/mapper');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
-const types = require('../../../lib/types');
+const ModelBatchItem = require('../../../lib/mapping/model-batch-item');
+const utils = require('../../../lib/utils');
 
 describe('Mapper', () => {
   describe('constructor', () => {
@@ -79,14 +80,11 @@ describe('Mapper', () => {
       const mapper = mapperTestHelper.getMapper(clientInfo);
       const modelMapper = mapper.forModel('Sample');
       const items = [{
-        consistency: types.consistencies.localQuorum
-      }, {
         isIdempotent: true,
         logged: true,
         timestamp: 0
       }, {
-        isIdempotent: false,
-        consistency: types.consistencies.localOne
+        isIdempotent: false
       }];
 
       return Promise.all(items.map((executionOptions, index) => {
@@ -97,6 +95,45 @@ describe('Mapper', () => {
           assert.strictEqual(clientInfo.batchExecutions[index].options.prepare, true);
         });
       }));
+    });
+
+    it('should set idempotency based on the items idempotency', () =>
+      Promise.all([ true, false ].map((isIdempotent) => {
+        const clientInfo = mapperTestHelper.getClient([ 'id1'], [ 1 ]);
+        const mapper = mapperTestHelper.getMapper(clientInfo);
+
+        // 2 queries, one using the provided idempotency to test
+        const items = [
+          new ModelBatchItem(Promise.resolve([ { isIdempotent, paramsGetter: utils.noop }])),
+          new ModelBatchItem(Promise.resolve([ { isIdempotent: true, paramsGetter: utils.noop }])),
+        ];
+
+        return mapper.batch(items)
+          .then(() => {
+            assert.strictEqual(clientInfo.batchExecutions[0].options.isIdempotent, isIdempotent);
+          });
+      })));
+
+    it('should allow multiple calls using the same ModelBatchItem', () => {
+      const clientInfo = mapperTestHelper.getClient([ 'id1'], [ 1 ]);
+      const mapper = mapperTestHelper.getMapper(clientInfo);
+
+      let resolve = null;
+
+      // 2 queries, one using the provided idempotency to test
+      const items = [
+        new ModelBatchItem(new Promise(r => resolve = r)),
+        new ModelBatchItem(Promise.resolve([ { isIdempotent: true, paramsGetter: utils.noop }])),
+      ];
+
+      // call it multiple times with the same queries
+      const promises = [ mapper.batch(items), mapper.batch(items) ];
+
+      resolve([ { isIdempotent: false, paramsGetter: utils.noop }]);
+
+      return Promise.all(promises.map((p, index) => p.then(() => {
+        assert.strictEqual(clientInfo.batchExecutions[index].options.isIdempotent, false);
+      })));
     });
   });
 });

@@ -214,7 +214,9 @@ Use `mapWithQuery()` method to create your own `ModelMapper` execution method.
 ### Usage example
 
 ```javascript
+// Write your own query using query markers for parameters
 const query = 'SELECT COUNT(videoid) as video_count FROM user_videos WHERE userid = ? GROUP BY userid';
+
 // Create a new ModelMapper method with your own query
 // and a function to extract the parameters from an object 
 videoMapper.getCount = videoMapper.mapWithQuery(query, video => [ video.userId ]);
@@ -227,8 +229,11 @@ const result = await videoMapper.getCount({ userId });
 console.log(result.first().videoCount);
 ```
 
-Note that when bypassing query generation, the result will still be an instance of `Result` with the columns mapped 
-to the property name according to the configuration.
+The result will be an instance of `Result` with the columns mapped to the property name according to the 
+configuration, similar to other `ModelMapper` methods.
+
+Note that you must use query markers to represent parameters in the query, you should avoid hard-coding the parameter
+values in the query. 
 
 ### Execution options
 

@@ -9,6 +9,7 @@ const requests = require('../../lib/requests');
 const defaultOptions = require('../../lib/client-options').defaultOptions();
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
+const ExecutionInfo = require('../../lib/execution-info').ExecutionInfo;
 const helper = require('../test-helper');
 
 describe('Connection', function () {
@@ -175,7 +176,7 @@ describe('Connection', function () {
     it('should set the request timeout', function (done) {
       const writeQueueFake = getWriteQueueFake();
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 0 } }, writeQueueFake);
-      c.sendStream(new requests.QueryRequest('QUERY1'), { readTimeout: 20 }, function (err) {
+      c.sendStream(new requests.QueryRequest('QUERY1'), getExecInfo({ readTimeout: 20 }), function (err) {
         helper.assertInstanceOf(err, errors.OperationTimedOutError);
         c.close();
         done();
@@ -286,4 +287,8 @@ function getWriteQueueFake(sent) {
       setImmediate(writeCallback);
     }
   });
+}
+
+function getExecInfo(options) {
+  return ExecutionInfo.empty();
 }

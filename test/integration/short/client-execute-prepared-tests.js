@@ -666,10 +666,10 @@ describe('Client', function () {
       it('should fill in the keyspace in the query options passed to the lbp', function (done) {
         const lbp = new loadBalancing.RoundRobinPolicy();
         lbp.newQueryPlanOriginal = lbp.newQueryPlan;
-        const queryOptionsArray = [];
-        lbp.newQueryPlan = function (query, queryOptions, callback) {
-          queryOptionsArray.push(queryOptions);
-          lbp.newQueryPlanOriginal(query, queryOptions, callback);
+        const executionInfoArray = [];
+        lbp.newQueryPlan = function (query, info, callback) {
+          executionInfoArray.push(info);
+          lbp.newQueryPlanOriginal(query, info, callback);
         };
         const client = newInstance({ keyspace: commonKs, policies: { loadBalancing: lbp}});
         utils.series([
@@ -679,8 +679,8 @@ describe('Client', function () {
           },
           client.shutdown.bind(client),
           function assertResults(next) {
-            const queryOptions = queryOptionsArray[queryOptionsArray.length - 1];
-            assert.strictEqual(queryOptions.keyspace, 'system');
+            const queryOptions = executionInfoArray[executionInfoArray.length - 1];
+            assert.strictEqual(queryOptions.getKeyspace(), 'system');
             next();
           }
         ], done);

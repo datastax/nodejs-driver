@@ -290,5 +290,7 @@ function getWriteQueueFake(sent) {
 }
 
 function getExecInfo(options) {
-  return ExecutionInfo.empty();
+  const info = ExecutionInfo.empty();
+  info.getReadTimeout = () => options.readTimeout;
+  return info;
 }

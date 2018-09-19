@@ -25,6 +25,7 @@ describe('metadata', function () {
           assert.strictEqual(ks.strategy, strategy);
           assert.ok(ks.strategyOptions);
           assert.strictEqual(ks.strategyOptions[optionName], optionValue);
+          assert.strictEqual(ks.virtual, false);
         }
 
         function checkKeyspace(client, name, strategy, optionName, optionValue) {
@@ -42,6 +43,7 @@ describe('metadata', function () {
             assert.ok(m.keyspaces);
             assert.ok(m.keyspaces['system']);
             assert.ok(m.keyspaces['system'].strategy);
+            assert.strictEqual(m.keyspaces['system'].virtual, false);
             next();
           },
           helper.toTask(client.execute, client, "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}"),
@@ -70,17 +72,17 @@ describe('metadata', function () {
               next();
             });
           },
-          helper.toTask(client.execute, client, "ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'datacenter2' : 1}"),
+          helper.toTask(client.execute, client, "ALTER KEYSPACE ks3 WITH replication = {'class' : 'NetworkTopologyStrategy', 'dc1' : 1}"),
           function checkAlteredKeyspace(next) {
             // rf strategy should have changed on client.
-            checkKeyspace(client, 'ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter2', '1');
+            checkKeyspace(client, 'ks3', 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
 
             // rf strategy should not have changed yet on nonSyncClient without refreshing explicitly.
             checkKeyspace(nonSyncClient, 'ks3', 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor', '1');
 
             nonSyncClient.metadata.refreshKeyspace('ks3', function (err, ks) {
               assert.ifError(err);
-              checkKeyspaceWithInfo(ks, 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter2', '1');
+              checkKeyspaceWithInfo(ks, 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'dc1', '1');
               next();
             });
           },
@@ -108,6 +110,49 @@ describe('metadata', function () {
             }
           ], done);
         });
+      });
+      vit('4.0', 'should retrieve virtual keyspace metadata', (done) => {
+        const client = newInstance();
+        const nonSyncClient = newInstance({ isMetadataSyncEnabled: false });
+        function checkVirtualKeyspace(ks) {
+          // table should be virtual and options should be undefined
+          assert.ok(ks.virtual);
+          assert.ifError(ks.durableWrites);
+          assert.ifError(ks.strategyOptions);
+          assert.ifError(ks.strategy);
+        }
+
+        utils.series([
+          client.connect.bind(client),
+          nonSyncClient.connect.bind(nonSyncClient),
+          function checkKeyspaces(next) {
+            const m = client.metadata;
+            checkVirtualKeyspace(m.keyspaces['system_views']);
+            next();
+          },
+          (next) => {
+            // There should be no keyspace metadata for the non synched client until its fetched via refreshKeyspace.
+            const ks = nonSyncClient.metadata.keyspaces;
+            assert.ok(ks['system_views'] === undefined);
+            nonSyncClient.metadata.refreshKeyspace('system_views', (err, ks) => {
+              assert.ifError(err);
+              checkVirtualKeyspace(ks);
+              next();
+            });
+          },
+          (next) => {
+            // Use global refreshKeyspaces and ensure that a previously unfetched virtual keyspace is fetched.
+            const ks = nonSyncClient.metadata.keyspaces;
+            assert.ok(ks['system_virtual_schema'] === undefined);
+            nonSyncClient.metadata.refreshKeyspaces((err) => {
+              assert.ifError(err);
+              checkVirtualKeyspace(nonSyncClient.metadata.keyspaces['system_virtual_schema']);
+              next();
+            });
+          },
+          client.shutdown.bind(client),
+          nonSyncClient.shutdown.bind(nonSyncClient)
+        ], done);
       });
     });
     describe('#getTokenRanges()', function () {
@@ -377,6 +422,7 @@ describe('metadata', function () {
     describe('#getTable()', function () {
       const keyspace = 'ks_tbl_meta';
       const is3 = helper.isCassandraGreaterThan('3.0');
+      const is4 = helper.isCassandraGreaterThan('4.0');
       const valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
       before(function createTables(done) {
         const client = newInstance();
@@ -387,8 +433,6 @@ describe('metadata', function () {
           "CREATE TABLE tbl2 (id uuid, text_sample text, PRIMARY KEY ((id, text_sample)))",
           "CREATE TABLE tbl3 (id uuid, text_sample text, PRIMARY KEY (id, text_sample))",
           "CREATE TABLE tbl4 (zck timeuuid, apk2 text, pk1 uuid, val2 blob, valz1 int, PRIMARY KEY ((pk1, apk2), zck))",
-          "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
-          "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE",
           "CREATE TABLE tbl7 (id1 uuid, id3 timeuuid, zid2 text, int_sample int, PRIMARY KEY (id1, zid2, id3)) WITH CLUSTERING ORDER BY (zid2 ASC, id3 DESC)",
           "CREATE TABLE tbl8 (id uuid, rating_value counter, rating_votes counter, PRIMARY KEY (id))",
           "CREATE TABLE tbl9 (id uuid, c1 'DynamicCompositeType(s => UTF8Type, i => Int32Type)', c2 'ReversedType(CompositeType(UTF8Type, Int32Type))', c3 'Int32Type', PRIMARY KEY (id, c1, c2))",
@@ -428,6 +472,13 @@ describe('metadata', function () {
             'CREATE TABLE tbl_cdc_false (a int PRIMARY KEY, b text) WITH cdc=FALSE'
           );
         }
+        if (!is4) {
+          // COMPACT STORAGE is not supported by C* 4.0.
+          queries.push(
+            "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
+            "CREATE TABLE tbl6 (id uuid, text1 text, text2 text, PRIMARY KEY (id)) WITH COMPACT STORAGE"
+          );
+        }
         utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
       });
       it('should retrieve the metadata of a single partition key table', function (done) {
@@ -449,6 +500,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 0);
             assert.strictEqual(table.clusteringOrder.length, 0);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -469,6 +521,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys.length, 2);
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.partitionKeys[1].name, 'text_sample');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -494,6 +547,7 @@ describe('metadata', function () {
             assert.strictEqual(table.clusteringKeys[0].name, 'text_sample');
             assert.strictEqual(table.clusteringOrder.length, 1);
             assert.strictEqual(table.clusteringOrder[0], 'ASC');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -521,6 +575,7 @@ describe('metadata', function () {
             assert.strictEqual(table.clusteringOrder.length, 2);
             assert.strictEqual(table.clusteringOrder[0], 'ASC');
             assert.strictEqual(table.clusteringOrder[1], 'DESC');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -546,11 +601,15 @@ describe('metadata', function () {
             assert.strictEqual(table.columnsByName['rating_votes'].type.code, types.dataTypes.counter);
             //true counter tables
             assert.strictEqual(table.replicateOnWrite, true);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
       });
       it('should retrieve the metadata of a compact storaged table', function (done) {
+        if (is4) {
+          this.skip();
+        }
         const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
@@ -568,11 +627,15 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys.length, 1);
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 0);
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
       });
       it('should retrieve the metadata of a compact storaged table with clustering key', function (done) {
+        if (is4) {
+          this.skip();
+        }
         const client = newInstance({ keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
@@ -589,6 +652,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id1');
             assert.strictEqual(table.clusteringKeys.length, 1);
             assert.strictEqual(table.clusteringKeys[0].name, 'id2');
+            assert.strictEqual(table.virtual, false);
             done();
           });
         });
@@ -609,6 +673,7 @@ describe('metadata', function () {
             assert.strictEqual(table.partitionKeys[0].name, 'id');
             assert.strictEqual(table.clusteringKeys.length, 1);
             assert.strictEqual(table.clusteringKeys[0].name, 'ck');
+            assert.strictEqual(table.virtual, false);
             client.shutdown(done);
           });
         });
@@ -888,6 +953,21 @@ describe('metadata', function () {
             next();
           });
         }, done);
+      });
+      vit('4.0', 'should retrieve the metadata of a virtual table', () => {
+        const client = setupInfo.client;
+        return client.metadata.getTable('system_views', 'clients')
+          .then((table) => {
+            assert.ok(table);
+            assert.ok(table.virtual);
+            assert.strictEqual(table.name, 'clients');
+            assert.deepEqual(table.columns.map(c => c.name), ['address', 'connection_stage', 'driver_name',
+              'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
+              'ssl_enabled', 'ssl_protocol', 'username']);
+            assert.deepEqual(table.clusteringOrder, ['ASC']);
+            assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);
+            assert.deepEqual(table.clusteringKeys.map(c => c.name), ['port']);
+          });
       });
       it('should retrieve the updated metadata after a schema change', function (done) {
         const client = newInstance();

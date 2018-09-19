@@ -61,6 +61,29 @@ describe('RequestHandler', function () {
         done();
       });
     });
+    it('should use the provided host if specified in the queryOptions', function (done) {
+      // get a fake host that always responds with a readTimeout
+      const host = helper.getHostsMock([ {} ], undefined, (r, h, cb) => {
+        cb(new errors.ResponseError(types.responseErrorCodes.readTimeout, 'Test error'));
+      })[0];
+
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
+        cb(null, {});
+      });
+      const retryPolicy = new TestRetryPolicy();
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, null, host);
+      handler.send(function (err, result) {
+        // expect an error that includes read timeout for that host.
+        assert.ok(err);
+        assert.deepEqual(Object.keys(err.innerErrors), [host.address]);
+        assert.strictEqual(err.innerErrors[host.address].code, types.responseErrorCodes.readTimeout);
+        // should have skipped lbp entirely.
+        const hosts = lbp.getFixedQueryPlan();
+        assert.strictEqual(hosts[0].sendStreamCalled, 0);
+        assert.strictEqual(hosts[1].sendStreamCalled, 0);
+        done();
+      });
+    });
     it('should callback with OperationTimedOutError when the retry policy decides', function (done) {
       const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
         if (h.address === '0') {
@@ -243,9 +266,9 @@ describe('RequestHandler', function () {
  * @param {Boolean} [isIdempotent]
  * @returns {RequestHandler}
  */
-function newInstance(request, client, lbp, retry, isIdempotent) {
+function newInstance(request, client, lbp, retry, isIdempotent, host) {
   client = client || newClient(null, lbp);
-  const options = { executionProfile: { loadBalancing: lbp }, retry: retry, isIdempotent: isIdempotent };
+  const options = { executionProfile: { loadBalancing: lbp }, retry: retry, isIdempotent: isIdempotent, host: host };
   return new RequestHandler(request, options, client);
 }
 

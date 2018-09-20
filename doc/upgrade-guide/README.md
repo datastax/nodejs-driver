@@ -7,6 +7,8 @@ If you have any questions or comments, you can [post them on the mailing list][m
 
 ## 4.0
 
+The following is a list of changes made in version 4.0 of the driver that are relevant when upgrading from version 3.x.
+
 ### Changes to the retry and load-balancing policies
 
 `ExecutionInfo` is introduced as a wrapper around the `QueryOptions` provided to the execution methods.
@@ -56,7 +58,11 @@ were removed.
 - Deprecated properties `handler`, `request` and `retryOnTimeout` were removed.
 - `options` property was replaced by `executionInfo` which is an instance of `ExecutionInfo`.
 
+---
+
 ## 2.0
+
+The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 1.x.
 
 ### API Changes
 

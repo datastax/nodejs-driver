@@ -19,10 +19,12 @@ describe('Client', function () {
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
     const commonTable = commonKs + '.' + helper.getRandomName('table');
     const commonTable2 = commonKs + '.' + helper.getRandomName('table');
+
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
       queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
     });
+
     it('should execute a prepared query with parameters on all hosts', function (done) {
       const client = setupInfo.client;
       const query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
@@ -44,6 +46,69 @@ describe('Client', function () {
         assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
         assert.strictEqual(err.query, query);
         done();
+      });
+    });
+    context('with incorrect query parameters', () => {
+      const client = setupInfo.client;
+      const query = `INSERT INTO ${commonTable2} (id, bigint_sample) VALUES (?, ?)`;
+
+      it('should callback with error when the amount of parameters does not match', done => {
+        utils.eachSeries(
+          [
+            // 2 parameters are expected
+            [ types.Uuid.random() ],
+            [ types.Uuid.random(), types.Long.ONE, 'abc' ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when the parameter types do not match', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), types.Uuid.random() ],
+            [ types.Uuid.random(), true ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when parameters can not be encoded', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), {} ],
+            [ types.Uuid.random(), Symbol('abc') ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when the partition key can not be encoded', done => {
+        utils.eachSeries(
+          [
+            [ Symbol(true), types.Long.ONE ],
+            [ {}, types.Long.ONE ],
+            [ types.InetAddress.fromString('10.10.10.10'), types.Long.ONE ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
       });
     });
     it('should prepare and execute a query without parameters', function (done) {

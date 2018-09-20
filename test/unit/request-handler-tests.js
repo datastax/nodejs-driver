@@ -50,7 +50,7 @@ describe('RequestHandler', function () {
         cb(null, {});
       });
       const retryPolicy = new TestRetryPolicy();
-      const handler = newInstance(queryRequest, null, lbp, retryPolicy);
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, true);
       handler.send(function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
@@ -92,13 +92,88 @@ describe('RequestHandler', function () {
         cb(null, {});
       });
       const retryPolicy = new TestRetryPolicy(false);
-      const handler = newInstance(queryRequest, null, lbp, retryPolicy);
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, true);
       handler.send(function (err) {
         helper.assertInstanceOf(err, errors.OperationTimedOutError);
         const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 1);
+        done();
+      });
+    });
+    it('should not use the retry policy if query is non-idempotent on writeTimeout', function (done) {
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
+        if (h.address === '0') {
+          return cb(new errors.ResponseError(types.responseErrorCodes.writeTimeout, 'Test error'));
+        }
+        cb(null, {});
+      });
+      const retryPolicy = new TestRetryPolicy();
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, false);
+      handler.send(function (err, result) {
+        helper.assertInstanceOf(err, errors.ResponseError);
+        assert.strictEqual(err.code, types.responseErrorCodes.writeTimeout);
+        const hosts = lbp.getFixedQueryPlan();
+        assert.strictEqual(hosts[0].sendStreamCalled, 1);
+        assert.strictEqual(hosts[1].sendStreamCalled, 0);
+        assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 0);
+        done();
+      });
+    });
+    it('should not use the retry policy if query is non-idempotent on OperationTimedOutError', function (done) {
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
+        if (h.address === '0') {
+          return cb(new errors.OperationTimedOutError('Test error'));
+        }
+        cb(null, {});
+      });
+      const retryPolicy = new TestRetryPolicy(false);
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, false);
+      handler.send(function (err) {
+        helper.assertInstanceOf(err, errors.OperationTimedOutError);
+        const hosts = lbp.getFixedQueryPlan();
+        assert.strictEqual(hosts[0].sendStreamCalled, 1);
+        assert.strictEqual(hosts[1].sendStreamCalled, 0);
+        assert.strictEqual(retryPolicy.requestErrors.length, 0);
+        done();
+      });
+    });
+    it('should use the retry policy even if query is non-idempotent on readTimeout', function (done) {
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
+        if (h.address === '0') {
+          return cb(new errors.ResponseError(types.responseErrorCodes.readTimeout, 'Test error'));
+        }
+        cb(null, {});
+      });
+      const retryPolicy = new TestRetryPolicy();
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, false);
+      handler.send(function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        const hosts = lbp.getFixedQueryPlan();
+        assert.strictEqual(hosts[0].sendStreamCalled, 1);
+        assert.strictEqual(hosts[1].sendStreamCalled, 1);
+        assert.strictEqual(retryPolicy.readTimeoutErrors.length, 1);
+        done();
+      });
+    });
+    it('should use the retry policy even if query is non-idempotent on unavailable', function (done) {
+      const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], undefined, function sendStreamCb(r, h, cb) {
+        if (h.address === '0') {
+          return cb(new errors.ResponseError(types.responseErrorCodes.unavailableException, 'Test error'));
+        }
+        cb(null, {});
+      });
+      const retryPolicy = new TestRetryPolicy();
+      const handler = newInstance(queryRequest, null, lbp, retryPolicy, false);
+      handler.send(function (err, result) {
+        assert.ifError(err);
+        helper.assertInstanceOf(result, types.ResultSet);
+        const hosts = lbp.getFixedQueryPlan();
+        assert.strictEqual(hosts[0].sendStreamCalled, 1);
+        assert.strictEqual(hosts[1].sendStreamCalled, 1);
+        assert.strictEqual(retryPolicy.unavailableErrors.length, 1);
         done();
       });
     });

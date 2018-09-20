@@ -160,13 +160,13 @@ unexpected error, invoked in the following situations:
 The [operation info][OperationInfo], passed as a parameter to the retry policy methods, exposes the `query` and query 
 `options` as properties.
 
-A default and base retry policy is included, along with `IdempotenceAwareRetryPolicy` that considers query idempotence.
+A default and base retry policy are included.
 
 ### Query idempotence
 
-Note that the current behaviour of the driver allows the `RetryPolicy` to retrieve the query idempotence as part of the
-information and take a decision whether to retry the execution or not. In future versions, the driver will rethrow the
-error back to the consumer for non-idempotent queries, without using the `RetryPolicy` for this case.
+Note that as of version 4.0, the configured `RetryPolicy` is not engaged when a query errors with a
+`WriteTimeoutException` or request error and the query was not [idempotent][idempotent].
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
 [OperationInfo]: /api/module.policies/module.retry/type.OperationInfo/
+[idempotent]: ../speculative-executions/#query-idempotence

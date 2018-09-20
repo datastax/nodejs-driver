@@ -125,6 +125,15 @@ describe('DefaultExecutionInfo', () => {
       const info = DefaultExecutionInfo.create(options, getClientFake());
       assert.deepStrictEqual(info.getPageState(), utils.allocBufferFromString(options.pageState, 'hex'));
     });
+
+    it('should expose the raw query options or an empty object', () => {
+      [undefined, null, () => {}, { prepare: true, myCustomOption: 1 }].forEach(options => {
+        const info = DefaultExecutionInfo.create(options, getClientFake());
+
+        const expectedOptions = options && typeof options !== 'function' ? options : utils.emptyObject;
+        assert.strictEqual(info.getRawQueryOptions(), expectedOptions);
+      });
+    });
   });
 
   describe('#getOrCreateTimestamp()', () => {

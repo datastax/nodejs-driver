@@ -38,6 +38,8 @@ Additionally, you can define the default idempotence for all executions when cre
 const client = new Client({ contactPoints, queryOptions: { isIdempotent: true }})
 ```
 
+Previously, a similar behaviour was available using `IdempotenceAwareRetryPolicy`, that is now marked as deprecated.
+
 ### Removed `retryOnTimeout` property of `QueryOptions`
 
 `retryOnTimeout`, the property that controlled whether a request should be tried when a response wasn't obtained 
@@ -46,13 +48,26 @@ after a period of time is no longer available.
 The behaviour should be now controlled using `onRequestError()` method on the `RetryPolicy`  for idempotent 
 queries.
 
-### Changes on retry module `OperationInfo`
+### Changes on `OperationInfo` of the retry module 
 
 The retry policy methods takes [`OperationInfo`][op-info] as a parameter. Some `OperationInfo` properties changes or 
 were removed.
 
 - Deprecated properties `handler`, `request` and `retryOnTimeout` were removed.
 - `options` property was replaced by `executionInfo` which is an instance of `ExecutionInfo`.
+
+## 2.0
+
+### API Changes
+
+1. `uuid` and `timeuuid` values are decoded as [`Uuid`](../features/datatypes/uuids) and
+[`TimeUuid`](../features/datatypes/uuids) instances.
+
+1. `decimal` values are decoded as [`BigDecimal`](../features/datatypes/numerical) instances.
+
+1. `varint` values are decoded as [`Integer`](../features/datatypes/numerical) instances.
+
+1. `inet` values are decoded as `InetAddress` instances.
 
 
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user

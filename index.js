@@ -3,6 +3,7 @@
 const clientOptions = require('./lib/client-options');
 exports.Client = require('./lib/client');
 exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
+exports.ExecutionInfo = require('./lib/execution-info').ExecutionInfo;
 exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');

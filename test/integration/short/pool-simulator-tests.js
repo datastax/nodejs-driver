@@ -89,7 +89,7 @@ describe('pool', function () {
     });
   });
 
-  context('with a cluster containing three nodes on each of the two datacenters', () => {
+  context('with a simulated cluster containing three nodes on each of the two datacenters', () => {
     let cluster;
 
     beforeEach(done => {
@@ -157,6 +157,9 @@ describe('pool', function () {
         .then(() =>
           // Wait for connections to node0 are reestablished
           helper.setIntervalUntilPromise(() => initialControlConnectionHost.pool.connections.length > 0, 500, 40))
+        .then(() =>
+          // Wait some more just to be sure no connection is being created in the background
+          new Promise(r => setTimeout(r, 500)))
         .then(() => {
           // The driver now sees 6 nodes
           assert.strictEqual(client.hosts.length, 6);

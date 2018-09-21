@@ -378,14 +378,13 @@ describe('Client', function () {
         client.execute('Q', function (err) {
           assert.ifError(err);
           assert.ok(info);
+          const timestamp = info.getOrGenerateTimestamp();
           if (version > 2) {
-            assert.ok(info.getOrGenerateTimestamp());
-            assert.ok(
-              (info.getOrGenerateTimestamp() instanceof types.Long)
-              || typeof info.getOrGenerateTimestamp() === 'number');
+            assert.ok(timestamp);
+            assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
           }
           else {
-            assert.strictEqual(info.timestamp, undefined);
+            assert.strictEqual(timestamp, null);
           }
           next();
         });
@@ -469,13 +468,13 @@ describe('Client', function () {
         client.batch(['q1', 'q2', 'q3'], function (err) {
           assert.ifError(err);
           assert.ok(info);
+          const timestamp = info.getOrGenerateTimestamp();
           if (version > 2) {
-            const timestamp = info.getOrGenerateTimestamp();
             assert.ok(timestamp);
             assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
           }
           else {
-            assert.strictEqual(info.timestamp, undefined);
+            assert.strictEqual(timestamp, null);
           }
           next();
         });

@@ -740,7 +740,7 @@ describe('Client', function () {
       ], done);
     });
     it('should failover when a node goes down with some outstanding requests', function (done) {
-      const options = utils.extend({}, helper.baseOptions);
+      const options = utils.extend({ queryOptions: { isIdempotent: true } }, helper.baseOptions);
       options.pooling = {
         coreConnectionsPerHost: {
           '0': 1,

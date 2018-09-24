@@ -539,6 +539,34 @@ describe('Client', function () {
         done();
       });
     });
+    it('should support buffer as input for any data type', () => {
+      const buffer4 = utils.allocBufferFromArray([0, 0, 0, 1]);
+      const buffer8 = utils.allocBuffer(8);
+      const buffer16 = types.Uuid.random().getBuffer();
+
+      const client = setupInfo.client;
+      const insertQuery = `INSERT INTO ${table}` +
+        ' (id, text_sample, int_sample, bigint_sample, float_sample, double_sample, inet_sample, list_sample2)' +
+        ' VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      const selectQuery = `SELECT * FROM ${table} WHERE id = ?`;
+      const params = [ buffer16, buffer4, buffer4, buffer8, buffer4, buffer8, buffer4, [ buffer4 ] ];
+
+      return Promise.all([ false, true ].map(prepare =>
+        client.execute(insertQuery, params, { prepare })
+          .then(() => client.execute(selectQuery, [ buffer16 ]))
+          .then(rs => {
+            const row = rs.first();
+            assert.ok(row);
+            assert.strictEqual(row['id'].toString(), new types.Uuid(buffer16).toString());
+            assert.strictEqual(row['text_sample'], buffer4.toString('utf8'));
+            assert.strictEqual(row['int_sample'], 1);
+            assert.strictEqual(row['bigint_sample'].toString(), '0');
+            assert.strictEqual(row['float_sample'], buffer4.readFloatBE(0));
+            assert.strictEqual(row['double_sample'], 0);
+            assert.strictEqual(row['inet_sample'].toString(), '0.0.0.1');
+            assert.deepStrictEqual(row['list_sample2'], [ 1 ]);
+          })));
+    });
     vdescribe('3.0.16', 'with noCompact', function () {
       before(function (done) {
         // While C* 4.0 supports the NO_COMPACT option, there is no way to create

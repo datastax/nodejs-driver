@@ -32,37 +32,9 @@ const queriesFailingOnFirstNode = {
 describe('Client', function () {
   this.timeout(5000);
   const setupInfo = simulacron.setup([ 3 ], { initClient: false });
+  primeQueries(setupInfo);
 
-  Object.keys(queries).forEach(key => {
-    const item = queries[key];
-
-    beforeEach(done => setupInfo.cluster.prime({
-      when: { query: item.value },
-      then: {
-        result: item.failure, message: `Sample error message for ${item.failure}`,
-      }
-    }, done));
-  });
-
-  Object.keys(queriesFailingOnFirstNode).forEach(key => {
-    const item = queriesFailingOnFirstNode[key];
-
-    beforeEach(done => setupInfo.cluster.prime({
-      when: { query: item.value },
-      then: { result: 'success', delay_in_ms: 0 }
-    }, done));
-
-    const failureResult = typeof item.failure === 'string'
-      ? { result: item.failure, message: `Sample error (first node) message for ${item.failure}`}
-      : item.failure;
-
-    beforeEach(done => setupInfo.cluster.node(0).prime({
-      when: { query: item.value },
-      then: failureResult
-    }, done));
-  });
-
-
+  // Use different metrics implementations
   [ getClientMetrics, getDefaultMetrics ].forEach(factory => {
 
     context(`with ${factory().constructor.name}`, () => {
@@ -230,6 +202,7 @@ describe('Client', function () {
 function getClientMetrics() {
   const m = new metrics.ClientMetrics();
 
+  // Custom implementation of each interface method
   m.onClientTimeoutError = () => m.clientTimeoutError = (m.clientTimeoutError || 0) + 1;
   m.onConnectionError = () => m.connectionError = (m.connectionError || 0) + 1;
   m.onOtherError = () => m.otherError = (m.otherError || 0) + 1;
@@ -253,6 +226,7 @@ function getClientMetrics() {
 function getDefaultMetrics() {
   const m = new metrics.DefaultMetrics();
 
+  // Listen to each event and track them in properties
   m.errors.clientTimeout.on('increment', () => m.clientTimeoutError = (m.clientTimeoutError || 0) + 1);
   m.errors.other.on('increment', () => m.otherError = (m.otherError || 0) + 1);
   m.errors.readTimeout.on('increment', () => m.readTimeoutError = (m.readTimeoutError || 0) + 1);
@@ -272,6 +246,7 @@ function getDefaultMetrics() {
   return m;
 }
 
+/** A retry policy that tracks calls to each method.*/
 class TestRetryPolicy extends RetryPolicy {
   constructor() {
     super();
@@ -316,4 +291,35 @@ class TestRetryPolicy extends RetryPolicy {
     this.requestError++;
     return this._getResult();
   }
+}
+
+function primeQueries(setupInfo) {
+  Object.keys(queries).forEach(key => {
+    const item = queries[key];
+
+    beforeEach(done => setupInfo.cluster.prime({
+      when: { query: item.value },
+      then: {
+        result: item.failure, message: `Sample error message for ${item.failure}`,
+      }
+    }, done));
+  });
+
+  Object.keys(queriesFailingOnFirstNode).forEach(key => {
+    const item = queriesFailingOnFirstNode[key];
+
+    beforeEach(done => setupInfo.cluster.prime({
+      when: { query: item.value },
+      then: { result: 'success', delay_in_ms: 0 }
+    }, done));
+
+    const failureResult = typeof item.failure === 'string'
+      ? { result: item.failure, message: `Sample error (first node) message for ${item.failure}`}
+      : item.failure;
+
+    beforeEach(done => setupInfo.cluster.node(0).prime({
+      when: { query: item.value },
+      then: failureResult
+    }, done));
+  });
 }

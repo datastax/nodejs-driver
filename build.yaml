@@ -42,7 +42,7 @@ build:
       export CCM_PATH=$HOME/ccm
       export JUNIT_REPORT_STACK=1
       export JUNIT_REPORT_PATH=.
-      npm install kerberos
+      npm install kerberos@0.0.24
       npm install mocha-jenkins-reporter
       if [ "$NODEJS_VERSION" != "0.10" ] && [ "$NODEJS_VERSION" != "0.12" ]; then
         npm install -g eslint@4;

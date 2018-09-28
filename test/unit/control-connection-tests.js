@@ -31,15 +31,24 @@ describe('ControlConnection', function () {
   describe('#init()', function () {
     this.timeout(20000);
     let useLocalhost;
+    let useIp6;
+
     before(function (done) {
       dns.resolve('localhost', function (err) {
         if (err) {
           helper.trace('localhost can not be resolved');
         }
         useLocalhost = !err;
+
         done();
       });
     });
+
+    before(done => dns.resolve6('localhost', (err, addresses) => {
+      useIp6 = !err && addresses.length > 0;
+      done();
+    }));
+
     function testResolution(CcMock, expectedHosts, done) {
       const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
         queryResults: { 'system\\.peers': {
@@ -57,7 +66,7 @@ describe('ControlConnection', function () {
       });
     }
     it('should resolve IPv4 and IPv6 addresses', function (done) {
-      if (!useLocalhost) {
+      if (!useLocalhost || !useIp6 ) {
         return done();
       }
       const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext());

@@ -191,8 +191,8 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 70);
             pageState = result.pageState;
-            //ResultSet#pageState is the hex string representation of the meta.pageState
-            assert.strictEqual(pageState, result.meta.pageState.toString('hex'));
+            //ResultSet#pageState is the hex string representation of the rawPageState
+            assert.strictEqual(pageState, result.rawPageState.toString('hex'));
             seriesNext();
           });
         },

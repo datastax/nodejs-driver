@@ -58,6 +58,11 @@ were removed.
 - Deprecated properties `handler`, `request` and `retryOnTimeout` were removed.
 - `options` property was replaced by `executionInfo` which is an instance of `ExecutionInfo`.
 
+### Removed `meta` property from `ResultSet`
+
+On earlier versions of the driver, the `ResultSet` exposed the property `meta` which contained the raw result metadata.
+This property was removed in the latest version.
+
 ---
 
 ## 2.0

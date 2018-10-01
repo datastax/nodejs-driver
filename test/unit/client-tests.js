@@ -608,87 +608,54 @@ describe('Client', function () {
     });
   });
   describe('#_waitForSchemaAgreement()', function () {
-    const Client = require('../../lib/client.js');
-    it('should use the control connection to retrieve schema information', function (done) {
-      const client = new Client(helper.baseOptions);
-      client.hosts = {length: 3};
-      let localCalls = 0;
-      let peerCalls = 0;
-      client.metadata = {
-        getLocalSchemaVersion: function (c, cb) {
-          localCalls++;
-          setImmediate(function () { cb(null, '1'); });
-        },
-        getPeersSchemaVersions: function (c, cb) {
-          peerCalls++;
-          setImmediate(function () { cb(null, ['1', '1']); });
-        }
-      };
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(localCalls, 1);
-        assert.strictEqual(peerCalls, 1);
-        done();
-      });
-    });
+    this.timeout(5000);
+
+    const Client = require('../../lib/client');
+
     it('should continue querying until the version matches', function (done) {
       const client = new Client(helper.baseOptions);
-      client.hosts = {length: 3};
-      let localCalls = 0;
-      let peerCalls = 0;
+      client.hosts = { length: 5 };
+      let calls = 0;
       client.metadata = {
-        getLocalSchemaVersion: function (c, cb) {
-          localCalls++;
-          setImmediate(function () { cb(null, '3'); });
-        },
-        getPeersSchemaVersions: function (c, cb) {
-          peerCalls++;
-          //The third time it gets called versions will match
-          setImmediate(function () { cb(null, [peerCalls]); });
+        compareSchemaVersions: (c, cb) => {
+          cb(null, ++calls === 3);
         }
       };
       client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
-        assert.strictEqual(localCalls, 3);
-        assert.strictEqual(peerCalls, 3);
+        assert.strictEqual(calls, 3);
         done();
       });
     });
+
     it('should timeout if there is no agreement', function (done) {
-      const client = new Client(utils.extend({}, helper.baseOptions, {protocolOptions: {maxSchemaAgreementWaitSeconds: 1}}));
-      client.hosts = {length: 3};
-      let localCalls = 0;
-      let peerCalls = 0;
+      const client = new Client(utils.extend({}, helper.baseOptions, {
+        protocolOptions: { maxSchemaAgreementWaitSeconds: 1 }
+      }));
+      client.hosts = { length: 5 };
+      let calls = 0;
       client.metadata = {
-        getLocalSchemaVersion: function (c, cb) {
-          localCalls++;
-          setImmediate(function () { cb(null, '1'); });
-        },
-        getPeersSchemaVersions: function (c, cb) {
-          peerCalls++;
-          //The versions are always different
-          setImmediate(function () { cb(null, ['2']); });
+        compareSchemaVersions: (c, cb) => {
+          calls++;
+          cb(null, false);
         }
       };
+
       client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
-        assert.ok(localCalls > 0);
-        assert.ok(peerCalls > 0);
+        assert.ok(calls > 0);
         done();
       });
     });
+
     it('should callback when there is an error retrieving versions', function (done) {
       const client = new Client(helper.baseOptions);
       client.hosts = {length: 3};
       const dummyError = new Error('dummy error');
       client.metadata = {
-        getLocalSchemaVersion: function (c, cb) {
-          setImmediate(function () { cb(); });
-        },
-        getPeersSchemaVersions: function (c, cb) {
-          setImmediate(function () { cb(dummyError); });
-        }
+        compareSchemaVersions: (c, cb) => cb(dummyError)
       };
+
       client._waitForSchemaAgreement(null, function (err) {
         assert.strictEqual(err, dummyError);
         done();

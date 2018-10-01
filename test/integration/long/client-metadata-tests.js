@@ -124,13 +124,13 @@ describe('Client', function () {
   partitionerSuite('RandomPartitioner');
   partitionerSuite('ByteOrderedPartitioner');
 
-  describe('ResultSet', function () {
-
+  context('with 1 stopped node', function () {
     const setupInfo = helper.setup(2, { clientOptions: { protocolOptions: { maxSchemaAgreementWaitSeconds: 1 } } });
     const client = setupInfo.client;
 
-    context('with 1 stopped node', function () {
-      before(done => helper.ccmHelper.stopNode(2, done));
+    before(done => helper.ccmHelper.stopNode(2, done));
+
+    describe('ResultSet', function () {
 
       describe('#info.isSchemaInAgreement', function () {
 
@@ -143,6 +143,24 @@ describe('Client', function () {
             "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
             " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
           ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, false)));
+      });
+    });
+
+    describe('Metadata', function () {
+      describe('#checkSchemaAgreement()', function () {
+        it('should return false after executing DDL queries', done => {
+          const createQuery = "CREATE KEYSPACE ks_meta_check_agreement" +
+            " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}";
+
+          utils.series([
+            next => client.execute(createQuery, next),
+            next => client.metadata.checkSchemaAgreement((err, agreement) => {
+              assert.ifError(err);
+              assert.strictEqual(agreement, false);
+              next();
+            })
+          ], done);
+        });
       });
     });
   });

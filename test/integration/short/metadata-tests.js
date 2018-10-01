@@ -1194,6 +1194,23 @@ describe('metadata', function () {
         });
       });
     });
+
+    describe('#compareSchemaVersions()', function () {
+      const client = setupInfo.client;
+
+      context('with a callback', () => {
+        it('should return true when the schema version is the same', done =>
+          client.metadata.checkSchemaAgreement(agreement => {
+            assert.strictEqual(agreement, true);
+            done();
+          }));
+      });
+
+      context('without a callback', () => {
+        it('should return true when the schema version is the same', () =>
+          client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
+      });
+    });
   });
   describe('Client#getState()', function () {
     it('should return a snapshot of the connection pool state', function (done) {

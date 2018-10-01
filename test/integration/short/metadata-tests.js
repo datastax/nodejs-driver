@@ -1235,6 +1235,22 @@ describe('metadata', function () {
       ], helper.finish(client, done));
     });
   });
+
+  describe('ResultSet', function () {
+    describe('#info.isSchemaInAgreement', function () {
+      const client = setupInfo.client;
+
+      it('should return true when executing DML queries', () =>
+        client.execute(helper.queries.basic)
+          .then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+
+      it('should return true when executing DDL queries', () =>
+        client.execute(
+          "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
+          " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
+        ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+    });
+  });
 });
 
 /** @returns {Client}  */

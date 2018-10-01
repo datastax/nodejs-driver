@@ -123,6 +123,29 @@ describe('Client', function () {
   partitionerSuite('Murmur3Partitioner');
   partitionerSuite('RandomPartitioner');
   partitionerSuite('ByteOrderedPartitioner');
+
+  describe('ResultSet', function () {
+
+    const setupInfo = helper.setup(2, { clientOptions: { protocolOptions: { maxSchemaAgreementWaitSeconds: 1 } } });
+    const client = setupInfo.client;
+
+    context('with 1 stopped node', function () {
+      before(done => helper.ccmHelper.stopNode(2, done));
+
+      describe('#info.isSchemaInAgreement', function () {
+
+        it('should return true when executing DML queries', () =>
+          client.execute(helper.queries.basic)
+            .then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+
+        it('should return false when executing DDL queries', () =>
+          client.execute(
+            "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
+            " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
+          ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, false)));
+      });
+    });
+  });
 });
 
 function partitionerSuite(partitionerName) {

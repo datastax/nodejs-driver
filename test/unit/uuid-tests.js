@@ -82,7 +82,7 @@ describe('Uuid', function () {
     });
   });
   describe('random()', function () {
-    this.timeout(10000);
+    this.timeout(20000);
     it('should return a Uuid instance', function () {
       helper.assertInstanceOf(Uuid.random(), Uuid);
     });
@@ -108,7 +108,7 @@ describe('Uuid', function () {
   });
 
   describe('random(cb)', function () {
-    this.timeout(5000);
+    this.timeout(20000);
     it('should return a Uuid instance', function (done) {
       Uuid.random(function(err, uuid) {
         helper.assertInstanceOf(uuid, Uuid);

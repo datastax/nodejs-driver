@@ -311,6 +311,9 @@ function getTrace(client, traceId, callback) {
       client.metadata.getTrace(traceId, function (err, t) {
         error = err;
         trace = t;
+        if (!t) {
+          return setTimeout(next, 1000);
+        }
         next();
       });
     },

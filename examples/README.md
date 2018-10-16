@@ -24,7 +24,7 @@ Each example is generally structured in a way where the `Client` is connected at
 While this is suitable for example single script purposes, you should reuse a single `Client` instance and
 only call client.shutdown() once in your application's lifetime.
 
-If you have any questions regarding these examples, feel free to post your question in the [mailing list][mailing-list].
+If you have any questions regarding these examples, feel free to post your questions in the [mailing list][mailing-list].
 
 [cassandra]: http://cassandra.apache.org/
 [doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/

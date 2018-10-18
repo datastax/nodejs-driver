@@ -39,6 +39,10 @@ describe('pool', function () {
       when: { query: 'SELECT * FROM paused' },
       then: { result: 'success', delay_in_ms: 1000 }
     }, done));
+    beforeEach(done => cluster.node(0).prime({
+      when: { query: 'SELECT * FROM paused_on_first' },
+      then: { result: 'success', delay_in_ms: 1000 }
+    }, done));
     afterEach(() => client.shutdown());
     afterEach(done => cluster.unregister(done));
 
@@ -86,6 +90,96 @@ describe('pool', function () {
           });
         })
         .then(() => validateStateOfPool(client));
+    });
+
+    it('should retry on the same host when defined by the retry policy', () => {
+      let retryCount = 0;
+      let firstHost;
+      const retryPolicy = policies.defaultRetryPolicy();
+
+      retryPolicy.onRequestError = (info, c, err) => {
+        helper.assertInstanceOf(err, errors.OperationTimedOutError);
+        assert.notEqual(firstHost, undefined);
+        assert.strictEqual(err.host, firstHost);
+        retryCount = info.nbRetry;
+        if (info.nbRetry > 1) {
+          // After a couple of attempts, retry on the next host
+          return retryPolicy.retryResult(undefined, false);
+        }
+        return retryPolicy.retryResult(undefined, true);
+      };
+
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        policies: {
+          loadBalancing: new helper.OrderedLoadBalancingPolicy(),
+          retry: retryPolicy
+        },
+        pooling: {
+          coreConnectionsPerHost: {
+            [types.distance.local]: 2
+          },
+          maxRequestsPerConnection: 50
+        }
+      });
+
+      return client.connect()
+        .then(() => firstHost = client.hosts.values()[0].address)
+        .then(() => client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 200 }))
+        .then(() => assert.strictEqual(retryCount, 2))
+        .then(() => client.shutdown());
+    });
+
+    it('should retry on the next host when useCurrentHost is true and connections are not available', () => {
+      let firstHost;
+      const retryPolicy = policies.defaultRetryPolicy();
+      let retryPolicyCalled = 0;
+
+      retryPolicy.onRequestError = (info, c, err) => {
+        helper.assertInstanceOf(err, errors.OperationTimedOutError);
+        assert.notEqual(firstHost, undefined);
+        assert.strictEqual(err.host, firstHost);
+        retryPolicyCalled++;
+
+        // Use a safety mechanism to avoid retrying forever, in case the assertions fail
+        const useCurrentHost = info.nbRetry < 5;
+        return retryPolicy.retryResult(undefined, useCurrentHost);
+      };
+
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        policies: {
+          loadBalancing: new helper.OrderedLoadBalancingPolicy(),
+          retry: retryPolicy
+        },
+        pooling: {
+          coreConnectionsPerHost: {
+            [types.distance.local]: 2
+          },
+          maxRequestsPerConnection: 50
+        }
+      });
+
+      const promises = [];
+
+      return client.connect()
+        .then(() => {
+          firstHost = client.hosts.values()[0].address;
+
+          // Create 99 in-flight requests
+          promises.push.apply(promises, new Array(99).fill(0).map(() =>
+            client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 2000 })));
+
+          // The pool will be busy after this request, so the retry will occur on the next host
+          const p2 = client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 50 });
+          promises.push(p2);
+          return p2;
+        })
+        // The query will be retried on the next host
+        .then(rs => assert.strictEqual(rs.info.queriedHost, client.hosts.values()[1].address))
+        .then(() => Promise.all(promises))
+        .then(() => assert.strictEqual(retryPolicyCalled, 1))
+        .then(() => client.shutdown());
     });
   });
 

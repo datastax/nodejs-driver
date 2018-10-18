@@ -120,12 +120,13 @@ describe('pool', function () {
             [types.distance.local]: 2
           },
           maxRequestsPerConnection: 50
-        }
+        },
+        socketOptions: { defunctReadTimeoutThreshold: Number.MAX_SAFE_INTEGER }
       });
 
       return client.connect()
         .then(() => firstHost = client.hosts.values()[0].address)
-        .then(() => client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 200 }))
+        .then(() => client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 200, isIdempotent: true }))
         .then(() => assert.strictEqual(retryCount, 2))
         .then(() => client.shutdown());
     });
@@ -157,7 +158,8 @@ describe('pool', function () {
             [types.distance.local]: 2
           },
           maxRequestsPerConnection: 50
-        }
+        },
+        socketOptions: { defunctReadTimeoutThreshold: Number.MAX_SAFE_INTEGER }
       });
 
       const promises = [];
@@ -171,7 +173,7 @@ describe('pool', function () {
             client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 2000 })));
 
           // The pool will be busy after this request, so the retry will occur on the next host
-          const p2 = client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 50 });
+          const p2 = client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 50, isIdempotent: true });
           promises.push(p2);
           return p2;
         })

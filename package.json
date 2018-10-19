@@ -20,10 +20,7 @@
   },
   "devDependencies": {
     "mocha": "~5.2.0",
-    "rewire": "^4.0.1",
-    "mocha-jenkins-reporter": "^0.4.1",
-    "mocha-appveyor-reporter": "^0.4.1",
-    "mocha-multi": "~0.11.1"
+    "rewire": "^4.0.1"
   },
   "repository": {
     "type": "git",

@@ -8,8 +8,6 @@ sudo: false
 cache:
   directories:
     - node_modules
-before_install:
-  - npm install npm -g
 script:
   - npm install -g eslint@4; npm run eslint;
   - npm test

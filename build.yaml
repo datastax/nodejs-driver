@@ -46,7 +46,8 @@ build:
       multi=mocha-jenkins-reporter=-
       SIMULACRON_PATH=$HOME/simulacron.jar
       TEST_TRACE=on
-  - npm: install npm -g
+  - npm: install mocha-jenkins-reporter@0
+  - npm: install mocha-multi@0
   - npm: install
   - npm: run-script ci
     graceful: true

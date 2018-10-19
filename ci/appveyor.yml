@@ -14,6 +14,7 @@ platform:
 install:
   - ps: .\ci\hardwareinfo.ps1
   - ps: .\ci\appveyor.ps1
+  - npm install npm -g
   - npm install
 build: off
 test_script:

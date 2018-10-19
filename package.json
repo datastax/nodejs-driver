@@ -19,26 +19,26 @@
     "long": "^2.2.0"
   },
   "devDependencies": {
-    "mocha": "~2.5.3",
-    "rewire": ">= 2.1.0",
-    "mocha-jenkins-reporter": ">= 0.1.9",
-    "mocha-appveyor-reporter": ">= 0.2.1",
-    "mocha-multi": "~0.11.0"
+    "mocha": "~5.2.0",
+    "rewire": "^4.0.1",
+    "mocha-jenkins-reporter": "^0.4.1",
+    "mocha-appveyor-reporter": "^0.4.1",
+    "mocha-multi": "~1.0.1"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/datastax/nodejs-driver.git"
+    "type": "git",
+    "url": "https://github.com/datastax/nodejs-driver.git"
   },
   "bugs": {
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
-  "scripts":  {
+  "scripts": {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
     "ci": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-multi",
     "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {
-    "node" : ">=4"
-   }
+    "node": ">=4"
+  }
 }

@@ -31,8 +31,9 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000",
-    "ci": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-multi",
-    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
+    "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-jenkins-reporter",
+    "ci_appveyor": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-appveyor-reporter",
+    "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit -R mocha-appveyor-reporter",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {

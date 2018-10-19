@@ -48,8 +48,7 @@ build:
       TEST_TRACE=on
   - npm: install
   - npm: install mocha-jenkins-reporter@0
-  - npm: install mocha-multi@0
-  - npm: run-script ci
+  - npm: run ci_jenkins
     graceful: true
   - script: |
       cd examples

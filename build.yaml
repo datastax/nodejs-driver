@@ -47,7 +47,8 @@ build:
       SIMULACRON_PATH=$HOME/simulacron.jar
       TEST_TRACE=on
   - npm: install
-  - npm: run-script ci
+  - npm: install mocha-jenkins-reporter@0
+  - npm: run ci_jenkins
     graceful: true
   - script: |
       cd examples

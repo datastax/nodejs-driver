@@ -34,6 +34,8 @@ cassandra:
   - dse-6.0
 build:
   - npm: install
+  - npm: install mocha-jenkins-reporter@0
+  - npm: install kerberos@0.0.24
   - script: |
       export TEST_DSE_VERSION=$CCM_VERSION
       export TEST_DSE_BRANCH=$CCM_BRANCH
@@ -42,11 +44,9 @@ build:
       export CCM_PATH=$HOME/ccm
       export JUNIT_REPORT_STACK=1
       export JUNIT_REPORT_PATH=.
-      npm install kerberos@0.0.24
-      npm install mocha-jenkins-reporter
       if [ "$NODEJS_VERSION" != "0.10" ] && [ "$NODEJS_VERSION" != "0.12" ]; then
         npm install -g eslint@4;
         npm run eslint;
       fi
-      npm run ci || true
+      npm run ci_jenkins || true
   - xunit: "*.xml"

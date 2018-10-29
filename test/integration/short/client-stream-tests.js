@@ -87,7 +87,7 @@ describe('Client', function () {
         })
         .on('error', function (err) {
           assert.ok(err, 'It should yield an error');
-          assert.ok(err instanceof errors.ResponseError);
+          helper.assertInstanceOf(err, errors.ResponseError);
           errorCalled = true;
         });
     });

@@ -21,25 +21,22 @@
     "long": "^2.2.0"
   },
   "devDependencies": {
-    "mocha": "~2.5.3",
-    "rewire": ">= 2.1.0",
-    "temp": ">= 0.8.3",
-    "mocha-jenkins-reporter": ">= 0.1.9",
-    "mocha-appveyor-reporter": ">= 0.2.1",
-    "mocha-multi": "~0.11.0"
+    "mocha": "~5.2.0",
+    "rewire": "^4.0.1",
+    "temp": ">= 0.8.3"
   },
   "homepage": "http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/",
   "bugs": {
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
   "license": "SEE LICENSE IN http://www.datastax.com/terms/datastax-dse-driver-license-terms",
-  "scripts":  {
+  "scripts": {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
-    "ci": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter",
-    "ci_unit": "./node_modules/.bin/mocha test/unit -R mocha-multi",
+    "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short -R mocha-jenkins-reporter --recursive --exit",
+    "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit -R mocha-appveyor-reporter --recursive --exit",
     "eslint": "eslint lib test --ignore-pattern '/lib/types/integer.js'"
   },
   "engines": {
-    "node" : ">=4"
-   }
+    "node": ">=4"
+  }
 }

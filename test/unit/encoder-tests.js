@@ -637,23 +637,63 @@ describe('encoder', function () {
       const encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
       assert.strictEqual(encoder.encode(undefined), null);
     });
-    it('should decode 0-length map values, v2', function () {
-      const encoder = new Encoder(2, {});
-      const buffer = utils.allocBufferFromString('000100046b6579310000', 'hex');
-      const value = encoder.decode(buffer,
-        { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
-      assert.ok(value);
-      assert.deepEqual(Object.keys(value), ['key1']);
-      assert.strictEqual(value['key1'], '');
+    it('should decode 0-length map values of supported types into 0-length values', function () {
+      const input = {'key1': Buffer.from([])};
+      [2, 3].forEach(v => {
+        const encoder = new Encoder(v, {});
+        const buffer = encoder.encode(input, dataTypes.map);
+        [
+          dataTypes.text,
+          dataTypes.ascii,
+          dataTypes.varchar,
+          dataTypes.blob,
+          dataTypes.custom,
+        ].forEach(function(t){
+          const type = { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: t } ]};
+          const value = encoder.decode(buffer, type);
+          assert.ok(value);
+          assert.deepEqual(Object.keys(value), Object.keys(input));
+          assert.strictEqual(value['key1'].length, 0);
+        });
+      });
     });
-    it('should decode 0-length map values, v3', function () {
-      const encoder = new Encoder(3, {});
-      const buffer = utils.allocBufferFromString('00000001000000046b65793100000000', 'hex');
-      const value = encoder.decode(buffer,
-        { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: types.dataTypes.text } ]});
-      assert.ok(value);
-      assert.deepEqual(Object.keys(value), ['key1']);
-      assert.strictEqual(value['key1'], '');
+    it('should decode 0-length map values of unsupported types into null values', function () {
+      // For some unperceivable reason the server can give us an empty buffer as a map value for any type.
+      // We must be able to handle this behaviour.
+      const input = {'key1': Buffer.from([])};
+      [2, 3].forEach(v => {
+        const encoder = new Encoder(v, {});
+        const buffer = encoder.encode(input, dataTypes.map);
+        [
+          dataTypes.bigint,
+          dataTypes.boolean,
+          dataTypes.counter,
+          dataTypes.decimal,
+          dataTypes.double,
+          dataTypes.float,
+          dataTypes.int,
+          dataTypes.timestamp,
+          dataTypes.uuid,
+          dataTypes.varint,
+          dataTypes.timeuuid,
+          dataTypes.inet,
+          dataTypes.date,
+          dataTypes.time,
+          dataTypes.smallint,
+          dataTypes.tinyint,
+          dataTypes.list,
+          dataTypes.map,
+          dataTypes.set,
+          dataTypes.udt,
+          dataTypes.tuple
+        ].forEach(t => {
+          const type = { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: t } ]};
+          const value = encoder.decode(buffer, type);
+          assert.ok(value);
+          assert.deepEqual(Object.keys(value), Object.keys(input));
+          assert.strictEqual(value['key1'], null);
+        });
+      });
     });
     it('should decode null map values', function () {
       // technically this should not be possible as nulls are not allowed in collections.
@@ -803,7 +843,7 @@ describe('encoder', function () {
       }, TypeError);
     });
     it('should throw TypeError if invalid routingKey type is provided', function () {
-      assert.throws(() => { 
+      assert.throws(() => {
         encoder.setRoutingKeyFromUser([1, 'text'], { routingKey: 123 });
       }, TypeError);
     });

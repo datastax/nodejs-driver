@@ -1,6 +1,7 @@
 title:    DataStax Enterprise Node.js Driver
 summary:  Nodejs Driver for DataStax Enterprise
 theme:    datastax
+swiftype_drivers: nodejsdrivers
 sections:
   - title:    Features
     prefix:   /features

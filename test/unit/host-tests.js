@@ -160,6 +160,38 @@ describe('HostConnectionPool', function () {
       });
     });
   });
+  describe('#borrowConnection()', function () {
+    it('should avoid returning the previous connection', done => {
+      const hostPool = newHostConnectionPoolInstance();
+      hostPool.coreConnectionsLength = 4;
+      hostPool.connections = [
+        { getInFlight: () => 0, index: 0 },
+        { getInFlight: () => 0, index: 1 },
+        { getInFlight: () => 0, index: 2 },
+        { getInFlight: () => 0, index: 3 },
+      ];
+      const result = new Map();
+
+      // Avoid returning connection at index 2
+      const previousConnectionIndex = 2;
+
+      utils.times(8, (n, next) => {
+        hostPool.borrowConnection(null, hostPool.connections[previousConnectionIndex], (err, c) => {
+          result.set(c.index, (result.get(c.index) || 0) + 1);
+          next(err);
+        });
+      }, err => {
+        if (err) {
+          return done(err);
+        }
+        assert.strictEqual(result.get(0), 2);
+        assert.strictEqual(result.get(1), 2);
+        assert.strictEqual(result.get(3), 4);
+        assert.strictEqual(result.get(previousConnectionIndex), undefined);
+        done();
+      });
+    });
+  });
   describe('#drainAndShutdown()', function () {
     it('should wait for connections to drain before shutting down', function (done) {
       const hostPool = newHostConnectionPoolInstance();

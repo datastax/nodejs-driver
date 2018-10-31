@@ -112,7 +112,7 @@ describe('HostConnectionPool', function () {
       });
     });
   });
-  describe('#borrowConnection()', function () {
+  describe('#createAndBorrowConnection()', function () {
     it('should get an open connection', function (done) {
       const hostPool = newHostConnectionPoolInstance();
       hostPool.coreConnectionsLength = 10;
@@ -125,7 +125,7 @@ describe('HostConnectionPool', function () {
           getInFlight: helper.functionOf(0)
         };
       };
-      hostPool.createAndBorrowConnection(function (err, c) {
+      hostPool.createAndBorrowConnection(null, function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
         //its a connection or is a mock
@@ -145,7 +145,7 @@ describe('HostConnectionPool', function () {
       ];
       const result = [];
       utils.times(8, (n, next) => {
-        hostPool.createAndBorrowConnection((err, c) => {
+        hostPool.createAndBorrowConnection(null, (err, c) => {
           result.push(c);
           next(err);
         });
@@ -366,7 +366,7 @@ describe('Host', function () {
         c.open = helper.callbackNoop;
         return c;
       };
-      host.borrowConnection(null, function () {
+      host.borrowConnection(null, null, function () {
         host.pool.connections[0].emit('idleRequestError', new Error('Test error'), c);
       });
     });
@@ -388,7 +388,7 @@ describe('Host', function () {
         c.open = helper.callbackNoop;
         return c;
       };
-      host.borrowConnection(null, function (err, c) {
+      host.borrowConnection(null, null, function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
         //its a connection or is a mock
@@ -409,7 +409,7 @@ describe('Host', function () {
       };
       // setup the distance and expected connections for the host
       host.setDistance(types.distance.local);
-      host.borrowConnection(null, function (err, c) {
+      host.borrowConnection(null, null, function (err, c) {
         assert.equal(err, null);
         assert.notEqual(c, null);
         //its a connection or is a mock
@@ -434,7 +434,7 @@ describe('Host', function () {
       };
       utils.series([
         function (next) {
-          host.borrowConnection(null, function (err, c) {
+          host.borrowConnection(null, null, function (err, c) {
             assert.equal(err, null);
             assert.notEqual(c, null);
             //Just 1 connection at the beginning
@@ -444,7 +444,7 @@ describe('Host', function () {
         },
         function (next) {
           host.setDistance(types.distance.local);
-          host.borrowConnection(null, function (err) {
+          host.borrowConnection(null, null, function (err) {
             assert.ifError(err);
             //Pool resizing happen in the background
             setTimeout(next, 100);
@@ -453,7 +453,7 @@ describe('Host', function () {
         function (next) {
           //Check multiple times in parallel
           utils.times(10, function (n, timesNext) {
-            host.borrowConnection(null, function (err, c) {
+            host.borrowConnection(null, null, function (err, c) {
               assert.equal(err, null);
               assert.notEqual(c, null);
               //The right size afterwards
@@ -655,7 +655,7 @@ describe('Host', function () {
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 4;
       host.pool._createConnection = () => newConnectionMock({ open: helper.callbackNoop });
-      host.borrowConnection(null, function (err) {
+      host.borrowConnection(null, null, function (err) {
         assert.ifError(err);
         host.warmupPool(function (err) {
           assert.ifError(err);
@@ -672,7 +672,7 @@ describe('Host', function () {
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 3;
       host.pool._createConnection = () => newConnectionMock({ open: (cb) => setTimeout(cb, 20)});
-      host.borrowConnection(null, function (err) {
+      host.borrowConnection(null, null, function (err) {
         assert.ifError(err);
         host.warmupPool(function (err) {
           assert.ifError(err);

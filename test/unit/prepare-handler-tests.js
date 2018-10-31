@@ -100,7 +100,7 @@ describe('PrepareHandler', function () {
     });
     it('should callback in error when there is an error borrowing a connection', function (done) {
       const host = helper.getHostsMock([ {} ])[0];
-      host.borrowConnection = function (cb) {
+      host.borrowConnection = function (c, cb) {
         cb(new Error('Test error'));
       };
       PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }], function (err) {

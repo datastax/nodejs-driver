@@ -698,7 +698,7 @@ const helper = {
       h.prepareCalled = 0;
       h.sendStreamCalled = 0;
       h.changeKeyspaceCalled = 0;
-      h.borrowConnection = function (cb) {
+      h.borrowConnection = function (c, cb) {
         if (!h.isUp() || h.shouldBeIgnored) {
           return cb(new Error('This host should not be used'));
         }

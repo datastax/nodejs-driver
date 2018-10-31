@@ -1,6 +1,7 @@
 title:    DataStax Nodejs Driver
 summary:  DataStax Nodejs Driver for Apache Cassandra
 theme:    datastax
+swiftype_drivers: nodejsdrivers
 sections:
   - title:    Features
     prefix:   /features

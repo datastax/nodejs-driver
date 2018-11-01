@@ -594,7 +594,7 @@ const helper = {
   },
 
   /**
-   * Executes a function at regular intervals while the condition is false or the amount of attempts >= maxAttempts.
+   * Executes a function at regular intervals while the condition is false and the amount of attempts < maxAttempts.
    * @param {Function} condition
    * @param {Number} delay
    * @param {Number} maxAttempts
@@ -616,8 +616,8 @@ const helper = {
       done);
   },
   /**
-   * Returns a method that executes a function at regular intervals while the condition is false or the amount of
-   * attempts >= maxAttempts.
+   * Returns a method that executes a function at regular intervals while the condition is false and the amount of
+   * attempts < maxAttempts.
    * @param {Function} condition
    * @param {Number} delay
    * @param {Number} maxAttempts
@@ -626,6 +626,23 @@ const helper = {
     const self = this;
     return (function setIntervalUntilHandler(done) {
       self.setIntervalUntil(condition, delay, maxAttempts, done);
+    });
+  },
+  /**
+   * Executes a function at regular intervals while the condition is false and the amount of attempts < maxAttempts.
+   * @param {Function} condition
+   * @param {Number} delay
+   * @param {Number} maxAttempts
+   */
+  setIntervalUntilPromise: function (condition, delay, maxAttempts) {
+    return new Promise((resolve, reject) => {
+      this.setIntervalUntil(condition, delay, maxAttempts, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   },
   /**

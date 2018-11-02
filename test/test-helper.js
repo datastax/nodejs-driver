@@ -699,11 +699,14 @@ const helper = {
       h.shouldBeIgnored = !!info.ignored;
       h.prepareCalled = 0;
       h.sendStreamCalled = 0;
-      h.changeKeyspaceCalled = 0;
-      h.borrowConnection = function (cb) {
+      h.connectionKeyspace = [];
+      h.borrowConnection = function (ks, c, cb) {
         if (!h.isUp() || h.shouldBeIgnored) {
           return cb(new Error('This host should not be used'));
         }
+
+        h.connectionKeyspace.push(ks);
+
         cb(null, {
           prepareOnce: function (q, cb) {
             h.prepareCalled++;
@@ -722,10 +725,6 @@ const helper = {
               op.setResult(null, {});
             });
             return op;
-          },
-          changeKeyspace: function (ks, cb) {
-            h.changeKeyspaceCalled++;
-            cb();
           }
         });
       };

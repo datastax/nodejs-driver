@@ -96,7 +96,7 @@ describe('PrepareHandler', function () {
       ];
       PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
         assert.ifError(err);
-        assert.strictEqual(host.changeKeyspaceCalled, 3);
+        assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks', null ]);
         assert.strictEqual(host.prepareCalled, 5);
         done();
       });
@@ -106,7 +106,7 @@ describe('PrepareHandler', function () {
     });
     it('should callback in error when there is an error borrowing a connection', function (done) {
       const host = helper.getHostsMock([ {} ])[0];
-      host.borrowConnection = function (cb) {
+      host.borrowConnection = function (ks, c, cb) {
         cb(new Error('Test error'));
       };
       PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }], function (err) {
@@ -129,7 +129,7 @@ describe('PrepareHandler', function () {
       ];
       PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
         helper.assertInstanceOf(err, Error);
-        assert.strictEqual(host.changeKeyspaceCalled, 1);
+        assert.deepStrictEqual(host.connectionKeyspace, ['system']);
         assert.strictEqual(host.prepareCalled, 2);
         done();
       });

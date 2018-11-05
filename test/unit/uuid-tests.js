@@ -151,6 +151,7 @@ describe('Uuid', function () {
     });
   });
 });
+
 describe('TimeUuid', function () {
   describe('constructor()', function () {
     it('should generate based on the parameters', function () {
@@ -218,7 +219,48 @@ describe('TimeUuid', function () {
       //next should collide
       assert.strictEqual(values[TimeUuid.fromDate(date, null, 'host01', 'AA').toString()], true);
     });
+
+    context('with callback defined', () => {
+      const date = new Date();
+      const ticks = 123;
+      const nodeId = 'myHost';
+      const clockId = 'zz';
+
+      function assertTimeUuidFunction(portions, callback) {
+        return (function assertTimeUuid(err, id) {
+          assert.ifError(err);
+          helper.assertInstanceOf(id, TimeUuid);
+          assert.strictEqual(id.getDate().getTime(), date.getTime());
+
+          if (portions > 1) {
+            assert.strictEqual(id.getDatePrecision().ticks, ticks);
+          }
+
+          if (portions > 2) {
+            assert.strictEqual(id.getNodeId().toString(), nodeId);
+          }
+
+          if (portions > 3) {
+            assert.strictEqual(id.getClockId().toString().slice(1), clockId.slice(1));
+          }
+          callback();
+        });
+      }
+
+      it('should support callback as second parameter', done =>
+        TimeUuid.fromDate(date, assertTimeUuidFunction(1, done)));
+
+      it('should support callback as third parameter', done =>
+        TimeUuid.fromDate(date, ticks, assertTimeUuidFunction(2, done)));
+
+      it('should support callback as forth parameter', done =>
+        TimeUuid.fromDate(date, ticks, nodeId, assertTimeUuidFunction(3, done)));
+
+      it('should support callback as fifth parameter', done =>
+        TimeUuid.fromDate(date, ticks, nodeId, clockId, assertTimeUuidFunction(4, done)));
+    });
   });
+
   describe('fromString()', function () {
     it('should parse the string representation', function () {
       const text = '3d555680-9886-11e4-8101-010101010101';
@@ -228,6 +270,7 @@ describe('TimeUuid', function () {
       assert.strictEqual(val.getDate().getTime(), new Date('2015-01-10 5:05:05 GMT+0000').getTime());
     });
   });
+
   describe('now()', function () {
     it('should pass the nodeId when provided', function () {
       const val = TimeUuid.now('h12345');
@@ -247,8 +290,43 @@ describe('TimeUuid', function () {
         secondTimeUuid = TimeUuid.now();
       }
       assert.strictEqual(secondTimeUuid.getDatePrecision().ticks, 0);
-    });  
+    });
+
+    context('with callback defined', () => {
+      const startDate = new Date();
+      const nodeId = 'aHost1';
+      const clockId = 'ab';
+
+      function assertTimeUuidFunction(portions, callback) {
+        return (function assertTimeUuid(err, id) {
+          assert.ifError(err);
+          helper.assertInstanceOf(id, TimeUuid);
+          assert.ok(id.getDate() >= startDate);
+          assert.ok(id.getDate() <= new Date());
+
+          if (portions > 0) {
+            assert.strictEqual(id.getNodeId().toString(), nodeId);
+          }
+
+          if (portions > 1) {
+            assert.strictEqual(id.getClockId().toString().slice(1), clockId.slice(1));
+          }
+
+          callback();
+        });
+      }
+
+      it('should support callback as first parameter', done =>
+        TimeUuid.now(assertTimeUuidFunction(0, done)));
+
+      it('should support callback as second parameter', done =>
+        TimeUuid.now(nodeId, assertTimeUuidFunction(1, done)));
+
+      it('should support callback as third parameter', done =>
+        TimeUuid.now(nodeId, clockId, assertTimeUuidFunction(2, done)));
+    });
   });
+
   describe('min()', function () {
     it('should generate uuid with the minimum node and clock id values', function () {
       const val = TimeUuid.min(new Date());

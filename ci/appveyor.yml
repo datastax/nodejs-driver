@@ -19,6 +19,5 @@ test_script:
 on_finish:
   - ps: .\ci\hardwareinfo.ps1
 cache:
-  - node_modules -> package.json
   - C:\Users\appveyor\.ccm\repository
   - C:\Users\appveyor\deps -> .\ci\appveyor.ps1

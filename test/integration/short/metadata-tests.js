@@ -1019,6 +1019,44 @@ describe('metadata', function () {
             });
         });
       });
+
+      context('with ECMAScript Map and Set', () => {
+        const client = new Client(Object.assign({}, helper.baseOptions, {
+          keyspace,
+          encoding: { map: Map, set: Set }
+        }));
+
+        before(() => client.connect());
+        after(() => client.shutdown());
+
+        it('should retrieve the table metadata using the same representation', () =>
+          client.metadata.getTable(keyspace, 'tbl7')
+            .then(table => {
+              assert.ok(table);
+              assert.strictEqual(table.columns.length, 4);
+              assert.strictEqual(typeof table.compactionClass, 'string');
+
+              assert.ok(table.compactionOptions);
+              assert.strictEqual(table.compactionOptions.constructor, Object);
+
+              assert.ok(table.compression);
+              assert.strictEqual(table.compression.constructor, Object);
+            }));
+
+        vit('2.1', 'should retrieve the secondary indexes metadata using the same representation', () =>
+          client.metadata.getTable(keyspace, 'tbl_indexes1')
+            .then(table => {
+              assert.ok(table.indexes.length > 0);
+              const index = table.indexes.filter(x => x.name === 'map_values_index')[0];
+              assert.ok(index, 'Index not found');
+              assert.strictEqual(index.name, 'map_values_index');
+              assert.strictEqual(index.isCompositesKind(), true);
+              assert.strictEqual(index.isCustomKind(), false);
+              assert.strictEqual(index.isKeysKind(), false);
+              assert.ok(index.options);
+              assert.strictEqual(index.options.constructor, Object);
+            }));
+      });
     });
     vdescribe('3.0', '#getMaterializedView()', function () {
       const keyspace = 'ks_view_meta';
@@ -1192,6 +1230,31 @@ describe('metadata', function () {
               return client.shutdown();
             });
         });
+      });
+
+      context('with ECMAScript Map and Set', () => {
+        const client = new Client(Object.assign({}, helper.baseOptions, {
+          keyspace,
+          encoding: { map: Map, set: Set }
+        }));
+
+        before(() => client.connect());
+        after(() => client.shutdown());
+
+        it('should retrieve the view metadata using the same representation', () =>
+          client.metadata.getMaterializedView(keyspace, 'dailyhigh')
+            .then(view => {
+              assert.ok(view);
+              assert.strictEqual(view.tableName, 'scores');
+              assert.strictEqual(view.partitionKeys.length, 4);
+              assert.strictEqual(view.clusteringKeys.length, 2);
+
+              assert.ok(view.compactionOptions);
+              assert.strictEqual(view.compactionOptions.constructor, Object);
+
+              assert.ok(view.compression);
+              assert.strictEqual(view.compression.constructor, Object);
+            }));
       });
     });
 

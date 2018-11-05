@@ -15,7 +15,7 @@ const client = new dse.Client({
 });
 ```
 
-To use the `DseGssapiAuthProvider`, you need to add the dependency to `kerberos` version `~0.0.24` in your application.
+To use the `DseGssapiAuthProvider`, you need to add the dependency to `kerberos` version `~1.0.0` in your application.
 
 ## DSE Unified Authentication
 

@@ -35,7 +35,7 @@ cassandra:
 build:
   - npm: install
   - npm: install mocha-jenkins-reporter@0
-  - npm: install kerberos@0.0.24
+  - npm: install kerberos@1
   - script: |
       export TEST_DSE_VERSION=$CCM_VERSION
       export TEST_DSE_BRANCH=$CCM_BRANCH

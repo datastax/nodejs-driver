@@ -13,6 +13,7 @@ install:
   - ps: .\ci\appveyor.ps1
   - npm install
   - npm install mocha-appveyor-reporter@0
+  - npm install kerberos@1
 build: off
 test_script:
   - "npm run %ci_type%"

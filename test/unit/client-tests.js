@@ -37,12 +37,26 @@ describe('Client', function () {
         return new Client();
       }, TypeError);
     });
+
     it('should create Metadata instance', function () {
       const Client = require('../../lib/client');
       const client = new Client({ contactPoints: ['192.168.10.10'] });
       helper.assertInstanceOf(client.metadata, Metadata);
     });
+
+    context('with useBigIntAsLong or useBigIntAsVarint set', () => {
+      if (typeof BigInt === 'undefined') {
+        it('should throw an error on engines that do not support it', () => {
+          const Client = require('../../lib/client');
+          [{ useBigIntAsLong: true }, { useBigIntAsVarint: true }].forEach(encoding => {
+            assert.throws(() => new Client({ contactPoints: ['10.10.1.1' ], encoding }),
+              /BigInt is not supported by the JavaScript engine/);
+          });
+        });
+      }
+    });
   });
+
   describe('#connect()', function () {
     this.timeout(35000);
     it('should fail if no host name can be resolved', function (done) {
@@ -136,6 +150,7 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#execute()', function () {
     it('should not support named parameters for simple statements', function (done) {
       const client = newConnectedInstance();
@@ -401,6 +416,7 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#eachRow()', function () {
     it('should pass optional parameters as null when not defined', function () {
       const createQueryOptions = clientOptions.createQueryOptions;
@@ -421,6 +437,7 @@ describe('Client', function () {
       assert.deepEqual(params.slice(0, 3), ['Q 5p', [3], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
     });
   });
+
   describe('#batch()', function () {
     const Client = rewire('../../lib/client.js');
     const requestHandlerMock = {
@@ -493,6 +510,7 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#batch(queries, {prepare: 1}, callback)', function () {
     it('should callback with error if the queries are not string', function (done) {
       const client = newConnectedInstance(undefined, undefined, PrepareHandler);
@@ -509,6 +527,7 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#shutdown()', function () {
     const options = clientOptions.extend({}, helper.baseOptions, {
       policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
@@ -607,6 +626,7 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#_waitForSchemaAgreement()', function () {
     const Client = require('../../lib/client.js');
     it('should use the control connection to retrieve schema information', function (done) {

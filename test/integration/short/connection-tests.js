@@ -13,6 +13,8 @@ const utils = require('../../../lib/utils.js');
 const requests = require('../../../lib/requests.js');
 const protocolVersion = require('../../../lib/types').protocolVersion;
 const helper = require('../../test-helper.js');
+const errors = require('../../../lib/errors');
+const types = require('../../../lib/types');
 const vit = helper.vit;
 
 describe('Connection', function () {
@@ -164,7 +166,14 @@ describe('Connection', function () {
         function asserting(seriesNext) {
           utils.times(maxRequests + 10, function (n, next) {
             const request = getRequest(helper.queries.basic);
-            connection.sendStream(request, null, next);
+            connection.sendStream(request, null, err => {
+              if (err) {
+                helper.assertInstanceOf(err, errors.ResponseError);
+                assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
+              }
+
+              next();
+            });
           }, seriesNext);
         }
       ], done);

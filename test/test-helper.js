@@ -553,7 +553,7 @@ const helper = {
   },
 
   /**
-   * Executes a function at regular intervals while the condition is false or the amount of attempts >= maxAttempts.
+   * Executes a function at regular intervals while the condition is false and the amount of attempts < maxAttempts.
    * @param {Function} condition
    * @param {Number} delay
    * @param {Number} maxAttempts
@@ -575,8 +575,8 @@ const helper = {
       done);
   },
   /**
-   * Returns a method that executes a function at regular intervals while the condition is false or the amount of
-   * attempts >= maxAttempts.
+   * Returns a method that executes a function at regular intervals while the condition is false and the amount of
+   * attempts < maxAttempts.
    * @param {Function} condition
    * @param {Number} delay
    * @param {Number} maxAttempts
@@ -585,6 +585,23 @@ const helper = {
     const self = this;
     return (function setIntervalUntilHandler(done) {
       self.setIntervalUntil(condition, delay, maxAttempts, done);
+    });
+  },
+  /**
+   * Executes a function at regular intervals while the condition is false and the amount of attempts < maxAttempts.
+   * @param {Function} condition
+   * @param {Number} delay
+   * @param {Number} maxAttempts
+   */
+  setIntervalUntilPromise: function (condition, delay, maxAttempts) {
+    return new Promise((resolve, reject) => {
+      this.setIntervalUntil(condition, delay, maxAttempts, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   },
   /**
@@ -642,11 +659,14 @@ const helper = {
       h.shouldBeIgnored = !!info.ignored;
       h.prepareCalled = 0;
       h.sendStreamCalled = 0;
-      h.changeKeyspaceCalled = 0;
-      h.borrowConnection = function (cb) {
+      h.connectionKeyspace = [];
+      h.borrowConnection = function (ks, c, cb) {
         if (!h.isUp() || h.shouldBeIgnored) {
           return cb(new Error('This host should not be used'));
         }
+
+        h.connectionKeyspace.push(ks);
+
         cb(null, {
           protocolVersion: protocolVersion,
           keyspace: 'ks',
@@ -667,10 +687,6 @@ const helper = {
               op.setResult(null, {});
             });
             return op;
-          },
-          changeKeyspace: function (ks, cb) {
-            h.changeKeyspaceCalled++;
-            cb();
           }
         });
       };

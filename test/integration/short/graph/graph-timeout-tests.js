@@ -109,7 +109,7 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
         client.connect.bind(client),
         function executeQuery (next) {
           client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);", null,
-            { executionProfile: 'withRetryPolicy'}, function(err) {
+            { executionProfile: 'withRetryPolicy', isIdempotent: true }, function(err) {
               assert.ok(err);
               helper.assertInstanceOf(err, errors.NoHostAvailableError);
               next();
@@ -124,7 +124,8 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
       utils.series([
         client.connect.bind(client),
         function executeQuery (next) {
-          client.executeGraph("java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);", function(err) {
+          const query = "java.util.concurrent.TimeUnit.MILLISECONDS.sleep(2000L);";
+          client.executeGraph(query, null, { isIdempotent: true }, function(err) {
             assert.ok(err);
             helper.assertInstanceOf(err, errors.NoHostAvailableError);
             next();

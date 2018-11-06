@@ -706,7 +706,17 @@ describe('encoder', function () {
       assert.deepEqual(Object.keys(value), ['key1']);
       assert.strictEqual(value['key1'], null);
     });
+
+    it('should return the raw buffer when a buffer is provided', () => {
+      const encoder = new Encoder(3, {});
+      const buffer = utils.allocBufferFromArray([ 0, 1, 2, 3 ]);
+
+      Object.keys(dataTypes).forEach(typeName => {
+        assert.strictEqual(encoder.encode(buffer, dataTypes[typeName]), buffer);
+      });
+    });
   });
+
   describe('#setRoutingKeyFromUser()', function () {
     const encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {

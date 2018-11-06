@@ -14,14 +14,20 @@ describe('ResultSet', function () {
   describe('constructor', function () {
     it('should set the properties', function () {
       const response = { rows: [ 0, 1, 2 ] };
-      const result = new ResultSet(response, '192.168.1.100', {}, 1, types.consistencies.three);
+      const result = new ResultSet(response, '192.168.1.100', {}, 1, types.consistencies.three, false);
       assert.strictEqual(result.rowLength, 3);
       assert.ok(result.info);
       assert.strictEqual(result.info.queriedHost, '192.168.1.100');
       assert.strictEqual(result.info.achievedConsistency, types.consistencies.three);
       assert.strictEqual(result.info.speculativeExecutions, 1);
+      assert.strictEqual(result.info.isSchemaInAgreement, false);
       assert.strictEqual(result.rows, response.rows);
+
       assert.strictEqual(new ResultSet({ rowLength: 12 }).rowLength, 12);
+
+      assert.strictEqual(
+        new ResultSet({ rowLength: 0 }, '10.10.10.10', null, 1, 1, true).info.isSchemaInAgreement,
+        true);
     });
   });
   describe('#first()', function () {

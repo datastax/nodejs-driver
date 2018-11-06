@@ -683,7 +683,8 @@ describe('Client', function () {
     beforeEach(helper.ccmHelper.start(3));
     afterEach(helper.ccmHelper.remove);
     it('should failover after a node goes down', function (done) {
-      const client = newInstance();
+      // treat queries as idempotent so they can be safely retried on another node
+      const client = newInstance({ queryOptions: { isIdempotent: true } });
       const hosts = {};
       const hostsDown = [];
       utils.series([
@@ -746,7 +747,7 @@ describe('Client', function () {
       ], done);
     });
     it('should failover when a node goes down with some outstanding requests', function (done) {
-      const options = utils.extend({}, helper.baseOptions);
+      const options = utils.extend({ queryOptions: { isIdempotent: true } }, helper.baseOptions);
       options.pooling = {
         coreConnectionsPerHost: {
           '0': 1,

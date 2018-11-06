@@ -43,59 +43,13 @@ describe('client read timeouts', function () {
     it('should move to next host for prepared queries executions', getMoveNextHostTest(true, true));
     it('should move to next host for prepared requests', getMoveNextHostTest(true, false));
     it('should move to next host for the initial prepare', getMoveNextHostTest(true, false));
-    it('should callback in error when retryOnTimeout is false', function (done) {
-      const client = newInstance({ socketOptions: { readTimeout: 3000 } });
-      let coordinators = {};
-      const errorsReceived = [];
-      utils.series([
-        client.connect.bind(client),
-        function warmup(next) {
-          utils.timesSeries(10, function (n, timesNext) {
-            client.execute('SELECT key FROM system.local', function (err, result) {
-              if (err) {
-                return timesNext(err);
-              }
-              coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-              timesNext();
-            });
-          }, next);
-        },
-        helper.toTask(helper.ccmHelper.pauseNode, null, 2),
-        function checkTimeouts(next) {
-          assert.strictEqual(Object.keys(coordinators).length, 2);
-          assert.strictEqual(coordinators['1'], true);
-          assert.strictEqual(coordinators['2'], true);
-          coordinators = {};
-          utils.times(10, function (n, timesNext) {
-            client.execute('SELECT key FROM system.local', [], { retryOnTimeout: false }, function (err, result) {
-              if (err) {
-                errorsReceived.push(err);
-              }
-              else {
-                coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-              }
-              timesNext();
-            });
-          }, function (err) {
-            if (err) {
-              return next(err);
-            }
-            assert.strictEqual(Object.keys(coordinators).length, 1);
-            assert.strictEqual(coordinators['1'], true);
-            //half of the executions failed
-            assert.strictEqual(errorsReceived.length, 5);
-            assert.ok(errorsReceived.reduce(function (previous, current) {
-              return previous && (current instanceof errors.OperationTimedOutError);
-            }, true));
-            next();
-          });
-        },
-        helper.toTask(helper.ccmHelper.resumeNode, null, 2),
-        client.shutdown.bind(client)
-      ], done);
-    });
+    it('should callback in error when isIdempotent is false', getTimeoutErrorExpectedTest({ isIdempotent: false }));
+    it('should callback in error when retryOnTimeout is false', getTimeoutErrorExpectedTest({ retryOnTimeout: false }));
     it('defunct the connection when the threshold passed', function (done) {
       const client = newInstance({
+        queryOptions: { 
+          isIdempotent: true
+        },
         socketOptions: {
           readTimeout: 3000,
           defunctReadTimeoutThreshold: 16
@@ -156,7 +110,7 @@ describe('client read timeouts', function () {
       ], done);
     });
     it('should move to next host for eachRow() executions', function (done) {
-      const client = newInstance({ socketOptions: { readTimeout: 3000 } });
+      const client = newInstance({ socketOptions: { readTimeout: 3000 }, queryOptions: { isIdempotent: true } });
       let coordinators = {};
       utils.series([
         client.connect.bind(client),
@@ -246,7 +200,7 @@ describe('client read timeouts', function () {
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
         pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
         socketOptions: { readTimeout: 1000 },
-        queryOptions: { consistency: types.consistencies.one }
+        queryOptions: { consistency: types.consistencies.one, isIdempotent: true }
       });
       utils.series([
         client.connect.bind(client),
@@ -276,7 +230,7 @@ describe('client read timeouts', function () {
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
         pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
         socketOptions: { readTimeout: 1000 },
-        queryOptions: { consistency: types.consistencies.one }
+        queryOptions: { consistency: types.consistencies.one, isIdempotent: true }
       });
       utils.series([
         client.connect.bind(client),
@@ -330,7 +284,7 @@ function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, read
   }
   profiles = profiles || [];
   return (function moveNextHostTest(done) {
-    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
+    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout }, queryOptions: { isIdempotent: true } });
     const timeoutLogs = [];
     client.on('log', function (level, constructorName, info) {
       if (level !== 'warning' || info.indexOf('timeout') === -1) {
@@ -399,7 +353,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
   profiles = profiles || [];
 
   return (function timeoutErrorNotExpectedTest(done) {
-    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout } });
+    const client = newInstance({ profiles: profiles, socketOptions: { readTimeout: readTimeout, isIdempotent: true } });
     let coordinators = {};
     utils.series([
       client.connect.bind(client),
@@ -450,6 +404,60 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
         assert.strictEqual(coordinators['2'], true);
         next();
       },
+      client.shutdown.bind(client)
+    ], done);
+  });
+}
+
+function getTimeoutErrorExpectedTest (queryOptions) {
+  return (function (done) {
+    const client = newInstance({ socketOptions: { readTimeout: 3000 }, queryOptions: { isIdempotent: true } });
+    let coordinators = {};
+    const errorsReceived = [];
+    utils.series([
+      client.connect.bind(client),
+      function warmup(next) {
+        utils.timesSeries(10, function (n, timesNext) {
+          client.execute('SELECT key FROM system.local', function (err, result) {
+            if (err) {
+              return timesNext(err);
+            }
+            coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+            timesNext();
+          });
+        }, next);
+      },
+      helper.toTask(helper.ccmHelper.pauseNode, null, 2),
+      function checkTimeouts(next) {
+        assert.strictEqual(Object.keys(coordinators).length, 2);
+        assert.strictEqual(coordinators['1'], true);
+        assert.strictEqual(coordinators['2'], true);
+        coordinators = {};
+        utils.times(10, function (n, timesNext) {
+          client.execute('SELECT key FROM system.local', [], queryOptions, function (err, result) {
+            if (err) {
+              errorsReceived.push(err);
+            }
+            else {
+              coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
+            }
+            timesNext();
+          });
+        }, function (err) {
+          if (err) {
+            return next(err);
+          }
+          assert.strictEqual(Object.keys(coordinators).length, 1);
+          assert.strictEqual(coordinators['1'], true);
+          //half of the executions failed
+          assert.strictEqual(errorsReceived.length, 5);
+          assert.ok(errorsReceived.reduce(function (previous, current) {
+            return previous && (current instanceof errors.OperationTimedOutError);
+          }, true));
+          next();
+        });
+      },
+      helper.toTask(helper.ccmHelper.resumeNode, null, 2),
       client.shutdown.bind(client)
     ], done);
   });

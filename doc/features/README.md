@@ -1,19 +1,20 @@
 # Features
 
-The DataStax Node.js Driver for Apache Cassandra is feature-rich and highly tunable Node.js client library for Apache
-Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3.
+The DataStax Enterprise Node.js Driver is feature-rich and highly tunable Node.js client library for DataStax 
+Enterprise.
 
 ## Usage
 
 - [Address resolution](address-resolution)
 - [Authentication](auth)
 - [Batch statements](batch)
-- [Cluster and schema metadata](metadata)
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution profiles](execution-profiles)
 - [Geospatial types support](geotypes)
 - [Graph support](graph-support)
+- [Logging](logging)
+- [Cluster and schema metadata](metadata)
 - [Native protocol](native-protocol)
 - [Paging](paging)
 - [Parameterized queries](parameterized-queries)

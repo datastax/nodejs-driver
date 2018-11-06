@@ -18,6 +18,7 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
+const bigIntTests = require('./es-bigint-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -1078,6 +1079,9 @@ describe('Client', function () {
         }, helper.finish(client, done));
       });
     });
+
+    bigIntTests(commonKs, true);
+
     vit('dse-6.0', 'should use keyspace if set on options', () => {
       const client = setupInfo.client;
       return client.execute('select * from local', {prepare: true}, {keyspace: 'system'})
@@ -1109,7 +1113,7 @@ describe('Client', function () {
       // in the following the following cases:
       //  1) it reprepares the statement on schema change and that updates the cache
       //  2) server responds with rows response containing new_metadata_id that prompts updating
-      //      the cache. 
+      //      the cache.
       const client = setupInfo.client;
       const client2 = newInstance({keyspace: commonKs});
       let table;

@@ -108,6 +108,7 @@ module.exports = {
     "Uint16Array": false,
     "Int32Array": false,
     "Int8Array": false,
+    "BigInt": false,
     "process": false,
     "setTimeout": false,
     "setImmediate": false,

@@ -57,7 +57,7 @@ const options = {
         set: Set
     }
 };
-const client = new cassandra.Client(options);
+const client = new Client(options);
 ```
 
 This way, when encoding or decoding map or set values, the driver uses those constructors:

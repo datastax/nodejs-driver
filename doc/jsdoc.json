@@ -1,17 +1,21 @@
 {
   "source": {
     "include": [
-      "lib/auth",
       "lib/dse-client.js",
-      "lib/execution-profile.js",
-      "lib/geometry",
-      "lib/graph",
+
+      "lib/types",
+      "lib/auth",
       "lib/policies",
+      "lib/metadata",
       "lib/client.js",
+      "lib/execution-profile.js",
+      "lib/encoder.js",
       "lib/errors.js",
       "lib/host.js",
-      "lib/metadata",
-      "lib/types",
+      "lib/tracker",
+
+      "lib/geometry",
+      "lib/graph",
       "lib/search"
     ]
   },

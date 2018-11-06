@@ -212,13 +212,15 @@ const helper = {
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
   assertContains: function (value, searchValue, caseInsensitive) {
+    const originalValue = value;
+    const originalSearchValue = searchValue;
     assert.strictEqual(typeof value, 'string');
     const message = 'String: "%s" does not contain "%s"';
     if (caseInsensitive !== false) {
       value = value.toLowerCase();
       searchValue = searchValue.toLowerCase();
     }
-    assert.ok(value.indexOf(searchValue) >= 0, util.format(message, value, searchValue));
+    assert.ok(value.indexOf(searchValue) >= 0, util.format(message, originalValue, originalSearchValue));
   },
   /**
    * Returns a function that waits on schema agreement before executing callback

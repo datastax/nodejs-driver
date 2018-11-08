@@ -66,6 +66,12 @@ describe('Client', function () {
             helper.assertInstanceOf(err, errors.ResponseError);
             assert.strictEqual(client.metrics.otherError, 1);
             assert.strictEqual(client.metrics.successfulResponse, undefined);
+            assert.strictEqual(client.metrics.response.length, 1);
+            const latency = client.metrics.response[0];
+            // Latency is an Array tuple composed of [seconds, nanoseconds]
+            assert.strictEqual(latency.length, 2);
+            assert.ok(Number.isInteger(latency[0]));
+            assert.ok(Number.isInteger(latency[1]));
           })
           .then(() => assert.strictEqual(catchCalled, true));
       });
@@ -85,7 +91,7 @@ describe('Client', function () {
       });
 
       it('should not retry when a speculative execution previously completed', () =>
-        client.execute(queriesFailingOnFirstNode.delayed.value, [], { isIdempotent: true })
+        client.execute(queriesFailingOnFirstNode.delayed.value, [], {isIdempotent: true})
           .then(rs => {
             assert.strictEqual(rs.info.queriedHost, setupInfo.cluster.node(1).address);
             assert.strictEqual(rs.info.speculativeExecutions, 1);
@@ -94,6 +100,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, 1);
             assert.strictEqual(client.metrics.speculativeExecution, 1);
             assert.strictEqual(client.metrics.clientTimeoutRetry, undefined);
+            assert.strictEqual(client.metrics.response.length, 1);
           })
           .then(() => new Promise(r => setTimeout(r, delay + 20)))
           .then(() => {
@@ -122,6 +129,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, 1);
             assert.strictEqual(client.options.policies.retry.called, 1);
             assert.strictEqual(client.options.policies.retry.unavailable, 1);
+            assert.strictEqual(client.metrics.response.length, 2);
           }));
 
       it('should use the retry policy for server read timeout', () =>
@@ -133,6 +141,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, 1);
             assert.strictEqual(client.options.policies.retry.called, 1);
             assert.strictEqual(client.options.policies.retry.readTimeout, 1);
+            assert.strictEqual(client.metrics.response.length, 2);
           }));
 
       it('should use the retry policy for server write timeout', () =>
@@ -144,6 +153,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, 1);
             assert.strictEqual(client.options.policies.retry.called, 1);
             assert.strictEqual(client.options.policies.retry.writeTimeout, 1);
+            assert.strictEqual(client.metrics.response.length, 2);
           }));
 
       it('should use the retry policy for client timeout', () => {
@@ -160,6 +170,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, 1);
             assert.strictEqual(client.options.policies.retry.called, 1);
             assert.strictEqual(client.options.policies.retry.requestError, 1);
+            assert.strictEqual(client.metrics.response.length, 1);
           });
       });
 
@@ -177,6 +188,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, undefined);
             assert.strictEqual(client.metrics.ignoredError, undefined);
             assert.strictEqual(client.options.policies.retry.requestError, 1);
+            assert.strictEqual(client.metrics.response.length, 1);
           })
           .then(() => assert.strictEqual(catchCalled, true));
       });
@@ -193,6 +205,7 @@ describe('Client', function () {
             assert.strictEqual(client.metrics.successfulResponse, undefined);
             assert.strictEqual(client.metrics.ignoredError, 1);
             assert.strictEqual(client.options.policies.retry.requestError, 1);
+            assert.strictEqual(client.metrics.response.length, 1);
           });
       });
     });
@@ -201,6 +214,7 @@ describe('Client', function () {
 
 function getClientMetrics() {
   const m = new metrics.ClientMetrics();
+  m.response = [];
 
   // Custom implementation of each interface method
   m.onClientTimeoutError = () => m.clientTimeoutError = (m.clientTimeoutError || 0) + 1;
@@ -219,12 +233,14 @@ function getClientMetrics() {
   m.onIgnoreError = () => m.ignoredError = (m.ignoredError || 0) + 1;
   m.onSpeculativeExecution = () => m.speculativeExecution = (m.speculativeExecution || 0) + 1;
   m.onSuccessfulResponse = () => m.successfulResponse = (m.successfulResponse || 0) + 1;
+  m.onResponse = latency => m.response.push(latency);
 
   return m;
 }
 
 function getDefaultMetrics() {
   const m = new metrics.DefaultMetrics();
+  m.response = [];
 
   // Listen to each event and track them in properties
   m.errors.clientTimeout.on('increment', () => m.clientTimeoutError = (m.clientTimeoutError || 0) + 1);
@@ -241,7 +257,8 @@ function getDefaultMetrics() {
 
   m.ignoredErrors.on('increment', () => m.ignoredError = (m.ignoredError || 0) + 1);
   m.speculativeExecutions.on('increment', () => m.speculativeExecution = (m.speculativeExecution || 0) + 1);
-  m.successfulResponses.on('increment', () => m.successfulResponse = (m.successfulResponse || 0) + 1);
+  m.responses.on('increment', latency => m.response.push(latency));
+  m.responses.success.on('increment', () => m.successfulResponse = (m.successfulResponse || 0) + 1);
 
   return m;
 }

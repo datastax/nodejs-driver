@@ -10,7 +10,8 @@
       "lib/encoder.js",
       "lib/errors.js",
       "lib/host.js",
-      "lib/tracker"
+      "lib/tracker",
+      "lib/metrics"
     ]
   },
   "templates": {

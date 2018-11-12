@@ -13,6 +13,7 @@ const speculativeExecution = require('../../lib/policies/speculative-execution')
 const ProfileManager = require('../../lib/execution-profile').ProfileManager;
 const OperationState = require('../../lib/operation-state');
 const defaultOptions = require('../../lib/client-options').defaultOptions;
+const ClientMetrics = require('../../lib/metrics/client-metrics');
 
 describe('RequestHandler', function () {
   const queryRequest = new requests.QueryRequest('QUERY1');
@@ -339,6 +340,7 @@ describe('RequestHandler', function () {
  * @param {LoadBalancingPolicy} lbp
  * @param {RetryPolicy} [retry]
  * @param {Boolean} [isIdempotent]
+ * @param {Host} host
  * @returns {RequestHandler}
  */
 function newInstance(request, client, lbp, retry, isIdempotent, host) {
@@ -354,7 +356,8 @@ function newClient(metadata, lbp) {
   return {
     profileManager: new ProfileManager(options),
     options: options,
-    metadata: metadata
+    metadata: metadata,
+    metrics: new ClientMetrics()
   };
 }
 

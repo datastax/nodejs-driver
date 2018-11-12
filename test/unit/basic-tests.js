@@ -834,6 +834,12 @@ describe('exports', function () {
     assert.strictEqual(api.tracker, require('../../lib/tracker'));
     assert.strictEqual(typeof api.tracker.RequestTracker, 'function');
     assert.strictEqual(typeof api.tracker.RequestLogger, 'function');
+
+    assert.ok(api.metrics);
+    assert.strictEqual(typeof api.metrics.ClientMetrics, 'function');
+    assert.strictEqual(api.metrics.ClientMetrics.name, 'ClientMetrics');
+    assert.strictEqual(typeof api.metrics.DefaultMetrics, 'function');
+    assert.strictEqual(api.metrics.DefaultMetrics.name, 'DefaultMetrics');
     /* eslint-enable global-require */
   });
 });

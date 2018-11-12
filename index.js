@@ -8,6 +8,7 @@ exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
 exports.tracker = require('./lib/tracker');
+exports.metrics = require('./lib/metrics');
 
 const token = require('./lib/token');
 exports.token = {

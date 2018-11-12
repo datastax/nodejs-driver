@@ -4,11 +4,11 @@ const assert = require('assert');
 const utils = require('../../lib/utils');
 const types = require('../../lib/types');
 const helper = require('../test-helper');
-const DefaultExecutionInfo = require('../../lib/execution-info').DefaultExecutionInfo;
+const DefaultExecutionOptions = require('../../lib/execution-options').DefaultExecutionOptions;
 const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 const defaultOptions = require('../../lib/client-options').defaultOptions;
 
-describe('DefaultExecutionInfo', () => {
+describe('DefaultExecutionOptions', () => {
   describe('create()', () => {
     it('should get the values from the query options', () => {
       const options = {
@@ -39,9 +39,9 @@ describe('DefaultExecutionInfo', () => {
         consistency: 100, serialConsistency: 200, retry: {}, readTimeout: 1000
       });
 
-      const info = DefaultExecutionInfo.create(options, getClientFake(executionProfile));
+      const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
 
-      assertExecutionInfo(info, options);
+      assertExecutionOptions(info, options);
     });
 
     it('should default some values from the execution profile', () => {
@@ -69,10 +69,10 @@ describe('DefaultExecutionInfo', () => {
         consistency: 1, serialConsistency: 2, retry: {}, readTimeout: 3, loadBalancing: {}
       });
 
-      const info = DefaultExecutionInfo.create(options, getClientFake(executionProfile));
+      const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
 
-      assertExecutionInfo(info, options);
-      assertExecutionInfo(info, executionProfile);
+      assertExecutionOptions(info, options);
+      assertExecutionOptions(info, executionProfile);
     });
 
     it('should default some values from the client options', () => {
@@ -101,10 +101,10 @@ describe('DefaultExecutionInfo', () => {
       clientOptions.socketOptions.readTimeout = 3456;
       clientOptions.policies.retry = {};
 
-      const info = DefaultExecutionInfo.create(options, getClientFake(null, clientOptions));
+      const info = DefaultExecutionOptions.create(options, getClientFake(null, clientOptions));
 
-      assertExecutionInfo(info, options);
-      assertExecutionInfo(info, clientOptions.queryOptions);
+      assertExecutionOptions(info, options);
+      assertExecutionOptions(info, clientOptions.queryOptions);
       assert.strictEqual(info.getReadTimeout(), clientOptions.socketOptions.readTimeout);
       assert.strictEqual(info.getRetryPolicy(), clientOptions.policies.retry);
     });
@@ -115,20 +115,20 @@ describe('DefaultExecutionInfo', () => {
       });
 
       [ null, undefined, () => {}].forEach(options => {
-        const info = DefaultExecutionInfo.create(options, getClientFake(executionProfile));
-        assertExecutionInfo(info, executionProfile);
+        const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
+        assertExecutionOptions(info, executionProfile);
       });
     });
 
     it('should convert hex pageState to Buffer', () => {
       const options = { pageState: 'abcd' };
-      const info = DefaultExecutionInfo.create(options, getClientFake());
+      const info = DefaultExecutionOptions.create(options, getClientFake());
       assert.deepStrictEqual(info.getPageState(), utils.allocBufferFromString(options.pageState, 'hex'));
     });
 
     it('should expose the raw query options or an empty object', () => {
       [undefined, null, () => {}, { prepare: true, myCustomOption: 1 }].forEach(options => {
-        const info = DefaultExecutionInfo.create(options, getClientFake());
+        const info = DefaultExecutionOptions.create(options, getClientFake());
 
         const expectedOptions = options && typeof options !== 'function' ? options : utils.emptyObject;
         assert.strictEqual(info.getRawQueryOptions(), expectedOptions);
@@ -139,13 +139,13 @@ describe('DefaultExecutionInfo', () => {
   describe('#getOrCreateTimestamp()', () => {
     it('should use the provided timestamp value', () => {
       const options = { timestamp: types.Long.fromNumber(10) };
-      const info = DefaultExecutionInfo.create(options, getClientFake());
+      const info = DefaultExecutionOptions.create(options, getClientFake());
       assert.strictEqual(info.getOrGenerateTimestamp(), options.timestamp);
     });
 
     it('should convert from Number to Long', () => {
       const options = { timestamp: 5 };
-      const info = DefaultExecutionInfo.create(options, getClientFake());
+      const info = DefaultExecutionOptions.create(options, getClientFake());
       const value = info.getOrGenerateTimestamp();
       helper.assertInstanceOf(value, types.Long);
       assert.ok(value.equals(options.timestamp));
@@ -157,7 +157,7 @@ describe('DefaultExecutionInfo', () => {
       this.called = 0;
       clientOptions.policies.timestampGeneration.next = () => ++this.called;
 
-      const info = DefaultExecutionInfo.create({}, getClientFake(null, clientOptions));
+      const info = DefaultExecutionOptions.create({}, getClientFake(null, clientOptions));
       const value = info.getOrGenerateTimestamp();
       helper.assertInstanceOf(value, types.Long);
       assert.ok(value.equals(types.Long.ONE));
@@ -167,10 +167,10 @@ describe('DefaultExecutionInfo', () => {
 });
 
 /**
- * @param {ExecutionInfo} info
+ * @param {ExecutionOptions} execOptions
  * @param expectedOptions
  */
-function assertExecutionInfo(info, expectedOptions) {
+function assertExecutionOptions(execOptions, expectedOptions) {
   const propToMethod = new Map([
     ['traceQuery', 'getIsQueryTracing'], ['retry', 'getRetryPolicy'], ['autoPage', 'getIsAutoPage'],
     ['counter', 'getIsBatchCounter'], ['logged', 'getIsBatchLogged'], ['prepare', 'getIsPrepared'],
@@ -190,12 +190,12 @@ function assertExecutionInfo(info, expectedOptions) {
       methodName = `get${prop.substr(0, 1).toUpperCase()}${prop.substr(1)}`;
     }
 
-    const method = info[methodName];
+    const method = execOptions[methodName];
     if (typeof method !== 'function') {
       throw new Error(`No method "${methodName}" found`);
     }
 
-    assert.strictEqual(expectedOptions[prop], method.call(info));
+    assert.strictEqual(expectedOptions[prop], method.call(execOptions));
   });
 }
 

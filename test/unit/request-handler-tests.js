@@ -15,9 +15,9 @@ const ProfileManager = execProfileModule.ProfileManager;
 const ExecutionProfile = execProfileModule.ExecutionProfile;
 const OperationState = require('../../lib/operation-state');
 const defaultOptions = require('../../lib/client-options').defaultOptions;
-const execInfoModule = require('../../lib/execution-info');
-const DefaultExecutionInfo = execInfoModule.DefaultExecutionInfo;
-const ExecutionInfo = execInfoModule.ExecutionInfo;
+const execOptionsModule = require('../../lib/execution-options');
+const DefaultExecutionOptions = execOptionsModule.DefaultExecutionOptions;
+const ExecutionOptions = execOptionsModule.ExecutionOptions;
 const ClientMetrics = require('../../lib/metrics/client-metrics');
 
 describe('RequestHandler', function () {
@@ -201,7 +201,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionInfo.empty());
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -235,7 +235,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionInfo.empty());
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -353,7 +353,7 @@ function newInstance(request, client, lbp, retry, isIdempotent, host) {
   const options = {
     executionProfile: new ExecutionProfile('abc', { loadBalancing: lbp }), retry: retry, isIdempotent: isIdempotent, host: host
   };
-  const info = new DefaultExecutionInfo(options, client);
+  const info = new DefaultExecutionOptions(options, client);
 
   return new RequestHandler(request, info, client);
 }

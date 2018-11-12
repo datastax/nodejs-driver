@@ -801,8 +801,8 @@ describe('exports', function () {
     assert.strictEqual(typeof api.errors.DriverError, 'function');
     assert.strictEqual(typeof api.ExecutionProfile, 'function');
     assert.strictEqual(api.ExecutionProfile.name, 'ExecutionProfile');
-    assert.strictEqual(typeof api.ExecutionInfo, 'function');
-    assert.strictEqual(api.ExecutionInfo.name, 'ExecutionInfo');
+    assert.strictEqual(typeof api.ExecutionOptions, 'function');
+    assert.strictEqual(api.ExecutionOptions.name, 'ExecutionOptions');
     assert.ok(api.types);
     assert.ok(api.policies);
     assert.ok(api.auth);

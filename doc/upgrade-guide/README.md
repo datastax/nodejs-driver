@@ -11,12 +11,12 @@ The following is a list of changes made in version 4.0 of the driver that are re
 
 ### Changes to the retry and load-balancing policies
 
-`ExecutionInfo` is introduced as a wrapper around the `QueryOptions` provided to the execution methods.
-The `ExecutionInfo` contains getter methods to obtain the values of each option, defaulting to the execution profile
+`ExecutionOptions` is introduced as a wrapper around the `QueryOptions`.
+The `ExecutionOptions` contains getter methods to obtain the values of each option, defaulting to the execution profile
 options or the ones defined in the `ClientOptions`. Previously, a shallow copy of the provided `QueryOptions` was 
 used, resulting in unnecessary allocations and evaluations.
 
-The `LoadBalancingPolicy` and `RetryPolicy` base classes changed method signatures to take `ExecutionInfo` instances 
+The `LoadBalancingPolicy` and `RetryPolicy` base classes changed method signatures to take `ExecutionOptions` instances 
 as argument instead of `QueryOptions`.
 
 Note that no breaking change was introduced for execution methods such as `Client#execute()`, `Client#batch()`, 
@@ -56,7 +56,7 @@ The retry policy methods takes [`OperationInfo`][op-info] as a parameter. Some `
 were removed.
 
 - Deprecated properties `handler`, `request` and `retryOnTimeout` were removed.
-- `options` property was replaced by `executionInfo` which is an instance of `ExecutionInfo`.
+- `options` property was replaced by `executionOptions` which is an instance of `ExecutionOptions`.
 
 ### Removed `meta` property from `ResultSet`
 

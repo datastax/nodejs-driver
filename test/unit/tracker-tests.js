@@ -195,6 +195,6 @@ describe('RequestLogger', () => {
 
 function getExecutionOptions(prepare) {
   const result = ExecutionOptions.empty();
-  result.getIsPrepared = () => prepare;
+  result.isPrepared = () => prepare;
   return result;
 }

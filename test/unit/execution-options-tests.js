@@ -172,8 +172,8 @@ describe('DefaultExecutionOptions', () => {
  */
 function assertExecutionOptions(execOptions, expectedOptions) {
   const propToMethod = new Map([
-    ['traceQuery', 'getIsQueryTracing'], ['retry', 'getRetryPolicy'], ['autoPage', 'getIsAutoPage'],
-    ['counter', 'getIsBatchCounter'], ['logged', 'getIsBatchLogged'], ['prepare', 'getIsPrepared'],
+    ['traceQuery', 'isQueryTracing'], ['retry', 'getRetryPolicy'], ['autoPage', 'isAutoPage'],
+    ['counter', 'isBatchCounter'], ['logged', 'isBatchLogged'], ['prepare', 'isPrepared'],
     ['loadBalancing', 'getLoadBalancingPolicy']
   ]);
 
@@ -187,7 +187,11 @@ function assertExecutionOptions(execOptions, expectedOptions) {
     let methodName = propToMethod.get(prop);
 
     if (!methodName) {
-      methodName = `get${prop.substr(0, 1).toUpperCase()}${prop.substr(1)}`;
+      if (prop.indexOf('is') === 0) {
+        methodName = prop;
+      } else {
+        methodName = `get${prop.substr(0, 1).toUpperCase()}${prop.substr(1)}`;
+      }
     }
 
     const method = execOptions[methodName];

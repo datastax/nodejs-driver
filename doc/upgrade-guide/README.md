@@ -65,6 +65,15 @@ This property was removed in the latest version.
 
 ---
 
+## 3.0
+
+### Changes in CQL aggregates metadata
+
+The `initCondition` property of `Aggregate`, the class that represents the metadata information of a CQL 
+aggregate, changes from `Object` to `String`.
+
+---
+
 ## 2.0
 
 The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 1.x.

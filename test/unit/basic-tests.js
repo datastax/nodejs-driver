@@ -798,7 +798,11 @@ describe('exports', function () {
     const api = require('../../index.js');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
-    assert.ok(typeof api.errors.DriverError, 'function');
+    assert.strictEqual(typeof api.errors.DriverError, 'function');
+    assert.strictEqual(typeof api.ExecutionProfile, 'function');
+    assert.strictEqual(api.ExecutionProfile.name, 'ExecutionProfile');
+    assert.strictEqual(typeof api.ExecutionOptions, 'function');
+    assert.strictEqual(api.ExecutionOptions.name, 'ExecutionOptions');
     assert.ok(api.types);
     assert.ok(api.policies);
     assert.ok(api.auth);

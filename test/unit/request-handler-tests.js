@@ -10,9 +10,14 @@ const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 const retry = require('../../lib/policies/retry');
 const speculativeExecution = require('../../lib/policies/speculative-execution');
-const ProfileManager = require('../../lib/execution-profile').ProfileManager;
+const execProfileModule = require('../../lib/execution-profile');
+const ProfileManager = execProfileModule.ProfileManager;
+const ExecutionProfile = execProfileModule.ExecutionProfile;
 const OperationState = require('../../lib/operation-state');
 const defaultOptions = require('../../lib/client-options').defaultOptions;
+const execOptionsModule = require('../../lib/execution-options');
+const DefaultExecutionOptions = execOptionsModule.DefaultExecutionOptions;
+const ExecutionOptions = execOptionsModule.ExecutionOptions;
 const ClientMetrics = require('../../lib/metrics/client-metrics');
 
 describe('RequestHandler', function () {
@@ -196,7 +201,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -230,7 +235,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -345,8 +350,12 @@ describe('RequestHandler', function () {
  */
 function newInstance(request, client, lbp, retry, isIdempotent, host) {
   client = client || newClient(null, lbp);
-  const options = { executionProfile: { loadBalancing: lbp }, retry: retry, isIdempotent: isIdempotent, host: host };
-  return new RequestHandler(request, options, client);
+  const options = {
+    executionProfile: new ExecutionProfile('abc', { loadBalancing: lbp }), retry: retry, isIdempotent: isIdempotent, host: host
+  };
+  const execOptions = new DefaultExecutionOptions(options, client);
+
+  return new RequestHandler(request, execOptions, client);
 }
 
 function newClient(metadata, lbp) {

@@ -38,10 +38,9 @@ describe('client read timeouts', function () {
     it('should move to next host for prepared requests', getMoveNextHostTest(true, false));
     it('should move to next host for the initial prepare', getMoveNextHostTest(true, false));
     it('should callback in error when isIdempotent is false', getTimeoutErrorExpectedTest({ isIdempotent: false }));
-    it('should callback in error when retryOnTimeout is false', getTimeoutErrorExpectedTest({ retryOnTimeout: false }));
     it('defunct the connection when the threshold passed', function (done) {
       const client = newInstance({
-        queryOptions: { 
+        queryOptions: {
           isIdempotent: true
         },
         socketOptions: {

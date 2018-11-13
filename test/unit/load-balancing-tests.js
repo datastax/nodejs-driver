@@ -9,6 +9,7 @@ const HostMap = require('../../lib/host.js').HostMap;
 const types = require('../../lib/types');
 const utils = require('../../lib/utils.js');
 const loadBalancing = require('../../lib/policies/load-balancing.js');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const LoadBalancingPolicy = loadBalancing.LoadBalancingPolicy;
 const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 const RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
@@ -522,7 +523,7 @@ describe('TokenAwarePolicy', function () {
     utils.series([
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
-        policy.newQueryPlan(null, {routingKey: utils.allocBufferUnsafe(16)}, function (err, iterator) {
+        policy.newQueryPlan(null, getExecOptions({ routingKey: utils.allocBufferUnsafe(16)}), function (err, iterator) {
           const hosts = helper.iteratorToArray(iterator);
           assert.ok(hosts);
           assert.strictEqual(hosts.length, 4);
@@ -549,7 +550,7 @@ describe('TokenAwarePolicy', function () {
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         utils.timesLimit(100, 32, function (n, timesNext) {
-          policy.newQueryPlan(null, { routingKey: utils.allocBufferUnsafe(16) }, function (err, iterator) {
+          policy.newQueryPlan(null, getExecOptions({ routingKey: utils.allocBufferUnsafe(16) }), function (err, iterator) {
             const hosts = helper.iteratorToArray(iterator);
             assert.strictEqual(hosts.length, 5);
             assert.deepEqual(hosts.map(toAddress).slice(0, 3).sort(), ['repl2_local', 'repl4_local', 'repl5_local']);
@@ -583,7 +584,7 @@ describe('TokenAwarePolicy', function () {
       helper.toTask(policy.init, policy, client, new HostMap()),
       function (next) {
         utils.timesLimit(iterations, 128, function (n, timesNext) {
-          policy.newQueryPlan(null, { routingKey: routingKey }, function (err, iterator) {
+          policy.newQueryPlan(null, getExecOptions({ routingKey }), function (err, iterator) {
             const hosts = helper.iteratorToArray(iterator);
             assert.strictEqual(hosts.length, 6);
             hosts.map(toAddress).slice(0, 4).forEach(function (address, i) {
@@ -785,4 +786,10 @@ function toHost(address) {
 
 function toFunc(val) {
   return (() => val);
+}
+
+function getExecOptions(options) {
+  const result = ExecutionOptions.empty();
+  result.getRoutingKey = () => options.routingKey;
+  return result;
 }

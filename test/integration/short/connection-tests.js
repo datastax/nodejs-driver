@@ -132,7 +132,7 @@ describe('Connection', function () {
         localCon.open.bind(localCon),
         function creating(next) {
           const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), {}, next);
+          localCon.sendStream(getRequest(query), null, next);
         },
         function changing(next) {
           localCon.changeKeyspace(keyspace, next);
@@ -151,7 +151,7 @@ describe('Connection', function () {
         localCon.open.bind(localCon),
         function creating(next) {
           const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), {}, next);
+          localCon.sendStream(getRequest(query), null, next);
         },
         function changing(next) {
           localCon.changeKeyspace(keyspace, next);

@@ -657,27 +657,6 @@ const helper = {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
   },
-  /**
-   * @param {Object} o1
-   * @param {Object} o2
-   * @param {Array.<string>} props
-   * @param {Array.<string>} [except]
-   */
-  compareProps: function (o1, o2, props, except) {
-    assert.ok(o1);
-    if (except) {
-      props = props.slice(0);
-      except.forEach(function (p) {
-        const index = props.indexOf(p);
-        if (index >= 0) {
-          props.splice(index, 1);
-        }
-      });
-    }
-    props.forEach(function comparePropItem(p) {
-      assert.strictEqual(o1[p], o2[p]);
-    });
-  },
   getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
     const pooling = {
       heartBeatInterval: heartBeatInterval || 0,
@@ -1031,9 +1010,9 @@ WhiteListPolicy.prototype.init = function (client, hosts, callback) {
   this.childPolicy.init(client, hosts, callback);
 };
 
-WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+WhiteListPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
   const list = this.list;
-  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
+  this.childPolicy.newQueryPlan(keyspace, info, function (err, iterator) {
     callback(err, {
       next: function () {
         let item = iterator.next();
@@ -1085,7 +1064,7 @@ function OrderedLoadBalancingPolicy() {
 
 util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
 
-OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
   callback(null, utils.arrayIterator(this.hosts.values()));
 };
 

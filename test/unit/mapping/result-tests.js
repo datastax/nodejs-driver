@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const Result = require('../../../lib/mapping/result');
+const util = require('util');
 
 const expected = [ { id: 1, name: 'name1', adapted: true }, { id: 2, name: 'name2', adapted: true }];
 
@@ -30,6 +31,14 @@ describe('Result', () => {
         arr.push(item);
       }
       assert.deepStrictEqual(arr, expected);
+    });
+  });
+
+  describe('[util.inspect.custom]()', () => {
+    it('should provide the array representation', () => {
+      const result = getResult();
+      assert.strictEqual(util.inspect(result), util.inspect(expected));
+      assert.strictEqual(util.inspect(result), util.inspect(result.toArray()));
     });
   });
 });

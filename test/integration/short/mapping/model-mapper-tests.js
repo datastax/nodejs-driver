@@ -6,6 +6,7 @@ const mapperTestHelper = require('./mapper-test-helper');
 const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
 const q = require('../../../../lib/mapping/q').q;
+const Mapper = require('../../../../lib/mapping/mapper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
 const Result = require('../../../../lib/mapping/result');
 const vit = helper.vit;
@@ -25,6 +26,14 @@ describe('ModelMapper', function () {
       return videoMapper.find(doc, null, 'default').then(result => {
         assert.ok(result.first());
       });
+    });
+
+    it('should use the correct table when no MappingOptions are specified', () => {
+      const mapper = new Mapper(client);
+      const modelMapper = mapper.forModel('videos');
+      const doc = { videoid: mapperTestHelper.videoIds[0] };
+      return modelMapper.find(doc)
+        .then(result => assert.ok(result.first()));
     });
 
     it('should use the another table', () => {
@@ -106,6 +115,12 @@ describe('ModelMapper', function () {
         assert.strictEqual(typeof result.first().name, 'string');
       }));
 
+    it('should use the correct table when no MappingOptions are specified', () => {
+      const mapper = new Mapper(client);
+      const modelMapper = mapper.forModel('videos');
+      return modelMapper.findAll().then(result => assert.ok(result.length > 0));
+    });
+
     it('should support fields and limit', () => videoMapper.findAll({ fields: [ 'id', 'addedDate' ], limit: 1 })
       .then(result => {
         helper.assertInstanceOf(result, Result);
@@ -172,6 +187,19 @@ describe('ModelMapper', function () {
           // It should have been inserted on the 3 tables
           assert.strictEqual(rows.length, 3);
           rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
+
+    it('should use the correct table when no MappingOptions are specified', () => {
+      const mapper = new Mapper(client);
+      const modelMapper = mapper.forModel('videos');
+      const doc = { videoid: Uuid.random(), name: 'ABC' };
+      return modelMapper.insert(doc)
+        .then(() => mapperTestHelper.getVideoRows(client, { id: doc.videoid }))
+        .then(rows => {
+          // Inserted on "videos" table
+          assert.strictEqual(rows.length, 1);
+          assert.strictEqual(rows[0]['name'], doc.name);
         });
     });
 
@@ -282,6 +310,19 @@ describe('ModelMapper', function () {
           assert.strictEqual(rows[0]['name'], 'updated single 1');
           assert.strictEqual(rows[1]['name'], doc.name);
           assert.strictEqual(rows[2]['name'], doc.name);
+        });
+    });
+
+    it('should use the correct table when no MappingOptions are specified', () => {
+      const mapper = new Mapper(client);
+      const modelMapper = mapper.forModel('videos');
+      const doc = { videoid: Uuid.random(), name: 'ABC Update' };
+      return modelMapper.update(doc)
+        .then(() => mapperTestHelper.getVideoRows(client, { id: doc.videoid }))
+        .then(rows => {
+          // Inserted on "videos" table
+          assert.strictEqual(rows.length, 1);
+          assert.strictEqual(rows[0]['name'], doc.name);
         });
     });
 
@@ -444,6 +485,24 @@ describe('ModelMapper', function () {
           });
 
           assert.strictEqual(rows[0]['description'], doc.description);
+        });
+    });
+
+    it('should use the correct table when no MappingOptions are specified', () => {
+      const mapper = new Mapper(client);
+      const modelMapper = mapper.forModel('videos');
+
+      const doc = {
+        id: Uuid.random(), name: 'to delete w/ no mapping', description: 'desc 4'
+      };
+
+      return mapperTestHelper.insertVideoRows(client, doc)
+        .then(() => modelMapper
+          .remove({ videoid: doc.id }))
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          assert.strictEqual(rows.length, 1);
+          assert.strictEqual(rows[0], null);
         });
     });
 

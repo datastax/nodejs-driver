@@ -37,7 +37,7 @@ const video = await videoMapper.get({ videoId: myVideoId });
 Use `find()` method to filter by one or more primary keys.
 
 ```javascript
-const userVideos = await videoMapper.get({ userId: myUserId });
+const userVideos = await videoMapper.find({ userId: myUserId });
 ```
 
 Insert an object using `insert()` method.

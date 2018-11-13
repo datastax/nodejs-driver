@@ -161,11 +161,11 @@ describe('Client', function () {
     });
     it('should build the routingKey based on routingNames', function (done) {
       const requestHandlerMock = {
-        send: function (request, info, client, cb) {
-          assert.ok(info);
-          assert.ok(info.getRoutingKey());
+        send: function (request, options, client, cb) {
+          assert.ok(options);
+          assert.ok(options.getRoutingKey());
           // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(info.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
+          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
           cb();
           done();
         }
@@ -188,11 +188,11 @@ describe('Client', function () {
     });
     it('should build the routingKey based on routingNames for query requests', function (done) {
       const requestHandlerMock = {
-        send: function (request, info, client, cb) {
-          assert.ok(info);
-          assert.ok(info.getRoutingKey());
+        send: function (request, options, client, cb) {
+          assert.ok(options);
+          assert.ok(options.getRoutingKey());
           // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(info.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
+          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
           cb();
           done();
         }
@@ -340,9 +340,9 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let info = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        info = o;
+        execOptions = o;
       };
 
       const items = [
@@ -356,19 +356,19 @@ describe('Client', function () {
         client.execute('Q1', [], queryOptions, utils.noop);
 
         // Verify the profile options
-        assert.strictEqual(info.getRetryPolicy(), profile.retry);
-        assert.strictEqual(info.getReadTimeout(), profile.readTimeout);
-        assert.strictEqual(info.getSerialConsistency(), profile.serialConsistency);
+        assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+        assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+        assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
 
         // Verify the overridden option
-        assert.strictEqual(info.getConsistency(), types.consistencies.all);
+        assert.strictEqual(execOptions.getConsistency(), types.consistencies.all);
       });
     });
     it('should set the timestamp', function (done) {
-      let info;
+      let execOptions;
       const handlerMock = {
         send: function (r, o, client, cb) {
-          info = o;
+          execOptions = o;
           cb(null, {});
         }
       };
@@ -377,8 +377,8 @@ describe('Client', function () {
         client.controlConnection.protocolVersion = version;
         client.execute('Q', function (err) {
           assert.ifError(err);
-          assert.ok(info);
-          const timestamp = info.getOrGenerateTimestamp();
+          assert.ok(execOptions);
+          const timestamp = execOptions.getOrGenerateTimestamp();
           if (version > 2) {
             assert.ok(timestamp);
             assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
@@ -391,10 +391,10 @@ describe('Client', function () {
       }, done);
     });
     it('should not set the timestamp when timestampGeneration is null', function (done) {
-      let info;
+      let execOptions;
       const handlerMock = {
         send: function (r, o, client, cb) {
-          info = o;
+          execOptions = o;
           cb(null, {});
         }
       };
@@ -402,8 +402,8 @@ describe('Client', function () {
       client.controlConnection.protocolVersion = 4;
       client.execute('Q', function (err) {
         assert.ifError(err);
-        assert.ok(info);
-        assert.strictEqual(info.getOrGenerateTimestamp(), null);
+        assert.ok(execOptions);
+        assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
         done();
       });
     });
@@ -455,10 +455,10 @@ describe('Client', function () {
       });
     });
     it('should set the timestamp', function (done) {
-      let info;
+      let execOptions;
       const handlerMock = {
         send: function (r, i, client, cb) {
-          info = i;
+          execOptions = i;
           cb(null, {});
         }
       };
@@ -467,8 +467,8 @@ describe('Client', function () {
         client.controlConnection.protocolVersion = version;
         client.batch(['q1', 'q2', 'q3'], function (err) {
           assert.ifError(err);
-          assert.ok(info);
-          const timestamp = info.getOrGenerateTimestamp();
+          assert.ok(execOptions);
+          const timestamp = execOptions.getOrGenerateTimestamp();
           if (version > 2) {
             assert.ok(timestamp);
             assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');

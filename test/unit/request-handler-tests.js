@@ -353,9 +353,9 @@ function newInstance(request, client, lbp, retry, isIdempotent, host) {
   const options = {
     executionProfile: new ExecutionProfile('abc', { loadBalancing: lbp }), retry: retry, isIdempotent: isIdempotent, host: host
   };
-  const info = new DefaultExecutionOptions(options, client);
+  const execOptions = new DefaultExecutionOptions(options, client);
 
-  return new RequestHandler(request, info, client);
+  return new RequestHandler(request, execOptions, client);
 }
 
 function newClient(metadata, lbp) {

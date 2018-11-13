@@ -39,9 +39,9 @@ describe('DefaultExecutionOptions', () => {
         consistency: 100, serialConsistency: 200, retry: {}, readTimeout: 1000
       });
 
-      const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
 
-      assertExecutionOptions(info, options);
+      assertExecutionOptions(execOptions, options);
     });
 
     it('should default some values from the execution profile', () => {
@@ -69,10 +69,10 @@ describe('DefaultExecutionOptions', () => {
         consistency: 1, serialConsistency: 2, retry: {}, readTimeout: 3, loadBalancing: {}
       });
 
-      const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
 
-      assertExecutionOptions(info, options);
-      assertExecutionOptions(info, executionProfile);
+      assertExecutionOptions(execOptions, options);
+      assertExecutionOptions(execOptions, executionProfile);
     });
 
     it('should default some values from the client options', () => {
@@ -101,12 +101,12 @@ describe('DefaultExecutionOptions', () => {
       clientOptions.socketOptions.readTimeout = 3456;
       clientOptions.policies.retry = {};
 
-      const info = DefaultExecutionOptions.create(options, getClientFake(null, clientOptions));
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake(null, clientOptions));
 
-      assertExecutionOptions(info, options);
-      assertExecutionOptions(info, clientOptions.queryOptions);
-      assert.strictEqual(info.getReadTimeout(), clientOptions.socketOptions.readTimeout);
-      assert.strictEqual(info.getRetryPolicy(), clientOptions.policies.retry);
+      assertExecutionOptions(execOptions, options);
+      assertExecutionOptions(execOptions, clientOptions.queryOptions);
+      assert.strictEqual(execOptions.getReadTimeout(), clientOptions.socketOptions.readTimeout);
+      assert.strictEqual(execOptions.getRetryPolicy(), clientOptions.policies.retry);
     });
 
     it('should allow null, undefined or function queryOptions argument', () => {
@@ -115,23 +115,23 @@ describe('DefaultExecutionOptions', () => {
       });
 
       [ null, undefined, () => {}].forEach(options => {
-        const info = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
-        assertExecutionOptions(info, executionProfile);
+        const execOptions = DefaultExecutionOptions.create(options, getClientFake(executionProfile));
+        assertExecutionOptions(execOptions, executionProfile);
       });
     });
 
     it('should convert hex pageState to Buffer', () => {
       const options = { pageState: 'abcd' };
-      const info = DefaultExecutionOptions.create(options, getClientFake());
-      assert.deepStrictEqual(info.getPageState(), utils.allocBufferFromString(options.pageState, 'hex'));
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake());
+      assert.deepStrictEqual(execOptions.getPageState(), utils.allocBufferFromString(options.pageState, 'hex'));
     });
 
     it('should expose the raw query options or an empty object', () => {
       [undefined, null, () => {}, { prepare: true, myCustomOption: 1 }].forEach(options => {
-        const info = DefaultExecutionOptions.create(options, getClientFake());
+        const execOptions = DefaultExecutionOptions.create(options, getClientFake());
 
         const expectedOptions = options && typeof options !== 'function' ? options : utils.emptyObject;
-        assert.strictEqual(info.getRawQueryOptions(), expectedOptions);
+        assert.strictEqual(execOptions.getRawQueryOptions(), expectedOptions);
       });
     });
   });
@@ -139,14 +139,14 @@ describe('DefaultExecutionOptions', () => {
   describe('#getOrCreateTimestamp()', () => {
     it('should use the provided timestamp value', () => {
       const options = { timestamp: types.Long.fromNumber(10) };
-      const info = DefaultExecutionOptions.create(options, getClientFake());
-      assert.strictEqual(info.getOrGenerateTimestamp(), options.timestamp);
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake());
+      assert.strictEqual(execOptions.getOrGenerateTimestamp(), options.timestamp);
     });
 
     it('should convert from Number to Long', () => {
       const options = { timestamp: 5 };
-      const info = DefaultExecutionOptions.create(options, getClientFake());
-      const value = info.getOrGenerateTimestamp();
+      const execOptions = DefaultExecutionOptions.create(options, getClientFake());
+      const value = execOptions.getOrGenerateTimestamp();
       helper.assertInstanceOf(value, types.Long);
       assert.ok(value.equals(options.timestamp));
     });
@@ -157,8 +157,8 @@ describe('DefaultExecutionOptions', () => {
       this.called = 0;
       clientOptions.policies.timestampGeneration.next = () => ++this.called;
 
-      const info = DefaultExecutionOptions.create({}, getClientFake(null, clientOptions));
-      const value = info.getOrGenerateTimestamp();
+      const execOptions = DefaultExecutionOptions.create({}, getClientFake(null, clientOptions));
+      const value = execOptions.getOrGenerateTimestamp();
       helper.assertInstanceOf(value, types.Long);
       assert.ok(value.equals(types.Long.ONE));
       assert.strictEqual(this.called, 1);

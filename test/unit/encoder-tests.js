@@ -751,24 +751,24 @@ describe('encoder', function () {
     });
     it('should not affect Token routing keys', function () {
       const token = new tokenizer.Murmur3Tokenizer().hash('4611686018427387904');
-      const info = getExecOptions({
+      const options = getExecOptions({
         routingIndexes: [1],
         routingKey: token
       });
-      encoder.setRoutingKeyFromUser([1, 'text'], info);
-      assert.strictEqual(info.getRoutingKey(), token);
+      encoder.setRoutingKeyFromUser([1, 'text'], options);
+      assert.strictEqual(options.getRoutingKey(), token);
     });
     it('should not affect TokenRange routing keys', function () {
       const murmur3 = new tokenizer.Murmur3Tokenizer();
       const start = murmur3.hash('-9223372036854775808');
       const end = murmur3.hash('4611686018427387904');
       const range = new token.TokenRange(start, end, murmur3);
-      const info = getExecOptions({
+      const options = getExecOptions({
         routingIndexes: [1],
         routingKey: range
       });
-      encoder.setRoutingKeyFromUser([1, 'text'], info);
-      assert.strictEqual(info.getRoutingKey(), range);
+      encoder.setRoutingKeyFromUser([1, 'text'], options);
+      assert.strictEqual(options.getRoutingKey(), range);
     });
     it('should build routing key based on routingIndexes', function () {
       let info = getExecOptions({
@@ -808,13 +808,13 @@ describe('encoder', function () {
         '0004' + utils.allocBufferFromString('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
     it('should allow null/undefined routingIndexes', function () {
-      const info = getExecOptions({
+      const execOptions = getExecOptions({
         hints: ['int', 'text'],
         routingIndexes: [0, null, 2]
       });
-      encoder.setRoutingKeyFromUser([1], info);
+      encoder.setRoutingKeyFromUser([1], execOptions);
       // It doesn't fail, it bypass routing logic
-      assert.strictEqual(info.getRoutingKey(), undefined);
+      assert.strictEqual(execOptions.getRoutingKey(), undefined);
     });
     it('should allow null or undefined routingKey parts', function () {
       let info = getExecOptions({

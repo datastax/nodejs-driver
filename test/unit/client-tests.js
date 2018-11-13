@@ -204,10 +204,10 @@ describe('Client', function () {
       client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
     });
     it('should fill parameter information for string hints', function (done) {
-      let info;
+      let execOptions;
       const requestHandlerMock = {
         send: function (r, o, client, cb) {
-          info = o;
+          execOptions = o;
           cb();
         }
       };
@@ -219,8 +219,8 @@ describe('Client', function () {
       const queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
       client.execute(query, [0, 1, 2, 3, 4], queryOptions, function (err) {
         assert.ifError(err);
-        assert.ok(info);
-        const hints = info.getHints();
+        assert.ok(execOptions);
+        const hints = execOptions.getHints();
         assert.ok(hints);
         assert.ok(hints[0]);
         assert.strictEqual(hints[0].code, types.dataTypes.int);
@@ -287,16 +287,16 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let info = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        info = o;
+        execOptions = o;
       };
       client.execute('Q', [], { }, utils.noop);
 
-      assert.strictEqual(info.getRetryPolicy(), profile.retry);
-      assert.strictEqual(info.getReadTimeout(), profile.readTimeout);
-      assert.strictEqual(info.getSerialConsistency(), profile.serialConsistency);
-      assert.strictEqual(info.getConsistency(), profile.consistency);
+      assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+      assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+      assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
+      assert.strictEqual(execOptions.getConsistency(), profile.consistency);
     });
     it('should use the provided execution profile options', function () {
       const Client = require('../../lib/client');
@@ -308,9 +308,9 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let info = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        info = o;
+        execOptions = o;
       };
 
       const items = [
@@ -324,10 +324,10 @@ describe('Client', function () {
         client.execute('Q1', [], queryOptions, utils.noop);
 
         // Verify the profile options
-        assert.strictEqual(info.getRetryPolicy(), profile.retry);
-        assert.strictEqual(info.getReadTimeout(), profile.readTimeout);
-        assert.strictEqual(info.getSerialConsistency(), profile.serialConsistency);
-        assert.strictEqual(info.getConsistency(), profile.consistency);
+        assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+        assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+        assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
+        assert.strictEqual(execOptions.getConsistency(), profile.consistency);
       });
     });
     it('should override the provided execution profile options with provided options', function () {

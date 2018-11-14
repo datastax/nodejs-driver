@@ -40,6 +40,7 @@ const helper = {
    * @param {String} [options.keyspace] Name of the keyspace to create.
    * @param {Number} [options.replicationFactor] Keyspace replication factor.
    * @param {Array<String>} [options.queries] Queries to run after client creation.
+   * @param {Boolean} [options.removeClusterAfter=true] Determines whether ccm remove should be called on after().
    */
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
@@ -62,7 +63,10 @@ const helper = {
       }
       after(client.shutdown.bind(client));
     }
-    after(helper.ccmHelper.remove);
+    if (options.removeClusterAfter !== false) {
+      after(helper.ccmHelper.remove);
+    }
+
     return {
       client: client,
       keyspace: keyspace
@@ -203,14 +207,17 @@ const helper = {
     }
     assert.strictEqual(val1, val2);
   },
+
   assertInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(instance instanceof constructor, 'Expected instance of ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+
   assertNotInstanceOf: function (instance, constructor) {
     assert.notEqual(instance, null, 'Expected instance, obtained ' + instance);
     assert.ok(!(instance instanceof constructor), 'Expected instance different than ' + constructor.name + ', actual constructor: ' + instance.constructor.name);
   },
+
   assertContains: function (value, searchValue, caseInsensitive) {
     const originalValue = value;
     const originalSearchValue = searchValue;
@@ -222,6 +229,25 @@ const helper = {
     }
     assert.ok(value.indexOf(searchValue) >= 0, util.format(message, originalValue, originalSearchValue));
   },
+
+  /**
+   * Asserts that the value has some properties defined and the value of those properties
+   * @param {Object} value
+   * @param {Object} expectedProperties
+   * @param {Boolean} [strictEquality=true]
+   */
+  assertProperties: (value, expectedProperties, strictEquality) => {
+    const properties = Object.keys(expectedProperties);
+    if (properties.length === 0) {
+      throw new Error('expectedProperties should be defined as an object');
+    }
+    assert.ok(value, 'value should be defined');
+
+    const assertFn = strictEquality !== false ? assert.strictEqual : assert.equal;
+
+    properties.forEach(key => assertFn(value[key], expectedProperties[key]));
+  },
+
   /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client
@@ -618,27 +644,6 @@ const helper = {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
   },
-  /**
-   * @param {Object} o1
-   * @param {Object} o2
-   * @param {Array.<string>} props
-   * @param {Array.<string>} [except]
-   */
-  compareProps: function (o1, o2, props, except) {
-    assert.ok(o1);
-    if (except) {
-      props = props.slice(0);
-      except.forEach(function (p) {
-        const index = props.indexOf(p);
-        if (index >= 0) {
-          props.splice(index, 1);
-        }
-      });
-    }
-    props.forEach(function comparePropItem(p) {
-      assert.strictEqual(o1[p], o2[p], 'For property ' + p);
-    });
-  },
   getPoolingOptions: function (localLength, remoteLength, heartBeatInterval) {
     const pooling = {
       heartBeatInterval: heartBeatInterval || 0,
@@ -701,11 +706,27 @@ const helper = {
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
       },
+
+      /**
+       * Returns the array of hosts used in the query plan.
+       */
       getFixedQueryPlan: function () {
         return hosts;
       },
+
       getDistance: function () {
         return types.distance.local;
+      },
+
+      /**
+       * Shutdowns the hosts and invoke the optional callback.
+       */
+      shutdown: function (cb) {
+        hosts.forEach(h => h.shutdown(false));
+
+        if (cb) {
+          cb();
+        }
       }
     });
   },
@@ -1396,9 +1417,9 @@ WhiteListPolicy.prototype.init = function (client, hosts, callback) {
   this.childPolicy.init(client, hosts, callback);
 };
 
-WhiteListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+WhiteListPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
   const list = this.list;
-  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (err, iterator) {
+  this.childPolicy.newQueryPlan(keyspace, info, function (err, iterator) {
     callback(err, {
       next: function () {
         let item = iterator.next();
@@ -1468,7 +1489,7 @@ function OrderedLoadBalancingPolicy() {
 
 util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
 
-OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
+OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
   callback(null, utils.arrayIterator(this.hosts.values()));
 };
 

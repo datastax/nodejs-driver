@@ -8,11 +8,14 @@
 const clientOptions = require('./lib/client-options');
 exports.Client = require('./lib/dse-client');
 exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
+exports.ExecutionOptions = require('./lib/execution-options').ExecutionOptions;
 exports.types = require('./lib/types');
 exports.errors = require('./lib/errors');
 exports.policies = require('./lib/policies');
 exports.auth = require('./lib/auth');
+exports.mapping = require('./lib/mapping');
 exports.tracker = require('./lib/tracker');
+exports.metrics = require('./lib/metrics');
 
 const token = require('./lib/token');
 exports.token = {

@@ -16,9 +16,15 @@ const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 const retry = require('../../lib/policies/retry');
 const speculativeExecution = require('../../lib/policies/speculative-execution');
-const ProfileManager = require('../../lib/execution-profile').ProfileManager;
+const execProfileModule = require('../../lib/execution-profile');
+const ProfileManager = execProfileModule.ProfileManager;
+const ExecutionProfile = execProfileModule.ExecutionProfile;
 const OperationState = require('../../lib/operation-state');
 const defaultOptions = require('../../lib/client-options').defaultOptions;
+const execOptionsModule = require('../../lib/execution-options');
+const DefaultExecutionOptions = execOptionsModule.DefaultExecutionOptions;
+const ExecutionOptions = execOptionsModule.ExecutionOptions;
+const ClientMetrics = require('../../lib/metrics/client-metrics');
 
 describe('RequestHandler', function () {
   const queryRequest = new requests.QueryRequest('QUERY1');
@@ -29,7 +35,7 @@ describe('RequestHandler', function () {
       handler.send(function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should callback with error when error can not be retried', function (done) {
@@ -45,7 +51,7 @@ describe('RequestHandler', function () {
         const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy defined in the queryOptions', function (done) {
@@ -64,7 +70,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the provided host if specified in the queryOptions', function (done) {
@@ -87,7 +93,8 @@ describe('RequestHandler', function () {
         const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 0);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
-        done();
+        host.shutdown();
+        lbp.shutdown(done);
       });
     });
     it('should callback with OperationTimedOutError when the retry policy decides', function (done) {
@@ -105,7 +112,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should not use the retry policy if query is non-idempotent on writeTimeout', function (done) {
@@ -124,7 +131,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should not use the retry policy if query is non-idempotent on OperationTimedOutError', function (done) {
@@ -142,7 +149,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy even if query is non-idempotent on readTimeout', function (done) {
@@ -161,7 +168,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.readTimeoutErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy even if query is non-idempotent on unavailable', function (done) {
@@ -180,7 +187,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.unavailableErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     context('when an UNPREPARED response is obtained', function () {
@@ -211,7 +218,7 @@ describe('RequestHandler', function () {
             return preparedCacheData;
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, []);
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -245,7 +252,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id, keyspace: 'ks1'};
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -255,7 +262,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 2);
           assert.strictEqual(hosts[1].prepareCalled, 0);
           assert.strictEqual(hosts[1].sendStreamCalled, 0);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should throw an error if prepared statement was on different keyspace than connection with older protocol version', function (done) {
@@ -275,7 +282,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id, keyspace: 'ks1'};
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, []);
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           helper.assertInstanceOf(err, Error);
@@ -310,7 +317,7 @@ describe('RequestHandler', function () {
             return { query: 'QUERY1', id: id };
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, [], ExecutionOptions.empty());
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -319,7 +326,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].prepareCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 2);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should update prepared cache when rows response received with new result id', function (done) {
@@ -338,7 +345,7 @@ describe('RequestHandler', function () {
             return preparedCacheData;
           }
         }, lbp);
-        const request = new requests.ExecuteRequest('QUERY1', queryId, [], {});
+        const request = new requests.ExecuteRequest('QUERY1', queryId, []);
         const handler = newInstance(request, client, lbp);
         handler.send(function (err, response) {
           assert.ifError(err);
@@ -381,7 +388,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           assert.strictEqual(hosts[2].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should use the query plan to use next hosts as coordinators with zero delay', function (done) {
@@ -409,7 +416,7 @@ describe('RequestHandler', function () {
           const hosts = lbp.getFixedQueryPlan();
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should callback in error when any of execution responses is an error that cant be retried', function (done) {
@@ -438,7 +445,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           assert.strictEqual(hosts[2].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
     });
@@ -451,12 +458,17 @@ describe('RequestHandler', function () {
  * @param {LoadBalancingPolicy} lbp
  * @param {RetryPolicy} [retry]
  * @param {Boolean} [isIdempotent]
+ * @param {Host} host
  * @returns {RequestHandler}
  */
 function newInstance(request, client, lbp, retry, isIdempotent, host) {
   client = client || newClient(null, lbp);
-  const options = { executionProfile: { loadBalancing: lbp }, retry: retry, isIdempotent: isIdempotent, host: host };
-  return new RequestHandler(request, options, client);
+  const options = {
+    executionProfile: new ExecutionProfile('abc', { loadBalancing: lbp }), retry: retry, isIdempotent: isIdempotent, host: host
+  };
+  const execOptions = new DefaultExecutionOptions(options, client);
+
+  return new RequestHandler(request, execOptions, client);
 }
 
 function newClient(metadata, lbp) {
@@ -466,7 +478,8 @@ function newClient(metadata, lbp) {
   return {
     profileManager: new ProfileManager(options),
     options: options,
-    metadata: metadata
+    metadata: metadata,
+    metrics: new ClientMetrics()
   };
 }
 

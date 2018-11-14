@@ -24,7 +24,9 @@ describe('Client', function () {
     const keyspace = helper.getRandomName('ks');
     const table = keyspace + '.' + helper.getRandomName('table');
     const selectAllQuery = 'SELECT * FROM ' + table;
+
     const setupInfo = helper.setup(1, { keyspace: keyspace, queries: [ helper.createTableCql(table) ] });
+
     it('should execute a basic query', function (done) {
       const client = setupInfo.client;
       client.execute(helper.queries.basic, function (err, result) {
@@ -46,6 +48,55 @@ describe('Client', function () {
           assert.equal(result, null);
           done();
         });
+      });
+    });
+    context('with incorrect query parameters', () => {
+      const client = setupInfo.client;
+      const query = `INSERT INTO ${table} (id, bigint_sample) VALUES (?, ?)`;
+
+      it('should callback with error when the amount of parameters does not match', done => {
+        utils.eachSeries(
+          [
+            // 2 parameters are expected
+            [ types.Uuid.random() ],
+            [ types.Uuid.random(), types.Long.ONE, 'abc' ]
+          ],
+          (params, next) => client.execute(query, params, err => {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when the parameter types do not match', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), 'a' ],
+            [ types.Uuid.random(), true ]
+          ],
+          (params, next) => client.execute(query, params, err => {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when parameters can not be encoded', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), {} ],
+            [ types.Uuid.random(), Symbol('abc') ]
+          ],
+          (params, next) => client.execute(query, params, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
       });
     });
     it('should callback with an empty Array instance as rows when not found', function (done) {
@@ -146,8 +197,8 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 70);
             pageState = result.pageState;
-            //ResultSet#pageState is the hex string representation of the meta.pageState
-            assert.strictEqual(pageState, result.meta.pageState.toString('hex'));
+            //ResultSet#pageState is the hex string representation of the rawPageState
+            assert.strictEqual(pageState, result.rawPageState.toString('hex'));
             seriesNext();
           });
         },

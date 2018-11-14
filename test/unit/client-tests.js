@@ -169,9 +169,9 @@ describe('Client', function () {
       const requestHandlerMock = {
         send: function (request, options, client, cb) {
           assert.ok(options);
-          assert.ok(options.routingKey);
+          assert.ok(options.getRoutingKey());
           // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
+          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
           cb();
           done();
         }
@@ -196,9 +196,9 @@ describe('Client', function () {
       const requestHandlerMock = {
         send: function (request, options, client, cb) {
           assert.ok(options);
-          assert.ok(options.routingKey);
+          assert.ok(options.getRoutingKey());
           // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.routingKey.toString('hex'), '00040000000100' + '00040000000200');
+          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
           cb();
           done();
         }
@@ -210,10 +210,10 @@ describe('Client', function () {
       client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
     });
     it('should fill parameter information for string hints', function (done) {
-      let options;
+      let execOptions;
       const requestHandlerMock = {
         send: function (r, o, client, cb) {
-          options = o;
+          execOptions = o;
           cb();
         }
       };
@@ -225,31 +225,32 @@ describe('Client', function () {
       const queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
       client.execute(query, [0, 1, 2, 3, 4], queryOptions, function (err) {
         assert.ifError(err);
-        assert.ok(options);
-        assert.ok(options.hints);
-        assert.ok(options.hints[0]);
-        assert.strictEqual(options.hints[0].code, types.dataTypes.int);
-        assert.ok(options.hints[1]);
-        assert.strictEqual(options.hints[1].code, types.dataTypes.list);
-        assert.ok(options.hints[1].info);
-        assert.strictEqual(options.hints[1].info.code, types.dataTypes.uuid);
-        assert.ok(options.hints[2]);
-        assert.strictEqual(options.hints[2].code, types.dataTypes.map);
-        assert.ok(util.isArray(options.hints[2].info));
-        assert.strictEqual(options.hints[2].info[0].code, types.dataTypes.text);
-        assert.strictEqual(options.hints[2].info[1].code, types.dataTypes.timestamp);
-        assert.ok(options.hints[3]);
-        assert.strictEqual(options.hints[3].code, types.dataTypes.udt);
-        assert.ok(options.hints[3].info);
-        assert.strictEqual(options.hints[3].info.keyspace, 'ks1');
+        assert.ok(execOptions);
+        const hints = execOptions.getHints();
+        assert.ok(hints);
+        assert.ok(hints[0]);
+        assert.strictEqual(hints[0].code, types.dataTypes.int);
+        assert.ok(hints[1]);
+        assert.strictEqual(hints[1].code, types.dataTypes.list);
+        assert.ok(hints[1].info);
+        assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
+        assert.ok(hints[2]);
+        assert.strictEqual(hints[2].code, types.dataTypes.map);
+        assert.ok(util.isArray(hints[2].info));
+        assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
+        assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
+        assert.ok(hints[3]);
+        assert.strictEqual(hints[3].code, types.dataTypes.udt);
+        assert.ok(hints[3].info);
+        assert.strictEqual(hints[3].info.keyspace, 'ks1');
         //nested collections
-        assert.ok(options.hints[4]);
-        assert.strictEqual(options.hints[4].code, types.dataTypes.map);
-        assert.ok(util.isArray(options.hints[4].info));
-        assert.ok(options.hints[4].info[0]);
-        assert.strictEqual(options.hints[4].info[0].code, types.dataTypes.uuid);
-        assert.strictEqual(options.hints[4].info[1].code, types.dataTypes.set);
-        assert.strictEqual(options.hints[4].info[1].info.code, types.dataTypes.text);
+        assert.ok(hints[4]);
+        assert.strictEqual(hints[4].code, types.dataTypes.map);
+        assert.ok(util.isArray(hints[4].info));
+        assert.ok(hints[4].info[0]);
+        assert.strictEqual(hints[4].info[0].code, types.dataTypes.uuid);
+        assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
+        assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
         done();
       });
     });
@@ -282,19 +283,6 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should pass optional parameters as null when not defined', function () {
-      const client = newConnectedInstance();
-      let params = null;
-      client._innerExecute = function (q, p, o, c) {
-        params = [q, p, o, c];
-      };
-      client.execute('Q1', [], utils.noop);
-      assert.deepEqual(params, ['Q1', [], clientOptions.createQueryOptions(client, null), utils.noop]);
-      client.execute('Q2', utils.noop);
-      assert.deepEqual(params, ['Q2', null, clientOptions.createQueryOptions(client, null), utils.noop]);
-      client.execute('Q3', null, { fetchSize: 20 }, utils.noop);
-      assert.deepEqual(params, ['Q3', null, clientOptions.createQueryOptions(client, { fetchSize: 20 }), utils.noop]);
-    });
     it('should use the default execution profile options', function () {
       const Client = require('../../lib/client');
       const profile = new ExecutionProfile('default', {
@@ -305,12 +293,16 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let queryOptions = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        queryOptions = o;
+        execOptions = o;
       };
       client.execute('Q', [], { }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name', 'graphOptions']);
+
+      assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+      assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+      assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
+      assert.strictEqual(execOptions.getConsistency(), profile.consistency);
     });
     it('should use the provided execution profile options', function () {
       const Client = require('../../lib/client');
@@ -322,17 +314,27 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let queryOptions = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        queryOptions = o;
+        execOptions = o;
       };
-      // profile by name
-      client.execute('Q1', [], { executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile), ['loadBalancing', 'name', 'graphOptions']);
-      const previousQueryOptions = queryOptions;
-      // profile by instance
-      client.execute('Q1', [], { executionProfile: profile }, utils.noop);
-      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions), ['executionProfile']);
+
+      const items = [
+        // profile by name
+        { executionProfile: 'profile1' },
+        // profile by instance
+        { executionProfile: profile }
+      ];
+
+      items.forEach(queryOptions => {
+        client.execute('Q1', [], queryOptions, utils.noop);
+
+        // Verify the profile options
+        assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+        assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+        assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
+        assert.strictEqual(execOptions.getConsistency(), profile.consistency);
+      });
     });
     it('should override the provided execution profile options with provided options', function () {
       const Client = require('../../lib/client');
@@ -344,26 +346,35 @@ describe('Client', function () {
       });
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
-      let queryOptions = null;
+      let execOptions = null;
       client._innerExecute = function (q, p, o) {
-        queryOptions = o;
+        execOptions = o;
       };
-      // profile by name
-      client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: 'profile1' }, utils.noop);
-      helper.compareProps(queryOptions, profile, Object.keys(profile),
-        ['consistency', 'loadBalancing', 'name', 'graphOptions']);
-      assert.strictEqual(queryOptions.consistency, types.consistencies.all);
-      const previousQueryOptions = queryOptions;
-      // profile by instance
-      client.execute('Q1', [], { consistency: types.consistencies.all, executionProfile: profile }, utils.noop);
-      helper.compareProps(queryOptions, previousQueryOptions, Object.keys(queryOptions),
-        ['executionProfile', 'graphOptions']);
+
+      const items = [
+        // profile by name
+        { consistency: types.consistencies.all, executionProfile: 'profile1' },
+        // profile by instance
+        { consistency: types.consistencies.all, executionProfile: profile }
+      ];
+
+      items.forEach(queryOptions => {
+        client.execute('Q1', [], queryOptions, utils.noop);
+
+        // Verify the profile options
+        assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
+        assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
+        assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
+
+        // Verify the overridden option
+        assert.strictEqual(execOptions.getConsistency(), types.consistencies.all);
+      });
     });
     it('should set the timestamp', function (done) {
-      let actualOptions;
+      let execOptions;
       const handlerMock = {
         send: function (r, o, client, cb) {
-          actualOptions = o;
+          execOptions = o;
           cb(null, {});
         }
       };
@@ -372,23 +383,24 @@ describe('Client', function () {
         client.controlConnection.protocolVersion = version;
         client.execute('Q', function (err) {
           assert.ifError(err);
-          assert.ok(actualOptions);
+          assert.ok(execOptions);
+          const timestamp = execOptions.getOrGenerateTimestamp();
           if (version > 2) {
-            assert.ok(actualOptions.timestamp);
-            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+            assert.ok(timestamp);
+            assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
           }
           else {
-            assert.strictEqual(actualOptions.timestamp, undefined);
+            assert.strictEqual(timestamp, null);
           }
           next();
         });
       }, done);
     });
     it('should not set the timestamp when timestampGeneration is null', function (done) {
-      let actualOptions;
+      let execOptions;
       const handlerMock = {
         send: function (r, o, client, cb) {
-          actualOptions = o;
+          execOptions = o;
           cb(null, {});
         }
       };
@@ -396,8 +408,8 @@ describe('Client', function () {
       client.controlConnection.protocolVersion = 4;
       client.execute('Q', function (err) {
         assert.ifError(err);
-        assert.ok(actualOptions);
-        assert.strictEqual(actualOptions.timestamp, undefined);
+        assert.ok(execOptions);
+        assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
         done();
       });
     });
@@ -424,28 +436,6 @@ describe('Client', function () {
       });
     });
   });
-
-  describe('#eachRow()', function () {
-    it('should pass optional parameters as null when not defined', function () {
-      const createQueryOptions = clientOptions.createQueryOptions;
-      const client = newConnectedInstance();
-      let params = null;
-      client._innerExecute = function (q, p, o, c) {
-        params = [q, p, o, c];
-      };
-      client.eachRow('Q 2p', utils.noop);
-      assert.deepEqual(params.slice(0, 3), ['Q 2p', null, createQueryOptions(client, null, utils.noop)]);
-      client.eachRow('Q 3p', [], utils.noop);
-      assert.deepEqual(params.slice(0, 3), ['Q 3p', [], createQueryOptions(client, null, utils.noop)]);
-      client.eachRow('Q 4p', [1], utils.noop, helper.callbackNoop);
-      assert.deepEqual(params.slice(0, 3), ['Q 4p', [1], createQueryOptions(client, null, utils.noop)]);
-      client.eachRow('Q 4p 2', [2], { fetchSize: 1}, utils.noop);
-      assert.deepEqual(params.slice(0, 3), ['Q 4p 2', [2], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
-      client.eachRow('Q 5p', [3], { fetchSize: 1}, utils.noop, helper.callbackNoop);
-      assert.deepEqual(params.slice(0, 3), ['Q 5p', [3], createQueryOptions(client, { fetchSize: 1 }, utils.noop)]);
-    });
-  });
-
   describe('#batch()', function () {
     const Client = rewire('../../lib/client.js');
     const requestHandlerMock = {
@@ -471,10 +461,10 @@ describe('Client', function () {
       });
     });
     it('should set the timestamp', function (done) {
-      let actualOptions;
+      let execOptions;
       const handlerMock = {
-        send: function (r, o, client, cb) {
-          actualOptions = o;
+        send: function (r, i, client, cb) {
+          execOptions = i;
           cb(null, {});
         }
       };
@@ -483,13 +473,14 @@ describe('Client', function () {
         client.controlConnection.protocolVersion = version;
         client.batch(['q1', 'q2', 'q3'], function (err) {
           assert.ifError(err);
-          assert.ok(actualOptions);
+          assert.ok(execOptions);
+          const timestamp = execOptions.getOrGenerateTimestamp();
           if (version > 2) {
-            assert.ok(actualOptions.timestamp);
-            assert.ok((actualOptions.timestamp instanceof types.Long) || typeof actualOptions.timestamp === 'number');
+            assert.ok(timestamp);
+            assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
           }
           else {
-            assert.strictEqual(actualOptions.timestamp, undefined);
+            assert.strictEqual(timestamp, null);
           }
           next();
         });

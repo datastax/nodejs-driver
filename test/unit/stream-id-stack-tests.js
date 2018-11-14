@@ -72,18 +72,38 @@ describe('StreamIdStack', function () {
     const releaseDelay = 100;
     const stack = newInstance(3, releaseDelay);
     //6 groups,
-    pop(stack, 128 * 5 + 2);
-    //return just 1 to the last group
+    const length = 128 * 5 + 2;
+
+    // Verify that the events are emitted
+    let inFlight = 0;
+    stack.on('inFlightIncrease', () => inFlight++);
+    stack.on('inFlightDecrease', n => inFlight -= n);
+
+    pop(stack, length);
+
+    assert.strictEqual(stack.inUse, length);
+    assert.strictEqual(inFlight, length);
+
+    // return just 1 to the last group
     stack.push(128 * 5);
     assert.strictEqual(stack.groups.length, 6);
 
     //the last group is completed and can be released
     stack.push(128 * 5 + 1);
+
+    // push 10 more
     push(stack, 0, 10);
+
+    assert.strictEqual(stack.inUse, inFlight);
+
     assert.strictEqual(stack.groups.length, 6);
     setTimeout(function () {
       //there should be 5 groups now
       assert.strictEqual(stack.groups.length, 5);
+
+      assert.strictEqual(stack.inUse, length - 12);
+      assert.strictEqual(inFlight, length - 12);
+
       stack.clear();
       done();
     }, releaseDelay + osPrecision);
@@ -91,6 +111,11 @@ describe('StreamIdStack', function () {
   it('should not release the current group', function (done) {
     const releaseDelay = 100;
     const stack = newInstance(3, releaseDelay);
+
+    let inFlight = 0;
+    stack.on('inFlightIncrease', () => inFlight++);
+    stack.on('inFlightDecrease', n => inFlight -= n);
+
     //6 groups,
     pop(stack, 128 * 5 + 2);
     //return just 1 to the last group
@@ -102,6 +127,7 @@ describe('StreamIdStack', function () {
     setTimeout(function () {
       //there should be 5 groups now
       assert.strictEqual(stack.groups.length, 6);
+      assert.strictEqual(stack.inUse, inFlight);
       stack.clear();
       done();
     }, releaseDelay + osPrecision);

@@ -14,6 +14,7 @@ Enterprise.
 - [Geospatial types support](geotypes)
 - [Graph support](graph-support)
 - [Logging](logging)
+- [Mapper](mapper)
 - [Cluster and schema metadata](metadata)
 - [Native protocol](native-protocol)
 - [Paging](paging)

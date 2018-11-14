@@ -11,11 +11,13 @@ const requests = require('../../lib/requests');
 const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
 const utils = require('../../lib/utils');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const QueryRequest = requests.QueryRequest;
 const ExecuteRequest = requests.ExecuteRequest;
 const BatchRequest = requests.BatchRequest;
 const StartupRequest = requests.StartupRequest;
 const PrepareRequest = requests.PrepareRequest;
+
 const encoder = new Encoder(types.protocolVersion.maxSupported, {});
 const dseV1Encoder = new Encoder(types.protocolVersion.dseV1, {});
 
@@ -26,7 +28,7 @@ describe('QueryRequest', function () {
   });
   describe('#write()', function () {
     it('should include keyspace from options', function () {
-      const request = new QueryRequest('Q1', [ ], { keyspace: 'ks1' } );
+      const request = getQueryRequest({ keyspace: 'ks1' }, []);
       const expectedBuffer = utils.allocBufferFromArray([
         types.protocolVersion.maxSupported,
         0, 0, 0, 0x7, // flags + stream id + opcode (0x7 = query)
@@ -38,7 +40,7 @@ describe('QueryRequest', function () {
       assert.deepEqual(request.write(encoder, 0), expectedBuffer);
     });
     it('should exclude keyspace from options for older protocols', function () {
-      const request = new QueryRequest('Q1', [ ], { keyspace: 'ks1' } );
+      const request = getQueryRequest({ keyspace: 'ks1' }, []);
       const expectedBuffer = utils.allocBufferFromArray([
         types.protocolVersion.dseV1,
         0, 0, 0, 0x7, // flags + stream id + opcode (0x7 = query)
@@ -61,7 +63,7 @@ describe('ExecuteRequest', function () {
   describe('#write()', function() {
     it('should not include keyspace from options', function () {
       const meta = { resultId: utils.allocBufferFromString('R1'), columns: [ { } ] };
-      const request = new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [], {keyspace: 'myks'}, meta);
+      const request = getExecuteRequest({keyspace: 'myks'}, meta, []);
       const expectedBuffer = utils.allocBufferFromArray([
         types.protocolVersion.maxSupported,
         0, 0, 0, 0xA, // flags + stream id + opcode (0xA = execute)
@@ -115,10 +117,7 @@ describe('BatchRequest', function () {
     testClone(request);
   });
   it('should include keyspace from options', function () {
-    const request = new BatchRequest([
-      { query: 'Q1', params: [] },
-      { query: 'Q2', params: [] }
-    ], { logged: false, consistency: 1, keyspace: 'ks1' });
+    const request = getBatchRequest({ logged: false, consistency: 1, keyspace: 'ks1' });
     const expectedBuffer = utils.allocBufferFromArray([
       types.protocolVersion.maxSupported,
       0, 0, 0, 0xd, // flags + stream id + opcode (0x7 = batch)
@@ -133,10 +132,7 @@ describe('BatchRequest', function () {
   });
   describe('#write()', function () {
     it('should exclude keyspace from options for older protocols', function () {
-      const request = new BatchRequest([
-        { query: 'Q1', params: [] },
-        { query: 'Q2', params: [] }
-      ], { logged: false, consistency: 1, keyspace: 'ks1' });
+      const request = getBatchRequest({ logged: false, consistency: 1, keyspace: 'ks1' });
       const expectedBuffer = utils.allocBufferFromArray([
         types.protocolVersion.dseV1,
         0, 0, 0, 0xd, // flags + stream id + opcode (0x7 = batch)
@@ -241,23 +237,37 @@ function testRequestLength(requestGetter) {
   });
 }
 
-function getQueryRequest() {
-  return new QueryRequest('Q1', [ 1, 2 ], { consistency: 1, hints: [] });
+function getQueryRequest(options, params) {
+  options = options || {};
+  const execOptions = ExecutionOptions.empty();
+  execOptions.getKeyspace = () => options.keyspace;
+
+  return new QueryRequest('Q1', params || [ 1, 2 ], execOptions);
 }
 
-function getBatchRequest() {
+function getBatchRequest(options) {
+  options = options || {};
+  const execOptions = ExecutionOptions.empty();
+  execOptions.getKeyspace = () => options.keyspace;
+  execOptions.isBatchLogged = () => options.logged;
+  execOptions.getConsistency = () => options.consistency;
+
   return new BatchRequest(
     [
       { query: 'Q1', params: [] },
       { query: 'Q2', params: [] }
-    ], { logged: false, consistency: 1 });
+    ], execOptions);
 }
 
-function getExecuteRequest() {
-  const meta = {
+function getExecuteRequest(options, meta, params) {
+  meta = meta || {
     resultId: utils.allocBufferFromString('R1'),
     columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]
   };
 
-  return new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
+  options = options || {};
+  const execOptions = ExecutionOptions.empty();
+  execOptions.getKeyspace = () => options && options.keyspace;
+
+  return new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), params || [ 1, 2], execOptions, meta);
 }

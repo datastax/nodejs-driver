@@ -16,6 +16,8 @@ const policies = require('../../../lib/policies');
 
 const Client = require('../../../lib/client');
 
+const healthResponseCountInterval = 200;
+
 describe('pool', function () {
 
   this.timeout(20000);
@@ -39,7 +41,8 @@ describe('pool', function () {
         coreConnectionsPerHost: {
           [types.distance.local]: 2
         },
-        maxRequestsPerConnection: 50
+        maxRequestsPerConnection: 50,
+        heartBeatInterval: 0
       }
     }));
     beforeEach(done => cluster.prime({
@@ -99,6 +102,19 @@ describe('pool', function () {
         .then(() => validateStateOfPool(client));
     });
 
+    it('should increase and decrease response dequeued counter', function() {
+      return client.connect()
+        .then(() => Promise.all(new Array(150).fill(null).map(() => client.execute('SELECT * FROM system.local'))))
+        .then(() => {
+          assert.ok(client.hosts.values().filter(h => h.getResponseCount() > 1).length > 0);
+        })
+        .then(() => new Promise(resolve => setTimeout(resolve, healthResponseCountInterval * 2 + 20)))
+        .then(() => {
+          // After some time passed without any activity, the counter values should be 0.
+          assert.strictEqual(client.hosts.values().filter(h => h.getResponseCount() !== 0).length, 0);
+        });
+    });
+
     it('should retry on the same host when defined by the retry policy', () => {
       let retryCount = 0;
       let firstHost;
@@ -146,7 +162,7 @@ describe('pool', function () {
       retryPolicy.onRequestError = (info, c, err) => {
         helper.assertInstanceOf(err, errors.OperationTimedOutError);
         assert.notEqual(firstHost, undefined);
-        assert.strictEqual(err.host, firstHost);
+        assert.strictEqual(err.host, firstHost.address);
         retryPolicyCalled++;
 
         // Use a safety mechanism to avoid retrying forever, in case the assertions fail
@@ -173,7 +189,7 @@ describe('pool', function () {
 
       return client.connect()
         .then(() => {
-          firstHost = client.hosts.values()[0].address;
+          firstHost = client.hosts.values()[0];
 
           // Create 99 in-flight requests
           promises.push.apply(promises, new Array(99).fill(0).map(() =>
@@ -186,8 +202,17 @@ describe('pool', function () {
         })
         // The query will be retried on the next host
         .then(rs => assert.strictEqual(rs.info.queriedHost, client.hosts.values()[1].address))
+        .then(() => {
+          assert.strictEqual(firstHost.getInFlight(), 100);
+          assert.strictEqual(client.getState().getInFlightQueries(firstHost), 100);
+        })
         .then(() => Promise.all(promises))
-        .then(() => assert.strictEqual(retryPolicyCalled, 1))
+        .then(() => new Promise(resolve => setImmediate(resolve)))
+        .then(() => {
+          assert.strictEqual(retryPolicyCalled, 1);
+          assert.strictEqual(firstHost.getInFlight(), 0);
+          assert.strictEqual(client.getState().getInFlightQueries(firstHost), 0);
+        })
         .then(() => client.shutdown());
     });
   });

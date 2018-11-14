@@ -1,7 +1,7 @@
 "use strict";
 const dse = require('dse-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Creates a table with a user-defined type, inserts a row and selects a row.

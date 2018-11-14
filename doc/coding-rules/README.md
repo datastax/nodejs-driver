@@ -63,7 +63,7 @@ const queries = [
    { query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
       params: ['hendrix', 'Changed email', new Date()]}
 ];
-const queryOptions = { prepare: true, consistency: cassandra.types.consistencies.quorum };
+const queryOptions = { prepare: true, consistency: dse.types.consistencies.quorum };
 client.batch(queries, queryOptions, function(err) {
    assert.ifError(err);
    console.log('Data updated on cluster');

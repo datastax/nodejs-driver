@@ -164,7 +164,7 @@ A default and base retry policy are included.
 
 ### Query idempotence
 
-Note that as of version 4.0, the configured `RetryPolicy` is not engaged when a query errors with a
+Note that as of version 2.0, the configured `RetryPolicy` is not engaged when a query errors with a
 `WriteTimeoutException` or request error and the query was not [idempotent][idempotent].
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator

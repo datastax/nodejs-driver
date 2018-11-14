@@ -50,7 +50,7 @@ const result = await videoMapper.find({ userId, addedDate: q.gt(myDate) });
 `q.gt()` represents the "greater than" operator (`>`), you can access all operators in `q` under the `mapping` module
  
 ```javascript
-const q = cassandra.mapping.q;
+const q = dse.mapping.q;
 ```
 
 #### Get objects using multiple conditions on the same field

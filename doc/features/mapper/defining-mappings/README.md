@@ -6,7 +6,7 @@ In general, you should specify the table name(s) and the naming convention you a
  application models.
 
 ```javascript
-const UnderscoreCqlToCamelCaseMappings = cassandra.mappings.UnderscoreCqlToCamelCaseMappings;
+const UnderscoreCqlToCamelCaseMappings = dse.mappings.UnderscoreCqlToCamelCaseMappings;
 
 const mappingOptions = {
   models: {

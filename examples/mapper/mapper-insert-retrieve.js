@@ -1,11 +1,11 @@
 "use strict";
-const cassandra = require('cassandra-driver');
-const Uuid = cassandra.types.Uuid;
-const UnderscoreCqlToCamelCaseMappings = cassandra.mapping.UnderscoreCqlToCamelCaseMappings;
+const dse = require('dse-driver');
+const Uuid = dse.types.Uuid;
+const UnderscoreCqlToCamelCaseMappings = dse.mapping.UnderscoreCqlToCamelCaseMappings;
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1']});
 
-const mapper = new cassandra.mapping.Mapper(client, { models: {
+const mapper = new dse.mapping.Mapper(client, { models: {
   'Video': {
     tables: ['videos', 'user_videos', 'latest_videos'],
     keyspace: 'examples',

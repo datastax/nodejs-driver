@@ -11,6 +11,7 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [CQL data types to JavaScript types](datatypes)
 - [Execution Profiles](execution-profiles)
 - [Logging](logging)
+- [Mapper](mapper)
 - [Cluster and schema metadata](metadata)
 - [Native protocol](native-protocol)
 - [Fetching large result sets](paging)

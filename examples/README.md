@@ -9,6 +9,8 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
   - [Connect](basic/basic-connect.js)
   - [Execute with promise-based API](basic/basic-execute.js)
   - [Execute using callbacks](basic/basic-execute-flow.js)
+- Mapper
+  - [Insert and retrieve using the Mapper](mapper/mapper-insert-retrieve.js)
 - Metadata
   - [Get hosts information](metadata/metadata-hosts.js)
   - [Get keyspaces information](metadata/metadata-keyspaces.js)
@@ -22,7 +24,7 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
 
 Each example is generally structured in a way where the `Client` is connected at the beginning and shutdown at the end.
 While this is suitable for example single script purposes, you should reuse a single `Client` instance and
-only call client.shutdown() once in your application's lifetime.
+only call `client.shutdown()` when exiting your application.
 
 If you have any questions regarding these examples, feel free to post your questions in the [mailing list][mailing-list].
 

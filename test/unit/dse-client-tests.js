@@ -7,7 +7,6 @@
 'use strict';
 const assert = require('assert');
 const Client = require('../../lib/dse-client');
-const clientOptions = require('../../lib/client-options');
 const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 const helper = require('../test-helper');
 const types = require('../../lib/types');
@@ -16,6 +15,8 @@ const utils = require('../../lib/utils');
 const policies = require('../../lib/policies');
 const errors = require('../../lib/errors');
 const DseLoadBalancingPolicy = policies.loadBalancing.DseLoadBalancingPolicy;
+const GraphExecutionOptions = require('../../lib/graph/options').GraphExecutionOptions;
+const proxyExecuteKey = require('../../lib/execution-options').proxyExecuteKey;
 
 describe('Client', function () {
   describe('constructor', function () {
@@ -55,7 +56,7 @@ describe('Client', function () {
     it('should allow optional parameters', function () {
       const client = new Client({ contactPoints: ['host1']});
       let parameters = {};
-      client.execute = function (query, params, options, callback) {
+      client._innerExecute = function (query, params, options, callback) {
         parameters = {
           query: query,
           params: params,
@@ -63,32 +64,35 @@ describe('Client', function () {
           callback: callback
         };
       };
+
       client.executeGraph('QUERY1', { a: 1 }, helper.noop);
       assert.strictEqual(parameters.query, 'QUERY1');
       assert.deepEqual(parameters.params, ['{"a":1}']);
       assert.ok(parameters.options);
-      assert.ok(parameters.options.customPayload);
+      assert.ok(parameters.options.getCustomPayload());
       assert.strictEqual(typeof parameters.callback, 'function');
+
       client.executeGraph('QUERY2', helper.noop);
       assert.strictEqual(parameters.query, 'QUERY2');
       assert.strictEqual(parameters.params, null);
       assert.ok(parameters.options);
-      assert.ok(parameters.options.customPayload);
+      assert.ok(parameters.options.getCustomPayload());
       assert.strictEqual(typeof parameters.callback, 'function');
     });
     it('should not allow a namespace of type different than string', function () {
       const client = new Client({ contactPoints: ['host1']});
-      client.execute = helper.noop;
+      client._innerExecute = helper.noop;
       assert.doesNotThrow(function () {
-        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.noop);
+        client.executeGraph('Q1', {}, { graphName: 'abc' }, helper.throwop);
       });
       assert.throws(function () {
-        client.executeGraph('Q1', {}, { graphName: 123 }, helper.noop);
+        client.executeGraph('Q1', {}, { graphName: 123 }, helper.throwop);
       }, TypeError);
     });
+
     it('should not allow a array query parameters', function () {
       const client = new Client({ contactPoints: ['host1']});
-      client.execute = helper.noop;
+      client._innerExecute = helper.noop;
       client.executeGraph('Q1', [], { }, function (err) {
         helper.assertInstanceOf(err, TypeError);
         assert.strictEqual(err.message, 'Parameters must be a Object instance as an associative array');
@@ -96,10 +100,10 @@ describe('Client', function () {
     });
     it('should execute with query and callback parameters', function (done) {
       const client = new Client({ contactPoints: ['host1']});
-      client.execute = function (query, params, options, callback) {
+      client._innerExecute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q2');
         assert.strictEqual(params, null);
-        assert.strictEqual(typeof options, 'object');
+        helper.assertInstanceOf(options, GraphExecutionOptions);
         assert.strictEqual(typeof callback, 'function');
         done();
       };
@@ -107,10 +111,10 @@ describe('Client', function () {
     });
     it('should execute with query, parameters and callback parameters', function (done) {
       const client = new Client({ contactPoints: ['host1']});
-      client.execute = function (query, params, options, callback) {
+      client._innerExecute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q3');
         assert.deepEqual(params, [JSON.stringify({ a: 1})]);
-        assert.strictEqual(typeof options, 'object');
+        helper.assertInstanceOf(options, GraphExecutionOptions);
         assert.strictEqual(typeof callback, 'function');
         done();
       };
@@ -119,11 +123,12 @@ describe('Client', function () {
     it('should execute with all parameters defined', function (done) {
       const client = new Client({ contactPoints: ['host1']});
       const optionsParameter = { k: { } };
-      client.execute = function (query, params, options, callback) {
+
+      client._innerExecute = function (query, params, execOptions, callback) {
         assert.strictEqual(query, 'Q4');
         assert.deepEqual(params, [JSON.stringify({ a: 2})]);
-        assert.notStrictEqual(optionsParameter, options);
-        assert.strictEqual(optionsParameter.k, options.k);
+        helper.assertInstanceOf(execOptions, GraphExecutionOptions);
+        assert.strictEqual(optionsParameter.k, execOptions.getRawQueryOptions().k);
         assert.strictEqual(typeof callback, 'function');
         done();
       };
@@ -132,7 +137,7 @@ describe('Client', function () {
     it('should set the same default options when not set', function (done) {
       const client = new Client({ contactPoints: ['host1']});
       const optionsArray = [];
-      client.execute = function (query, params, options, callback) {
+      client._innerExecute = function (query, params, options, callback) {
         assert.strictEqual(query, 'Q5');
         assert.deepEqual(params, [JSON.stringify({ z: 3})]);
         optionsArray.push(options);
@@ -141,8 +146,8 @@ describe('Client', function () {
       client.executeGraph('Q5', { z: 3 }, helper.noop);
       client.executeGraph('Q5', { z: 3 }, helper.noop);
       assert.strictEqual(optionsArray.length, 2);
-      assert.strictEqual(optionsArray[0], optionsArray[1]);
-      assert.ok(optionsArray[0].customPayload);
+      assert.strictEqual(optionsArray[0].getRawQueryOptions(), optionsArray[1].getRawQueryOptions());
+      assert.ok(optionsArray[0].getCustomPayload());
       done();
     });
     it('should set the default payload for the executions', function () {
@@ -156,19 +161,19 @@ describe('Client', function () {
       });
       const optionsParameter = { anotherOption: { k: 'v'}};
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
       assert.notStrictEqual(optionsParameter, actualOptions);
       //shallow copy the properties
-      assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'a1');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name1');
-      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_ONE');
-      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'a1');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'name1');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'LOCAL_ONE');
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-write-consistency'], undefined);
     });
     it('should set the default readTimeout in the payload', function () {
       //noinspection JSCheckFunctionSignatures
@@ -180,42 +185,45 @@ describe('Client', function () {
         }
       });
       let actualOptions = null;
-      client.execute = function (q, p, options) {
+      client._innerExecute = function (q, p, options) {
         actualOptions = options;
       };  
       //with options defined
       client.executeGraph('Q10', { c: 0}, { }, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
-      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
-      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'TWO');
-      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-read-consistency'], undefined);
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'TWO');
+      assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
+
       //with payload defined
       client.executeGraph('Q10', { c: 0}, { customPayload: { 'z': utils.allocBufferFromString('zValue')} }, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
-      helper.assertBufferString(actualOptions.customPayload['z'], 'zValue');
-      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
+      helper.assertBufferString(actualOptions.getCustomPayload()['z'], 'zValue');
+      assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
+
       //with timeout defined
       client.executeGraph('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
-      assert.strictEqual(actualOptions.customPayload['z'], undefined);
-      assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(9999)));
-      assert.strictEqual(actualOptions.readTimeout, 9999);
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
+      assert.strictEqual(actualOptions.getCustomPayload()['z'], undefined);
+      assert.deepEqual(actualOptions.getCustomPayload()['request-timeout'], Long.toBuffer(Long.fromNumber(9999)));
+      assert.strictEqual(actualOptions.getReadTimeout(), 9999);
+
       //without options defined
       client.executeGraph('Q10', { c: 0}, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'x');
-      assert.strictEqual(typeof actualOptions.customPayload['request-timeout'], 'undefined');
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
+      assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
     });
     it('should set the read and write consistency levels', function () {
       const client = new Client({
@@ -225,26 +233,27 @@ describe('Client', function () {
         }
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q5', { c: 0}, helper.throwop);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'g');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name10');
-      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
-      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'g');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'name10');
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-read-consistency'], undefined);
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-write-consistency'], undefined);
       let optionsParameter = {
         graphReadConsistency: types.consistencies.localQuorum
       };
       client.executeGraph('Q5', { c: 0}, optionsParameter, helper.throwop);
       assert.notStrictEqual(optionsParameter, actualOptions);
+
       //shallow copy the properties
-      assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'LOCAL_QUORUM');
-      assert.strictEqual(actualOptions.customPayload['graph-write-consistency'], undefined);
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'LOCAL_QUORUM');
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-write-consistency'], undefined);
       optionsParameter = {
         graphWriteConsistency: types.consistencies.quorum
       };
@@ -252,28 +261,27 @@ describe('Client', function () {
       assert.notStrictEqual(optionsParameter, actualOptions);
       //shallow copy the properties
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      assert.strictEqual(actualOptions.customPayload['graph-read-consistency'], undefined);
-      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-read-consistency'], undefined);
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'QUORUM');
     });
     it('should reuse the default payload for the executions', function (done) {
       const client = new Client({ contactPoints: ['host1'], graphOptions: { name: 'name1' }});
       const optionsParameter = { anotherOption: { k: 'v2'}};
       const actualOptions = [];
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         //do not use the actual object
         assert.notStrictEqual(optionsParameter, options);
         //shallow copy the properties
-        assert.strictEqual(optionsParameter.anotherOption, options.anotherOption);
-        assert.ok(options.customPayload);
+        assert.strictEqual(optionsParameter.anotherOption, options.getRawQueryOptions().anotherOption);
+        assert.ok(options.getCustomPayload());
         actualOptions.push(options);
       };
       client.executeGraph('Q5', { a: 1}, optionsParameter, helper.throwop);
       client.executeGraph('Q6', { b: 1}, optionsParameter, helper.throwop);
       assert.strictEqual(actualOptions.length, 2);
-      assert.notStrictEqual(actualOptions[0], actualOptions[1]);
-      assert.strictEqual(actualOptions[0].customPayload, actualOptions[1].customPayload);
+      assert.strictEqual(actualOptions[0].getCustomPayload(), actualOptions[1].getCustomPayload());
       done();
     });
     it('should set the payload with the options provided', function (done) {
@@ -283,15 +291,15 @@ describe('Client', function () {
         name: 'namespace2'
       }});
       const optionsParameter = { anotherOption: { k: 'v3'}};
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         //do not use the actual object
         assert.notStrictEqual(optionsParameter, options);
         //shallow copy the properties
-        assert.strictEqual(optionsParameter.anotherOption, options.anotherOption);
-        assert.ok(options.customPayload);
-        assert.deepEqual(options.customPayload['graph-language'], utils.allocBufferFromString('groovy2'));
-        assert.deepEqual(options.customPayload['graph-source'], utils.allocBufferFromString('another-source'));
-        assert.deepEqual(options.customPayload['graph-name'], utils.allocBufferFromString('namespace2'));
+        assert.strictEqual(optionsParameter.anotherOption, options.getRawQueryOptions().anotherOption);
+        assert.ok(options.getCustomPayload());
+        assert.deepEqual(options.getCustomPayload()['graph-language'], utils.allocBufferFromString('groovy2'));
+        assert.deepEqual(options.getCustomPayload()['graph-source'], utils.allocBufferFromString('another-source'));
+        assert.deepEqual(options.getCustomPayload()['graph-name'], utils.allocBufferFromString('namespace2'));
         done();
       };
       client.executeGraph('Q5', { 'x': 1 }, optionsParameter, helper.throwop);
@@ -301,20 +309,20 @@ describe('Client', function () {
         name: 'name2'
       }});
       let actualOptions = null;
-      client.execute = function (q, p, options) {
+      client._innerExecute = function (q, p, options) {
         actualOptions = options;
       };
       client.executeGraph('Q5', { 'x': 1 }, null, helper.throwop);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name2');
-      assert.strictEqual(actualOptions.customPayload[clientOptions.proxyExecuteKey], undefined);
-      const previousPayload = actualOptions.customPayload;
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'name2');
+      assert.strictEqual(actualOptions.getCustomPayload()[proxyExecuteKey], undefined);
+      const previousPayload = actualOptions.getCustomPayload();
       client.executeGraph('Q5', { 'x': 1 }, { executeAs: 'alice' }, helper.throwop);
-      assert.notStrictEqual(previousPayload, actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'gremlin-groovy');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'name2');
-      helper.assertBufferString(actualOptions.customPayload[clientOptions.proxyExecuteKey], 'alice');
+      assert.notStrictEqual(previousPayload, actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'name2');
+      helper.assertBufferString(actualOptions.getCustomPayload()[proxyExecuteKey], 'alice');
     });
     it('should set the options according to default profile', function () {
       const client = new Client({
@@ -334,17 +342,17 @@ describe('Client', function () {
         ]
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', { 'x': 1 }, null, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-language'], 'groovy1');
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'source1');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'nameZ');
-      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'TWO');
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'groovy1');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'source1');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'nameZ');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'TWO');
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
     });
     it('should set the options according to specified profile', function () {
       const client = new Client({
@@ -372,28 +380,28 @@ describe('Client', function () {
       });
       const optionsParameter = { executionProfile: 'graph-olap' };
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwop);
       assert.ok(actualOptions);
-      assert.ok(actualOptions.customPayload);
-      helper.assertBufferString(actualOptions.customPayload['graph-source'], 'aaa');
-      helper.assertBufferString(actualOptions.customPayload['graph-name'], 'nameZ');
-      helper.assertBufferString(actualOptions.customPayload['graph-read-consistency'], 'THREE');
-      helper.assertBufferString(actualOptions.customPayload['graph-write-consistency'], 'QUORUM');
-      assert.deepEqual(actualOptions.customPayload['request-timeout'], Long.toBuffer(Long.fromNumber(99000)));
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'aaa');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'nameZ');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'THREE');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'QUORUM');
+      assert.deepEqual(actualOptions.getCustomPayload()['request-timeout'], Long.toBuffer(Long.fromNumber(99000)));
       const lastOptions = actualOptions;
       client.executeGraph('Q2', { 'x': 2 }, optionsParameter, helper.throwop);
       assert.notStrictEqual(actualOptions, lastOptions);
       // Reusing same customPayload instance
-      assert.strictEqual(actualOptions.customPayload, lastOptions.customPayload);
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      assert.strictEqual(actualOptions.getCustomPayload(), lastOptions.getCustomPayload());
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       optionsParameter.retry = new policies.retry.RetryPolicy();
       client.executeGraph('Q2', { 'x': 3 }, optionsParameter, helper.throwop);
-      assert.strictEqual(actualOptions.retry, optionsParameter.retry);
+      assert.strictEqual(actualOptions.getRetryPolicy(), optionsParameter.retry);
     });
-    it('should let the core driver deal with profile specified not found', function () {
+    it('should let the core driver deal with profile specified not found', function (done) {
       const client = new Client({
         contactPoints: ['host1'],
         graphOptions: {
@@ -408,14 +416,15 @@ describe('Client', function () {
         ]
       });
       const optionsParameter = { executionProfile: 'profile-x' };
-      let actualOptions = null;
-      client.execute = function (query, params, options) {
-        actualOptions = options;
-      };
-      client.executeGraph('Q', { 'x': 1 }, optionsParameter, helper.throwop);
-      assert.ok(actualOptions);
-      assert.ok(!actualOptions.customPayload);
-      assert.strictEqual(actualOptions.executionProfile, 'profile-x');
+      let innerExecuteCalled = false;
+
+      client._innerExecute = () => innerExecuteCalled = true;
+
+      client.executeGraph('Q', { 'x': 1 }, optionsParameter, err => {
+        helper.assertInstanceOf(err, errors.ArgumentError);
+        assert.ok(!innerExecuteCalled);
+        done();
+      });
     });
     it('should use the retry policy from the default profile when specified', function () {
       const retryPolicy1 = new policies.retry.RetryPolicy();
@@ -433,21 +442,21 @@ describe('Client', function () {
         ]
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy3);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy3);
       client.executeGraph('Q', null, { retry: retryPolicy3 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy3);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy3);
     });
     it('should use specific retry policy when not specified in the default profile', function () {
       const retryPolicy1 = new policies.retry.RetryPolicy();
@@ -462,24 +471,24 @@ describe('Client', function () {
         ]
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwop);
       assert.ok(actualOptions);
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
       client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
     });
     it('should use specific retry policy when no default profile specified', function () {
       const retryPolicy1 = new policies.retry.RetryPolicy();
@@ -493,24 +502,24 @@ describe('Client', function () {
         ]
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', null, null, helper.throwop);
       assert.ok(actualOptions);
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       client.executeGraph('Q', null, { executionProfile: 'default'}, helper.throwop);
       assert.ok(actualOptions);
-      helper.assertInstanceOf(actualOptions.retry, policies.retry.FallthroughRetryPolicy);
+      helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy1);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
       client.executeGraph('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
       client.executeGraph('Q', null, { retry: retryPolicy2 }, helper.throwop);
       assert.ok(actualOptions);
-      assert.strictEqual(actualOptions.retry, retryPolicy2);
+      assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
     });
     it('should use the graph language provided in the profile', function () {
       const client = new Client({
@@ -522,15 +531,15 @@ describe('Client', function () {
         ]
       });
       let actualOptions = null;
-      client.execute = function (query, params, options) {
+      client._innerExecute = function (query, params, options) {
         actualOptions = options;
       };
       client.executeGraph('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
-      assert.ok(actualOptions && actualOptions.customPayload);
-      assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'lolcode');
+      assert.ok(actualOptions && actualOptions.getCustomPayload());
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'lolcode');
       client.executeGraph('Q', null, null, helper.throwop);
-      assert.ok(actualOptions && actualOptions.customPayload);
-      assert.strictEqual(actualOptions.customPayload['graph-language'].toString(), 'gremlin-groovy');
+      assert.ok(actualOptions && actualOptions.getCustomPayload());
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'gremlin-groovy');
     });
     context('with analytics queries', function () {
       it('should query for analytics master', function (done) {
@@ -539,7 +548,7 @@ describe('Client', function () {
           name: 'name1'
         }});
         let actualOptions;
-        client.execute = function (q, p, options, cb) {
+        client._innerExecute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
           }
@@ -555,8 +564,8 @@ describe('Client', function () {
             client.executeGraph('g.V()', function (err) {
               assert.ifError(err);
               assert.ok(actualOptions);
-              assert.ok(actualOptions.preferredHost);
-              assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+              assert.ok(actualOptions.getPreferredHost());
+              assert.ok(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
               next();
             });
           },
@@ -564,8 +573,8 @@ describe('Client', function () {
             client.executeGraph('g.V()', null, {}, function (err) {
               assert.ifError(err);
               assert.ok(actualOptions);
-              assert.ok(actualOptions.preferredHost);
-              assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+              assert.ok(actualOptions.getPreferredHost());
+              assert.ok(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
               next();
             });
           }
@@ -583,7 +592,7 @@ describe('Client', function () {
           ]
         });
         let actualOptions;
-        client.execute = function (q, p, options, cb) {
+        client._innerExecute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
           }
@@ -597,8 +606,8 @@ describe('Client', function () {
         client.executeGraph('g.V()', null, { executionProfile: 'analytics' }, function (err) {
           assert.ifError(err);
           assert.ok(actualOptions);
-          assert.ok(actualOptions.preferredHost);
-          assert.ok(actualOptions.preferredHost.address, '10.10.10.10:9042');
+          assert.ok(actualOptions.getPreferredHost());
+          assert.ok(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
           done();
         });
       });
@@ -620,7 +629,7 @@ describe('Client', function () {
           }
         });
         let actualOptions;
-        client.execute = function (q, p, options, cb) {
+        client._innerExecute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
           }
@@ -634,8 +643,8 @@ describe('Client', function () {
         client.executeGraph('g.V()', function (err) {
           assert.ifError(err);
           assert.ok(actualOptions);
-          assert.ok(actualOptions.preferredHost);
-          assert.strictEqual(actualOptions.preferredHost.address, '10.10.10.10:9042');
+          assert.ok(actualOptions.getPreferredHost());
+          assert.strictEqual(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
           assert.strictEqual(translatorCalled, 1);
           done();
         });
@@ -646,7 +655,7 @@ describe('Client', function () {
           name: 'name1'
         }});
         let actualOptions;
-        client.execute = function (q, p, options, cb) {
+        client._innerExecute = function (q, p, options, cb) {
           if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
             return cb(new Error('Test error'));
           }
@@ -656,7 +665,7 @@ describe('Client', function () {
         client.executeGraph('g.V()', function (err) {
           assert.ifError(err);
           assert.ok(actualOptions);
-          assert.strictEqual(actualOptions.preferredHost, null);
+          assert.strictEqual(actualOptions.getPreferredHost(), null);
           done();
         });
       });
@@ -668,7 +677,7 @@ describe('Client', function () {
         let callback;
         let options;
         let params;
-        client.execute = function (query, p, o, cb) {
+        client._innerExecute = function (query, p, o, cb) {
           called++;
           params = p;
           options = o;
@@ -702,7 +711,7 @@ describe('Client', function () {
             assert.ok(params);
             assert.strictEqual(params[0], JSON.stringify(expectedParams));
             assert.ok(options);
-            assert.strictEqual(options.consistency, expectedOptions.consistency);
+            assert.strictEqual(options.getConsistency(), expectedOptions.consistency);
             return null;
           });
       });

@@ -11,6 +11,7 @@ const types = require('../../lib/types');
 const loadBalancing = require('../../lib/policies/load-balancing');
 const DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
 const helper = require('../test-helper');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 
 describe('DseLoadBalancingPolicy', function () {
   describe('constructor', function () {
@@ -23,7 +24,7 @@ describe('DseLoadBalancingPolicy', function () {
     it('should return the preferred host first', function (done) {
       const hosts = [ 'h1', 'h2', 'h3'];
       const lbp = DseLoadBalancingPolicy.createAsWrapper(new TestLoadBalancingPolicy(hosts));
-      lbp.newQueryPlan('ks1', { preferredHost: 'h0' }, function (err, iterator) {
+      lbp.newQueryPlan('ks1', getExecOptions({ preferredHost: 'h0' }), function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
         const hostArray = iteratorToArray(iterator);
@@ -34,7 +35,7 @@ describe('DseLoadBalancingPolicy', function () {
     it('should return the child policy plan when preferred is not defined', function (done) {
       const hosts = [ 'h1', 'h2', 'h3'];
       const lbp = DseLoadBalancingPolicy.createAsWrapper(new TestLoadBalancingPolicy(hosts));
-      lbp.newQueryPlan('ks1', { }, function (err, iterator) {
+      lbp.newQueryPlan('ks1', getExecOptions({ }), function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
         const hostArray = iteratorToArray(iterator);
@@ -49,7 +50,7 @@ describe('DseLoadBalancingPolicy', function () {
         return types.distance.ignored;
       };
       const lbp = DseLoadBalancingPolicy.createAsWrapper(childPolicy);
-      lbp.newQueryPlan('ks1', { preferredHost: 'h0' }, function (err, iterator) {
+      lbp.newQueryPlan('ks1', getExecOptions({ preferredHost: 'h0' }), function (err, iterator) {
         assert.ifError(err);
         assert.ok(iterator);
         iteratorToArray(iterator);
@@ -90,6 +91,14 @@ util.inherits(TestLoadBalancingPolicy, loadBalancing.LoadBalancingPolicy);
 TestLoadBalancingPolicy.prototype.newQueryPlan = function (q, o, callback) {
   return callback(null, arrayIterator(this.arr));
 };
+
+function getExecOptions(options) {
+  options = options || {};
+
+  const execOptions = ExecutionOptions.empty();
+  execOptions.getPreferredHost = () => options.preferredHost;
+  return execOptions;
+}
 
 function arrayIterator (arr) {
   let index = 0;

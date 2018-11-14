@@ -232,7 +232,7 @@ describe('RequestHandler', function () {
           assert.deepEqual(info.meta, metadata);
           // metadata should have been propagated to subsequent execute request.
           assert.deepEqual(executeRequest.meta, metadata);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should allow prepared statement keyspace different than connection keyspace', function (done) {
@@ -292,7 +292,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].prepareCalled, 0);
           assert.strictEqual(hosts[1].sendStreamCalled, 0);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should move to next host when PREPARE response is an error', function (done) {
@@ -357,7 +357,7 @@ describe('RequestHandler', function () {
           // metadata should be updated by newResultId detected in result.
           const info = client.metadata.getPreparedById(1);
           assert.deepEqual(info.meta.resultId, newResultId);
-          done();
+          lbp.shutdown(done);
         });
       });
     });

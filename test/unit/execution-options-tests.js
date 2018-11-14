@@ -184,7 +184,7 @@ function assertExecutionOptions(execOptions, expectedOptions) {
     ['loadBalancing', 'getLoadBalancingPolicy']
   ]);
 
-  const ignoreProps = new Set(['executionProfile', 'name']);
+  const ignoreProps = new Set(['executionProfile', 'name', 'graphOptions']);
 
   Object.keys(expectedOptions).forEach(prop => {
     if (ignoreProps.has(prop)) {

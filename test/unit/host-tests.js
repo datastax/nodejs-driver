@@ -427,6 +427,7 @@ describe('Host', function () {
         assert.ok(c.open instanceof Function);
         //Only 1 connection should be created as the distance has not been set
         assert.equal(host.pool.connections.length, 1);
+        host.shutdown(false);
         done();
       });
     });
@@ -451,6 +452,7 @@ describe('Host', function () {
         setTimeout(function () {
           // all connections should be created by now
           assert.equal(host.pool.connections.length, 5);
+          host.shutdown(false);
           done();
         }, 100);
       });
@@ -494,7 +496,10 @@ describe('Host', function () {
             });
           }, next);
         }
-      ], done);
+      ], err => {
+        host.shutdown(false);
+        done(err);
+      });
     });
   });
   describe('#setUp()', function () {
@@ -541,6 +546,7 @@ describe('Host', function () {
       host.checkIsUp = function () { checkIsUpCalled++; };
       host.setDistance(types.distance.local);
       assert.strictEqual(checkIsUpCalled, 1);
+      host.shutdown(false);
     });
     it('should call drainAndShutdown() and emit when the new distance is ignored', function () {
       const host = newHostInstance(defaultOptions);
@@ -679,6 +685,7 @@ describe('Host', function () {
       assert.ok(!host.pool.hasScheduledNewConnection());
       host.checkIsUp();
       assert.ok(!host.pool.hasScheduledNewConnection());
+      host.shutdown(false);
     });
   });
   describe('#warmupPool()', function () {

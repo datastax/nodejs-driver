@@ -742,11 +742,27 @@ const helper = {
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
       },
+
+      /**
+       * Returns the array of hosts used in the query plan.
+       */
       getFixedQueryPlan: function () {
         return hosts;
       },
+
       getDistance: function () {
         return types.distance.local;
+      },
+
+      /**
+       * Shutdowns the hosts and invoke the optional callback.
+       */
+      shutdown: function (cb) {
+        hosts.forEach(h => h.shutdown(false));
+
+        if (cb) {
+          cb();
+        }
       }
     });
   },

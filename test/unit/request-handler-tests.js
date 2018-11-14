@@ -29,7 +29,7 @@ describe('RequestHandler', function () {
       handler.send(function (err, result) {
         assert.ifError(err);
         helper.assertInstanceOf(result, types.ResultSet);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should callback with error when error can not be retried', function (done) {
@@ -45,7 +45,7 @@ describe('RequestHandler', function () {
         const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy defined in the queryOptions', function (done) {
@@ -64,7 +64,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the provided host if specified in the queryOptions', function (done) {
@@ -87,7 +87,8 @@ describe('RequestHandler', function () {
         const hosts = lbp.getFixedQueryPlan();
         assert.strictEqual(hosts[0].sendStreamCalled, 0);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
-        done();
+        host.shutdown();
+        lbp.shutdown(done);
       });
     });
     it('should callback with OperationTimedOutError when the retry policy decides', function (done) {
@@ -105,7 +106,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should not use the retry policy if query is non-idempotent on writeTimeout', function (done) {
@@ -124,7 +125,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.writeTimeoutErrors.length, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should not use the retry policy if query is non-idempotent on OperationTimedOutError', function (done) {
@@ -142,7 +143,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 0);
         assert.strictEqual(retryPolicy.requestErrors.length, 0);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy even if query is non-idempotent on readTimeout', function (done) {
@@ -161,7 +162,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.readTimeoutErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     it('should use the retry policy even if query is non-idempotent on unavailable', function (done) {
@@ -180,7 +181,7 @@ describe('RequestHandler', function () {
         assert.strictEqual(hosts[0].sendStreamCalled, 1);
         assert.strictEqual(hosts[1].sendStreamCalled, 1);
         assert.strictEqual(retryPolicy.unavailableErrors.length, 1);
-        done();
+        lbp.shutdown(done);
       });
     });
     context('when an UNPREPARED response is obtained', function () {
@@ -210,7 +211,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 2);
           assert.strictEqual(hosts[1].prepareCalled, 0);
           assert.strictEqual(hosts[1].sendStreamCalled, 0);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should move to next host when PREPARE response is an error', function (done) {
@@ -244,7 +245,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].prepareCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 2);
-          done();
+          lbp.shutdown(done);
         });
       });
     });
@@ -275,7 +276,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           assert.strictEqual(hosts[2].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should use the query plan to use next hosts as coordinators with zero delay', function (done) {
@@ -303,7 +304,7 @@ describe('RequestHandler', function () {
           const hosts = lbp.getFixedQueryPlan();
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
       it('should callback in error when any of execution responses is an error that cant be retried', function (done) {
@@ -332,7 +333,7 @@ describe('RequestHandler', function () {
           assert.strictEqual(hosts[0].sendStreamCalled, 1);
           assert.strictEqual(hosts[1].sendStreamCalled, 1);
           assert.strictEqual(hosts[2].sendStreamCalled, 1);
-          done();
+          lbp.shutdown(done);
         });
       });
     });

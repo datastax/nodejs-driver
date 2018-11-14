@@ -54,6 +54,7 @@ describe('ControlConnection', function () {
       cc.init(function (err) {
         const hosts = cc.hosts.values();
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         assert.deepEqual(hosts.map(h => h.address), expectedHosts);
         done();
@@ -66,6 +67,7 @@ describe('ControlConnection', function () {
       const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext());
       cc.init(function (err) {
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         const hosts = cc.hosts.values();
         assert.strictEqual(hosts.length, 2);
@@ -80,6 +82,7 @@ describe('ControlConnection', function () {
       const cc = newInstance({ contactPoints: [ 'localhost:9999' ] }, getContext());
       cc.init(function (err) {
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         const hosts = cc.hosts.values();
         assert.ok(hosts.length >= 1);
@@ -152,6 +155,7 @@ describe('ControlConnection', function () {
       const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0 ] }));
       cc.init(function (err) {
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         assert.strictEqual(hosts.length, 2);
         assert.ok(cc.initialized);
@@ -163,6 +167,7 @@ describe('ControlConnection', function () {
       const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1] }));
       cc.init(function (err) {
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.strictEqual(Object.keys(err.innerErrors).length, 2);
         assert.strictEqual(hosts.length, 2);
@@ -177,6 +182,7 @@ describe('ControlConnection', function () {
       }));
       cc.init(function (err) {
         cc.shutdown();
+        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         done();
       });
@@ -198,6 +204,7 @@ describe('ControlConnection', function () {
           // Attempted reconnection and succeeded
           assert.strictEqual(hostsTried.length, 2);
           cc.shutdown();
+          cc.hosts.values().forEach(h => h.shutdown());
           done();
         });
       });
@@ -345,6 +352,7 @@ describe('ControlConnection', function () {
             // Changed connection
             assert.notEqual(state.connection, previousConnection);
             cc.shutdown();
+            cc.hosts.values().forEach(h => h.shutdown());
             done();
           }, 20);
         });

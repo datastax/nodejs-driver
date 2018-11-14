@@ -766,12 +766,17 @@ describe('Client', function () {
             });
           }, seriesNext);
         },
+        next => setImmediate(next),
         function testCase(seriesNext) {
           //3 hosts alive
           assert.strictEqual(Object.keys(hosts).length, 3);
+
+          const state = client.getState();
+          client.hosts.forEach(h => assert.strictEqual(state.getInFlightQueries(h), 0));
+
           let killed = false;
           utils.timesLimit(500, 20, function (n, next) {
-            if (n === 10) {
+            if (n === 30) {
               //kill a node when there are some outstanding requests
               helper.ccmHelper.exec(['node2', 'stop', '--not-gently'], function (err) {
                 killed = true;
@@ -791,16 +796,17 @@ describe('Client', function () {
               assert.ifError(err);
               next();
             });
-          }, function (err) {
-            assert.ifError(err);
-            //Only 2 hosts alive at the end
-            assert.strictEqual(
-              client.hosts.slice(0).reduce(function (val, h) {
-                return val + (h.isUp() ? 1 : 0);
-              }, 0),
-              2);
-            seriesNext();
-          });
+          }, seriesNext);
+        },
+        next => setImmediate(next),
+        function assertHostState(next) {
+          // Only 2 hosts are UP at the end
+          assert.strictEqual(client.hosts.values().reduce((val, h) => val + (h.isUp() ? 1 : 0), 0), 2);
+
+          // In-flight counter should be 0 for UP and DOWN nodes
+          const state = client.getState();
+          client.hosts.forEach(h => assert.strictEqual(state.getInFlightQueries(h), 0));
+          next();
         }
       ], done);
     });

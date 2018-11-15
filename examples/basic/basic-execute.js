@@ -1,7 +1,7 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Example using Promise.
@@ -19,5 +19,5 @@ client.connect()
   })
   .catch(function (err) {
     console.error('There was an error when connecting', err);
-    return client.shutdown();
+    return client.shutdown().then(() => process.exit(1));
   });

@@ -101,6 +101,7 @@ const helper = {
     return {
       //required
       contactPoints: ['127.0.0.1'],
+      localDataCenter: 'dc1',
       // retry all queries multiple times (for improved test resiliency).
       policies: { retry: new RetryMultipleTimes(3) }
     };

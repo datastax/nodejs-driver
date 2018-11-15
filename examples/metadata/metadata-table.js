@@ -1,7 +1,7 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Creates a table and retrieves its information
@@ -27,9 +27,9 @@ client.connect()
     console.log('- Partition keys:', table.partitionKeys);
     console.log('- Clustering keys:', table.clusteringKeys);
     console.log('Shutting down');
-    client.shutdown();
+    return client.shutdown();
   })
   .catch(function (err) {
     console.error('There was an error', err);
-    return client.shutdown();
+    return client.shutdown().then(() => process.exit(1));
   });

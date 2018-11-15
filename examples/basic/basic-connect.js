@@ -1,7 +1,11 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+client.on('log', function(level, className, message, furtherInfo) {
+  console.log('log event: %s -- %s', level, message);
+});
+
 client.connect()
   .then(function () {
     console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
@@ -11,5 +15,5 @@ client.connect()
   })
   .catch(function (err) {
     console.error('There was an error when connecting', err);
-    return client.shutdown();
+    return client.shutdown().then(() => process.exit(1));
   });

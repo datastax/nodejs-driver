@@ -38,7 +38,7 @@ You can use the [project mailing list][mailinglist] or create a ticket on the [J
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], keyspace: 'ks1' });
+const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], localDataCenter: 'datacenter1', keyspace: 'ks1' });
 
 const query = 'SELECT name, email FROM users WHERE key = ?';
 client.execute(query, [ 'someone' ])

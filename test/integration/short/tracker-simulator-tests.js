@@ -35,7 +35,7 @@ describe('tracker', function () {
 
         it('should be called when a valid response is obtained for ' + requestType + ' request', () => {
           const requestTracker = new TestTracker();
-          const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+          const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const query = 'SELECT * FROM system.local';
           const parameters = [ 'local' ];
           return client.connect()
@@ -47,7 +47,7 @@ describe('tracker', function () {
 
       it('should be called when a error response is obtained', () => {
         const requestTracker = new TestTracker();
-        const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+        const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
         const query = 'SELECT * FROM system.failing';
         const parameters = [ 'abc' ];
         let err;
@@ -68,7 +68,7 @@ describe('tracker', function () {
 
         it('should be called when a valid response is obtained for BATCH request containing ' + requestType, () => {
           const requestTracker = new TestTracker();
-          const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+          const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const queries = [
             { query: 'SELECT * FROM system.local WHERE key = ?', params: [] }
           ];
@@ -82,7 +82,7 @@ describe('tracker', function () {
 
       it('should be called when a error response is obtained', () => {
         const requestTracker = new TestTracker();
-        const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+        const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
         const query = 'SELECT INVALID';
         const parameters = [ 'abc' ];
         return client.connect()
@@ -98,7 +98,7 @@ describe('tracker', function () {
 
         it('should be called when a valid response is obtained for ' + requestType + ' request', () => {
           const requestTracker = new TestTracker();
-          const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+          const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const query = 'SELECT * FROM system.local';
           const parameters = ['local'];
           return client.connect()
@@ -113,7 +113,7 @@ describe('tracker', function () {
 
     it('should be called when client is being shutdown', () => {
       const requestTracker = new TestTracker();
-      const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker });
+      const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
       return client.connect()
         .then(() => assert.strictEqual(requestTracker.shutdownCalled, 0))
         .then(() => client.shutdown())
@@ -123,7 +123,7 @@ describe('tracker', function () {
 
   describe('RequestLogger', function () {
     const logger = new tracker.RequestLogger({ slowThreshold: 50, requestSizeThreshold: 1000 });
-    const client = new Client({ contactPoints: [ simulacron.startingIp ], requestTracker: logger });
+    const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker: logger });
 
     before(() => client.connect());
     after(() => client.shutdown());

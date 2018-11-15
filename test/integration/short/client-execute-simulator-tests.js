@@ -23,6 +23,7 @@ describe('Client', function() {
     before(() => {
       client = new Client({
         contactPoints: [simulacron.startingIp],
+        localDataCenter: 'dc0',
         policies: {
           // define an LBP that includes all nodes except node 3
           loadBalancing: new WhiteListPolicy(new DCAwareRoundRobinPolicy(), [

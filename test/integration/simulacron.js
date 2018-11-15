@@ -136,7 +136,7 @@ const simulacronHelper = {
       });
     });
     if (initClient) {
-      const baseOptions = { contactPoints: [self.startingIp] };
+      const baseOptions = { contactPoints: [self.startingIp], localDataCenter: 'dc0' };
       client = new Client(utils.extend({}, options.clientOptions, baseOptions));
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));

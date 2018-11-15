@@ -486,9 +486,9 @@ describe('DCAwareRoundRobinPolicy', function () {
         assert.strictEqual(logEvents.length, 1);
         const event = logEvents[0];
         assert.strictEqual(event.level, 'warning');
-        assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' +
-          ' DCAwareRoundRobinPolicy. This is considered deprecated and will be removed in a future release.' +
-          ' Instead, please specify local data center using \'localDataCenter\' in Client options.');
+        assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' + 
+          ' DCAwareRoundRobinPolicy. It is more preferable to specify the local data center using' + 
+          ' \'localDataCenter\' in Client options instead.');
         next();
       }
     ], done);

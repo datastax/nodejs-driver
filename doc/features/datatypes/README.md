@@ -13,7 +13,7 @@ date|[LocalDate](datetime)
 decimal|[BigDecimal](numerical)
 double|[Number](numerical)
 float|[Number](numerical)
-inet|[InetAddress][inetaddress-api]
+inet|[InetAddress](/api/module.types/class.InetAddress/)
 int|[Number](numerical)
 list|[Array](collections)
 map|[Object / ECMAScript 6 Map](collections)
@@ -68,5 +68,4 @@ Providing parameter hints in the query options is another way around it.
 client.execute('SELECT * FROM table1 where key = ?', [ key ], { hints : ['int'] });
 ```
 
-[inetaddress-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html
 [buffer]: https://nodejs.org/api/buffer.html

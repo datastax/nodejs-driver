@@ -48,8 +48,8 @@ The `EC2MultiRegionTranslator` class is provided out of the box. It helps optimi
 infrastructure (both Cassandra nodes and clients) is distributed across multiple Amazon EC2 regions:
 
 - a client communicating with a Cassandra node in the same EC2 region should use the node’s private IP address (which is
-less expensive)
-- a client communicating with a node in a different region should use the public IP address
+less expensive);
+- a client communicating with a node in a different region should use the public IP address.
 
 To use this implementation, provide an instance when initializing the `Client` object.
 

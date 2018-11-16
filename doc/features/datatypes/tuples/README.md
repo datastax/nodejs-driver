@@ -1,9 +1,9 @@
 # Tuples
 
-Cassandra 2.1 introduced a tuple type for CQL.
+Cassandra 2.1 introduced a `tuple` type for CQL.
 
 A tuple is a fixed-length set of typed positional fields. With the driver, you retrieve and store tuples using the 
-`Tuple` class.
+[`Tuple` class](/api/module.types/class.Tuple/).
 
 For example, given the following table to represent the value of the exchange between two currencies.
 
@@ -17,7 +17,7 @@ CREATE TABLE forex (
 );
 ```
 
-To retrieve the Tuple value:
+To retrieve the `Tuple` value:
 
 ```
 const query = 'SELECT name, time, currencies, value FROM forex where name = ?';

@@ -1,6 +1,6 @@
 # Null and unset values
 
-To complete a distributed DELETE operation, Cassandra replaces it with a special value called a tombstone which can be propagated to replicas. When inserting or updating a field, you tocan set a certain field to null as a way to clear the value of a field, and it is considered a DELETE operation. In some cases, you might insert rows using null for values that are not specified, and even though our intention is to leave the value empty, Cassandra represents it as a tombstone causing unnecessary overhead.
+To complete a distributed DELETE operation, Cassandra replaces it with a special value called a tombstone which can be propagated to replicas. When inserting or updating a field, you can set a certain field to null as a way to clear the value of a field, and it is considered a DELETE operation. In some cases, you might insert rows using null for values that are not specified, and even though our intention is to leave the value empty, Cassandra represents it as a tombstone causing unnecessary overhead.
 
 To avoid tombstones, in previous versions of Cassandra, you used different query combinations only containing the fields that had a value.
 

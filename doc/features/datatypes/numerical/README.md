@@ -65,7 +65,7 @@ client.execute(query, [ id, 1 ], { prepare: true });
 
 ## decimal 
 
-The `BigDecimal` class provides support for representing the CQL decimal datatype, because JavaScript has no built-in
+The [`BigDecimal` class](/api/module.types/class.BigDecimal/) provides support for representing the CQL decimal datatype, because JavaScript has no built-in
 arbitrary precision decimal representation.
 
 ```javascript
@@ -88,7 +88,7 @@ client.execute('SELECT decimal_val FROM users')
 
 ## bigint 
 
-The `Long` class provides support for representing the CQL bigint datatype, because JavaScript has no built-in 64-bit
+The [`Long` class](/api/module.types/class.Long/) provides support for representing the CQL bigint datatype, because JavaScript has no built-in 64-bit
 integer representation.
 
 ```javascript
@@ -112,7 +112,7 @@ client.execute('SELECT bigint_val FROM users')
 
 ## varint 
 
-The `Integer` class, originally part of the Google Closure math library, provides support for representing CQL varint
+The [`Integer` class](/api/module.types/class.Integer/), originally part of the Google Closure math library, provides support for representing CQL varint
 datatype values, because JavaScript has no arbitrarily-large signed integer representation.
 
 ```javascript

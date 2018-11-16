@@ -47,7 +47,7 @@ describe('Client', function() {
     describe(data.title, function () {
       const clientOptions = {
         contactPoints: [simulacron.startingIp],
-        localDataCenter: 'dc0',
+        localDataCenter: 'dc1',
         policies: { 
           loadBalancing: new OrderedLoadBalancingPolicy()
         }
@@ -85,7 +85,7 @@ describe('Client', function() {
   describe('with ConstantSpeculativeExecutionPolicy', function () {
     const clientOptions = {
       contactPoints: [simulacron.startingIp],
-      localDataCenter: 'dc0',
+      localDataCenter: 'dc1',
       policies: { 
         speculativeExecution: new ConstantSpeculativeExecutionPolicy(delay, 3), 
         loadBalancing: new OrderedLoadBalancingPolicy()
@@ -300,7 +300,7 @@ describe('Client', function() {
     it('should allow zero delay', function (done) {
       const clientOptions = {
         contactPoints: cluster.getContactPoints(0),
-        localDataCenter: 'dc0',
+        localDataCenter: 'dc1',
         policies: { 
           speculativeExecution: new ConstantSpeculativeExecutionPolicy(0, 3),
         }

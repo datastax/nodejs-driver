@@ -266,8 +266,9 @@ describe('ControlConnection', function () {
     });
   });
   describe('#setPeersInfo()', function () {
-    it('should use not add invalid addresses', function () {
+    it('should not add invalid addresses', function () {
       const options = clientOptions.extend({}, helper.baseOptions);
+      delete options.localDataCenter;
       const cc = newInstance(options);
       cc.host = new Host('18.18.18.18', 1, options);
       const rows = [
@@ -289,7 +290,7 @@ describe('ControlConnection', function () {
       });
     });
     it('should set the host datacenter and cassandra version', function () {
-      const options = clientOptions.extend({}, helper.baseOptions);
+      const options = utils.extend(clientOptions.extend({}, helper.baseOptions), { localDataCenter: 'dc101' });
       const cc = newInstance(options);
       const rows = [
         //valid rpc address
@@ -306,6 +307,34 @@ describe('ControlConnection', function () {
         assert.ok(cc.hosts.get('9.8.7.6:9042'));
         assert.strictEqual(cc.hosts.get('9.8.7.6:9042').datacenter, 'dc101');
         assert.strictEqual(cc.hosts.get('9.8.7.6:9042').cassandraVersion, '2.1.4');
+      });
+    });
+    it('should throw an error if configured localDataCenter is not found among hosts', function () {
+      const options = utils.extend(clientOptions.extend({}, helper.baseOptions), { localDataCenter: 'dc102' });
+      const cc = newInstance(options);
+      const rows = [
+        //valid rpc address
+        {'rpc_address': getInet([5, 4, 3, 2]), peer: getInet([1, 1, 1, 1]), data_center: 'dc100', release_version: '2.1.4'},
+        //valid rpc address
+        {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1]), data_center: 'dc101', release_version: '2.1.4'}
+      ];
+      cc.setPeersInfo(true, null, { rows: rows }, function (err) {
+        helper.assertInstanceOf(err, errors.ArgumentError);
+      });
+    });
+    it('should not throw an error if localDataCenter is not configured', function () {
+      const options = clientOptions.extend({}, helper.baseOptions);
+      delete options.localDataCenter;
+      const cc = newInstance(options);
+      const rows = [
+        //valid rpc address
+        {'rpc_address': getInet([5, 4, 3, 2]), peer: getInet([1, 1, 1, 1]), data_center: 'dc100', release_version: '2.1.4'},
+        //valid rpc address
+        {'rpc_address': getInet([9, 8, 7, 6]), peer: getInet([1, 1, 1, 1]), data_center: 'dc101', release_version: '2.1.4'}
+      ];
+      cc.setPeersInfo(true, null, { rows: rows }, function (err) {
+        assert.ifError(err);
+        assert.strictEqual(cc.hosts.length, 2);
       });
     });
   });

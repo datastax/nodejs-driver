@@ -109,5 +109,5 @@ const authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@sswo
 const client = new Client({ authProvider: authProvider });
 ```
 
-[consistency]: http://docs.datastax.com/en/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html
+[consistency]: https://docs.datastax.com/en/dse/6.0/dse-arch/datastax_enterprise/dbInternals/dbIntConfigConsistency.html
 [datatypes]: /features/datatypes/

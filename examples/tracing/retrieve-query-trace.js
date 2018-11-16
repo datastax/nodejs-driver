@@ -32,5 +32,5 @@ client.connect()
   })
   .catch(function (err) {
     console.error('There was an error', err);
-    return client.shutdown().then(() => process.exit(1));
+    return client.shutdown().then(() => { throw err; });
   });

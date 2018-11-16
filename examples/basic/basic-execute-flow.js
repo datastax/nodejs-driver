@@ -43,10 +43,13 @@ async.series([
     });
   }
 ], function (err) {
-  let code = 0;
   if (err) {
     console.error('There was an error', err.message, err.stack);
   }
   console.log('Shutting down');
-  client.shutdown(() => process.exit(code));
+  client.shutdown(() => {
+    if (err) {
+      throw err;
+    }
+  });
 });

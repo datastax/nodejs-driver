@@ -2,9 +2,6 @@
 const cassandra = require('cassandra-driver');
 
 const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
-client.on('log', function(level, className, message, furtherInfo) {
-  console.log('log event: %s -- %s', level, message);
-});
 
 client.connect()
   .then(function () {
@@ -15,5 +12,5 @@ client.connect()
   })
   .catch(function (err) {
     console.error('There was an error when connecting', err);
-    return client.shutdown().then(() => process.exit(1));
+    return client.shutdown().then(() => { throw err; });
   });

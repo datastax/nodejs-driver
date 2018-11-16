@@ -453,7 +453,7 @@ describe('DCAwareRoundRobinPolicy', function () {
   });
   it('should throw an error when localDataCenter is not configured on Client options', function (done) {
     const policy = new DCAwareRoundRobinPolicy();
-    const options = clientOptions.extend({}, helper.baseOptions);
+    const options = utils.extend({}, helper.baseOptions);
     delete options.localDataCenter;
     const client = new Client(options);
     const logEvents = [];
@@ -463,13 +463,15 @@ describe('DCAwareRoundRobinPolicy', function () {
     const hosts = new HostMap();
     hosts.set('1', createHost('1', client.options));
     policy.init(client, hosts, (err) => {
-      helper.assertInstanceOf(err, errors.DriverInternalError);
+      helper.assertInstanceOf(err, errors.ArgumentError);
+      assert.strictEqual(err.message, '\'localDataCenter\' is not defined in Client options and also was not specified' + 
+        ' in constructor. At least one is required.');
       done();
     });
   });
-  it('should warn on init when localDc was provided to constructor but localDataCenter was not set on Client options', function (done) {
+  it('should log on init when localDc was provided to constructor but localDataCenter was not set on Client options', function (done) {
     const policy = new DCAwareRoundRobinPolicy('dc1');
-    const options = clientOptions.extend({}, helper.baseOptions);
+    const options = utils.extend({}, helper.baseOptions);
     delete options.localDataCenter;
     const client = new Client(options);
     const logEvents = [];
@@ -485,10 +487,10 @@ describe('DCAwareRoundRobinPolicy', function () {
       function checkLogs(next) {
         assert.strictEqual(logEvents.length, 1);
         const event = logEvents[0];
-        assert.strictEqual(event.level, 'warning');
+        assert.strictEqual(event.level, 'info');
         assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' + 
           ' DCAwareRoundRobinPolicy. It is more preferable to specify the local data center using' + 
-          ' \'localDataCenter\' in Client options instead.');
+          ' \'localDataCenter\' in Client options instead when your application is targeting a single data center.');
         next();
       }
     ], done);

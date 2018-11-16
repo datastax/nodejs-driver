@@ -1019,6 +1019,44 @@ describe('metadata', function () {
             });
         });
       });
+
+      context('with ECMAScript Map and Set', () => {
+        const client = new Client(Object.assign({}, helper.baseOptions, {
+          keyspace,
+          encoding: { map: Map, set: Set }
+        }));
+
+        before(() => client.connect());
+        after(() => client.shutdown());
+
+        it('should retrieve the table metadata using the same representation', () =>
+          client.metadata.getTable(keyspace, 'tbl7')
+            .then(table => {
+              assert.ok(table);
+              assert.strictEqual(table.columns.length, 4);
+              assert.strictEqual(typeof table.compactionClass, 'string');
+
+              assert.ok(table.compactionOptions);
+              assert.strictEqual(table.compactionOptions.constructor, Object);
+
+              assert.ok(table.compression);
+              assert.strictEqual(table.compression.constructor, Object);
+            }));
+
+        vit('2.1', 'should retrieve the secondary indexes metadata using the same representation', () =>
+          client.metadata.getTable(keyspace, 'tbl_indexes1')
+            .then(table => {
+              assert.ok(table.indexes.length > 0);
+              const index = table.indexes.filter(x => x.name === 'map_values_index')[0];
+              assert.ok(index, 'Index not found');
+              assert.strictEqual(index.name, 'map_values_index');
+              assert.strictEqual(index.isCompositesKind(), true);
+              assert.strictEqual(index.isCustomKind(), false);
+              assert.strictEqual(index.isKeysKind(), false);
+              assert.ok(index.options);
+              assert.strictEqual(index.options.constructor, Object);
+            }));
+      });
     });
     vdescribe('3.0', '#getMaterializedView()', function () {
       const keyspace = 'ks_view_meta';
@@ -1193,6 +1231,49 @@ describe('metadata', function () {
             });
         });
       });
+
+      context('with ECMAScript Map and Set', () => {
+        const client = new Client(Object.assign({}, helper.baseOptions, {
+          keyspace,
+          encoding: { map: Map, set: Set }
+        }));
+
+        before(() => client.connect());
+        after(() => client.shutdown());
+
+        it('should retrieve the view metadata using the same representation', () =>
+          client.metadata.getMaterializedView(keyspace, 'dailyhigh')
+            .then(view => {
+              assert.ok(view);
+              assert.strictEqual(view.tableName, 'scores');
+              assert.strictEqual(view.partitionKeys.length, 4);
+              assert.strictEqual(view.clusteringKeys.length, 2);
+
+              assert.ok(view.compactionOptions);
+              assert.strictEqual(view.compactionOptions.constructor, Object);
+
+              assert.ok(view.compression);
+              assert.strictEqual(view.compression.constructor, Object);
+            }));
+      });
+    });
+
+    describe('#compareSchemaVersions()', function () {
+      const client = setupInfo.client;
+
+      context('with callback specified', () => {
+        it('should return true when the schema version is the same', done =>
+          client.metadata.checkSchemaAgreement((err, agreement) => {
+            assert.ifError(err);
+            assert.strictEqual(agreement, true);
+            done();
+          }));
+      });
+
+      context('with no callback specified', () => {
+        it('should return true when the schema version is the same', () =>
+          client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
+      });
     });
   });
   describe('Client#getState()', function () {
@@ -1233,6 +1314,22 @@ describe('metadata', function () {
           });
         }
       ], helper.finish(client, done));
+    });
+  });
+
+  describe('ResultSet', function () {
+    describe('#info.isSchemaInAgreement', function () {
+      const client = setupInfo.client;
+
+      it('should return true when executing DML queries', () =>
+        client.execute(helper.queries.basic)
+          .then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+
+      it('should return true when executing DDL queries', () =>
+        client.execute(
+          "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
+          " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
+        ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
     });
   });
 });

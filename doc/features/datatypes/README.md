@@ -5,10 +5,10 @@ When retrieving the value of a column from a `Row` object, the value is typed ac
 CQL data type|JavaScript type
 ---|---
 ascii|String
-bigint|[Long](numerical)
+bigint|[Long / BigInt](numerical)
 blob|[Buffer][buffer]
 boolean|Boolean
-counter|[Long](numerical)
+counter|[Long / BigInt](numerical)
 date|[LocalDate](datetime)
 decimal|[BigDecimal](numerical)
 double|[Number](numerical)

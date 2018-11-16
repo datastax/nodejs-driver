@@ -1,6 +1,7 @@
 title:    DataStax Nodejs Driver
 summary:  DataStax Nodejs Driver for Apache Cassandra
 theme:    datastax
+swiftype_drivers: nodejsdrivers
 sections:
   - title:    Features
     prefix:   /features
@@ -10,7 +11,7 @@ sections:
     prefix:   /faq
     type:     markdown
     files:    'doc/faq/**/*.md'
-  - title:    Getting started
+  - title:    Getting Started
     prefix:   /getting-started
     type:     markdown
     files:    'doc/getting-started/**/*.md'
@@ -18,6 +19,10 @@ sections:
     prefix:   /coding-rules
     type:     markdown
     files:    'doc/coding-rules/**/*.md'
+  - title:    Upgrade Guide
+    prefix:   /upgrade-guide
+    type:     markdown
+    files:    'doc/upgrade-guide/**/*.md'
   - title:    API docs
     prefix:   /api
     type:     jsdoc

@@ -7,6 +7,7 @@ const token = require('../../lib/token');
 
 const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const dataTypes = types.dataTypes;
 const helper = require('../test-helper');
 
@@ -698,145 +699,139 @@ describe('encoder', function () {
       assert.deepEqual(Object.keys(value), ['key1']);
       assert.strictEqual(value['key1'], null);
     });
+
+    it('should return the raw buffer when a buffer is provided', () => {
+      const encoder = new Encoder(3, {});
+      const buffer = utils.allocBufferFromArray([ 0, 1, 2, 3 ]);
+
+      Object.keys(dataTypes).forEach(typeName => {
+        assert.strictEqual(encoder.encode(buffer, dataTypes[typeName]), buffer);
+      });
+    });
   });
+
   describe('#setRoutingKeyFromUser()', function () {
     const encoder = new Encoder(2, {});
     it('should concat Array of buffers in the correct format',function () {
-      /** @type {QueryOptions} */
-      let options = {
+      let options = getExecOptions({
         //Its an array of 3 values
         /** @type {Array|Buffer} */
-        routingKey: [utils.allocBufferFromArray([1]), utils.allocBufferFromArray([2]), utils.allocBufferFromArray([3, 3])]
-      };
+        routingKey: [
+          utils.allocBufferFromArray([1]), utils.allocBufferFromArray([2]), utils.allocBufferFromArray([3, 3])]
+      });
       encoder.setRoutingKeyFromUser([1, 'text'], options);
-      assert.ok(options.routingKey);
+      assert.ok(options.getRoutingKey());
       //The routingKey should have the form: [2-byte-length] + key + [0]
       // eslint-disable-next-line no-useless-concat
-      assert.strictEqual(options.routingKey.toString('hex'), '00010100' + '00010200' + '0002030300');
+      assert.strictEqual(options.getRoutingKey().toString('hex'), '00010100' + '00010200' + '0002030300');
 
-      options = {
+      options = getExecOptions({
         //Its an array of 1 value
         routingKey: [utils.allocBufferFromArray([1])]
-      };
+      });
       encoder.setRoutingKeyFromUser([], options);
       //the result should be a single value
-      assert.strictEqual(options.routingKey.toString('hex'), '01');
+      assert.strictEqual(options.getRoutingKey().toString('hex'), '01');
     });
     it('should not affect Buffer routing keys', function () {
-      /** @type {QueryOptions} */
-      let options = {
+      let options = getExecOptions({
         routingKey: utils.allocBufferFromArray([1, 2, 3, 4])
-      };
-      const initialRoutingKey = options.routingKey.toString('hex');
+      });
+      const initialRoutingKey = options.getRoutingKey().toString('hex');
       encoder.setRoutingKeyFromUser([1, 'text'], options);
-      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
+      assert.strictEqual(options.getRoutingKey().toString('hex'), initialRoutingKey);
 
-      options = {
+      options = getExecOptions({
         routingIndexes: [1],
         routingKey: utils.allocBufferFromArray([1, 2, 3, 4])
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'text'], options);
       //The routing key should take precedence over routingIndexes
-      assert.strictEqual(options.routingKey.toString('hex'), initialRoutingKey);
+      assert.strictEqual(options.getRoutingKey().toString('hex'), initialRoutingKey);
     });
     it('should not affect Token routing keys', function () {
       const token = new tokenizer.Murmur3Tokenizer().hash('4611686018427387904');
-      const options = {
+      const options = getExecOptions({
         routingIndexes: [1],
         routingKey: token
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'text'], options);
-      assert.strictEqual(options.routingKey, token);
+      assert.strictEqual(options.getRoutingKey(), token);
     });
     it('should not affect TokenRange routing keys', function () {
       const murmur3 = new tokenizer.Murmur3Tokenizer();
       const start = murmur3.hash('-9223372036854775808');
       const end = murmur3.hash('4611686018427387904');
       const range = new token.TokenRange(start, end, murmur3);
-      const options = {
+      const options = getExecOptions({
         routingIndexes: [1],
         routingKey: range
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'text'], options);
-      assert.strictEqual(options.routingKey, range);
+      assert.strictEqual(options.getRoutingKey(), range);
     });
     it('should build routing key based on routingIndexes', function () {
-      /** @type {QueryOptions} */
-      let options = {
+      let options = getExecOptions({
         hints: ['int'],
         routingIndexes: [0]
-      };
+      });
       encoder.setRoutingKeyFromUser([1], options);
-      assert.strictEqual(options.routingKey.toString('hex'), '00000001');
+      assert.strictEqual(options.getRoutingKey().toString('hex'), '00000001');
 
-      options = {
+      options = getExecOptions({
         hints: ['int', 'string', 'int'],
         routingIndexes: [0, 2]
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'yeah', 2], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
       // eslint-disable-next-line no-useless-concat
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '00000002' + '00');
+      assert.strictEqual(options.getRoutingKey().toString('hex'), '0004' + '00000001' + '00' + '0004' + '00000002' + '00');
 
-      options = {
+      options = getExecOptions({
         //less hints
         hints: ['int'],
         routingIndexes: [0, 2]
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'yeah', utils.allocBufferFromArray([1, 1, 1, 1])], options);
       //length1 + buffer1 + 0 + length2 + buffer2 + 0
       // eslint-disable-next-line no-useless-concat
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
-      options = {
+      assert.strictEqual(options.getRoutingKey().toString('hex'), '0004' + '00000001' + '00' + '0004' + '01010101' + '00');
+
+      options = getExecOptions({
         //no hints
         routingIndexes: [1, 2]
-      };
+      });
       encoder.setRoutingKeyFromUser([1, 'yeah', utils.allocBufferFromArray([1, 1, 1, 1])], options);
-      //length1 + buffer1 + 0 + length2 + buffer2 + 0
-      // eslint-disable-next-line no-useless-concat
-      assert.strictEqual(options.routingKey.toString('hex'), '0004' + utils.allocBufferFromString('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
+      assert.strictEqual(options.getRoutingKey().toString('hex'),
+        //length1 + buffer1 + 0 + length2 + buffer2 + 0
+        // eslint-disable-next-line no-useless-concat
+        '0004' + utils.allocBufferFromString('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
     it('should allow null/undefined routingIndexes', function () {
-      /** @type {QueryOptions} */
-      const options = {
+      const execOptions = getExecOptions({
         hints: ['int', 'text'],
         routingIndexes: [0, null, 2]
-      };
-      encoder.setRoutingKeyFromUser([1], options);
+      });
+      encoder.setRoutingKeyFromUser([1], execOptions);
       // It doesn't fail, it bypass routing logic
-      assert.strictEqual(options.routingKey, undefined);
+      assert.strictEqual(execOptions.getRoutingKey(), undefined);
     });
     it('should allow null or undefined routingKey parts', function () {
-      /** @type {QueryOptions} */
-      const options = {
+      let options = getExecOptions({
         routingKey: [utils.allocBufferFromArray([0]), null, utils.allocBufferFromArray([1])]
-      };
+      });
       encoder.setRoutingKeyFromUser([], options);
-      assert.strictEqual(options.routingKey, null);
-      options.routingKey = [utils.allocBufferFromArray([0]), undefined, utils.allocBufferFromArray([1])];
+      assert.strictEqual(options.getRoutingKey(), null);
+
+      options = getExecOptions({
+        routingKey: [utils.allocBufferFromArray([0]), undefined, utils.allocBufferFromArray([1])]
+      });
       encoder.setRoutingKeyFromUser([], options);
-      assert.strictEqual(options.routingKey, null);
-    });
-    it('should throw if the type could not be encoded', function () {
-      assert.throws(function () {
-        /** @type {QueryOptions} */
-        const options = {
-          routingIndexes: [0]
-        };
-        encoder.setRoutingKeyFromUser([{a: 1}], options);
-      }, TypeError);
-      assert.throws(function () {
-        /** @type {QueryOptions} */
-        const options = {
-          hints: ['int'],
-          routingIndexes: [0]
-        };
-        encoder.setRoutingKeyFromUser(['this is text'], options);
-      }, TypeError);
+      assert.strictEqual(options.getRoutingKey(), null);
     });
     it('should throw TypeError if invalid routingKey type is provided', function () {
       assert.throws(() => {
-        encoder.setRoutingKeyFromUser([1, 'text'], { routingKey: 123 });
+        encoder.setRoutingKeyFromUser([1, 'text'], getExecOptions({ routingKey: 123 }));
       }, TypeError);
     });
   });
@@ -1235,3 +1230,13 @@ describe('encoder', function () {
     });
   });
 });
+
+function getExecOptions(options) {
+  const result = ExecutionOptions.empty();
+  let routingKey = options.routingKey;
+  result.setRoutingKey = v => routingKey = v;
+  result.getRoutingKey = () => routingKey;
+  result.getHints = () => options.hints;
+  result.getRoutingIndexes = () => options.routingIndexes;
+  return result;
+}

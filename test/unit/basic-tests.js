@@ -798,7 +798,11 @@ describe('exports', function () {
     const api = require('../../index.js');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
-    assert.ok(typeof api.errors.DriverError, 'function');
+    assert.strictEqual(typeof api.errors.DriverError, 'function');
+    assert.strictEqual(typeof api.ExecutionProfile, 'function');
+    assert.strictEqual(api.ExecutionProfile.name, 'ExecutionProfile');
+    assert.strictEqual(typeof api.ExecutionOptions, 'function');
+    assert.strictEqual(api.ExecutionOptions.name, 'ExecutionOptions');
     assert.ok(api.types);
     assert.ok(api.policies);
     assert.ok(api.auth);
@@ -823,6 +827,20 @@ describe('exports', function () {
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');
     helper.assertInstanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
     assert.strictEqual(api.auth, require('../../lib/auth'));
+
+    // mapping module
+    assert.ok(api.mapping);
+    assertConstructorExposed(api.mapping, api.mapping.TableMappings);
+    assertConstructorExposed(api.mapping, api.mapping.DefaultTableMappings);
+    assertConstructorExposed(api.mapping, api.mapping.UnderscoreCqlToCamelCaseMappings);
+    assertConstructorExposed(api.mapping, api.mapping.Mapper);
+    assertConstructorExposed(api.mapping, api.mapping.ModelMapper);
+    assertConstructorExposed(api.mapping, api.mapping.ModelBatchItem);
+    assertConstructorExposed(api.mapping, api.mapping.ModelBatchMapper);
+    assertConstructorExposed(api.mapping, api.mapping.Result);
+    assert.ok(api.mapping.q);
+    assert.strictEqual(typeof api.mapping.q.in_, 'function');
+
     //metadata module with classes
     assert.ok(api.metadata);
     assert.strictEqual(typeof api.metadata.Metadata, 'function');
@@ -834,6 +852,19 @@ describe('exports', function () {
     assert.strictEqual(api.tracker, require('../../lib/tracker'));
     assert.strictEqual(typeof api.tracker.RequestTracker, 'function');
     assert.strictEqual(typeof api.tracker.RequestLogger, 'function');
+
+    assert.ok(api.metrics);
+    assert.strictEqual(typeof api.metrics.ClientMetrics, 'function');
+    assert.strictEqual(api.metrics.ClientMetrics.name, 'ClientMetrics');
+    assert.strictEqual(typeof api.metrics.DefaultMetrics, 'function');
+    assert.strictEqual(api.metrics.DefaultMetrics.name, 'DefaultMetrics');
     /* eslint-enable global-require */
   });
 });
+
+function assertConstructorExposed(obj, constructorRef) {
+  assert.ok(obj);
+  assert.strictEqual(typeof constructorRef, 'function');
+  // Verify that is exposed with the same name as the class
+  assert.strictEqual(obj[constructorRef.name], constructorRef);
+}

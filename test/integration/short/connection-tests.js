@@ -6,6 +6,8 @@ const defaultOptions = require('../../../lib/client-options.js').defaultOptions(
 const utils = require('../../../lib/utils.js');
 const requests = require('../../../lib/requests.js');
 const helper = require('../../test-helper.js');
+const errors = require('../../../lib/errors');
+const types = require('../../../lib/types');
 const vit = helper.vit;
 
 describe('Connection', function () {
@@ -130,7 +132,7 @@ describe('Connection', function () {
         localCon.open.bind(localCon),
         function creating(next) {
           const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), {}, next);
+          localCon.sendStream(getRequest(query), null, next);
         },
         function changing(next) {
           localCon.changeKeyspace(keyspace, next);
@@ -149,7 +151,7 @@ describe('Connection', function () {
         localCon.open.bind(localCon),
         function creating(next) {
           const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), {}, next);
+          localCon.sendStream(getRequest(query), null, next);
         },
         function changing(next) {
           localCon.changeKeyspace(keyspace, next);
@@ -175,7 +177,14 @@ describe('Connection', function () {
         function asserting(seriesNext) {
           utils.times(maxRequests + 10, function (n, next) {
             const request = getRequest(helper.queries.basic);
-            connection.sendStream(request, null, next);
+            connection.sendStream(request, null, err => {
+              if (err) {
+                helper.assertInstanceOf(err, errors.ResponseError);
+                assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
+              }
+
+              next();
+            });
           }, seriesNext);
         }
       ], done);

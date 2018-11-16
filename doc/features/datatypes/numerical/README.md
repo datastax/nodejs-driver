@@ -144,3 +144,29 @@ subtraction, division, bitwise, etc).
 
 For `tinyint`, only Numbers between -128 and 127 are valid, and for `smallint` only Numbers between -32768 and 32767.
 Numbers outside valid ranges will callback with `TypeError` when executing.
+
+## ECMAScript BigInt support
+
+On modern JavaScript engines with [`BigInt`][bigint] support (e.g., Node.js 10+), you can use ECMAScript
+`BigInt` to represent `varint` and/or `bigint` CQL data types with the Node.js driver.
+
+To enable this option, you must specify it in the client options:
+
+```javascript
+const client = new Client({
+  contactPoints,
+  encoding: { 
+      useBigIntAsLong: true,
+      useBigIntAsVarint: true
+  }
+});
+```
+
+You can use `BigInt` to represent `varint` or `bigint` CQL data types or both.
+
+```javascript
+client.execute('SELECT varint_value FROM table')
+  .then(rs => console.log(typeof rs.rows[0]['varint_value'])); // "bigint"
+```
+
+[bigint]: https://github.com/tc39/proposal-bigint

@@ -12,16 +12,19 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
+const bigIntTests = require('./es-bigint-tests');
 
 describe('Client', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
     const commonTable = commonKs + '.' + helper.getRandomName('table');
     const commonTable2 = commonKs + '.' + helper.getRandomName('table');
+
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
       queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
     });
+
     it('should execute a prepared query with parameters on all hosts', function (done) {
       const client = setupInfo.client;
       const query = util.format('SELECT * FROM %s WHERE id1 = ?', commonTable);
@@ -43,6 +46,69 @@ describe('Client', function () {
         assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
         assert.strictEqual(err.query, query);
         done();
+      });
+    });
+    context('with incorrect query parameters', () => {
+      const client = setupInfo.client;
+      const query = `INSERT INTO ${commonTable2} (id, bigint_sample) VALUES (?, ?)`;
+
+      it('should callback with error when the amount of parameters does not match', done => {
+        utils.eachSeries(
+          [
+            // 2 parameters are expected
+            [ types.Uuid.random() ],
+            [ types.Uuid.random(), types.Long.ONE, 'abc' ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, errors.ResponseError);
+            assert.strictEqual(err.code, types.responseErrorCodes.invalid);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when the parameter types do not match', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), types.Uuid.random() ],
+            [ types.Uuid.random(), true ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when parameters can not be encoded', done => {
+        utils.eachSeries(
+          [
+            [ types.Uuid.random(), {} ],
+            [ types.Uuid.random(), Symbol('abc') ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
+      });
+
+      it('should callback with error when the partition key can not be encoded', done => {
+        utils.eachSeries(
+          [
+            [ Symbol(true), types.Long.ONE ],
+            [ {}, types.Long.ONE ],
+            [ types.InetAddress.fromString('10.10.10.10'), types.Long.ONE ]
+          ],
+          (params, next) => client.execute(query, params, {prepare: true}, err => {
+            helper.assertInstanceOf(err, TypeError);
+            next();
+          }),
+          done
+        );
       });
     });
     it('should prepare and execute a query without parameters', function (done) {
@@ -155,7 +221,7 @@ describe('Client', function () {
         queryOptions: { consistency: types.consistencies.quorum }
       });
       let pageState;
-      let metaPageState;
+      let rawPageState;
       const table = helper.getRandomName('table');
       utils.series([
         helper.toTask(client.execute, client, helper.createTableCql(table)),
@@ -171,7 +237,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 70);
             pageState = result.pageState;
-            metaPageState = result.meta.pageState;
+            rawPageState = result.rawPageState;
             seriesNext();
           });
         },
@@ -185,7 +251,7 @@ describe('Client', function () {
         },
         function selectDataRemainingWithMetaPageState(seriesNext) {
           //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: metaPageState}, function (err, result) {
+          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: rawPageState}, function (err, result) {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 30);
             seriesNext();
@@ -665,10 +731,10 @@ describe('Client', function () {
       it('should fill in the keyspace in the query options passed to the lbp', function (done) {
         const lbp = new loadBalancing.RoundRobinPolicy();
         lbp.newQueryPlanOriginal = lbp.newQueryPlan;
-        const queryOptionsArray = [];
-        lbp.newQueryPlan = function (query, queryOptions, callback) {
-          queryOptionsArray.push(queryOptions);
-          lbp.newQueryPlanOriginal(query, queryOptions, callback);
+        const executionOptionsArray = [];
+        lbp.newQueryPlan = function (query, info, callback) {
+          executionOptionsArray.push(info);
+          lbp.newQueryPlanOriginal(query, info, callback);
         };
         const client = newInstance({ keyspace: commonKs, policies: { loadBalancing: lbp}});
         utils.series([
@@ -678,8 +744,8 @@ describe('Client', function () {
           },
           client.shutdown.bind(client),
           function assertResults(next) {
-            const queryOptions = queryOptionsArray[queryOptionsArray.length - 1];
-            assert.strictEqual(queryOptions.keyspace, 'system');
+            const options = executionOptionsArray[executionOptionsArray.length - 1];
+            assert.strictEqual(options.getKeyspace(), 'system');
             next();
           }
         ], done);
@@ -1072,6 +1138,8 @@ describe('Client', function () {
         }, helper.finish(client, done));
       });
     });
+
+    bigIntTests(commonKs, true);
   });
 });
 

@@ -1,11 +1,11 @@
 environment:
   appveyor_build_worker_cloud: gce
-  ci_type: ci_unit
+  ci_type: ci_unit_appveyor
   matrix:
-    - nodejs_version: 8
-      TEST_CASSANDRA_VERSION: 3.11.2
-      ci_type: ci
     - nodejs_version: 10
+      TEST_CASSANDRA_VERSION: 3.11.3
+      ci_type: ci_appveyor
+    - nodejs_version: 8
     - nodejs_version: 6 
     - nodejs_version: 4
 image: Visual Studio 2017
@@ -15,6 +15,7 @@ install:
   - ps: .\ci\hardwareinfo.ps1
   - ps: .\ci\appveyor.ps1
   - npm install
+  - npm install mocha-appveyor-reporter@0
 build: off
 test_script:
   - "npm run %ci_type%"

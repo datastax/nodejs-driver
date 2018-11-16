@@ -304,7 +304,7 @@ describe('Client', function () {
         keyspace: setupInfo.keyspace,
         queryOptions: { consistency: types.consistencies.quorum }
       });
-      let metaPageState;
+      let rawPageState;
       let pageState;
       utils.series([
         helper.toTask(insertTestData, null, client, table, 131),
@@ -318,7 +318,7 @@ describe('Client', function () {
             assert.strictEqual(counter, 70);
             assert.strictEqual(result.rowLength, counter);
             pageState = result.pageState;
-            metaPageState = result.meta.pageState;
+            rawPageState = result.rawPageState;
             seriesNext();
           });
         },
@@ -338,7 +338,7 @@ describe('Client', function () {
         function selectDataRemainingWithMetaPageState(seriesNext) {
           //The remaining
           let counter = 0;
-          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: metaPageState}, function (n, row) {
+          client.eachRow(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70, pageState: rawPageState}, function (n, row) {
             assert.ok(row);
             counter++;
           }, function (err, result) {

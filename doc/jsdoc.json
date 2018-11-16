@@ -4,13 +4,16 @@
       "lib/types",
       "lib/auth",
       "lib/policies",
+      "lib/mapping",
       "lib/metadata",
       "lib/client.js",
       "lib/execution-profile.js",
+      "lib/execution-options.js",
       "lib/encoder.js",
       "lib/errors.js",
       "lib/host.js",
-      "lib/tracker"
+      "lib/tracker",
+      "lib/metrics"
     ]
   },
   "templates": {

@@ -5,10 +5,12 @@ const requests = require('../../lib/requests');
 const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
 const utils = require('../../lib/utils');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const QueryRequest = requests.QueryRequest;
 const ExecuteRequest = requests.ExecuteRequest;
 const BatchRequest = requests.BatchRequest;
 const StartupRequest = requests.StartupRequest;
+
 const encoder = new Encoder(types.protocolVersion.maxSupported, {});
 
 describe('QueryRequest', function () {
@@ -134,7 +136,7 @@ function testRequestLength(requestGetter) {
 }
 
 function getQueryRequest() {
-  return new QueryRequest('Q1', [ 1, 2 ], { consistency: 1, hints: [] });
+  return new QueryRequest('Q1', [ 1, 2 ], ExecutionOptions.empty());
 }
 
 function getBatchRequest() {
@@ -142,10 +144,10 @@ function getBatchRequest() {
     [
       { query: 'Q1', params: [] },
       { query: 'Q2', params: [] }
-    ], { logged: false, consistency: 1 });
+    ], ExecutionOptions.empty());
 }
 
 function getExecuteRequest() {
   const meta = { columns: [ { type: { code: types.dataTypes.int } }, { type: { code: types.dataTypes.int } } ]};
-  return new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], {}, meta);
+  return new ExecuteRequest('Q1', utils.allocBufferFromString('Q1'), [ 1, 2], ExecutionOptions.empty(), meta);
 }

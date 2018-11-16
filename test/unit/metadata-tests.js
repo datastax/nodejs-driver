@@ -2534,6 +2534,56 @@ describe('Metadata', function () {
       }, Error);
     });
   });
+
+  describe('#compareSchemaVersions()', function () {
+    it('should return false when any of the query fails', () =>
+      Promise.all([0, 1].map(failIndex => {
+        let index = 0;
+
+        const cc = {
+          connection: {
+            sendStream: (r, o, cb) => {
+              if (index++ === failIndex) {
+                return cb(new Error('Test error'));
+              }
+              cb(null, {rows: [{'schema_version': '123'}]});
+            }
+          }
+        };
+
+        const metadata = newInstance(cc);
+        return metadata.checkSchemaAgreement()
+          .then(agreement => assert.strictEqual(agreement, false));
+      })));
+
+    it('should return true when versions match', () => {
+      const cc = {
+        connection: {
+          sendStream: (r, o, cb) => {
+            cb(null, {rows: [{'schema_version': '123'}]});
+          }
+        }
+      };
+
+      const metadata = newInstance(cc);
+      return metadata.checkSchemaAgreement()
+        .then(agreement => assert.strictEqual(agreement, true));
+    });
+
+    it('should return false when versions match', () => {
+      let index = 0;
+
+      const cc = {
+        connection: {
+          sendStream: (r, o, cb) => setImmediate(() => cb(null, {rows: [{'schema_version': String(index++)}]}))
+        }
+      };
+
+      const metadata = newInstance(cc);
+      return metadata.checkSchemaAgreement()
+        .then(agreement => assert.strictEqual(agreement, false));
+    });
+  });
 });
 describe('SchemaParser', function () {
   const isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
@@ -2629,8 +2679,8 @@ function stringifyDefault(v) {
 }
 
 /** @returns {Metadata} */
-function newInstance() {
-  return new Metadata(clientOptions.defaultOptions(), getControlConnectionForRows([]));
+function newInstance(cc) {
+  return new Metadata(clientOptions.defaultOptions(), cc || getControlConnectionForRows([]));
 }
 
 function expectRanges(metadata, keyspace, host, expectedRanges) {

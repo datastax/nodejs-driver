@@ -41,6 +41,7 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
 
   const clientOptions = {
     contactPoints: [simulacron.startingIp],
+    localDataCenter: 'dc1',
   };
 
   if (maxVersion) {
@@ -66,7 +67,7 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
           data_centers: [
             {
               id: 0,
-              name: "dc0",
+              name: "dc1",
               nodes: nodes
             }
           ]

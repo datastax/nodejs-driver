@@ -1,7 +1,7 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Creates a table and retrieves its information
@@ -28,9 +28,9 @@ client.connect()
     console.log('Trace for the execution of the query:');
     console.log(trace);
     console.log('The trace was retrieved successfully');
-    client.shutdown();
+    return client.shutdown();
   })
   .catch(function (err) {
     console.error('There was an error', err);
-    return client.shutdown();
+    return client.shutdown().then(() => { throw err; });
   });

@@ -101,6 +101,7 @@ const helper = {
     return {
       //required
       contactPoints: ['127.0.0.1'],
+      localDataCenter: 'dc1',
       // retry all queries multiple times (for improved test resiliency).
       policies: { retry: new RetryMultipleTimes(3) }
     };
@@ -788,6 +789,10 @@ function Ccm() {
 Ccm.prototype.startAll = function (nodeLength, options, callback) {
   const self = this;
   options = options || {};
+  // adapt to multi dc format so data center naming is consistent.
+  if (typeof nodeLength === 'number') {
+    nodeLength = nodeLength + ':0';
+  }
   const version = options.version || helper.getCassandraVersion();
   helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
   utils.series([

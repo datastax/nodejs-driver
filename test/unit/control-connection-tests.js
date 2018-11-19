@@ -162,6 +162,28 @@ describe('ControlConnection', function () {
         done();
       });
     });
+    it('should borrow connections in random order', function (done) {
+      // collect unique permutations of borrow order.
+      const borrowOrders = new Set();
+      utils.times(20, (i, next) => {
+        const hosts = [];
+        const cc = newInstance({ contactPoints: [ '::1', '::2', '::3', '::4' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1, 2 ] }));
+        cc.init(function (err) {
+          cc.shutdown();
+          cc.hosts.values().forEach(h => h.shutdown());
+          assert.ifError(err);
+          assert.strictEqual(hosts.length, 4);
+          assert.ok(cc.initialized);
+          borrowOrders.add(hosts.map((h) => h.address).join());
+          next();
+        });
+      }, (err) => {
+        assert.ifError(err);
+        // should have been more than 1 unique permutation
+        assert.ok(borrowOrders.size > 1);
+        done();
+      });
+    });
     it('should callback with NoHostAvailableError when borrowing all connections fail', function (done) {
       const hosts = [];
       const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1] }));

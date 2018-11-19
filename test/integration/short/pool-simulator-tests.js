@@ -231,7 +231,7 @@ describe('pool', function () {
         .withTranslations(new Map([ [ node2Address, node1Address]]));
 
       const client = new Client({
-        contactPoints: cluster.getContactPoints(),
+        contactPoints: [cluster.getContactPoints()[0]],
         localDataCenter: 'dc1',
         policies: {
           addressResolution: addressTranslator,

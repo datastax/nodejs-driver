@@ -6,7 +6,7 @@ efficient:
 - Only use one `Client` instance per keyspace or use a single Client and explicitly specify the keyspace in your queries
 and reuse it in across your modules in the application lifetime.
 - If you execute a statement more than once, use a prepared statement.
-- You can reduce the number of network roundtrips and also have atomic operations by using batches.
+- In some situations you can reduce the number of network roundtrips and also have atomic operations by using batches.
 
 ## Client 
 
@@ -33,7 +33,7 @@ Your code should share the same `Client` instance across your application.
 ## Prepared statements 
 
 Using prepared statements provides multiple benefits. A prepared statement is parsed and prepared on the Cassandra nodes
-and is ready for future execution. When binding parameters, only they (and the query id) are sent over the wire. These
+and is ready for future execution. When binding parameters are provided, only they (and the query id) are sent over the wire. These
 performance gains add up when using the same queries (with different parameters) repeatedly. Additionally, when
 preparing, the driver retrieves information about the parameter types which allows an accurate mapping between a
 JavaScript type and a CQL type.
@@ -51,8 +51,9 @@ client.execute(query, [ id ], { prepare: true }, callback);
 The batch statement combines multiple data modification statements (`INSERT`, `UPDATE`, or `DELETE`) into a single logical
 operation that is sent to the server in a single request. Batching together multiple operations also ensures that they
 are executed in an atomic way, (that is, either all succeed or none). To make the best use of `batch()`, read about
-[atomic batches in Cassandra 1.2](http://www.datastax.com/dev/blog/atomic-batches-in-cassandra-1-2) and [static columns
-and batching of conditional updates](http://www.datastax.com/dev/dev/blog/cql-in-2-0-6).
+[atomic batches in Cassandra 1.2](http://www.datastax.com/dev/blog/atomic-batches-in-cassandra-1-2), [static columns
+and batching of conditional updates](http://www.datastax.com/dev/dev/blog/cql-in-2-0-6),
+and [CQL documentation][batches].  But take into account that incorrect use of batch statements may increase load to servers.
 
 Starting with Cassandra 2.0, prepared statements can be used in batch operations.
 
@@ -69,3 +70,5 @@ client.batch(queries, queryOptions, function(err) {
    console.log('Data updated on cluster');
 });
 ```
+
+[batches]: https://docs.datastax.com/en/cql/3.3/cql/cql_using/useBatchTOC.html

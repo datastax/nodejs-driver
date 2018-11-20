@@ -2,7 +2,7 @@
 
 ### Which versions of Cassandra does the driver support?
 
-The latest version of the driver supports any Cassandra version greater than 1.2.
+The latest version of the driver supports any Cassandra version starting with 2.1.
 
 ### Which versions of CQL does the driver support?
 

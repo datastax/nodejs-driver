@@ -239,6 +239,7 @@ describe('pool', function () {
 
       const client = new Client({
         contactPoints: cluster.getContactPoints(),
+        localDataCenter: 'dc1',
         policies: {
           addressResolution: addressTranslator,
           reconnection: new policies.reconnection.ConstantReconnectionPolicy(400)

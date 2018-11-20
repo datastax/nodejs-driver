@@ -9,6 +9,12 @@ If you have any questions or comments, you can [post them on the mailing list][m
 
 The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 3.x.
 
+### localDataCenter is now a required Client option
+
+When using `DCAwareRoundRobinPolicy`, which is used by default,  a local data center must now be provided to the
+`Client` options parameter as `localDataCenter`.  This is necessary to prevent routing requests to nodes in remote
+data centers.
+
 ### Changes to the retry and load-balancing policies
 
 `ExecutionOptions` is introduced as a wrapper around the `QueryOptions`.

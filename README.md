@@ -32,7 +32,7 @@ You can use the [project mailing list][mailing-list] or create a ticket on the [
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.Client({ contactPoints: ['host1', 'host2'] });
+const client = new dse.Client({ contactPoints: ['host1', 'host2'], localDataCenter: 'datacenter1' });
 
 const query = 'SELECT name, email FROM users WHERE key = ?';
 client.execute(query, [ 'someone' ])

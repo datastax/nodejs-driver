@@ -64,7 +64,7 @@ hint (`udt<address>`) and initially the driver makes an extra round-strip to the
 
 User defined types can nested arbitrarily. Here is an example based on the schema used in the previous example, but
 with the phones column changed from `set<text>` to a `set<frozen<phone>>`. The phone UDT contains an alias, a 
-phone_number and a country_code.
+`phone_number` and a `country_code`.
 
 ```
 CREATE TYPE phone ( 

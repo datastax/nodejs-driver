@@ -36,6 +36,7 @@ describe('Client', function () {
             poolingOptions[types.distance.local] = 1;
             client = new Client({
               contactPoints: [sCluster.getContactPoints()[0]],
+              localDataCenter: 'dc1',
               policies: {
                 reconnection: new reconnection.ConstantReconnectionPolicy(100),
                 retry: new helper.RetryMultipleTimes(3)

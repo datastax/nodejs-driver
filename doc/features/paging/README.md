@@ -28,7 +28,7 @@ client.stream(query, parameters, options)
 ```
 
 With the `eachRow()` method, you can retrieve the following pages automatically by setting the `autoPage` flag to
-`true` in the queryOptions to request the following pages automatically. Because `eachRow()` does not handle back
+`true` in the `queryOptions` to request the following pages automatically. Because `eachRow()` does not handle back
 pressure, it is only suitable when there is minimum computation per row required and no additional I/O, otherwise it
 ends up buffering an unbounded amount of rows.
 

@@ -3,7 +3,7 @@ const dse = require('dse-driver');
 const Uuid = dse.types.Uuid;
 const UnderscoreCqlToCamelCaseMappings = dse.mapping.UnderscoreCqlToCamelCaseMappings;
 
-const client = new dse.Client({ contactPoints: ['127.0.0.1']});
+const client = new dse.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 const mapper = new dse.mapping.Mapper(client, { models: {
   'Video': {
@@ -62,8 +62,11 @@ client.connect()
     // SELECT using table "user_videos"
     return videoMapper.find({ userId });
   })
-  .then(results => console.log('--Obtained video by user id\n', results.first()))
+  .then(results => {
+    console.log('--Obtained video by user id\n', results.first());
+    return client.shutdown();
+  })
   .catch(function (err) {
     console.error('There was an error', err);
-  })
-  .then(() => client.shutdown());
+    return client.shutdown().then(() => { throw err; });
+  });

@@ -8,6 +8,7 @@
 const assert = require('assert');
 
 const helper = require('../test-helper.js');
+const errors = require('../../lib/errors');
 const Client = require('../../lib/client.js');
 const clientOptions = require('../../lib/client-options.js');
 const Host = require('../../lib/host.js').Host;
@@ -36,7 +37,7 @@ describe('RoundRobinPolicy', function () {
     const hosts = [];
     const originalHosts = createHostMap(['A', 'B', 'C', 'E']);
     const times = 100;
-    policy.init(null, originalHosts, function () {
+    policy.init(new Client(helper.baseOptions), originalHosts, function () {
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           assert.equal(err, null);
@@ -84,7 +85,7 @@ describe('RoundRobinPolicy', function () {
     const policy = new RoundRobinPolicy();
     const originalHosts = createHostMap(['A', 'B', 'C']);
     const times = 10;
-    policy.init(null, originalHosts, function () {
+    policy.init(new Client(helper.baseOptions), originalHosts, function () {
       utils.times(times, function (n, next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
           let item;
@@ -108,7 +109,7 @@ describe('RoundRobinPolicy', function () {
 });
 describe('DCAwareRoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
-    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const policy = new DCAwareRoundRobinPolicy();
     policy.hosts = null;
     policy.newQueryPlan(null, null, function(err) {
       assert(err instanceof Error);
@@ -118,7 +119,7 @@ describe('DCAwareRoundRobinPolicy', function () {
   it('should yield local nodes in a round robin manner in parallel', function (done) {
     //local datacenter: dc1
     //0 host per remote datacenter
-    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const policy = new DCAwareRoundRobinPolicy();
     const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     const hosts = [];
     const originalHosts = new HostMap();
@@ -173,7 +174,7 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
   });
   it('should yield local hosts in a round robin manner when consuming.', function (done) {
-    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const policy = new DCAwareRoundRobinPolicy();
     const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     const originalHosts = new HostMap();
     let i;
@@ -424,14 +425,14 @@ describe('DCAwareRoundRobinPolicy', function () {
     });
   });
   it('should handle cache being cleared and next iterations', function (done) {
-    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const policy = new DCAwareRoundRobinPolicy();
     const options = clientOptions.extend({}, helper.baseOptions, {policies: {loadBalancing: policy}});
     const hosts = new HostMap();
     hosts.set('1', createHost('1', options));
     hosts.set('2', createHost('2', options));
     utils.series([
       function initPolicy(next) {
-        policy.init(null, hosts, next);
+        policy.init(new Client(options), hosts, next);
       },
       function checkQueryPlanWithNewNodesBeingAdded(next) {
         policy.newQueryPlan(null, null, function (err, iterator) {
@@ -456,9 +457,29 @@ describe('DCAwareRoundRobinPolicy', function () {
     ], done);
 
   });
-  it('should warn on init when no local DC was configured', function (done) {
+  it('should throw an error when localDataCenter is not configured on Client options', function (done) {
     const policy = new DCAwareRoundRobinPolicy();
-    const client = new Client(helper.baseOptions);
+    const options = utils.extend({}, helper.baseOptions);
+    delete options.localDataCenter;
+    const client = new Client(options);
+    const logEvents = [];
+    client.on('log', function(level, className, message, furtherInfo) {
+      logEvents.push({level: level, className: className, message: message, furtherInfo: furtherInfo});
+    });
+    const hosts = new HostMap();
+    hosts.set('1', createHost('1', client.options));
+    policy.init(client, hosts, (err) => {
+      helper.assertInstanceOf(err, errors.ArgumentError);
+      assert.strictEqual(err.message, '\'localDataCenter\' is not defined in Client options and also was not specified' + 
+        ' in constructor. At least one is required.');
+      done();
+    });
+  });
+  it('should log on init when localDc was provided to constructor but localDataCenter was not set on Client options', function (done) {
+    const policy = new DCAwareRoundRobinPolicy('dc1');
+    const options = utils.extend({}, helper.baseOptions);
+    delete options.localDataCenter;
+    const client = new Client(options);
     const logEvents = [];
     client.on('log', function(level, className, message, furtherInfo) {
       logEvents.push({level: level, className: className, message: message, furtherInfo: furtherInfo});
@@ -472,15 +493,16 @@ describe('DCAwareRoundRobinPolicy', function () {
       function checkLogs(next) {
         assert.strictEqual(logEvents.length, 1);
         const event = logEvents[0];
-        assert.strictEqual(event.level, 'warning');
-        assert.strictEqual(event.message, 'No local Data Center was provided with DCAwareRoundRobinPolicy.' +
-          '  Using discovered DC \'dc1\' from host 1.  Future releases will require local DC to be specified.');
+        assert.strictEqual(event.level, 'info');
+        assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' + 
+          ' DCAwareRoundRobinPolicy. It is more preferable to specify the local data center using' + 
+          ' \'localDataCenter\' in Client options instead when your application is targeting a single data center.');
         next();
       }
     ], done);
   });
-  it('should not warn on init when local DC was configured', function (done) {
-    const policy = new DCAwareRoundRobinPolicy('dc1');
+  it('should not warn on init when localDataCenter was configured on Client options', function (done) {
+    const policy = new DCAwareRoundRobinPolicy();
     const client = new Client(helper.baseOptions);
     const logEvents = [];
     client.on('log', function(level, className, message, furtherInfo) {

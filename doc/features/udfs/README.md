@@ -12,7 +12,7 @@ client.execute(query)
   });
 ```
 
-The driver also exposes [UDFs and aggregates metadata information][metadata-api], for example let's see how to retrieve the metadata
+The driver also exposes [UDFs and aggregates metadata information](/api/module.metadata/), for example let's see how to retrieve the metadata
 information of a UDF named iif, that takes a boolean and int parameter.
 
 ```javascript
@@ -22,4 +22,3 @@ client.metadata.getFunction('ks1', 'iif', ['boolean', 'int'])
   });
 ```
 
-[metadata-api]: http://docs.datastax.com/en/latest-nodejs-driver-api/module-metadata-Metadata.html

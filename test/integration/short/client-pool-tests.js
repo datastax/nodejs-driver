@@ -201,6 +201,7 @@ describe('Client', function () {
     it('should not fail when switching keyspace and a contact point is not valid', function (done) {
       const client = new Client({
         contactPoints: ['1.1.1.1', helper.baseOptions.contactPoints[0]],
+        localDataCenter: helper.baseOptions.localDataCenter,
         keyspace: 'system'
       });
       client.connect(function (err) {

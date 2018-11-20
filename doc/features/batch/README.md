@@ -39,3 +39,6 @@ different parameters provided.
 Note that Cassandra batches are not suitable for bulk loading, there are dedicated tools for that. Batches allow you
 to group related updates in a single request, so keep the batch size small (in the order of tens).
 Starting from Cassandra version 2.0.8, the server issues a warning if the batch size is greater than 5K.
+Refer to [CQL documentation][batches] for information about correct and incorrect use of batches.
+
+[batches]: https://docs.datastax.com/en/cql/3.3/cql/cql_using/useBatchTOC.html

@@ -20,6 +20,7 @@ module.exports = function (keyspace, prepare) {
   context('when BigInt is supported by the engine', () => {
     const client = new Client({
       contactPoints: helper.baseOptions.contactPoints,
+      localDataCenter: helper.baseOptions.localDataCenter,
       keyspace,
       encoding: { useBigIntAsVarint: true, useBigIntAsLong: true, set: Set }
     });

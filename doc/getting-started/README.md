@@ -9,14 +9,20 @@ dse package:
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['host1'] });
+const client = new cassandra.Client({
+  contactPoints: ['host1', 'host2'],
+  localDataCenter: 'datacenter1'
+});
 ```
 
 Becomes:
 
 ```javascript
 const dse = require('dse-driver');
-const client = new dse.Client({ contactPoints: ['host1'] });
+const client = new dse.Client({
+  contactPoints: ['host1', 'host2'],
+  localDataCenter: 'datacenter1'
+});
 ```
 
 All CQL features in the Cassandra driver (see the [core driver features][core-features]) are available in the

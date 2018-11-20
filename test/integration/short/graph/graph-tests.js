@@ -952,7 +952,7 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
         // Set the dse_leases keyspace to RF of 2, this will prevent election of new job tracker until all nodes
         // are available, preventing weird cases where 1 node thinks the wrong node is a master.
         client.execute(
-          "ALTER KEYSPACE dse_leases WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'GraphAnalytics': '2'}",
+          "ALTER KEYSPACE dse_leases WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'dc1': '2'}",
           next);
       },
       function addNode(next) {

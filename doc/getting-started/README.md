@@ -4,26 +4,26 @@ Getting started with the DataStax Node.js driver for Apache Cassandra.
 
 ## Connecting to a cluster
 
-To connect to a Cassandra cluster, you need to provide at least 1 node of the cluster, if there are more nodes than
-the one provided, then driver will use one of them.  The driver will discover all the
-nodes in the cluster after it connects to the one node in given list. 
+To connect to an Apache Cassandra cluster, you need to provide the address or host name of at least one node
+in the cluster and the local data center name.  The driver will discover all the nodes in the cluster after
+it connects to one node in given list.
  
-Typically you create only 1 `Client` instance for a given Cassandra cluster and use it across your application.
+Typically you create only a single `Client` instance for a given Cassandra cluster and use it across your application.
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['host1', 'host2'] });
+const client = new cassandra.Client({ contactPoints: ['host1', 'host2'], localDataCenter: 'datacenter1' });
 client.connect(function (err) {
   assert.ifError(err);
 });
 ```
 
-At this point, the driver will be connected to one of the contact points and discovered the rest of the nodes in your
-cluster.  
+At this point, the driver will be connected to all the nodes in the local data center and discovered the rest
+of the nodes in your cluster.
 
 Even though calling `#connect()` is not required (the execute method internally calls to connect), it is recommended you
 call to `#connect()` on application startup, this way you can ensure that you start your app once your are connected to
-your Cassandra cluster.
+your cluster.
 
 ## Retrieving data
 
@@ -62,7 +62,7 @@ additional info (hints) from the user.
 
 ```javascript
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
-//Set the prepare flag in your queryOptions
+// Set the prepare flag in your queryOptions
 client.execute(query, ['mick-jagger'], { prepare: true }, callback);
 ```
 

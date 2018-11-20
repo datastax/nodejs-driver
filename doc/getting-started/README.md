@@ -8,7 +8,8 @@ To connect to an Apache Cassandra cluster, you need to provide the address or ho
 in the cluster and the local data center name.  The driver will discover all the nodes in the cluster after
 it connects to one node in given list.
  
-Typically you create only a single `Client` instance for a given Cassandra cluster and use it across your application.
+Typically, you should create only a single `Client` instance for a given Cassandra cluster and use it across
+your application.
 
 ```javascript
 const cassandra = require('cassandra-driver');

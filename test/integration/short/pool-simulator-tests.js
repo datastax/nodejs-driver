@@ -292,6 +292,23 @@ describe('pool', function () {
         })
         .then(() => client.shutdown());
     });
+
+    it('should use different contactPoints as initial control connection', () =>
+      helper.repeat(20, () => {
+        const client = new Client({
+          contactPoints: cluster.getContactPoints(),
+          localDataCenter: 'dc1'
+        });
+
+        let address;
+
+        return client.connect()
+          .then(() => address = client.controlConnection.host.address)
+          .then(() => client.shutdown())
+          .then(() => address);
+
+      }).then(addresses => assert.ok(new Set(addresses).size > 0))
+    );
   });
 });
 

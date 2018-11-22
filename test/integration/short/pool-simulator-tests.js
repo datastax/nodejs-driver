@@ -201,6 +201,7 @@ describe('pool', function () {
         })
         .then(() => Promise.all(promises))
         .then(() => new Promise(resolve => setImmediate(resolve)))
+        .then(() => helper.setIntervalUntilPromise(() => firstHost.getInFlight() === 0, 10, 100))
         .then(() => {
           assert.strictEqual(retryPolicyCalled, 1);
           assert.strictEqual(firstHost.getInFlight(), 0);

@@ -15,6 +15,13 @@ When using `DCAwareRoundRobinPolicy`, which is used by default,  a local data ce
 `Client` options parameter as `localDataCenter`.  This is necessary to prevent routing requests to nodes in remote
 data centers.
 
+### Selection of contact points is now evaluated in random order
+
+The list of contact points provided as a Client option is now shuffled before selecting a node to connect to as part
+of initialization.  This change was made for instances where configuration is shared between many clients.  In this
+case, it is better to distribute initial connections to different nodes in the cluster instead of choosing the
+same node each time as the initial connection makes a number of queries to discover cluster topology and schema.
+
 ### Changes to the retry and load-balancing policies
 
 `ExecutionOptions` is introduced as a wrapper around the `QueryOptions`.

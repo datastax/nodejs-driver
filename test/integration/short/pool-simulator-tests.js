@@ -232,7 +232,7 @@ describe('pool', function () {
         .withTranslations(new Map([ [ node2Address, node1Address]]));
 
       const client = new Client({
-        contactPoints: cluster.getContactPoints(),
+        contactPoints: [cluster.getContactPoints()[0]],
         localDataCenter: 'dc1',
         policies: {
           addressResolution: addressTranslator,
@@ -293,6 +293,23 @@ describe('pool', function () {
         })
         .then(() => client.shutdown());
     });
+
+    it('should use different contactPoints as initial control connection', () =>
+      helper.repeat(20, () => {
+        const client = new Client({
+          contactPoints: cluster.getContactPoints(),
+          localDataCenter: 'dc1'
+        });
+
+        let address;
+
+        return client.connect()
+          .then(() => address = client.controlConnection.host.address)
+          .then(() => client.shutdown())
+          .then(() => address);
+
+      }).then(addresses => assert.ok(new Set(addresses).size > 0))
+    );
   });
 });
 

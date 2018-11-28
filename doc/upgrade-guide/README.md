@@ -21,6 +21,13 @@ Previously, we supported the use of the `DseLoadBalancingPolicy` as a wrapper of
 implementation of the `DseLoadBalancingPolicy` provides replica ordering using "Power of Two Random Choices" algorithm 
 and removes the possibility of chaining policies.
 
+### Selection of contact points is now evaluated in random order
+
+The list of contact points provided as a Client option is now shuffled before selecting a node to connect to as part
+of initialization.  This change was made for instances where configuration is shared between many clients.  In this
+case, it is better to distribute initial connections to different nodes in the cluster instead of choosing the
+same node each time as the initial connection makes a number of queries to discover cluster topology and schema.
+
 ### Changes to the retry and load-balancing policies
 
 `ExecutionOptions` is introduced as a wrapper around the `QueryOptions`.
@@ -74,6 +81,12 @@ were removed.
 
 On earlier versions of the driver, the `ResultSet` exposed the property `meta` which contained the raw result metadata.
 This property was removed in the latest version.
+
+### Removed `DCAwareRoundRobinPolicy` `usedHostsPerRemoteDC` constructor parameter
+
+`DCAwareRoundRobinPolicy` no longer supports routing queries to hosts in remote data centers. Because of this
+`usedHostsPerRemoteDC` has been removed as a constructor parameter.  This change was made because handling
+data center outages is better suited at a service level rather than within an application client.
 
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [op-info]: https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.policies/module.retry/type.OperationInfo/

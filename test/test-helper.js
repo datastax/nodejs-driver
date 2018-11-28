@@ -738,6 +738,20 @@ const helper = {
   isWin: function () {
     return process.platform.indexOf('win') === 0;
   },
+
+  /**
+   * Invokes a function multiple times and returns a Promise that is resolved when all the promises have completed.
+   * @param {Number} times
+   * @param {Function} fn
+   * @returns {Promise}
+   */
+  repeat: function(times, fn) {
+    const arr = new Array(times);
+    for (let i = 0; i < times; i++) {
+      arr[i] = fn(i);
+    }
+    return Promise.all(arr);
+  },
   requireOptional: function (moduleName) {
     try {
       // eslint-disable-next-line

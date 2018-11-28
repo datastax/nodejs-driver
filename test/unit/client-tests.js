@@ -519,7 +519,8 @@ describe('Client', function () {
       });
     });
     it('should callback with error if the queries are undefined', function (done) {
-      const client = newConnectedInstance(undefined, undefined, PrepareHandler);
+      const options = { policies: { loadBalancing: new policies.loadBalancing.RoundRobinPolicy() }};
+      const client = newConnectedInstance(undefined, options, PrepareHandler);
       client.batch([ undefined, undefined, 'q3' ], { prepare: true }, function (err) {
         helper.assertInstanceOf(err, errors.ArgumentError);
         done();

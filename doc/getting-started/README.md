@@ -57,7 +57,8 @@ Graph and CQL workloads, allowing you to use a single `Client` instance for all 
 
 ```javascript
 const client = new dse.Client({ 
-  contactPoints: ['host1'], 
+  contactPoints: ['host1'],
+  localDataCenter: 'oltp-us-west',
   profiles: [
     new ExecutionProfile('time-series', {
       consistency: consistency.localOne,

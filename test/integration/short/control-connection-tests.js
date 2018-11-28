@@ -122,9 +122,12 @@ describe('ControlConnection', function () {
     it('should subscribe to TOPOLOGY_CHANGE add events and refresh ring info', function (done) {
       const options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
       options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(1000);
+      options.policies.loadBalancing = new policies.loadBalancing.RoundRobinPolicy();
+
       const cc = newInstance(options, 1, 1);
       utils.series([
         cc.init.bind(cc),
+        next => options.policies.loadBalancing.init(null, cc.hosts, next),
         helper.toTask(helper.ccmHelper.bootstrapNode, null, 3),
         helper.toTask(helper.ccmHelper.startNode, null, 3),
         // While the host is started, it's not a given that it will have been connected and marked up,
@@ -138,20 +141,25 @@ describe('ControlConnection', function () {
           }, 0);
           assert.strictEqual(countUp, 3);
           cc.shutdown();
+          hosts.forEach(h => h.shutdown());
           next();
         }
       ], done);
     });
     it('should subscribe to TOPOLOGY_CHANGE remove events and refresh ring info', function (done) {
       const cc = newInstance();
+      cc.options.policies.loadBalancing = new policies.loadBalancing.RoundRobinPolicy();
+
       utils.series([
         cc.init.bind(cc),
+        next => cc.options.policies.loadBalancing.init(null, cc.hosts, next),
         helper.toTask(helper.ccmHelper.decommissionNode, null, 2),
         helper.waitOnHostGone(cc, 2),
         function (next) {
           const hosts = cc.hosts.slice(0);
           assert.strictEqual(hosts.length, 1);
           cc.shutdown();
+          hosts.forEach(h => h.shutdown());
           next();
         }
       ], done);

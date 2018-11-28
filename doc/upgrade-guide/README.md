@@ -7,13 +7,19 @@ If you have any questions or comments, you can [post them on the mailing list][m
 
 ## 2.0
 
-The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 3.x.
+The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 1.x.
 
 ### localDataCenter is now a required Client option
 
-When using `DCAwareRoundRobinPolicy`, which is used by default,  a local data center must now be provided to the
-`Client` options parameter as `localDataCenter`.  This is necessary to prevent routing requests to nodes in remote
-data centers.
+When using `DseLoadBalancingPolicy`, which is used by default, or `DCAwareRoundRobinPolicy` a local data center must 
+now be provided to the `Client` options parameter as `localDataCenter`.  This is necessary to prevent routing 
+requests to nodes in remote data centers unintentionally.
+
+### Removed `createAsAWrapper()` method from `DseLoadBalancingPolicy` class
+
+Previously, we supported the use of the `DseLoadBalancingPolicy` as a wrapper of a child policy. The new 
+implementation of the `DseLoadBalancingPolicy` provides replica ordering using "Power of Two Random Choices" algorithm 
+and removes the possibility of chaining policies.
 
 ### Changes to the retry and load-balancing policies
 

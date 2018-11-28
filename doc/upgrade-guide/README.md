@@ -76,6 +76,12 @@ were removed.
 On earlier versions of the driver, the `ResultSet` exposed the property `meta` which contained the raw result metadata.
 This property was removed in the latest version.
 
+### Removed `DCAwareRoundRobinPolicy` `usedHostsPerRemoteDC` constructor parameter
+
+`DCAwareRoundRobinPolicy` no longer supports routing queries to hosts in remote data centers. Because of this
+`usedHostsPerRemoteDC` has been removed as a constructor parameter.  This change was made because handling
+data center outages is better suited at a service level rather than within an application client.
+
 ---
 
 ## 3.0

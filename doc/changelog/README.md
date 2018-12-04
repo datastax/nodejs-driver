@@ -2,6 +2,23 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 1.7.0
+
+2018-12-04
+
+### Features
+
+- [NODEJS-442] - Parse Virtual Keyspace Metadata
+- [NODEJS-443] - Provide a means of sending query to a specific node to facilitate virtual table queries
+- [NODEJS-459] - Support for Virtual Tables/System views
+- [NODEJS-487] - Deprecate DCAwareRoundRobinPolicy parameter for inter-DC failover
+
+### Bug fixes
+
+- [NODEJS-465] - Table metadata fetch fails when using ES2015 Set and C* 3.0+
+- [NODEJS-472] - Connections attempts are made when a new node is bootstrapped even if its marked as "ignored"
+- [NODEJS-474] - Retry on current host should be made on a different connection
+
 ## 1.6.0
 
 2018-04-17

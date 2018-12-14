@@ -25,7 +25,8 @@ in driver versions 3.0 and above:
 
 ```javascript
 const client = new cassandra.Client({
-  contactPoints: [ 'node1', 'node2' ],
+  contactPoints,
+  localDataCenter,
   encoding: { useUndefinedAsUnset: false } 
 });
 ```

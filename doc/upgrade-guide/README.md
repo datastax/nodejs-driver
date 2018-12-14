@@ -50,7 +50,11 @@ client.execute(query, params, { prepare: true, isIdempotent: true })
 Additionally, you can define the default idempotence for all executions when creating the `Client` instance:
 
 ```javascript
-const client = new Client({ contactPoints, queryOptions: { isIdempotent: true }})
+const client = new Client({
+  contactPoints,
+  localDataCenter,
+  queryOptions: { isIdempotent: true }
+});
 ```
 
 Previously, a similar behaviour was available using `IdempotenceAwareRetryPolicy`, that is now marked as deprecated.

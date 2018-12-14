@@ -246,7 +246,8 @@ creating the `Client` instance.
 
 ```javascript
 const client = new Client({ 
-  contactPoints, 
+  contactPoints,
+  localDataCenter,
   profiles: [ 
     new ExecutionProfile('default', {
       consistency: consistency.one,

@@ -13,7 +13,12 @@ your application.
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['host1', 'host2'], localDataCenter: 'datacenter1' });
+
+const client = new cassandra.Client({ 
+  contactPoints: ['host1', 'host2'],
+  localDataCenter: 'datacenter1'
+});
+
 client.connect(function (err) {
   assert.ifError(err);
 });
@@ -108,7 +113,7 @@ Using an authentication provider on an auth-enabled Cassandra cluster:
 ```javascript
 const authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
 //Set the auth provider in the clientOptions when creating the Client instance
-const client = new Client({ authProvider: authProvider });
+const client = new Client({ contactPoints, localDataCenter, authProvider });
 ```
 
 [consistency]: https://docs.datastax.com/en/dse/6.0/dse-arch/datastax_enterprise/dbInternals/dbIntConfigConsistency.html

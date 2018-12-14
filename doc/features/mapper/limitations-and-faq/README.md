@@ -24,7 +24,7 @@ If you are using a single keyspace containing all your data, its recommended tha
 creating the `Client` instance. For example:
 
 ```javascript
-const client = new Client({ contactPoints, keyspace: 'my_keyspace' });
+const client = new Client({ contactPoints, localDataCenter, keyspace: 'killrvideo' });
 const mapper = new Mapper(client);
 ```
 
@@ -32,7 +32,7 @@ When dealing with multiple keyspaces, you can specify the keyspace of the tables
 `MappingOptions`:
 
 ```javascript
-const client = new Client({ contactPoints});
+const client = new Client({ contactPoints, localDataCenter });
 const mapper = new Mapper(client, {
   models: {
     'Video': { 

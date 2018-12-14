@@ -1,5 +1,30 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.0.0
+
+2018-12-17
+
+### Features
+
+- [NODEJS-144] - Object Mapper
+- [NODEJS-104] - Randomize contact points to prevent hotspots
+- [NODEJS-192] - Allow raw bytes to be input for all types
+- [NODEJS-220] - Slow Query Logger
+- [NODEJS-300] - Expose metrics API
+- [NODEJS-331] - Bypass retry logic when query is marked as non-idempotent
+- [NODEJS-345] - Expose Metadata.checkSchemaAgreement() and ExecutionInfo.isSchemaInAgreement()
+- [NODEJS-366] - Latency tracker interface
+- [NODEJS-379] - DCAwareRoundRobinPolicy: Throw when local datacenter is not specified
+- [NODEJS-387] - Expose optional callbacks in TimeUuid.now() and TimeUuid.fromDate() as an async overload
+- [NODEJS-449] - Support new JavaScript primitive type bigint
+- [NODEJS-450] - Introduce a wrapper around QueryOptions
+- [NODEJS-485] - Remove usedHostsPerRemoteDc from DCAwareRoundRobinPolicy
+- [NODEJS-462] - Remove the experimental flag to the Execution Profiles
+
+### Bug fixes
+
+- [NODEJS-473] - Zero-length map values: Fix RangeError on empty buffer in Encoder
+
 ## 3.6.0
 
 2018-12-04

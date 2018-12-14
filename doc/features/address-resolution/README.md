@@ -18,24 +18,22 @@ The `AddressTranslator` interface allows you to deal with such cases, by transfo
 node to another address to be used by the driver for connection.
 
 ```javascript
-function MyAddressTranslator() {
+class MyAddressTranslator extends AddressTranslator {
+  translate(address, port, callback) {
+    // Your custom translation logic
+  }
 }
-
-util.inherits(MyAddressTranslator, AddressTranslator);
-
-MyAddressTranslator.prototype.translate = function (address, port, callback) {
-   // Your custom translation logic.
-};
 ```
 
 You then configure the driver to use your AddressTranslator implementation in the client options.
 
 ```javascript
 const client = new Client({
-   contactPoints: ['1.2.3.4'], 
-   policies: { 
-      addressResolution: new MyAddressTranslator() 
-   }
+  contactPoints,
+  localDataCenter,
+  policies: { 
+    addressResolution: new MyAddressTranslator() 
+  }
 });
 ```
 
@@ -56,11 +54,13 @@ To use this implementation, provide an instance when initializing the `Client` o
 ```javascript
 const cassandra = require('cassandra-driver');
 const addressResolution = cassandra.policies.addressResolution;
+
 const client = new Client({
-   contactPoints: ['1.2.3.4'], 
-   policies: { 
-      addressResolution: new addressResolution.EC2MultiRegionTranslator() 
-   }
+  contactPoints,
+  localDataCenter,
+  policies: { 
+    addressResolution: new addressResolution.EC2MultiRegionTranslator() 
+  }
 });
 ```
 

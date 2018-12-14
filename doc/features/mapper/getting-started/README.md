@@ -7,7 +7,7 @@ const cassandra = require('cassandra-driver');
 const Client = cassandra.Client;
 const Mapper = cassandra.mapping.Mapper;
 
-const client = new Client({ contactPoints, keyspace });
+const client = new Client({ contactPoints, localDataCenter, keyspace });
 ```
 
 Create a `Mapper` instance and reuse it across your application. You can specify you model properties and how those

@@ -155,6 +155,7 @@ To enable this option, you must specify it in the client options:
 ```javascript
 const client = new Client({
   contactPoints,
+  localDataCenter,
   encoding: { 
       useBigIntAsLong: true,
       useBigIntAsVarint: true

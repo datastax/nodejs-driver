@@ -21,7 +21,8 @@ You can provide a different generator when creating the `Client` instance:
 
 ```javascript
 const client = new Client({
-  contactPoints: ['h1', 'h2'],
+  contactPoints,
+  localDataCenter,
   policies: {
     timestampGeneration: new MyCustomTimestampGenerator()
   }

@@ -30,7 +30,7 @@ instance:
 const cassandra = require('cassandra-driver');
 
 const requestTracker = new cassandra.tracker.RequestLogger({ slowThreshold: 1000 });
-const client = new Client({ contactPoints, requestTracker });
+const client = new Client({ contactPoints, localDataCenter, requestTracker });
 ```
 
 You can subscribe to `'slow'`, `'large'`, `'normal'` and `'failure'` events using the emitter object instance:

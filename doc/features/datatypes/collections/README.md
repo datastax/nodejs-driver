@@ -51,12 +51,14 @@ The new built-in types in ECMAScript 6, Map and Set, can be used to represent CQ
 
 ```javascript
 const options = {
-    contactPoints: contactPoints,
-    encoding: { 
-        map: Map,
-        set: Set
-    }
+  contactPoints,
+  localDataCenter,
+  encoding: { 
+    map: Map,
+    set: Set
+  }
 };
+
 const client = new Client(options);
 ```
 

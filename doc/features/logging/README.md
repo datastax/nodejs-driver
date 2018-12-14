@@ -30,7 +30,7 @@ instance:
 const dse = require('dse-driver');
 
 const requestTracker = new dse.tracker.RequestLogger({ slowThreshold: 1000 });
-const client = new Client({ contactPoints, requestTracker });
+const client = new Client({ contactPoints, localDataCenter, requestTracker });
 ```
 
 You can subscribe to `'slow'`, `'large'`, `'normal'` and `'failure'` events using the emitter object instance:

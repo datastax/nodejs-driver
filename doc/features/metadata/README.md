@@ -79,6 +79,7 @@ The default timeout is `10` seconds, it can be customized when creating the `Cli
 ```javascript
 const client = new Client({
   contactPoints,
+  localDataCenter,
   protocolOptions: { maxSchemaAgreementWaitSeconds: 20 }
 });
 ```

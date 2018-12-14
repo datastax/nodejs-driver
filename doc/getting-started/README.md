@@ -9,9 +9,7 @@ dse package:
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({
-  contactPoints: ['host1', 'host2'],
-  localDataCenter: 'datacenter1'
+const client = new cassandra.Client({ contactPoints: ['host1', 'host2'], localDataCenter: 'datacenter1' 
 });
 ```
 

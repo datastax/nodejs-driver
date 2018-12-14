@@ -14,8 +14,9 @@ to limit the protocol version to use, you do so in the protocol options.
 const dse = require('dse-driver');
 const protocolVersion = dse.types.protocolVersion;
 const client = new dse.Client({
-   contactPoints: [ 'host1', 'host2' ],
-   protocolOptions: { maxVersion: protocolVersion.v3 }
+  contactPoints,
+  localDataCenter,
+  protocolOptions: { maxVersion: protocolVersion.v3 }
 });
 ```
 
@@ -36,8 +37,9 @@ version when initializing the client:
 
 ```javascript
 const client = new Client({
-   contactPoints: [ 'host1', 'host2' ],
-   protocolOptions: { maxVersion: protocolVersion.v2 }
+  contactPoints,
+  localDataCenter,
+  protocolOptions: { maxVersion: protocolVersion.v2 }
 });
 ```
 
@@ -46,7 +48,8 @@ unspecified or by using `protocolVersion.maxSupported`:
 
 ```javascript
 const client = new Client({
-   contactPoints: [ 'host1', 'host2' ],
-   protocolOptions: { maxVersion: protocolVersion.maxSupported }
+  contactPoints,
+  localDataCenter,
+  protocolOptions: { maxVersion: protocolVersion.maxSupported }
 });
 ```

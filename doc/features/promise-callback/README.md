@@ -20,7 +20,8 @@ instances, you can optionally provide your own factory method when creating the 
 ```javascript
 const BbPromise = require('bluebird');
 const client = new Client({
-  contactPoints: contactPoints,
+  contactPoints,
+  localDataCenter,
   promiseFactory: BbPromise.fromCallback
 });
 ```

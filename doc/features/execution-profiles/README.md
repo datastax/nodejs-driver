@@ -31,8 +31,10 @@ const aggregationProfile = new ExecutionProfile('aggregation', {
   readTimeout: 30000,
   serialConsistency: consistency.localSerial
 });
+
 const client = new Client({ 
-  contactPoints: ['host1'], 
+  contactPoints: ['host1'],
+  localDataCenter,
   profiles: [ aggregationProfile ]
 });
 ```
@@ -46,7 +48,8 @@ You can define a default profile, using the name `'default'`:
 
 ```javascript
 const client = new Client({ 
-  contactPoints: ['host1'], 
+  contactPoints: ['host1'],
+  localDataCenter,
   profiles: [ 
     new ExecutionProfile('default', {
       consistency: consistency.one,

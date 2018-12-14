@@ -7,7 +7,7 @@ const dse = require('dse-driver');
 const Client = dse.Client;
 const Mapper = dse.mapping.Mapper;
 
-const client = new Client({ contactPoints, keyspace });
+const client = new Client({ contactPoints, localDataCenter, keyspace });
 ```
 
 Create a `Mapper` instance and reuse it across your application. You can specify you model properties and how those

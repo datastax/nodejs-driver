@@ -20,9 +20,7 @@ const dse = require('dse-driver');
 const DCAwareRoundRobinPolicy = dse.policies.loadBalancing.DCAwareRoundRobinPolicy;
 const client = new dse.Client({
    contactPoints: ['10.1.1.3', '10.1.1.4', '10.1.1.5'], 
-   policies: {
-      loadBalancing: new DCAwareRoundRobinPolicy('US_EAST');
-   }
+   localDataCenter: 'eu-west-3'
 });
 ```
 

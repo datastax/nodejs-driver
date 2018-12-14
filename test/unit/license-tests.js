@@ -15,6 +15,8 @@ const licenseHeaderRegex = new RegExp(
   ' \\* http://www.datastax.com/terms/datastax-dse-driver-license-terms');
 
 describe('All source files', function() {
+  this.timeout(5000);
+
   it('should start with license header', function () {
     // eslint-disable-next-line no-undef
     const root = path.normalize(path.join(__dirname, '../../'));

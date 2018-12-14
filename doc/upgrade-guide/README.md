@@ -92,5 +92,10 @@ This property was removed in the latest version.
 `usedHostsPerRemoteDC` has been removed as a constructor parameter.  This change was made because handling
 data center outages is better suited at a service level rather than within an application client.
 
+### Kerberos optional dependency bumped to 1.0+
+
+The driver supports GSSAPI authentication using `kerberos` library, the minimum version requirement for the
+`kerberos` library is `1.0.0`.
+
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [op-info]: https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.policies/module.retry/type.OperationInfo/

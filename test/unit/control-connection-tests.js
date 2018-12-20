@@ -43,7 +43,12 @@ describe('ControlConnection', function () {
       done();
     }));
 
-    function testResolution(CcMock, expectedHosts, done) {
+    function testResolution(CcMock, expectedHosts, expectedResolved, done) {
+      if (typeof expectedResolved === 'function') {
+        done = expectedResolved;
+        expectedResolved = expectedHosts;
+      }
+
       const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
         queryResults: { 'system\\.peers': {
           rows: expectedHosts
@@ -51,12 +56,15 @@ describe('ControlConnection', function () {
             .map(address => ({'rpc_address': address.split(':')[0] }))
         }}
       }));
+
       cc.init(function (err) {
         const hosts = cc.hosts.values();
         cc.shutdown();
         cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         assert.deepEqual(hosts.map(h => h.address), expectedHosts);
+        const resolvedContactPoints = cc.getResolvedContactPoints();
+        assert.deepStrictEqual(resolvedContactPoints.get('my-host-name'), expectedResolved);
         done();
       });
     }
@@ -103,7 +111,10 @@ describe('ControlConnection', function () {
           throw new Error('dns.lookup() should not be used');
         }
       });
-      testResolution(ControlConnectionMock, [ '1:9042', '2:9042', '10:9042', '20:9042' ], done);
+
+      testResolution(ControlConnectionMock,
+        [ '1:9042', '2:9042', '10:9042', '20:9042' ],
+        [ '1:9042', '2:9042', '[10]:9042', '[20]:9042' ], done);
     });
     it('should ignore IPv4 or IPv6 resolution errors', function (done) {
       const ControlConnectionMock = rewire('../../lib/control-connection');
@@ -159,6 +170,9 @@ describe('ControlConnection', function () {
         assert.ifError(err);
         assert.strictEqual(hosts.length, 2);
         assert.ok(cc.initialized);
+        helper.assertMapEqual(
+          cc.getResolvedContactPoints(),
+          new Map([['::1', ['[::1]:9042']], ['::2', ['[::2]:9042']]]));
         done();
       });
     });

@@ -308,6 +308,20 @@ const helper = {
   },
 
   /**
+   * Tests for deep equality of Maps between the actual and expected parameters
+   * @param actual
+   * @param expected
+   */
+  assertMapEqual: (actual, expected) => {
+    helper.assertInstanceOf(actual, Map);
+    helper.assertInstanceOf(expected, Map);
+    assert.deepStrictEqual(Array.from(actual.keys()), Array.from(expected.keys()), 'Map keys do not match ');
+    expected.forEach((value, key) => {
+      assert.deepStrictEqual(actual.get(key), value, `Value for '${key}' does not match`);
+    });
+  },
+
+  /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client
    * @param {Function} callback

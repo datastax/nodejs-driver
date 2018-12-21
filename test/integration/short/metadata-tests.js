@@ -5,6 +5,7 @@ const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
+const packageInfo = require('../../../package.json');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 
@@ -1330,6 +1331,18 @@ describe('metadata', function () {
           "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
           " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
         ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+    });
+  });
+
+  describe('Client information', () => {
+    vit('4.0', 'should send driver name and version', () => {
+      const query = 'select driver_name, driver_version from system_views.clients';
+      return setupInfo.client.execute(query)
+        .then(rs => {
+          const row = rs.first();
+          assert.strictEqual(row['driver_name'], packageInfo.description);
+          assert.strictEqual(row['driver_version'], packageInfo.version);
+        });
     });
   });
 });

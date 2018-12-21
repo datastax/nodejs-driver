@@ -61,21 +61,24 @@ describe('Startup', function() {
       noCompactValue: 'true'
     };
 
+    const driverNameAndVersionBuffer = Buffer.concat([
+      getStringBuffer(startupOptions.driverNameKey),
+      getStringBuffer(startupOptions.driverNameValue),
+      getStringBuffer(startupOptions.driverVersionKey),
+      getStringBuffer(startupOptions.driverVersionValue)]);
+
     it('should include NO_COMPACT in options if true', function() {
       const request = new StartupRequest(null, true);
       const expectedBuffer = Buffer.concat([
         utils.allocBufferFromArray([
           types.protocolVersion.maxSupported, // protocol version
           0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-          0, 0, 0, 112, // length
+          0, 0, 0, 40 + driverNameAndVersionBuffer.length, // length
           0, 4, // map size
         ]),
         getStringBuffer(startupOptions.cqlVersionKey),
         getStringBuffer(startupOptions.cqlVersionValue),
-        getStringBuffer(startupOptions.driverNameKey),
-        getStringBuffer(startupOptions.driverNameValue),
-        getStringBuffer(startupOptions.driverVersionKey),
-        getStringBuffer(startupOptions.driverVersionValue),
+        driverNameAndVersionBuffer,
         getStringBuffer(startupOptions.noCompactKey),
         getStringBuffer(startupOptions.noCompactValue)
       ]);
@@ -87,15 +90,12 @@ describe('Startup', function() {
       utils.allocBufferFromArray([
         types.protocolVersion.maxSupported, // protocol version
         0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-        0, 0, 0, 94, // length
+        0, 0, 0, 22 + driverNameAndVersionBuffer.length, // length
         0, 3, // map size
       ]),
       getStringBuffer(startupOptions.cqlVersionKey),
       getStringBuffer(startupOptions.cqlVersionValue),
-      getStringBuffer(startupOptions.driverNameKey),
-      getStringBuffer(startupOptions.driverNameValue),
-      getStringBuffer(startupOptions.driverVersionKey),
-      getStringBuffer(startupOptions.driverVersionValue)
+      driverNameAndVersionBuffer
     ]);
 
     it('should not include NO_COMPACT in options if false', function() {

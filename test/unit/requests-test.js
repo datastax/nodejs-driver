@@ -68,7 +68,7 @@ describe('Startup', function() {
       getStringBuffer(startupOptions.driverVersionValue)]);
 
     it('should include NO_COMPACT in options if true', function() {
-      const request = new StartupRequest(null, true);
+      const request = new StartupRequest({ noCompact: true });
       const expectedBuffer = Buffer.concat([
         utils.allocBufferFromArray([
           types.protocolVersion.maxSupported, // protocol version
@@ -99,7 +99,7 @@ describe('Startup', function() {
     ]);
 
     it('should not include NO_COMPACT in options if false', function() {
-      const request = new StartupRequest(null, false);
+      const request = new StartupRequest({ noCompact: false });
       assert.deepEqual(request.write(encoder, 0), expectedBufferWithNoCompact);
     });
     it('should not include NO_COMPACT in options if not provided', function() {

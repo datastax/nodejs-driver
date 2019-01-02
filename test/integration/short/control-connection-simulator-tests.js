@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const net = require('net');
 const simulacron = require('../simulacron');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
@@ -27,6 +28,20 @@ describe('ControlConnection', function() {
     it('should not downgrade with versions 3.0 & 2.0', testWithNodes(['3.0.13', '2.0.17'], 4));
     // can't downgrade because C* 3.0 does not support protocol V1.
     it('should not downgrade with versions 3.0 & 1.2', testWithNodes(['3.0.13', '1.2.19'], 4));
+  });
+
+  describe('#getLocalAddress()', () => {
+    it('should retrieve the local ip address of the host', () => {
+      const client = new Client({ contactPoints: [simulacron.startingIp], localDataCenter: 'dc1'});
+
+      client.connect()
+        .then(() => {
+          const cc = client.controlConnection;
+          assert.strictEqual(typeof cc.getLocalAddress(), 'string');
+          assert.ok(net.isIP(cc.getLocalAddress()));
+        })
+        .then(() => client.shutdown());
+    });
   });
 });
 

@@ -5,6 +5,7 @@ const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
+const packageInfo = require('../../../package.json');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 
@@ -1065,7 +1066,7 @@ describe('metadata', function () {
         const queries = [
           "CREATE KEYSPACE ks_view_meta WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}",
           "CREATE TABLE ks_view_meta.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
-          "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC)"
+          "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT game, year, month, score, user, day FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC, user ASC)"
         ];
         utils.eachSeries(queries, client.execute.bind(client), function (err) {
           client.shutdown();
@@ -1106,10 +1107,11 @@ describe('metadata', function () {
           client.connect.bind(client),
           nonSyncClient.connect.bind(nonSyncClient),
           helper.toTask(client.execute, client, 'CREATE MATERIALIZED VIEW monthlyhigh AS ' +
-            'SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND' +
-            ' score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL' +
+            'SELECT game, year, month, score, user, day FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND' +
+            ' month IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND day IS NOT NULL' +
             ' PRIMARY KEY ((game, year, month), score, user, day)' +
-            ' WITH CLUSTERING ORDER BY (score DESC) AND compaction = { \'class\' : \'SizeTieredCompactionStrategy\' }'),
+            ' WITH CLUSTERING ORDER BY (score DESC, user ASC, day ASC) AND compaction = { \'class\' :' +
+            ' \'SizeTieredCompactionStrategy\' }'),
           function checkView1(next) {
             utils.each(clients, function(client, eachNext) {
               client.metadata.getMaterializedView('ks_view_meta', 'monthlyhigh', function (err, view) {
@@ -1330,6 +1332,18 @@ describe('metadata', function () {
           "CREATE KEYSPACE ks_rs_is_schema_in_agreement" +
           " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
         ).then(rs => assert.strictEqual(rs.info.isSchemaInAgreement, true)));
+    });
+  });
+
+  describe('Client information', () => {
+    vit('4.0', 'should send driver name and version', () => {
+      const query = 'select driver_name, driver_version from system_views.clients';
+      return setupInfo.client.execute(query)
+        .then(rs => {
+          const row = rs.first();
+          assert.strictEqual(row['driver_name'], packageInfo.description);
+          assert.strictEqual(row['driver_version'], packageInfo.version);
+        });
     });
   });
 });

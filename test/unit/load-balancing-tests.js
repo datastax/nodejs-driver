@@ -100,6 +100,10 @@ describe('RoundRobinPolicy', function () {
       }, done);
     });
   });
+
+  describe('#getOptions()', () => {
+    it('should return an empty Map', () => helper.assertMapEqual(new RoundRobinPolicy().getOptions(), new Map()));
+  });
 });
 describe('DCAwareRoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
@@ -289,6 +293,13 @@ describe('DCAwareRoundRobinPolicy', function () {
       }
     ], done);
   });
+
+  describe('#getOptions()', () => {
+    it('should return a Map with the local data center name', () => {
+      helper.assertMapEqual(new DCAwareRoundRobinPolicy('local1').getOptions(),
+        new Map([['localDataCenter', 'local1']]));
+    });
+  });
 });
 describe('TokenAwarePolicy', function () {
   it('should use the childPolicy when no routingKey provided', function (done) {
@@ -408,6 +419,20 @@ describe('TokenAwarePolicy', function () {
       }
     ], done);
   });
+
+  describe('#getOptions()', () => {
+    it('should return a Map with the child policy name', () => {
+      helper.assertMapEqual(new TokenAwarePolicy(new RoundRobinPolicy()).getOptions(),
+        new Map([['childPolicy', 'RoundRobinPolicy']]));
+    });
+
+    context('when DCAwareRoundRobinPolicy is child policy', () => {
+      it('should return a Map with the local data center name', () => {
+        helper.assertMapEqual(new TokenAwarePolicy(new DCAwareRoundRobinPolicy('dc2')).getOptions(),
+          new Map([['childPolicy', 'DCAwareRoundRobinPolicy'], ['localDataCenter', 'dc2']]));
+      });
+    });
+  });
 });
 describe('WhiteListPolicy', function () {
   it('should use the childPolicy to determine the distance', function () {
@@ -441,6 +466,13 @@ describe('WhiteListPolicy', function () {
       assert.strictEqual(helper.lastOctetOf(hosts[0]), '1');
       assert.strictEqual(helper.lastOctetOf(hosts[1]), '3');
       done();
+    });
+  });
+
+  describe('#getOptions()', () => {
+    it('should return a Map with the child policy name', () => {
+      helper.assertMapEqual(new WhiteListPolicy(new RoundRobinPolicy(), ['a', 'b']).getOptions(),
+        new Map([['childPolicy', 'RoundRobinPolicy'], ['whitelist', ['a', 'b']]]));
     });
   });
 });

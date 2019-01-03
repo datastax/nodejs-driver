@@ -60,7 +60,8 @@ describe('Client', function () {
   describe('#connect()', function () {
     this.timeout(35000);
     it('should fail if no host name can be resolved', function (done) {
-      const options = utils.extend({}, helper.baseOptions, {contactPoints: ['not1.existent-host', 'not2.existent-host']});
+      const contactPoints = ['not1.existent-host', 'not2.existent-host'];
+      const options = utils.extend({}, helper.baseOptions, { contactPoints });
       const Client = require('../../lib/client.js');
       const client = new Client(options);
       client.connect(function (err) {
@@ -69,6 +70,10 @@ describe('Client', function () {
         assert.ok(err.message.indexOf('resolve') > 0, 'Message was: ' + err.message);
         assert.ok(client.hosts);
         assert.strictEqual(client.hosts.length, 0);
+
+        const resolvedContactPoints = client.controlConnection.getResolvedContactPoints();
+        contactPoints.forEach(name => assert.strictEqual(resolvedContactPoints.get(name), utils.emptyArray));
+
         done();
       });
     });

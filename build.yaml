@@ -48,6 +48,8 @@ build:
       TEST_TRACE=on
   - npm: install
   - npm: install mocha-jenkins-reporter@0
+  - npm: install -g eslint@4
+  - npm: run eslint
   - npm: run ci_jenkins
     graceful: true
   - script: |

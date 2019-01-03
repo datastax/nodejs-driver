@@ -8,6 +8,7 @@
 const assert = require('assert');
 //project modules
 const utils = require('../../lib/utils');
+const helper = require('../test-helper');
 const reconnection = require('../../lib/policies/reconnection');
 
 describe('ConstantReconnectionPolicy', function () {
@@ -22,6 +23,12 @@ describe('ConstantReconnectionPolicy', function () {
       next();
     }, done);
 
+  });
+
+  describe('#getOptions()', () => {
+    it('should return a Map with the delay', () => {
+      helper.assertMapEqual(new reconnection.ConstantReconnectionPolicy(123).getOptions(), new Map([['delay', 123]]));
+    });
   });
 });
 
@@ -41,5 +48,12 @@ describe('ExponentialReconnectionPolicy', function () {
       next();
     }, done);
 
+  });
+
+  describe('#getOptions()', () => {
+    it('should return a Map with the policy options', () => {
+      helper.assertMapEqual(new reconnection.ExponentialReconnectionPolicy(2000, 100000, false).getOptions(),
+        new Map([['baseDelay', 2000], ['maxDelay', 100000], ['startWithNoDelay', false]]));
+    });
   });
 });

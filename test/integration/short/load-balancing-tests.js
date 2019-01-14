@@ -14,6 +14,72 @@ const vdescribe = helper.vdescribe;
 
 const maxInFlightRequests = 16;
 
+/** Pre-calculated replicas based on the key and default partitioner */
+const replicasByKey = {
+  rf1: new Map([
+    [0, [2]],
+    [1, [2]],
+    [2, [2]],
+    [3, [1]],
+    [4, [3]],
+    [5, [2]],
+    [6, [3]],
+    [7, [3]],
+    [8, [2]],
+    [9, [1]],
+    [10, [2]],
+    [11, [2]],
+    [12, [1]],
+    [13, [2]],
+    [14, [1]],
+    [15, [3]],
+  ]),
+  rf2: new Map([
+    [0, [2,3]],
+    [1, [2,3]],
+    [2, [2,3]],
+    [3, [1,2]],
+    [4, [3,1]],
+    [5, [2,3]],
+    [6, [3,1]],
+    [7, [3,1]],
+    [8, [2,3]],
+    [9, [1,2]],
+    [10, [2,3]],
+    [11, [2,3]],
+    [12, [1,2]],
+    [13, [2,3]],
+    [14, [1,2]],
+    [15, [3,1]]
+  ]),
+  rf2Composite: new Map([
+    ['a0', [3,1]],
+    ['a1', [2,3]],
+    [utils.stringRepeat('b', 10) + '0', [3,1]],
+    [utils.stringRepeat('b', 10) + '1', [3,1]],
+    [utils.stringRepeat('c', 20) + '0', [3,1]],
+    [utils.stringRepeat('c', 20) + '1', [1,2]],
+    [utils.stringRepeat('d', 300) + '0', [3,1]],
+    [utils.stringRepeat('d', 300) + '1', [1,2]],
+    ['a0b', [2,3]],
+    ['a1b', [3,1]],
+    ['a2b', [3,1]],
+    ['a3b', [2,3]],
+    ['a4b', [3,1]],
+    ['a5b', [2,3]],
+    ['a6b', [2,3]],
+    ['a7b', [2,3]],
+    ['a8b', [3,1]],
+    ['a9b', [3,1]],
+    ['a10b', [3,1]],
+    ['a11b', [1,2]],
+    ['a12b', [3,1]],
+    ['a13b', [2,3]],
+    ['a14b', [3,1]],
+    ['a15b', [2,3]],
+  ])
+};
+
 context('with a reusable 3 node cluster', function () {
   this.timeout(180000);
   // pass in 3:0 to exercise CCM dc set up logic which will use a consistent data center name
@@ -75,14 +141,15 @@ context('with a reusable 3 node cluster', function () {
       const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
       utils.mapSeries([
         utils.stringRepeat('a', 1),
-        utils.stringRepeat('b', 0x3fff),
-        utils.stringRepeat('c', 0x7fff),
-        utils.stringRepeat('d', 0xffe0),
+        utils.stringRepeat('b', 10),
+        utils.stringRepeat('c', 20),
+        utils.stringRepeat('d', 300),
       ], function eachValue(value, next) {
-        utils.timesLimit(32, maxInFlightRequests, function eachTime(n, timesNext) {
+        utils.timesLimit(2, maxInFlightRequests, function eachTime(n, timesNext) {
           client.execute(query, [ value, n.toString() ], queryOptions, function (err, result) {
             assert.ifError(err);
-            assertReplicas(result, client, 2, timesNext);
+            assertExpectedReplicas('rf2Composite', `${value}${n}`, result);
+            timesNext();
           });
         }, next);
       }, helper.finish(client, done));
@@ -93,54 +160,39 @@ context('with a reusable 3 node cluster', function () {
     it('should balance between replicas on a different keyspace', function (done) {
       testAllReplicasAreUsedAsCoordinator('ks_simple_rp1', 'ks_network_rp2.table_c', 2, done);
     });
-    it('should target the correct replicas for routing keys of different length', function (done) {
-      const replicasLength = 2;
-      const client = new Client({
-        policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
-        keyspace: 'ks_network_rp2',
-        contactPoints: helper.baseOptions.contactPoints
-      });
-      const query = 'INSERT INTO table_composite (id1, id2) VALUES (?, ?)';
-      const queryOptions = { traceQuery: true, consistency: types.consistencies.all, prepare: true };
-      utils.timesLimit(100, 20, function (n, timesNext) {
-        const params = [ 'abc', utils.stringRepeat('a', n + 1) ];
-        client.execute(query, params, queryOptions, function (err, result) {
-          assert.ifError(err);
-          assertReplicas(result, client, replicasLength, timesNext);
-        });
-      }, helper.finish(client, done));
-    });
     it('should target the correct replica using batches', function (done) {
-      const replicasLength = 2;
+      const rf = 2;
       const client = new Client({
         policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
         keyspace: 'ks_network_rp2',
         contactPoints: helper.baseOptions.contactPoints
       });
       const query = 'INSERT INTO table_c (id, name) VALUES (?, ?)';
-      const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-      utils.timesLimit(50, maxInFlightRequests, function (n, timesNext) {
+      const queryOptions = { prepare: true, consistency: types.consistencies.all };
+
+      utils.timesLimit(16, maxInFlightRequests, function (n, timesNext) {
         const params = [ n, n ];
         client.batch([{ query, params }], queryOptions, function (err, result) {
           assert.ifError(err);
-          assertReplicas(result, client, replicasLength, timesNext);
+          assertExpectedReplicas(rf, n, result);
+          timesNext();
         });
       }, helper.finish(client, done));
     });
     it('should target the correct replica using routing indexes', function (done) {
-      const replicasLength = 2;
       const client = new Client({
         policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
         keyspace: 'ks_network_rp2',
         contactPoints: helper.baseOptions.contactPoints
       });
       const query = 'INSERT INTO table_composite (id2, id1) VALUES (?, ?)';
-      const queryOptions = { traceQuery: true, consistency: types.consistencies.all, routingIndexes: [ 1, 0] };
-      utils.timesLimit(100, maxInFlightRequests, function (n, timesNext) {
+      const queryOptions = { consistency: types.consistencies.localOne, routingIndexes: [ 1, 0] };
+      utils.timesLimit(16, maxInFlightRequests, function (n, timesNext) {
         const params = [ 'a' + n, 'b' ];
         client.execute(query, params, queryOptions, function (err, result) {
           assert.ifError(err);
-          assertReplicas(result, client, replicasLength, timesNext);
+          assertExpectedReplicas('rf2Composite', `${params[0]}${params[1]}`, result);
+          timesNext();
         });
       }, helper.finish(client, done));
     });
@@ -208,132 +260,72 @@ function testWithQueryOptions(optionsFn, expectedHostOctet, done) {
  * Check that the trace event sources only shows nodes that are replicas to fulfill a consistency ALL query.
  * @param {String} loggedKeyspace
  * @param {String} table
- * @param {Number} expectedReplicas
+ * @param {Number} rf
  * @param {Function} done
  */
-function testNoHops(loggedKeyspace, table, expectedReplicas, done) {
+function testNoHops(loggedKeyspace, table, rf, done) {
   const client = new Client({
     policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
     keyspace: loggedKeyspace,
     contactPoints: helper.baseOptions.contactPoints
   });
+
   const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
-  const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-  utils.timesLimit(50, maxInFlightRequests, function (n, timesNext) {
+  const queryOptions = { prepare: true, consistency: types.consistencies.localOne };
+
+  utils.timesLimit(16, maxInFlightRequests, function (n, timesNext) {
     const params = [ n, n ];
     client.execute(query, params, queryOptions, function (err, result) {
       assert.ifError(err);
-      assertReplicas(result, client, expectedReplicas, timesNext);
+      assertExpectedReplicas(rf, n, result);
+      timesNext();
     });
   }, helper.finish(client, done));
 }
 
-function assertReplicas(result, client, expectedReplicas, next) {
-  getTrace(client, result.info.traceId, function (err, trace) {
-    assert.ifError(err);
-    // Check where the events are coming from
-    const replicas = getReplicas(trace);
-    // Verify that only replicas were hit (coordinator + replica)
-    assert.strictEqual(Object.keys(replicas).length, expectedReplicas);
-    next();
-  });
+function assertExpectedReplicas(rf, key, result) {
+  const name = typeof rf === 'number' ? `rf${rf}` : rf;
+  const expected = replicasByKey[name].get(key);
+  const queriedHostLastOctet = helper.lastOctetOf(result.info.queriedHost);
+  assert.ok(
+    expected.indexOf(parseInt(queriedHostLastOctet, 10)) >= 0,
+    `Expected to be any of [${expected}] but was ${queriedHostLastOctet}`
+  );
 }
 
 /**
  * Check that the coordinator of a given query and parameters are the same as the ones in the sources
  * @param {String} loggedKeyspace
  * @param {String} table
- * @param {Number} expectedReplicas
+ * @param {Number} rf
  * @param {Function} done
  */
-function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, expectedReplicas, done) {
+function testAllReplicasAreUsedAsCoordinator(loggedKeyspace, table, rf, done) {
   const client = new Client({
     policies: { loadBalancing: new TokenAwarePolicy(new RoundRobinPolicy()) },
     keyspace: loggedKeyspace,
     contactPoints: helper.baseOptions.contactPoints
   });
   const query = util.format('INSERT INTO %s (id, name) VALUES (?, ?)', table);
-  const queryOptions = { traceQuery: true, prepare: true, consistency: types.consistencies.all };
-  const results = [];
+  const queryOptions = { prepare: true, consistency: types.consistencies.localOne };
   utils.timesSeries(10, function (i, nextParameters) {
     const params = [ i, i ];
-    const coordinators = {};
-    let replicas;
+    const coordinators = new Set();
     utils.timesLimit(100, maxInFlightRequests, function (n, timesNext) {
       client.execute(query, params, queryOptions, function (err, result) {
         assert.ifError(err);
-        coordinators[helper.lastOctetOf(result.info.queriedHost)] = true;
-        if (n !== 0) {
-          // Only check the trace once
-          return timesNext();
-        }
-        getTrace(client, result.info.traceId, function (err, trace) {
-          assert.ifError(err);
-          replicas = getReplicas(trace);
-          timesNext();
-        });
+        coordinators.add(parseInt(helper.lastOctetOf(result.info.queriedHost), 10));
+        timesNext();
       });
     }, function (err) {
       assert.ifError(err);
-      results.push({
-        replicas: replicas,
-        coordinators: coordinators
-      });
+      assert.deepStrictEqual(Array.from(coordinators).sort(), replicasByKey[`rf${rf}`].get(i).sort());
       nextParameters();
     });
   }, function () {
     client.shutdown();
-    results.forEach(function (item) {
-      assert.strictEqual(Object.keys(item.replicas).length, expectedReplicas);
-      assert.deepEqual(Object.keys(item.replicas).sort(), Object.keys(item.coordinators).sort(),
-        'All replicas should be used as coordinators');
-    });
     done();
   });
-}
-
-/**
- * Gets the query trace retrying additional times if it fails.
- */
-function getTrace(client, traceId, callback) {
-  let attempts = 0;
-  let trace;
-  let error;
-  if (!traceId) {
-    throw new Error('traceid was not provided');
-  }
-  // Retry several times
-  utils.whilst(
-    function condition() {
-      return !trace && attempts++ < 20;
-    },
-    function fn(next) {
-      client.metadata.getTrace(traceId, function (err, t) {
-        error = err;
-        trace = t;
-        if (!t) {
-          return setTimeout(next, 1000);
-        }
-        next();
-      });
-    },
-    function whilstEnd() {
-      callback(error, trace);
-    }
-  );
-}
-
-function getReplicas(trace) {
-  const replicas = {};
-  const regex = /\b(?:from|to) \/([\da-f:.]+)$/i;
-  trace.events.forEach(function (event) {
-    replicas[helper.lastOctetOf(event['source'].toString())] = true;
-    const activityMatches = regex.exec(event['activity']);
-    if (activityMatches && activityMatches.length === 2) {
-      replicas[helper.lastOctetOf(activityMatches[1])] = true;
-    }
-  });
-  return replicas;
 }
 
 function newInstance(policy) {

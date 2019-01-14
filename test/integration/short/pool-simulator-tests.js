@@ -13,7 +13,7 @@ const healthResponseCountInterval = 200;
 
 describe('pool', function () {
 
-  this.timeout(20000);
+  this.timeout(40000);
   before(done => simulacron.start(done));
   after(done => simulacron.stop(done));
 
@@ -207,6 +207,52 @@ describe('pool', function () {
           assert.strictEqual(firstHost.getInFlight(), 0);
           assert.strictEqual(client.getState().getInFlightQueries(firstHost), 0);
         })
+        .then(() => client.shutdown());
+    });
+
+    it('should reconnect in the background when hosts are back online', () => {
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        localDataCenter: 'dc1',
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(200) },
+        pooling: { heartBeatInterval: 50 }
+      });
+
+      return client.connect()
+        .then(() => client.hosts.values().forEach(h => assert.strictEqual(1, h.pool.connections.length)))
+        .then(() => Promise.all([0, 1, 2].map(n => promiseFromCallback(cb => cluster.dc(0).node(n).stop(cb)))))
+        .then(() => helper.setIntervalUntilPromise(
+          // Validate all nodes are down
+          () => client.hosts.values().reduce((acc, h) => acc && !h.isUp(), true), 20, 5000
+        ))
+        .then(() => assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ false, false, false ]))
+        .then(() => Promise.all([0, 1, 2].map(n => promiseFromCallback(cb => cluster.dc(0).node(n).start(cb)))))
+        .then(() => helper.setIntervalUntilPromise(
+          // Validate all nodes are UP
+          () => client.hosts.values().reduce((acc, h) => acc && h.isUp(), true), 20, 5000
+        ))
+        .then(() => assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ true, true, true ]))
+        .then(() => client.hosts.values().forEach(h => assert.strictEqual(1, h.pool.connections.length)))
+        .then(() => new Promise(r => setTimeout(r, 400)))
+        .then(() => client.shutdown());
+    });
+
+    it('should connect when first contact point is down', () => {
+      const startIpOctets = simulacron.startingIp.split('.');
+      const secondNodeLastOctet = parseInt(startIpOctets[3], 10) + 1;
+
+      const client = new Client({
+        contactPoints: [
+          startIpOctets.join('.'),
+          `${startIpOctets.slice(0, 3).join('.')}.${secondNodeLastOctet}`],
+        localDataCenter: 'dc1',
+      });
+
+      return promiseFromCallback(cb => cluster.dc(0).node(0).stop(cb))
+        .then(() => client.connect())
+        .then(() => assert.strictEqual(
+          client.controlConnection.host.address.split(':')[0].split('.')[3],
+          secondNodeLastOctet.toString()))
         .then(() => client.shutdown());
     });
   });

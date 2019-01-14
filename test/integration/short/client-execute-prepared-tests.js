@@ -1120,20 +1120,29 @@ describe('Client', function () {
           keyspace: keyspace,
           contactPoints: helper.baseOptions.contactPoints
         });
+
+        /** Pre-calculated based on partitioner and initial tokens */
+        const replicaByKey = new Map([
+          ['0', '1'],
+          ['1', '1'],
+          ['2', '1'],
+          ['3', '3'],
+          ['4', '3'],
+          ['5', '3'],
+          ['6', '2'],
+          ['7', '3'],
+          ['8', '1'],
+          ['9', '3']]);
+
         utils.timesSeries(10, function (n, timesNext) {
           const game = n.toString();
           const query = 'SELECT * FROM alltimehigh WHERE game = ?';
-          client.execute(query, [game], { traceQuery: true, prepare: true}, function (err, result) {
+
+          client.execute(query, [game], { prepare: true}, function (err, result) {
             assert.ifError(err);
-            const coordinator = result.info.queriedHost;
-            const traceId = result.info.traceId;
-            client.metadata.getTrace(traceId, function (err, trace) {
-              assert.ifError(err);
-              trace.events.forEach(function (event) {
-                assert.strictEqual(helper.lastOctetOf(event['source'].toString()), helper.lastOctetOf(coordinator.toString()));
-              });
-              timesNext();
-            });
+            const queriedHostLastOctet = helper.lastOctetOf(result.info.queriedHost);
+            assert.strictEqual(queriedHostLastOctet, replicaByKey.get(game));
+            timesNext();
           });
         }, helper.finish(client, done));
       });

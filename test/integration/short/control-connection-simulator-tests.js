@@ -34,7 +34,7 @@ describe('ControlConnection', function() {
     it('should retrieve the local ip address of the host', () => {
       const client = new Client({ contactPoints: [simulacron.startingIp], localDataCenter: 'dc1'});
 
-      client.connect()
+      return client.connect()
         .then(() => {
           const cc = client.controlConnection;
           assert.strictEqual(typeof cc.getLocalAddress(), 'string');

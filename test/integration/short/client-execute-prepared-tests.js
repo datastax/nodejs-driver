@@ -728,7 +728,7 @@ describe('Client', function () {
     });
 
     describe('with a different keyspace', function () {
-      it('should fill in the keyspace in the query options passed to the lbp', function (done) {
+      it('should fill in the keyspace in the query options passed to the lbp', () => {
         const lbp = new loadBalancing.RoundRobinPolicy();
         lbp.newQueryPlanOriginal = lbp.newQueryPlan;
         const executionOptionsArray = [];
@@ -736,21 +736,21 @@ describe('Client', function () {
           executionOptionsArray.push(info);
           lbp.newQueryPlanOriginal(query, info, callback);
         };
-        const client = newInstance({ keyspace: commonKs, policies: { loadBalancing: lbp}});
-        utils.series([
-          client.connect.bind(client),
-          function query(next) {
-            client.execute('SELECT * FROM system.local WHERE key = ?', [ 'local' ], { prepare: true }, next);
-          },
-          client.shutdown.bind(client),
-          function assertResults(next) {
+
+        const client = newInstance({ keyspace: 'system', policies: { loadBalancing: lbp }});
+        const query = `SELECT * FROM ${commonTable2} WHERE id = ?`;
+
+        return client.connect()
+          .then(() => client.execute(query, [ Uuid.random() ], { prepare: true }))
+          .then(() => client.shutdown())
+          .then(() => {
             const options = executionOptionsArray[executionOptionsArray.length - 1];
-            assert.strictEqual(options.getKeyspace(), 'system');
-            next();
-          }
-        ], done);
+            // commonTable lives in commonKs
+            assert.strictEqual(options.getKeyspace(), commonKs);
+          });
       });
     });
+
     describe('with udt and tuple', function () {
       before(function (done) {
         const client = setupInfo.client;

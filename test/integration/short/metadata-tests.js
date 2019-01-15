@@ -252,9 +252,13 @@ describe('metadata', function () {
               assert.strictEqual(udtInfo.fields[2].type.code, types.dataTypes.int);
               assert.strictEqual(udtInfo.fields[3].name, 'second_number');
               assert.strictEqual(udtInfo.fields[3].type.code, types.dataTypes.custom);
-              assert.strictEqual(udtInfo.fields[3].type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
-                + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
-                + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
+
+              const customTypeInfo = udtInfo.fields[3].type.info;
+              helper.assertContains(customTypeInfo, 's=>org.apache.cassandra.db.marshal.UTF8Type');
+              helper.assertContains(customTypeInfo, 'i=>org.apache.cassandra.db.marshal.Int32Type');
+              assert.strictEqual(customTypeInfo.startsWith(
+                'org.apache.cassandra.db.marshal.DynamicCompositeType('), true);
+
               next();
             });
           },
@@ -899,9 +903,12 @@ describe('metadata', function () {
               assert.ok(dynamicColumn);
               assert.strictEqual(dynamicColumn.name, 'c1');
               assert.strictEqual(dynamicColumn.type.code, types.dataTypes.custom);
-              assert.strictEqual(dynamicColumn.type.info, 'org.apache.cassandra.db.marshal.DynamicCompositeType('
-                + 's=>org.apache.cassandra.db.marshal.UTF8Type,'
-                + 'i=>org.apache.cassandra.db.marshal.Int32Type)');
+
+              const typeInfo = dynamicColumn.type.info;
+
+              helper.assertContains(typeInfo, 's=>org.apache.cassandra.db.marshal.UTF8Type');
+              helper.assertContains(typeInfo, 'i=>org.apache.cassandra.db.marshal.Int32Type');
+              assert.strictEqual(typeInfo.startsWith('org.apache.cassandra.db.marshal.DynamicCompositeType('), true);
 
               const reversedColumn = table.clusteringKeys[1];
               assert.ok(reversedColumn);

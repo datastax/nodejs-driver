@@ -267,7 +267,7 @@ function getRequest(query) {
 function getProtocolVersion() {
   // expected protocol version
   const dseVersion = helper.getDseVersion();
-  if (dseVersion.indexOf('6.0') === 0) {
+  if (helper.isDseGreaterThan('6.0')) {
     return protocolVersion.dseV2;
   }
   if (dseVersion.indexOf('5.1') === 0) {

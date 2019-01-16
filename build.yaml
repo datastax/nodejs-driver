@@ -8,7 +8,7 @@ schedules:
         - nodejs: ['6']
         # Only build with latest for 4.x and 10.x
         - nodejs: ['4', '10']
-          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1']
+          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1', 'dse-6.7', 'dse-6.8']
   nightly:
     # Run full suite nightly on change for all primary branches if they have changes.
     schedule: nightly
@@ -32,6 +32,8 @@ cassandra:
   - dse-5.0
   - dse-5.1
   - dse-6.0
+  - dse-6.7
+  - dse-6.8
 build:
   - npm: install
   - npm: install mocha-jenkins-reporter@0

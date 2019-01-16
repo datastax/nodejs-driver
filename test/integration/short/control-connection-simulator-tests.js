@@ -37,10 +37,16 @@ describe('ControlConnection', function() {
   });
 
   describe('#getLocalAddress()', () => {
+    const simulacronCluster = new simulacron.SimulacronCluster();
+
+    before(done => simulacronCluster.register([5], null, done));
+
+    after(done => simulacronCluster.unregister(done));
+
     it('should retrieve the local ip address of the host', () => {
       const client = new Client({ contactPoints: [simulacron.startingIp], localDataCenter: 'dc1'});
 
-      client.connect()
+      return client.connect()
         .then(() => {
           const cc = client.controlConnection;
           assert.strictEqual(typeof cc.getLocalAddress(), 'string');

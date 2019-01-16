@@ -26,7 +26,8 @@ const cassandraVersionByDse = {
   '5.0': '3.0',
   '5.1': '3.11',
   '6.0': '3.11',
-  '6.7': '3.11'
+  '6.7': '3.11',
+  '6.8': '3.11'
 };
 
 const helper = {
@@ -986,9 +987,10 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       });
     },
     function (next) {
-      let create = ['create', 'test', '--dse', '-v', version];
+      const clusterName = helper.getRandomName('test');
+      let create = ['create', clusterName, '--dse', '-v', version];
       if (process.env['TEST_DSE_DIR']) {
-        create = ['create', 'test', '--install-dir=' + process.env['TEST_DSE_DIR']];
+        create = ['create', clusterName, '--install-dir=' + process.env['TEST_DSE_DIR']];
         helper.trace('With', create[2]);
       }
       if (options.ssl) {

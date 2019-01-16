@@ -838,64 +838,6 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should connect when first contact point is down', function (done) {
-      utils.series([
-        helper.toTask(helper.ccmHelper.exec, null, ['node1', 'stop']),
-        function (next) {
-          const client = newInstance({ contactPoints: ['127.0.0.1', '127.0.0.2'], pooling: { warmup: true } });
-          client.connect(function (err) {
-            assert.ifError(err);
-            client.shutdown(next);
-          });
-        }
-      ], done);
-    });
-    it('should reconnect in the background', function (done) {
-      const reconnectionDelay = 500;
-      const client = newInstance({
-        pooling: { heartBeatInterval: 0, warmup: true },
-        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) }
-      });
-      utils.series([
-        client.connect.bind(client),
-        function (next) {
-          const hosts = client.hosts.values();
-          assert.strictEqual('1', helper.lastOctetOf(client.controlConnection.host));
-          assert.strictEqual(3, hosts.length);
-          hosts.forEach(function (h) {
-            assert.ok(h.pool.connections.length > 0, 'with warmup = true, it should create the core connections');
-          });
-          next();
-        },
-        helper.toTask(helper.ccmHelper.stopNode, null, 1),
-        helper.toTask(helper.ccmHelper.stopNode, null, 2),
-        helper.toTask(helper.ccmHelper.stopNode, null, 3),
-        function tryToQuery(next) {
-          utils.timesSeries(20, function (n, timesNext) {
-            client.execute(helper.queries.basic, function (err) {
-              //it should fail
-              helper.assertInstanceOf(err, errors.NoHostAvailableError);
-              if (n % 5 === 0) {
-                //wait for failed reconnection attempts to happen
-                return setTimeout(timesNext, 1500);
-              }
-              timesNext();
-            });
-          }, next);
-        },
-        helper.toTask(helper.ccmHelper.startNode, null, 3),
-        helper.waitOnHostUp(client, 3),
-        helper.delay(reconnectionDelay * 2),
-        function assertReconnected(next) {
-          assert.strictEqual('3', helper.lastOctetOf(client.controlConnection.host));
-          client.hosts.forEach(function (host) {
-            assert.strictEqual(host.isUp(), helper.lastOctetOf(host) === '3');
-          });
-          next();
-        },
-        client.shutdown.bind(client)
-      ], done);
-    });
   });
   describe('#shutdown()', function () {
     before(helper.ccmHelper.start(2));

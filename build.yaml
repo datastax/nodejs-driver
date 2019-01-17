@@ -38,6 +38,8 @@ build:
   - npm: install
   - npm: install mocha-jenkins-reporter@0
   - npm: install kerberos@1
+  - npm: install -g eslint@4
+  - npm: run eslint
   - script: |
       export TEST_DSE_VERSION=$CCM_VERSION
       export TEST_DSE_BRANCH=$CCM_BRANCH

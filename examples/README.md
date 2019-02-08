@@ -21,6 +21,8 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
   - [Inserting and retrieving Tuples](tuple/tuple-insert-select.js)
 - Query tracing
   - [Retrieving the trace of a query request](tracing/retrieve-query-trace.js)
+- Concurrent execution
+  - [Execute multiple queries in a loop with a defined concurrency level](concurrent-executions/execute-in-loop.js)
 
 Each example is generally structured in a way where the `Client` is connected at the beginning and shutdown at the end.
 While this is suitable for example single script purposes, you should reuse a single `Client` instance and

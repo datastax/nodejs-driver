@@ -315,7 +315,8 @@ describe('pool', function () {
           assert.strictEqual(client.getState().getConnectedHosts().length, 3);
           // Validate that events of original node going back UP don't affect the ControlConnection
           assert.strictEqual(client.controlConnection.getEndpoint(), secondAddress);
-        });
+        })
+        .then(() => client.shutdown());
     });
 
     it('should stop attempting to reconnect to down after shutdown', () => {

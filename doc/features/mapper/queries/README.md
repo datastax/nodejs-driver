@@ -169,7 +169,7 @@ non-negligible performance cost on the server-side so this should be used sparin
 Delete a video
 
 ```javascript
-await videoMapper.delete({ videoId });
+await videoMapper.remove({ videoId });
 ```
 
 #### Delete an object using a [conditional statement][lwt]
@@ -177,7 +177,7 @@ await videoMapper.delete({ videoId });
 Delete a video when the existing name contains a certain value.
 
 ```javascript
-await videoMapper.delete({ videoId }, { when: { name: 'original name' } });
+await videoMapper.remove({ videoId }, { when: { name: 'original name' } });
 ```
 
 ## Group mutations in a batch

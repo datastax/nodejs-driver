@@ -9,11 +9,14 @@
 
 const https = require('https');
 const format = require('util').format;
+const path = require('path');
 const exec = require('child_process').exec;
 
 const Client = require('../../../../lib/dse-client');
 const helper = require('../../../test-helper');
-const ccmCmdString = 'docker exec $(docker ps -a -q  --filter ancestor=single_endpoint) ccm %s';
+const utils = require('../../../../lib/utils');
+
+const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
 
 module.exports = {
   setup: function() {
@@ -21,6 +24,7 @@ module.exports = {
       contactPoints: [],
       proxyAddress: null,
       localDataCenter: null,
+      setupSucceeded: false,
       getClient: function (options) {
         const client = new Client(Object.assign({
           contactPoints: this.contactPoints,
@@ -39,8 +43,9 @@ module.exports = {
       }
     };
 
+    before(() => this.runContainer());
+
     before(done => {
-      let errCalled = false;
 
       const requestOptions = {
         hostname: '127.0.0.1',
@@ -49,37 +54,81 @@ module.exports = {
         rejectUnauthorized: false
       };
 
-      https.get(requestOptions, (res) => {
-        let data = '';
+      let connected = false;
+      const start = process.hrtime();
+      const maxWaitSeconds = 60;
 
-        res
-          .on('data', (chunk) => {
-            data += chunk;
-          })
-          .on('end', () => {
-            if (errCalled) {
-              return;
-            }
+      utils.whilst(
+        () => !connected && process.hrtime(start)[0] < maxWaitSeconds,
+        next => {
+          let errCalled = false;
+          https.get(requestOptions, (res) => {
+            let data = '';
 
-            const message = JSON.parse(data);
-            const contactInfo = message['contact_info'];
-            setupInfo.proxyAddress = contactInfo['sni_proxy_address'];
-            setupInfo.localDataCenter = contactInfo['local_dc'];
-            contactInfo['contact_points'].forEach(n => setupInfo.contactPoints.push(n));
-            done();
+            res
+              .on('data', (chunk) => {
+                data += chunk.toString();
+              })
+              .on('end', () => {
+                if (errCalled) {
+                  return;
+                }
+
+                const message = JSON.parse(data);
+                const contactInfo = message['contact_info'];
+                setupInfo.proxyAddress = contactInfo['sni_proxy_address'];
+                setupInfo.localDataCenter = contactInfo['local_dc'];
+                contactInfo['contact_points'].forEach(n => setupInfo.contactPoints.push(n));
+                connected = true;
+                next();
+              });
+          }).on("error", (err) => {
+            errCalled = true;
+            helper.trace(err.toString());
+            setTimeout(next, 200);
           });
-
-      }).on("error", (err) => {
-        errCalled = true;
-        done(err);
-      });
+        },
+        () => {
+          if (connected) {
+            done();
+          } else {
+            done(new Error(`Could not connect to metadata svc after ${maxWaitSeconds} seconds`));
+          }
+        }
+      );
 
     });
+
+    before(() => setupInfo.setupSucceeded = true);
+
+    after(() => {
+      if (!setupInfo.setupSucceeded) {
+        // eslint-disable-next-line no-undef,no-console
+        console.log(this.containerLogs);
+      }
+    });
+
+    after(() => this.stopContainer());
 
     return setupInfo;
   },
   execCcm: function (cmd) {
-    return new Promise((resolve, reject) => exec(format(ccmCmdString, cmd), (err, stdout, stderr) => {
+    return this.execCommand(format(ccmCmdString, cmd));
+  },
+  runContainer: function () {
+    let singleEndpointPath = process.env['SINGLE_ENDPOINT_PATH'];
+    if (!singleEndpointPath) {
+      singleEndpointPath = path.join(process.env['HOME'], 'proxy', 'run.sh');
+      helper.trace("SINGLE_ENDPOINT_PATH not set, using " + singleEndpointPath);
+    }
+
+    return this.execCommand(singleEndpointPath);
+  },
+  stopContainer: function () {
+    return this.execCommand('docker kill $(docker ps -a -q --filter ancestor=single_endpoint)');
+  },
+  execCommand: function (cmd) {
+    return new Promise((resolve, reject) => exec(cmd, (err, stdout, stderr) => {
       if (stderr) {
         helper.trace(stderr);
       }

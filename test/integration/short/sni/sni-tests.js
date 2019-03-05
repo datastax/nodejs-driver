@@ -95,7 +95,7 @@ describe('SNI support', function () {
           // In the background, stop and restart a node
           Promise.resolve()
             .then(() => sniHelper.stopNode(1))
-            .then(() => promiseDelay(500))
+            .then(() => promiseDelay(200))
             .then(() => sniHelper.startNode(1))
             .then(() => promiseDelay(500))
             .then(() => restarted = true);

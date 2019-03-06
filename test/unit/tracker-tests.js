@@ -7,9 +7,10 @@
 
 'use strict';
 
-const RequestLogger = require('../../lib/tracker').RequestLogger;
-const helper = require('../test-helper');
 const assert = require('assert');
+const helper = require('../test-helper');
+const types = require('../../lib/types');
+const RequestLogger = require('../../lib/tracker').RequestLogger;
 const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 
 describe('RequestLogger', () => {
@@ -43,6 +44,13 @@ describe('RequestLogger', () => {
         helper.assertContains(message, 'Slow request, took 1000 ms');
         helper.assertContains(message, '[a:1,b:true,c:1.01]');
         helper.assertContains(message, 'not prepared');
+      });
+
+      it('should stringify individual object values', () => {
+        const query = 'INSERT SAMPLE (k1, k2) VALUES (?, ?)';
+        const params = [ types.Uuid.random(), types.InetAddress.fromString('10.10.10.1') ];
+        logger.onSuccess({ address: '::1' }, query, params, getExecutionOptions(true), 1, 2, [ 2, 0 ]);
+        helper.assertContains(message, `INSERT SAMPLE (k1, k2) VALUES (?, ?) [${params.join(',')}]`);
       });
 
       it('should include size information and round to KB', () => {

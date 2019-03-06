@@ -1376,6 +1376,17 @@ describe('metadata', function () {
     });
   });
 
+  describe('Client#hosts', () => {
+    it('should contain the hosts metadata information', () => {
+      setupInfo.client.hosts.values().forEach(host => {
+        assert.strictEqual(host.datacenter, 'dc1');
+        assert.strictEqual(typeof host.rack, 'string');
+        helper.assertInstanceOf(host.hostId, types.Uuid);
+        helper.assertInstanceOf(host.tokens, Array);
+      });
+    });
+  });
+
   describe('ResultSet', function () {
     describe('#info.isSchemaInAgreement', function () {
       const client = setupInfo.client;

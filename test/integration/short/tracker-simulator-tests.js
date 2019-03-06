@@ -12,6 +12,7 @@ const helper = require('../../test-helper');
 const tracker = require('../../../lib/tracker');
 const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
 const Client = require('../../../lib/client');
 const Host = require('../../../lib/host').Host;
 const simulacron = require('../simulacron');
@@ -147,14 +148,17 @@ describe('tracker', function () {
     logger.emitter.on('large', m => largeMessages.push(m));
 
     context('when using execute()', () => {
-      it('should log slow queries', () => client.execute(queryDelayed, [ 1 ], { prepare: true })
-        .then(() => {
-          assert.strictEqual(slowMessages.length, 1);
-          assert.strictEqual(largeMessages.length, 0);
-          helper.assertContains(slowMessages[0], 'Slow request, took');
-          helper.assertContains(slowMessages[0], queryDelayed + ' [1]');
-        })
-      );
+      it('should log slow queries', () => {
+        const id = types.Uuid.random();
+
+        return client.execute(queryDelayed, [ id ], { prepare: true })
+          .then(() => {
+            assert.strictEqual(slowMessages.length, 1);
+            assert.strictEqual(largeMessages.length, 0);
+            helper.assertContains(slowMessages[0], 'Slow request, took');
+            helper.assertContains(slowMessages[0], `${queryDelayed} [${id}]`);
+          });
+      });
 
       it('should log large queries', () => {
         const query = 'INSERT INTO table1 (id) VALUES (?)';

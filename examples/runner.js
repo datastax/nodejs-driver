@@ -12,7 +12,7 @@ const path = require('path');
 
 /** List all js files in the directory */
 function getJsFiles(dir, fileArray) {
-  var files = fs.readdirSync(dir);
+  const files = fs.readdirSync(dir);
   fileArray = fileArray || [];
   files.forEach(function(file) {
     if (file === 'node_modules') {
@@ -30,26 +30,28 @@ function getJsFiles(dir, fileArray) {
   return fileArray;
 }
 
-if (typeof Promise === 'undefined' || process.version.indexOf('v0.') === 0) {
-  console.log('Examples where not executed as a modern runtime is required');
+if (+process.versions.node.split('.')[0] < 8) {
+  console.log('Examples were not executed as they were designed to run against Node.js 8+');
   return;
 }
 
-var runnerFileName = path.basename(module.filename);
+const runnerFileName = path.basename(module.filename);
 let counter = 0;
 let failures = 0;
+
 async.eachSeries(getJsFiles(path.dirname(module.filename) + path.sep), function (file, next) {
   if (file.indexOf(runnerFileName) >= 0) {
     return next();
   }
 
   let timedOut = false;
-  var timeout = setTimeout(function() {
+  const timeout = setTimeout(function() {
     console.log("%s timed out after 10s", file);
     counter++;
     failures++;
     next();
   }, 10000);
+
   exec('node ' + file, function (err) {
     if(timedOut) {
       return;

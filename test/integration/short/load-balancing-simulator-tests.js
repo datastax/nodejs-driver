@@ -229,12 +229,7 @@ describe('DseLoadBalancingPolicy', function() {
     });
 
     const query = 'SELECT * FROM paused_2';
-    const hostCounts = {};
-    const incrementCount = result => {
-      const address = result.info.queriedHost;
-      hostCounts[address] = (hostCounts[address] || 0) + 1;
-    };
-
+    const queriedHosts = new Set();
     const pausedAddress = cluster.node(2).address;
     const execPromises = [];
 
@@ -242,8 +237,12 @@ describe('DseLoadBalancingPolicy', function() {
       .then(() => {
         // replicas needs to be faked to avoid getting token metadata with Simulacron
         let counter = 0;
+
         // 3 nodes from the local dc and all remote nodes are replicas
-        replicas = client.hosts.values().filter(h => h.datacenter !== localDc || counter++ < 3);
+        replicas = client.hosts.values()
+          .slice().sort(utils.propCompare('address'))
+          .filter(h => h.datacenter !== localDc || counter++ < 3);
+
         localReplicas = replicas.filter(h => h.datacenter === localDc);
         // Local replicas Array contains the paused node
         assert.strictEqual(localReplicas.filter(h => h.address === pausedAddress).length, 1);
@@ -265,10 +264,12 @@ describe('DseLoadBalancingPolicy', function() {
           }
         });
       })
-      .then(() => promiseRepeat(40, 20, () => client.execute(query, [], queryOptions).then(incrementCount)))
+      .then(() => promiseRepeat(10, 5, () => client.execute(query, [], queryOptions)
+        .then(result => queriedHosts.add(result.info.queriedHost))))
       .then(() => {
-        assert.strictEqual(Object.keys(hostCounts).length, 2);
-        assert.strictEqual(hostCounts[pausedAddress], undefined);
+        assert.deepStrictEqual(
+          Array.from(queriedHosts).sort(),
+          localReplicas.map(h => h.address).sort().filter(address => address !== pausedAddress));
       })
       .then(() => Promise.all(execPromises))
       .then(() => {

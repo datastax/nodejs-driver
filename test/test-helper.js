@@ -1519,15 +1519,32 @@ let warnedDseVersion = false;
  * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].
  * @constructor
  */
-function OrderedLoadBalancingPolicy() {
+class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy {
 
+  /**
+   * Creates a new instance.
+   * @param {Array<String>|SimulacronCluster} [addresses] When specified, it uses the order from the provided host
+   * addresses.
+   */
+  constructor(addresses) {
+    super();
+
+    if (addresses && typeof addresses.dc === 'function') {
+      // With Simulacron, use the nodes from the first DC in that order
+      addresses = addresses.dc(0).nodes.map(n => n.address);
+    }
+
+    this.addresses = addresses;
+  }
+
+  newQueryPlan(keyspace, info, callback) {
+    const hosts = !this.addresses
+      ? this.hosts.values()
+      : this.addresses.map(address => this.hosts.get(address));
+
+    return callback(null, hosts[Symbol.iterator]());
+  }
 }
-
-util.inherits(OrderedLoadBalancingPolicy, policies.loadBalancing.RoundRobinPolicy);
-
-OrderedLoadBalancingPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
-  callback(null, utils.arrayIterator(this.hosts.values()));
-};
 
 module.exports = helper;
 module.exports.RetryMultipleTimes = RetryMultipleTimes;

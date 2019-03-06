@@ -55,37 +55,31 @@ describe('ControlConnection', function () {
         expectedResolved = expectedHosts;
       }
 
-      const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
-        queryResults: { 'system\\.peers': {
-          rows: expectedHosts
-            .filter(address => address !== '1:9042')
-            .map(address => ({'rpc_address': address.split(':')[0] }))
-        }}
-      }));
+      const state = {};
+      const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({ failBorrow: 10, state}));
 
       cc.init(function (err) {
-        const hosts = cc.hosts.values();
         cc.shutdown();
-        cc.hosts.values().forEach(h => h.shutdown());
-        assert.ifError(err);
-        assert.deepEqual(hosts.map(h => h.address), expectedHosts);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.deepStrictEqual(state.connectionAttempts.sort(), expectedHosts.sort());
         const resolvedContactPoints = cc.getResolvedContactPoints();
         assert.deepStrictEqual(resolvedContactPoints.get('my-host-name'), expectedResolved);
         done();
       });
     }
+
     it('should resolve IPv4 and IPv6 addresses', function (done) {
       if (!useLocalhost || !useIp6 ) {
         return done();
       }
-      const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext());
+
+      const state = {};
+      const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext({ state, failBorrow: [ 0, 1 ]}));
+
       cc.init(function (err) {
         cc.shutdown();
-        cc.hosts.values().forEach(h => h.shutdown());
-        assert.ifError(err);
-        const hosts = cc.hosts.values();
-        assert.strictEqual(hosts.length, 2);
-        assert.deepEqual(hosts.map(h => h.address).sort(), [ '127.0.0.1:9042', '::1:9042' ]);
+        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.deepEqual(state.connectionAttempts.sort(), [ '127.0.0.1:9042', '::1:9042' ]);
         done();
       });
     });
@@ -99,8 +93,9 @@ describe('ControlConnection', function () {
         cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
         const hosts = cc.hosts.values();
-        assert.ok(hosts.length >= 1);
-        assert.strictEqual(hosts.filter(h => h.address === '127.0.0.1:9999').length, 1);
+        assert.strictEqual(hosts.length, 1);
+        // Resolved to ::1 or 127.0.0.
+        helper.assertContains(hosts[0].address, '1:9999');
         done();
       });
     });
@@ -168,14 +163,15 @@ describe('ControlConnection', function () {
       testResolution(ControlConnectionMock, [ '123:9042' ], done);
     });
     it('should continue iterating through the hosts when borrowing a connection fails', function (done) {
-      const hosts = [];
-      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0 ] }));
+      const state = {};
+      const contactPoints = [ '::1', '::2' ];
+      const cc = newInstance({ contactPoints }, getContext({ state, failBorrow: [ 0 ] }));
+
       cc.init(function (err) {
         cc.shutdown();
-        cc.hosts.values().forEach(h => h.shutdown());
         assert.ifError(err);
-        assert.strictEqual(hosts.length, 2);
         assert.ok(cc.initialized);
+        assert.deepStrictEqual(state.connectionAttempts.sort(), contactPoints.map(x => `${x}:9042`));
         helper.assertMapEqual(
           cc.getResolvedContactPoints(),
           new Map([['::1', ['[::1]:9042']], ['::2', ['[::2]:9042']]]));
@@ -186,15 +182,13 @@ describe('ControlConnection', function () {
       // collect unique permutations of borrow order.
       const borrowOrders = new Set();
       utils.times(20, (i, next) => {
-        const hosts = [];
-        const cc = newInstance({ contactPoints: [ '::1', '::2', '::3', '::4' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1, 2 ] }));
+        const state = {};
+        const cc = newInstance({ contactPoints: [ '::1', '::2', '::3', '::4' ] }, getContext({ state, failBorrow: 4 }));
         cc.init(function (err) {
           cc.shutdown();
           cc.hosts.values().forEach(h => h.shutdown());
-          assert.ifError(err);
-          assert.strictEqual(hosts.length, 4);
-          assert.ok(cc.initialized);
-          borrowOrders.add(hosts.map((h) => h.address).join());
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          borrowOrders.add(state.connectionAttempts.join());
           next();
         });
       }, (err) => {
@@ -205,23 +199,21 @@ describe('ControlConnection', function () {
       });
     });
     it('should callback with NoHostAvailableError when borrowing all connections fail', function (done) {
-      const hosts = [];
-      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ hosts: hosts, failBorrow: [ 0, 1] }));
+      const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({ failBorrow: 2 }));
       cc.init(function (err) {
         cc.shutdown();
         cc.hosts.values().forEach(h => h.shutdown());
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
         assert.strictEqual(Object.keys(err.innerErrors).length, 2);
-        assert.strictEqual(hosts.length, 2);
         assert.ok(!cc.initialized);
         done();
       });
     });
     it('should continue iterating through the hosts when metadata retrieval fails', function (done) {
-      const hosts = [];
       const cc = newInstance({ contactPoints: [ '::1', '::2' ] }, getContext({
-        hosts: hosts, queryResults: { '::1': 'Test error, failed query' }
+        queryResults: { '::1': 'Test error, failed query' }
       }));
+
       cc.init(function (err) {
         cc.shutdown();
         cc.hosts.values().forEach(h => h.shutdown());
@@ -231,20 +223,25 @@ describe('ControlConnection', function () {
     });
     it('should listen to socketClose and reconnect', function (done) {
       const state = {};
-      const hostsTried = [];
+      const peersRows = [
+        {'rpc_address': types.InetAddress.fromString('::2') }
+      ];
+
       const lbp = new policies.loadBalancing.RoundRobinPolicy();
+
       const cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp } }, getContext({
-        state: state, hosts: hostsTried
+        state, queryResults: { 'peers': peersRows }
       }));
       cc.init(function (err) {
         assert.ifError(err);
         assert.ok(state.connection);
-        assert.strictEqual(hostsTried.length, 1);
+        assert.strictEqual(state.hostsTried.length, 0);
+        assert.strictEqual(state.connectionAttempts.length, 1);
         lbp.init(null, cc.hosts, utils.noop);
         state.connection.emit('socketClose');
         setImmediate(function () {
           // Attempted reconnection and succeeded
-          assert.strictEqual(hostsTried.length, 2);
+          assert.strictEqual(state.hostsTried.length, 1);
           cc.shutdown();
           cc.hosts.values().forEach(h => h.shutdown());
           done();
@@ -383,7 +380,6 @@ describe('ControlConnection', function () {
   describe('#refresh()', function () {
     it('should schedule reconnection when it cant borrow a connection', function (done) {
       const state = {};
-      const hostsTried = [];
       const lbp = new policies.loadBalancing.RoundRobinPolicy();
       lbp.queryPlanCount = 0;
       lbp.newQueryPlan = function (ks, o, cb) {
@@ -391,41 +387,42 @@ describe('ControlConnection', function () {
           // Return an empty query plan the first time
           return cb(null, utils.arrayIterator([]));
         }
-        return cb(null, utils.arrayIterator(lbp.hosts.values()));
+        return cb(null, [ lbp.hosts.values()[1], lbp.hosts.values()[0] ][Symbol.iterator]());
       };
-      const rp = new policies.reconnection.ConstantReconnectionPolicy(10);
+
+      const rp = new policies.reconnection.ConstantReconnectionPolicy(40);
       rp.nextDelayCount = 0;
-      rp.newSchedule = function () {
-        return {
-          next: function () {
-            rp.nextDelayCount++;
-            return { value: 10, done: false};
-          }
-        };
+      rp.newSchedule = function*() {
+        rp.nextDelayCount++;
+        yield this.delay;
       };
-      const cc = newInstance({ contactPoints: [ '::1', '::2' ], policies: { loadBalancing: lbp, reconnection: rp } },
-        getContext({ state: state, hosts: hostsTried }));
+
+      const cc = newInstance({ contactPoints: [ '::1' ], policies: { loadBalancing: lbp, reconnection: rp } },
+        getContext({ state: state, queryResults: { 'peers': [ {'rpc_address': types.InetAddress.fromString('::2') } ] }}));
+
       cc.init(function (err) {
         assert.ifError(err);
         assert.ok(state.connection);
-        assert.strictEqual(hostsTried.length, 1);
+        assert.strictEqual(state.hostsTried.length, 0);
+        assert.strictEqual(cc.hosts.length, 2);
+
         lbp.init(null, cc.hosts, utils.noop);
-        state.connection.emit('socketClose');
         const previousConnection = state.connection;
+        state.connection.emit('socketClose');
+
         setImmediate(function () {
-          // Attempted reconnection and there isn't a host available
-          assert.strictEqual(hostsTried.length, 1);
           // Scheduled reconnection
-          assert.strictEqual(rp.nextDelayCount, 1);
+          // nextDelayCount should be 2 as both the host and the control connection are reconnecting
+          assert.strictEqual(rp.nextDelayCount, 2);
           setTimeout(function () {
             // Reconnected
-            assert.strictEqual(hostsTried.length, 2);
+            assert.strictEqual(state.hostsTried.length, 1);
             // Changed connection
             assert.notEqual(state.connection, previousConnection);
             cc.shutdown();
             cc.hosts.values().forEach(h => h.shutdown());
             done();
-          }, 20);
+          }, 50);
         });
       });
     });
@@ -466,11 +463,18 @@ function getFakeConnection(endpoint, queryResults) {
         break;
       }
     }
-    if (typeof result === 'string') {
-      return cb(new Error(result));
+
+    if (Array.isArray(result)) {
+      result = { rows: result };
     }
-    cb(null, result || defaultResult);
+
+    if (typeof result === 'string') {
+      cb(new Error(result));
+    } else {
+      cb(null, result || defaultResult);
+    }
   };
+  c.close = cb => (cb ? cb() : null);
   return c;
 }
 
@@ -482,19 +486,37 @@ function getFakeConnection(endpoint, queryResults) {
 function getContext(options) {
   options = options || {};
   // hosts that the ControlConnection used to borrow a connection
-  const hosts = options.hosts || [];
   const state = options.state || {};
-  const failBorrow = options.failBorrow || [];
+  state.connectionAttempts = [];
+  state.hostsTried = [];
+  let failBorrow = options.failBorrow || [];
+
+  if (typeof failBorrow === 'number') {
+    failBorrow = Array.from(new Array(failBorrow).keys());
+  }
+
+  let index = 0;
+
   return {
     borrowHostConnection: function (h, callback) {
-      const i = hosts.length;
-      hosts.push(h);
+      const i = options.state.hostsTried.length;
+      options.state.hostsTried.push(h);
       state.host = h;
       if (failBorrow.indexOf(i) >= 0) {
         return callback(new Error('Test error'));
       }
+
       state.connection = getFakeConnection(h.address, options.queryResults);
-      return callback(null, state.connection);
+      callback(null, state.connection);
+    },
+    createConnection: function (endpoint, callback) {
+      state.connectionAttempts.push(endpoint);
+      if (failBorrow.indexOf(index++) >= 0) {
+        return callback(new Error('Fake connect error'));
+      }
+
+      state.connection = getFakeConnection(endpoint, options.queryResults);
+      callback(null, state.connection);
     }
   };
 }

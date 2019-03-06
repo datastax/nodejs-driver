@@ -36,7 +36,7 @@ describe('pool', function () {
       contactPoints: cluster.getContactPoints(),
       // Use a LBP with a fixed order to have predictable behaviour
       // Warning: OrderedLoadBalancingPolicy is only suitable for testing!
-      policies: { loadBalancing: new helper.OrderedLoadBalancingPolicy() },
+      policies: { loadBalancing: new helper.OrderedLoadBalancingPolicy(cluster) },
       pooling: {
         coreConnectionsPerHost: {
           [types.distance.local]: 2
@@ -47,11 +47,11 @@ describe('pool', function () {
     }));
     beforeEach(done => cluster.prime({
       when: { query: 'SELECT * FROM paused' },
-      then: { result: 'success', delay_in_ms: 1000 }
+      then: { result: 'success', delay_in_ms: 2000 }
     }, done));
     beforeEach(done => cluster.node(0).prime({
       when: { query: 'SELECT * FROM paused_on_first' },
-      then: { result: 'success', delay_in_ms: 1000 }
+      then: { result: 'success', delay_in_ms: 2000 }
     }, done));
     afterEach(() => client.shutdown());
     afterEach(done => cluster.unregister(done));
@@ -60,13 +60,13 @@ describe('pool', function () {
       return client.connect()
         .then(() => Promise.all(new Array(150).fill(null).map(() => client.execute('SELECT * FROM paused'))))
         .then(results => {
-          const hosts = client.hosts.keys();
+          const hosts = cluster.dc(0).nodes.map(n => n.address);
           // First 100 items should be the first host (50 * 2 connections)
           assertArray(results.slice(0, 100).map(rs => rs.info.queriedHost), hosts[0]);
           // The next 50 items should be the second host
           assertArray(results.slice(100).map(rs => rs.info.queriedHost), hosts[1]);
         })
-        .then(() => validateStateOfPool(client));
+        .then(() => validateStateOfPool(client, cluster));
     });
 
     it('should fail when all hosts are busy', function () {
@@ -82,7 +82,7 @@ describe('pool', function () {
             .then(() => resultTuple);
         })))
         .then(results => {
-          const hosts = client.hosts.keys();
+          const hosts = cluster.dc(0).nodes.map(x => x.address);
 
           // The first 300 requests should have succeed
           assertArray(results.slice(0, 100).map(r => r.coordinator), hosts[0]);
@@ -99,7 +99,7 @@ describe('pool', function () {
             });
           });
         })
-        .then(() => validateStateOfPool(client));
+        .then(() => validateStateOfPool(client, cluster));
     });
 
     it('should increase and decrease response dequeued counter', function() {
@@ -135,7 +135,7 @@ describe('pool', function () {
       const client = new Client({
         contactPoints: cluster.getContactPoints(),
         policies: {
-          loadBalancing: new helper.OrderedLoadBalancingPolicy(),
+          loadBalancing: new helper.OrderedLoadBalancingPolicy(cluster),
           retry: retryPolicy
         },
         pooling: {
@@ -148,7 +148,7 @@ describe('pool', function () {
       });
 
       return client.connect()
-        .then(() => firstHost = client.hosts.values()[0].address)
+        .then(() => firstHost = cluster.node(0).address)
         .then(() => client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 200, isIdempotent: true }))
         .then(() => assert.strictEqual(retryCount, 2))
         .then(() => client.shutdown());
@@ -173,7 +173,7 @@ describe('pool', function () {
       const client = new Client({
         contactPoints: cluster.getContactPoints(),
         policies: {
-          loadBalancing: new helper.OrderedLoadBalancingPolicy(),
+          loadBalancing: new helper.OrderedLoadBalancingPolicy(cluster),
           retry: retryPolicy
         },
         pooling: {
@@ -189,11 +189,11 @@ describe('pool', function () {
 
       return client.connect()
         .then(() => {
-          firstHost = client.hosts.values()[0];
+          firstHost = client.hosts.get(cluster.node(0).address);
 
           // Create 99 in-flight requests
           promises.push.apply(promises, new Array(99).fill(0).map(() =>
-            client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 2000 })));
+            client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 10000 })));
 
           // The pool will be busy after this request, so the retry will occur on the next host
           const p2 = client.execute('SELECT * FROM paused_on_first', null, { readTimeout: 50, isIdempotent: true });
@@ -201,7 +201,7 @@ describe('pool', function () {
           return p2;
         })
         // The query will be retried on the next host
-        .then(rs => assert.strictEqual(rs.info.queriedHost, client.hosts.values()[1].address))
+        .then(rs => assert.strictEqual(rs.info.queriedHost, cluster.node(1).address))
         .then(() => {
           assert.strictEqual(firstHost.getInFlight(), 100);
           assert.strictEqual(client.getState().getInFlightQueries(firstHost), 100);
@@ -261,6 +261,108 @@ describe('pool', function () {
           client.controlConnection.host.address.split(':')[0].split('.')[3],
           secondNodeLastOctet.toString()))
         .then(() => client.shutdown());
+    });
+
+    it('should have a single connection when warmup is false', () => {
+      // Use a single contact point to make sure control connection uses the first host
+      const contactPoints = [ cluster.getContactPoints()[0] ];
+
+      const client = new Client({
+        contactPoints,
+        localDataCenter: 'dc1',
+        pooling: { warmup: false, coreConnectionsPerHost: { [types.distance.local]: 3 } }
+      });
+
+      after(() => client.shutdown());
+
+      return client.connect()
+        .then(() => {
+          assert.strictEqual(client.hosts.length, 3);
+          const state = client.getState();
+          const hosts = state.getConnectedHosts();
+          assert.deepStrictEqual(hosts.map(h => h.address), contactPoints);
+          assert.strictEqual(state.getOpenConnections(hosts[0]), 1);
+        });
+    });
+
+    it('should maintain the same ControlConnection host after nodes going UP and DOWN and back UP', () => {
+      const firstAddress = cluster.getContactPoints()[0];
+
+      const client = new Client({
+        contactPoints: [ firstAddress ],
+        localDataCenter: 'dc1',
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100) },
+        pooling: { heartBeatInterval: 50 }
+      });
+
+      after(() => client.shutdown());
+
+      let secondAddress;
+
+      return client.connect()
+        .then(() => {
+          assert.strictEqual(client.getState().getConnectedHosts().length, 3);
+          assert.strictEqual(client.controlConnection.getEndpoint(), firstAddress);
+        })
+        .then(() => promiseFromCallback(cb => cluster.node(firstAddress).stop(cb)))
+        .then(() => helper.setIntervalUntilPromise(
+          () => (client.controlConnection.getEndpoint() || firstAddress) !== firstAddress, 20, 5000
+        ))
+        .then(() => {
+          // Validate CC is now connected to another host
+          assert.notEqual(client.controlConnection.getEndpoint(), undefined);
+          assert.notStrictEqual(client.controlConnection.getEndpoint(), firstAddress);
+          secondAddress = client.controlConnection.getEndpoint();
+        })
+        .then(() => promiseFromCallback(cb => cluster.node(firstAddress).start(cb)))
+        .then(() => helper.setIntervalUntilPromise(
+          () => client.hosts.values().find(h => !h.isUp()) === undefined, 20, 5000
+        ))
+        .then(() => {
+          assert.strictEqual(client.getState().getConnectedHosts().length, 3);
+          // Validate that events of original node going back UP don't affect the ControlConnection
+          assert.strictEqual(client.controlConnection.getEndpoint(), secondAddress);
+        })
+        .then(() => client.shutdown());
+    });
+
+    it('should stop attempting to reconnect to down after shutdown', () => {
+      const firstAddress = cluster.getContactPoints()[0];
+      const reconnectionDelay = 20;
+
+      const client = new Client({
+        contactPoints: [ firstAddress ],
+        localDataCenter: 'dc1',
+        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay) },
+        pooling: { heartBeatInterval: 50 }
+      });
+
+      after(() => client.shutdown());
+
+      // Validate via log messages
+      const logMessages = [];
+
+      return client.connect()
+        .then(() => {
+          assert.strictEqual(client.getState().getConnectedHosts().length, 3);
+          assert.strictEqual(client.controlConnection.getEndpoint(), firstAddress);
+        })
+        .then(() => Promise.all(
+          client.hosts.values()
+            .map(h => h.address).slice(0, 2)
+            .map(address => promiseFromCallback(cb => cluster.node(address).stop(cb)))
+        ))
+        .then(() => helper.setIntervalUntilPromise(
+          () => (client.controlConnection.getEndpoint() || firstAddress) !== firstAddress, 20, 5000
+        ))
+        .then(() => {
+          assert.notEqual(client.controlConnection.getEndpoint(), undefined);
+          assert.notStrictEqual(client.controlConnection.getEndpoint(), firstAddress);
+        })
+        .then(() => client.shutdown())
+        .then(() => client.on('log', (level, message) => logMessages.push([ level, message ])))
+        .then(() => new Promise(r => setTimeout(r, reconnectionDelay * 2)))
+        .then(() => assert.deepStrictEqual(logMessages, []));
     });
   });
 
@@ -373,12 +475,12 @@ function assertArray(arr, value) {
 /**
  * Asserts that all nodes are UP and that the LBP is selecting the first healthy node.
  */
-function validateStateOfPool(client) {
+function validateStateOfPool(client, cluster) {
   return client.execute('SELECT * FROM system.local')
     .then(rs => {
       // Assert it didn't affect the state of the pool
       assertArray(client.hosts.values().map(h => h.isUp()), true);
-      return assert.strictEqual(rs.info.queriedHost, client.hosts.keys()[0]);
+      return assert.strictEqual(rs.info.queriedHost, cluster.node(0).address);
     });
 }
 

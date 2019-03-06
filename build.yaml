@@ -4,11 +4,17 @@ schedules:
     schedule: per_commit
     matrix:
       exclude:
-        # Exclude all builds for 6.x.
+        # Exclude all builds for Node.js 6
         - nodejs: ['6']
-        # Only build with latest for 4.x and 10.x
-        - nodejs: ['4', '10']
+        # Only build DSE 6.0 with Node.js 4
+        - nodejs: ['4']
           cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+        # Only build DSE 6.7 with Node.js 10
+        - nodejs: ['10']
+          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1', 'dse-6.0', 'dse-6.8']
+        # Build all DSE versions with Node.js 8 except DSE 6.0 and DSE 6.7
+        - nodejs: ['8']
+          cassandra: ['dse-6.0', 'dse-6.7']
   nightly:
     # Run full suite nightly on change for all primary branches if they have changes.
     schedule: nightly
@@ -48,9 +54,5 @@ build:
       export CCM_PATH=$HOME/ccm
       export JUNIT_REPORT_STACK=1
       export JUNIT_REPORT_PATH=.
-      if [ "$NODEJS_VERSION" != "0.10" ] && [ "$NODEJS_VERSION" != "0.12" ]; then
-        npm install -g eslint@4;
-        npm run eslint;
-      fi
       npm run ci_jenkins || true
   - xunit: "*.xml"

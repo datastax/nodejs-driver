@@ -25,12 +25,12 @@ module.exports = {
       proxyAddress: null,
       localDataCenter: null,
       setupSucceeded: false,
-      getClient: function (options) {
-        const client = new Client(Object.assign({
+      getClient: function (options, clientConstructor) {
+        const client = new (clientConstructor || Client)(Object.assign({
           contactPoints: this.contactPoints,
           localDataCenter: this.localDataCenter,
           protocolOptions: { maxVersion: 4 },
-          sni: { address: this.proxyAddress},
+          sni: { address: this.proxyAddress },
           sslOptions: {
             checkServerIdentity: () => undefined,
             rejectUnauthorized: false
@@ -112,9 +112,11 @@ module.exports = {
 
     return setupInfo;
   },
+
   execCcm: function (cmd) {
     return this.execCommand(format(ccmCmdString, cmd));
   },
+
   runContainer: function () {
     let singleEndpointPath = process.env['SINGLE_ENDPOINT_PATH'];
     if (!singleEndpointPath) {
@@ -124,9 +126,11 @@ module.exports = {
 
     return this.execCommand(singleEndpointPath);
   },
+
   stopContainer: function () {
     return this.execCommand('docker kill $(docker ps -a -q --filter ancestor=single_endpoint)');
   },
+
   execCommand: function (cmd) {
     return new Promise((resolve, reject) => exec(cmd, (err, stdout, stderr) => {
       if (stderr) {
@@ -140,12 +144,15 @@ module.exports = {
       }
     }));
   },
+
   startAllNodes: function () {
     return this.execCcm('start --root');
   },
+
   stopNode: function (nodeId) {
     return this.execCcm(`node${nodeId} stop`);
   },
+
   startNode: function (nodeId) {
     return this.execCcm(`node${nodeId} start --root --wait-for-binary-proto`);
   }

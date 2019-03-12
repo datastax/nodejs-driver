@@ -75,7 +75,7 @@ describe('Client', function () {
       client.connect(function (err) {
         assert.ok(err);
         helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        done();
+        client.shutdown(done);
       });
     });
     it('should select a tokenizer', function (done) {
@@ -296,18 +296,14 @@ describe('Client', function () {
       const client = newInstance(options);
       utils.times(100, function (n, next) {
         client.connect(next);
-      }, function (err) {
-        done(err);
-      });
+      }, helper.finish(client, done));
     });
     it('should connect using the plain text authenticator when calling execute', function (done) {
       const options = {authProvider: new PlainTextAuthProvider('cassandra', 'cassandra'), keyspace: 'system'};
       const client = newInstance(options);
       utils.times(100, function (n, next) {
         client.execute('SELECT * FROM local', next);
-      }, function (err) {
-        done(err);
-      });
+      }, helper.finish(client, done));
     });
     it('should return an AuthenticationError', function (done) {
       const options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
@@ -320,7 +316,7 @@ describe('Client', function () {
           helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
           next();
         });
-      }, done);
+      }, helper.finish(client, done));
     });
     it('should return an AuthenticationError when calling execute', function (done) {
       const options = {authProvider: new PlainTextAuthProvider('not___EXISTS', 'not___EXISTS'), keyspace: 'system'};
@@ -333,7 +329,7 @@ describe('Client', function () {
           helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
           next();
         });
-      }, done);
+      }, helper.finish(client, done));
     });
   });
   describe('#connect() with ipv6', function () {
@@ -363,7 +359,7 @@ describe('Client', function () {
           assert.strictEqual(client.hosts.values()[0].address, expected);
           utils.times(10, function (n, next) {
             client.execute(helper.queries.basic, next);
-          }, testDone);
+          }, helper.finish(client, testDone));
         });
       }
     });
@@ -371,6 +367,9 @@ describe('Client', function () {
   describe('#connect() with nodes failing', function () {
     it('should connect after a failed attempt', function (done) {
       const client = newInstance();
+
+      after(() => client.shutdown());
+
       utils.series([
         helper.ccmHelper.removeIfAny,
         function (next) {
@@ -679,6 +678,9 @@ describe('Client', function () {
     it('should failover after a node goes down', function (done) {
       // treat queries as idempotent so they can be safely retried on another node
       const client = newInstance({ queryOptions: { isIdempotent: true } });
+
+      after(() => client.shutdown());
+
       const hosts = {};
       const hostsDown = [];
       utils.series([
@@ -749,9 +751,13 @@ describe('Client', function () {
           '2': 0
         }
       };
+
       const client = new Client(options);
       const hosts = {};
       const query = helper.queries.basic;
+
+      after(() => client.shutdown());
+
       utils.series([
         function (next) {
           // wait for all initial events to ensure we don't incidentally get an 'UP' event for node 2

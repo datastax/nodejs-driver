@@ -11,6 +11,7 @@ const assert = require('assert');
 const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const errors = require('../../../lib/errors');
+const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
 
@@ -363,6 +364,81 @@ describe('pool', function () {
         .then(() => client.on('log', (level, message) => logMessages.push([ level, message ])))
         .then(() => new Promise(r => setTimeout(r, reconnectionDelay * 2)))
         .then(() => assert.deepStrictEqual(logMessages, []));
+    });
+
+    [
+      {
+        name: 'using the control connection',
+        fn: (client, cb) => client.controlConnection.query(helper.queries.basic, false, cb)
+      }, {
+        name: 'using client execute',
+        fn: (client, cb) => client.execute(helper.queries.basic, cb)
+      }
+    ].forEach(item => {
+      it(`should reject requests immediately after shutdown ${item.name}`, () => {
+        const client = new Client({
+          contactPoints: cluster.getContactPoints(),
+          localDataCenter: 'dc1',
+          pooling: { heartBeatInterval: 10000 }
+        });
+
+        after(() => client.shutdown());
+
+        let stop = false;
+        let requestCounter = 0;
+        let responseCounter = 0;
+        const results = [];
+        const maxResults = 1000;
+
+        return client.connect()
+          .then(() => {
+            // Execute queries in the background
+            utils.whilst(
+              () => !stop,
+              next => {
+                utils.timesLimit(100, 32, (i, timesNext) => {
+
+                  const checkReject = client.isShuttingDown;
+                  let timePassed = false;
+
+                  if (checkReject) {
+                    setTimeout(() => timePassed = true, 20);
+                  }
+
+                  requestCounter++;
+
+                  item.fn(client, err => {
+                    responseCounter++;
+                    if (checkReject && results.length < maxResults) {
+                      results.push({ timePassed, err });
+                    }
+
+                    if (err && client.isShuttingDown) {
+                      err = null;
+                    }
+
+                    timesNext(err);
+                  });
+                }, err => setImmediate(next, err));
+              },
+              utils.noop
+            );
+          })
+          .then(() => new Promise(r => setTimeout(r, 20)))
+          // Shutdown while there are queries in progress
+          .then(() => client.shutdown())
+          .then(() => new Promise(r => setTimeout(r, 200)))
+          .then(() => stop = true)
+          .then(() => new Promise(r => setTimeout(r, 200)))
+          .then(() => {
+            assert.ok(results.length > 0);
+            results.forEach(r => {
+              helper.assertInstanceOf(r.err, Error);
+              assert.strictEqual(r.timePassed, false);
+            });
+            assert.strictEqual(responseCounter, requestCounter);
+          });
+      });
     });
   });
 

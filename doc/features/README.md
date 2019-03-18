@@ -20,5 +20,6 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [Query timestamps](query-timestamps)
 - [Query warnings](query-warnings)
 - [Speculative query executions](speculative-executions)
+- [TLS/SSL](tls)
 - [Tuning policies](tuning-policies)
 - [User-defined functions and aggregates](udfs)

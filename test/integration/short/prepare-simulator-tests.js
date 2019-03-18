@@ -1,6 +1,6 @@
 'use strict';
+
 const assert = require('assert');
-const util = require('util');
 
 const Client = require('../../../lib/client');
 const types = require('../../../lib/types/index');
@@ -11,46 +11,49 @@ const simulacron = require('../simulacron');
 
 describe('Client', function () {
   this.timeout(20000);
+
   describe('Preparing statements on nodes behavior', function () {
     let sCluster = null;
     let client = null;
-    const query = util.format('SELECT * FROM ks.table1 WHERE id1 = ?');
-    before(function (done) {
-      simulacron.start(done);
-    });
-    beforeEach(function (done) {
+
+    const query = 'SELECT * FROM ks.table1 WHERE id1 = ?';
+    const pausedQuery = 'SELECT * FROM paused';
+
+    before(done => simulacron.start(done));
+
+    beforeEach(done => {
       sCluster = new simulacron.SimulacronCluster();
-      utils.series(
-        [
-          function startCluster(next) {
-            sCluster.register([5], {}, next);
-          },
-          function connectCluster(next) {
-            const poolingOptions = {};
-            poolingOptions[types.distance.local] = 1;
-            client = new Client({
-              contactPoints: [sCluster.getContactPoints()[0]],
-              localDataCenter: 'dc1',
-              policies: {
-                reconnection: new reconnection.ConstantReconnectionPolicy(100),
-                retry: new helper.RetryMultipleTimes(3)
-              },
-              pooling: poolingOptions
-            });
-            client.connect.bind(client);
-            next();
-          },
-          helper.toTask(sCluster.clear, sCluster),
-          helper.toTask(sCluster.primeQuery, sCluster, query)
-        ], done);
+      sCluster.register([5], {}, done);
     });
-    afterEach(function (done) {
-      client.shutdown.bind(client);
-      sCluster.unregister(done);
+
+    beforeEach(done => {
+      const poolingOptions = {};
+      poolingOptions[types.distance.local] = 1;
+      client = new Client({
+        contactPoints: [sCluster.getContactPoints()[0]],
+        localDataCenter: 'dc1',
+        policies: {
+          reconnection: new reconnection.ConstantReconnectionPolicy(100),
+          retry: new helper.RetryMultipleTimes(3)
+        },
+        pooling: poolingOptions
+      });
+
+      client.connect(done);
     });
-    after(function (done) {
-      simulacron.stop(done);
-    });
+
+    beforeEach(done => sCluster.clear(done));
+    beforeEach(done => sCluster.primeQuery(query, done));
+
+    beforeEach(done => sCluster.node(0).prime({
+      when: { query: pausedQuery },
+      then: { result: 'success', delay_in_ms: 2000, ignore_on_prepare: false }
+    }, done));
+
+    afterEach(() => client.shutdown());
+    afterEach(done => sCluster.unregister(done));
+    after(done => simulacron.stop(done));
+
     it('should prepare query on all hosts', function (done) {
       const idRandom = types.Uuid.random();
       client.execute(query, [idRandom], {prepare: 1}, function (err, result) {
@@ -76,9 +79,21 @@ describe('Client', function () {
         }, done);
       });
     });
+
     it('should re-prepare query when host go UP again', function (done) {
       const idRandom = types.Uuid.random();
       const nodeDownAddress = sCluster.getContactPoints()[4];
+
+      const logMessages = [];
+      const logRegex = /Re-preparing all queries on host [\d.:]+ before setting it as UP/i;
+
+      // Verify log messages
+      client.on('log', (level, className, message) => {
+        if (level === 'info' && className === 'Host' && logRegex.test(message)) {
+          logMessages.push(message);
+        }
+      });
+
       utils.series(
         [
           function stopLastNode(next) {
@@ -151,6 +166,9 @@ describe('Client', function () {
               if (!prepareQuery) {
                 assert.fail('Query no prepared on restarted host');
               }
+
+              assert.strictEqual(logMessages.length, 1);
+
               next();
             });
           }

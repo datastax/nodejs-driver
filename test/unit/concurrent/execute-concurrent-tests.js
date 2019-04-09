@@ -76,6 +76,20 @@ describe('executeConcurrent(client, query, parameters)', function () {
       .then(result => assert.strictEqual(result.totalExecuted, 0));
   });
 
+  it('should set the execution profile', () => {
+    const testContext = getTestContext();
+    const options = { executionProfile: 'ep1' };
+
+    return executeConcurrent(testContext.client, 'INSERT ...', [ [1], [2] ], options)
+      .then(result => {
+        assert.strictEqual(result.totalExecuted, 2);
+        assert.strictEqual(testContext.executions.length, 2);
+        testContext.executions.forEach(item => {
+          assert.strictEqual(item.options.executionProfile, options.executionProfile);
+        });
+      });
+  });
+
   context('when collectResults is true', () => {
 
     it('should set the resultItems', () => {
@@ -105,7 +119,7 @@ describe('executeConcurrent(client, query, parameters)', function () {
       const testContext = getTestContext();
       const parameters = Array.from(Array(10).keys()).map(x => [ x, 0 ]);
 
-      return executeConcurrent(testContext.client, 'Q1', parameters, { collectResults: false })
+      return executeConcurrent(testContext.client, 'Q1', parameters)
         .then(result => assert.throws(() => result.resultItems,
           /Property resultItems can not be accessed when collectResults is set to false/));
     });
@@ -410,7 +424,39 @@ describe('executeConcurrent(client, query, stream)', () => {
 });
 
 describe('executeConcurrent(client, queryAndParameters)', () => {
-  it('should be implemented');
+  it('should use the different query and parameters', () => {
+    const queryAndParams = [
+      { query: 'Q1', params: ['a'] },
+      { query: 'Q2', params: ['b'] },
+      { query: 'Q3', params: ['c'] },
+    ];
+
+    const testContext = getTestContext();
+
+    return executeConcurrent(testContext.client, queryAndParams)
+      .then(result => {
+        assert.strictEqual(result.totalExecuted, queryAndParams.length);
+        assert.deepStrictEqual(testContext.executions.map(x => ({ query: x.query, params: x.params })), queryAndParams);
+      });
+  });
+
+  it('should set the execution profile', () => {
+    const testContext = getTestContext();
+    const queryAndParams = [
+      { query: 'Q1', params: ['a'] },
+      { query: 'Q2', params: ['b'] },
+    ];
+
+    const options = { executionProfile: 'ep1' };
+
+    return executeConcurrent(testContext.client, queryAndParams, options)
+      .then(result => {
+        assert.strictEqual(result.totalExecuted, queryAndParams.length);
+        testContext.executions.forEach(item => {
+          assert.strictEqual(item.options.executionProfile, options.executionProfile);
+        });
+      });
+  });
 });
 
 function getTestContext(errorIndexes) {
@@ -420,16 +466,18 @@ function getTestContext(errorIndexes) {
     maxInFlight: 0,
     inFlight: 0,
     index: 0,
+    executions: [],
     client: {
-      execute: function (query, parameters) {
+      execute: function (query, params, options) {
         const index = testContext.index++;
         testContext.maxInFlight = Math.max(++testContext.inFlight, testContext.maxInFlight);
+        testContext.executions.push({ query, params, options });
 
         return new Promise((resolve, reject) => setTimeout(() => {
           testContext.inFlight--;
 
           if (errorIndexes.indexOf(index) === -1) {
-            resolve(new types.ResultSet({ rows: [ { col1: parameters } ]}));
+            resolve(new types.ResultSet({ rows: [ { col1: params } ]}));
           } else {
             reject(new Error(`Test error ${index}`));
           }

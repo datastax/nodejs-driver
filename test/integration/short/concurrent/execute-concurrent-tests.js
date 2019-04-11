@@ -9,8 +9,10 @@ const Transform = require('stream').Transform;
 const Uuid = types.Uuid;
 const executeConcurrent = require('../../../../lib/concurrent').executeConcurrent;
 
-const insertQuery = 'INSERT INTO table1 (key1, key2, value) VALUES (?, ?, ?)';
-const countQuery = 'SELECT COUNT(*) as total FROM table1 WHERE key1 = ?';
+const insertQuery1 = 'INSERT INTO table1 (key1, key2, value) VALUES (?, ?, ?)';
+const insertQuery2 = 'INSERT INTO table2 (id, value) VALUES (?, ?)';
+const countQuery1 = 'SELECT COUNT(*) as total FROM table1 WHERE key1 = ?';
+const selectQuery2 = 'SELECT * FROM table2 WHERE id = ?';
 
 describe('executeConcurrent()', function () {
   this.timeout(120000);
@@ -18,7 +20,7 @@ describe('executeConcurrent()', function () {
   const setupInfo = helper.setup(1, {
     queries: [
       'CREATE TABLE table1 (key1 uuid, key2 int, value text, PRIMARY KEY (key1, key2))',
-      'CREATE TABLE table2 (id text PRIMARY KEY, value text)',
+      'CREATE TABLE table2 (id uuid PRIMARY KEY, value text)',
     ]
   });
 
@@ -29,7 +31,7 @@ describe('executeConcurrent()', function () {
       const id = Uuid.random();
       const values = Array.from(new Array(600).keys()).map(x => [ id, x, x.toString() ]);
 
-      return executeConcurrent(client, insertQuery, values)
+      return executeConcurrent(client, insertQuery1, values)
         .then(result => {
           assert.strictEqual(result.totalExecuted, values.length);
           assert.deepStrictEqual(result.errors, []);
@@ -41,7 +43,7 @@ describe('executeConcurrent()', function () {
       const id = Uuid.random();
       const values = getParameterValues(id, 10);
 
-      return executeConcurrent(client, insertQuery, values)
+      return executeConcurrent(client, insertQuery1, values)
         .then(result => {
           assert.strictEqual(result.totalExecuted, values.length);
           assert.deepStrictEqual(result.errors, []);
@@ -54,7 +56,7 @@ describe('executeConcurrent()', function () {
       const id = Uuid.random();
       const values = getParameterValues(id, 20);
 
-      return executeConcurrent(client, insertQuery, values, { concurrencyLevel: 5, collectResults: true })
+      return executeConcurrent(client, insertQuery1, values, { concurrencyLevel: 5, collectResults: true })
         .then(result => {
           assert.strictEqual(result.totalExecuted, values.length);
           assert.deepStrictEqual(result.errors, []);
@@ -72,7 +74,7 @@ describe('executeConcurrent()', function () {
       // Set invalid parameters for one of the items
       values[7] = [];
 
-      return executeConcurrent(client, insertQuery, values, options)
+      return executeConcurrent(client, insertQuery1, values, options)
         .then(result => {
           assert.strictEqual(result.totalExecuted, values.length);
           assert.deepStrictEqual(result.errors.length, 1);
@@ -87,7 +89,7 @@ describe('executeConcurrent()', function () {
       const values = [[ Uuid.random(), 1, 'one' ], []];
       let error;
 
-      return executeConcurrent(client, insertQuery, values)
+      return executeConcurrent(client, insertQuery1, values)
         .catch(err => error = err)
         .then(() => {
           helper.assertInstanceOf(error, errors.ResponseError);
@@ -102,10 +104,10 @@ describe('executeConcurrent()', function () {
       // Set invalid parameters for two of the values
       values[19] = values[33] = [];
 
-      return executeConcurrent(client, insertQuery, values, { raiseOnFirstError: false, concurrencyLevel: 10 })
+      return executeConcurrent(client, insertQuery1, values, { raiseOnFirstError: false, concurrencyLevel: 10 })
         .then(result => {
           assert.strictEqual(result.totalExecuted, values.length);
-          assert.deepStrictEqual(result.errors.length, 2);
+          assert.strictEqual(result.errors.length, 2);
           result.errors.forEach(err => helper.assertInstanceOf(err, errors.ResponseError));
         })
         .then(() => validateInserted(client, id, values.length - 2));
@@ -118,12 +120,111 @@ describe('executeConcurrent()', function () {
       const fsStream = fs.createReadStream(__filename, { highWaterMark: 512 });
       const transformStream = fsStream.pipe(new LineTransform(id));
 
-      return executeConcurrent(client, insertQuery, transformStream, { concurrencyLevel: 10 })
+      return executeConcurrent(client, insertQuery1, transformStream, { concurrencyLevel: 10 })
         .then(result => {
           assert.strictEqual(result.totalExecuted, transformStream.index);
+          // It should have paused the stream while reading
+          assert.ok(transformStream.pauseCounter > 1);
           assert.deepStrictEqual(result.errors, []);
+          assert.throws(() => result.resultItems, /resultItems/);
         })
         .then(() => validateInserted(client, id, transformStream.index));
+    });
+
+    it('should reject the promise when there is an execution error', () => {
+      const fsStream = fs.createReadStream(__filename);
+      const fixedValues = new Map([[15, []], [30, []]]);
+      const transformStream = fsStream.pipe(new LineTransform(Uuid.random(), { fixedValues }));
+      let error;
+
+      return executeConcurrent(client, insertQuery1, transformStream, { concurrencyLevel: 10 })
+        .catch(err => error = err)
+        .then(() => helper.assertInstanceOf(error, errors.ResponseError));
+    });
+
+    it('should resolve the promise when there is an execution error and raiseOnFirstError is false', () => {
+      const id = Uuid.random();
+      const fsStream = fs.createReadStream(__filename);
+      const fixedValues = new Map([[15, []], [30, []]]);
+      const transformStream = fsStream.pipe(new LineTransform(id, { fixedValues }));
+
+      return executeConcurrent(client, insertQuery1, transformStream, { concurrencyLevel: 10, raiseOnFirstError: false })
+        .then(result => {
+          assert.strictEqual(result.totalExecuted, transformStream.index);
+          assert.strictEqual(result.errors.length, 2);
+          result.errors.forEach(err => helper.assertInstanceOf(err, errors.ResponseError));
+        })
+        .then(() => validateInserted(client, id, transformStream.index - 2));
+    });
+
+    it('should reject the promise when there is a read error', () =>
+      // Regardless of the raiseOnFirstError setting
+      Promise.all([ true, false ].map(raiseOnFirstError => {
+        const fsStream = fs.createReadStream(__filename);
+        const transformStream = fsStream.pipe(new LineTransform(Uuid.random(), { failAtIndex: 15 }));
+        let error;
+
+        return executeConcurrent(client, insertQuery1, transformStream, { concurrencyLevel: 10, raiseOnFirstError })
+          .catch(err => error = err)
+          .then(() => {
+            helper.assertInstanceOf(error, Error);
+            assert.strictEqual(error.message, 'Test transform error');
+          });
+      })));
+  });
+
+  describe('with different queries and parameters', () => {
+    it('should execute the different queries', () => {
+      const id = Uuid.random();
+      const queryAndParameters = [
+        { query: insertQuery1, params: [ id, 0, 'one on table1'] },
+        { query: insertQuery2, params: [ id, 'one on table2' ]},
+        { query: insertQuery1, params: [ id, 1, 'second on table1'] }
+      ];
+
+      return executeConcurrent(client, queryAndParameters)
+        .then(result => {
+          assert.strictEqual(result.totalExecuted, queryAndParameters.length);
+          assert.strictEqual(result.errors.length, 0);
+          assert.throws(() => result.resultItems, /resultItems can not be accessed/);
+        })
+        .then(() => validateInserted(client, id, 2))
+        .then(() => client.execute(selectQuery2, [ id ], { prepare: true }))
+        .then(rs2 => assert.ok(rs2.first()));
+    });
+
+    it('should reject the promise when there is an error', () => {
+      const id = Uuid.random();
+      const queryAndParameters = [
+        { query: insertQuery1, params: [ id, 0, 'one on table1'] },
+        { query: 'INSERT FAIL', params: []},
+        { query: insertQuery1, params: [ id, 1, 'second on table1'] }
+      ];
+      let error;
+
+      return executeConcurrent(client, queryAndParameters)
+        .catch(err => error = err)
+        .then(() => {
+          helper.assertInstanceOf(error, errors.ResponseError);
+          assert.strictEqual(error.code, types.responseErrorCodes.syntaxError);
+        });
+    });
+
+    it('should resolve the promise when there is an error and raiseOnFirstError is false', () => {
+      const id = Uuid.random();
+      const queryAndParameters = [
+        { query: insertQuery1, params: [ id, 0, 'one on table1'] },
+        { query: 'INSERT FAIL', params: []},
+        { query: insertQuery1, params: [ id, 1, 'second on table1'] }
+      ];
+
+      return executeConcurrent(client, queryAndParameters, { raiseOnFirstError: false })
+        .then(result => {
+          assert.strictEqual(result.totalExecuted, queryAndParameters.length);
+          assert.strictEqual(result.errors.length, 1);
+          helper.assertInstanceOf(result.errors[0], errors.ResponseError);
+        })
+        .then(() => validateInserted(client, id, 2));
     });
   });
 });
@@ -133,7 +234,7 @@ function getParameterValues(id, length) {
 }
 
 function validateInserted(client, id, totalExpected) {
-  return client.execute(countQuery, [ id ])
+  return client.execute(countQuery1, [ id ])
     .then(rs => assert.equal(rs.first()['total'].toString(), totalExpected));
 }
 
@@ -141,11 +242,16 @@ function validateInserted(client, id, totalExpected) {
  * Simplified line reader for testing purposes
  */
 class LineTransform extends Transform {
-  constructor(id) {
+
+  constructor(id, options) {
     super({ writableObjectMode: true, readableObjectMode: true });
 
     this._id = id;
+    options = options || {};
+    this._failAtIndex = options.failAtIndex;
+    this._fixedValues = options.fixedValues || new Map();
     this.index = 0;
+    this.pauseCounter = 0;
   }
 
   _transform(chunk, encoding, callback) {
@@ -153,9 +259,20 @@ class LineTransform extends Transform {
     const parts = text.split('\n');
 
     for (let i = 0; i < parts.length; i++) {
-      this.push([ this._id, this.index++, parts[i] ]);
+      const index = this.index++;
+      const values = this._fixedValues.get(index) || [ this._id, index, parts[i] ];
+      this.push(values);
+
+      if (this.index === this._failAtIndex) {
+        return callback(new Error('Test transform error'));
+      }
     }
 
     callback();
+  }
+
+  pause() {
+    this.pauseCounter++;
+    super.pause();
   }
 }

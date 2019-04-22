@@ -11,6 +11,14 @@ const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions
 const dataTypes = types.dataTypes;
 const helper = require('../test-helper');
 
+const zeroLengthTypesSupported = new Set([
+  dataTypes.text,
+  dataTypes.ascii,
+  dataTypes.varchar,
+  dataTypes.custom,
+  dataTypes.blob
+]);
+
 describe('encoder', function () {
   describe('Encoder.guessDataType()', function () {
     it('should guess the native types', function () {
@@ -635,13 +643,7 @@ describe('encoder', function () {
       [2, 3].forEach(v => {
         const encoder = new Encoder(v, {});
         const buffer = encoder.encode(input, dataTypes.map);
-        [
-          dataTypes.text,
-          dataTypes.ascii,
-          dataTypes.varchar,
-          dataTypes.blob,
-          dataTypes.custom,
-        ].forEach(function(t){
+        Array.from(zeroLengthTypesSupported).forEach(function(t){
           const type = { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: t } ]};
           const value = encoder.decode(buffer, type);
           assert.ok(value);
@@ -657,37 +659,50 @@ describe('encoder', function () {
       [2, 3].forEach(v => {
         const encoder = new Encoder(v, {});
         const buffer = encoder.encode(input, dataTypes.map);
-        [
-          dataTypes.bigint,
-          dataTypes.boolean,
-          dataTypes.counter,
-          dataTypes.decimal,
-          dataTypes.double,
-          dataTypes.float,
-          dataTypes.int,
-          dataTypes.timestamp,
-          dataTypes.uuid,
-          dataTypes.varint,
-          dataTypes.timeuuid,
-          dataTypes.inet,
-          dataTypes.date,
-          dataTypes.time,
-          dataTypes.smallint,
-          dataTypes.tinyint,
-          dataTypes.list,
-          dataTypes.map,
-          dataTypes.set,
-          dataTypes.udt,
-          dataTypes.tuple
-        ].forEach(t => {
-          const type = { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: t } ]};
-          const value = encoder.decode(buffer, type);
-          assert.ok(value);
-          assert.deepEqual(Object.keys(value), Object.keys(input));
-          assert.strictEqual(value['key1'], null);
-        });
+
+        utils.objectValues(types.dataTypes)
+          .filter(t => typeof t === "number" && !zeroLengthTypesSupported.has(t))
+          .forEach(t => {
+            const type = { code: types.dataTypes.map, info: [ { code: types.dataTypes.text }, { code: t } ]};
+            const value = encoder.decode(buffer, type);
+            assert.ok(value);
+            assert.deepEqual(Object.keys(value), Object.keys(input));
+            assert.strictEqual(value['key1'], null);
+          });
       });
     });
+
+    it('should decode empty buffers as nulls for most types', () => {
+      const encoder = new Encoder(4, {});
+      const emptyBuffer = utils.allocBufferUnsafe(0);
+
+      utils.objectValues(types.dataTypes)
+        .filter(t => typeof t === "number" && !zeroLengthTypesSupported.has(t))
+        .forEach(code => assert.strictEqual(encoder.decode(emptyBuffer, { code }), null));
+    });
+
+    it('should decode empty buffers as empty strings', () => {
+      const encoder = new Encoder(4, {});
+      const emptyBuffer = utils.allocBufferUnsafe(0);
+
+      [
+        dataTypes.text,
+        dataTypes.ascii,
+        dataTypes.varchar
+      ]
+        .forEach(code => assert.strictEqual(encoder.decode(emptyBuffer, { code }), ''));
+    });
+
+    it('should decode empty buffers for blobs and custom types', () => {
+      const encoder = new Encoder(4, {});
+      const emptyBuffer = utils.allocBufferUnsafe(0);
+      [
+        dataTypes.blob,
+        dataTypes.custom
+      ]
+        .forEach(t => assert.deepStrictEqual(encoder.decode(emptyBuffer, {code: t}), utils.allocBufferUnsafe(0)));
+    });
+
     it('should decode null map values', function () {
       // technically this should not be possible as nulls are not allowed in collections.
       // at a protocol level this is only possible with v3+ as v2 uses unsigned short for collection element size.

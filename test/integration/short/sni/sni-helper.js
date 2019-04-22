@@ -17,29 +17,20 @@ const helper = require('../../../test-helper');
 const utils = require('../../../../lib/utils');
 
 const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
+const metadataSvcUrl = [ '127.0.0.1', ':', '30443', '/metadata' ];
 
 module.exports = {
   setup: function() {
     const setupInfo = {
-      contactPoints: [],
-      proxyAddress: null,
-      localDataCenter: null,
       setupSucceeded: false,
-      getClient: function (options, clientConstructor) {
-        const client = new (clientConstructor || Client)(Object.assign({
-          contactPoints: this.contactPoints,
-          localDataCenter: this.localDataCenter,
-          protocolOptions: { maxVersion: 4 },
-          sni: { address: this.proxyAddress },
-          sslOptions: {
-            checkServerIdentity: () => undefined,
-            rejectUnauthorized: false
-          }
-        }, options));
+      getClient: function (options) {
+        return Client
+          .forClusterConfig(metadataSvcUrl.join(''), Object.assign({ protocolOptions: { maxVersion: 4 } }, options))
+          .then(client => {
+            after(() => client.shutdown());
 
-        after(() => client.shutdown());
-
-        return client;
+            return client.connect().then(() => client);
+          });
       }
     };
 
@@ -48,9 +39,9 @@ module.exports = {
     before(done => {
 
       const requestOptions = {
-        hostname: '127.0.0.1',
-        port: 30443,
-        path: '/metadata',
+        hostname: metadataSvcUrl[0],
+        port: metadataSvcUrl[2],
+        path: metadataSvcUrl[3],
         rejectUnauthorized: false
       };
 
@@ -63,22 +54,13 @@ module.exports = {
         next => {
           let errCalled = false;
           https.get(requestOptions, (res) => {
-            let data = '';
-
             res
-              .on('data', (chunk) => {
-                data += chunk.toString();
-              })
+              .on('data', chunk => {})
               .on('end', () => {
                 if (errCalled) {
                   return;
                 }
 
-                const message = JSON.parse(data);
-                const contactInfo = message['contact_info'];
-                setupInfo.proxyAddress = contactInfo['sni_proxy_address'];
-                setupInfo.localDataCenter = contactInfo['local_dc'];
-                contactInfo['contact_points'].forEach(n => setupInfo.contactPoints.push(n));
                 connected = true;
                 next();
               });

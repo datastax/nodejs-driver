@@ -13,6 +13,8 @@ const rewire = require('rewire');
 const sniHelper = require('./sni-helper');
 const helper = require('../../../test-helper');
 const policies = require('../../../../lib/policies');
+const errors = require('../../../../lib/errors');
+const Client = require('../../../../lib/dse-client');
 
 const port = 9042;
 
@@ -23,11 +25,9 @@ describe('SNI support', function () {
 
   context('with a 3 node cluster', () => {
 
-    it('should resolve dns name of the proxy', () => {
-      const client = setupInfo.getClient();
-
-      return client.connect()
-        .then(() => {
+    it('should resolve dns name of the proxy', () =>
+      setupInfo.getClient()
+        .then(client => {
           assert.strictEqual(client.hosts.length, 3);
 
           assert.ok(client.options.sni.addressResolver.getIp());
@@ -40,44 +40,38 @@ describe('SNI support', function () {
             assert.strictEqual(h.pool.connections[0].endpointFriendlyName,
               `${client.options.sni.addressResolver.getIp()}:${client.options.sni.port} (${h.hostId})`);
           });
-        });
-    });
-
-    it('should use the proxy address when an IP is provided', () => {
-      const client = setupInfo.getClient();
-
-      const proxyAddress = client.options.sni.address;
-      assert.ok(proxyAddress);
-      client.options.sni.address = `127.0.0.1${proxyAddress.substr(proxyAddress.indexOf(':'))}`;
-
-      return client.connect()
-        .then(() => client.hosts.forEach(h => assert.strictEqual(h.pool.connections.length, 1)))
-        .then(() => client.shutdown());
-    });
+        }));
 
     it('should use all the proxy resolved addresses', () => {
-      const libPath = '../../../../lib';
       const hostName = 'dummy-host';
       let resolvedAddress;
+      let client;
 
-      const cc = rewire(`${libPath}/control-connection`);
-      cc.__set__("dns", {
-        resolve4: (name, cb) => {
-          resolvedAddress = name;
-          // Use different loopback addresses
-          cb(null, ['127.0.0.1', '127.0.0.2']);
-        }
-      });
+      return setupInfo.getClient()
+        .then(tempClient => {
+          const libPath = '../../../../lib';
 
-      const Client = rewire(`${libPath}/client`);
-      Client.__set__("ControlConnection", cc);
+          const cc = rewire(`${libPath}/control-connection`);
+          cc.__set__("dns", {
+            resolve4: (name, cb) => {
+              resolvedAddress = name;
+              // Use different loopback addresses
+              cb(null, ['127.0.0.1', '127.0.0.2']);
+            }
+          });
 
-      const client = setupInfo.getClient(null, Client);
-      const proxyAddress = client.options.sni.address;
-      assert.ok(proxyAddress);
-      client.options.sni.address = `${hostName}${proxyAddress.substr(proxyAddress.indexOf(':'))}`;
+          const Client = rewire(`${libPath}/client`);
+          Client.__set__("ControlConnection", cc);
 
-      return client.connect()
+          // Use a tempClient to extract all the options
+          client = new Client(tempClient.options);
+          const proxyAddress = client.options.sni.address;
+          assert.ok(proxyAddress);
+          client.options.sni.address = `${hostName}${proxyAddress.substr(proxyAddress.indexOf(':'))}`;
+
+          return tempClient.shutdown();
+        })
+        .then(() => client.connect())
         .then(() => {
           assert.strictEqual(resolvedAddress, hostName);
           const hosts = client.hosts.values();
@@ -85,15 +79,17 @@ describe('SNI support', function () {
             assert.strictEqual(h.pool.connections.length, 1);
             assert.strictEqual(h.pool.connections[0].endpoint.split(':')[0], `127.0.0.${(index % 2) + 1}`);
           });
-        })
-        .then(() => client.shutdown());
+
+          return client.shutdown();
+        });
     });
 
     it('should match system.local information of each node', () => {
-      // Use round robin to make sure that the 3 host are targeted in 3 executions
-      const client = setupInfo.getClient({ policies: new policies.loadBalancing.RoundRobinPolicy() });
+      let client;
 
-      return client.connect()
+      // Use round robin to make sure that the 3 host are targeted in 3 executions
+      return setupInfo.getClient({ policies: new policies.loadBalancing.RoundRobinPolicy() })
+        .then(clientInstance => client = clientInstance)
         .then(() => Promise.all(new Array(3).fill(0).map(() => client.execute('SELECT * FROM system.local'))))
         .then(results => {
           const queried = new Set();
@@ -116,14 +112,15 @@ describe('SNI support', function () {
     beforeEach(() => sniHelper.startAllNodes());
 
     it('should reconnect to the same host and refresh dns resolution', () => {
-      const client = setupInfo.getClient({
-        pooling: { heartBeatInterval: 50 },
-        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(20) }
-      });
-
+      let client;
       let refreshCalled = false;
 
-      return client.connect()
+      return setupInfo
+        .getClient({
+          pooling: { heartBeatInterval: 50 },
+          policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(20) }
+        })
+        .then(clientInstance => client = clientInstance)
         .then(() => assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined))
         .then(() => sniHelper.stopNode(1))
         .then(() => helper.setIntervalUntilPromise(() => client.hosts.values().find(h => !h.isUp()), 20, 1000))
@@ -147,15 +144,17 @@ describe('SNI support', function () {
     });
 
     it('should continue querying', () => {
-      const client = setupInfo.getClient({
-        pooling: { heartBeatInterval: 50 },
-        policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(40) },
-        queryOptions: { isIdempotent: true }
-      });
-
+      let client;
       let restarted = false;
 
-      return client.connect()
+      return setupInfo
+        .getClient({
+          pooling: { heartBeatInterval: 50 },
+          policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(40) },
+          queryOptions: { isIdempotent: true }
+        })
+        .then(clientInstance => client = clientInstance)
+        .then(() => client.connect())
         .then(() => assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined))
         .then(() => {
           // In the background, stop and restart a node
@@ -171,6 +170,32 @@ describe('SNI support', function () {
           () => promiseRepeat(1000, 32, () => client.execute(helper.queries.basic))
         ))
         .then(() => client.shutdown());
+    });
+  });
+
+  context('without a metadata service', () => {
+
+    it('should throw a NoHostAvailableError when there is a https connection error', () => {
+      let error;
+      // Use an unreachable address
+      return Client.forClusterConfig('172.31.255.255:30443/path-to-metadata')
+        .catch(err => error = err)
+        .then(() => {
+          helper.assertInstanceOf(error, errors.NoHostAvailableError);
+          assert.strictEqual(error.message, 'There was an error fetching the metadata information');
+          assert.deepStrictEqual(Object.keys(error.innerErrors), ['172.31.255.255:30443/path-to-metadata']);
+        });
+    });
+
+    it('should throw a NoHostAvailableError when path is invalid', () => {
+      let error;
+      return Client.forClusterConfig('127.0.0.1:30443/invalid')
+        .catch(err => error = err)
+        .then(() => {
+          helper.assertInstanceOf(error, errors.NoHostAvailableError);
+          assert.strictEqual(error.message, 'There was an error fetching the metadata information');
+          assert.deepStrictEqual(Object.keys(error.innerErrors), ['127.0.0.1:30443/invalid']);
+        });
     });
   });
 });

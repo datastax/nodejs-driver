@@ -26,6 +26,29 @@ describe('Client', function () {
         new Client();
       }, errors.ArgumentError);
     });
+
+    it('should validate client id, application name and version', () => {
+      assert.throws(() => new Client(Object.assign({ applicationName: 123 }, helper.baseOptions)),
+        /applicationName should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ applicationVersion: 123 }, helper.baseOptions)),
+        /applicationVersion should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ id: 123 }, helper.baseOptions)),
+        /Client id must be a Uuid/);
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z', applicationVersion: '1.2.3' },
+        helper.baseOptions)));
+
+      assert.doesNotThrow(() =>
+        new Client(Object.assign(
+          { applicationName: 'App_Z', applicationVersion: '1.2.3', id: types.Uuid.random() },
+          helper.baseOptions)));
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z'}, helper.baseOptions)));
+      assert.doesNotThrow(() => new Client(Object.assign({ id: types.TimeUuid.now() }, helper.baseOptions)));
+    });
+
     it('should set DseLoadBalancingPolicy as default', function () {
       let client = new Client({ contactPoints: ['host1'] });
       helper.assertInstanceOf(client.options.policies.loadBalancing, DseLoadBalancingPolicy);

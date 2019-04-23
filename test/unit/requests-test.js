@@ -151,6 +151,10 @@ describe('BatchRequest', function () {
 });
 
 describe('Startup', function() {
+  const clientId = types.Uuid.random();
+  const applicationName = 'My App';
+  const applicationVersion = '3.20.1';
+
   describe('#write()', function () {
     const startupOptions = {
       cqlVersionKey: 'CQL_VERSION',
@@ -160,7 +164,13 @@ describe('Startup', function() {
       driverVersionKey: 'DRIVER_VERSION',
       driverVersionValue: packageInfo.version,
       noCompactKey: 'NO_COMPACT',
-      noCompactValue: 'true'
+      noCompactValue: 'true',
+      clientIdKey: 'CLIENT_ID',
+      clientIdValue: clientId.toString(),
+      applicationNameKey: 'APPLICATION_NAME',
+      applicationNameValue: applicationName,
+      applicationVersionKey: 'APPLICATION_VERSION',
+      applicationVersionValue: applicationVersion
     };
 
     const driverNameAndVersionBuffer = Buffer.concat([
@@ -207,6 +217,51 @@ describe('Startup', function() {
     it('should not include NO_COMPACT in options if not provided', function() {
       const request = new StartupRequest();
       assert.deepEqual(request.write(encoder, 0), expectedBufferWithNoCompact);
+    });
+
+    it('should include client id', () => {
+      const expected = Buffer.concat([
+        utils.allocBufferFromArray([
+          types.protocolVersion.maxSupported, // protocol version
+          0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
+          0, 0, 0, 143, // length
+          0, 4, // map size
+        ]),
+        getStringBuffer(startupOptions.cqlVersionKey),
+        getStringBuffer(startupOptions.cqlVersionValue),
+        driverNameAndVersionBuffer,
+        getStringBuffer(startupOptions.clientIdKey),
+        getStringBuffer(startupOptions.clientIdValue)
+      ]);
+
+      // ID as a UUID instance
+      assert.deepEqual(new StartupRequest({ clientId }).write(encoder, 0), expected);
+
+      // ID as a string
+      assert.deepEqual(new StartupRequest({ clientId: clientId.toString() }).write(encoder, 0), expected);
+    });
+
+    it('should include application name and version', () => {
+      const expected = Buffer.concat([
+        utils.allocBufferFromArray([
+          types.protocolVersion.maxSupported, // protocol version
+          0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
+          0, 0, 0, 198, // length
+          0, 6, // map size
+        ]),
+        getStringBuffer(startupOptions.cqlVersionKey),
+        getStringBuffer(startupOptions.cqlVersionValue),
+        driverNameAndVersionBuffer,
+        getStringBuffer(startupOptions.clientIdKey),
+        getStringBuffer(startupOptions.clientIdValue),
+        getStringBuffer(startupOptions.applicationNameKey),
+        getStringBuffer(startupOptions.applicationNameValue),
+        getStringBuffer(startupOptions.applicationVersionKey),
+        getStringBuffer(startupOptions.applicationVersionValue)
+      ]);
+
+      const request = new StartupRequest({ clientId, applicationName, applicationVersion });
+      assert.deepEqual(request.write(encoder, 0), expected);
     });
   });
 });

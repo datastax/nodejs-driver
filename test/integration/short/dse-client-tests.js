@@ -10,6 +10,7 @@ const version = require('../../../index').version;
 const helper = require('../../test-helper');
 const Client = require('../../../lib/dse-client');
 const utils = require('../../../lib/utils');
+const types = require('../../../lib/types');
 
 describe('Client', function() {
   this.timeout(60000);
@@ -46,5 +47,16 @@ describe('Client', function() {
       },
       client.shutdown.bind(client)
     ],done);
+  });
+
+  it('should support providing client id, application name and version', () => {
+    const client = new Client(helper.getOptions({
+      applicationName: 'My App',
+      applicationVersion: 'v3.2.1',
+      clientId: types.Uuid.random()
+    }));
+
+    return client.connect()
+      .then(() => client.shutdown());
   });
 });

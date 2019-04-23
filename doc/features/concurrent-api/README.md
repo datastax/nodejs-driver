@@ -19,6 +19,8 @@ const parameters = [[1, 'a'], [2, 'b'], [3, 'c'], ]; // ...
 const result = await executeConcurrent(client, query, parameters);
 ```
 
+You can visit the [code examples in the driver repository][examples] to check out a working example.
+
 ### Using a fixed query and a readable stream
 
 When a `Stream` instance is provided the driver will read from the input stream and execute one query per item 
@@ -71,6 +73,10 @@ Use the `concurrencyLevel` option property to set the maximum amount of requests
 const result = await executeConcurrent(client, query, parameters, { concurrencyLevel: 200 });
 ```
 
+Note that increasing the amount of simultaneous requests will result in further queueing at the driver level and the
+server nodes level. You should find the optimal to get high throughput and low latency, based on your cluster size 
+and hardware specifications. Using a higher concurrency level setting than optimal might result in query timeouts. 
+
 ### Collecting all the ResultSet instances of each individual execution
 
 In the case you want the driver to collect each individual `ResultSet` instance, you can use the `collectResults` flag.
@@ -82,3 +88,5 @@ for (let rs of result.resultItems) {
   // ...
 }
 ```
+
+[examples]: https://github.com/datastax/nodejs-driver/tree/master/examples

@@ -6,7 +6,12 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCen
 
 /**
  * Inserts multiple rows in a table limiting the amount of parallel requests.
- * Note that you can also use existing libraries to limit concurrency in a loop, for example:
+ *
+ * Note that here is a built-in method in the driver <code>executeConcurrent()</code> that allows you to execute
+ * multiple simultaneous requests using an Array or a Stream. Check out execute-concurrent-array.js for more
+ * information.
+ *
+ * You can also use existing libraries to limit concurrency in a loop, for example:
  *  - https://caolan.github.io/async/docs.html#eachLimit
  *  - http://bluebirdjs.com/docs/api/promise.map.html
  */

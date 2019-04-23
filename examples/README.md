@@ -22,6 +22,8 @@ You should also visit the [Documentation][doc-index] and [FAQ][faq].
 - Query tracing
   - [Retrieving the trace of a query request](tracing/retrieve-query-trace.js)
 - Concurrent execution
+  - [Insert multiple rows in a table from an Array using built-in
+  method](concurrent-executions/execute-concurrent-array.js)
   - [Execute multiple queries in a loop with a defined concurrency level](concurrent-executions/execute-in-loop.js)
 
 Each example is generally structured in a way where the `Client` is connected at the beginning and shutdown at the end.

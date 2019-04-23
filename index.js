@@ -11,6 +11,7 @@ exports.auth = require('./lib/auth');
 exports.mapping = require('./lib/mapping');
 exports.tracker = require('./lib/tracker');
 exports.metrics = require('./lib/metrics');
+exports.concurrent = require('./lib/concurrent');
 
 const token = require('./lib/token');
 exports.token = {

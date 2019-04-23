@@ -12,6 +12,7 @@
       "lib/mapping",
       "lib/metadata",
       "lib/client.js",
+      "lib/concurrent",
       "lib/execution-profile.js",
       "lib/execution-options.js",
       "lib/encoder.js",

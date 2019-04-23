@@ -50,6 +50,7 @@ describe('Client', function () {
         });
       });
     });
+
     context('with incorrect query parameters', () => {
       const client = setupInfo.client;
       const query = `INSERT INTO ${table} (id, bigint_sample) VALUES (?, ?)`;
@@ -99,6 +100,7 @@ describe('Client', function () {
         );
       });
     });
+
     it('should callback with an empty Array instance as rows when not found', function (done) {
       const client = setupInfo.client;
       client.execute(helper.queries.basicNoResults, function (err, result) {
@@ -110,6 +112,29 @@ describe('Client', function () {
         done();
       });
     });
+
+    it('should support retrieving empty buffers as values', () => {
+      // Include some columns to make sure the behaviour is consistent across different types.
+      // Inserting empty buffers fails server side for some types, e.g., "Not enough bytes to read a list"
+      const columnsAsNulls = ['bigint_sample', 'int_sample', 'double_sample', 'timeuuid_sample'];
+      const columns = ['text_sample', 'blob_sample'].concat(columnsAsNulls);
+      const insertQuery = `INSERT INTO ${table} (id, ${columns.join(',')})` +
+        ` VALUES (?, ${columns.map(() => '?').join(',')})`;
+      const selectQuery = `SELECT * FROM ${table} WHERE id = ?`;
+      const emptyBuffer = utils.allocBufferUnsafe(0);
+      const id = types.Uuid.random();
+      const client = setupInfo.client;
+
+      return client.execute(insertQuery, [ id ].concat(columns.map(() => emptyBuffer)))
+        .then(() => client.execute(selectQuery, [ id ]))
+        .then(rs => {
+          const row = rs.first();
+          columnsAsNulls.forEach(c => assert.strictEqual(row[c], null));
+          assert.strictEqual(row['text_sample'], '');
+          assert.deepStrictEqual(row['blob_sample'], utils.allocBufferUnsafe(0));
+        });
+    });
+
     it('should handle 250 parallel queries', function (done) {
       const client = setupInfo.client;
       utils.times(250, function (n, next) {

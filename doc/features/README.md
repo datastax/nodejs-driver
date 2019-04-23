@@ -8,6 +8,7 @@ Enterprise.
 - [Address resolution](address-resolution)
 - [Authentication](auth)
 - [Batch statements](batch)
+- [Concurrent execution API](concurrent-api)
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution profiles](execution-profiles)

@@ -864,6 +864,9 @@ describe('exports', function () {
     assert.strictEqual(api.metrics.ClientMetrics.name, 'ClientMetrics');
     assert.strictEqual(typeof api.metrics.DefaultMetrics, 'function');
     assert.strictEqual(api.metrics.DefaultMetrics.name, 'DefaultMetrics');
+
+    assert.ok(api.concurrent);
+    assert.strictEqual(typeof api.concurrent.executeConcurrent, 'function');
     /* eslint-enable global-require */
   });
 });

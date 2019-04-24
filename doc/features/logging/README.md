@@ -48,7 +48,7 @@ An example message would be:
 Note that events will be emitted only when certain options are defined:
 - `'slow'` events will only be emitted if `slowThreshold` is set.
 - `'large'` events will only be emitted if `requestSizeThreshold` is set.
-- `'normal'` events will only be emitted if `logNormalQueries` is set to `true`. This setting can be changed at 
+- `'normal'` events will only be emitted if `logNormalRequests` is set to `true`. This setting can be changed at 
 runtime using the `RequestLogger` property of the same name. 
 - `'failure'` events will only be emitted if `logErroredRequests` is set to `true`. This setting can be changed at
 runtime using the property of the same name.

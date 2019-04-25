@@ -46,6 +46,7 @@ An example message would be:
 ```
 
 Note that events will be emitted only when certain options are defined:
+
 - `'slow'` events will only be emitted if `slowThreshold` is set.
 - `'large'` events will only be emitted if `requestSizeThreshold` is set.
 - `'normal'` events will only be emitted if `logNormalRequests` is set to `true`. This setting can be changed at 

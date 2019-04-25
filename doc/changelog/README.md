@@ -2,6 +2,27 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 2.1.0
+
+2019-04-25
+
+### Features
+
+- [NODEJS-180] - Expose API for parallel execution
+- [NODEJS-100] - Provide a way to stream data in
+- [NODEJS-478] - Send startup message and invoke Insights RPCs periodically
+- [NODEJS-491] - Send driver name and driver version in the STARTUP message
+- [NODEJS-497] - Add jitter to ExponentialReconnectionPolicy
+- [NODEJS-500] - ControlConnection init: Defer host map creation until system tables have been queried
+- [NODEJS-501] - Include host_id in host metadata
+
+### Bug fixes
+
+- [NODEJS-475] - Buffer out of bounds error when reading empty byte buffers
+- [NODEJS-477] - Logged message when preparing times out does not contain host address
+- [NODEJS-492] - RequestLogger: Object parameter is not stringified before using substr
+- [NODEJS-506] - ControlConnection queries during shutdown can leave active handles
+
 ## 2.0.0
 
 2018-12-17

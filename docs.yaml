@@ -37,6 +37,8 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/dse-driver
 versions:
+  - name: '2.1'
+    ref: '2.1'
   - name: '2.0'
     ref: '2.0'
   - name: '1.7'

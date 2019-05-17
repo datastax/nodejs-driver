@@ -223,7 +223,7 @@ The development effort to provide an up to date, high performance, fully feature
 
 ## License
 
-Copyright 2014-2018 DataStax
+Copyright DataStax, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

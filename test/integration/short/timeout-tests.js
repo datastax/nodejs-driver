@@ -46,7 +46,7 @@ describe('client read timeouts', function () {
   });
   describe('when socketOptions.readTimeout is not set', function () {
     it('should do nothing else than waiting', getTimeoutErrorNotExpectedTest(false, false));
-    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 3123, 0, { readTimeout: 3123 }));
+    it('should use readTimeout when defined', getMoveNextHostTest(false, false, 513, 0, { readTimeout: 513 }));
   });
   describe('when socketOptions.readTimeout is set', function () {
     it('should move to next host by default for simple queries', getMoveNextHostTest(false, false));
@@ -60,7 +60,7 @@ describe('client read timeouts', function () {
           isIdempotent: true
         },
         socketOptions: {
-          readTimeout: 3000,
+          readTimeout: 500,
           defunctReadTimeoutThreshold: 16
         },
         //1 connection per host to simply it
@@ -119,7 +119,7 @@ describe('client read timeouts', function () {
       ], done);
     });
     it('should move to next host for eachRow() executions', function (done) {
-      const client = newInstance({ socketOptions: { readTimeout: 3000 }, queryOptions: { isIdempotent: true } });
+      const client = newInstance({ socketOptions: { readTimeout: 500 }, queryOptions: { isIdempotent: true } });
       let coordinators = {};
       utils.series([
         client.connect.bind(client),
@@ -177,29 +177,29 @@ describe('client read timeouts', function () {
       ];
     }
     it('should be used instead of socketOptions.readTimeout and profile.readTimeout for simple queries',
-      getMoveNextHostTest(false, false, 3123, 1 << 24, { executionProfile: 'aProfile', readTimeout: 3123 }, profiles()));
+      getMoveNextHostTest(false, false, 420, 1 << 24, { executionProfile: 'aProfile', readTimeout: 420 }, profiles()));
     it('should be used instead of socketOptions.readTimeout and profile.readTimeout for prepared queries executions',
-      getMoveNextHostTest(true, true, 3123, 1 << 24, { executionProfile: 'aProfile', readTimeout: 3123 }, profiles()));
+      getMoveNextHostTest(true, true, 420, 1 << 24, { executionProfile: 'aProfile', readTimeout: 420 }, profiles()));
     it('should suppress socketOptions.readTimeout and profile.readTimeout when set to 0 for simple queries',
-      getTimeoutErrorNotExpectedTest(false, false, 1000, { executionProfile: 'aProfile', readTimeout: 0}, profiles()));
+      getTimeoutErrorNotExpectedTest(false, false, 300, { executionProfile: 'aProfile', readTimeout: 0}, profiles()));
     it('should suppress socketOptions.readTimeout and profile.readTimeout when set to 0 for prepared queries executions',
-      getTimeoutErrorNotExpectedTest(true, true, 1000, { executionProfile: 'aProfile', readTimeout: 0}, profiles()));
+      getTimeoutErrorNotExpectedTest(true, true, 300, { executionProfile: 'aProfile', readTimeout: 0}, profiles()));
   });
   describe('when executionProfile.readTimeout is set', function() {
     function timeoutProfiles() {
       return [
         new ExecutionProfile('indefiniteTimeout', {readTimeout: 0}),
-        new ExecutionProfile('definedTimeout', {readTimeout: 3123})
+        new ExecutionProfile('definedTimeout', {readTimeout: 500})
       ];
     }
     it('should be used instead of socketOptions.readTimeout for simple queries',
-      getMoveNextHostTest(false, false, 3123, 1 << 24, { executionProfile: 'definedTimeout' }, timeoutProfiles()));
+      getMoveNextHostTest(false, false, 500, 1 << 24, { executionProfile: 'definedTimeout' }, timeoutProfiles()));
     it('should be used instead of socketOptions.readTimeout for prepared queries executions',
-      getMoveNextHostTest(true, true, 3123, 1 << 24, { executionProfile: 'definedTimeout' }, timeoutProfiles()));
+      getMoveNextHostTest(true, true, 500, 1 << 24, { executionProfile: 'definedTimeout' }, timeoutProfiles()));
     it('should suppress socketOptions.readTimeout when set to 0 for simple queries',
-      getTimeoutErrorNotExpectedTest(false, false, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
+      getTimeoutErrorNotExpectedTest(false, false, 500, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
     it('should suppress socketOptions.readTimeout when set to 0 for prepared queries executions',
-      getTimeoutErrorNotExpectedTest(true, true, 1000, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
+      getTimeoutErrorNotExpectedTest(true, true, 500, { executionProfile: 'indefiniteTimeout'}, timeoutProfiles()));
   });
   vdescribe('2.0', 'with prepared batches', function () {
     it('should retry when preparing multiple queries', function (done) {
@@ -238,7 +238,7 @@ describe('client read timeouts', function () {
         // Use a lbp that always yields the hosts in the same order
         policies: { loadBalancing: new FixedOrderLoadBalancingPolicy() },
         pooling: { warmup: true, coreConnectionsPerHost: { '0': 1 }},
-        socketOptions: { readTimeout: 1000 },
+        socketOptions: { readTimeout: 200 },
         queryOptions: { consistency: types.consistencies.one, isIdempotent: true }
       });
       utils.series([
@@ -286,10 +286,10 @@ function newInstance(options) {
  */
 function getMoveNextHostTest(prepare, prepareWarmup, expectedTimeoutMillis, readTimeout, queryOptions, profiles) {
   if (!expectedTimeoutMillis) {
-    expectedTimeoutMillis = 3000;
+    expectedTimeoutMillis = 300;
   }
   if (!readTimeout) {
-    readTimeout = 3000;
+    readTimeout = 300;
   }
   profiles = profiles || [];
   return (function moveNextHostTest(done) {
@@ -393,7 +393,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
           client.execute('SELECT key FROM system.local', [], queryOptions, cb);
         }
         //wait for the node that is healthy to respond
-        setTimeout(next, 2000);
+        setTimeout(next, 1000);
       },
       function checkWhenPaused(next) {
         //the other callback is still waiting
@@ -404,7 +404,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
       helper.toTask(helper.ccmHelper.resumeNode, null, 2),
       function waitForResponse(next) {
         // Wait for 2 seconds after resume for node to respond.
-        setTimeout(next, 2000);
+        setTimeout(next, 1000);
       },
       function checkAfterResuming(next) {
         // Should get responses from each coordinator since no requests should have timed out.
@@ -420,7 +420,7 @@ function getTimeoutErrorNotExpectedTest(prepare, prepareWarmup, readTimeout, que
 
 function getTimeoutErrorExpectedTest (queryOptions) {
   return (function (done) {
-    const client = newInstance({ socketOptions: { readTimeout: 3000 }, queryOptions: { isIdempotent: true } });
+    const client = newInstance({ socketOptions: { readTimeout: 500 }, queryOptions: { isIdempotent: true } });
     let coordinators = {};
     const errorsReceived = [];
     utils.series([

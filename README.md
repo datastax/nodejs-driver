@@ -283,9 +283,9 @@ Note: DataStax products do not support big-endian systems.
 
 ## License
 
-Copyright DataStax, Inc.
+© DataStax, Inc.
 
-http://www.datastax.com/terms/datastax-dse-driver-license-terms
+The full license terms are available at https://www.datastax.com/terms/datastax-dse-driver-license-terms
 
 
 [dse]: http://www.datastax.com/products/datastax-enterprise

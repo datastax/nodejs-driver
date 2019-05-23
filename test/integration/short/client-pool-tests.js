@@ -772,7 +772,7 @@ describe('Client', function () {
           setTimeout(next, 5000);
         },
         function warmUpPool(seriesNext) {
-          utils.times(10, function (n, next) {
+          utils.times(20, function (n, next) {
             client.execute(query, function (err, result) {
               assert.ifError(err);
               hosts[result.info.queriedHost] = true;
@@ -780,13 +780,13 @@ describe('Client', function () {
             });
           }, seriesNext);
         },
-        next => setImmediate(next),
-        function testCase(seriesNext) {
-          //3 hosts alive
-          assert.strictEqual(Object.keys(hosts).length, 3);
-
+        helper.setIntervalUntilTask(() => {
           const state = client.getState();
-          client.hosts.forEach(h => assert.strictEqual(state.getInFlightQueries(h), 0));
+          return client.hosts.values().reduce((accumulator, h) => accumulator + state.getInFlightQueries(h), 0) === 0;
+        }, 20, 100),
+        function testCase(seriesNext) {
+          // 3 hosts alive
+          assert.strictEqual(Object.keys(hosts).length, 3);
 
           let killed = false;
           utils.timesLimit(500, 20, function (n, next) {

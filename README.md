@@ -266,9 +266,9 @@ console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
 
 ## License
 
-Copyright 2016-2017 DataStax
+© DataStax, Inc.
 
-http://www.datastax.com/terms/datastax-dse-driver-license-terms
+The full license terms are available at https://www.datastax.com/terms/datastax-dse-driver-license-terms
 
 
 [dse]: http://www.datastax.com/products/datastax-enterprise

@@ -4,7 +4,9 @@
  * Please see the license for details:
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
+
 'use strict';
+
 const assert = require('assert');
 const errors = require('../../../../lib/errors');
 const helper = require('../../../test-helper');
@@ -31,7 +33,10 @@ vdescribe('dse-5.0', 'graph query client timeouts', function () {
       },
       client.connect.bind(client),
       function createGraph(next) {
-        const query = 'system.graph("name1").ifNotExists().create()';
+        const query = `system.graph("name1")
+          .ifNotExists()
+          ${helper.isDseGreaterThan('6.8') ? '.classicEngine()' : ''}
+          .create()`;
         client.executeGraph(query, null, { graphName: null}, next);
       },
       client.shutdown.bind(client)
@@ -164,7 +169,7 @@ function getTimeoutTest(expectedTimeoutMillis, queryOptions, clientOptions) {
           // Graph statements should not be retried
           assert.ok(!(err instanceof errors.NoHostAvailableError), 'Error should be rethrown by the retry policy');
           const match = err.message.match(operationTimeoutRE);
-          assert.ok(match[1]);
+          assert.ok(match && match[1], `Message does not match: "${err.message}"`);
           assert.strictEqual(parseFloat(match[1]), expectedTimeoutMillis);
           next();
         });

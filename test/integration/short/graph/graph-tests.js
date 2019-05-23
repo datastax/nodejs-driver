@@ -19,42 +19,10 @@ const Polygon = geometry.Polygon;
 const types = require('../../../../lib/types');
 const InetAddress = types.InetAddress;
 const Uuid = types.Uuid;
-const cl = types.consistencies;
-const loadBalancing = require('../../../../lib/policies/load-balancing');
-const DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const utils = require('../../../../lib/utils');
 const graphModule = require('../../../../lib/graph');
-
-const makeStrict = 'schema.config().option("graph.schema_mode").set("production")';
-
-const allowScans = 'schema.config().option("graph.allow_scan").set("true")';
-
-const modernSchema =
-  makeStrict + '\n' +
-  allowScans + '\n' +
-  'schema.propertyKey("name").Text().ifNotExists().create();\n' +
-  'schema.propertyKey("age").Int().ifNotExists().create();\n' +
-  'schema.propertyKey("lang").Text().ifNotExists().create();\n' +
-  'schema.propertyKey("weight").Float().ifNotExists().create();\n' +
-  'schema.vertexLabel("person").properties("name", "age").ifNotExists().create();\n' +
-  'schema.vertexLabel("software").properties("name", "lang").ifNotExists().create();\n' +
-  'schema.edgeLabel("created").properties("weight").connection("person", "software").ifNotExists().create();\n' +
-  'schema.edgeLabel("knows").properties("weight").connection("person", "person").ifNotExists().create();';
-
-const modernGraph =
-  'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
-  'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
-  'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
-  'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
-  'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
-  'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
-  'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
-  'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
-  'marko.addEdge("created", lop, "weight", 0.4f);\n' +
-  'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
-  'josh.addEdge("created", lop, "weight", 0.4f);\n' +
-  'peter.addEdge("created", lop, "weight", 0.2f);';
+const graphTestHelper = require('./graph-test-helper');
 
 vdescribe('dse-5.0', 'Client', function () {
   this.timeout(120000);
@@ -69,14 +37,14 @@ vdescribe('dse-5.0', 'Client', function () {
         client.execute(helper.queries.basic, next);
       },
       function createGraph(next) {
-        client.executeGraph('system.graph("name1").ifNotExists().create()', null, { graphName: null}, next);
+        const query = `system.graph("name1")
+          .ifNotExists()
+          ${helper.isDseGreaterThan('6.8') ? '.classicEngine()' : ''}
+          .create()`;
+        client.executeGraph(query, null, { graphName: null}, next);
       },
-      function _makeStrict(next) {
-        client.executeGraph(makeStrict, null, { graphName: 'name1'}, next);
-      },
-      function _allowScans(next) {
-        client.executeGraph(allowScans, null, { graphName: 'name1'}, next);
-      },
+      next => graphTestHelper.makeStrict(client, next),
+      next => graphTestHelper.allowScans(client, next),
       client.shutdown.bind(client)
     ], done);
   });
@@ -109,14 +77,11 @@ vdescribe('dse-5.0', 'Client', function () {
       });
     }));
     context('with modern schema', function () {
-      //See reference graph here
-      //http://www.tinkerpop.com/docs/3.0.0.M1/
-      before(wrapClient(function (client, done) {
-        client.executeGraph(modernSchema, function (err) {
-          assert.ifError(err);
-          client.executeGraph(modernGraph, done);
-        });
-      }));
+
+      // See reference graph here
+      // http://tinkerpop.apache.org/docs/current/reference/
+      before(wrapClient((client, done) => graphTestHelper.createModernGraph(client, done)));
+
       it('should retrieve graph vertices', wrapClient(function (client, done) {
         const query = 'g.V().has("name", "marko").out("knows")';
         client.executeGraph(query, function (err, result) {
@@ -824,227 +789,6 @@ vdescribe('dse-5.0', 'Client', function () {
           }
         ], done);
       }));
-    });
-  });
-});
-
-// DSP-15333 prevents this suite to be tested against DSE 5.0
-vdescribe('dse-5.1', 'Client with down node', function () {
-  this.timeout(270000);
-  before(function (done) {
-    const client = new Client(helper.getOptions());
-    utils.series([
-      function startCcm(next) {
-        helper.ccm.startAll(3, {workloads: ['graph']}, next);
-      },
-      client.connect.bind(client),
-      function createGraph(next) {
-        const replicationConfig = "{'class' : 'SimpleStrategy', 'replication_factor' : 3}";
-        const query = 'system.graph("name1")\n' +
-          '.option("graph.replication_config").set(replicationConfig)' +
-          '.option("graph.system_replication_config").set(replicationConfig)' +
-          '.ifNotExists().create()';
-        client.executeGraph(query, {replicationConfig: replicationConfig}, { graphName: null}, next);
-      },
-      function createSchema(next) {
-        client.executeGraph(modernSchema, null, { graphName: "name1" }, next);
-      },
-      function loadGraph(next) {
-        client.executeGraph(modernGraph, null, { graphName: "name1" }, next);
-      },
-      function simpleQuery(next) {
-        // execute a graph traversal, which triggers some schema operations.
-        client.executeGraph('g.V().limit(1)', null, { graphName: "name1" }, next);
-      },
-      function stopNode(next) {
-        helper.ccm.stopNode(2, next);
-      },
-      // Wait for the down node to be marked as unavailable by the other nodes
-      helper.delay(30000),
-      client.shutdown.bind(client)
-    ], done);
-  });
-  after(helper.ccm.remove.bind(helper.ccm));
-  describe('#executeGraph()', function () {
-
-    const addVertexQuery = 'graph.addVertex(label, "person", "name", "joe", "age", 42);';
-    const getVertexQuery = 'g.V().limit(1)';
-
-    function expectFailAtAll(done) {
-      return (function(err, result) {
-        assert.ok(err);
-        assert.strictEqual(
-          err.message, 'Not enough replicas available for query at consistency ALL (3 required but only 2 alive)');
-        assert.strictEqual(err.code, types.responseErrorCodes.unavailableException);
-        assert.strictEqual(result, undefined);
-        done();
-      });
-    }
-
-    it('should be able to make a read query with ONE read consistency, ALL write consistency', wrapClient(function (client, done) {
-      client.executeGraph(getVertexQuery, null, {readTimeout: 5000, graphReadConsistency: cl.one, graphWriteConsistency: cl.all}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result.first());
-        done();
-      });
-    }));
-
-    it('should fail to make a read query with ALL read consistency', wrapClient(function (client, done) {
-      client.executeGraph(getVertexQuery, null, {graphReadConsistency: cl.all}, expectFailAtAll(done));
-    }));
-
-    it('should be able to make a write query with ALL read consistency, TWO write consistency', wrapClient(function (client, done) {
-      client.executeGraph(addVertexQuery, null, {readTimeout: 5000, graphReadConsistency: cl.all, graphWriteConsistency: cl.two}, function (err, result) {
-        assert.ifError(err);
-        assert.ok(result.first());
-        done();
-      });
-    }));
-
-    it('should fail to make a write query with ALL write consistency', wrapClient(function (client, done) {
-      client.executeGraph(addVertexQuery, null, {graphWriteConsistency: cl.all}, expectFailAtAll(done));
-    }));
-
-    it('should use read consistency from profile', wrapClient(function (client, done) {
-      client.executeGraph(getVertexQuery, null, {executionProfile: 'readALL'}, expectFailAtAll(done));
-    }, {profiles: [new ExecutionProfile('readALL', {graphOptions: {readConsistency: cl.all}})]}));
-
-    it('should use write consistency from profile', wrapClient(function (client, done) {
-      client.executeGraph(addVertexQuery, null, {executionProfile: 'writeALL'}, expectFailAtAll(done));
-    }, {profiles: [new ExecutionProfile('writeALL', {graphOptions: {writeConsistency: cl.all}})]}));
-
-    it('should use read consistency from default profile', wrapClient(function (client, done) {
-      client.executeGraph(getVertexQuery, expectFailAtAll(done));
-    }, {profiles: [new ExecutionProfile('default', {graphOptions: {readConsistency: cl.all}})]}));
-
-    it('should use write consistency from default profile', wrapClient(function (client, done) {
-      client.executeGraph(addVertexQuery, expectFailAtAll(done));
-    }, {profiles: [new ExecutionProfile('default', {graphOptions: {writeConsistency: cl.all}})]}));
-  });
-});
-
-vdescribe('dse-5.0', 'Client with spark workload', function () {
-  this.timeout(300000);
-  before(function (done) {
-    const client = new Client(helper.getOptions());
-    utils.series([
-      function startCcm(next) {
-        helper.ccm.startAll(1, {workloads: ['graph', 'spark']}, next);
-      },
-      client.connect.bind(client),
-      function createGraph(next) {
-        const replicationConfig = "{'class' : 'SimpleStrategy', 'replication_factor' : 1}";
-        const query = 'system.graph("name1")\n' +
-          '.option("graph.replication_config").set(replicationConfig)' +
-          '.option("graph.system_replication_config").set(replicationConfig)' +
-          '.ifNotExists().create()';
-        client.executeGraph(query, {replicationConfig: replicationConfig}, {graphName: null}, function(err) {
-          assert.ifError(err);
-          next();
-        });
-      },
-      function waitForWorkers(next) {
-        // Wait for master to come online before altering keyspace as it needs to meet LOCAL_QUORUM CL to start, and
-        // that can't be met with 1/NUM_NODES available.
-        helper.waitForWorkers(client, 1, next);
-      },
-      function updateDseLeases(next) {
-        // Set the dse_leases keyspace to RF of 2, this will prevent election of new job tracker until all nodes
-        // are available, preventing weird cases where 1 node thinks the wrong node is a master.
-        client.execute(
-          "ALTER KEYSPACE dse_leases WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'dc1': '2'}",
-          next);
-      },
-      function addNode(next) {
-        helper.ccm.bootstrapNode(2, next);
-      },
-      function setNodeWorkload(next) {
-        helper.ccm.setWorkload(2, ['graph', 'spark'], next);
-      },
-      function startNode(next) {
-        helper.ccm.startNode(2, next);
-      },
-      function waitForWorkers(next) {
-        helper.waitForWorkers(client, 2, next);
-      },
-      function createSchema(next) {
-        client.executeGraph(modernSchema, null, {graphName: "name1"}, next);
-      },
-      function loadGraph(next) {
-        client.executeGraph(modernGraph, null, {graphName: "name1"}, next);
-      },
-      client.shutdown.bind(client)
-    ], done);
-  });
-  after(helper.ccm.remove.bind(helper.ccm));
-  describe('#connect()', function () {
-    it('should obtain DSE workload', function (done) {
-      const client = newInstance();
-      client.connect(function (err) {
-        assert.ifError(err);
-        const host = client.hosts.values()[0];
-        if (helper.isDseGreaterThan('5.1')) {
-          assert.deepEqual(host.workloads, [ 'Analytics', 'Cassandra', 'Graph' ]);
-        }
-        else {
-          assert.deepEqual(host.workloads, [ 'Analytics' ]);
-        }
-        done();
-      });
-    });
-  });
-  describe('#executeGraph()', function () {
-
-    function executeAnalyticsQueries(queryOptions, options, shouldQueryMasterOnly) {
-      return wrapClient(function(client, done) {
-        helper.findSparkMaster(client, function (serr, sparkMaster) {
-          assert.ifError(serr);
-          utils.timesSeries(5, function (n, timesNext) {
-            client.executeGraph('g.V().count()', null, queryOptions, function (err, result) {
-              assert.ifError(err);
-              assert.ok(result);
-              assert.ok(result.info);
-              assert.strictEqual(6, result.first());
-              if(shouldQueryMasterOnly) {
-                // Ensure the master was the queried host.
-                let queriedHost = result.info.queriedHost;
-                const portSep = queriedHost.lastIndexOf(":");
-                queriedHost = portSep !== -1 ? queriedHost.substr(0, portSep) : queriedHost;
-                assert.strictEqual(queriedHost, sparkMaster);
-              }
-              timesNext(err, result.info.queriedHost);
-            });
-          }, function () {
-            done();
-          });
-        });
-      }, options);
-    }
-
-    it('should make an OLAP query using \'a\' traversal source', executeAnalyticsQueries({graphSource: 'a'}));
-    it('should make an OLAP query using profile with \'a\' traversal source',
-      executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics', {graphOptions: {source: 'a'}})]}));
-    it('should make an OLAP query with default profile using \'a\' traversal source',
-      executeAnalyticsQueries({}, {profiles: [new ExecutionProfile('default', {graphOptions: {source: 'a'}})]}));
-    it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy',
-      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: new DseLoadBalancingPolicy()}}, true));
-    it('should contact spark master directly to make an OLAP query when using profile with DseLoadBalancingPolicy',
-      executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics',
-        {loadBalancing: new DseLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
-    );
-    context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        return;
-      }
-      it('should return a promise for OLAP query', function () {
-        const client = newInstance();
-        const p = client.executeGraph('g.V().count()', { graphSource: 'a' });
-        helper.assertInstanceOf(p, Promise);
-        return p.then(function (result) {
-          helper.assertInstanceOf(result, graphModule.GraphResultSet);
-          assert.strictEqual(typeof result.first(), 'number');
-        });
-      });
     });
   });
 });

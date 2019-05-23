@@ -835,7 +835,7 @@ const helper = {
   findSparkMaster: function (client, callback) {
     client.execute('call DseClientTool.getAnalyticsGraphServer();', function(err, result) {
       if(err) {
-        callback(err);
+        return callback(err);
       }
       const row = result.first();
       const host = row.result.ip;

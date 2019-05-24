@@ -20,6 +20,7 @@ const assert = require('assert');
 const helper = require('../../../test-helper');
 const mapperTestHelper = require('./mapper-test-helper');
 const types = require('../../../../lib/types');
+const utils = require('../../../../lib/utils');
 const Uuid = types.Uuid;
 const q = require('../../../../lib/mapping/q').q;
 const Mapper = require('../../../../lib/mapping/mapper');
@@ -35,6 +36,7 @@ describe('ModelMapper', function () {
   const client = mapper.client;
   const videoMapper = mapper.forModel('Video');
   const userMapper = mapper.forModel('User');
+  const clusteringMapper = mapper.forModel('Clustering');
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -65,6 +67,29 @@ describe('ModelMapper', function () {
         .then(result => {
           assert.strictEqual(result.first(), null);
         });
+    });
+
+    it('should use select the correct table based on order by columns', () => {
+      const doc = { id1: 'a' };
+
+      const items = [
+        { orderBy: { id2: 'asc', id3: 'asc' }, table: 1 },
+        { orderBy: { id2: 'desc' }, table: 1 },
+        { orderBy: { id2: 'asc' }, table: 1 },
+        { orderBy: { id3: 'asc', id2: 'asc' }, table: 2 },
+        { orderBy: { id3: 'desc' }, table: 2 },
+        { orderBy: { id3: 'asc' }, table: 2 },
+      ];
+
+      return Promise.all(items.map(item =>
+        clusteringMapper.find(doc, { orderBy: item.orderBy }, 'default')
+          .then(result => {
+            const expectedValues = utils.objectValues(item.orderBy)[0] === 'asc'
+              ? [ `value_abc_table${item.table}`, `value_azz_table${item.table}` ]
+              : [ `value_azz_table${item.table}`, `value_abc_table${item.table}` ];
+            assert.deepStrictEqual(result.toArray().map(x => x.value), expectedValues);
+          }))
+      );
     });
 
     it('should support manual paging', () => {

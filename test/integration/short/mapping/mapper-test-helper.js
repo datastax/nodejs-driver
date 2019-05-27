@@ -58,6 +58,7 @@ const mapperHelper = module.exports = {
       `CREATE TABLE video_rating (videoid uuid, rating_counter counter, rating_total counter, PRIMARY KEY (videoid))`,
       `CREATE TABLE table_clustering1 (id1 text, id2 text, id3 text, value text, PRIMARY KEY (id1, id2, id3))`,
       `CREATE TABLE table_clustering2 (id1 text, id3 text, id2 text, value text, PRIMARY KEY (id1, id3, id2))`,
+      `CREATE TABLE table_static1 (id1 text, id2 text, s text static, value text, PRIMARY KEY (id1, id2))`,
 
       // Insert test data
       `INSERT INTO videos (videoid, name, userid, description, location, location_type, preview_thumbnails, tags,
@@ -170,7 +171,8 @@ const mapperHelper = module.exports = {
           },
           mappings: new UnderscoreCqlToCamelCaseMappings()
         },
-        'Clustering': { tables: ['table_clustering1', 'table_clustering2'] }
+        'Clustering': { tables: ['table_clustering1', 'table_clustering2'] },
+        'Static': { tables: ['table_static1'] }
       }
     });
   },

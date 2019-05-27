@@ -37,6 +37,7 @@ describe('ModelMapper', function () {
   const videoMapper = mapper.forModel('Video');
   const userMapper = mapper.forModel('User');
   const clusteringMapper = mapper.forModel('Clustering');
+  const staticMapper = mapper.forModel('Static');
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -322,6 +323,25 @@ describe('ModelMapper', function () {
     });
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
+    it('should support inserting static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support inserting static column value with clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), id2: 'b', s: 'static value 2' };
+
+      return staticMapper.insert(doc)
+        .then(() =>
+          client.execute('SELECT id1, id2, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
   });
 
   describe('#update()', () => {
@@ -352,6 +372,15 @@ describe('ModelMapper', function () {
           assert.strictEqual(rows[1]['name'], doc.name);
           assert.strictEqual(rows[2]['name'], doc.name);
         });
+    });
+
+    it('should support updating static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.update(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
     });
 
     it('should use the correct table when no MappingOptions are specified', () => {

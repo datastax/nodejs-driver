@@ -169,6 +169,23 @@ describe('types', function () {
         assert.strictEqual(t.get(2), 'third3');
       });
     });
+
+    describe('fromArray()', () => {
+      it('should return a Tuple instance using the Array items as elements', () => {
+        [
+          [ 'a' ],
+          [ 'a', 'b' ],
+          [ 'a', 'b', 'c' ]
+        ].forEach(items => {
+          const tuple = Tuple.fromArray(items);
+          // The Array instance should not be the same
+          assert.notStrictEqual(tuple.elements, items);
+          // The elements should be the same
+          assert.deepStrictEqual(tuple.elements, items);
+        });
+      });
+    });
+
   });
   describe('LocalDate', function () {
     const LocalDate = types.LocalDate;

@@ -38,6 +38,7 @@ describe('ModelMapper', function () {
   const userMapper = mapper.forModel('User');
   const clusteringMapper = mapper.forModel('Clustering');
   const staticMapper = mapper.forModel('Static');
+  const static2Mapper = mapper.forModel('Static2');
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -342,6 +343,16 @@ describe('ModelMapper', function () {
           client.execute('SELECT id1, id2, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
         .then(rs => assertRowMatchesDoc(rs.first(), doc));
     });
+
+    it('should support inserting multiple static column values without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s0: 'static value 1', s1: 'static value 2' };
+
+      return static2Mapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s0, s1 FROM table_static2 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
   });
 
   describe('#update()', () => {

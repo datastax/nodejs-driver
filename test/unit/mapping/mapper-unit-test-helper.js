@@ -17,18 +17,28 @@ const Mapper = require('../../../lib/mapping/mapper');
 const mapperHelper = module.exports = {
   /**
    * Gets a fake client instance that returns metadata for a single table
-   * @param {Array} columns
+   * @param {Array|Function} columns
    * @param {Array} primaryKeys
    * @param {String} [keyspace]
    * @param {Object} [response]
    * @return {{executions: Array, batchExecutions: Array, client: Client}}
    */
   getClient: function (columns, primaryKeys, keyspace, response) {
-    columns = columns.map(c => (typeof c === 'string' ? { name: c, type: { code: dataTypes.text }} : c));
-    const partitionKeys = columns.slice(0, primaryKeys[0]);
-    const clusteringKeys = primaryKeys[1] !== undefined
-      ? columns.slice(primaryKeys[0], primaryKeys[1] + primaryKeys[0])
-      : [];
+
+    const getTableMetadata = typeof columns === 'function'
+      ? columns
+      : (ks, name) => {
+        // Build a fake table metadata
+        columns = columns.map(c => (typeof c === 'string' ? {name: c, type: {code: dataTypes.text}} : c));
+        const partitionKeys = columns.slice(0, primaryKeys[0]);
+        const clusteringKeys = primaryKeys[1] !== undefined
+          ? columns.slice(primaryKeys[0], primaryKeys[1] + primaryKeys[0])
+          : [];
+
+        const table = {name, partitionKeys, clusteringKeys, columnsByName: {}, columns};
+        table.columns.forEach(c => table.columnsByName[c.name] = c);
+        return Promise.resolve(table);
+      };
 
     const result = {
       executions: [],
@@ -38,11 +48,7 @@ const mapperHelper = module.exports = {
         connect: () => Promise.resolve(),
         keyspace: keyspace === undefined ? 'ks1' : keyspace,
         metadata: {
-          getTable: (ks, name) => {
-            const table = { name, partitionKeys, clusteringKeys, columnsByName: {}, columns };
-            table.columns.forEach(c => table.columnsByName[c.name] = c);
-            return Promise.resolve(table);
-          },
+          getTable: getTableMetadata,
         },
         execute: function (query, params, options) {
           result.executions.push({ query, params, options });
@@ -61,14 +67,14 @@ const mapperHelper = module.exports = {
     return result;
   },
 
-  getModelMapper: function (clientInfo) {
-    const mapper = mapperHelper.getMapper(clientInfo);
+  getModelMapper: function (clientInfo, models) {
+    const mapper = mapperHelper.getMapper(clientInfo, models);
     return mapper.forModel('Sample');
   },
 
-  getMapper: function (clientInfo) {
+  getMapper: function (clientInfo, models) {
     return new Mapper(clientInfo.client, {
-      models: {
+      models: models || {
         'Sample': {
           tables: [ 'table1' ],
           columns: {

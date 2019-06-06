@@ -9,6 +9,7 @@
 
 const assert = require('assert');
 const q = require('../../../lib/mapping/q').q;
+const dataTypes = require('../../../lib/types').dataTypes;
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 
@@ -52,16 +53,31 @@ describe('ModelMapper', () => {
     it('should support orderBy in correct order', () => testQueries('find', [
       {
         doc: { id1: 'value2' },
-        docInfo: { orderBy: {'locationType': 'desc' }},
+        docInfo: { orderBy: {'id2': 'desc' }},
         query:
-          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY location_type DESC',
+          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 DESC',
         params: [ 'value2' ]
       }, {
-        doc: { id1: 'value1', id2: q.gte('e') },
-        docInfo: { fields: ['name'], limit: 20, orderBy: {'description': 'asc', 'locationType': 'desc' }},
+        doc: { id1: 'value3' },
+        docInfo: { orderBy: {'id2': 'asc' }},
         query:
-          'SELECT name FROM ks1.table1 WHERE id1 = ? AND id2 >= ? ORDER BY description ASC, location_type DESC LIMIT ?',
+          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC',
+        params: [ 'value3' ]
+      }, {
+        doc: { id1: 'value1', id2: q.gte('e') },
+        docInfo: { fields: ['name'], limit: 20, orderBy: {'id2': 'asc' }},
+        query:
+          'SELECT name FROM ks1.table1 WHERE id1 = ? AND id2 >= ? ORDER BY id2 ASC LIMIT ?',
         params: [ 'value1', 'e', 20 ]
+      }]));
+
+    it('should support ordering by clustering key only providing a partition key', () => testQueries('find', [
+      {
+        doc: { id1: 'value2' },
+        docInfo: { orderBy: {'id2': 'asc' }},
+        query:
+          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC',
+        params: [ 'value2' ]
       }]));
 
     it('should throw an error when filter, fields or orderBy are not valid', () =>
@@ -123,6 +139,45 @@ describe('ModelMapper', () => {
         assert.strictEqual(execution.query, 'SELECT * FROM ks1.NoTableSpecified WHERE id1 = ? AND id2 = ?');
       });
     });
+
+    it('should use the correct table when order by a clustering key', () => {
+      // Mock table metadata
+      function getTableMetadata(ks, name) {
+        // Equivalent of
+        // CREATE TABLE table1 (id1 text, id2 text, id3 text, PRIMARY KEY (id1, id2, id3))
+        // CREATE TABLE table2 (id1 text, id2 text, id3 text, PRIMARY KEY (id1, id3, id2))
+        const columns = [ 'id1', 'id2', 'id3', 'value' ].map(c => ({ name: c, type: { code: dataTypes.text }}));
+        const partitionKeys = [ columns[0] ];
+        const clusteringKeys = name === 'table1' ? [ columns[1], columns[2] ] : [ columns[2], columns[1] ];
+
+        const table = { name, partitionKeys, clusteringKeys, columnsByName: {}, columns };
+        table.columns.forEach(c => table.columnsByName[c.name] = c);
+        return Promise.resolve(table);
+      }
+
+      const models = { 'Sample': { tables: [ 'table1', 'table2' ] } };
+
+      const clientInfo = mapperTestHelper.getClient(getTableMetadata, null, 'ks1', emptyResponse);
+      const modelMapper = mapperTestHelper.getModelMapper(clientInfo, models);
+
+      return modelMapper
+        .find({ id1: 'a' }, { orderBy: { 'id3': 'asc' }})
+        .then(() => modelMapper.find({ id1: 'a' }, { orderBy: { 'id2': 'desc', 'id3': 'desc' }}))
+        .then(() => modelMapper.find({ id1: 'a' }, { orderBy: { 'id2': 'asc' }}))
+        .then(() => {
+          [
+            // Selected "table2" for the first query
+            'SELECT * FROM ks1.table2 WHERE id1 = ? ORDER BY id3 ASC',
+            // Selected "table1" for the second query
+            'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 DESC, id3 DESC',
+            // Selected "table1" for the third query
+            'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC'
+          ].forEach((query, index) => {
+            assert.strictEqual(clientInfo.executions[index].query, query);
+            assert.deepStrictEqual(clientInfo.executions[index].params, [ 'a' ]);
+          });
+        });
+    });
   });
 
   describe('#get()', () => {
@@ -159,20 +214,6 @@ describe('ModelMapper', () => {
         docInfo: { fields: ['name', 'description', 'locationType'] },
         query: 'SELECT name, description, location_type FROM ks1.table1',
         params: []
-      }]));
-
-    it('should support orderBy in correct order', () => testQueries('findAll', [
-      {
-        docInfo: { orderBy: {'locationType': 'desc' }},
-        query:
-          'SELECT * FROM ks1.table1 ORDER BY location_type DESC',
-        params: []
-      }, {
-        doc: { id1: 'value1', id2: q.gte('e') },
-        docInfo: { fields: ['name'], limit: 20, orderBy: {'description': 'asc', 'locationType': 'desc' }},
-        query:
-          'SELECT name FROM ks1.table1 ORDER BY description ASC, location_type DESC LIMIT ?',
-        params: [ 20 ]
       }]));
   });
 

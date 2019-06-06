@@ -49,10 +49,10 @@ describe('Cache', function() {
       assert.notDeepEqual(key1WithLimitA, key2WithLimit);
 
       // orderBy
-      const key1WithOrderByA = getKey(docKeys1, {}, { orderBy: ['abc'] });
-      const key1WithOrderByB = getKey(docKeys1, {}, { orderBy: ['def'] });
-      const key1WithOrderByC = getKey(docKeys1, {}, { orderBy: ['abc'] });
-      const key1WithOrderByD = getKey(docKeys1, {}, { orderBy: ['abc', 'def'] });
+      const key1WithOrderByA = getKey(docKeys1, {}, { orderBy: {'abc': 'asc'} });
+      const key1WithOrderByB = getKey(docKeys1, {}, { orderBy: {'def': 'desc'} });
+      const key1WithOrderByC = getKey(docKeys1, {}, { orderBy: {'abc': 'asc'} });
+      const key1WithOrderByD = getKey(docKeys1, {}, { orderBy: {'abc': 'asc', 'def': 'desc'} });
 
       assert.notDeepEqual(key1WithOrderByA, key1WithOrderByB);
       assert.notDeepEqual(key1WithOrderByA, key1WithOrderByD);

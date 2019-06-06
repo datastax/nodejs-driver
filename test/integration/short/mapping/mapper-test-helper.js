@@ -47,6 +47,8 @@ const mapperHelper = module.exports = {
       `CREATE TABLE users (userid uuid, firstname varchar, lastname varchar, email text, created_date timestamp,
       PRIMARY KEY (userid))`,
       `CREATE TABLE video_rating (videoid uuid, rating_counter counter, rating_total counter, PRIMARY KEY (videoid))`,
+      `CREATE TABLE table_clustering1 (id1 text, id2 text, id3 text, value text, PRIMARY KEY (id1, id2, id3))`,
+      `CREATE TABLE table_clustering2 (id1 text, id3 text, id2 text, value text, PRIMARY KEY (id1, id3, id2))`,
 
       // Insert test data
       `INSERT INTO videos (videoid, name, userid, description, location, location_type, preview_thumbnails, tags,
@@ -59,7 +61,11 @@ const mapperHelper = module.exports = {
      '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401')`,
       `INSERT INTO latest_videos (yyyymmdd, videoid, added_date, name, preview_image_location) VALUES ('2012-06-01',
      99051fe9-6a9c-46c2-b949-38ef78858dd0,'2012-06-01 06:00:00Z','My funny cat',
-     '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401');`
+     '/us/vid/b3/b3a76c6b-7c7f-4af6-964f-803a9283c401');`,
+      `INSERT INTO table_clustering1 (id1, id2, id3, value) VALUES ('a', 'b', 'c', 'value_abc_table1')`,
+      `INSERT INTO table_clustering1 (id1, id2, id3, value) VALUES ('a', 'z', 'z', 'value_azz_table1')`,
+      `INSERT INTO table_clustering2 (id1, id2, id3, value) VALUES ('a', 'b', 'c', 'value_abc_table2')`,
+      `INSERT INTO table_clustering2 (id1, id2, id3, value) VALUES ('a', 'z', 'z', 'value_azz_table2')`
     ];
 
     helper.setup(1, { queries, keyspace: mapperHelper.keyspace, removeClusterAfter: false });
@@ -154,7 +160,8 @@ const mapperHelper = module.exports = {
             'videoid': 'id'
           },
           mappings: new UnderscoreCqlToCamelCaseMappings()
-        }
+        },
+        'Clustering': { tables: ['table_clustering1', 'table_clustering2'] }
       }
     });
   },

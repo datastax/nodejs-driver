@@ -25,11 +25,15 @@ const vdescribe = helper.vdescribe;
 const Duration = types.Duration;
 
 vdescribe('3.10', 'Duration', function () {
-  this.timeout('30000');
+
+  this.timeout(120000);
+
   const setupInfo = helper.setup(1, {
     queries: ['CREATE TABLE tbl_duration (pk uuid PRIMARY KEY, c1 duration)']
   });
+
   const client = setupInfo.client;
+
   describe('serialization', function () {
     it('should serialize and deserialize duration type instances', function (done) {
       const values = [
@@ -74,6 +78,7 @@ vdescribe('3.10', 'Duration', function () {
         'P0000-00-00T00:00:56',
         'P0001-03-00T02:10:00'
       ];
+
       utils.eachSeries([ true, false ], function (prepare, prepareNext) {
         utils.eachSeries(values, function (v, next) {
           const query = 'INSERT INTO tbl_duration (pk, c1) VALUES (?, ?)';
@@ -95,6 +100,7 @@ vdescribe('3.10', 'Duration', function () {
       }, done);
     });
   });
+
   describe('metadata', function () {
     it('should parse column metadata', function (done) {
       client.metadata.getTable(setupInfo.keyspace, 'tbl_duration', function (err, tableInfo) {

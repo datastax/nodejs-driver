@@ -126,7 +126,8 @@ describe('Mapper', function () {
 
       return mapper
         .batch([
-          userMapper.batching.update(userDoc, { ifExists: true })
+          userMapper.batching.update(userDoc, { ifExists: true }),
+          userMapper.batching.update(userDoc)
         ])
         .then(result => {
           helper.assertInstanceOf(result, Result);

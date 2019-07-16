@@ -10,39 +10,61 @@
 const https = require('https');
 const format = require('util').format;
 const path = require('path');
+const fs = require('fs');
 const exec = require('child_process').exec;
 
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
 const utils = require('../../../../lib/utils');
 
 const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
 const metadataSvcUrl = [ '127.0.0.1', ':', '30443', '/metadata' ];
 
-module.exports = {
-  setup: function() {
+const cloudHelper = module.exports = {
+
+  getOptions: function (options1, options2) {
+    const baseOptions = {
+      protocolOptions: { maxVersion: 4 }
+    };
+
+    return Object.assign(baseOptions, options1, options2);
+  },
+
+  /**
+   * Creates a new client using the default options.
+   * @param {DseClientOptions} [options]
+   * @return {Client}
+   */
+  getClient: function (options) {
+    const client = new Client(
+      cloudHelper.getOptions({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1.zip' } }, options));
+
+    after(() => client.shutdown());
+
+    return client;
+  },
+
+  setup: function(options) {
+    options = options || {};
+
     const setupInfo = {
       setupSucceeded: false,
-      getClient: function (options) {
-        return Client
-          .forClusterConfig(metadataSvcUrl.join(''), Object.assign({ protocolOptions: { maxVersion: 4 } }, options))
-          .then(client => {
-            after(() => client.shutdown());
-
-            return client.connect().then(() => client);
-          });
-      }
     };
 
     before(() => this.runContainer());
 
     before(done => {
 
+      // Check metadata svc is listening
       const requestOptions = {
         hostname: metadataSvcUrl[0],
         port: metadataSvcUrl[2],
         path: metadataSvcUrl[3],
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        // Use test certificates
+        ca: [ fs.readFileSync('./certs/ca.crt') ],
+        cert: fs.readFileSync('./certs/cert'),
+        key: fs.readFileSync('./certs/key')
       };
 
       let connected = false;
@@ -66,7 +88,7 @@ module.exports = {
               });
           }).on("error", (err) => {
             errCalled = true;
-            helper.trace(err.toString());
+            helper.trace(`Error waiting for metadata svc: ${err.toString()}. Retrying...`);
             setTimeout(next, 200);
           });
         },
@@ -79,6 +101,15 @@ module.exports = {
         }
       );
 
+    });
+
+    before(() => {
+      if (!options.queries) {
+        return;
+      }
+
+      const queries = options.queries.join('; ');
+      return this.execCcm(`node1 cqlsh -x "${queries}"`);
     });
 
     before(() => setupInfo.setupSucceeded = true);
@@ -106,15 +137,15 @@ module.exports = {
       helper.trace("SINGLE_ENDPOINT_PATH not set, using " + singleEndpointPath);
     }
 
-    return this.execCommand(singleEndpointPath);
+    return this.execCommand(singleEndpointPath, { 'REQUIRE_CLIENT_CERTIFICATE': 'true' });
   },
 
   stopContainer: function () {
     return this.execCommand('docker kill $(docker ps -a -q --filter ancestor=single_endpoint)');
   },
 
-  execCommand: function (cmd) {
-    return new Promise((resolve, reject) => exec(cmd, (err, stdout, stderr) => {
+  execCommand: function (cmd, env) {
+    return new Promise((resolve, reject) => exec(cmd, { env }, (err, stdout, stderr) => {
       if (stderr) {
         helper.trace(stderr);
       }

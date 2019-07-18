@@ -15,6 +15,7 @@ const helper = require('../../../test-helper');
 const policies = require('../../../../lib/policies');
 const errors = require('../../../../lib/errors');
 const auth = require('../../../../lib/auth');
+const utils = require('../../../../lib/utils');
 
 const port = 9042;
 
@@ -140,6 +141,7 @@ describe('Cloud support', function () {
       const client = cloudHelper.getClient({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1-wo-creds.zip' } });
 
       return client.connect()
+        .catch(() => {})
         .then(() => assert.strictEqual(client.options.authProvider, null))
         .then(() => client.shutdown());
     });
@@ -149,6 +151,10 @@ describe('Cloud support', function () {
       const client = cloudHelper.getClient({ authProvider });
 
       return client.connect()
+        .catch(err => {
+          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          helper.assertInstanceOf(utils.objectValues(err.innerErrors)[0], errors.AuthenticationError);
+        })
         .then(() => assert.strictEqual(client.options.authProvider, authProvider))
         .then(() => client.shutdown());
     });

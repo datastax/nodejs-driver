@@ -109,7 +109,7 @@ const cloudHelper = module.exports = {
       }
 
       const queries = options.queries.join('; ');
-      return this.execCcm(`node1 cqlsh -x "${queries}"`);
+      return this.execCcm(`node1 cqlsh -u cassandra -p cassandra -x "${queries}"`);
     });
 
     before(() => setupInfo.setupSucceeded = true);

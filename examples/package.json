@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
-    "dse-driver": "file:../",
+    "cassandra-driver": "file:../",
     "async": "^1.5.2"
   }
 }

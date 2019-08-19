@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 'use strict';
-const dse = require('dse-driver');
+const cassandra = require('cassandra-driver');
 const async = require('async');
-const Point = dse.geometry.Point;
+const Point = cassandra.geometry.Point;
 
-const client = new dse.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
 
 /**
  * Example using async library for avoiding nested callbacks

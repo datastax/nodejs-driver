@@ -1,6 +1,6 @@
 # DataStax Node.js Driver usage samples
 
-This folder contains examples on how to use some features of the Node.js Driver for [DataStax Enterprise][dse].
+This folder contains examples on how to use some features of the DataStax Node.js Driver.
 
 You should also visit the [Documentation][doc-index] and [FAQ][faq].
 
@@ -35,6 +35,6 @@ only call `client.shutdown()` when exiting your application.
 If you have any questions regarding these examples, feel free to post your questions in the [mailing list][mailing-list].
 
 [dse]: https://www.datastax.com/products/datastax-enterprise
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
+[doc-index]: https://docs.datastax.com/en/developer/nodejs-driver/latest/
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/
+[faq]: https://docs.datastax.com/en/developer/nodejs-driver/latest/faq/

@@ -1,7 +1,7 @@
 "use strict";
-const dse = require('dse-driver');
+const cassandra = require('cassandra-driver');
 
-const client = new dse.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Example using Promise.

@@ -1,8 +1,7 @@
 "use strict";
-const dse = require('dse-driver');
-const assert = require('assert');
+const cassandra = require('cassandra-driver');
 
-const client = new dse.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Creates a table with a Tuple type, inserts a row and selects a row.
@@ -21,9 +20,9 @@ client.connect()
   .then(function () {
     console.log('Inserting');
     // Create a new instance of a Tuple
-    const currencies = new dse.types.Tuple('USD', 'EUR');
+    const currencies = new cassandra.types.Tuple('USD', 'EUR');
     const query = 'INSERT INTO examples.tuple_forex (name, time, currencies, value)  VALUES (?, ?, ?, ?)';
-    const params = [ 'market1', dse.types.TimeUuid.now(), currencies, new dse.types.BigDecimal(11, 1) ];
+    const params = [ 'market1', cassandra.types.TimeUuid.now(), currencies, new cassandra.types.BigDecimal(11, 1) ];
     return client.execute(query, params, { prepare: true});
   })
   .then(function () {

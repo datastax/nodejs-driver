@@ -1,7 +1,7 @@
 "use strict";
-const dse = require('dse-driver');
+const cassandra = require('cassandra-driver');
 
-const client = new dse.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
 
 /**
  * Creates a table and retrieves its information
@@ -18,7 +18,7 @@ client.connect()
   })
   .then(function () {
     const query = "INSERT INTO examples.trace_tbl1 (id, txt) VALUES (?, ?)";
-    return client.execute(query, [dse.types.Uuid.random(), 'hello trace'], { traceQuery: true});
+    return client.execute(query, [cassandra.types.Uuid.random(), 'hello trace'], { traceQuery: true});
   })
   .then(function (result) {
     const traceId = result.info.traceId;

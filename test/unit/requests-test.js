@@ -233,7 +233,7 @@ describe('Startup', function() {
         utils.allocBufferFromArray([
           types.protocolVersion.maxSupported, // protocol version
           0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-          0, 0, 0, 143, // length
+          0, 0, 0, 153, // length
           0, 4, // map size
         ]),
         getStringBuffer(startupOptions.cqlVersionKey),
@@ -255,7 +255,7 @@ describe('Startup', function() {
         utils.allocBufferFromArray([
           types.protocolVersion.maxSupported, // protocol version
           0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-          0, 0, 0, 198, // length
+          0, 0, 0, 208, // length
           0, 6, // map size
         ]),
         getStringBuffer(startupOptions.cqlVersionKey),

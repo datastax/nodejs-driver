@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-const dse = require('dse-driver');
+const cassandra = require('cassandra-driver');
 const async = require('async');
-const assert = require('assert');
 
 /**
  * Example using async library for avoiding nested callbacks
@@ -25,11 +24,11 @@ const assert = require('assert');
  * Inserts some vertex and edges: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#_the_graph_structure
  */
 
-const client = new dse.Client({
+const client = new cassandra.Client({
   contactPoints: ['127.0.0.1'],
   profiles: [
     // Set the graph name in the default execution profile
-    new dse.ExecutionProfile('default', {
+    new cassandra.ExecutionProfile('default', {
       graphOptions: { name: 'example_graph' }
     })
   ]

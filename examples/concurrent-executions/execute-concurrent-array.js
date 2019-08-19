@@ -1,5 +1,5 @@
 "use strict";
-const cassandra = require('dse-driver');
+const cassandra = require('cassandra-driver');
 const executeConcurrent = cassandra.concurrent.executeConcurrent;
 const Uuid = cassandra.types.Uuid;
 

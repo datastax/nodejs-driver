@@ -1,5 +1,5 @@
 "use strict";
-const cassandra = require('dse-driver');
+const cassandra = require('cassandra-driver');
 const Uuid = cassandra.types.Uuid;
 
 const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });

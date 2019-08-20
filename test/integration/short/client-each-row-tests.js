@@ -509,7 +509,7 @@ describe('Client', function () {
         table,
         table
       );
-      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 32768) };
+      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 6000) };
       client.eachRow(query, params, { prepare: true }, utils.noop, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

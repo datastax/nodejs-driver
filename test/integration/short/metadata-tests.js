@@ -496,7 +496,7 @@ describe('metadata', function () {
           );
         }
 
-        if (helper.isCassandraGreaterThan('4.0') || helper.isDseGreaterThan('6.0')) {
+        if (!helper.isCassandraGreaterThan('4.0') && !helper.isDseGreaterThan('6.0')) {
           // COMPACT STORAGE is not supported by DSE 6.0 / C* 4.0.
           queries.push(
             "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",
@@ -632,9 +632,10 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table', function (done) {
-        if (helper.isDseGreaterThan('6')) {
+        if (helper.isCassandraGreaterThan('4.0') || helper.isDseGreaterThan('6')) {
           this.skip();
         }
+
         const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);
@@ -658,9 +659,10 @@ describe('metadata', function () {
         });
       });
       it('should retrieve the metadata of a compact storaged table with clustering key', function (done) {
-        if (helper.isDseGreaterThan('6')) {
+        if (helper.isCassandraGreaterThan('4.0') || helper.isDseGreaterThan('6')) {
           this.skip();
         }
+
         const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {
           assert.ifError(err);

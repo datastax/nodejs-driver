@@ -18,9 +18,9 @@ const assert = require('assert');
 const helper = require('../../../test-helper');
 const DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
 const Client = require('../../../../lib/dse-client');
-const vit = helper.vit;
+const vdescribe = helper.vdescribe;
 
-describe('DsePlainTextAuthProvider', function () {
+vdescribe('dse-5.0', 'DsePlainTextAuthProvider', function () {
   this.timeout(180000);
   it('should authenticate against DSE daemon instance', function (done) {
     const testClusterOptions = {
@@ -39,7 +39,8 @@ describe('DsePlainTextAuthProvider', function () {
       });
     });
   });
-  vit('dse-5.0', 'should authenticate against DSE 5+ DseAuthenticator', function (done) {
+
+  it('should authenticate against DSE 5+ DseAuthenticator', function (done) {
     const testClusterOptions = {
       yaml: ['authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator'],
       jvmArgs: ['-Dcassandra.superuser_setup_delay_ms=0'],

@@ -20,7 +20,8 @@ const DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-prov
 const Client = require('../../../../lib/dse-client');
 const errors = require('../../../../lib/errors');
 const ads = helper.ads;
-const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
+const cDescribe = helper.conditionalDescribe(
+  helper.requireOptional('kerberos') && helper.isDseGreaterThan('5.0'), 'kerberos and DSE required to run');
 
 cDescribe('DseGssapiAuthProvider', function () {
   this.timeout(180000);

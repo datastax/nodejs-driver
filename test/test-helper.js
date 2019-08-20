@@ -315,17 +315,33 @@ const helper = {
       setTimeout(callback, ms);
     });
   },
-  getDseVersion: function() {
-    let version = process.env['TEST_DSE_VERSION'];
-    if (!version) {
-      version = '5.1.6';
-    }
-    return version;
-  },
+
+  /**
+   * Gets the Apache Cassandra version.
+   * When the server is DSE, gets the Apache Cassandra equivalent.
+   */
   getCassandraVersion: function () {
-    const dseVersion = this.getDseVersion().split('.').slice(0, 2).join('.');
-    return cassandraVersionByDse[dseVersion];
+    const serverInfo = this.getServerInfo();
+
+    if (!serverInfo.isDse) {
+      return serverInfo.version;
+    }
+
+    const dseVersion = serverInfo.version.split('.').slice(0, 2).join('.');
+    return cassandraVersionByDse[dseVersion] || cassandraVersionByDse['6.7'];
   },
+
+  /**
+   * Gets the server version and type.
+   * @return {{version, isDse}}
+   */
+  getServerInfo: function () {
+    return {
+      version: process.env['CCM_VERSION'] || '3.11.4',
+      isDse: process.env['CCM_IS_DSE'] === 'true'
+    };
+  },
+
   getSimulatedCassandraVersion: function() {
     let version = this.getCassandraVersion();
     // simulacron does not support protocol V2 and V1, so cap at 2.1.
@@ -337,14 +353,30 @@ const helper = {
     }
     return version;
   },
+
   /**
-   * Determines if the current DSE instance version is greater than or equals to the version provided
+   * Determines if the current server is a DSE instance *AND* version is greater than or equals to the version provided
    * @param {String} version The version in string format, dot separated.
    * @returns {Boolean}
    */
   isDseGreaterThan: function (version) {
-    return helper.versionCompare(helper.getDseVersion(), version);
+    const serverInfo = this.getServerInfo();
+    if (!serverInfo.isDse) {
+      return false;
+    }
+
+    return helper.versionCompare(serverInfo.version, version);
   },
+
+  /**
+   * Determines if the current C* or DSE instance version is greater than or equals to the C* version provided
+   * @param {String} version The version in string format, dot separated.
+   * @returns {Boolean}
+   */
+  isCassandraGreaterThan: function (version) {
+    return helper.versionCompare(helper.getCassandraVersion(), version);
+  },
+
   versionCompare: function (instanceVersionStr, version) {
     let expected = [1, 0]; //greater than or equals to
     if (version.indexOf('<=') === 0) {
@@ -985,8 +1017,11 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
   if (typeof nodeLength === 'number') {
     nodeLength = nodeLength + ':0';
   }
-  const version = options.version || helper.getDseVersion();
-  helper.trace('Starting test DSE cluster v%s with %s node(s)', version, nodeLength);
+
+  const serverInfo = helper.getServerInfo();
+
+  helper.trace(`Starting ${serverInfo.isDse ? 'DSE' : 'Cassandra'} cluster v${serverInfo.version} with ${nodeLength} node(s)`);
+
   utils.series([
     function (next) {
       //it wont hurt to remove
@@ -997,18 +1032,28 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       const clusterName = helper.getRandomName('test');
-      let create = ['create', clusterName, '--dse', '-v', version];
-      if (process.env['TEST_DSE_DIR']) {
-        create = ['create', clusterName, '--install-dir=' + process.env['TEST_DSE_DIR']];
+      let create = ['create', clusterName];
+
+      if (serverInfo.isDse) {
+        create.push('--dse');
+      }
+
+      create.push('-v', serverInfo.version);
+
+      if (process.env['CCM_INSTALL_DIR']) {
+        create = ['create', clusterName, '--install-dir=' + process.env['CCM_INSTALL_DIR']];
         helper.trace('With', create[2]);
       }
+
       if (options.ssl) {
         create.push('--ssl', self.getPath('ssl'));
       }
+
       if (options.partitioner) {
         create.push('-p');
         create.push(options.partitioner);
       }
+
       self.exec(create, helper.wait(options.sleep, next));
     },
     function (next) {
@@ -1501,28 +1546,23 @@ FallthroughRetryPolicy.prototype.onRequestError = FallthroughRetryPolicy.prototy
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  let serverVersion = helper.getDseVersion();
-  if (testVersion.indexOf('dse-') !== 0) {
-    // Its comparing C* db engine versions
-    const dseVersion = serverVersion.split('.').slice(0, 2).join('.');
-    serverVersion = cassandraVersionByDse[dseVersion];
-    if (!serverVersion && !warnedDseVersion) {
-      warnedDseVersion = true;
-      // eslint-disable-next-line no-console, no-undef
-      console.error('ERROR: No db engine version defined by DSE version ' + dseVersion + ', using value from DSE 5.1');
+  const serverInfo = helper.getServerInfo();
+  let invokeFunction = false;
+
+  if (testVersion.startsWith('dse-')) {
+    if (serverInfo.isDse) {
+      // Compare only if the server instance is DSE
+      invokeFunction = helper.versionCompare(serverInfo.version, testVersion.substr(4));
     }
-    serverVersion = serverVersion || cassandraVersionByDse['5.1'];
+  } else {
+    // Use the C* version (of DSE or the actual C* version)
+    invokeFunction = helper.versionCompare(helper.getCassandraVersion(), testVersion);
   }
-  else {
-    // Remove the 'dse-' prefix
-    testVersion = testVersion.substr(4);
-  }
-  if (helper.versionCompare(serverVersion, testVersion)) {
+
+  if (invokeFunction) {
     func.apply(this, args);
   }
 }
-
-let warnedDseVersion = false;
 
 /**
  * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].

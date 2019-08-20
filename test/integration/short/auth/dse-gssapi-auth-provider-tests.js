@@ -33,7 +33,7 @@ cDescribe('DseGssapiAuthProvider', function () {
 
   before(done => {
 
-    const v5 = helper.versionCompare(helper.getDseVersion(), '5.0');
+    const v5 = helper.isDseGreaterThan('5.0');
     // Set authenticator based on DSE version.
     const authenticator = v5 ?
       'authenticator:com.datastax.bdp.cassandra.auth.DseAuthenticator' :

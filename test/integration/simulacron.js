@@ -162,9 +162,11 @@ const simulacronHelper = {
     return { cluster: simulacronCluster, client: client };
   },
   baseOptions: (function () {
+    const serverInfo = helper.getServerInfo();
+
     return {
       cassandraVersion: helper.getSimulatedCassandraVersion(),
-      dseVersion: helper.getDseVersion(),
+      dseVersion: serverInfo.isDse ? serverInfo.version : '',
       clusterName: 'testCluster',
       activityLog: true,
       numTokens: 1
@@ -387,7 +389,7 @@ SimulacronCluster.prototype.register = function(dcs, options, callback) {
 /**
  * Registers and starts cluster with given body.
  *
- * @param {Object} Request payload body.
+ * @param {Object} body payload body.
  * @param {Function} callback
  */
 SimulacronCluster.prototype.registerWithBody = function(body, callback) {

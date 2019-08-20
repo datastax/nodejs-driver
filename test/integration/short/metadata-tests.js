@@ -444,7 +444,7 @@ describe('metadata', function () {
     });
     describe('#getTable()', function () {
       const keyspace = 'ks_tbl_meta';
-      const is3 = helper.isDseGreaterThan('5.0');
+      const is3 = helper.isCassandraGreaterThan('3.0');
       const valuesIndex = (is3 ? "(values(map_values))" : "(map_values)");
       before(function createTables(done) {
         const client = newInstance();
@@ -474,7 +474,7 @@ describe('metadata', function () {
           'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
         );
 
-        if (helper.isDseGreaterThan('5.0')) {
+        if (helper.isCassandraGreaterThan('2.2')) {
           queries.push(
             'CREATE INDEX map_entries_index ON tbl_indexes1 (entries(map_entries))',
             'CREATE TABLE ks_tbl_meta.tbl_c22 ' +
@@ -486,6 +486,7 @@ describe('metadata', function () {
             "CREATE INDEX map_all_keys_index on tbl_indexes1 (keys(map_all))",
             "CREATE INDEX map_all_values_index on tbl_indexes1 (values(map_all))");
         }
+
         if (helper.isDseGreaterThan('6')) {
           queries.push(
             'CREATE TABLE tbl_cdc_true (a int PRIMARY KEY, b text) WITH cdc=TRUE',
@@ -493,7 +494,9 @@ describe('metadata', function () {
             "CREATE TABLE tbl_nodesync_true (a int PRIMARY KEY, b text) WITH nodesync={'enabled': 'true', 'deadline_target_sec': '86400'}",
             "CREATE TABLE tbl_nodesync_false (a int PRIMARY KEY, b text) WITH nodesync={'enabled': 'false'}"
           );
-        } else {
+        }
+
+        if (helper.isCassandraGreaterThan('4.0') || helper.isDseGreaterThan('6.0')) {
           // COMPACT STORAGE is not supported by DSE 6.0 / C* 4.0.
           queries.push(
             "CREATE TABLE tbl5 (id1 uuid, id2 timeuuid, text1 text, PRIMARY KEY (id1, id2)) WITH COMPACT STORAGE",

@@ -274,19 +274,29 @@ function getRequest(query) {
  * @returns {number}
  */
 function getProtocolVersion() {
-  // expected protocol version
-  const dseVersion = helper.getDseVersion();
-  if (helper.isDseGreaterThan('6.0')) {
-    return protocolVersion.dseV2;
-  }
-  if (dseVersion.indexOf('5.1') === 0) {
-    return protocolVersion.dseV1;
-  }
-  if (dseVersion.indexOf('5.0') === 0) {
+  // Expected protocol version by server
+
+  const serverInfo = helper.getServerInfo();
+
+  if (serverInfo.isDse) {
+    if (helper.isDseGreaterThan('6.0')) {
+      return protocolVersion.dseV2;
+    }
+
+    if (serverInfo.version.startsWith('5.1')) {
+      return protocolVersion.dseV1;
+    }
+
+    if (serverInfo.version.startsWith('4.8')) {
+      return protocolVersion.v3;
+    }
+
     return protocolVersion.v4;
   }
-  if (dseVersion.indexOf('4.8') === 0) {
+
+  if (serverInfo.version.startsWith('2.1')) {
     return protocolVersion.v3;
   }
-  return 4;
+
+  return protocolVersion.v4;
 }

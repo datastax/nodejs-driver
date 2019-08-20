@@ -42,10 +42,6 @@ cassandra:
 build:
   - type: envinject
     properties: |
-      TEST_CASSANDRA_VERSION=$CCM_CASSANDRA_VERSION
-      TEST_DSE_VERSION=$CCM_VERSION
-      TEST_DSE_BRANCH=$CCM_BRANCH
-      TEST_DSE_DIR=$CCM_INSTALL_DIR
       JAVA_HOME=$CCM_JAVA_HOME
       CCM_PATH=$HOME/ccm
       JUNIT_REPORT_STACK=1

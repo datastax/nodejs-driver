@@ -6,7 +6,7 @@ schedules:
       exclude:
         - nodejs: ['6']
         - nodejs: ['4']
-          cassandra: ['3.11', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+          cassandra: ['3.11', 'dse-5.1', 'dse-6.0', 'dse-6.8']
         - nodejs: ['8']
           cassandra: ['2.1', 'dse-5.1', 'dse-6.7', 'dse-6.8']
         - nodejs: ['10']

@@ -611,15 +611,18 @@ describe('Client', function () {
           loggedMessage = true;
         }
       });
+
+      const warnThresholdInKb = helper.getServerInfo().isDse ? 64 : 5;
+
       const query = util.format(
         "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (%s, '%s')\n" +
         "INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
         table,
         types.Uuid.random(),
-        utils.stringRepeat('a', 2 * 1025),
+        utils.stringRepeat('a', 100),
         table,
         types.Uuid.random(),
-        utils.stringRepeat('a', 3 * 1025)
+        utils.stringRepeat('a', warnThresholdInKb * 1025)
       );
       client.execute(query, function (err, result) {
         assert.ifError(err);

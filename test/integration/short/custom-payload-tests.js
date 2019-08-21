@@ -164,10 +164,11 @@ describe('custom payload', function () {
       utils.series([
         client.connect.bind(client),
         function executeBatch(next) {
+          const warnThresholdInKb = helper.getServerInfo().isDse ? 64 : 5;
           const q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           const queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch2'] },
-            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 5 * 1025)] }
+            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', warnThresholdInKb * 1025)] }
           ];
           client.batch(queries, { customPayload: payload}, function (err, result) {
             assert.ifError(err);

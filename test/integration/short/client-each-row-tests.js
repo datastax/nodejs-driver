@@ -494,6 +494,7 @@ describe('Client', function () {
     vit('2.2', 'should include the warning in the ResultSet', function (done) {
       const client = newInstance({ keyspace: setupInfo.client.keyspace });
       let loggedMessage = false;
+
       client.on('log', function (level, className, message) {
         if (loggedMessage || level !== 'warning') {
           return;
@@ -503,13 +504,19 @@ describe('Client', function () {
           loggedMessage = true;
         }
       });
+
       const query = util.format(
         "BEGIN UNLOGGED BATCH INSERT INTO %s (id, text_sample) VALUES (:id1, :sample)\n" +
         "INSERT INTO %s (id, text_sample) VALUES (:id2, :sample) APPLY BATCH",
         table,
         table
       );
-      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 6000) };
+
+      const warnThresholdInKb = helper.getServerInfo().isDse ? 64 : 5;
+      const params = {
+        id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', warnThresholdInKb * 1025)
+      };
+
       client.eachRow(query, params, { prepare: true }, utils.noop, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

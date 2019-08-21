@@ -1117,16 +1117,21 @@ helper.ccm.start = function (nodeLength, options) {
 helper.ccm.bootstrapNode = function (nodeIndex, callback) {
   const ipPrefix = helper.ipPrefix;
   helper.trace('bootstrapping node', nodeIndex);
-  helper.ccm.exec([
+  const ccmArgs = [
     'add',
     'node' + nodeIndex,
     '-i',
     ipPrefix + nodeIndex,
     '-j',
     (7000 + 100 * nodeIndex).toString(),
-    '-b',
-    '--dse'
-  ], callback);
+    '-b'
+  ];
+
+  if (helper.getServerInfo().isDse) {
+    ccmArgs.push('--dse');
+  }
+
+  helper.ccm.exec(ccmArgs, callback);
 };
 
 helper.ccm.decommissionNode = function (nodeIndex, callback) {

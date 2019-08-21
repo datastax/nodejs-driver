@@ -5,10 +5,12 @@ schedules:
     matrix:
       exclude:
         - nodejs: ['6']
-        - nodejs: ['4','10']
-          cassandra: ['2.1', '3.0', 'dse-5.0', 'dse-5.1', 'dse-6.7', 'dse-6.8']
-        - nodejs: '8'
-          cassandra: ['3.0', 'dse-5.0', 'dse-5.1', 'dse-6.0', 'dse-6.8']
+        - nodejs: ['4']
+          cassandra: ['3.11', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+        - nodejs: ['8']
+          cassandra: ['2.1', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+        - nodejs: ['10']
+          cassandra: ['2.1', '3.11', 'dse-6.0', 'dse-6.7', 'dse-6.8']
   nightly:
     # nightly job for primary branches to run all configs.
     schedule: nightly
@@ -29,9 +31,7 @@ os:
   - ubuntu/bionic64/nodejs-driver
 cassandra:
   - '2.1'
-  - '3.0'
   - '3.11'
-  - dse-5.0
   - dse-5.1
   - dse-6.0
   - dse-6.7

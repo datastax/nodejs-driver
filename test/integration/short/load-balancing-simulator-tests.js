@@ -159,7 +159,7 @@ describe('DseLoadBalancingPolicy', function() {
         assert.deepEqual(Object.keys(hostCounts).sort(), localReplicas.map(h => h.address).sort());
 
         // Look that it was "fairly" balanced
-        const deviation = 0.08;
+        const deviation = 0.1;
         utils.objectValues(hostCounts).forEach(count => {
           assert.ok(count > length / localReplicas.length - length * deviation);
           assert.ok(count < length / localReplicas.length + length * deviation);

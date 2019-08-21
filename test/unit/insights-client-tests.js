@@ -109,7 +109,7 @@ describe('InsightsClient', function () {
       });
     });
 
-    ['6.0.1', '5.1.2', '5.0.13', '4.8.11'].forEach(version => {
+    ['6.0.1', '5.1.2', '5.0.13', '4.8.11', '{empty}'].forEach(version => {
       it(`should not send the startup event rpc when the server version is ${version}`, done => {
         let messageString;
         let error;
@@ -465,7 +465,7 @@ function getClient(options) {
 
   hostVersions.forEach((v, i) => {
     client.hosts.set(`10.10.10.${i}`, {
-      getDseVersion: () => v.split('.'),
+      getDseVersion: () => (v === '{empty}' ? utils.emptyArray : v.split('.')),
       datacenter: 'dc' + (i % 2),
       setDistance: () => {}
     });

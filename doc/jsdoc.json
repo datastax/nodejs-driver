@@ -1,7 +1,6 @@
 {
   "source": {
     "include": [
-      "lib/dse-client.js",
       "lib/geometry",
       "lib/graph",
       "lib/search",

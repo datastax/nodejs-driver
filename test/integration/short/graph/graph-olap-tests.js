@@ -17,7 +17,7 @@
 'use strict';
 
 const assert = require('assert');
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
 const loadBalancing = require('../../../../lib/policies/load-balancing');

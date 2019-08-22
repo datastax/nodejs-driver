@@ -17,7 +17,7 @@
 const assert = require('assert');
 const helper = require('../../../test-helper');
 const DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const vdescribe = helper.vdescribe;
 
 vdescribe('dse-5.0', 'DsePlainTextAuthProvider', function () {

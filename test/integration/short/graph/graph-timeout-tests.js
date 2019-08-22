@@ -21,7 +21,7 @@ const errors = require('../../../../lib/errors');
 const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
 const utils = require('../../../../lib/utils');
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const DefaultRetryPolicy = require('../../../../lib/policies/retry').RetryPolicy;
 

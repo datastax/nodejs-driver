@@ -21,7 +21,7 @@ const vdescribe = helper.vdescribe;
 const utils = require('../../../../lib/utils');
 const types = require('../../../../lib/types');
 const dateRangeModule = require('../../../../lib/search/date-range');
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const DateRange = dateRangeModule.DateRange;
 
 vdescribe('dse-5.1', 'DateRange', function () {

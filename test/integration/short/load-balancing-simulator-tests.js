@@ -21,7 +21,7 @@ const simulacron = require('../simulacron');
 const utils = require('../../../lib/utils');
 const loadBalancing = require('../../../lib/policies/load-balancing');
 
-const Client = require('../../../lib/dse-client');
+const Client = require('../../../lib/client');
 
 const queryOptions = { prepare: true, routingKey: utils.allocBuffer(16), keyspace: 16 };
 

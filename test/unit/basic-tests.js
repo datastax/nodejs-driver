@@ -17,7 +17,7 @@
 const assert = require('assert');
 const util = require('util');
 
-const Client = require('../../lib/dse-client.js');
+const Client = require('../../lib/client.js');
 const clientOptions = require('../../lib/client-options.js');
 const types = require('../../lib/types');
 const dataTypes = types.dataTypes;

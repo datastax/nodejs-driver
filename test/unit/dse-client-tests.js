@@ -15,7 +15,7 @@
  */
 'use strict';
 const assert = require('assert');
-const Client = require('../../lib/dse-client');
+const Client = require('../../lib/client');
 const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 const helper = require('../test-helper');
 const types = require('../../lib/types');
@@ -29,12 +29,6 @@ const proxyExecuteKey = require('../../lib/execution-options').proxyExecuteKey;
 
 describe('Client', function () {
   describe('constructor', function () {
-    it('should validate options', function () {
-      assert.throws(function () {
-        // eslint-disable-next-line
-        new Client();
-      }, errors.ArgumentError);
-    });
 
     it('should validate client id, application name and version', () => {
       assert.throws(() => new Client(Object.assign({ applicationName: 123 }, helper.baseOptions)),

@@ -17,7 +17,7 @@
 const assert = require('assert');
 const version = require('../../../index').version;
 const helper = require('../../test-helper');
-const Client = require('../../../lib/dse-client');
+const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 

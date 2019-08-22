@@ -16,7 +16,7 @@
 'use strict';
 const util = require('util');
 const assert = require('assert');
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
 const vit = helper.vit;

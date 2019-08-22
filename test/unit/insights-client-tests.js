@@ -18,7 +18,7 @@
 
 const assert = require('assert');
 const os = require('os');
-const Client = require('../../lib/dse-client');
+const Client = require('../../lib/client');
 const ClientState = require('../../lib/metadata/client-state');
 const InsightsClient = require('../../lib/insights-client');
 const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;

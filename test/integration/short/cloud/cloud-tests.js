@@ -131,7 +131,7 @@ describe('Cloud support', function () {
 
       return client.connect()
         .then(() => {
-          helper.assertInstanceOf(client.options.authProvider, auth.DsePlainTextAuthProvider);
+          helper.assertInstanceOf(client.options.authProvider, auth.PlainTextAuthProvider);
           assert.strictEqual(client.options.authProvider.username, 'cassandra');
         })
         .then(() => client.shutdown());
@@ -147,7 +147,7 @@ describe('Cloud support', function () {
     });
 
     it('should support overriding the auth provider', () => {
-      const authProvider = new auth.DsePlainTextAuthProvider('user1', '12345678');
+      const authProvider = new auth.PlainTextAuthProvider('user1', '12345678');
       const client = cloudHelper.getClient({ authProvider });
 
       return client.connect()

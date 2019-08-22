@@ -32,7 +32,7 @@ const cloudHelper = module.exports = {
 
   /**
    * Creates a new client using the default options.
-   * @param {DseClientOptions} [options]
+   * @param {ClientOptions} [options]
    * @return {Client}
    */
   getClient: function (options) {

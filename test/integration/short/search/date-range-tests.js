@@ -84,11 +84,10 @@ vdescribe('dse-5.1', 'DateRange', function () {
           const query = 'INSERT INTO tbl_udt_tuple (k, u, uf, t, tf) VALUES (?, ?, ?, ?, ?)';
           const options = { prepare: prepare };
 
-          // provide type hints for non-prepared queries.  Use 'custom' instead of 'DateRangeType' as the actual
-          // type doesn't matter.
           if (!prepare) {
-            options['hints'] = [ 'uuid', 'udt<test_udt>', 'udt<test_udt>', 'tuple<custom, int>', 'tuple<custom, int>' ];
+            return this.skip();
           }
+
           client.execute(query, [ id, u, uf, t, tf ], options, function (err) {
             assert.ifError(err);
             const query = 'SELECT * FROM tbl_udt_tuple WHERE k = ?';
@@ -164,7 +163,7 @@ vdescribe('dse-5.1', 'DateRange', function () {
 
           const options = { prepare: prepare };
           if (!prepare) {
-            options['hints'] = [ 'uuid', 'list<custom>', 'set<custom>', 'map<text,custom>', 'map<custom,text>' ];
+            options['hints'] = [ 'uuid', 'list', 'set', 'map', 'map' ];
           }
 
           const query = 'INSERT INTO tbl_collection (k, l, s, m0, m1) VALUES (?, ?, ?, ?, ?)';
@@ -203,7 +202,7 @@ vdescribe('dse-5.1', 'DateRange', function () {
 
             const options = { prepare: prepare };
             if (!prepare) {
-              options['hints'] = [ 'custom', 'int' ];
+              options['hints'] = [ null, 'int' ];
             }
             client.execute(query, [ value, 1 ], options, function (err) {
               assert.ifError(err);

@@ -31,6 +31,7 @@ const ProfileManager = require('../../lib/execution-profile').ProfileManager;
 const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
 const clientOptions = require('../../lib/client-options');
 const PrepareHandler = require('../../lib/prepare-handler');
+const Client = require('../../lib/client');
 
 // allow non-global require as Client gets rewired.
 /* eslint-disable global-require */
@@ -38,7 +39,6 @@ const PrepareHandler = require('../../lib/prepare-handler');
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
-      const Client = require('../../lib/client');
       assert.throws(function () {
         return new Client({});
       }, TypeError);
@@ -57,6 +57,41 @@ describe('Client', function () {
       const Client = require('../../lib/client');
       const client = new Client({ contactPoints: ['192.168.10.10'] });
       helper.assertInstanceOf(client.metadata, Metadata);
+    });
+
+    it('should validate client id, application name and version', () => {
+      assert.throws(() => new Client(Object.assign({ applicationName: 123 }, helper.baseOptions)),
+        /applicationName should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ applicationVersion: 123 }, helper.baseOptions)),
+        /applicationVersion should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ id: 123 }, helper.baseOptions)),
+        /Client id must be a Uuid/);
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z', applicationVersion: '1.2.3' },
+        helper.baseOptions)));
+
+      assert.doesNotThrow(() =>
+        new Client(Object.assign(
+          { applicationName: 'App_Z', applicationVersion: '1.2.3', id: types.Uuid.random() },
+          helper.baseOptions)));
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z'}, helper.baseOptions)));
+      assert.doesNotThrow(() => new Client(Object.assign({ id: types.TimeUuid.now() }, helper.baseOptions)));
+    });
+
+    it('should set DseLoadBalancingPolicy as default', function () {
+      let client = new Client({ contactPoints: ['host1'] });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DseLoadBalancingPolicy);
+      const retryPolicy = new policies.retry.RetryPolicy();
+      client = new Client({
+        contactPoints: ['host1'],
+        // with some of the policies specified
+        policies: { retry: retryPolicy }
+      });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DseLoadBalancingPolicy);
+      assert.strictEqual(client.options.policies.retry, retryPolicy);
     });
 
     context('with useBigIntAsLong or useBigIntAsVarint set', () => {

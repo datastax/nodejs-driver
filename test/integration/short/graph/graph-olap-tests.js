@@ -134,9 +134,6 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
         {loadBalancing: new DseLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
     );
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        return;
-      }
       it('should return a promise for OLAP query', function () {
         const client = newInstance();
         const p = client.executeGraph('g.V().count()', { graphSource: 'a' });

@@ -706,9 +706,6 @@ vdescribe('dse-5.0', 'Client', function () {
       ], done);
     }));
     context('with no callback specified', function () {
-      if (!helper.promiseSupport) {
-        return;
-      }
       it('should return a promise', function () {
         const client = newInstance();
         const p = client.executeGraph('g.V()', null, null);

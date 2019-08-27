@@ -25,8 +25,6 @@ const types = require('../../lib/types');
 const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const dataTypes = types.dataTypes;
 const helper = require('../test-helper');
-const encoderExtensions = require('../../lib/encoder-extensions');
-encoderExtensions.register(Encoder);
 
 const zeroLengthTypesSupported = new Set([
   dataTypes.text,
@@ -1255,7 +1253,7 @@ describe('encoder', function () {
   describe('prototype', function () {
     it('should only expose encode() and decode() functions', function () {
       const keys = Object.keys(Encoder.prototype);
-      assert.deepEqual(keys, ['decode', 'encode', 'baseDecode', 'baseEncode']);
+      assert.deepStrictEqual(keys, ['decode', 'encode']);
       keys.forEach(function (k) {
         assert.strictEqual(typeof Encoder.prototype[k], 'function');
       });

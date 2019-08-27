@@ -23,6 +23,7 @@ const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
+const version = require('../../../index').version;
 
 const Client = require('../../../lib/client');
 
@@ -373,6 +374,53 @@ describe('pool', function () {
         .then(() => client.on('log', (level, message) => logMessages.push([ level, message ])))
         .then(() => new Promise(r => setTimeout(r, reconnectionDelay * 2)))
         .then(() => assert.deepStrictEqual(logMessages, []));
+    });
+
+    it('should log the module versions on first connect only', function(done) {
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        localDataCenter: 'dc1'
+      });
+      const versionLogRE = /^Connecting to cluster using .+ version (.+)$/;
+      let versionMessage = undefined;
+
+      client.on('log', function(level, className, message) {
+        const match = message.match(versionLogRE);
+        if (match) {
+          versionMessage = { level: level, match: match };
+        }
+      });
+
+      utils.series([
+        client.connect.bind(client),
+        function ensureLogged(next) {
+          assert.ok(versionMessage);
+          assert.strictEqual(versionMessage.level, 'info');
+          // versions should match those from the modules.
+          assert.strictEqual(versionMessage.match[1], version);
+          versionMessage = undefined;
+          next();
+        },
+        client.connect.bind(client),
+        function ensureNotLogged(next) {
+          assert.strictEqual(versionMessage, undefined);
+          next();
+        },
+        client.shutdown.bind(client)
+      ],done);
+    });
+
+    it('should support providing client id, application name and version', () => {
+      const client = new Client(helper.getOptions({
+        contactPoints: cluster.getContactPoints(),
+        localDataCenter: 'dc1',
+        applicationName: 'My App',
+        applicationVersion: 'v3.2.1',
+        clientId: types.Uuid.random()
+      }));
+
+      return client.connect()
+        .then(() => client.shutdown());
     });
 
     [

@@ -27,7 +27,7 @@ const queryOptions = { prepare: true, routingKey: utils.allocBuffer(16), keyspac
 
 const localDc = 'dc1';
 
-describe('DseLoadBalancingPolicy', function() {
+describe('DefaultLoadBalancingPolicy', function() {
   this.timeout(20000);
 
   let cluster;
@@ -80,7 +80,7 @@ describe('DseLoadBalancingPolicy', function() {
       client = new Client({
         contactPoints: cluster.getContactPoints(),
         policies: {
-          loadBalancing: new loadBalancing.DseLoadBalancingPolicy({ localDc, getReplicas: () => null })
+          loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc, getReplicas: () => null })
         }
       });
 
@@ -98,7 +98,7 @@ describe('DseLoadBalancingPolicy', function() {
       client = new Client({
         contactPoints: cluster.getContactPoints(),
         policies: {
-          loadBalancing: new loadBalancing.DseLoadBalancingPolicy({ localDc })
+          loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc })
         }
       });
 
@@ -129,7 +129,7 @@ describe('DseLoadBalancingPolicy', function() {
     client = new Client({
       contactPoints: cluster.getContactPoints(),
       policies: {
-        loadBalancing: new loadBalancing.DseLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
+        loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
       }
     });
 
@@ -174,7 +174,7 @@ describe('DseLoadBalancingPolicy', function() {
     client = new Client({
       contactPoints: cluster.getContactPoints(),
       policies: {
-        loadBalancing: new loadBalancing.DseLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
+        loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
       }
     });
 
@@ -232,7 +232,7 @@ describe('DseLoadBalancingPolicy', function() {
     client = new Client({
       contactPoints: cluster.getContactPoints(),
       policies: {
-        loadBalancing: new loadBalancing.DseLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
+        loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc, getReplicas: () => replicas })
       },
       pooling: { heartBeatInterval: 0 }
     });

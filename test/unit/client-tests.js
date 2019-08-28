@@ -81,16 +81,16 @@ describe('Client', function () {
       assert.doesNotThrow(() => new Client(Object.assign({ id: types.TimeUuid.now() }, helper.baseOptions)));
     });
 
-    it('should set DseLoadBalancingPolicy as default', function () {
+    it('should set DefaultLoadBalancingPolicy as default', function () {
       let client = new Client({ contactPoints: ['host1'] });
-      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DseLoadBalancingPolicy);
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DefaultLoadBalancingPolicy);
       const retryPolicy = new policies.retry.RetryPolicy();
       client = new Client({
         contactPoints: ['host1'],
         // with some of the policies specified
         policies: { retry: retryPolicy }
       });
-      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DseLoadBalancingPolicy);
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DefaultLoadBalancingPolicy);
       assert.strictEqual(client.options.policies.retry, retryPolicy);
     });
 

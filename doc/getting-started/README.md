@@ -47,10 +47,10 @@ See [Getting started with DataStax Node.js driver for more information][core-get
 
 ## Working with mixed workloads
 
-The driver features [Execution Profiles](../features/execution-profiles/) that provide a mechanism to group together
+The driver features [Execution Profiles](../features/execution-profiles) that provide a mechanism to group together
 a set of configuration options and reuse them across different query executions.
 
-[Execution Profiles](../features/execution-profiles/) are specially useful when dealing with different workloads like
+[Execution Profiles](../features/execution-profiles) are specially useful when dealing with different workloads like
 Graph and CQL workloads, allowing you to use a single `Client` instance for all workloads, for example:
 
 ```javascript
@@ -64,7 +64,7 @@ const client = new dse.Client({
       serialConsistency: consistency.localSerial
     }),
     new ExecutionProfile('graph', {
-      loadBalancing: new DseLoadBalancingPolicy('graph-us-west'),
+      loadBalancing: new DefaultLoadBalancingPolicy('graph-us-west'),
       consistency: consistency.localQuorum,
       readTimeout: 10000,
       graphOptions: { name: 'myGraph' }

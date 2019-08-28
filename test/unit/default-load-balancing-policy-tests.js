@@ -27,7 +27,7 @@ const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions
 const errors = require('../../lib/errors');
 const Client = require('../../lib/client');
 
-const DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
+const DefaultLoadBalancingPolicy = loadBalancing.DefaultLoadBalancingPolicy;
 const Host = hostModule.Host;
 const HostMap = hostModule.HostMap;
 const lastOctetOf = helper.lastOctetOf;
@@ -42,11 +42,11 @@ describe('DefaultLoadBalancingPolicy', () => {
 
   describe('constructor', () => {
     it('should support providing the localDc as a string instead of the options', () => {
-      assert.strictEqual(new DseLoadBalancingPolicy('my-local-dc').localDc, 'my-local-dc');
+      assert.strictEqual(new DefaultLoadBalancingPolicy('my-local-dc').localDc, 'my-local-dc');
     });
 
     it('should support providing the localDc in the options', () => {
-      assert.strictEqual(new DseLoadBalancingPolicy({ localDc: 'my-local-dc2' }).localDc, 'my-local-dc2');
+      assert.strictEqual(new DefaultLoadBalancingPolicy({ localDc: 'my-local-dc2' }).localDc, 'my-local-dc2');
     });
   });
 
@@ -304,7 +304,7 @@ describe('DefaultLoadBalancingPolicy', () => {
 
   describe('#init()', () => {
     it('should throw an error when localDataCenter is not configured on Client options', function (done) {
-      const policy = new DseLoadBalancingPolicy();
+      const policy = new DefaultLoadBalancingPolicy();
       const options = utils.extend({}, helper.baseOptions);
       delete options.localDataCenter;
       const hosts = new HostMap();
@@ -318,7 +318,7 @@ describe('DefaultLoadBalancingPolicy', () => {
     });
 
     it('should log on init when localDc was provided to constructor but localDataCenter was not set on Client options', function (done) {
-      const policy = new DseLoadBalancingPolicy({ localDc: 'dc1' });
+      const policy = new DefaultLoadBalancingPolicy({ localDc: 'dc1' });
       const options = utils.extend({}, helper.baseOptions);
       delete options.localDataCenter;
       const client = new Client(options);
@@ -439,7 +439,7 @@ function getNewInstance(options) {
     getReplicas = () => options.getReplicas(hostMap);
   }
 
-  const policy = new DseLoadBalancingPolicy({
+  const policy = new DefaultLoadBalancingPolicy({
     localDc, filter: options.filter, getReplicas, compare: options.compare, healthCheck: options.healthCheck,
     isHostNewlyUp: options.isHostNewlyUp
   });

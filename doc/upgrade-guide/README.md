@@ -5,6 +5,17 @@ are relevant to for an upgrade from prior versions.
 
 If you have any questions or comments, you can [post them on the mailing list][mailing-list].
 
+## Next
+
+### New default load balancing policy
+
+The driver uses the new `DefaultLoadBalancingPolicy` implementation as default load balancing policy. The new policy
+attempts to fairly distribute the load based on the amount of in-flight request per hosts. The
+local replicas are initially shuffled and [between the first two nodes in the shuffled list, the one with fewer
+in-flight requests is selected as coordinator](https://www.eecs.harvard.edu/~michaelm/postscripts/mythesis.pdf).
+
+---
+
 ## 4.0
 
 The following is a list of changes made in version 4.0 of the driver that are relevant when upgrading from version 3.x.

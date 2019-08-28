@@ -21,7 +21,7 @@ const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
 const loadBalancing = require('../../../../lib/policies/load-balancing');
-const DseLoadBalancingPolicy = loadBalancing.DseLoadBalancingPolicy;
+const DefaultLoadBalancingPolicy = loadBalancing.DefaultLoadBalancingPolicy;
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const utils = require('../../../../lib/utils');
 const graphModule = require('../../../../lib/graph');
@@ -127,11 +127,11 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
       executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics', {graphOptions: {source: 'a'}})]}));
     it('should make an OLAP query with default profile using \'a\' traversal source',
       executeAnalyticsQueries({}, {profiles: [new ExecutionProfile('default', {graphOptions: {source: 'a'}})]}));
-    it('should contact spark master directly to make an OLAP query when using DseLoadBalancingPolicy',
-      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: new DseLoadBalancingPolicy()}}, true));
-    it('should contact spark master directly to make an OLAP query when using profile with DseLoadBalancingPolicy',
+    it('should contact spark master directly to make an OLAP query when using DefaultLoadBalancingPolicy',
+      executeAnalyticsQueries({graphSource: 'a'}, {policies: {loadBalancing: new DefaultLoadBalancingPolicy()}}, true));
+    it('should contact spark master directly to make an OLAP query when using profile with DefaultLoadBalancingPolicy',
       executeAnalyticsQueries({executionProfile: 'analytics'}, {profiles: [new ExecutionProfile('analytics',
-        {loadBalancing: new DseLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
+        {loadBalancing: new DefaultLoadBalancingPolicy(), graphOptions: {source: 'a'}})]}, true)
     );
     context('with no callback specified', function () {
       it('should return a promise for OLAP query', function () {

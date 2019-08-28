@@ -5,21 +5,15 @@ are relevant to for an upgrade from prior versions.
 
 If you have any questions or comments, you can [post them on the mailing list][mailing-list].
 
-## 2.0
+## 4.0
 
-The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 1.x.
+The following is a list of changes made in version 4.0 of the driver that are relevant when upgrading from version 3.x.
 
 ### localDataCenter is now a required Client option
 
-When using `DseLoadBalancingPolicy`, which is used by default, or `DCAwareRoundRobinPolicy` a local data center must 
-now be provided to the `Client` options parameter as `localDataCenter`.  This is necessary to prevent routing 
-requests to nodes in remote data centers unintentionally.
-
-### Removed `createAsAWrapper()` method from `DseLoadBalancingPolicy` class
-
-Previously, we supported the use of the `DseLoadBalancingPolicy` as a wrapper of a child policy. The new 
-implementation of the `DseLoadBalancingPolicy` provides replica ordering using "Power of Two Random Choices" algorithm 
-and removes the possibility of chaining policies.
+When using `DCAwareRoundRobinPolicy`, which is used by default,  a local data center must now be provided to the
+`Client` options parameter as `localDataCenter`.  This is necessary to prevent routing requests to nodes in remote
+data centers.
 
 ### Selection of contact points is now evaluated in random order
 
@@ -92,10 +86,32 @@ This property was removed in the latest version.
 `usedHostsPerRemoteDC` has been removed as a constructor parameter.  This change was made because handling
 data center outages is better suited at a service level rather than within an application client.
 
-### Kerberos optional dependency bumped to 1.0+
+---
 
-The driver supports GSSAPI authentication using `kerberos` library, the minimum version requirement for the
-`kerberos` library is `1.0.0`.
+## 3.0
+
+### Changes in CQL aggregates metadata
+
+The `initCondition` property of `Aggregate`, the class that represents the metadata information of a CQL 
+aggregate, changes from `Object` to `String`.
+
+---
+
+## 2.0
+
+The following is a list of changes made in version 2.0 of the driver that are relevant when upgrading from version 1.x.
+
+### API Changes
+
+1. `uuid` and `timeuuid` values are decoded as [`Uuid`](../features/datatypes/uuids) and
+[`TimeUuid`](../features/datatypes/uuids) instances.
+
+1. `decimal` values are decoded as [`BigDecimal`](../features/datatypes/numerical) instances.
+
+1. `varint` values are decoded as [`Integer`](../features/datatypes/numerical) instances.
+
+1. `inet` values are decoded as `InetAddress` instances.
+
 
 [mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [op-info]: https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.policies/module.retry/type.OperationInfo/

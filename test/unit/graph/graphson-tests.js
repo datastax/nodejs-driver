@@ -17,12 +17,12 @@
 
 const assert = require('assert');
 const util = require('util');
-const helper = require('../test-helper');
-const GraphSONReader = require('../../lib/encoder-extensions').GraphSONReader;
-const graphModule = require('../../lib/graph');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const geometry = require('../../lib/geometry');
+const helper = require('../../test-helper');
+const GraphSONReader = require('../../../lib/graph/graphson-reader');
+const graphModule = require('../../../lib/graph');
+const types = require('../../../lib/types');
+const utils = require('../../../lib/utils');
+const geometry = require('../../../lib/geometry');
 
 describe('GraphSONReader', function () {
   describe('#read()', function () {

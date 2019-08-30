@@ -54,13 +54,16 @@ If (!(Test-Path $env:CCM_PATH)) {
 Write-Host "Installing CCM and its dependencies"
 Start-Process python -ArgumentList "-m pip install psutil pyYaml six ccm" -Wait -NoNewWindow
 
+Write-Host "Setting execution policy to unrestricted"
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+
 # Predownload cassandra version for CCM if it isn't already downloaded.
-If (!(Test-Path C:\Users\appveyor\.ccm\repository\$env:TEST_CASSANDRA_VERSION)) {
-  Write-Host "Predownloading $env:TEST_CASSANDRA_VERSION"
-  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py create -v $($env:TEST_CASSANDRA_VERSION) -n 1 predownload" -Wait -NoNewWindow
+If (!(Test-Path C:\Users\appveyor\.ccm\repository\$env:CCM_VERSION)) {
+  Write-Host "Predownloading $env:CCM_VERSION"
+  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py create -v $($env:CCM_VERSION) -n 1 predownload" -Wait -NoNewWindow
   Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py remove predownload" -Wait -NoNewWindow
 } else {
-  Write-Host "Cassandra $env:TEST_CASSANDRA_VERSION was already preloaded"
+  Write-Host "Cassandra $env:CCM_VERSION was already preloaded"
 }
 
 # Activate the proper nodejs version.

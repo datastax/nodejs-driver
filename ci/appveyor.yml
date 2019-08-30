@@ -1,7 +1,10 @@
 environment:
+  appveyor_build_worker_cloud: gce
   ci_type: ci_unit_appveyor
   matrix:
     - nodejs_version: 10
+      CCM_VERSION: 3.11.2
+      ci_type: ci_appveyor
     - nodejs_version: 8
     - nodejs_version: 6
     - nodejs_version: 4
@@ -13,12 +16,12 @@ install:
   - ps: .\ci\appveyor.ps1
   - npm install
   - npm install mocha-appveyor-reporter@0
-  - npm install kerberos@1
 build: off
 test_script:
   - "npm run %ci_type%"
 on_finish:
   - ps: .\ci\hardwareinfo.ps1
 cache:
+  - node_modules -> package.json
   - C:\Users\appveyor\.ccm\repository
   - C:\Users\appveyor\deps -> .\ci\appveyor.ps1

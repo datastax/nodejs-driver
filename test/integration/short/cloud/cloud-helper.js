@@ -7,18 +7,14 @@
 
 'use strict';
 
-const https = require('https');
 const format = require('util').format;
 const path = require('path');
-const fs = require('fs');
 const exec = require('child_process').exec;
 
 const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
-const utils = require('../../../../lib/utils');
 
 const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
-const metadataSvcUrl = [ '127.0.0.1', ':', '30443', '/metadata' ];
 
 const cloudHelper = module.exports = {
 
@@ -53,56 +49,6 @@ const cloudHelper = module.exports = {
 
     before(() => this.runContainer());
 
-    before(done => {
-
-      // Check metadata svc is listening
-      const requestOptions = {
-        hostname: metadataSvcUrl[0],
-        port: metadataSvcUrl[2],
-        path: metadataSvcUrl[3],
-        rejectUnauthorized: false,
-        // Use test certificates
-        ca: [ fs.readFileSync('./certs/ca.crt') ],
-        cert: fs.readFileSync('./certs/cert'),
-        key: fs.readFileSync('./certs/key')
-      };
-
-      let connected = false;
-      const start = process.hrtime();
-      const maxWaitSeconds = 60;
-
-      utils.whilst(
-        () => !connected && process.hrtime(start)[0] < maxWaitSeconds,
-        next => {
-          let errCalled = false;
-          https.get(requestOptions, (res) => {
-            res
-              .on('data', chunk => {})
-              .on('end', () => {
-                if (errCalled) {
-                  return;
-                }
-
-                connected = true;
-                next();
-              });
-          }).on("error", (err) => {
-            errCalled = true;
-            helper.trace(`Error waiting for metadata svc: ${err.toString()}. Retrying...`);
-            setTimeout(next, 200);
-          });
-        },
-        () => {
-          if (connected) {
-            done();
-          } else {
-            done(new Error(`Could not connect to metadata svc after ${maxWaitSeconds} seconds`));
-          }
-        }
-      );
-
-    });
-
     before(() => {
       if (!options.queries) {
         return;
@@ -131,6 +77,7 @@ const cloudHelper = module.exports = {
   },
 
   runContainer: function () {
+    helper.trace('Starting SNI container');
     let singleEndpointPath = process.env['SINGLE_ENDPOINT_PATH'];
     if (!singleEndpointPath) {
       singleEndpointPath = path.join(process.env['HOME'], 'proxy', 'run.sh');

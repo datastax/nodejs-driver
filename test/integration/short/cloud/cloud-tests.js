@@ -16,11 +16,14 @@ const policies = require('../../../../lib/policies');
 const errors = require('../../../../lib/errors');
 const auth = require('../../../../lib/auth');
 const utils = require('../../../../lib/utils');
+const vdescribe = helper.vdescribe;
 
 const port = 9042;
 
-describe('Cloud support', function () {
-  this.timeout(120000);
+vdescribe('3.11', 'Cloud support', function () {
+  // Only run tests with few versions of DSE as SNI project has a fixed C*/DSE version
+
+  this.timeout(240000);
 
   context('with a 3 node cluster', () => {
 

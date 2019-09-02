@@ -27,9 +27,9 @@ To turn on this feature, you first need to create an instance of `RequestLogger`
 instance:
 
 ```javascript
-const dse = require('dse-driver');
+const cassandra = require('cassandra-driver');
 
-const requestTracker = new dse.tracker.RequestLogger({ slowThreshold: 1000 });
+const requestTracker = new cassandra.tracker.RequestLogger({ slowThreshold: 1000 });
 const client = new Client({ contactPoints, localDataCenter, requestTracker });
 ```
 

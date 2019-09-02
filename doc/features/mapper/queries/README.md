@@ -1,7 +1,7 @@
 # Queries
 
 The Mapper generates the CQL queries and adapts the results into objects according to the [defined
-mappings](../defining-mappings/).
+mappings](../defining-mappings).
 
 *Note that throughout the Mapper documentation the [killrvideo schema][killrvideo] is used.* 
 
@@ -50,7 +50,7 @@ const result = await videoMapper.find({ userId, addedDate: q.gt(myDate) });
 `q.gt()` represents the "greater than" operator (`>`), you can access all operators in `q` under the `mapping` module
  
 ```javascript
-const q = dse.mapping.q;
+const q = cassandra.mapping.q;
 ```
 
 #### Get objects using multiple conditions on the same field
@@ -207,7 +207,7 @@ await mapper.batch(changes);
 ## Custom queries
 
 The Mapper supports bypassing query generation, allowing you to specify the CQL query. It will execute the query and 
-map the results according to the [mapping configuration](../defining-mappings/).
+map the results according to the [mapping configuration](../defining-mappings).
 
 Use `mapWithQuery()` method to create your own `ModelMapper` execution method.
 
@@ -286,7 +286,7 @@ userMapper.get({ videoId }, 'another-execution-profile');
 
 ---
 
-You can look at the [documentation on defining mappings](../defining-mappings/) to understand how tables and columns 
+You can look at the [documentation on defining mappings](../defining-mappings) to understand how tables and columns 
 are mapped into object and properties.
 
 [killrvideo]: https://github.com/pmcfadin/killrvideo-sample-schema

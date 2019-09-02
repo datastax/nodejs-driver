@@ -1,6 +1,6 @@
 ## Geospatial types
 
-[DataStax Enterprise][dse] 5.0 comes with a set of additional CQL types to represent geospatial data:
+[DataStax Enterprise][dse] comes with a set of additional CQL types to represent geospatial data:
 
 - `PointType`
 - `LineStringType`
@@ -18,8 +18,8 @@ in [Well-known text][wkt] format, and `toJSON()`, that returns the JSON represen
 ## Usage
 
 ```javascript
-const dse = require('dse-driver');
-const Point = dse.geometry.Point;
+const cassandra = require('cassandra-driver');
+const Point = cassandra.geometry.Point;
 const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
 const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
 

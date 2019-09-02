@@ -52,14 +52,14 @@ less expensive);
 To use this implementation, provide an instance when initializing the `Client` object.
 
 ```javascript
-const dse = require('dse-driver');
-const addressResolution = dse.policies.addressResolution;
+const cassandra = require('cassandra-driver');
+const { EC2MultiRegionTranslator } = cassandra.policies.addressResolution;
 
-const client = new dse.Client({
+const client = new cassandra.Client({
   contactPoints,
   localDataCenter,
   policies: { 
-    addressResolution: new addressResolution.EC2MultiRegionTranslator() 
+    addressResolution: new EC2MultiRegionTranslator() 
   }
 });
 ```

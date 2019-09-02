@@ -3,9 +3,9 @@
 The Mapper is provided as part of the driver package.
 
 ```javascript
-const dse = require('dse-driver');
-const Client = dse.Client;
-const Mapper = dse.mapping.Mapper;
+const cassandra = require('cassandra-driver');
+const Client = cassandra.Client;
+const Mapper = cassandra.mapping.Mapper;
 
 const client = new Client({ contactPoints, localDataCenter, keyspace });
 ```

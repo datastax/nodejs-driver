@@ -3,10 +3,11 @@
 `Client` includes the `executeGraph()` method to execute graph queries:
 
 ```javascript
-const client = new dse.Client({
+const client = new cassandra.Client({
   contactPoints: ['host1', 'host2'],
   graphOptions: { name: 'demo' }
 });
+
 // executeGraph() method returns a Promise
 client.executeGraph('g.V()')
   .then(function (result) {
@@ -31,8 +32,8 @@ You can set default graph options when initializing `Client` which will be used 
 example, to avoid providing a `graphName` option in each `executeGraph()` call:
 
 ```javascript
-const dse = require('dse-driver');
-const client = new dse.Client({
+const cassandra = require('cassandra-driver');
+const client = new cassandra.Client({
   contactPoints: ['host1', 'host2'],
   graphOptions: { name: 'demo' }
 });

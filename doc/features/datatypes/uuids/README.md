@@ -8,7 +8,7 @@ The [`Uuid` class](/api/module.types/class.Uuid/) provides support for represent
 use the `Uuid` static method `random()`:
 
 ```javascript
-const Uuid = require('dse-driver').types.Uuid;
+const Uuid = require('cassandra-driver').types.Uuid;
 const id = Uuid.random();
 ```
 
@@ -36,7 +36,7 @@ The [`TimeUuid` class](/api/module.types/class.TimeUuid/) provides support for r
 To generate a time-based identifier, you can use the `now()` and `fromDate()` static methods:
 
 ```javascript
-const TimeUuid = require('dse-driver').types.TimeUuid;
+const TimeUuid = require('cassandra-driver').types.TimeUuid;
 const id1 = TimeUuid.now();
 const id2 = TimeUuid.fromDate(new Date());
 ```

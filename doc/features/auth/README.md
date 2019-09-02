@@ -1,17 +1,18 @@
 # DSE Authentication
 
-Two authentication providers are included to connect to a DSE cluster secured with `DseAuthenticator`:
+Three authentication providers are included to connect to a DSE cluster secured with `DseAuthenticator`:
 
-- `DsePlainTextAuthProvider`: Plain-text authentication;
-- `DseGssapiAuthProvider`: GSSAPI authentication.
+- `PlainTextAuthProvider`: Plain-text authentication.
+- `DsePlainTextAuthProvider`: Plain-text authentication on DSE.
+- `DseGssapiAuthProvider`: GSSAPI authentication on DSE.
 
-To configure a provider, pass it when initializing the `Client`:
+You can configure an authentication provider when initializing the `Client`:
 
 ```javascript
-const dse = require('dse');
-const client = new dse.Client({
+const cassandra = require('cassandra-driver');
+const client = new cassandra.Client({
   contactPoints: [ 'host1', 'host2' ],
-  authProvider: new dse.auth.DseGssapiAuthProvider()
+  authProvider: new cassandra.auth.DseGssapiAuthProvider()
 });
 ```
 
@@ -19,7 +20,7 @@ To use the `DseGssapiAuthProvider`, you need to add the dependency to `kerberos`
 
 ## DSE Unified Authentication
 
-With DSE 5.1+, unified Authentication allows you to:
+Single DSE 5.1+, DSE Unified Authentication allows you to:
 
 - Proxy Login: Authenticate using a fixed set of authentication credentials but allow authorization of resources
 based on another user id.
@@ -42,10 +43,10 @@ GRANT PROXY.LOGIN ON ROLE 'alice' TO 'ben'
 Once "ben" is granted proxy login as "alice":
 
 ```javascript
-const dse = require('dse');
-const client = new dse.Client({
+const cassandra = require('cassandra-driver');
+const client = new cassandra.Client({
   contactPoints: [ 'host1', 'host2' ],
-  authProvider: new dse.auth.DsePlainTextAuthProvider('ben', 'ben', 'alice')
+  authProvider: new cassandra.auth.DsePlainTextAuthProvider('ben', 'ben', 'alice')
 });
 
 // All requests will be executed using the authorizationId 'alice'
@@ -69,10 +70,10 @@ Once "ben" is granted permission to execute queries as "alice":
 
 
 ```javascript
-const dse = require('dse');
-const client = new dse.Client({
+const cassandra = require('cassandra-driver');
+const client = new cassandra.Client({
   contactPoints: [ 'host1', 'host2' ],
-  authProvider: new dse.auth.DsePlainTextAuthProvider('ben', 'ben')
+  authProvider: new cassandra.auth.DsePlainTextAuthProvider('ben', 'ben')
 });
 
 // The following requests will be executed as 'alice'

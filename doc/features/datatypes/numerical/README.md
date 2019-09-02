@@ -69,7 +69,7 @@ The [`BigDecimal` class](/api/module.types/class.BigDecimal/) provides support f
 arbitrary precision decimal representation.
 
 ```javascript
-const BigDecimal = require('dse-driver').types.BigDecimal;
+const BigDecimal = require('cassandra-driver').types.BigDecimal;
 const value1 = new BigDecimal(153, 2);
 const value2 = BigDecimal.fromString('1.53');
 console.log(value1.toString());     // 1.53
@@ -92,7 +92,7 @@ The [`Long` class](/api/module.types/class.Long/) provides support for represent
 integer representation.
 
 ```javascript
-const Long = require('dse-driver').types.Long;
+const Long = require('cassandra-driver').types.Long;
 const value1 = Long.fromNumber(101);
 const value2 = Long.fromString('101');
 console.log(value1.toString());             // 101
@@ -116,7 +116,7 @@ The [`Integer` class](/api/module.types/class.Integer/), originally part of the 
 datatype values, because JavaScript has no arbitrarily-large signed integer representation.
 
 ```javascript
-const Integer = require('dse-driver').types.Integer;
+const Integer = require('cassandra-driver').types.Integer;
 const value1 = Integer.fromNumber(404);
 const value2 = Integer.fromString(404);
 console.log(value1.toString());             // 404

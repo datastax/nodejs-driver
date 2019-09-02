@@ -1,13 +1,12 @@
 # Connection pooling
 
-The driver maintains one or more connections opened to each DataStax Enterprise node selected by the load-balancing
-policy.
+The driver maintains one or more connections opened to each Apache Cassandra node selected by the load-balancing policy.
 The amount of connections per host is defined in the pooling configuration.
 
 ## Default pooling configuration 
 
-The default number of connections per host depends on the version of the DSE cluster.
-When using the driver to connect to modern server versions (DSE 4.7 and above), the driver uses one
+The default number of connections per host depends on the version of the Apache Cassandra cluster.
+When using the driver to connect to modern server versions (Apache Cassandra 2.1 and above), the driver uses one
 connection per host.
 
 ## Setting the number of connections per host 
@@ -16,8 +15,8 @@ If needed, you can set the number of connections per host depending on the dista
 in the `pooling` configuration:
 
 ```javascript
-const dse = require('dse-driver');
-const distance = dse.types.distance;
+const cassandra = require('cassandra-driver');
+const distance = cassandra.types.distance;
 
 const options = {
   contactPoints,
@@ -30,7 +29,7 @@ const options = {
   }
 };
 
-const client = new dse.Client(options);
+const client = new Client(options);
 ```
 
 ## Simultaneous requests per connection

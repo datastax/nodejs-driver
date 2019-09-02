@@ -19,6 +19,7 @@ const assert = require('assert');
 const util = require('util');
 const simulacron = require('../simulacron');
 const utils = require('../../../lib/utils');
+const helper = require('../../test-helper');
 const loadBalancing = require('../../../lib/policies/load-balancing');
 
 const Client = require('../../../lib/client');
@@ -122,7 +123,11 @@ describe('DefaultLoadBalancingPolicy', function() {
     });
   });
 
-  it('should balance the load fairly between replicas', () => {
+  it('should balance the load fairly between replicas', function() {
+    if (helper.isWin()) {
+      return this.skip();
+    }
+
     let replicas = null;
     let localReplicas;
 
@@ -167,7 +172,11 @@ describe('DefaultLoadBalancingPolicy', function() {
       });
   });
 
-  it('should balance the load fairly between replicas when 1 replica takes more time to complete', () => {
+  it('should balance the load fairly between replicas when 1 replica takes more time to complete', function() {
+    if (helper.isWin()) {
+      return this.skip();
+    }
+
     let replicas = null;
     let localReplicas;
 
@@ -213,7 +222,7 @@ describe('DefaultLoadBalancingPolicy', function() {
           util.format('Delayed vs healthy: %d was not less than half of %d', delayedCount, healthyCount)));
 
         // Look that it was "fairly" balanced between healthy nodes
-        const deviation = 0.08;
+        const deviation = 0.1;
         const healthyReplicasLength = localReplicas.length - 1;
         const healthyReplicasLoad = length - delayedCount;
         utils.objectValues(hostCounts).forEach(count => {

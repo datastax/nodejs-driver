@@ -1089,12 +1089,18 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
     },
     function (next) {
       const start = ['start', '--wait-for-binary-proto'];
-      if (util.isArray(options.jvmArgs)) {
+
+      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
+        start.push('--quiet-windows');
+      }
+
+      if (Array.isArray(options.jvmArgs)) {
         options.jvmArgs.forEach(function (arg) {
           start.push('--jvm_arg', arg);
         }, this);
         helper.trace('With jvm args', options.jvmArgs);
       }
+
       self.exec(start, helper.wait(options.sleep, next));
     },
     self.waitForUp.bind(self)
@@ -1164,7 +1170,13 @@ helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
  * @param {Function} callback
  */
 helper.ccm.startNode = function (nodeIndex, callback) {
-  helper.ccm.exec(['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'], callback);
+  const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+
+  if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
+    args.push('--quiet-windows');
+  }
+
+  helper.ccm.exec(args, callback);
 };
 
 /**

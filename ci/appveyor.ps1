@@ -77,3 +77,13 @@ Install-Product node $env:nodejs_version $env:PLATFORM
 
 # Enable appveyor reporter
 $env:multi="spec=- mocha-appveyor-reporter=-"
+
+# Download simulacron jar
+$simulacron_path = "$($dep_dir)\simulacron.jar"
+If (!(Test-Path $simulacron_path)) {
+    Write-Host "Downloading simulacron jar"
+    $url = "https://github.com/datastax/simulacron/releases/download/0.8.2/simulacron-standalone-0.8.2.jar"
+    (new-object System.Net.WebClient).DownloadFile($url, $simulacron_path)
+}
+
+$env:SIMULACRON_PATH=$simulacron_path

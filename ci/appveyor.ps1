@@ -44,15 +44,21 @@ If (!(Test-Path $ant_path)) {
 }
 $env:PATH="$($ant_path)\bin;$($env:PATH)"
 
-$env:CCM_PATH="$($dep_dir)\ccm"
-# Clone CCM from git, it will only be used to access keystores for SSL.
-If (!(Test-Path $env:CCM_PATH)) {
-  Start-Process git -ArgumentList "clone https://github.com/pcmanus/ccm.git $($env:CCM_PATH)" -Wait -NoNewWindow
-}
-
 # Install Python Dependencies for CCM.
 Write-Host "Installing CCM and its dependencies"
-Start-Process python -ArgumentList "-m pip install psutil pyYaml six ccm" -Wait -NoNewWindow
+Start-Process python -ArgumentList "-m pip install psutil pyYaml six" -Wait -NoNewWindow
+
+$env:CCM_PATH="$($dep_dir)\ccm"
+
+# Clone CCM from git
+If (!(Test-Path $env:CCM_PATH)) {
+  Write-Host "Cloning git ccm... $($env:CCM_PATH)"
+  Start-Process git -ArgumentList "clone https://github.com/pcmanus/ccm.git $($env:CCM_PATH)" -Wait -NoNewWindow
+  Write-Host "git ccm cloned"
+  pushd $env:CCM_PATH
+  Start-Process python -ArgumentList "setup.py install" -Wait -NoNewWindow
+  popd
+}
 
 Write-Host "Setting execution policy to unrestricted"
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
@@ -60,8 +66,8 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 # Predownload cassandra version for CCM if it isn't already downloaded.
 If (!(Test-Path C:\Users\appveyor\.ccm\repository\$env:CCM_VERSION)) {
   Write-Host "Predownloading $env:CCM_VERSION"
-  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py create -v $($env:CCM_VERSION) -n 1 predownload" -Wait -NoNewWindow
-  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py remove predownload" -Wait -NoNewWindow
+  Start-Process python -ArgumentList "$env:CCM_PATH\ccm.py create -v $($env:CCM_VERSION) -n 1 predownload" -Wait -NoNewWindow
+  Start-Process python -ArgumentList "$env:CCM_PATH\ccm.py remove predownload" -Wait -NoNewWindow
 } else {
   Write-Host "Cassandra $env:CCM_VERSION was already preloaded"
 }

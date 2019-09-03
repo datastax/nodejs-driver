@@ -55,10 +55,12 @@ If (!(Test-Path $env:CCM_PATH)) {
   Write-Host "Cloning git ccm... $($env:CCM_PATH)"
   Start-Process git -ArgumentList "clone https://github.com/pcmanus/ccm.git $($env:CCM_PATH)" -Wait -NoNewWindow
   Write-Host "git ccm cloned"
-  pushd $env:CCM_PATH
-  Start-Process python -ArgumentList "setup.py install" -Wait -NoNewWindow
-  popd
 }
+
+Write-Host "Installing CCM"
+pushd $env:CCM_PATH
+Start-Process python -ArgumentList "setup.py install" -Wait -NoNewWindow
+popd
 
 Write-Host "Setting execution policy to unrestricted"
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process

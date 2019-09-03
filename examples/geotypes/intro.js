@@ -14,53 +14,35 @@
  * limitations under the License.
  */
 'use strict';
+
 const cassandra = require('cassandra-driver');
-const async = require('async');
 const Point = cassandra.geometry.Point;
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1']});
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'dc1' });
 
 /**
- * Example using async library for avoiding nested callbacks
- * See https://github.com/caolan/async
- *
  * Inserts a row containing a PointType and retrieves the row.
  */
 
-async.series([
-  function connect(next) {
-    client.connect(next);
-  },
-  function createKeyspace(next) {
-    const query = "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3' }";
-    client.execute(query, next);
-  },
-  function createTable(next) {
-    const query = "CREATE TABLE IF NOT EXISTS examples.geotypes (name text PRIMARY KEY, coords 'PointType')";
-    client.execute(query, next);
-  },
-  function insert(next) {
+client.connect()
+  .then(() => client.execute("CREATE KEYSPACE IF NOT EXISTS examples WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3' }"))
+  .then(() => client.execute("CREATE TABLE IF NOT EXISTS examples.geotypes (name text PRIMARY KEY, coords 'PointType')"))
+  .then(() => {
     const query = 'INSERT INTO examples.geotypes (name, coords) VALUES (?, ?)';
-    client.execute(query, ['Eiffel Tower', new Point(48.8582, 2.2945)], { prepare: true }, next);
-  },
-  function select(next) {
+    return client.execute(query, ['Eiffel Tower', new Point(48.8582, 2.2945)], { prepare: true });
+  })
+  .then(() => {
+
     const query = 'SELECT name, coords FROM examples.geotypes WHERE name = ?';
-    client.execute(query, ['Eiffel Tower'], { prepare: true}, function (err, result) {
-      if (err) {
-        return next(err);
-      }
-      const row = result.first();
-      console.log('Obtained row: ', row);
-      const p = row.coords;
-      console.log('"Coords" column value is instance of Point: %s', p instanceof Point);
-      console.log('Accessing point properties: x = %d, y = %d', p.x, p.y);
-      next();
-    });
-  }
-], function (err) {
-  if (err) {
-    console.error('There was an error', err.message, err.stack);
-  }
-  console.log('Shutting down');
-  client.shutdown();
-});
+    return client.execute(query, ['Eiffel Tower'], { prepare: true});
+  })
+  .then(result => {
+    const row = result.first();
+    console.log('Obtained row: ', row);
+    const p = row.coords;
+    console.log('"Coords" column value is instance of Point: %s', p instanceof Point);
+    console.log('Accessing point properties: x = %d, y = %d', p.x, p.y);
+  })
+  .finally(() => client.shutdown());
+
+process.on('unhandledRejection', (reason) => { throw reason; });

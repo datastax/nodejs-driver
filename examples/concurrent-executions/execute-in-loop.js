@@ -2,7 +2,7 @@
 const cassandra = require('cassandra-driver');
 const Uuid = cassandra.types.Uuid;
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'dc1' });
 
 /**
  * Inserts multiple rows in a table limiting the amount of parallel requests.
@@ -59,3 +59,6 @@ async function executeOneAtATime(info) {
 }
 
 example();
+
+// Exit on unhandledRejection
+process.on('unhandledRejection', (reason) => { throw reason; });

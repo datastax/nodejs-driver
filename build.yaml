@@ -6,11 +6,12 @@ schedules:
       exclude:
         - nodejs: ['6']
         - nodejs: ['4']
-          cassandra: ['3.11', 'dse-5.1', 'dse-6.0', 'dse-6.8']
+          cassandra: ['3.11', 'dse-5.1', 'dse-6.0', 'dse-6.7', 'dse-6.8']
         - nodejs: ['8']
           cassandra: ['2.1', 'dse-5.1', 'dse-6.7', 'dse-6.8']
         - nodejs: ['10']
-          cassandra: ['2.1', '3.11', 'dse-6.0', 'dse-6.7', 'dse-6.8']
+          # Examples are run on Node.js 10 and against DSE 6.7
+          cassandra: ['2.1', '3.11', 'dse-6.0', 'dse-6.8']
   nightly:
     # nightly job for primary branches to run all configs.
     schedule: nightly
@@ -51,4 +52,16 @@ build:
   - npm: install -g eslint@4
   - npm: run eslint
   - npm: run ci_jenkins
+  - script: |
+      if [ "$CCM_IS_DSE" == "true" ] && [ "${CCM_VERSION:0:3}" == "6.7" ]; then
+        pushd examples
+        npm install
+        ccm create test_samples --dse -v $CCM_VERSION -n 1:0 -b -s
+        node runner.js
+        run_rc=$?
+        ccm remove
+        popd
+        exit $run_rc
+      fi
+    strict: false
   - xunit: "*.xml"

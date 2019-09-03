@@ -30,9 +30,8 @@ function getJsFiles(dir, fileArray) {
   return fileArray;
 }
 
-if (+process.versions.node.split('.')[0] < 8) {
-  console.log('Examples were not executed as they were designed to run against Node.js 8+');
-  return;
+if (+process.versions.node.split('.')[0] < 10) {
+  throw new Error('Examples were not executed as they were designed to run against Node.js 10+');
 }
 
 const runnerFileName = path.basename(module.filename);

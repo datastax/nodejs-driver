@@ -1,302 +1,257 @@
-# DataStax Enterprise Node.js Driver
+# DataStax Node.js Driver for Apache Cassandra
 
-This driver is built on top of [Node.js driver for Apache Cassandra][cassandra-driver] and provides the following
-additions for [DataStax Enterprise][dse]:
-
-* `Authenticator` implementations that use the authentication scheme negotiation in the server-side `DseAuthenticator`;
-* encoders for geospatial types which integrate seamlessly with the driver;
-* DSE graph integration.
-
-The DataStax Enterprise Node.js Driver can be used solely with DataStax Enterprise. Please consult
-[the license](#license).
+A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra and [DSE][dse] using
+exclusively Cassandra's binary protocol and Cassandra Query Language.
 
 ## Installation
 
 ```bash
-npm install dse-driver
+$ npm install cassandra-driver
 ```
+
+[![Build Status](https://travis-ci.org/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver) [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
+
+
+## Features
+
+- Simple, Prepared, and [Batch][batch] statements
+- Asynchronous IO, parallel execution, request pipelining
+- [Connection pooling][pooling]
+- Auto node discovery
+- Automatic reconnection
+- Configurable [load balancing][load-balancing] and [retry policies][retry]
+- Works with any cluster size
+- Both [promise and callback-based API][doc-promise-callback]
+- [Row streaming and pipes](#row-streaming-and-pipes)
 
 ## Documentation
 
 - [Documentation index][doc-index]
-- [API docs][api-docs]
+- [CQL types to JavaScript types][doc-datatypes]
+- [API docs][doc-api]
 - [FAQ][faq]
 
 ## Getting Help
 
-You can use the [project mailing list][mailing-list] or create a ticket on the [Jira issue tracker][jira]. 
+You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
-## Getting Started
-
-`Client` inherits from the CQL driver counterpart `Client`.
+## Basic usage
 
 ```javascript
-const dse = require('dse-driver');
-const client = new dse.Client({ contactPoints: ['host1', 'host2'], localDataCenter: 'datacenter1' });
+const cassandra = require('cassandra-driver');
+
+const client = new cassandra.Client({
+  contactPoints: ['h1', 'h2'],
+  localDataCenter: 'datacenter1',
+  keyspace: 'ks1'
+});
 
 const query = 'SELECT name, email FROM users WHERE key = ?';
+
 client.execute(query, [ 'someone' ])
   .then(result => console.log('User with email %s', result.rows[0].email));
 ```
 
-Along with the rest of asynchronous execution methods in the driver, `execute()` returns a [`Promise`][promise] that
- can be chained using `then()` method. On modern JavaScript engines, promises can be awaited upon using the `await` 
- keyword within [async functions][async-fn].
+The driver supports both [promises and callbacks][doc-promise-callback] for the asynchronous methods,
+you can choose the approach that suits your needs.
 
-Alternatively, you can use the callback-based execution for all asynchronous methods of the API by providing a 
-callback as the last parameter.
+Note that in order to have concise code examples in this documentation, we will use the promise-based API of the 
+driver along with the `await` keyword.
 
-```javascript
-client.execute(query, [ 'someone' ], function(err, result) {
-  assert.ifError(err);
-  console.log('User with email %s', result.rows[0].email);
-});
-```
+### Prepare your queries
 
-_In order to have concise code examples in this documentation, we will use the promise-based API of the driver 
-along with the `await` keyword._
+Using prepared statements provides multiple benefits.
 
-The same submodules structure in the Node.js driver for Apache Cassandra is available in the `dse-driver`, for example:
+Prepared statements are parsed and prepared on the Cassandra nodes and are ready for future execution.
+Also, when preparing, the driver retrieves information about the parameter types which
+ **allows an accurate mapping between a JavaScript type and a Cassandra type**.
+
+The driver will prepare the query once on each host and execute the statement with the bound parameters.
 
 ```javascript
-const dse = require('dse-driver');
-const Uuid = dse.types.Uuid;
+// Use query markers (?) and parameters
+const query = 'UPDATE users SET birth = ? WHERE key=?'; 
+const params = [ new Date(1942, 10, 1), 'jimi-hendrix' ];
+
+// Set the prepare flag in the query options
+await client.execute(query, params, { prepare: true });
+console.log('Row updated on the cluster');
 ```
 
-## Authentication
+### Row streaming and pipes
 
-For clients connecting to a DSE cluster secured with `DseAuthenticator`, two authentication providers are included:
-
-* `DsePlainTextAuthProvider`: Plain-text authentication;
-* `DseGSSAPIAuthProvider`: GSSAPI authentication;
-
-To configure a provider, pass it when initializing a cluster:
+When using `#eachRow()` and `#stream()` methods, the driver parses each row as soon as it is received,
+ yielding rows without buffering them.
 
 ```javascript
-const dse = require('dse-driver');
-const client = new dse.Client({
-  contactPoints: ['h1', 'h2'], 
-  keyspace: 'ks1',
-  authProvider: new dse.auth.DseGssapiAuthProvider()
-});
+// Reducing a large result
+client.eachRow(
+  'SELECT time, val FROM temperature WHERE station_id=',
+  ['abc'],
+  (n, row) => {
+    // The callback will be invoked per each row as soon as they are received
+    minTemperature = Math.min(row.val, minTemperature); 
+  },
+  err => { 
+    // This function will be invoked when all rows where consumed or an error was encountered  
+  }
+);
 ```
 
-See the jsdoc of each implementation for more details.
+The `#stream()` method works in the same way but instead of callback it returns a [Readable Streams2][streams2] object
+ in `objectMode` that emits instances of `Row`.
 
-## Graph
-
-`Client` includes the `executeGraph()` method to execute graph queries:
+It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
 
 ```javascript
-const client = new dse.Client({
-  contactPoints: ['host1', 'host2'],
-  profiles: [
-    new ExecutionProfile('default', {
-      graphOptions: { name: 'demo' }
-    })
-  ]
-});
+client.stream('SELECT time, val FROM temperature WHERE station_id=', [ 'abc' ])
+  .on('readable', function () {
+    // 'readable' is emitted as soon a row is received and parsed
+    let row;
+    while (row = this.read()) {
+      console.log('time %s and value %s', row.time, row.val);
+    }
+  })
+  .on('end', function () {
+    // Stream ended, there aren't any more rows
+  })
+  .on('error', function (err) {
+    // Something went wrong: err is a response error from Cassandra
+  });
 ```
+
+### User defined types
+
+[User defined types (UDT)][cql-udt] are represented as JavaScript objects.
+
+For example:
+Consider the following UDT and table
+
+```cql
+CREATE TYPE address (
+  street text,
+  city text,
+  state text,
+  zip int,
+  phones set<text>
+);
+CREATE TABLE users (
+  name text PRIMARY KEY,
+  email text,
+  address frozen<address>
+);
+```
+
+You can retrieve the user address details as a regular JavaScript object.
 
 ```javascript
-// executeGraph() method returns a Promise
-const result = await client.executeGraph('g.V()');
-const vertex = result.first();
-console.log(vertex.label);
-```
-
-### Graph Options
-
-You can set graph options in execution profiles when initializing `Client`. Also, to avoid providing the graph name
-option in each `executeGraph()` call, you can set the graph options in the default execution profile:
-
-```javascript
-const client = new dse.Client({
-  contactPoints: ['host1', 'host2'],
-  profiles: [
-    new ExecutionProfile('default', {
-      graphOptions: { name: 'demo' }
-    }),
-    new ExecutionProfile('demo2-profile', {
-      graphOptions: { name: 'demo2' }
-    })
-  ]
-});
-```
-```javascript
-// Execute a traversal on the 'demo' graph
-const result = await client.executeGraph(query, params);
-```
-
-If needed, you can specify an execution profile different from the default one: 
-
-```javascript
-// Execute a traversal on the 'demo2' graph
-client.executeGraph(query, params, { executionProfile: 'demo2-profile'});
-```
-
-Additionally, you can also set the default graph options without using execution profiles (not recommended). 
-
-```javascript
-const client = new dse.Client({
-  contactPoints: ['host1', 'host2'],
-  graphOptions: { name: 'demo' }
-});
-```
-
-### Handling Results
-
-Graph queries return a `GraphResultSet`, which is an [iterable][iterable] of rows. The format of the data returned is
-dependent on the data requested.  For example, the payload representing edges will be different than those that
-represent vertices using the ['modern'][modern-graph] graph:
-
-```javascript
-// Creating the 'modern' graph
-const query =
-  'Vertex marko = graph.addVertex(label, "person", "name", "marko", "age", 29);\n' +
-  'Vertex vadas = graph.addVertex(label, "person", "name", "vadas", "age", 27);\n' +
-  'Vertex lop = graph.addVertex(label, "software", "name", "lop", "lang", "java");\n' +
-  'Vertex josh = graph.addVertex(label, "person", "name", "josh", "age", 32);\n' +
-  'Vertex ripple = graph.addVertex(label, "software", "name", "ripple", "lang", "java");\n' +
-  'Vertex peter = graph.addVertex(label, "person", "name", "peter", "age", 35);\n' +
-  'marko.addEdge("knows", vadas, "weight", 0.5f);\n' +
-  'marko.addEdge("knows", josh, "weight", 1.0f);\n' +
-  'marko.addEdge("created", lop, "weight", 0.4f);\n' +
-  'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
-  'josh.addEdge("created", lop, "weight", 0.4f);\n' +
-  'peter.addEdge("created", lop, "weight", 0.2f);';
-
-await client.executeGraph(query);
-```
-
-```javascript
-// Handling Edges
-const result = await client.executeGraph('g.E()');
-result.forEach(function (edge) {
-  console.log(edge.id); // [an internal id representing the edge]
-  console.log(edge.type); // edge
-  console.log(edge.label); // created
-  console.log(edge.properties.weight); // 0.4
-  console.log(edge.outVLabel); // person
-  console.log(edge.outV); // [an id representing the outgoing vertex]
-  console.log(edge.inVLabel); // software
-  console.log(edge.inV); // [an id representing the incoming vertex]
-});
-```
-
-```javascript
-// Using ES6 for...of
-const result = await client.executeGraph('g.E()');
-for (let edge of result) {
-  console.log(edge.label); // created
-  // ...
-}
-```
-
-```javascript
-// Handling Vertices
-const result = await client.executeGraph('g.V().hasLabel("person")');
-result.forEach(function(vertex) {
-  console.log(vertex.id); // [an internal id representing the vertex]
-  console.log(vertex.type); // vertex
-  console.log(vertex.label); // person
-  console.log(vertex.properties.name[0].value); // marko
-  console.log(vertex.properties.age[0].value); // 29
-});
-```
-
-### Parameters
-
-Unlike CQL queries which support both positional and named parameters, graph queries only support named parameters.
-As a result of this, parameters must be passed in as an object:
-
-```javascript
-const query = 'g.addV(label, vertexLabel, "name", username)';
-const result = await client.executeGraph(query, { vertexLabel: 'person', username: 'marko' });
-const vertex = result.first();
-// ...
-```
-
-Parameters are encoded in json, thus will ultimately use their json representation (`toJSON` if present,
-otherwise object representation).
-
-You can use results from previous queries as parameters to subsequent queries.  For example, if you want to use the id
-of a vertex returned in a previous query for making a subsequent query:
-
-```javascript
-let result = await client.executeGraph('g.V().hasLabel("person").has("name", "marko")');
-const vertex = result.first();
-result = await client.executeGraph('g.V(vertexId).out("knows").values("name")', { vertexId: vertex.id });
-const names = result.toArray();
-console.log(names); // [ 'vadas', 'josh' ]
-```
-
-### Prepared graph statements
-
-Prepared graph statements are not supported by DSE Graph yet (they will be added in the near future).
-
-## Geospatial types
-
-DSE 5.0 comes with a set of additional CQL types to represent geospatial data: `PointType`, `LineStringType` and
-`PolygonType`.
-
-```
-cqlsh> CREATE TABLE points_of_interest(name text PRIMARY KEY, coords 'PointType');
-cqlsh> INSERT INTO points_of_interest (name, coords) VALUES ('Eiffel Tower', 'POINT(48.8582 2.2945)');
-```
-
-The DSE driver includes encoders and representations of these types in the `geometry` module that can be used directly
-as parameters in queries:
-
-```javascript
-const dse = require('dse-driver');
-const Point = dse.geometry.Point;
-const insertQuery = 'INSERT INTO points_of_interest (name, coords) VALUES (?, ?)';
-const selectQuery = 'SELECT coords FROM points_of_interest WHERE name = ?';
-
-await client.execute(insertQuery, [ 'Eiffel Tower', new Point(48.8582, 2.2945) ], { prepare: true });
-const result = await client.execute(selectQuery, ['Eiffel Tower'], { prepare: true });
+const query = 'SELECT name, address FROM users WHERE key = ?';
+const result = await client.execute(query, [ key ], { prepare: true });
 const row = result.first();
-const point = row['coords'];
-console.log(point instanceof Point); // true
-console.log('x: %d, y: %d', point.x, point.y); // x: 48.8582, y: 2.2945
+const address = row.address;
+console.log('User lives in %s, %s - %s', address.street, address.city, address.state);
 ```
+
+Read more information  about using [UDTs with the Node.js Driver][doc-udt].
+
+### Paging
+
+All driver methods use a default `fetchSize` of 5000 rows, retrieving only first page of results up to a
+maximum of 5000 rows to shield an application against accidentally retrieving large result sets in a single response.
+
+`stream()` method automatically fetches the following page once the current one was read. You can also use `eachRow()` 
+method to retrieve the following pages by using `autoPage` flag. See [paging documentation for more 
+information][doc-paging].
+
+### Batch multiple statements
+
+You can execute multiple statements in a batch to update/insert several rows atomically even in different column families.
+
+```javascript
+const queries = [
+  {
+    query: 'UPDATE user_profiles SET email=? WHERE key=?',
+    params: [ emailAddress, 'hendrix' ]
+  }, {
+    query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
+    params: [ 'hendrix', 'Changed email', new Date() ]
+  }
+];
+
+await client.batch(queries, { prepare: true });
+console.log('Data updated on cluster');
+```
+
+----
+
+## Data types
+
+There are few data types defined in the ECMAScript specification, this usually represents a problem when you are trying
+ to deal with data types that come from other systems in JavaScript.
+
+The driver supports all the CQL data types in Apache Cassandra (3.0 and below) even for types with no built-in
+JavaScript representation, like decimal, varint and bigint. Check the documentation on working with
+ [numerical values][doc-numerical], [uuids][doc-uuid] and [collections][doc-collections].
 
 ## Logging
 
-Instances of `Client` are [`EventEmitter`][event-emitter] and emit `'log'` events:
+Instances of `Client()` are `EventEmitter` and emit `log` events:
 
 ```javascript
-client.on('log', (level, className, message, furtherInfo) => {
-  console.log('%s: %s', level, message);
+client.on('log', function(level, className, message, furtherInfo) {
+  console.log('log event: %s -- %s', level, message);
 });
 ```
 
-The `level` values passed to the listener can be `verbose`, `info`, `warning` or `error`. In production environment, you should filter out `verbose` log events, that are suitable for debug.
+The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
 
 ## Compatibility
 
-- DataStax Enterprise versions 4.5 and above.
+- Apache Cassandra versions 2.1 and above.
+- DataStax Enterprise versions 4.8 and above.
 - Node.js versions 4 and above.
 
 Note: DataStax products do not support big-endian systems.
+
+## Credits
+
+This driver is based on the original work of [Jorge Bay][jorgebay] on [node-cassandra-cql][old-driver] and adds a series of advanced features that are common across all other [DataStax drivers][drivers] for Apache Cassandra.
+
+The development effort to provide an up to date, high performance, fully featured Node.js Driver for Apache Cassandra will continue on this project, while [node-cassandra-cql][old-driver] will be discontinued.
 
 ## License
 
 © DataStax, Inc.
 
-The full license terms are available at https://www.datastax.com/terms/datastax-dse-driver-license-terms
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
+http://www.apache.org/licenses/LICENSE-2.0
 
-[dse]: http://www.datastax.com/products/datastax-enterprise
-[cassandra-driver]: https://github.com/datastax/nodejs-driver
-[iterable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterable
-[modern-graph]: http://tinkerpop.apache.org/docs/3.2.7/reference/#_the_graph_structure
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+[cassandra]: https://cassandra.apache.org/
+[doc-api]: https://docs.datastax.com/en/developer/nodejs-driver/latest/api/
+[doc-index]: https://docs.datastax.com/en/developer/nodejs-driver/latest/
+[doc-datatypes]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/
+[doc-numerical]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/numerical/
+[doc-uuid]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
+[doc-collections]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
+[doc-udt]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
+[doc-promise-callback]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
+[doc-paging]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/
+[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
+[load-balancing]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
+[retry]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
+[pooling]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
+[batch]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
+[upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
+[old-driver]: https://github.com/jorgebay/node-cassandra-cql
+[jorgebay]: https://github.com/jorgebay
+[drivers]: https://github.com/datastax
+[mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
-[mailing-list]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
-[api-docs]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/api/
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/faq/
-[promise]: https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise
-[async-fn]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function
-[event-emitter]: https://nodejs.org/api/events.html#events_class_eventemitter
+[streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
+[cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#udts
+[survey]: http://goo.gl/forms/f216tY3Ebr
+[dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
+[dse]: https://www.datastax.com/products/datastax-enterprise

@@ -273,6 +273,33 @@ describe('ModelMapper', function () {
         });
     });
 
+    it('should support inserting in parallel', () => {
+      const userIds = new Array(10).fill(0).map(() => Uuid.random());
+
+      return Promise
+        .all(userIds.map(id =>
+          userMapper.insert({
+            id,
+            firstName: 'a',
+            lastName: 'b',
+            createdDate: new Date(),
+            email: `${id}@example.com`
+          })))
+        .then(() => {
+          const query = 'SELECT * FROM users WHERE userid IN ?';
+          return client.execute(query, [ userIds ]);
+        })
+        .then(rs => {
+          // Compare ids
+          assert.deepStrictEqual(
+            rs.rows.map(r => r['userid'].toString()).sort(),
+            userIds.map(id => id.toString()).sort());
+
+          assert.strictEqual(rs.rowLength, userIds.length);
+          rs.rows.forEach(row => assert.strictEqual(row['email'], `${row['userid']}@example.com`));
+        });
+    });
+
     it('should consider fields filter', () => {
       const doc = {
         id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video insert sample 4',

@@ -20,6 +20,7 @@ const util = require('util');
 
 const Client = require('../../lib/client.js');
 const clientOptions = require('../../lib/client-options.js');
+const auth = require('../../lib/auth');
 const types = require('../../lib/types');
 const dataTypes = types.dataTypes;
 const loadBalancing = require('../../lib/policies/load-balancing.js');
@@ -31,6 +32,8 @@ const utils = require('../../lib/utils.js');
 const writers = require('../../lib/writers');
 const OperationState = require('../../lib/operation-state');
 const helper = require('../test-helper.js');
+
+const contactPoints = ['a'];
 
 describe('types', function () {
   describe('Long', function () {
@@ -759,6 +762,45 @@ describe('clientOptions', function () {
           protocolOptions: { maxVersion: 16 }
         });
       }, TypeError);
+    });
+    it('should validate credentials', () => {
+      const message = /credentials username and password must be a string/;
+
+      assert.throws(() => clientOptions.extend({ contactPoints, credentials: {} }), message);
+
+      assert.throws(() => clientOptions.extend({ contactPoints, credentials: { username: 'a' } }), message);
+
+      assert.throws(() => clientOptions.extend({ contactPoints, credentials: { password: 'b' } }), message);
+
+      assert.doesNotThrow(() => clientOptions.extend({
+        contactPoints, credentials: { username: 'a', password: 'b' }
+      }));
+    });
+    it('should validate authProvider', () => {
+      const message = /options\.authProvider must be an instance of AuthProvider/;
+
+      assert.throws(() => clientOptions.extend({ contactPoints, authProvider: {} }), message);
+
+      assert.throws(() => clientOptions.extend({ contactPoints, authProvider: true }), message);
+
+      assert.throws(() => clientOptions.extend({ contactPoints, authProvider: 'abc' }), message);
+
+      assert.doesNotThrow(() => clientOptions.extend({
+        contactPoints, authProvider: new auth.PlainTextAuthProvider('a', 'b')
+      }));
+
+      assert.doesNotThrow(() => clientOptions.extend({ contactPoints, authProvider: null }));
+
+      assert.doesNotThrow(() => clientOptions.extend({ contactPoints, authProvider: undefined }));
+    });
+    it('should use the authProvider when both credentials and authProvider are defined', () => {
+      const authProvider = new auth.PlainTextAuthProvider('a', 'b');
+
+      const options = clientOptions.extend({
+        contactPoints, authProvider, credentials: { username: 'c', password: 'd' }
+      });
+
+      assert.strictEqual(options.authProvider, authProvider);
     });
   });
   describe('#defaultOptions()', function () {

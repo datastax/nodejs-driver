@@ -28,7 +28,7 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
-const bigIntTests = require('./es-bigint-tests');
+const numericTests = require('./numeric-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -1197,7 +1197,7 @@ describe('Client', function () {
       });
     });
 
-    bigIntTests(commonKs, true);
+    numericTests(commonKs, true);
   });
 });
 

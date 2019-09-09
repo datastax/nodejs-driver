@@ -18,15 +18,94 @@
 
 const assert = require('assert');
 const Client = require('../../../lib/client');
+const types = require('../../../lib/types');
 const helper = require('../../test-helper');
+const Uuid = types.Uuid;
+
+const createTableNumericValuesCql =
+  `CREATE TABLE tbl_numeric_values (
+   id uuid PRIMARY KEY,
+   bigint_value bigint,
+   decimal_value decimal,
+   double_value double,
+   float_value float,
+   varint_value varint,
+   int_value int)`;
 
 // Exported to be called on other fixtures to take advantage from existing setups
 module.exports = function (keyspace, prepare) {
-  if (typeof BigInt === 'undefined') {
-    return;
-  }
+
+  context('with numeric values', () => {
+
+    const client = new Client({
+      contactPoints: helper.baseOptions.contactPoints,
+      localDataCenter: helper.baseOptions.localDataCenter,
+      keyspace
+    });
+
+    before(() => client.connect());
+    before(() => client.execute(createTableNumericValuesCql));
+    after(() => client.shutdown());
+
+    it('should support setting numeric values using strings', () => {
+      const insertQuery =
+        `INSERT INTO tbl_numeric_values
+         (id, bigint_value, decimal_value, double_value, float_value, varint_value, int_value) VALUES
+         (?, ?, ?, ?, ?, ?, ?)`;
+      const hints = !prepare ? [null, 'bigint', 'decimal', 'double', 'float', 'varint', 'int'] : null;
+      const intValue = '1234567';
+      const decimalValue = '1234567.875';
+      const id = Uuid.random();
+
+      const params = [ id, intValue, decimalValue, decimalValue, decimalValue, intValue, intValue ];
+
+      return client.execute(insertQuery, params, { prepare, hints })
+        .then(() => client.execute('SELECT * FROM tbl_numeric_values WHERE id = ?', [ id ]))
+        .then(rs => {
+          const row = rs.first();
+          ['bigint_value', 'varint_value', 'int_value'].forEach(columnName =>
+            assert.strictEqual(row[columnName].toString(), intValue));
+
+          ['decimal_value', 'double_value', 'float_value'].forEach(columnName =>
+            assert.strictEqual(row[columnName].toString(), decimalValue));
+        });
+    });
+
+    it('should support setting BigInt values using strings', function () {
+      if (typeof BigInt === 'undefined') {
+        return this.skip();
+      }
+
+      const client = new Client({
+        contactPoints: helper.baseOptions.contactPoints,
+        localDataCenter: helper.baseOptions.localDataCenter,
+        keyspace,
+        encoding: { useBigIntAsVarint: true, useBigIntAsLong: true, set: Set }
+      });
+
+      after(() => client.shutdown());
+
+      const insertQuery = 'INSERT INTO tbl_numeric_values (id, bigint_value, varint_value) VALUES (?, ?, ?)';
+      const hints = !prepare ? [null, 'bigint', 'varint'] : null;
+      const intValue = '9223372036854775807';
+      const id = Uuid.random();
+
+      return client.connect()
+        .then(() => client.execute(insertQuery, [ id, intValue, intValue ], { prepare, hints }))
+        .then(() => client.execute('SELECT * FROM tbl_numeric_values WHERE id = ?', [ id ]))
+        .then(rs => {
+          const row = rs.first();
+          ['bigint_value', 'varint_value'].forEach(columnName =>
+            assert.strictEqual(row[columnName].toString(), intValue));
+        });
+    });
+  });
 
   context('when BigInt is supported by the engine', () => {
+    if (typeof BigInt === 'undefined') {
+      return;
+    }
+
     const client = new Client({
       contactPoints: helper.baseOptions.contactPoints,
       localDataCenter: helper.baseOptions.localDataCenter,

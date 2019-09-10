@@ -32,6 +32,16 @@ const createTableNumericValuesCql =
    varint_value varint,
    int_value int)`;
 
+const createTableNumericCollectionsCql =
+  `CREATE TABLE tbl_numeric_collections (
+   id uuid PRIMARY KEY,
+   list_bigint list<bigint>,
+   list_decimal list<decimal>,
+   map_double map<text, double>,
+   set_float set<float>,
+   map_varint map<text, varint>,
+   set_int set<int>)`;
+
 // Exported to be called on other fixtures to take advantage from existing setups
 module.exports = function (keyspace, prepare) {
 
@@ -45,6 +55,7 @@ module.exports = function (keyspace, prepare) {
 
     before(() => client.connect());
     before(() => client.execute(createTableNumericValuesCql));
+    before(() => client.execute(createTableNumericCollectionsCql));
     after(() => client.shutdown());
 
     it('should support setting numeric values using strings', () => {
@@ -68,6 +79,31 @@ module.exports = function (keyspace, prepare) {
 
           ['decimal_value', 'double_value', 'float_value'].forEach(columnName =>
             assert.strictEqual(row[columnName].toString(), decimalValue));
+        });
+    });
+
+    it('should support setting numeric values using strings for collections', () => {
+      const insertQuery =
+        `INSERT INTO tbl_numeric_collections
+         (id, list_bigint, list_decimal, map_double, set_float, map_varint, set_int) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      const hints = !prepare
+        ? [ null, 'list<bigint>', 'list<decimal>', 'map<text, double>', 'set<float>', 'map<text, varint>', 'set<int>']
+        : null;
+      const intValue = '890';
+      const decimalValue = '1234567.875';
+      const id = Uuid.random();
+
+      const params = [
+        id, [ intValue ], [ decimalValue ], { a: decimalValue }, [ decimalValue ], { a: intValue }, [ intValue ] ];
+
+      return client.execute(insertQuery, params, { prepare, hints })
+        .then(() => client.execute('SELECT * FROM tbl_numeric_collections WHERE id = ?', [ id ]))
+        .then(rs => {
+          const row = rs.first();
+          assert.strictEqual(row['list_bigint'][0].toString(), intValue);
+          assert.strictEqual(row['list_decimal'][0].toString(), decimalValue);
+          assert.strictEqual(row['set_float'][0].toString(), decimalValue);
+          assert.strictEqual(row['set_int'][0].toString(), intValue);
         });
     });
 

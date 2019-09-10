@@ -11,8 +11,6 @@ const assert = require('assert');
 const Mapper = require('../../../lib/mapping/mapper');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
-const ModelBatchItem = require('../../../lib/mapping/model-batch-item');
-const utils = require('../../../lib/utils');
 
 describe('Mapper', () => {
   describe('constructor', () => {
@@ -104,15 +102,66 @@ describe('Mapper', () => {
       }));
     });
 
+    it('should not create unhandled promises', () => {
+      const clientInfo = mapperTestHelper.getClient([ 'id1', 'id2', 'name'], [ 1, 1 ]);
+      const mapper = mapperTestHelper.getMapper(clientInfo);
+      const modelMapper = mapper.forModel('Sample');
+      const unhandled = [];
+
+      function unhandledRejectionFn(reason, promise) {
+        unhandled.push({ reason, promise });
+      }
+
+      process.on('unhandledRejection', unhandledRejectionFn);
+
+      modelMapper.batching.insert({ z: 'this column does not exist' });
+      modelMapper.batching.update({ z: 'this column does not exist' });
+      modelMapper.batching.remove({ z: 'this column does not exist' });
+
+      return new Promise(r => setImmediate(r))
+        .then(() => process.removeListener('unhandledRejection', unhandledRejectionFn))
+        .then(() => assert.strictEqual(unhandled.length, 0));
+    });
+
+    it('should throw error when one of the ModelBatchItem is invalid', () => {
+      const clientInfo = mapperTestHelper.getClient([ 'id1', 'id2', 'name'], [ 1, 1 ]);
+      const mapper = mapperTestHelper.getMapper(clientInfo);
+      const modelMapper = mapper.forModel('Sample');
+      const unhandled = [];
+
+      function unhandledRejectionFn(reason, promise) {
+        unhandled.push({ reason, promise });
+      }
+
+      process.on('unhandledRejection', unhandledRejectionFn);
+      let error;
+
+      return mapper
+        .batch([
+          modelMapper.batching.insert({ z: 'this column does not exist' }),
+          modelMapper.batching.update({ z: 'this column does not exist' }),
+          modelMapper.batching.remove({ z: 'this column does not exist' })
+        ])
+        .catch(err => error = err)
+        .then(() => new Promise(r => setImmediate(r)))
+        .then(() => {
+          process.removeListener('unhandledRejection', unhandledRejectionFn);
+          helper.assertInstanceOf(error, Error);
+          helper.assertContains(error.message, 'No table matches');
+          assert.strictEqual(unhandled.length, 0);
+        });
+    });
+
     it('should set idempotency based on the items idempotency', () =>
       Promise.all([ true, false ].map((isIdempotent) => {
         const clientInfo = mapperTestHelper.getClient([ 'id1'], [ 1 ]);
         const mapper = mapperTestHelper.getMapper(clientInfo);
+        const modelMapper = mapper.forModel('Sample');
 
         // 2 queries, one using the provided idempotency to test
         const items = [
-          new ModelBatchItem(Promise.resolve([ { isIdempotent, paramsGetter: utils.noop }])),
-          new ModelBatchItem(Promise.resolve([ { isIdempotent: true, paramsGetter: utils.noop }])),
+          modelMapper.batching.insert({ id1: 'value1' }, { ifNotExists: !isIdempotent }),
+          modelMapper.batching.insert({ id1: 'value2' }),
         ];
 
         return mapper.batch(items)
@@ -120,27 +169,5 @@ describe('Mapper', () => {
             assert.strictEqual(clientInfo.batchExecutions[0].options.isIdempotent, isIdempotent);
           });
       })));
-
-    it('should allow multiple calls using the same ModelBatchItem', () => {
-      const clientInfo = mapperTestHelper.getClient([ 'id1'], [ 1 ]);
-      const mapper = mapperTestHelper.getMapper(clientInfo);
-
-      let resolve = null;
-
-      // 2 queries, one using the provided idempotency to test
-      const items = [
-        new ModelBatchItem(new Promise(r => resolve = r)),
-        new ModelBatchItem(Promise.resolve([ { isIdempotent: true, paramsGetter: utils.noop }])),
-      ];
-
-      // call it multiple times with the same queries
-      const promises = [ mapper.batch(items), mapper.batch(items) ];
-
-      resolve([ { isIdempotent: false, paramsGetter: utils.noop }]);
-
-      return Promise.all(promises.map((p, index) => p.then(() => {
-        assert.strictEqual(clientInfo.batchExecutions[index].options.isIdempotent, false);
-      })));
-    });
   });
 });

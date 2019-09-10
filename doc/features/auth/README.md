@@ -1,21 +1,39 @@
 # DSE Authentication
 
-Two authentication providers are included to connect to a DSE cluster secured with `DseAuthenticator`:
+The driver includes three authentication providers:
 
-- `DsePlainTextAuthProvider`: Plain-text authentication;
+- `PlainTextAuthProvider`: Plain-text authentication for Apache Cassandra and DSE.
+- `DsePlainTextAuthProvider`: Plain-text authentication for DSE unified auth.
 - `DseGssapiAuthProvider`: GSSAPI authentication.
 
-To configure a provider, pass it when initializing the `Client`:
+In case you are using plain-text authentication on the server, you can set the `credentials` when creating the 
+`Client` instance.
 
 ```javascript
-const dse = require('dse');
+const dse = require('dse-driver');
+
 const client = new dse.Client({
-  contactPoints: [ 'host1', 'host2' ],
+  contactPoints,
+  localDataCenter,
+  credentials: { username: 'my_username', password: 'my_p@ssword1!' }
+});
+```
+
+## Setting the authentication provider
+
+For other authentication methods, you can configure the provider in the `Client` options:
+
+```javascript
+const dse = require('dse-driver');
+const client = new dse.Client({
+  contactPoints,
+  localDataCenter,
   authProvider: new dse.auth.DseGssapiAuthProvider()
 });
 ```
 
-To use the `DseGssapiAuthProvider`, you need to add the dependency to `kerberos` version `~1.0.0` in your application.
+Note that to use the `DseGssapiAuthProvider` you need to add the dependency to `kerberos` version `~1.0.0` in your 
+application.
 
 ## DSE Unified Authentication
 
@@ -42,7 +60,7 @@ GRANT PROXY.LOGIN ON ROLE 'alice' TO 'ben'
 Once "ben" is granted proxy login as "alice":
 
 ```javascript
-const dse = require('dse');
+const dse = require('dse-driver');
 const client = new dse.Client({
   contactPoints: [ 'host1', 'host2' ],
   authProvider: new dse.auth.DsePlainTextAuthProvider('ben', 'ben', 'alice')
@@ -69,7 +87,7 @@ Once "ben" is granted permission to execute queries as "alice":
 
 
 ```javascript
-const dse = require('dse');
+const dse = require('dse-driver');
 const client = new dse.Client({
   contactPoints: [ 'host1', 'host2' ],
   authProvider: new dse.auth.DsePlainTextAuthProvider('ben', 'ben')

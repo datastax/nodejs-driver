@@ -28,6 +28,8 @@ describe('ModelMapper', function () {
   const videoMapper = mapper.forModel('Video');
   const userMapper = mapper.forModel('User');
   const clusteringMapper = mapper.forModel('Clustering');
+  const staticMapper = mapper.forModel('Static');
+  const static2Mapper = mapper.forModel('Static2');
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -262,6 +264,33 @@ describe('ModelMapper', function () {
         });
     });
 
+    it('should support inserting in parallel', () => {
+      const userIds = new Array(10).fill(0).map(() => Uuid.random());
+
+      return Promise
+        .all(userIds.map(id =>
+          userMapper.insert({
+            id,
+            firstName: 'a',
+            lastName: 'b',
+            createdDate: new Date(),
+            email: `${id}@example.com`
+          })))
+        .then(() => {
+          const query = 'SELECT * FROM users WHERE userid IN ?';
+          return client.execute(query, [ userIds ]);
+        })
+        .then(rs => {
+          // Compare ids
+          assert.deepStrictEqual(
+            rs.rows.map(r => r['userid'].toString()).sort(),
+            userIds.map(id => id.toString()).sort());
+
+          assert.strictEqual(rs.rowLength, userIds.length);
+          rs.rows.forEach(row => assert.strictEqual(row['email'], `${row['userid']}@example.com`));
+        });
+    });
+
     it('should consider fields filter', () => {
       const doc = {
         id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video insert sample 4',
@@ -313,6 +342,35 @@ describe('ModelMapper', function () {
     });
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
+    it('should support inserting static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support inserting static column value with clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), id2: 'b', s: 'static value 2' };
+
+      return staticMapper.insert(doc)
+        .then(() =>
+          client.execute('SELECT id1, id2, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support inserting multiple static column values without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s0: 'static value 1', s1: 'static value 2' };
+
+      return static2Mapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s0, s1 FROM table_static2 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
   });
 
   describe('#update()', () => {
@@ -343,6 +401,15 @@ describe('ModelMapper', function () {
           assert.strictEqual(rows[1]['name'], doc.name);
           assert.strictEqual(rows[2]['name'], doc.name);
         });
+    });
+
+    it('should support updating static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.update(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
     });
 
     it('should use the correct table when no MappingOptions are specified', () => {

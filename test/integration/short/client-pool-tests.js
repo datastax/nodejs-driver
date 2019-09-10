@@ -30,6 +30,7 @@ const Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
 const PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
 const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
+const vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(120000);
@@ -319,7 +320,7 @@ describe('Client', function () {
       }, helper.finish(client, done));
     });
 
-    it('should support connecting using other role', () => {
+    vit('3.0', 'should support connecting using other role', () => {
       let client = newInstance({ authProvider: new PlainTextAuthProvider('cassandra', 'cassandra') });
 
       const username = 'user2';
@@ -373,7 +374,7 @@ describe('Client', function () {
 
     context('with credentials', () => {
 
-      it('should support authenticating', () => {
+      vit('3.0', 'should support authenticating', () => {
         let client = newInstance({ credentials: { username: 'cassandra', password: 'cassandra' } });
 
         const username = 'user2';

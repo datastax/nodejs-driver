@@ -22,6 +22,7 @@ $ npm install cassandra-driver
 - Works with any cluster size
 - Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
+- Built-in [object mapper][doc-mapper]
 
 ## Documentation
 
@@ -180,6 +181,31 @@ client.batch(queries, { prepare: true })
   .then(result => console.log('Data updated on cluster'));
 ```
 
+
+
+## Object Mapper
+
+The driver provides a built-in [object mapper][doc-mapper] that lets you interact with your data like you 
+would interact with a set of documents.
+
+Retrieving objects from the database:
+
+```javascript
+const videos = await videoMapper.find({ userId });
+for (let video of videos) {
+  console.log(video.name);
+}
+```
+
+Updating an object from the database:
+
+```javascript
+await videoMapper.update({ id, userId, name, addedDate, description });
+```
+
+You can read more information about [getting started with the Mapper in our
+documentation][doc-mapper-start].
+
 ----
 
 ## Data types
@@ -240,6 +266,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
 [doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
 [doc-promise-callback]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
+[doc-mapper]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/
+[doc-mapper-start]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/getting-started/
 [faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
 [load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
 [retry]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy

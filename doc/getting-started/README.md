@@ -19,9 +19,8 @@ const client = new cassandra.Client({
   localDataCenter: 'datacenter1'
 });
 
-client.connect(function (err) {
-  assert.ifError(err);
-});
+client.connect()
+  .then(() => console.log('Connected!'));
 ```
 
 At this point, the driver will be connected to all the nodes in the local data center and discovered the rest
@@ -38,11 +37,14 @@ query and a callback.
 
 ```javascript
 const query = "SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger'";
-client.execute(query, function (err, result) {
-  var user = result.first();
-  //The row is an Object with column names as property keys. 
-  console.log('My name is %s and my email is %s', user.name, user.email);
-});
+
+client.execute(query)
+  .then(result => {
+      const row = result.first();
+    
+      // The row is an Object with column names as property keys. 
+      console.log('My name is %s and my email is %s', row.name, row.email);
+    });
 ```
 
 ### Using query parameters and prepared statements
@@ -52,7 +54,7 @@ parameters as an Array.
 
 ```javascript
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
-client.execute(query, ['mick-jagger'], callback);
+client.execute(query, ['mick-jagger']);
 ```
 
 This way you can reuse the query and forget about escaping / stringifying the parameters in your query. 
@@ -68,6 +70,7 @@ additional info (hints) from the user.
 
 ```javascript
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
+
 // Set the prepare flag in your queryOptions
 client.execute(query, ['mick-jagger'], { prepare: true }, callback);
 ```
@@ -81,6 +84,7 @@ You can use the `#execute()` method to execute any CQL query.
 ```javascript
 const query = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
 const params = ['mick-jagger', 'Sir Mick Jagger', 'mick@rollingstones.com', new Date(1943, 6, 26)];
+
 client.execute(query, params, { prepare: true }, function (err) {
   assert.ifError(err);
   //Inserted in the cluster
@@ -93,18 +97,48 @@ To specify how consistent the data must be for a given read or write operation, 
 [consistency level][consistency] per query
 
 ```javascript
-client.execute(query, params, { consistency: types.consistencies.quorum }, function (err) {
-  //This callback will be called once it has been written in the number of replicas
-  //satisfying the consistency level specified.
-});
+const { types } = cassandra;
+
+client.execute(query, params, { consistency: types.consistencies.localQuorum })
+  .then(() => {
+    // The Promise will be resolved once it has been written in the number of replicas
+    // satisfying the consistency level specified.
+  });
 ```
 
 Or you can provide a default consistency level for all your queries when creating the `Client` instance (defaults to
 `localOne`).
 
 ```javascript
-const client = new Client({ queryOptions: { consistency: types.consistencies.quorum } });
+const client = new Client({
+  contactPoints,
+  localDataCenter, 
+  queryOptions: { consistency: types.consistencies.localQuorum }
+});
 ```
+
+## Mapper
+
+The driver provides a built-in [object mapper](../features/mapper) that lets you interact with your data like you would 
+interact with a set of documents.
+
+Retrieving objects from the database:
+
+```javascript
+const videos = await videoMapper.find({ userId });
+for (let video of videos) {
+  console.log(video.name);
+}
+```
+
+Updating an object from the database:
+
+```javascript
+await videoMapper.update({ id, userId, name, addedDate, description });
+```
+
+You can read more information about [getting started with the Mapper in our
+documentation](../features/mapper/getting-started).
 
 ## Authentication (optional)
 
@@ -112,6 +146,7 @@ Using an authentication provider on an auth-enabled Cassandra cluster:
 
 ```javascript
 const authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+
 //Set the auth provider in the clientOptions when creating the Client instance
 const client = new Client({ contactPoints, localDataCenter, authProvider });
 ```

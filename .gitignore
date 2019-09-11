@@ -19,3 +19,4 @@ test/localConfig.json
 .DS_Store
 out/
 /docs
+**/typescript/*.js

@@ -14,18 +14,32 @@
  * limitations under the License.
  */
 
-import { Client, ClientOptions } from "../../../index";
+import { auth, Client, policies, types } from "../../../index";
 
 /*
- * Compile tests using TypeScript definitions.
+ * TypeScript definitions compilation tests for Client class.
  */
 
-// @ts-ignore
-const clientOptions: ClientOptions = {};
-const client = new Client(clientOptions);
+const client = new Client({
+  contactPoints: ['h1', 'h2'],
+  localDataCenter: 'dc1',
+  keyspace: 'ks1',
+  authProvider: new auth.PlainTextAuthProvider('a', 'b')
+});
 
 client.connect()
   .then(() => {});
 
 client.shutdown()
   .then(() => {});
+
+const lbp = new policies.loadBalancing.DCAwareRoundRobinPolicy('dc1');
+lbp.getDistance(null);
+
+types.protocolVersion.isSupported(types.protocolVersion.v4);
+
+types.Long.fromNumber(2).div(types.Long.fromString('a'));
+
+types.TimeUuid.now();
+
+types.TimeUuid.now((err, value) => value.getDate() === new Date());

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-// TypeScript Version: 2.3
-
 import * as _Long from 'long';
 import * as stream from 'stream';
+import { ValueCallback } from '../../';
 
 export namespace types {
   enum consistencies {
@@ -348,7 +347,7 @@ export namespace types {
 
     keys(): string[];
 
-    forEach(callback: (row: Row) => any): void;
+    forEach(callback: (row: Row) => void): void;
 
     values(): any[];
 
@@ -360,9 +359,9 @@ export namespace types {
 
     static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
 
-    static now(nodeId: string | Buffer, clockId: string | Buffer, callback: (err: Error, value: TimeUuid) => any): void;
+    static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
 
-    static now(callback: (err: Error, value: TimeUuid) => any): void;
+    static now(callback: ValueCallback<TimeUuid>): void;
 
     static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer): TimeUuid;
 
@@ -371,7 +370,7 @@ export namespace types {
       ticks: number,
       nodeId: string | Buffer,
       clockId: string | Buffer,
-      callback: (err: Error, value: TimeUuid) => any): void;
+      callback: ValueCallback<TimeUuid>): void;
 
     static fromString(value: string): TimeUuid;
 
@@ -406,7 +405,7 @@ export namespace types {
 
     static fromString(value: string): Uuid;
 
-    static random(callback: (err: Error, value: Uuid) => any): void;
+    static random(callback: ValueCallback<Uuid>): void;
 
     static random(): Uuid;
 

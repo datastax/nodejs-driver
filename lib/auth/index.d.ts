@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// TypeScript Version: 2.2
-
 export namespace auth {
   interface Authenticator {
     initialResponse(callback: Function);

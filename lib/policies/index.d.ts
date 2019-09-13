@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// TypeScript Version: 2.2
-
 import { Client, ExecutionOptions, Host, HostMap } from '../../';
 import { types } from '../types';
 

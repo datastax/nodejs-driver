@@ -78,6 +78,19 @@ export namespace policies {
 
       getOptions(): Map<string, object>;
     }
+
+    class WhiteListPolicy implements LoadBalancingPolicy {
+      constructor(childPolicy: LoadBalancingPolicy, whiteList: string[]);
+
+      getDistance(host: Host): types.distance;
+
+      getOptions(): Map<string, object>;
+
+      init(client: Client, hosts: HostMap, callback): void;
+
+      newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void);
+
+    }
   }
 
   namespace reconnection {

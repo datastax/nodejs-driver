@@ -47,6 +47,8 @@ export class Client extends events.EventEmitter {
 
   connect(): Promise<void>;
 
+  connect(EmptyCallback): void;
+
   execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<types.ResultSet>;
 
   execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<types.ResultSet>): void;
@@ -85,6 +87,8 @@ export class Client extends events.EventEmitter {
     callback: ValueCallback<types.ResultSet>): void;
 
   shutdown(): Promise<void>;
+
+  shutdown(EmptyCallback): void;
 
   getReplicas(keyspace: string, token: Buffer): Host[];
 

@@ -20,26 +20,59 @@ import { auth, Client, policies, types } from "../../../index";
  * TypeScript definitions compilation tests for Client class.
  */
 
-const client = new Client({
-  contactPoints: ['h1', 'h2'],
-  localDataCenter: 'dc1',
-  keyspace: 'ks1',
-  authProvider: new auth.PlainTextAuthProvider('a', 'b')
-});
+async function myTest(): Promise<any> {
+  const client = new Client({
+    contactPoints: ['h1', 'h2'],
+    localDataCenter: 'dc1',
+    keyspace: 'ks1',
+    authProvider: new auth.PlainTextAuthProvider('a', 'b')
+  });
 
-client.connect()
-  .then(() => {});
+  let promise: Promise<void>;
+  let result: types.ResultSet;
+  let error: Error;
 
-client.shutdown()
-  .then(() => {});
+  promise = client.connect();
+  client.connect(err => error = err);
 
-const lbp = new policies.loadBalancing.DCAwareRoundRobinPolicy('dc1');
-lbp.getDistance(null);
+  const query = 'SELECT * FROM test';
+  const params1 = [ 1 ];
+  const params2 = { val: 1 };
 
-types.protocolVersion.isSupported(types.protocolVersion.v4);
+  // Promise-based execution
+  result = await client.execute(query);
+  result = await client.execute(query, params1);
+  result = await client.execute(query, params2);
+  result = await client.execute(query, params1, { prepare: true });
 
-types.Long.fromNumber(2).div(types.Long.fromString('a'));
+  // Callback-based execution
+  client.execute(query, useResult);
+  client.execute(query, params1, useResult);
+  client.execute(query, params2, useResult);
+  client.execute(
+    query,
+    params2,
+    { prepare: true, isIdempotent: false, consistency: types.consistencies.localOne },
+    useResult);
 
-types.TimeUuid.now();
+  const queries1 = [
+    'INSERT something',
+    { query: 'UPDATE something', params: params1 },
+    { query: 'INSERT something else', params: params2 }
+  ];
 
-types.TimeUuid.now((err, value) => value.getDate() === new Date());
+  // Promise-based execution
+  result = await client.batch(queries1);
+  result = await client.batch(queries1, { prepare: true, isIdempotent: true });
+
+  // Callback-based execution
+  client.batch(queries1, useResult);
+  client.batch(queries1, { prepare: true, logged: true, counter: false, executionProfile: 'ep1' }, useResult);
+
+  promise = client.shutdown();
+  client.shutdown(err => error = err);
+}
+
+function useResult(err: Error, rs: types.ResultSet): void {
+  // Mock function that takes the parameters defined in the driver callback
+}

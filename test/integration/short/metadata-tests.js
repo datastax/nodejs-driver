@@ -1309,6 +1309,12 @@ describe('metadata', function () {
           client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
       });
     });
+
+    describe('#isDbaas()', () => {
+      it('should return false for any product type except cloud', () => {
+        assert.strictEqual(setupInfo.client.metadata.isDbaas(), false);
+      });
+    });
   });
   describe('Client#getState()', function () {
     it('should return a snapshot of the connection pool state', function (done) {

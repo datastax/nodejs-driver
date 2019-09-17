@@ -300,6 +300,15 @@ describe('Client', function () {
         done(err);
       });
     });
+    it('should set the defaults based on product type', () => {
+      const client = newInstance();
+
+      return client.connect()
+        .then(() => {
+          assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localOne);
+        })
+        .then(() => client.shutdown());
+    });
   });
 
   describe('#connect() with auth', function () {

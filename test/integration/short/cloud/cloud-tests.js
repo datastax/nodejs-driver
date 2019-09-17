@@ -16,6 +16,7 @@ const policies = require('../../../../lib/policies');
 const errors = require('../../../../lib/errors');
 const auth = require('../../../../lib/auth');
 const utils = require('../../../../lib/utils');
+const types = require('../../../../lib/types');
 const vdescribe = helper.vdescribe;
 
 const port = 9042;
@@ -34,7 +35,7 @@ vdescribe('3.11', 'Cloud support', function () {
       ]
     });
 
-    it('should resolve dns name of the proxy and connect', () => {
+    it('should resolve dns name of the proxy, connect and set defaults', () => {
       const client = cloudHelper.getClient();
 
       return client.connect()
@@ -43,6 +44,8 @@ vdescribe('3.11', 'Cloud support', function () {
 
           assert.ok(client.options.sni.addressResolver.getIp());
           assert.ok(client.options.sni.port);
+          assert.strictEqual(client.metadata.isDbaas(), true);
+          assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localQuorum);
 
           client.hosts.forEach(h => {
             assert.ok(h.isUp());
@@ -112,7 +115,8 @@ vdescribe('3.11', 'Cloud support', function () {
           });
 
           assert.strictEqual(queried.size, 3);
-        });
+        })
+        .then(() => client.shutdown());
     });
 
     it('should allow the user to override sslOptions', () => {

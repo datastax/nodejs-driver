@@ -94,7 +94,9 @@ export namespace types {
     v2 = 0x02,
     v3 = 0x03,
     v4 = 0x04,
-    v5 = 0x05
+    v5 = 0x05,
+    maxSupported = v5,
+    minSupported = v1
   }
 
   namespace protocolVersion {

@@ -42,7 +42,7 @@ export namespace policies {
   }
 
   namespace loadBalancing {
-    interface LoadBalancingPolicy {
+    abstract class LoadBalancingPolicy {
       init(client: Client, hosts: HostMap, callback): void;
 
       getDistance(host: Host): types.distance;
@@ -55,41 +55,16 @@ export namespace policies {
       getOptions(): Map<string, object>;
     }
 
-    class DCAwareRoundRobinPolicy implements LoadBalancingPolicy {
+    class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
       constructor(localDc: string);
-
-      getDistance(host: Host): types.distance;
-
-      init(client: Client, hosts: HostMap, callback): void;
-
-      newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void);
-
-      getOptions(): Map<string, object>;
     }
 
-    class TokenAwarePolicy implements LoadBalancingPolicy {
+    class TokenAwarePolicy extends LoadBalancingPolicy {
       constructor(childPolicy: LoadBalancingPolicy);
-
-      getDistance(host: Host): types.distance;
-
-      init(client: Client, hosts: HostMap, callback): void;
-
-      newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void);
-
-      getOptions(): Map<string, object>;
     }
 
-    class WhiteListPolicy implements LoadBalancingPolicy {
+    class WhiteListPolicy extends LoadBalancingPolicy {
       constructor(childPolicy: LoadBalancingPolicy, whiteList: string[]);
-
-      getDistance(host: Host): types.distance;
-
-      getOptions(): Map<string, object>;
-
-      init(client: Client, hosts: HostMap, callback): void;
-
-      newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void);
-
     }
   }
 

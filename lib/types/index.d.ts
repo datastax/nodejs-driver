@@ -50,6 +50,7 @@ export namespace types {
     time = 0x0012,
     smallint = 0x0013,
     tinyint = 0x0014,
+    duration = 0x0015,
     list = 0x0020,
     map = 0x0021,
     set = 0x0022,
@@ -81,7 +82,8 @@ export namespace types {
     invalid = 0x2200,
     configError = 0x2300,
     alreadyExists = 0x2400,
-    unprepared = 0x2500
+    unprepared = 0x2500,
+    clientWriteFailure = 0x8000
   }
 
   enum protocolVersion {
@@ -90,7 +92,9 @@ export namespace types {
     v3 = 0x03,
     v4 = 0x04,
     v5 = 0x05,
-    maxSupported = v5,
+    dseV1 = 0x41,
+    dseV2 = 0x42,
+    maxSupported = dseV2,
     minSupported = v1
   }
 

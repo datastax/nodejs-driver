@@ -61,6 +61,10 @@ export namespace policies {
     class RoundRobinPolicy extends LoadBalancingPolicy {
       constructor();
     }
+
+    class DseLoadBalancingPolicy extends LoadBalancingPolicy {
+      constructor(options?: { localDc?: string, filter?: (host: Host) => boolean });
+    }
   }
 
   namespace reconnection {
@@ -102,6 +106,10 @@ export namespace policies {
 
     class IdempotenceAwareRetryPolicy extends RetryPolicy {
       constructor(childPolicy: RetryPolicy);
+    }
+
+    class FallthroughRetryPolicy extends RetryPolicy {
+      constructor();
     }
 
     class RetryPolicy {

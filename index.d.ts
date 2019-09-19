@@ -13,12 +13,14 @@ import { types } from './lib/types';
 import { metrics } from './lib/metrics';
 import { tracker } from './lib/tracker';
 import { metadata } from './lib/metadata';
+import { graph } from './lib/graph';
 import Long = types.Long;
 
 // Export imported submodules
 export { concurrent } from './lib/concurrent';
 export { mapping } from './lib/mapping';
-export { auth, metadata, metrics, policies, tracker, types };
+export { geometry } from './lib/geometry';
+export { auth, graph, metadata, metrics, policies, tracker, types };
 
 export const version: number;
 
@@ -47,6 +49,8 @@ export class Client extends events.EventEmitter {
   execute(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet>): void;
 
   execute(query: string, callback: ValueCallback<types.ResultSet>): void;
+
+  //TODO: Add Graph and DSE client options
 
   eachRow(query: string,
           params: ArrayOrObject,

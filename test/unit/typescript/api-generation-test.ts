@@ -5,7 +5,7 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 
-import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, geometry, graph, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
 
 let counter:number = 0;
@@ -23,7 +23,7 @@ export function generate(): void {
   console.log(`
 'use strict';
   
-import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, mapping, geometry, graph, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
 
 export async function generatedFn() {
@@ -43,6 +43,8 @@ export async function generatedFn() {
   printClasses(metadata, 'metadata');
   printClasses(metrics, 'metrics');
   printClasses(tracker, 'tracker');
+  printClasses(geometry, 'geometry');
+  printClasses(graph, 'graph');
 
   // types
   printEnum(types.dataTypes, 'types.dataTypes');

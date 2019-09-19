@@ -23,4 +23,16 @@ export namespace auth {
 
     newAuthenticator(endpoint: string, name: string): Authenticator;
   }
+
+  class DsePlainTextAuthProvider implements AuthProvider {
+    constructor(username: string, password: string, authorizationId?: string);
+
+    newAuthenticator(endpoint: string, name: string): Authenticator;
+  }
+
+  class DseGssapiAuthProvider implements AuthProvider {
+    constructor(gssOptions?: { authorizationId?: string, service?: string, hostNameResolver?: Function });
+
+    newAuthenticator(endpoint: string, name: string): Authenticator;
+  }
 }

@@ -1,13 +1,40 @@
 language: node_js
-node_js:
-  - "10"
-  - "8"
-  - "6"
-  - "4"
 sudo: false
 cache:
   directories:
     - node_modules
-script:
-  - npm install -g eslint@4; npm run eslint;
-  - npm test
+
+jobs:
+  include:
+    - stage: "tests"
+      name: "Run eslint"
+      script: "npm install -g eslint@4; npm run eslint;"
+      node_js: "10"
+    - name: "TypeScript 2.9 generation and compilation tests"
+      node_js: "10"
+      script:
+        - npm install -g typescript@2.9;
+        - pushd test/unit/typescript/
+        - tsc -p .
+        - node -e "require('./api-generation-test').generate()" > generated.ts
+        - tsc generated.ts
+    - name: "Unit tests - Node.js 10"
+      node_js: "10"
+      script: "npm test"
+    - name: "Unit tests - Node.js 8"
+      node_js: "8"
+      script: "npm test"
+    - name: "Unit tests - Node.js 6"
+      node_js: "6"
+      script: "npm test"
+    - name: "Unit tests - Node.js 4"
+      node_js: "4"
+      script: "npm test"
+    - name: "TypeScript (latest) generation and compilation tests"
+      node_js: "10"
+      script:
+        - npm install -g typescript;
+        - pushd test/unit/typescript/
+        - tsc -p .
+        - node -e "require('./api-generation-test').generate()" > generated.ts
+        - tsc generated.ts

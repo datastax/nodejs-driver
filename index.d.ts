@@ -175,8 +175,8 @@ export interface ClientOptions {
   authProvider?: auth.AuthProvider;
 
   encoding?: {
-    map?: typeof Map | any;
-    set?: typeof Set | any;
+    map?: Function;
+    set?: Function;
     copyBuffer?: boolean;
     useUndefinedAsUnset?: boolean;
     useBigIntAsLong?: boolean;

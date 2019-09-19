@@ -66,6 +66,10 @@ export namespace policies {
     class WhiteListPolicy extends LoadBalancingPolicy {
       constructor(childPolicy: LoadBalancingPolicy, whiteList: string[]);
     }
+
+    class RoundRobinPolicy extends LoadBalancingPolicy {
+      constructor();
+    }
   }
 
   namespace reconnection {

@@ -20,3 +20,5 @@ test/localConfig.json
 out/
 /docs
 **/typescript/*.js
+**/typescript/*.js.map
+**/typescript/generated.ts

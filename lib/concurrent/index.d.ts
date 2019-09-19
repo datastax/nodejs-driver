@@ -24,7 +24,7 @@ export namespace concurrent {
     totalExecuted: number;
   }
 
-  interface options {
+  type Options = {
     collectResults?: boolean;
     concurrencyLevel?: number;
     executionProfile?: string;
@@ -36,10 +36,10 @@ export namespace concurrent {
     client: Client,
     query: string,
     parameters: any[][]|Readable,
-    options?: options): Promise<ResultSetGroup>;
+    options?: Options): Promise<ResultSetGroup>;
 
   function executeConcurrent(
     client: Client,
     queries: Array<{query: string, params: any[]}>,
-    options?: options): Promise<ResultSetGroup>;
+    options?: Options): Promise<ResultSetGroup>;
 }

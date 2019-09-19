@@ -53,7 +53,7 @@ export namespace mapping {
     toArray(): any[];
   }
 
-  interface MappingExecutionOptions {
+  type MappingExecutionOptions = {
     executionProfile?: string;
     isIdempotent?: boolean;
     logged?: boolean;
@@ -75,7 +75,7 @@ export namespace mapping {
     forModel(name: string): ModelMapper;
   }
 
-  interface MappingOptions {
+  type MappingOptions = {
     models: { [key: string]: ModelOptions };
   }
 
@@ -89,7 +89,7 @@ export namespace mapping {
     deleteOnlyColumns?: boolean;
   }
 
-  interface ModelOptions {
+  type ModelOptions = {
     tables?: string[] | ModelTables[];
     mappings?: TableMappings;
     columns?: { [key: string]: string };
@@ -129,5 +129,35 @@ export namespace mapping {
       paramsHandler: (doc) => any[],
       executionOptions?: string | MappingExecutionOptions
     ): (doc, executionOptions?: string | MappingExecutionOptions) => Promise<Result>;
+  }
+
+  namespace q {
+    interface QueryOperator {
+
+    }
+
+    function in_(arr): QueryOperator;
+
+    function gt(value): QueryOperator;
+
+    function gte(value): QueryOperator;
+
+    function lt(value): QueryOperator;
+
+    function lte(value): QueryOperator;
+
+    function notEq(value): QueryOperator;
+
+    function and(condition1, condition2): QueryOperator;
+
+    function incr(value): QueryOperator;
+
+    function decr(value): QueryOperator;
+
+    function append(value): QueryOperator;
+
+    function prepend(value): QueryOperator;
+
+    function remove(value): QueryOperator;
   }
 }

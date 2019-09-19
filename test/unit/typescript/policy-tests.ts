@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { auth, Client, policies, types } from "../../../index";
+import { policies } from "../../../index";
 import LoadBalancingPolicy = policies.loadBalancing.LoadBalancingPolicy;
 import TokenAwarePolicy = policies.loadBalancing.TokenAwarePolicy;
 

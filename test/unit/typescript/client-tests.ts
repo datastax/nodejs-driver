@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { auth, Client, policies, types } from "../../../index";
+import { auth, Client, types } from "../../../index";
 
 /*
  * TypeScript definitions compilation tests for Client class.

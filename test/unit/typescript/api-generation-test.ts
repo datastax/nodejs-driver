@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { auth, concurrent, mapping, metadata, policies, types } from "../../../index";
+import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
 
 let counter:number = 0;
@@ -32,7 +32,7 @@ export function generate(): void {
   console.log(`
 'use strict';
   
-import { auth, concurrent, mapping, metadata, policies, types } from "../../../index";
+import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
 
 export async function generatedFn() {
@@ -46,9 +46,12 @@ export async function generatedFn() {
   printObjects(root, 'root', new Set([ 'token' ]));
 
   printClasses(auth, 'auth');
+  printClasses(errors, 'errors');
   printFunctions(concurrent, 'concurrent');
   printClasses(concurrent, 'concurrent');
   printClasses(metadata, 'metadata');
+  printClasses(metrics, 'metrics');
+  printClasses(tracker, 'tracker');
 
   // types
   printEnum(types.dataTypes, 'types.dataTypes');

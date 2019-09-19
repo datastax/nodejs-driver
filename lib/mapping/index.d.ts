@@ -79,13 +79,33 @@ export namespace mapping {
     models: { [key: string]: ModelOptions };
   }
 
-  interface DocInfo {
+  type FindDocInfo = {
+    fields?: string[];
+    orderBy?: { [key: string]: string };
+    limit?: number;
+  }
+
+  type InsertDocInfo = {
     fields?: string[];
     ttl?: number;
     ifNotExists?: boolean;
-    when?: { [key: string]: string };
+  }
+
+  type UpdateDocInfo = {
+    fields?: string[];
+    ttl?: number;
+    ifExists?: boolean;
+    when?: { [key: string]: any };
     orderBy?: { [key: string]: string };
     limit?: number;
+    deleteOnlyColumns?: boolean;
+  }
+
+  type RemoveDocInfo = {
+    fields?: string[];
+    ttl?: number;
+    ifExists?: boolean;
+    when?: { [key: string]: any };
     deleteOnlyColumns?: boolean;
   }
 
@@ -101,28 +121,28 @@ export namespace mapping {
   }
 
   interface ModelBatchMapper {
-    insert(doc, docInfo?: DocInfo): ModelBatchItem;
+    insert(doc, docInfo?: InsertDocInfo): ModelBatchItem;
 
-    remove(doc, docInfo?: DocInfo): ModelBatchItem;
+    remove(doc, docInfo?: RemoveDocInfo): ModelBatchItem;
 
-    update(doc, docInfo?: DocInfo): ModelBatchItem;
+    update(doc, docInfo?: UpdateDocInfo): ModelBatchItem;
   }
 
   interface ModelMapper {
     name: string;
     batching: ModelBatchMapper;
 
-    get(doc, docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    get(doc, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<any>;
 
-    find(doc, docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    find(doc, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    findAll(docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    insert(doc, docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    insert(doc, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    update(doc, docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    update(doc, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    remove(doc, docInfo?: DocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    remove(doc, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
     mapWithQuery(
       query: string,

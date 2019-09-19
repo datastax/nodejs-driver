@@ -145,6 +145,8 @@ export namespace metadata {
   }
 
   interface Metadata {
+    keyspaces: { [name: string]: { name: string, strategy: string }};
+
     clearPrepared(): void;
 
     getAggregate(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>, callback: ValueCallback<Aggregate>): void;

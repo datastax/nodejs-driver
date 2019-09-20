@@ -15,6 +15,7 @@ import { tracker } from './lib/tracker';
 import { metadata } from './lib/metadata';
 import { graph } from './lib/graph';
 import Long = types.Long;
+import Uuid = types.Uuid;
 
 // Export imported submodules
 export { concurrent } from './lib/concurrent';
@@ -36,7 +37,7 @@ export class Client extends events.EventEmitter {
   metadata: metadata.Metadata;
   metrics: metrics.ClientMetrics;
 
-  constructor(options: ClientOptions);
+  constructor(options: DseClientOptions);
 
   connect(): Promise<void>;
 
@@ -50,7 +51,23 @@ export class Client extends events.EventEmitter {
 
   execute(query: string, callback: ValueCallback<types.ResultSet>): void;
 
-  //TODO: Add Graph and DSE client options
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any },
+    options: GraphQueryOptions,
+    callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any },
+    callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(traversal: string, callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters?: { [name: string]: any },
+    options?: GraphQueryOptions): Promise<graph.GraphResultSet>;
 
   eachRow(query: string,
           params: ArrayOrObject,
@@ -243,6 +260,31 @@ export interface QueryOptions {
   timestamp?: number | Long;
   traceQuery?: boolean;
 }
+
+export interface DseClientOptions extends ClientOptions {
+  id?: Uuid;
+  applicationName?: string;
+  applicationVersion?: string;
+  monitorReporting?: { enabled?: boolean };
+  graphOptions?: GraphOptions;
+}
+
+export interface GraphQueryOptions extends QueryOptions {
+  graphLanguage?: string;
+  graphName?: string;
+  graphReadConsistency?: types.consistencies;
+  graphSource?: string;
+  graphWriteConsistency?: types.consistencies;
+}
+
+export type GraphOptions = {
+  language?: string;
+  name?: string;
+  readConsistency?: types.consistencies;
+  readTimeout?: number;
+  source?: string;
+  writeConsistency?: types.consistencies;
+};
 
 export class ExecutionProfile {
   consistency: number;

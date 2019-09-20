@@ -62,6 +62,17 @@ async function myTest(): Promise<any> {
 
   promise = client.shutdown();
   client.shutdown(err => error = err);
+
+  let otherClient: Client;
+
+  otherClient = new Client({
+    contactPoints: ['h1', 'h2'],
+    localDataCenter: 'dc1',
+    id: types.Uuid.random(),
+    applicationName: 'My app',
+    applicationVersion: '3.1.2',
+    graphOptions: { name: 'graph1', readConsistency: types.consistencies.localQuorum }
+  });
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

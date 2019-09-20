@@ -383,6 +383,20 @@ describe('ModelMapper', function () {
         .then(rs => assertRowMatchesDoc(rs.first(), doc));
     });
 
+    it('should support setting the ttl', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video insert with ttl',
+        description: 'Description of video with ttl',
+      };
+
+      return videoMapper.insert(doc, { ttl: 360 })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted on "videos" and "user_videos" tables
+          assert.strictEqual(rows.length, 2);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
   });
 
   describe('#update()', () => {
@@ -540,6 +554,33 @@ describe('ModelMapper', function () {
     });
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
+    it('should support setting the ttl', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video updated with ttl',
+        description: 'Description updated video with ttl',
+      };
+
+      return videoMapper.update(doc, { ttl: 360 })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted on "videos" and "user_videos" tables
+          assert.strictEqual(rows.length, 2);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
+
+    it('should support setting the ttl and CAS in the same statement', () => {
+      const doc = { id: Uuid.random(), name: 'Video w/ ttl and CAS', description: 'Updated video with ttl and CAS' };
+
+      return videoMapper.update(doc, { ttl: 360, when: { name: q.notEq('video1')} })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted only on "videos"
+          assert.strictEqual(rows.length, 1);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
   });
 
   describe('#remove()', () => {

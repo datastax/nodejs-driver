@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, ExecutionOptions, Host, HostMap } from '../../';
+import { Client, EmptyCallback, ExecutionOptions, Host, HostMap } from '../../';
 import { types } from '../types';
 
 
@@ -43,14 +43,14 @@ export namespace policies {
 
   namespace loadBalancing {
     abstract class LoadBalancingPolicy {
-      init(client: Client, hosts: HostMap, callback): void;
+      init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
 
       getDistance(host: Host): types.distance;
 
       newQueryPlan(
         keyspace: string,
         executionOptions: ExecutionOptions,
-        callback: (error: Error, iterator: Iterator<Host>) => void);
+        callback: (error: Error, iterator: Iterator<Host>) => void): void;
 
       getOptions(): Map<string, object>;
     }

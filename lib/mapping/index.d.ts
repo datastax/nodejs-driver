@@ -121,34 +121,34 @@ export namespace mapping {
   }
 
   interface ModelBatchMapper {
-    insert(doc, docInfo?: InsertDocInfo): ModelBatchItem;
+    insert(doc: any, docInfo?: InsertDocInfo): ModelBatchItem;
 
-    remove(doc, docInfo?: RemoveDocInfo): ModelBatchItem;
+    remove(doc: any, docInfo?: RemoveDocInfo): ModelBatchItem;
 
-    update(doc, docInfo?: UpdateDocInfo): ModelBatchItem;
+    update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
   }
 
   interface ModelMapper {
     name: string;
     batching: ModelBatchMapper;
 
-    get(doc, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<any>;
+    get(doc: any, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<any>;
 
-    find(doc, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    find(doc: any, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
     findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    insert(doc, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    insert(doc: any, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    update(doc, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    update(doc: any, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    remove(doc, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    remove(doc: any, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
     mapWithQuery(
       query: string,
-      paramsHandler: (doc) => any[],
+      paramsHandler: (doc: any) => any[],
       executionOptions?: string | MappingExecutionOptions
-    ): (doc, executionOptions?: string | MappingExecutionOptions) => Promise<Result>;
+    ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result>;
   }
 
   namespace q {
@@ -156,28 +156,28 @@ export namespace mapping {
 
     }
 
-    function in_(arr): QueryOperator;
+    function in_(arr: any): QueryOperator;
 
-    function gt(value): QueryOperator;
+    function gt(value: any): QueryOperator;
 
-    function gte(value): QueryOperator;
+    function gte(value: any): QueryOperator;
 
-    function lt(value): QueryOperator;
+    function lt(value: any): QueryOperator;
 
-    function lte(value): QueryOperator;
+    function lte(value: any): QueryOperator;
 
-    function notEq(value): QueryOperator;
+    function notEq(value: any): QueryOperator;
 
-    function and(condition1, condition2): QueryOperator;
+    function and(condition1: any, condition2: any): QueryOperator;
 
-    function incr(value): QueryOperator;
+    function incr(value: any): QueryOperator;
 
-    function decr(value): QueryOperator;
+    function decr(value: any): QueryOperator;
 
-    function append(value): QueryOperator;
+    function append(value: any): QueryOperator;
 
-    function prepend(value): QueryOperator;
+    function prepend(value: any): QueryOperator;
 
-    function remove(value): QueryOperator;
+    function remove(value: any): QueryOperator;
   }
 }

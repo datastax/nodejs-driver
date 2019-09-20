@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-import * as _Long from 'long';
+import _Long = require('long');
 import * as stream from 'stream';
 import { ValueCallback } from '../../';
 
 export namespace types {
+  class Long extends _Long {
+
+  }
+
   enum consistencies {
     any = 0x00,
     one = 0x01,
@@ -311,10 +315,6 @@ export namespace types {
     toString(): string;
   }
 
-  class Long extends _Long {
-
-  }
-
   interface ResultSet extends Iterator<Row> {
     info: {
       queriedHost: string,
@@ -326,7 +326,7 @@ export namespace types {
       customPayload: any
     };
 
-    columns: Array<{ name: string, type: { code: dataTypes, info } }>;
+    columns: Array<{ name: string, type: { code: dataTypes, info: any } }>;
     nextPage: (() => void) | null;
     pageState: string;
     rowLength: number;

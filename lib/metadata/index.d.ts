@@ -124,7 +124,7 @@ export namespace metadata {
     startedAt: number | types.Long;
     duration: number;
     clientAddress: string;
-    events: Array<{ id: Uuid; activity; source; elapsed; thread }>;
+    events: Array<{ id: Uuid; activity: any; source: any; elapsed: any; thread: any }>;
   }
 
   interface SchemaFunction {

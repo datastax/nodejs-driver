@@ -37,8 +37,8 @@ async function myTest(client: Client): Promise<any> {
   o = await videoMapper.get({ videoId: Uuid.random() });
 
   o = await videoMapper.get({ name: 'a' }, { fields: ['videoId'] }, 'ep1');
-  o = await videoMapper.get({ name: 'b' }, null, { executionProfile: 'ep1' });
-  o = await videoMapper.get({ userId: 1 }, null, { isIdempotent: true });
+  o = await videoMapper.get({ name: 'b' }, undefined, { executionProfile: 'ep1' });
+  o = await videoMapper.get({ userId: 1 }, { }, { isIdempotent: true });
 
   result = await videoMapper.find({ name: 'a' }, { fields: ['videoId'], limit: 10, orderBy: { 'name': 'asc' } });
   result = await videoMapper.find({ name: 'b' }, { }, 'ep1');

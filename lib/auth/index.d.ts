@@ -16,11 +16,11 @@
 
 export namespace auth {
   interface Authenticator {
-    initialResponse(callback: Function);
+    initialResponse(callback: Function): void;
 
-    evaluateChallenge(challenge: Buffer, callback: Function);
+    evaluateChallenge(challenge: Buffer, callback: Function): void;
 
-    onAuthenticationSuccess(token?: Buffer);
+    onAuthenticationSuccess(token?: Buffer): void;
   }
 
   interface AuthProvider {

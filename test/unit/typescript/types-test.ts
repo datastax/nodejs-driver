@@ -35,8 +35,6 @@ function myTest(): void {
 
   types.protocolVersion.isSupported(types.protocolVersion.v4);
 
-  let long: Long = Long.fromNumber(2).div(Long.fromString('a'));
-
   id = Uuid.random();
 
   id = TimeUuid.now();
@@ -55,4 +53,12 @@ function myTest(): void {
 
   let tuple = Tuple.fromArray([ 'a', 1]);
   b = tuple !== new Tuple('a', 1);
+
+  // Long is an external dependency
+  // Use static methods
+  let long: Long = Long.fromNumber(2).div(Long.fromString('a')).toUnsigned();
+  // Use as an instance
+  long.div(long);
+  // Use constructor
+  long = new Long(1, 2);
 }

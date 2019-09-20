@@ -76,7 +76,7 @@ export async function generatedFn() {
   console.log('\n}\n');
 }
 
-function printEnum(enumObject:object, name: string): void {
+function printEnum(enumObject:{ [key: string]: any }, name: string): void {
   console.log(`  // ${name} enum values`);
 
   Object.keys(enumObject)
@@ -90,7 +90,7 @@ function printEnum(enumObject:object, name: string): void {
 /**
  * Prints classes and interfaces
  */
-function printClasses(ns:object, namespaceString: string, except: Set<string> = new Set()): void {
+function printClasses(ns:{ [key: string]: any }, namespaceString: string, except: Set<string> = new Set()): void {
   console.log(`  // ${namespaceString} classes and interfaces`);
 
   Object.keys(ns)
@@ -104,7 +104,7 @@ function printClasses(ns:object, namespaceString: string, except: Set<string> = 
 /**
  * Prints static functions
  */
-function printFunctions(ns:object, namespaceString: string, except: Set<string> = new Set()): void {
+function printFunctions(ns:{ [key: string]: any }, namespaceString: string, except: Set<string> = new Set()): void {
   console.log(`  // ${namespaceString} static functions`);
 
   Object.keys(ns)
@@ -118,7 +118,7 @@ function printFunctions(ns:object, namespaceString: string, except: Set<string> 
 /**
  * Prints static functions
  */
-function printObjects(ns:object, namespaceString: string, except: Set<string> = new Set()): void {
+function printObjects(ns:{ [key: string]: any }, namespaceString: string, except: Set<string> = new Set()): void {
   console.log(`  // ${namespaceString} namespaces/objects`);
 
   Object.keys(ns)

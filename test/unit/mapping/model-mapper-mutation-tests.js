@@ -199,6 +199,15 @@ describe('ModelMapper', () => {
         query: 'UPDATE ks1.table1 SET description = ? WHERE id1 = ? AND id2 = ?',
         params: ['description1', 'value1', 'value2']
       }]));
+
+    it('should set TTL', () => testQueries('update', [
+      {
+        doc: { id1: 'value_id1', id2: 'value_id2', name: 'value_name1' },
+        docInfo: { ttl: 360 },
+        query: 'UPDATE ks1.table1 USING TTL ? SET name = ? WHERE id1 = ? AND id2 = ?',
+        params: [ 360, 'value_name1', 'value_id1', 'value_id2' ]
+      }
+    ]));
   });
 
   describe('#remove()', () => {

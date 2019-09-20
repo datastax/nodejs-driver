@@ -17,6 +17,7 @@
 'use strict';
 
 const assert = require('assert');
+const util = require('util');
 const helper = require('../../../test-helper');
 const mapperTestHelper = require('./mapper-test-helper');
 const types = require('../../../../lib/types');
@@ -225,6 +226,8 @@ describe('ModelMapper', function () {
       };
 
       return videoMapper.insert(doc, null, 'default')
+        // Void result, it should be inspected as '[]'
+        .then(result => assert.strictEqual(util.inspect(result), util.inspect([])))
         .then(() => mapperTestHelper.getVideoRows(client, doc))
         .then(rows => {
           // It should have been inserted on the 3 tables
@@ -565,6 +568,8 @@ describe('ModelMapper', function () {
         .then(rows => assert.strictEqual(rows.length, 2))
         // Just provide the primary keys of 1 table
         .then(() => videoMapper.remove({ id: doc.id }))
+        // Void result, it should be inspected as '[]'
+        .then(result => assert.strictEqual(util.inspect(result), util.inspect([])))
         .then(() => mapperTestHelper.getVideoRows(client, doc))
         .then(rows => {
           assert.strictEqual(rows.length, 2);

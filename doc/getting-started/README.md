@@ -33,7 +33,7 @@ your cluster.
 ## Retrieving data
 
 The `#execute()` method can be used to send a CQL query to a Cassandra node, a simple way to use would be to provide a
-query and a callback.
+query.
 
 ```javascript
 const query = "SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger'";
@@ -72,7 +72,7 @@ additional info (hints) from the user.
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
 
 // Set the prepare flag in your queryOptions
-client.execute(query, ['mick-jagger'], { prepare: true }, callback);
+client.execute(query, ['mick-jagger'], { prepare: true });
 ```
 
 See the [data types documentation to see how CQL types are mapped to JavaScript types][datatypes]. 

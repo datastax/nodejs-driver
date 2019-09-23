@@ -24,7 +24,7 @@ describe('All source files', function() {
     const candidateRE = /.*\.(js|ts)$/;
     // List of directories to ignore, this may not be comprehensive depending on your local workspace.
     const dirsToIgnoreRE = /(node_modules)|(\.git)|(\.idea)|(coverage)|(out)|(examples)/;
-    const filesToIgnoreRE = /(\/test\/unit\/typescript\/.*\.js)|(\/integer\.js)/;
+    const filesToIgnoreRE = /(\/test\/unit\/typescript\/.*\.js)|(integer\.js)/;
 
     function validateLicenses(dir) {
       fs.readdirSync(dir).forEach(function(file) {

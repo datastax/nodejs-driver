@@ -18,7 +18,9 @@
     "graphdb"
   ],
   "dependencies": {
-    "long": "^2.2.0"
+    "long": "^2.2.0",
+    "@types/node": ">=4",
+    "@types/long": "^4.0.0"
   },
   "devDependencies": {
     "mocha": "~5.2.0",

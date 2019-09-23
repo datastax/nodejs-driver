@@ -19,3 +19,6 @@ test/localConfig.json
 .DS_Store
 out/
 /docs
+**/typescript/*.js
+**/typescript/*.js.map
+**/typescript/generated.ts

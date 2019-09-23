@@ -5,7 +5,7 @@ are relevant to for an upgrade from prior versions.
 
 If you have any questions or comments, you can [post them on the mailing list][mailing-list].
 
-## NEXT VERSION
+## 4.2
 
 ### Tuple constructor with one parameter
 

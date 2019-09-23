@@ -2,6 +2,28 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 2.2.0
+
+2019-09-23
+
+### Features
+
+- [NODEJS-464] - Include TypeScript declaration files on the package
+- [NODEJS-512] - Mapper: support selecting the table or view using clustering keys from "order by"
+- [NODEJS-514] - Support string input for all numeric types
+- [NODEJS-515] - Mapper: support static column updates with only the partition key
+- [NODEJS-545] - Introduce 'credentials' client option
+
+### Bug fixes
+
+- [NODEJS-509] - Mapper: batch items promise usage can lead to unhandled rejections
+- [NODEJS-524] - "RangeError: Index out of range" when fetching tuples
+- [NODEJS-527] - Mapper: select query cache key uses order by portion incorrectly
+- [NODEJS-529] - Tuple constructor incorrectly handles single element values
+- [NODEJS-538] - Mapper query generation error: USING clause is misplaced
+- [NODEJS-543] - DseGssapiAuthProvider fails with Kerberos library version 1.1.3
+- [NODEJS-546] - Mapper result throws when inspected and result is not ROWS
+
 ## 2.1.0
 
 2019-04-25

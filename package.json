@@ -1,6 +1,6 @@
 {
   "name": "dse-driver",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "DataStax Enterprise Node.js Driver",
   "author": "DataStax",
   "keywords": [
@@ -27,7 +27,7 @@
     "rewire": "^4.0.1",
     "temp": ">= 0.8.3"
   },
-  "homepage": "http://docs.datastax.com/en/developer/nodejs-driver-dse/latest/",
+  "homepage": "https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/",
   "bugs": {
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },

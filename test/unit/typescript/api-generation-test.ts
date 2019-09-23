@@ -20,7 +20,13 @@ let counter:number = 0;
  */
 export function generate(): void {
 
-  console.log(`
+  console.log(`/**
+ * Copyright DataStax, Inc.
+ *
+ * Please see the license for details:
+ * http://www.datastax.com/terms/datastax-dse-driver-license-terms
+ */
+  
 'use strict';
   
 import { auth, concurrent, errors, mapping, geometry, graph, metadata, metrics, policies, tracker, types } from "../../../index";

@@ -53,13 +53,13 @@ export class Client extends events.EventEmitter {
 
   executeGraph(
     traversal: string,
-    parameters: { [name: string]: any },
+    parameters: { [name: string]: any } | undefined,
     options: GraphQueryOptions,
     callback: ValueCallback<graph.GraphResultSet>): void;
 
   executeGraph(
     traversal: string,
-    parameters: { [name: string]: any },
+    parameters: { [name: string]: any } | undefined,
     callback: ValueCallback<graph.GraphResultSet>): void;
 
   executeGraph(traversal: string, callback: ValueCallback<graph.GraphResultSet>): void;

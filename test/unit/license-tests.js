@@ -24,6 +24,7 @@ describe('All source files', function() {
     const candidateRE = /.*\.(js|ts)$/;
     // List of directories to ignore, this may not be comprehensive depending on your local workspace.
     const dirsToIgnoreRE = /(node_modules)|(\.git)|(\.idea)|(coverage)|(out)|(examples)/;
+    const filesToIgnoreRE = /(\/test\/unit\/typescript\/.*\.js)|(\/integer\.js)/;
 
     function validateLicenses(dir) {
       fs.readdirSync(dir).forEach(function(file) {
@@ -31,7 +32,7 @@ describe('All source files', function() {
         if (fs.statSync(filePath).isDirectory() && !file.match(dirsToIgnoreRE)) {
           validateLicenses(filePath);
         }
-        else if (file.charAt(0) !== '.' && file.match(candidateRE) && file !== 'integer.js') {
+        else if (file.charAt(0) !== '.' && file.match(candidateRE) && !filePath.match(filesToIgnoreRE)) {
           const data = fs.readFileSync(filePath, 'utf8');
           assert.ok(licenseHeaderRegex.test(data), 'Beginning of ' + filePath + ' does not start with license header.');
         }

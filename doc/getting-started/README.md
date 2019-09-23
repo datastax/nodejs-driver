@@ -40,11 +40,11 @@ const query = "SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger
 
 client.execute(query)
   .then(result => {
-      const row = result.first();
+    const row = result.first();
     
-      // The row is an Object with column names as property keys. 
-      console.log('My name is %s and my email is %s', row.name, row.email);
-    });
+    // The row is an Object with column names as property keys. 
+    console.log('My name is %s and my email is %s', row.name, row.email);
+  });
 ```
 
 ### Using query parameters and prepared statements
@@ -85,10 +85,7 @@ You can use the `#execute()` method to execute any CQL query.
 const query = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
 const params = ['mick-jagger', 'Sir Mick Jagger', 'mick@rollingstones.com', new Date(1943, 6, 26)];
 
-client.execute(query, params, { prepare: true }, function (err) {
-  assert.ifError(err);
-  //Inserted in the cluster
-});
+client.execute(query, params, { prepare: true });
 ```
 
 ### Setting the consistency level
@@ -99,7 +96,7 @@ To specify how consistent the data must be for a given read or write operation, 
 ```javascript
 const { types } = cassandra;
 
-client.execute(query, params, { consistency: types.consistencies.localQuorum })
+client.execute(query, params, { consistency: types.consistencies.localQuorum, prepare: true })
   .then(() => {
     // The Promise will be resolved once it has been written in the number of replicas
     // satisfying the consistency level specified.
@@ -126,6 +123,7 @@ Retrieving objects from the database:
 
 ```javascript
 const videos = await videoMapper.find({ userId });
+
 for (let video of videos) {
   console.log(video.name);
 }
@@ -140,15 +138,17 @@ await videoMapper.update({ id, userId, name, addedDate, description });
 You can read more information about [getting started with the Mapper in our
 documentation](../features/mapper/getting-started).
 
-## Authentication (optional)
+## Authentication
 
-Using an authentication provider on an auth-enabled Cassandra cluster:
+You can set the credentials to connect to an Apache Cassandra cluster secured using a `PasswordAuthenticator` or to a
+DSE cluster secured with `DseAuthenticator`, with plain-text authentication as default scheme.
 
 ```javascript
-const authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
-
-//Set the auth provider in the clientOptions when creating the Client instance
-const client = new Client({ contactPoints, localDataCenter, authProvider });
+const client = new cassandra.Client({
+  contactPoints,
+  localDataCenter,
+  credentials: { username: 'my_username', password: 'my_p@ssword1!' }
+});
 ```
 
 [consistency]: https://docs.datastax.com/en/dse/6.0/dse-arch/datastax_enterprise/dbInternals/dbIntConfigConsistency.html

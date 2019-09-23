@@ -21,7 +21,7 @@ describe('All source files', function() {
     // eslint-disable-next-line no-undef
     const root = path.normalize(path.join(__dirname, '../../'));
     // Files to capture and validate header on.
-    const candidateRE = /.*\.(js)$/;
+    const candidateRE = /.*\.(js|ts)$/;
     // List of directories to ignore, this may not be comprehensive depending on your local workspace.
     const dirsToIgnoreRE = /(node_modules)|(\.git)|(\.idea)|(coverage)|(out)|(examples)/;
 

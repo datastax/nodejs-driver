@@ -66,6 +66,12 @@ async function myTest(): Promise<any> {
   let otherClient: Client;
 
   otherClient = new Client({
+    contactPoints: ['10.0.0.100', '10.0.0.101'],
+    localDataCenter: 'datacenter1',
+    credentials: { username: 'user1', password: 'p@ssword1' }
+  });
+
+  otherClient = new Client({
     contactPoints: ['h1', 'h2'],
     localDataCenter: 'dc1',
     id: types.Uuid.random(),

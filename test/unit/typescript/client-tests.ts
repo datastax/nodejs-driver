@@ -79,6 +79,15 @@ async function myTest(): Promise<any> {
     localDataCenter: 'datacenter1',
     credentials: { username: 'user1', password: 'p@ssword1' }
   });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' }
+  });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' },
+    credentials: { username: 'a', password: 'b' }
+  });
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

@@ -169,7 +169,7 @@ export interface ExecutionOptions {
 }
 
 export interface ClientOptions {
-  contactPoints: string[];
+  contactPoints?: string[];
   localDataCenter?: string;
   keyspace?: string;
   authProvider?: auth.AuthProvider;
@@ -177,6 +177,10 @@ export interface ClientOptions {
     username: string;
     password: string;
   }
+
+  cloud?: {
+    secureConnectBundle: string;
+  };
 
   encoding?: {
     map?: Function;

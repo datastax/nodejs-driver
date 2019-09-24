@@ -173,6 +173,10 @@ export interface ClientOptions {
   localDataCenter?: string;
   keyspace?: string;
   authProvider?: auth.AuthProvider;
+  credentials?: {
+    username: string;
+    password: string;
+  }
 
   encoding?: {
     map?: Function;

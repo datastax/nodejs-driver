@@ -71,6 +71,14 @@ async function myTest(): Promise<any> {
 
   promise = client.shutdown();
   client.shutdown(err => error = err);
+
+  let otherClient: Client;
+
+  otherClient = new Client({
+    contactPoints: ['10.0.0.100', '10.0.0.101'],
+    localDataCenter: 'datacenter1',
+    credentials: { username: 'user1', password: 'p@ssword1' }
+  });
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

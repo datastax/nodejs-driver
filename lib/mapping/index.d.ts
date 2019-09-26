@@ -128,7 +128,7 @@ export namespace mapping {
     update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
   }
 
-  interface ModelMapper<T> {
+  interface ModelMapper<T = { [key: string]: any }> {
     name: string;
     batching: ModelBatchMapper;
 

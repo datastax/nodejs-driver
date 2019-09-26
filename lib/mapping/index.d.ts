@@ -148,7 +148,7 @@ export namespace mapping {
       query: string,
       paramsHandler: (doc: any) => any[],
       executionOptions?: string | MappingExecutionOptions
-    ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result>;
+    ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result<T>>;
   }
 
   namespace q {

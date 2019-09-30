@@ -25,7 +25,7 @@ const utils = require('../../../lib/utils.js');
 const errors = require('../../../lib/errors.js');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
-const bigIntTests = require('./es-bigint-tests');
+const numericTests = require('./numeric-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -1157,7 +1157,7 @@ describe('Client', function () {
       });
     });
 
-    bigIntTests(keyspace, false);
+    numericTests(keyspace, false);
 
     vit('dse-6.0', 'should use keyspace if set on options', () => {
       const client = setupInfo.client;

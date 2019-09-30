@@ -1,26 +1,43 @@
-# DSE Authentication
+# Authentication
 
-Three authentication providers are included to connect to a DSE cluster secured with `DseAuthenticator`:
+The driver includes three authentication providers:
 
-- `PlainTextAuthProvider`: Plain-text authentication.
-- `DsePlainTextAuthProvider`: Plain-text authentication on DSE.
-- `DseGssapiAuthProvider`: GSSAPI authentication on DSE.
+- `PlainTextAuthProvider`: Plain-text authentication for Apache Cassandra and DSE.
+- `DsePlainTextAuthProvider`: Plain-text authentication for DSE unified auth.
+- `DseGssapiAuthProvider`: GSSAPI authentication for DSE.
 
-You can configure an authentication provider when initializing the `Client`:
+In case you are using plain-text authentication on the server, you can set the `credentials` when creating the 
+`Client` instance.
+
+```javascript
+const cassandra = require('cassandra-driver');
+
+const client = new cassandra.Client({
+  contactPoints,
+  localDataCenter,
+  credentials: { username: 'my_username', password: 'my_p@ssword1!' }
+});
+```
+
+## Setting the authentication provider
+
+For other authentication methods, you can configure the provider in the `Client` options:
 
 ```javascript
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({
-  contactPoints: [ 'host1', 'host2' ],
+  contactPoints,
+  localDataCenter,
   authProvider: new cassandra.auth.DseGssapiAuthProvider()
 });
 ```
 
-To use the `DseGssapiAuthProvider`, you need to add the dependency to `kerberos` version `~1.0.0` in your application.
+Note that to use the `DseGssapiAuthProvider` you need to add the dependency to `kerberos` version `~1.0.0` in your 
+application.
 
 ## DSE Unified Authentication
 
-Single DSE 5.1+, DSE Unified Authentication allows you to:
+DSE Unified Authentication allows you to:
 
 - Proxy Login: Authenticate using a fixed set of authentication credentials but allow authorization of resources
 based on another user id.

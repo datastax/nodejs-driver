@@ -29,6 +29,11 @@ describe('Result', () => {
       const arr = result.toArray();
       assert.deepStrictEqual(arr, expected);
     });
+
+    it('should return empty array when is a VOID result', () => {
+      const result = new Result({ columns: [], rows: undefined, rowLength: undefined }, null, () => {});
+      assert.deepStrictEqual(result.toArray(), []);
+    });
   });
 
   describe('#forEach()', () => {
@@ -55,6 +60,16 @@ describe('Result', () => {
       const result = getResult();
       assert.strictEqual(util.inspect(result), util.inspect(expected));
       assert.strictEqual(util.inspect(result), util.inspect(result.toArray()));
+    });
+
+    it('should return empty array representation when is a VOID result', () => {
+      const result = new Result({ columns: [], rows: undefined, rowLength: undefined }, null, () => {});
+      assert.strictEqual(util.inspect(result), util.inspect([]));
+    });
+
+    it('should return empty array representation when is LWT result', () => {
+      const result = new Result({ columns: [ { name: '[applied]' }], rows: [{ }], rowLength: 1 }, null, () => {});
+      assert.strictEqual(util.inspect(result), util.inspect([]));
     });
   });
 });

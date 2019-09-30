@@ -17,6 +17,7 @@
 'use strict';
 
 const assert = require('assert');
+const util = require('util');
 const helper = require('../../../test-helper');
 const mapperTestHelper = require('./mapper-test-helper');
 const types = require('../../../../lib/types');
@@ -37,6 +38,8 @@ describe('ModelMapper', function () {
   const videoMapper = mapper.forModel('Video');
   const userMapper = mapper.forModel('User');
   const clusteringMapper = mapper.forModel('Clustering');
+  const staticMapper = mapper.forModel('Static');
+  const static2Mapper = mapper.forModel('Static2');
 
   describe('#find()', () => {
     it('should use the correct table', () => {
@@ -223,6 +226,8 @@ describe('ModelMapper', function () {
       };
 
       return videoMapper.insert(doc, null, 'default')
+        // Void result, it should be inspected as '[]'
+        .then(result => assert.strictEqual(util.inspect(result), util.inspect([])))
         .then(() => mapperTestHelper.getVideoRows(client, doc))
         .then(rows => {
           // It should have been inserted on the 3 tables
@@ -268,6 +273,33 @@ describe('ModelMapper', function () {
           // Inserted only on "videos" table
           assert.strictEqual(rows.length, 1);
           rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
+
+    it('should support inserting in parallel', () => {
+      const userIds = new Array(10).fill(0).map(() => Uuid.random());
+
+      return Promise
+        .all(userIds.map(id =>
+          userMapper.insert({
+            id,
+            firstName: 'a',
+            lastName: 'b',
+            createdDate: new Date(),
+            email: `${id}@example.com`
+          })))
+        .then(() => {
+          const query = 'SELECT * FROM users WHERE userid IN ?';
+          return client.execute(query, [ userIds ]);
+        })
+        .then(rs => {
+          // Compare ids
+          assert.deepStrictEqual(
+            rs.rows.map(r => r['userid'].toString()).sort(),
+            userIds.map(id => id.toString()).sort());
+
+          assert.strictEqual(rs.rowLength, userIds.length);
+          rs.rows.forEach(row => assert.strictEqual(row['email'], `${row['userid']}@example.com`));
         });
     });
 
@@ -322,6 +354,49 @@ describe('ModelMapper', function () {
     });
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
+    it('should support inserting static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support inserting static column value with clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), id2: 'b', s: 'static value 2' };
+
+      return staticMapper.insert(doc)
+        .then(() =>
+          client.execute('SELECT id1, id2, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support inserting multiple static column values without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s0: 'static value 1', s1: 'static value 2' };
+
+      return static2Mapper.insert(doc)
+        .then(() => client.execute('SELECT id1, s0, s1 FROM table_static2 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
+    });
+
+    it('should support setting the ttl', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video insert with ttl',
+        description: 'Description of video with ttl',
+      };
+
+      return videoMapper.insert(doc, { ttl: 360 })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted on "videos" and "user_videos" tables
+          assert.strictEqual(rows.length, 2);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
   });
 
   describe('#update()', () => {
@@ -352,6 +427,15 @@ describe('ModelMapper', function () {
           assert.strictEqual(rows[1]['name'], doc.name);
           assert.strictEqual(rows[2]['name'], doc.name);
         });
+    });
+
+    it('should support updating static column value without clustering keys', () => {
+
+      const doc = { id1: Uuid.random().toString(), s: 'static value 1' };
+
+      return staticMapper.update(doc)
+        .then(() => client.execute('SELECT id1, s FROM table_static1 WHERE id1 = ?', [ doc.id1 ], { prepare: true }))
+        .then(rs => assertRowMatchesDoc(rs.first(), doc));
     });
 
     it('should use the correct table when no MappingOptions are specified', () => {
@@ -470,6 +554,33 @@ describe('ModelMapper', function () {
     });
 
     it('should throw an error when the table does not exist', () => testTableNotFound(mapper, 'find'));
+
+    it('should support setting the ttl', () => {
+      const doc = {
+        id: Uuid.random(), userId: Uuid.random(), addedDate: new Date(), name: 'Video updated with ttl',
+        description: 'Description updated video with ttl',
+      };
+
+      return videoMapper.update(doc, { ttl: 360 })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted on "videos" and "user_videos" tables
+          assert.strictEqual(rows.length, 2);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
+
+    it('should support setting the ttl and CAS in the same statement', () => {
+      const doc = { id: Uuid.random(), name: 'Video w/ ttl and CAS', description: 'Updated video with ttl and CAS' };
+
+      return videoMapper.update(doc, { ttl: 360, when: { name: q.notEq('video1')} })
+        .then(() => mapperTestHelper.getVideoRows(client, doc))
+        .then(rows => {
+          // Inserted only on "videos"
+          assert.strictEqual(rows.length, 1);
+          rows.forEach(row => assertRowMatchesDoc(row, doc));
+        });
+    });
   });
 
   describe('#remove()', () => {
@@ -498,6 +609,8 @@ describe('ModelMapper', function () {
         .then(rows => assert.strictEqual(rows.length, 2))
         // Just provide the primary keys of 1 table
         .then(() => videoMapper.remove({ id: doc.id }))
+        // Void result, it should be inspected as '[]'
+        .then(result => assert.strictEqual(util.inspect(result), util.inspect([])))
         .then(() => mapperTestHelper.getVideoRows(client, doc))
         .then(rows => {
           assert.strictEqual(rows.length, 2);

@@ -113,9 +113,6 @@ describe('encoder', function () {
         typeEncoder.encode('hello', 'int');
       }, TypeError);
       assert.throws(function () {
-        typeEncoder.encode('1.1', 'float');
-      }, TypeError);
-      assert.throws(function () {
         typeEncoder.encode(100, dataTypes.uuid);
       }, TypeError);
       assert.throws(function () {
@@ -738,6 +735,30 @@ describe('encoder', function () {
         assert.strictEqual(encoder.encode(buffer, dataTypes[typeName]), buffer);
       });
     });
+
+    it('should encode string representations of numeric values', () => {
+      const encoder = newInstance();
+      assertBuffer(encoder.encode('3', getType(dataTypes.bigint)), 8);
+      assertBuffer(encoder.encode('3', getType(dataTypes.varint)), 1);
+      assertBuffer(encoder.encode('3', getType(dataTypes.int)), 4);
+      assertBuffer(encoder.encode('3.375', getType(dataTypes.float)), 4);
+      assertBuffer(encoder.encode('3.375', getType(dataTypes.double)), 8);
+      assertBuffer(encoder.encode('3.375', getType(dataTypes.decimal)), 6);
+      assertBuffer(encoder.encode(NaN, getType(dataTypes.double)), 8);
+    });
+
+    it('should encode NaN', () => {
+      const encoder = newInstance();
+      assertBuffer(encoder.encode(NaN, getType(dataTypes.double)), 8);
+      assertBuffer(encoder.encode(NaN, getType(dataTypes.float)), 4);
+    });
+
+    it('should throw an error for invalid string representations of numeric values', () => {
+      const encoder = newInstance();
+      assert.throws(() => encoder.encode('hello!', getType(dataTypes.int)), TypeError);
+      assert.throws(() => encoder.encode('hello!', getType(dataTypes.double)), TypeError);
+      assert.throws(() => encoder.encode('hello!', getType(dataTypes.float)), TypeError);
+    });
   });
 
   describe('#setRoutingKeyFromUser()', function () {
@@ -1269,4 +1290,17 @@ function getExecOptions(options) {
   result.getHints = () => options.hints;
   result.getRoutingIndexes = () => options.routingIndexes;
   return result;
+}
+
+function newInstance(protocolVersion, clientOptions) {
+  return new Encoder(protocolVersion || types.protocolVersion.maxSupported, clientOptions || {});
+}
+
+function getType(typeCode) {
+  return { code: typeCode };
+}
+
+function assertBuffer(buffer, length) {
+  helper.assertInstanceOf(buffer, Buffer);
+  assert.strictEqual(buffer.length, length);
 }

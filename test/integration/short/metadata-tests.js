@@ -471,7 +471,8 @@ describe('metadata', function () {
           'CREATE TYPE "UDTq""uoted" ("I" int, "B""B" blob, t text)',
           "CREATE TABLE tbl_udts1 (id uuid PRIMARY KEY, udt_sample frozen<udt1>)",
           "CREATE TABLE tbl_udts2 (id frozen<udt1> PRIMARY KEY)",
-          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)'
+          'CREATE TABLE tbl_udts_with_quoted (id uuid PRIMARY KEY, udt_sample frozen<"UDTq""uoted">)',
+          'CREATE TABLE tbl_static (id1 int, id2 int, static_value int static, value int, PRIMARY KEY (id1, id2))'
         );
 
         if (helper.isCassandraGreaterThan('2.2')) {
@@ -768,6 +769,14 @@ describe('metadata', function () {
           });
         });
       });
+
+      vit('2.1', 'should retrieve static columns', () =>
+        setupInfo.client.metadata.getTable(keyspace, 'tbl_static')
+          .then(table => {
+            assert.strictEqual(table.columns.length, 4);
+            table.columns.forEach(c => assert.strictEqual(c.isStatic, c.name === 'static_value'));
+          }));
+
       vit('2.2', 'should retrieve a secondary index on map entries', function (done) {
         const client = newInstance({keyspace: keyspace});
         client.connect(function (err) {

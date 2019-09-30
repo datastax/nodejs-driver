@@ -27,7 +27,7 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
-const bigIntTests = require('./es-bigint-tests');
+const numericTests = require('./numeric-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -776,6 +776,7 @@ describe('Client', function () {
     });
 
     describe('with udt and tuple', function () {
+
       before(function (done) {
         const client = setupInfo.client;
         utils.series([
@@ -785,19 +786,22 @@ describe('Client', function () {
           helper.toTask(client.execute, client, 'CREATE TABLE tbl_tuples (id uuid PRIMARY KEY, tuple_col1 tuple<text,int>, tuple_col2 tuple<uuid,bigint,boolean>)')
         ], done);
       });
+
       vit('2.1', 'should encode objects into udt', function (done) {
         const insertQuery = 'INSERT INTO tbl_udts (id, phone_col, address_col) VALUES (?, ?, ?)';
         const selectQuery = 'SELECT id, phone_col, address_col FROM tbl_udts WHERE id = ?';
-        const client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true }});
+        const client = setupInfo.client;
         const id = Uuid.random();
         const phone = { alias: 'work2', number: '555 9012', country_code: 54};
         const address = { street: 'DayMan', ZIP: 28111, phones: [ { alias: 'personal'} ]};
+        const options = { prepare: true };
+
         utils.series([
           function insert(next) {
-            client.execute(insertQuery, [id, phone, address], next);
+            client.execute(insertQuery, [id, phone, address], options, next);
           },
           function select(next) {
-            client.execute(selectQuery, [id], function (err, result) {
+            client.execute(selectQuery, [id], options, function (err, result) {
               assert.ifError(err);
               const row = result.first();
               const phoneResult = row['phone_col'];
@@ -813,29 +817,31 @@ describe('Client', function () {
               assert.strictEqual(addressResult.phones[0].number, null);
               next();
             });
-          },
-          client.shutdown.bind(client)
+          }
         ], done);
       });
+
       vit('2.1', 'should encode and decode tuples', function (done) {
         const insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
         const selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
-        const client = newInstance({ keyspace: commonKs, queryOptions: { prepare: true}});
+        const client = setupInfo.client;
         const id1 = Uuid.random();
         const tuple1 = new types.Tuple('val1', 1);
         const tuple2 = new types.Tuple(Uuid.random(), types.Long.fromInt(12), true);
+        const options = { prepare: true };
+
         utils.series([
           function insert1(next) {
-            client.execute(insertQuery, [id1, tuple1, tuple2], next);
+            client.execute(insertQuery, [id1, tuple1, tuple2], options, next);
           },
           function insert2(next) {
-            client.execute(insertQuery, [Uuid.random(), new types.Tuple('unset pair', undefined), null], next);
+            client.execute(insertQuery, [Uuid.random(), new types.Tuple('unset pair', undefined), null], options, next);
           },
           function insert3(next) {
-            client.execute(insertQuery, [Uuid.random(), new types.Tuple('null pair', null), null], next);
+            client.execute(insertQuery, [Uuid.random(), new types.Tuple('null pair', null), null], options, next);
           },
           function select1(next) {
-            client.execute(selectQuery, [id1], function (err, result) {
+            client.execute(selectQuery, [id1], options, function (err, result) {
               assert.ifError(err);
               const row = result.first();
               const tuple1Result = row['tuple_col1'];
@@ -853,7 +859,34 @@ describe('Client', function () {
           }
         ], done);
       });
+
+      vit('2.1', 'should support encoding and decoding tuples with fewer items than declared', () => {
+        const insertQuery = 'INSERT INTO tbl_tuples (id, tuple_col1, tuple_col2) VALUES (?, ?, ?)';
+        const selectQuery = 'SELECT * FROM tbl_tuples WHERE id = ?';
+        const id1 = Uuid.random();
+        const tuple1 = new types.Tuple('value1');
+        const tuple2 = new types.Tuple(Uuid.random());
+        const client = setupInfo.client;
+        const options = { prepare: true };
+
+        return client.execute(insertQuery, [ id1, tuple1, tuple2 ], options)
+          .then(() => client.execute(selectQuery, [ id1 ], options))
+          .then(rs => {
+            const row = rs.first();
+            const tuple1Result = row['tuple_col1'];
+            const tuple2Result = row['tuple_col2'];
+
+            assert.strictEqual(tuple1Result.length, 2);
+            assert.deepStrictEqual(tuple1Result.values(), [ 'value1', undefined ]);
+
+            assert.strictEqual(tuple2Result.length, 3);
+            assert.strictEqual(tuple2Result.get(0).toString(), tuple2.get(0).toString());
+            assert.deepStrictEqual(tuple2Result.values().slice(1), [ undefined, undefined ]);
+          });
+      });
+
     });
+
     describe('with smallint and tinyint types', function () {
       const insertQuery = 'INSERT INTO tbl_smallints (id, smallint_sample, tinyint_sample) VALUES (?, ?, ?)';
       const selectQuery = 'SELECT id, smallint_sample, tinyint_sample FROM tbl_smallints WHERE id = ?';
@@ -1172,7 +1205,7 @@ describe('Client', function () {
       });
     });
 
-    bigIntTests(commonKs, true);
+    numericTests(commonKs, true);
 
     vit('dse-6.0', 'should use keyspace if set on options', () => {
       const client = setupInfo.client;

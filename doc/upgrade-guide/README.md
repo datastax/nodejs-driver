@@ -16,6 +16,14 @@ in-flight requests is selected as coordinator](https://www.eecs.harvard.edu/~mic
 
 ---
 
+## 4.2
+
+### Tuple constructor with one parameter
+
+The `Tuple` constructor had an undocumented behaviour when invoked with a single parameter which was an `Array`,
+the driver used the `Array` instance as `Tuple` elements. We removed this behaviour that was used internally.
+`Tuple.fromArray()` method should be used to build a `Tuple` from an `Array` of elements. 
+
 ## 4.0
 
 The following is a list of changes made in version 4.0 of the driver that are relevant when upgrading from version 3.x.

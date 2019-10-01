@@ -8,6 +8,7 @@ Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Que
 - [Address resolution](address-resolution)
 - [Batch statements](batch)
 - [Concurrent execution API](concurrent-api)
+- [Connecting to DataStax Apollo database](cloud)
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution Profiles](execution-profiles)

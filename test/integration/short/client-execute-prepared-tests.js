@@ -38,7 +38,8 @@ describe('Client', function () {
 
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
-      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
+      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ],
+      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb: 5'] }
     });
 
     it('should execute a prepared query with parameters on all hosts', function (done) {
@@ -589,7 +590,7 @@ describe('Client', function () {
         commonTable,
         commonTable
       );
-      const params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 2562) };
+      const params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 6 * 1024) };
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

@@ -1160,7 +1160,7 @@ describe('Client', function () {
         const queries = [
           "CREATE KEYSPACE ks_view_prepared WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}",
           "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
-          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
+          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT * FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY (game, score, year, month, day, user) WITH CLUSTERING ORDER BY (score DESC, year DESC, month DESC, day DESC, user DESC)"
         ];
         utils.eachSeries(queries, setupInfo.client.execute.bind(setupInfo.client), helper.wait(2000, done));
       });

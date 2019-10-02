@@ -39,7 +39,7 @@ describe('Client', function () {
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
       queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ],
-      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb: 5'] }
+      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb:5'] }
     });
 
     it('should execute a prepared query with parameters on all hosts', function (done) {

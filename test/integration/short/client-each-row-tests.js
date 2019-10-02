@@ -171,7 +171,7 @@ describe('Client', function () {
     const setupInfo = helper.setup(3, {
       ccmOptions: {
         jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1'],
-        yaml: ['batch_size_warn_threshold_in_kb: 5']
+        yaml: ['batch_size_warn_threshold_in_kb:5']
       },
       replicationFactor: 3,
       queries: [ helper.createTableCql(table) ]

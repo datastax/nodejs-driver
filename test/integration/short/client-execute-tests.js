@@ -38,7 +38,7 @@ describe('Client', function () {
     const setupInfo = helper.setup(1, {
       keyspace: keyspace,
       queries: [ helper.createTableCql(table) ],
-      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb: 5'] }
+      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb:5'] }
     });
 
     it('should execute a basic query', function (done) {

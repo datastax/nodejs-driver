@@ -29,7 +29,7 @@ describe('custom payload', function () {
   const keyspace = helper.getRandomName('ks');
   const table = keyspace + '.' + helper.getRandomName('tbl');
   before(helper.ccmHelper.start(1, {
-    yaml: ['batch_size_warn_threshold_in_kb: 5'],
+    yaml: ['batch_size_warn_threshold_in_kb:5'],
     jvmArgs: ['-Dcassandra.custom_query_handler_class=org.apache.cassandra.cql3.CustomPayloadMirroringQueryHandler']
   }));
   before(function (done) {

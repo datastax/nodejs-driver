@@ -165,20 +165,31 @@ const helper = {
     },
     /**
      * Adds a new node to the cluster
-     * @param {Number} nodeIndex 1 based index of the node
+     * @param {number|{nodeIndex: number, dc?: string}} options 1 based index of the node or options.
      * @param {Function} callback
      */
-    bootstrapNode: function (nodeIndex, callback) {
+    bootstrapNode: function (options, callback) {
+      if (typeof options === 'number') {
+        options = { nodeIndex: options };
+      }
+
       const ipPrefix = helper.ipPrefix;
-      new Ccm().exec([
+      helper.trace('bootstrapping node', options.nodeIndex);
+      const params = [
         'add',
-        'node' + nodeIndex,
+        'node' + options.nodeIndex,
         '-i',
-        ipPrefix + nodeIndex,
+        ipPrefix + options.nodeIndex,
         '-j',
-        (7000 + 100 * nodeIndex).toString(),
+        (7000 + 100 * options.nodeIndex).toString(),
         '-b'
-      ], callback);
+      ];
+
+      if (options.dc) {
+        params.push('-d', options.dc);
+      }
+
+      new Ccm().exec(params, callback);
     },
     /**
      * @param {Number} nodeIndex 1 based index of the node

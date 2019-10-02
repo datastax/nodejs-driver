@@ -19,6 +19,7 @@ describe('custom payload', function () {
   const keyspace = helper.getRandomName('ks');
   const table = keyspace + '.' + helper.getRandomName('tbl');
   before(helper.ccmHelper.start(1, {
+    yaml: ['batch_size_warn_threshold_in_kb:5'],
     jvmArgs: ['-Dcassandra.custom_query_handler_class=org.apache.cassandra.cql3.CustomPayloadMirroringQueryHandler']
   }));
   before(function (done) {
@@ -158,7 +159,7 @@ describe('custom payload', function () {
           const q = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
           const queries = [
             { query: q, params: [types.Uuid.random(), 'text-batch2'] },
-            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 64 * 1024)] }
+            { query: q, params: [types.Uuid.random(), utils.stringRepeat('a', 6 * 1024)] }
           ];
           client.batch(queries, { customPayload: payload}, function (err, result) {
             assert.ifError(err);

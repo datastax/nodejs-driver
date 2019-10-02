@@ -25,7 +25,11 @@ describe('Client', function () {
     const table = keyspace + '.' + helper.getRandomName('table');
     const selectAllQuery = 'SELECT * FROM ' + table;
 
-    const setupInfo = helper.setup(1, { keyspace: keyspace, queries: [ helper.createTableCql(table) ] });
+    const setupInfo = helper.setup(1, {
+      keyspace: keyspace,
+      queries: [ helper.createTableCql(table) ],
+      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb:5'] }
+    });
 
     it('should execute a basic query', function (done) {
       const client = setupInfo.client;
@@ -607,10 +611,10 @@ describe('Client', function () {
         "INSERT INTO %s (id, text_sample) VALUES (%s, '%s') APPLY BATCH",
         table,
         types.Uuid.random(),
-        utils.stringRepeat('a', 32 * 1025),
+        utils.stringRepeat('a', 6 * 1024),
         table,
         types.Uuid.random(),
-        utils.stringRepeat('a', 33 * 1025)
+        utils.stringRepeat('a', 6 * 1024)
       );
       client.execute(query, function (err, result) {
         assert.ifError(err);

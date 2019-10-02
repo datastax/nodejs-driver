@@ -169,7 +169,10 @@ describe('Client', function () {
   describe('#eachRow(query, params, {prepare: 1})', function () {
     const table = helper.getRandomName('table');
     const setupInfo = helper.setup(3, {
-      ccmOptions: { jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1'] },
+      ccmOptions: {
+        jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1'],
+        yaml: ['batch_size_warn_threshold_in_kb:5']
+      },
       replicationFactor: 3,
       queries: [ helper.createTableCql(table) ]
     });
@@ -510,7 +513,7 @@ describe('Client', function () {
         table,
         table
       );
-      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 2562) };
+      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 6 * 1024) };
       client.eachRow(query, params, { prepare: true }, utils.noop, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);

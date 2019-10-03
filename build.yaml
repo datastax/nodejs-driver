@@ -8,10 +8,10 @@ schedules:
         - nodejs: ['6']
         # Only build DSE 6.0 with Node.js 4
         - nodejs: ['4']
-          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+          cassandra: ['dse-4.8', 'dse-5.1', 'dse-6.7', 'dse-6.8']
         # Only build DSE 6.7 with Node.js 10
         - nodejs: ['10']
-          cassandra: ['dse-4.8', 'dse-5.0', 'dse-5.1', 'dse-6.0', 'dse-6.8']
+          cassandra: ['dse-4.8', 'dse-5.1', 'dse-6.0', 'dse-6.8']
         # Build all DSE versions with Node.js 8 except DSE 6.0 and DSE 6.7
         - nodejs: ['8']
           cassandra: ['dse-6.0', 'dse-6.7']
@@ -35,7 +35,6 @@ os:
   - ubuntu/bionic64/nodejs-driver
 cassandra:
   - dse-4.8
-  - dse-5.0
   - dse-5.1
   - dse-6.0
   - dse-6.7

@@ -53,7 +53,7 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
           next);
       },
       function addNode(next) {
-        helper.ccm.bootstrapNode(2, next);
+        helper.ccm.bootstrapNode({ nodeIndex: 2, dc: 'dc1' }, next);
       },
       function setNodeWorkload(next) {
         helper.ccm.setWorkload(2, ['graph', 'spark'], next);

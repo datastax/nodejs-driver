@@ -54,7 +54,7 @@ describe('Client', function () {
 
     it('should create Metadata instance', function () {
       const client = new Client({ contactPoints: ['192.168.10.10'] });
-      helper.assertInstanceOf(client.metadata, Metadata);
+      assert.instanceOf(client.metadata, Metadata);
     });
 
     context('with useBigIntAsLong or useBigIntAsVarint set', () => {
@@ -77,10 +77,10 @@ describe('Client', function () {
       const client = new Client(options);
       client.connect(function (err) {
         assert.ok(err);
-        helper.assertInstanceOf(err, errors.NoHostAvailableError);
-        assert.ok(err.message.indexOf('resolve') > 0, 'Message was: ' + err.message);
+        assert.instanceOf(err, errors.NoHostAvailableError);
+        assert.match(err.message, /resolve/);
         assert.ok(client.hosts);
-        assert.strictEqual(client.hosts.length, 0);
+        assert.lengthOf(client.hosts, 0);
 
         const resolvedContactPoints = client.controlConnection.getResolvedContactPoints();
         contactPoints.forEach(name => assert.strictEqual(resolvedContactPoints.get(name), utils.emptyArray));
@@ -148,7 +148,7 @@ describe('Client', function () {
       ], function (err) {
         assert.ifError(err);
         client.connect(function (err) {
-          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.instanceOf(err, errors.NoHostAvailableError);
           assert.ok(err.message.indexOf('after shutdown') >= 0, 'Error message does not contain occurrence: ' + err.message);
           done();
         });
@@ -158,9 +158,9 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.connect();
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.catch(function (err) {
-          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.instanceOf(err, errors.NoHostAvailableError);
           done();
         });
       });
@@ -171,7 +171,7 @@ describe('Client', function () {
     it('should not support named parameters for simple statements', function (done) {
       const client = newConnectedInstance();
       client.execute('QUERY', {named: 'parameter'}, function (err) {
-        helper.assertInstanceOf(err, errors.ArgumentError);
+        assert.instanceOf(err, errors.ArgumentError);
         done();
       });
     });
@@ -258,7 +258,7 @@ describe('Client', function () {
         assert.strictEqual(hints[4].code, types.dataTypes.map);
         assert.ok(util.isArray(hints[4].info));
         assert.ok(hints[4].info[0]);
-        assert.strictEqual(hints[4].info[0].code, types.dataTypes.uuid);
+        assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
         assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
         assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
         done();
@@ -275,19 +275,19 @@ describe('Client', function () {
       utils.series([
         function (next) {
           client.execute(query, [], { hints: ['int2']}, function (err) {
-            helper.assertInstanceOf(err, TypeError);
+            assert.instanceOf(err, TypeError);
             next();
           });
         },
         function (next) {
           client.execute(query, [], { hints: ['map<zeta>']}, function (err) {
-            helper.assertInstanceOf(err, TypeError);
+            assert.instanceOf(err, TypeError);
             next();
           });
         },
         function (next) {
           client.execute(query, [], { hints: ['udt<myudt>']}, function (err) {
-            helper.assertInstanceOf(err, TypeError);
+            assert.instanceOf(err, TypeError);
             next();
           });
         }
@@ -424,18 +424,18 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { prepare: true });
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.catch(function (err) {
-          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.instanceOf(err, errors.NoHostAvailableError);
           done();
         });
       });
       it('should reject the promise when an ExecutionProfile is not found', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.catch(function (err) {
-          helper.assertInstanceOf(err, errors.ArgumentError);
+          assert.instanceOf(err, errors.ArgumentError);
           done();
         });
       });
@@ -504,9 +504,9 @@ describe('Client', function () {
       it('should reject the promise when queries is not an Array', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.batch('Q', null);
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.catch(function (err) {
-          helper.assertInstanceOf(err, errors.ArgumentError);
+          assert.instanceOf(err, errors.ArgumentError);
           done();
         });
       });
@@ -517,14 +517,14 @@ describe('Client', function () {
     it('should callback with error if the queries are not string', function (done) {
       const client = newConnectedInstance(undefined, undefined, PrepareHandler);
       client.batch([{ noQuery: true }], { prepare: true }, function (err) {
-        helper.assertInstanceOf(err, errors.ArgumentError);
+        assert.instanceOf(err, errors.ArgumentError);
         done();
       });
     });
     it('should callback with error if the queries are undefined', function (done) {
       const client = newConnectedInstance(undefined, undefined, PrepareHandler);
       client.batch([ undefined, undefined, 'q3' ], { prepare: true }, function (err) {
-        helper.assertInstanceOf(err, errors.ArgumentError);
+        assert.instanceOf(err, errors.ArgumentError);
         done();
       });
     });
@@ -608,7 +608,7 @@ describe('Client', function () {
       const logEvents = [];
       client.on('log', logEvents.push.bind(logEvents));
       client.connect(function (err) {
-        helper.assertInstanceOf(err, errors.NoHostAvailableError);
+        assert.instanceOf(err, errors.NoHostAvailableError);
         client.shutdown(function clientShutdownCallback(err) {
           assert.ifError(err);
           setTimeout(function () {
@@ -626,7 +626,7 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.shutdown();
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.then(done);
       });
     });

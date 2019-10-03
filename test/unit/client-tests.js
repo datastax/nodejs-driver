@@ -15,9 +15,10 @@
  */
 
 'use strict';
-const assert = require('assert');
+const assert = require('chai').assert;
 const util = require('util');
 const proxyquire = require('proxyquire');
+const sinon = require('sinon');
 
 const Client = require('../../lib/client');
 const policies = require('../../lib/policies');
@@ -456,14 +457,11 @@ describe('Client', function () {
 
     it('should internally call to connect', function (done) {
       const client = new Client(helper.baseOptions);
-      let connectCalled = false;
-      client.connect = function (cb) {
-        connectCalled = true;
-        cb();
-      };
+      const connect = sinon.fake(cb => cb());
+      sinon.replace(client, 'connect', connect);
       client.batch(['q1'], function (err) {
         assert.ifError(err);
-        assert.strictEqual(connectCalled, true);
+        assert.isTrue(connect.calledOnce);
         done();
       });
     });
@@ -487,7 +485,7 @@ describe('Client', function () {
             assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
           }
           else {
-            assert.strictEqual(timestamp, null);
+            assert.isNull(timestamp);
           }
           next();
         });
@@ -497,9 +495,9 @@ describe('Client', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.batch(['Q'], null);
-        helper.assertInstanceOf(p, Promise);
+        assert.instanceOf(p, Promise);
         p.catch(function (err) {
-          helper.assertInstanceOf(err, errors.NoHostAvailableError);
+          assert.instanceOf(err, errors.NoHostAvailableError);
           done();
         });
       });
@@ -635,7 +633,10 @@ describe('Client', function () {
   });
 
   describe('#_waitForSchemaAgreement()', function () {
-    this.timeout(5000);
+    let clock;
+
+    before(() => clock = sinon.useFakeTimers({ shouldAdvanceTime: true }));
+    after(() => clock.restore());
 
     it('should continue querying until the version matches', function (done) {
       const client = new Client(helper.baseOptions);
@@ -646,11 +647,14 @@ describe('Client', function () {
           cb(null, ++calls === 3);
         }
       };
+
       client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
         assert.strictEqual(calls, 3);
         done();
       });
+
+      clock.tick(5000);
     });
 
     it('should timeout if there is no agreement', function (done) {
@@ -658,19 +662,17 @@ describe('Client', function () {
         protocolOptions: { maxSchemaAgreementWaitSeconds: 1 }
       }));
       client.hosts = { length: 5 };
-      let calls = 0;
       client.metadata = {
-        compareSchemaVersions: (c, cb) => {
-          calls++;
-          cb(null, false);
-        }
+        compareSchemaVersions: sinon.fake((c, cb) => cb(null, false))
       };
 
       client._waitForSchemaAgreement(null, function (err) {
         assert.ifError(err);
-        assert.ok(calls > 0);
+        assert.isAbove(client.metadata.compareSchemaVersions.callCount, 0);
         done();
       });
+
+      clock.tick(5000);
     });
 
     it('should callback when there is an error retrieving versions', function (done) {

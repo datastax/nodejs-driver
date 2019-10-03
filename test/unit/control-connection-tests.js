@@ -17,7 +17,7 @@
 "use strict";
 const assert = require('assert');
 const events = require('events');
-const rewire = require('rewire');
+const proxyquire = require('proxyquire');
 const dns = require('dns');
 
 const helper = require('../test-helper.js');
@@ -110,8 +110,7 @@ describe('ControlConnection', function () {
       });
     });
     it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', function (done) {
-      const ControlConnectionMock = rewire('../../lib/control-connection');
-      ControlConnectionMock.__set__('dns', {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
           cb(null, ['1', '2']);
         },
@@ -121,15 +120,14 @@ describe('ControlConnection', function () {
         lookup: function () {
           throw new Error('dns.lookup() should not be used');
         }
-      });
+      }});
 
       testResolution(ControlConnectionMock,
         [ '1:9042', '2:9042', '10:9042', '20:9042' ],
         [ '1:9042', '2:9042', '[10]:9042', '[20]:9042' ], done);
     });
     it('should ignore IPv4 or IPv6 resolution errors', function (done) {
-      const ControlConnectionMock = rewire('../../lib/control-connection');
-      ControlConnectionMock.__set__('dns', {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
           cb(null, ['1', '2']);
         },
@@ -139,12 +137,12 @@ describe('ControlConnection', function () {
         lookup: function () {
           throw new Error('dns.lookup() should not be used');
         }
-      });
+      }});
+
       testResolution(ControlConnectionMock, [ '1:9042', '2:9042'], done);
     });
     it('should use dns.lookup() as failover', function (done) {
-      const ControlConnectionMock = rewire('../../lib/control-connection');
-      ControlConnectionMock.__set__('dns', {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
           cb(new Error('Test error'));
         },
@@ -154,12 +152,12 @@ describe('ControlConnection', function () {
         lookup: function (name, cb) {
           cb(null, '123');
         }
-      });
+      }});
+
       testResolution(ControlConnectionMock, [ '123:9042' ], done);
     });
     it('should use dns.lookup() when no address was resolved', function (done) {
-      const ControlConnectionMock = rewire('../../lib/control-connection');
-      ControlConnectionMock.__set__('dns', {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
           cb(null);
         },
@@ -169,7 +167,8 @@ describe('ControlConnection', function () {
         lookup: function (name, cb) {
           cb(null, '123');
         }
-      });
+      }});
+
       testResolution(ControlConnectionMock, [ '123:9042' ], done);
     });
     it('should continue iterating through the hosts when borrowing a connection fails', function (done) {

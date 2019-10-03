@@ -16,9 +16,8 @@
 
 "use strict";
 const assert = require('assert');
-const util = require('util');
-const events = require('events');
-const rewire = require('rewire');
+const EventEmitter = require('events');
+const proxyquire = require('proxyquire');
 
 const Connection = require('../../lib/connection');
 const requests = require('../../lib/requests');
@@ -201,25 +200,19 @@ describe('Connection', function () {
   });
   describe('#close', function () {
     it('should allow socket.close event to be emitted before calling back when connected', function (done) {
-      const ConnectionInjected = rewire('../../lib/connection');
-      function SocketMock() {
+
+      class Socket extends BaseSocketMock {
+        destroy() {
+          setImmediate(() => this.emit('close'));
+        }
+
+        end() {
+          this.destroy();
+        }
       }
-      util.inherits(SocketMock, events.EventEmitter);
-      SocketMock.prototype.connect = function (p, a, cb) {
-        setImmediate(cb);
-      };
-      SocketMock.prototype.destroy = function () {
-        const self = this;
-        setImmediate(function () {
-          self.emit('close');
-        });
-      };
-      SocketMock.prototype.end = SocketMock.prototype.destroy;
-      SocketMock.prototype.setTimeout = helper.noop;
-      SocketMock.prototype.setKeepAlive = helper.noop;
-      SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this;};
-      ConnectionInjected.__set__("net", { Socket: SocketMock});
+
+      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
+
       const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
@@ -242,24 +235,17 @@ describe('Connection', function () {
       });
     });
     it('should allow socket.close event to be emitted before calling back when disconnected', function (done) {
-      const ConnectionInjected = rewire('../../lib/connection');
-      function SocketMock() {
+      class Socket extends BaseSocketMock {
+        destroy() {
+          setImmediate(() => this.emit('close'));
+        }
+
+        end() {
+          setImmediate(() => this.emit('close'));
+        }
       }
-      util.inherits(SocketMock, events.EventEmitter);
-      SocketMock.prototype.connect = function (p, a, cb) {
-        setImmediate(cb);
-      };
-      SocketMock.prototype.end = function () {
-        const self = this;
-        setImmediate(function () {
-          self.emit('close');
-        });
-      };
-      SocketMock.prototype.setTimeout = helper.noop;
-      SocketMock.prototype.setKeepAlive = helper.noop;
-      SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this;};
-      ConnectionInjected.__set__("net", { Socket: SocketMock});
+
+      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
       const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
@@ -309,4 +295,19 @@ function getExecOptions(options) {
   const result = ExecutionOptions.empty();
   result.getReadTimeout = () => options.readTimeout;
   return result;
+}
+
+class BaseSocketMock extends EventEmitter {
+  connect(p, a, cb) {
+    setImmediate(cb);
+  }
+
+  destroy() {}
+  end() {}
+  setTimeout() {}
+  setKeepAlive() {}
+  setNoDelay() {}
+  pipe() {
+    return this;
+  }
 }

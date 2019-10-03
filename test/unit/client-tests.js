@@ -17,8 +17,9 @@
 'use strict';
 const assert = require('assert');
 const util = require('util');
-const rewire = require('rewire');
+const proxyquire = require('proxyquire');
 
+const Client = require('../../lib/client');
 const policies = require('../../lib/policies');
 const helper = require('../test-helper');
 const errors = require('../../lib/errors');
@@ -33,13 +34,9 @@ const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile
 const clientOptions = require('../../lib/client-options');
 const PrepareHandler = require('../../lib/prepare-handler');
 
-// allow non-global require as Client gets rewired.
-/* eslint-disable global-require */
-
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
-      const Client = require('../../lib/client');
       assert.throws(function () {
         return new Client({});
       }, TypeError);
@@ -55,7 +52,6 @@ describe('Client', function () {
     });
 
     it('should create Metadata instance', function () {
-      const Client = require('../../lib/client');
       const client = new Client({ contactPoints: ['192.168.10.10'] });
       helper.assertInstanceOf(client.metadata, Metadata);
     });
@@ -63,7 +59,6 @@ describe('Client', function () {
     context('with useBigIntAsLong or useBigIntAsVarint set', () => {
       if (typeof BigInt === 'undefined') {
         it('should throw an error on engines that do not support it', () => {
-          const Client = require('../../lib/client');
           [{ useBigIntAsLong: true }, { useBigIntAsVarint: true }].forEach(encoding => {
             assert.throws(() => new Client({ contactPoints: ['10.10.1.1' ], encoding }),
               /BigInt is not supported by the JavaScript engine/);
@@ -78,7 +73,6 @@ describe('Client', function () {
     it('should fail if no host name can be resolved', function (done) {
       const contactPoints = ['not1.existent-host', 'not2.existent-host'];
       const options = utils.extend({}, helper.baseOptions, { contactPoints });
-      const Client = require('../../lib/client.js');
       const client = new Client(options);
       client.connect(function (err) {
         assert.ok(err);
@@ -94,7 +88,6 @@ describe('Client', function () {
       });
     });
     it('should connect once and queue if multiple calls in parallel', function (done) {
-      const Client = rewire('../../lib/client.js');
       let initCounter = 0;
       let emitCounter = 0;
       const options = utils.extend({
@@ -112,7 +105,10 @@ describe('Client', function () {
         //Async
         setTimeout(cb, 100);
       };
-      Client.__set__("ControlConnection", ccMock);
+
+      const Client = proxyquire('../../lib/client.js', {
+        './control-connection': ccMock
+      });
       const client = new Client(options);
       client.on('connected', function () {emitCounter++;});
       utils.times(1000, function (n, next) {
@@ -128,7 +124,6 @@ describe('Client', function () {
       });
     });
     it('should fail when trying to connect after shutdown', function (done) {
-      const Client = require('../../lib/client');
       const options = utils.extend({
         contactPoints: helper.baseOptions.contactPoints,
         policies: {
@@ -160,7 +155,6 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.connect();
         helper.assertInstanceOf(p, Promise);
@@ -299,7 +293,6 @@ describe('Client', function () {
       ], done);
     });
     it('should use the default execution profile options', function () {
-      const Client = require('../../lib/client');
       const profile = new ExecutionProfile('default', {
         consistency: types.consistencies.three,
         readTimeout: 12345,
@@ -320,7 +313,6 @@ describe('Client', function () {
       assert.strictEqual(execOptions.getConsistency(), profile.consistency);
     });
     it('should use the provided execution profile options', function () {
-      const Client = require('../../lib/client');
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
@@ -352,7 +344,6 @@ describe('Client', function () {
       });
     });
     it('should override the provided execution profile options with provided options', function () {
-      const Client = require('../../lib/client');
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
@@ -430,7 +421,6 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { prepare: true });
         helper.assertInstanceOf(p, Promise);
@@ -440,7 +430,6 @@ describe('Client', function () {
         });
       });
       it('should reject the promise when an ExecutionProfile is not found', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
         helper.assertInstanceOf(p, Promise);
@@ -452,7 +441,6 @@ describe('Client', function () {
     });
   });
   describe('#batch()', function () {
-    const Client = rewire('../../lib/client.js');
     const requestHandlerMock = {
       send: function (r, o, client, cb) {
         // Make it async
@@ -461,7 +449,11 @@ describe('Client', function () {
         }, 50);
       }
     };
-    Client.__set__("RequestHandler", requestHandlerMock);
+
+    const Client = proxyquire('../../lib/client.js', {
+      './request-handler': requestHandlerMock
+    });
+
     it('should internally call to connect', function (done) {
       const client = new Client(helper.baseOptions);
       let connectCalled = false;
@@ -503,7 +495,6 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.batch(['Q'], null);
         helper.assertInstanceOf(p, Promise);
@@ -513,7 +504,6 @@ describe('Client', function () {
         });
       });
       it('should reject the promise when queries is not an Array', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.batch('Q', null);
         helper.assertInstanceOf(p, Promise);
@@ -557,8 +547,11 @@ describe('Client', function () {
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
-      const Client = rewire('../../lib/client.js');
-      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
+
+      const Client = proxyquire('../../lib/client', {
+        './control-connection': getControlConnectionMock(hosts)
+      });
+
       const client = new Client(options);
       client.shutdown(function(){
         assert.equal(client.connected, false);
@@ -575,8 +568,9 @@ describe('Client', function () {
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
-      const Client = rewire('../../lib/client.js');
-      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
+      const Client = proxyquire('../../lib/client', {
+        './control-connection': getControlConnectionMock(hosts)
+      });
       const client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -597,8 +591,9 @@ describe('Client', function () {
       h2.pool.connections = [{close: setImmediate}];
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
-      const Client = rewire('../../lib/client.js');
-      Client.__set__("ControlConnection", getControlConnectionMock(hosts));
+      const Client = proxyquire('../../lib/client', {
+        './control-connection': getControlConnectionMock(hosts)
+      });
       const client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -611,7 +606,6 @@ describe('Client', function () {
     });
     it('should not attempt reconnection and log after shutdown', function (done) {
       const rp = new policies.reconnection.ConstantReconnectionPolicy(50);
-      const Client = require('../../lib/client');
       const client = new Client(utils.extend({}, helper.baseOptions, { policies: { reconnection: rp } }));
       const logEvents = [];
       client.on('log', logEvents.push.bind(logEvents));
@@ -632,7 +626,6 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
-        const Client = require('../../lib/client');
         const client = new Client(helper.baseOptions);
         const p = client.shutdown();
         helper.assertInstanceOf(p, Promise);
@@ -643,8 +636,6 @@ describe('Client', function () {
 
   describe('#_waitForSchemaAgreement()', function () {
     this.timeout(5000);
-
-    const Client = require('../../lib/client');
 
     it('should continue querying until the version matches', function (done) {
       const client = new Client(helper.baseOptions);
@@ -720,11 +711,14 @@ function newProfileManager(options) {
 }
 
 function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
-  const Client = rewire('../../lib/client.js');
-  Client.__set__("RequestHandler", requestHandlerMock || function () {});
-  Client.__set__("PrepareHandler", prepareHandlerMock || function () {});
+  const Client = proxyquire('../../lib/client', {
+    './request-handler': requestHandlerMock || function () {},
+    './prepare-handler': prepareHandlerMock || function () {}
+  });
+
   const client = new Client(utils.extend({}, helper.baseOptions, options));
   client._getEncoder = () => new Encoder(2, {});
   client.connect = helper.callbackNoop;
+
   return client;
 }

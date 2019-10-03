@@ -17,7 +17,7 @@
 "use strict";
 const assert = require('assert');
 const util = require('util');
-const rewire = require('rewire');
+const StreamIdStack = require('../../lib/stream-id-stack');
 
 describe('StreamIdStack', function () {
   this.timeout(2000);
@@ -155,9 +155,9 @@ describe('StreamIdStack', function () {
 
 /** @returns {StreamIdStack}  */
 function newInstance(version, releaseDelay) {
-  const StreamIdStack = rewire('../../lib/stream-id-stack');
-  StreamIdStack.__set__("releaseDelay", releaseDelay || 100);
-  return new StreamIdStack(version || 3);
+  const stack = new StreamIdStack(version || 3);
+  stack.releaseDelay = releaseDelay || 100;
+  return stack;
 }
 
 function pop(stack, n) {

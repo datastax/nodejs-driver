@@ -1,0 +1,5 @@
+# TypeScript: js files are generated using tsc transpiler
+/test/unit/typescript/*.js
+
+# Integer is part of the Closure Library
+/lib/types/integer.js

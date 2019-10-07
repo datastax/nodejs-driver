@@ -4,8 +4,10 @@
  * Please see the license for details:
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
-'use strict';
-const assert = require('assert');
+
+"use strict";
+const assert = require('chai').assert;
+const sinon = require('sinon');
 
 const Connection = require('../../../lib/connection.js');
 const defaultOptions = require('../../../lib/client-options.js').defaultOptions();
@@ -74,25 +76,37 @@ describe('Connection', function () {
         localCon.close(done);
       });
     });
-    it('should set the timeout for the heartbeat', function (done) {
-      const options = utils.extend({}, defaultOptions);
-      options.pooling.heartBeatInterval = 100;
-      const c = newInstance(null, undefined, options);
-      let sendCounter = 0;
-      c.open(function (err) {
-        assert.ifError(err);
-        const originalSend = c.sendStream;
-        c.sendStream = function() {
-          sendCounter++;
-          originalSend.apply(c, arguments);
-        };
-        setTimeout(function () {
-          assert.ok(sendCounter > 3, 'sendCounter ' + sendCounter);
+
+    context('using timers', () => {
+      let clock;
+
+      before(() => clock = sinon.useFakeTimers({ shouldAdvanceTime: true }));
+      after(() => clock.restore());
+
+      it('should set the timeout for the heartbeat', function (done) {
+        const c = sinon.spy(newInstance());
+
+        c.open(function (err) {
+          assert.ifError(err);
+
+          const initialSendCalls = c.sendStream.callCount;
+
+          // Default is 30s
+          clock.tick(defaultOptions.pooling.heartBeatInterval);
+
+          assert.strictEqual(c.sendStream.callCount, initialSendCalls + 1);
+
+          const request = c.sendStream.getCall(c.sendStream.callCount-1).args[0];
+
+          assert.strictEqual(request, requests.options);
+
+          c.close();
           done();
-        }, 600);
+        });
       });
     });
   });
+
   describe('#open with ssl', function () {
     before(helper.ccmHelper.start(1, {ssl: true}));
     after(helper.ccmHelper.remove);
@@ -253,7 +267,11 @@ function newInstance(address, protocolVersion, options){
   }
   //var logEmitter = function (name, type) { if (type === 'verbose') { return; } console.log.apply(console, arguments);};
   options = utils.deepExtend({logEmitter: helper.noop}, options || defaultOptions);
-  return new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
+
+  const c = new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
+
+  after(() => c.close());
+  return c;
 }
 
 function getRequest(query) {

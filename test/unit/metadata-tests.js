@@ -8,7 +8,6 @@
 const assert = require('assert');
 const util = require('util');
 const events = require('events');
-const rewire = require('rewire');
 
 const helper = require('../test-helper.js');
 const clientOptions = require('../../lib/client-options.js');
@@ -25,6 +24,7 @@ const dataTypes = types.dataTypes;
 const utils = require('../../lib/utils');
 const errors = require('../../lib/errors');
 const Encoder = require('../../lib/encoder');
+const isDoneForToken = require('../../lib/metadata/schema-parser').isDoneForToken;
 
 describe('Metadata', function () {
   describe('#refreshKeyspace()', function () {
@@ -2615,7 +2615,6 @@ describe('Metadata', function () {
   });
 });
 describe('SchemaParser', function () {
-  const isDoneForToken = rewire('../../lib/metadata/schema-parser')['__get__']('isDoneForToken');
   describe('isDoneForToken()', function () {
     it('should skip if dc not included in topology', function () {
       const replicationFactors = { 'dc1': 3, 'dc2': 1 };

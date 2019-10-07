@@ -7,7 +7,7 @@
 
 'use strict';
 
-const assert = require('assert');
+const expect = require('chai').expect;
 const Client = require('../../../lib/client');
 const types = require('../../../lib/types');
 const helper = require('../../test-helper');
@@ -66,10 +66,10 @@ module.exports = function (keyspace, prepare) {
         .then(rs => {
           const row = rs.first();
           ['bigint_value', 'varint_value', 'int_value'].forEach(columnName =>
-            assert.strictEqual(row[columnName].toString(), intValue));
+            expect(row[columnName].toString()).to.be.equal(intValue));
 
           ['decimal_value', 'double_value', 'float_value'].forEach(columnName =>
-            assert.strictEqual(row[columnName].toString(), decimalValue));
+            expect(row[columnName].toString()).to.be.equal(decimalValue));
         });
     });
 
@@ -91,10 +91,10 @@ module.exports = function (keyspace, prepare) {
         .then(() => client.execute('SELECT * FROM tbl_numeric_collections WHERE id = ?', [ id ]))
         .then(rs => {
           const row = rs.first();
-          assert.strictEqual(row['list_bigint'][0].toString(), intValue);
-          assert.strictEqual(row['list_decimal'][0].toString(), decimalValue);
-          assert.strictEqual(row['set_float'][0].toString(), decimalValue);
-          assert.strictEqual(row['set_int'][0].toString(), intValue);
+          expect(row['list_bigint'][0].toString()).to.be.equal(intValue);
+          expect(row['list_decimal'][0].toString()).to.be.equal(decimalValue);
+          expect(row['set_float'][0].toString()).to.be.equal(decimalValue);
+          expect(row['set_int'][0].toString()).to.be.equal(intValue);
         });
     });
 
@@ -123,7 +123,7 @@ module.exports = function (keyspace, prepare) {
         .then(rs => {
           const row = rs.first();
           ['bigint_value', 'varint_value'].forEach(columnName =>
-            assert.strictEqual(row[columnName].toString(), intValue));
+            expect(row[columnName].toString()).to.be.equal(intValue));
         });
     });
   });
@@ -169,12 +169,12 @@ module.exports = function (keyspace, prepare) {
           .then(() => client.execute(selectQuery, [ textValue, value ], { hints, prepare }))
           .then(rs => {
             const row = rs.first();
-            assert.strictEqual(row['id1'], value.toString());
-            assert.strictEqual(row['id2'], value);
-            assert.strictEqual(row['varint1'], value);
-            assert.deepStrictEqual(row['list1'], [value, value]);
-            assert.deepStrictEqual(row['set1'], new Set([value]));
-            assert.deepStrictEqual(row['set2'], new Set([value]));
+            expect(row['id1']).to.be.equal(value.toString());
+            expect(row['id2']).to.be.equal(value);
+            expect(row['varint1']).to.be.equal(value);
+            expect(row['list1']).to.be.an('array').to.have.all.members([value, value]);
+            expect(row['set1']).to.be.instanceOf(Set).and.to.have.all.keys(value);
+            expect(row['set2']).to.be.instanceOf(Set).and.to.have.all.keys(value);
           });
       })));
 
@@ -190,9 +190,9 @@ module.exports = function (keyspace, prepare) {
           .then(() => client.execute(selectQuery, [ textValue, BigInt(0) ], { hints, prepare }))
           .then(rs => {
             const row = rs.first();
-            assert.strictEqual(row['id1'], value.toString());
-            assert.strictEqual(row['varint1'], value);
-            assert.deepStrictEqual(row['set2'], new Set([value]));
+            expect(row['id1']).to.be.equal(value.toString());
+            expect(row['varint1']).to.be.equal(value);
+            expect(row['set2']).to.be.instanceOf(Set).and.to.have.all.keys(value);
           });
       })));
   });

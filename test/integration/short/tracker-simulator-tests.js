@@ -7,8 +7,9 @@
 
 'use strict';
 
-const assert = require('assert');
-const helper = require('../../test-helper');
+const assert = require('chai').assert;
+const sinon = require('sinon');
+
 const tracker = require('../../../lib/tracker');
 const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
@@ -42,7 +43,7 @@ describe('tracker', function () {
         const requestType = prepare ? 'EXECUTE' : 'QUERY';
 
         it('should be called when a valid response is obtained for ' + requestType + ' request', () => {
-          const requestTracker = new TestTracker();
+          const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
           const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const query = 'SELECT * FROM system.local';
           const parameters = [ 'local' ];
@@ -54,7 +55,7 @@ describe('tracker', function () {
       });
 
       it('should be called when a error response is obtained', () => {
-        const requestTracker = new TestTracker();
+        const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
         const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
         const query = 'SELECT * FROM system.failing';
         const parameters = [ 'abc' ];
@@ -65,7 +66,7 @@ describe('tracker', function () {
             verifyError(requestTracker, query, parameters);
             err = e;
           })
-          .then(() => helper.assertInstanceOf(err, errors.ResponseError))
+          .then(() => assert.instanceOf(err, errors.ResponseError))
           .then(() => client.shutdown());
       });
     });
@@ -75,7 +76,7 @@ describe('tracker', function () {
         const requestType = prepare ? 'bound statements' : 'queries';
 
         it('should be called when a valid response is obtained for BATCH request containing ' + requestType, () => {
-          const requestTracker = new TestTracker();
+          const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
           const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const queries = [
             { query: 'SELECT * FROM system.local WHERE key = ?', params: [] }
@@ -89,7 +90,7 @@ describe('tracker', function () {
       });
 
       it('should be called when a error response is obtained', () => {
-        const requestTracker = new TestTracker();
+        const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
         const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
         const query = 'SELECT INVALID';
         const parameters = [ 'abc' ];
@@ -105,7 +106,7 @@ describe('tracker', function () {
         const requestType = prepare ? 'EXECUTE' : 'QUERY';
 
         it('should be called when a valid response is obtained for ' + requestType + ' request', () => {
-          const requestTracker = new TestTracker();
+          const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
           const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
           const query = 'SELECT * FROM system.local';
           const parameters = ['local'];
@@ -120,12 +121,12 @@ describe('tracker', function () {
     });
 
     it('should be called when client is being shutdown', () => {
-      const requestTracker = new TestTracker();
+      const requestTracker = sinon.createStubInstance(tracker.RequestTracker);
       const client = new Client({ contactPoints: [ simulacron.startingIp ], localDataCenter: 'dc1', requestTracker });
       return client.connect()
-        .then(() => assert.strictEqual(requestTracker.shutdownCalled, 0))
+        .then(() => assert.strictEqual(requestTracker.shutdown.callCount, 0))
         .then(() => client.shutdown())
-        .then(() => assert.strictEqual(requestTracker.shutdownCalled, 1));
+        .then(() => assert.strictEqual(requestTracker.shutdown.callCount, 1));
     });
   });
 
@@ -155,8 +156,8 @@ describe('tracker', function () {
           .then(() => {
             assert.strictEqual(slowMessages.length, 1);
             assert.strictEqual(largeMessages.length, 0);
-            helper.assertContains(slowMessages[0], 'Slow request, took');
-            helper.assertContains(slowMessages[0], `${queryDelayed} [${id}]`);
+            assert.match(slowMessages[0], /Slow request, took/);
+            assert.include(slowMessages[0], `${queryDelayed} [${id}]`);
           });
       });
 
@@ -168,8 +169,8 @@ describe('tracker', function () {
           .then(() => {
             assert.strictEqual(slowMessages.length, 0);
             assert.strictEqual(largeMessages.length, 1);
-            helper.assertContains(largeMessages[0], 'Request exceeded length');
-            helper.assertContains(largeMessages[0], query);
+            assert.include(largeMessages[0], 'Request exceeded length');
+            assert.include(largeMessages[0], query);
           });
       });
     });
@@ -184,12 +185,12 @@ describe('tracker', function () {
             .then(() => {
               assert.strictEqual(slowMessages.length, 0);
               assert.strictEqual(largeMessages.length, 1);
-              helper.assertContains(largeMessages[0], 'Request exceeded length');
+              assert.match(largeMessages[0], /Request exceeded length/);
               if (logged) {
-                helper.assertContains(largeMessages[0], ': LOGGED BATCH w/ 1 queries (' + query);
+                assert.include(largeMessages[0], ': LOGGED BATCH w/ 1 queries (' + query);
               }
               else {
-                helper.assertContains(largeMessages[0], ': BATCH w/ 1 queries (' + query);
+                assert.include(largeMessages[0], ': BATCH w/ 1 queries (' + query);
               }
             });
         });
@@ -199,26 +200,28 @@ describe('tracker', function () {
 });
 
 function verifyResponse(tracker, query, parameters) {
-  assert.strictEqual(tracker.responses.length, 1);
-  assert.strictEqual(tracker.errors.length, 0);
-  const r = tracker.responses[0];
+  assert.isTrue(tracker.onSuccess.calledOnce);
+  assert.isTrue(tracker.onError.notCalled);
+
+  const r = tracker.onSuccess.getCall(0).args;
 
   verifyCommon(r, query, parameters);
 
   const responseLength = r[5];
-  assert.strictEqual(typeof responseLength, 'number');
-  assert.ok(responseLength > 0);
+  assert.typeOf(responseLength, 'number');
+  assert.isAbove(responseLength, 0);
 }
 
 function verifyError(tracker, query, parameters) {
-  assert.strictEqual(tracker.responses.length, 0);
-  assert.strictEqual(tracker.errors.length, 1);
-  const errorInfo = tracker.errors[0];
+  assert.isTrue(tracker.onSuccess.notCalled);
+  assert.isTrue(tracker.onError.calledOnce);
+
+  const errorInfo = tracker.onError.getCall(0).args;
   verifyCommon(errorInfo, query, parameters);
 }
 
 function verifyCommon(info, query, parameters) {
-  helper.assertInstanceOf(info[0], Host);
+  assert.instanceOf(info[0], Host);
   if (Array.isArray(query)) {
     assert.deepEqual(info[1].map(x => ({ query: x.query, params: x.params })), query);
   } else {
@@ -229,32 +232,11 @@ function verifyCommon(info, query, parameters) {
 
   const requestLength = info[4];
   const latency = info[info.length - 1];
-  assert.strictEqual(typeof requestLength, 'number');
+  assert.typeOf(requestLength, 'number');
 
   // latency is an Array with 2 integers: seconds, nanos
-  assert.ok(Array.isArray(latency));
+  assert.isArray(latency);
   assert.strictEqual(latency.length, 2);
   assert.strictEqual(latency[0], 0);
-  assert.ok(latency[1] > 0);
-}
-
-class TestTracker extends tracker.RequestTracker {
-  constructor() {
-    super();
-    this.responses = [];
-    this.errors = [];
-    this.shutdownCalled = 0;
-  }
-
-  onSuccess() {
-    this.responses.push(Array.prototype.slice.call(arguments));
-  }
-
-  onError() {
-    this.errors.push(Array.prototype.slice.call(arguments));
-  }
-
-  shutdown() {
-    this.shutdownCalled++;
-  }
+  assert.isAbove(latency[1], 0);
 }

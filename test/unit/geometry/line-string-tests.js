@@ -15,7 +15,6 @@
  */
 'use strict';
 const assert = require('assert');
-const rewire = require('rewire');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 const Point = require('../../../lib/geometry/point');
@@ -67,7 +66,6 @@ describe('LineString', function () {
   });
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
-      const BELineString = rewire(moduleName);
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '000000000200000002000000000000000000000000000000003ff0000000000000bff3333333333333'],
@@ -79,7 +77,7 @@ describe('LineString', function () {
           '000000000200000003408490000000000040203f35b771f1b53ff00000000000004008000000000000bff0000000000000405bc00000000000']
       ]
         .forEach(function (item) {
-          const line = new BELineString(item[0]);
+          const line = new LineString(item[0]);
           line.useBESerialization = function () {
             return true;
           };
@@ -89,7 +87,6 @@ describe('LineString', function () {
         });
     });
     it('should return WKB in a little-endian OS', function () {
-      const LELineString = rewire(moduleName);
       [
         [ [ new Point(0, 0), new Point(1, -1.2)],
           '01020000000200000000000000000000000000000000000000000000000000f03f333333333333f3bf'],
@@ -101,7 +98,7 @@ describe('LineString', function () {
           '0102000000030000000000000000908440b5f171b7353f2040000000000000f03f0000000000000840000000000000f0bf0000000000c05b40']
       ]
         .forEach(function (item) {
-          const line = new LELineString(item[0]);
+          const line = new LineString(item[0]);
           line.useBESerialization = function () {
             return false;
           };

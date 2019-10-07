@@ -15,9 +15,9 @@
  */
 'use strict';
 const assert = require('assert');
-const util = require('util');
-const events = require('events');
-const rewire = require('rewire');
+const EventEmitter = require('events');
+const proxyquire = require('proxyquire');
+const sinon = require('sinon');
 
 const Connection = require('../../lib/connection');
 const requests = require('../../lib/requests');
@@ -132,93 +132,91 @@ describe('Connection', function () {
     });
   });
   describe('#sendStream()', function () {
-    this.timeout(1000);
-    it('should set the timeout for the idle request', function (done) {
+    let clock;
+
+    before(() => clock = sinon.useFakeTimers());
+    after(() => clock.restore());
+
+    it('should set the timeout for the idle request', function () {
       const sent = [];
       const writeQueueFake = getWriteQueueFake(sent);
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 20 } }, writeQueueFake);
       c.sendStream(new requests.QueryRequest('QUERY1'), null, utils.noop);
-      setTimeout(function () {
-        // 2 requests were sent, the user query plus the idle 'options' query
-        assert.deepEqual(sent.map(function (op) {
-          if (op.request instanceof requests.QueryRequest) {
-            return op.request.query;
-          }
-          return op.request;
-        }), [ 'QUERY1', requests.options ]);
-        c.close();
-        done();
-      }, 30);
+
+      clock.tick(20);
+
+      // 2 requests were sent, the user query plus the idle 'options' query
+      assert.deepEqual(sent.map(function (op) {
+        if (op.request instanceof requests.QueryRequest) {
+          return op.request.query;
+        }
+        return op.request;
+      }), [ 'QUERY1', requests.options ]);
+      c.close();
     });
-    it('should not set the timeout for the idle request when heartBeatInterval is 0', function (done) {
+    it('should not set the timeout for the idle request when heartBeatInterval is 0', function () {
       const sent = [];
       const writeQueueFake = getWriteQueueFake(sent);
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 0 } }, writeQueueFake);
       c.sendStream(new requests.QueryRequest('QUERY1'), null, utils.noop);
-      setTimeout(function () {
-        // Only 1 request was sent, no idle query
-        assert.deepEqual(sent.map(function (op) {
-          if (op.request instanceof requests.QueryRequest) {
-            return op.request.query;
-          }
-          return op.request;
-        }), [ 'QUERY1' ]);
-        c.close();
-        done();
-      }, 20);
+
+      clock.tick(20);
+
+      // Only 1 request was sent, no idle query
+      assert.deepEqual(sent.map(function (op) {
+        if (op.request instanceof requests.QueryRequest) {
+          return op.request.query;
+        }
+        return op.request;
+      }), [ 'QUERY1' ]);
+      c.close();
     });
-    it('should reset the timeout after each new request', function (done) {
+    it('should reset the timeout after each new request', function () {
       const sent = [];
       const writeQueueFake = getWriteQueueFake(sent);
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 20 } }, writeQueueFake);
       for (let i = 0; i < 4; i++) {
-        setTimeout(function (query) {
-          c.sendStream(new requests.QueryRequest(query), null, utils.noop);
-        }, 10 * i, 'QUERY' + i);
+        clock.tick(10);
+        c.sendStream(new requests.QueryRequest('QUERY' + i), null, utils.noop);
       }
-      setTimeout(function () {
-        // Only 4 request were sent, no idle query
-        assert.deepEqual(sent.map(function (op) {
-          if (op.request instanceof requests.QueryRequest) {
-            return op.request.query;
-          }
-          return op.request;
-        }), Array.apply(null, new Array(4)).map((x, i) => 'QUERY' + i));
-        c.close();
-        done();
-      }, 40);
+
+      // Only 4 request were sent, no idle query
+      assert.deepEqual(sent.map(function (op) {
+        if (op.request instanceof requests.QueryRequest) {
+          return op.request.query;
+        }
+        return op.request;
+      }), Array.apply(null, new Array(4)).map((x, i) => 'QUERY' + i));
+      c.close();
     });
     it('should set the request timeout', function (done) {
       const writeQueueFake = getWriteQueueFake();
       const c = newInstance(undefined, undefined, { pooling: { heartBeatInterval: 0 } }, writeQueueFake);
+
       c.sendStream(new requests.QueryRequest('QUERY1'), getExecOptions({ readTimeout: 20 }), function (err) {
         helper.assertInstanceOf(err, errors.OperationTimedOutError);
         c.close();
         done();
       });
+
+      clock.tick(20);
     });
   });
   describe('#close', function () {
     it('should allow socket.close event to be emitted before calling back when connected', function (done) {
-      const ConnectionInjected = rewire('../../lib/connection');
-      function SocketMock() {
+
+      class Socket extends BaseSocketMock {
+        destroy() {
+          setImmediate(() => this.emit('close'));
+        }
+
+        end() {
+          this.destroy();
+        }
       }
-      util.inherits(SocketMock, events.EventEmitter);
-      SocketMock.prototype.connect = function (p, a, cb) {
-        setImmediate(cb);
-      };
-      SocketMock.prototype.destroy = function () {
-        const self = this;
-        setImmediate(function () {
-          self.emit('close');
-        });
-      };
-      SocketMock.prototype.end = SocketMock.prototype.destroy;
-      SocketMock.prototype.setTimeout = helper.noop;
-      SocketMock.prototype.setKeepAlive = helper.noop;
-      SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this;};
-      ConnectionInjected.__set__("net", { Socket: SocketMock});
+
+      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
+
       const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
@@ -241,24 +239,17 @@ describe('Connection', function () {
       });
     });
     it('should allow socket.close event to be emitted before calling back when disconnected', function (done) {
-      const ConnectionInjected = rewire('../../lib/connection');
-      function SocketMock() {
+      class Socket extends BaseSocketMock {
+        destroy() {
+          setImmediate(() => this.emit('close'));
+        }
+
+        end() {
+          setImmediate(() => this.emit('close'));
+        }
       }
-      util.inherits(SocketMock, events.EventEmitter);
-      SocketMock.prototype.connect = function (p, a, cb) {
-        setImmediate(cb);
-      };
-      SocketMock.prototype.end = function () {
-        const self = this;
-        setImmediate(function () {
-          self.emit('close');
-        });
-      };
-      SocketMock.prototype.setTimeout = helper.noop;
-      SocketMock.prototype.setKeepAlive = helper.noop;
-      SocketMock.prototype.setNoDelay = helper.noop;
-      SocketMock.prototype.pipe = function () {return this;};
-      ConnectionInjected.__set__("net", { Socket: SocketMock});
+
+      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
       const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
@@ -308,4 +299,19 @@ function getExecOptions(options) {
   const result = ExecutionOptions.empty();
   result.getReadTimeout = () => options.readTimeout;
   return result;
+}
+
+class BaseSocketMock extends EventEmitter {
+  connect(p, a, cb) {
+    setImmediate(cb);
+  }
+
+  destroy() {}
+  end() {}
+  setTimeout() {}
+  setKeepAlive() {}
+  setNoDelay() {}
+  pipe() {
+    return this;
+  }
 }

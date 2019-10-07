@@ -50,11 +50,33 @@ vdescribe('dse-6.7', 'InsightsClient', function () {
 
     after(() => client.shutdown());
 
+    let rpcLog;
+    let attempts = 0;
+
     return client.connect()
-      .then(() => new Promise(r => setImmediate(r)))
-      .then(() => new Promise((resolve, reject) => node.getLogs((err, logs) => (err ? reject(err) : resolve(logs)))))
-      .then(logs => {
-        const rpcLog = logs.find(l => l.type === 'QUERY' && l.query === insightsRpcQuery);
+      .then(() => new Promise((resolve, reject) => {
+        utils.whilst(
+          () => !rpcLog && attempts++ < 10,
+          next => {
+            node.getLogs((err, logs) => {
+              if (err) {
+                return next(err);
+              }
+
+              rpcLog = logs.find(l => l.type === 'QUERY' && l.query === insightsRpcQuery);
+
+              setTimeout(next, !rpcLog ? 100 : 0);
+            });
+          },
+          err => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+      }))
+      .then(() => {
         assert.ok(rpcLog, 'RPC query not found');
         const paramsBase64 = rpcLog.frame.message.options.positional_values;
         assert.strictEqual(paramsBase64.length, 1);

@@ -15,7 +15,6 @@
  */
 'use strict';
 const assert = require('assert');
-const rewire = require('rewire');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 const Point = require('../../../lib/geometry/point');
@@ -74,7 +73,6 @@ describe('Polygon', function () {
   });
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
-      const BEPolygon = rewire(moduleName);
       [
         [ [new Point(1, 3), new Point(3, 1), new Point(3, 6), new Point(1, 3)],
           '00000000030000000100000004' +
@@ -88,7 +86,7 @@ describe('Polygon', function () {
           '4008000000000000']
       ]
         .forEach(function (item) {
-          const polygon = new BEPolygon(item[0]);
+          const polygon = new Polygon(item[0]);
           polygon.useBESerialization = function () {
             return true;
           };
@@ -98,14 +96,13 @@ describe('Polygon', function () {
         });
     });
     it('should return WKB in a little-endian OS', function () {
-      const LEPolygon = rewire(moduleName);
       [
         [ [ new Point(0, 3), new Point(3, 1), new Point(3, 6), new Point(0, 3)],
           '01030000000100000004000000000000000000000000000000000008400000000000000840000000000000f03f0000000000000840000000000000184000000000000000000000000000000840'
         ]
       ]
         .forEach(function (item) {
-          const polygon = new LEPolygon(item[0]);
+          const polygon = new Polygon(item[0]);
           polygon.useBESerialization = function () {
             return false;
           };

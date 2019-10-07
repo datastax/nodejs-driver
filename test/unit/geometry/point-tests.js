@@ -15,7 +15,6 @@
  */
 'use strict';
 const assert = require('assert');
-const rewire = require('rewire');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 const moduleName = '../../../lib/geometry/point';
@@ -61,7 +60,6 @@ describe('Point', function () {
   });
   describe('#toBuffer()', function () {
     it('should return WKB in a big-endian OS', function () {
-      const BEPoint = rewire(moduleName);
       [
         [2, 4, '000000000140000000000000004010000000000000'],
         [2.2, 4.2, '0000000001400199999999999a4010cccccccccccd'],
@@ -69,7 +67,7 @@ describe('Point', function () {
         [3.3333331, -10.9, '0000000001400aaaaa8b5964f6c025cccccccccccd']
       ]
         .forEach(function (item) {
-          const p = new BEPoint(item[0], item[1]);
+          const p = new Point(item[0], item[1]);
           p.useBESerialization = function () {
             return true;
           };
@@ -79,7 +77,6 @@ describe('Point', function () {
         });
     });
     it('should return WKB in a little-endian OS', function () {
-      const LEPoint = rewire(moduleName);
       [
         [2, 4, '010100000000000000000000400000000000001040'],
         [2.2, 4.2, '01010000009a99999999990140cdcccccccccc1040'],
@@ -87,7 +84,7 @@ describe('Point', function () {
         [3.3333331, -10.9, '0101000000f664598baaaa0a40cdcccccccccc25c0']
       ]
         .forEach(function (item) {
-          const p = new LEPoint(item[0], item[1]);
+          const p = new Point(item[0], item[1]);
           p.useBESerialization = function () {
             return false;
           };

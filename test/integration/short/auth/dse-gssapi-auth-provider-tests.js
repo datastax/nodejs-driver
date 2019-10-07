@@ -22,6 +22,7 @@ const errors = require('../../../../lib/errors');
 const ads = helper.ads;
 const cDescribe = helper.conditionalDescribe(
   helper.requireOptional('kerberos') && helper.isDseGreaterThan('5.0'), 'kerberos and DSE required to run');
+const vit = helper.vit;
 
 cDescribe('DseGssapiAuthProvider', function () {
   this.timeout(180000);
@@ -66,13 +67,13 @@ cDescribe('DseGssapiAuthProvider', function () {
 
   after(ads.stop.bind(ads));
 
-  it('should authenticate against DSE instance using Kerberos', done => {
+  vit('dse-5.1', 'should authenticate against DSE instance using Kerberos', done => {
     const authProvider = new DseGssapiAuthProvider();
     const clientOptions = helper.getOptions({ authProvider: authProvider });
     helper.connectAndQuery(new Client(clientOptions), done);
   });
 
-  it('should fail with auth errors when authProvider is undefined', () => {
+  vit('dse-5.1', 'should fail with auth errors when authProvider is undefined', () => {
     const clientOptions = helper.getOptions({ authProvider: undefined });
     const client = new Client(clientOptions);
     let catchCalled = false;

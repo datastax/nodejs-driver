@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
+
+"use strict";
+const assert = require('chai').assert;
 const util = require('util');
+const sinon = require('sinon');
 
 const helper = require('../../test-helper.js');
 const Client = require('../../../lib/client.js');
@@ -168,7 +170,10 @@ describe('Client', function () {
   describe('#eachRow(query, params, {prepare: 1})', function () {
     const table = helper.getRandomName('table');
     const setupInfo = helper.setup(3, {
-      ccmOptions: { jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1'] },
+      ccmOptions: {
+        jvmArgs: ['-Dcassandra.wait_for_tracing_events_timeout_secs=-1'],
+        yaml: ['batch_size_warn_threshold_in_kb:5']
+      },
       replicationFactor: 3,
       queries: [ helper.createTableCql(table) ]
     });
@@ -451,39 +456,35 @@ describe('Client', function () {
         client.connect.bind(client),
         function selectNotExistent(next) {
           const query = util.format('SELECT * FROM %s WHERE id = ?', table);
-          let called = 0;
-          client.eachRow(query, [types.Uuid.random()], {prepare: true, traceQuery: true}, function () {
-            called++;
-          }, function (err, result) {
+          const spy = sinon.spy();
+
+          client.eachRow(query, [types.Uuid.random()], {prepare: true, traceQuery: true}, spy, (err, result) => {
             assert.ifError(err);
             assert.ok(result);
-            assert.strictEqual(called, 0);
+            assert.strictEqual(spy.callCount, 0);
             helper.assertInstanceOf(result.info.traceId, types.Uuid);
             next();
           });
         },
         function insertQuery(next) {
           const query = util.format('INSERT INTO %s (id) VALUES (?)', table);
-          let called = 0;
-          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
-            called++;
-          }, function (err, result) {
+          const spy = sinon.spy();
+
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, spy, (err, result) => {
             assert.ifError(err);
             assert.ok(result);
-            assert.strictEqual(called, 0);
+            assert.isFalse(spy.called);
             helper.assertInstanceOf(result.info.traceId, types.Uuid);
             next();
           });
         },
         function selectSingleRow(next) {
           const query = util.format('SELECT * FROM %s WHERE id = ?', table);
-          let called = 0;
-          client.eachRow(query, [id], { prepare: true, traceQuery: true}, function () {
-            called++;
-          }, function (err, result) {
+          const spy = sinon.spy();
+          client.eachRow(query, [id], { prepare: true, traceQuery: true}, spy, function (err, result) {
             assert.ifError(err);
             assert.ok(result);
-            assert.strictEqual(called, 1);
+            assert.isTrue(spy.calledOnce);
             assert.strictEqual(result.rowLength, 1);
             helper.assertInstanceOf(result.info.traceId, types.Uuid);
             next();
@@ -511,18 +512,13 @@ describe('Client', function () {
         table,
         table
       );
-
-      const warnThresholdInKb = helper.getServerInfo().isDse ? 64 : 5;
-      const params = {
-        id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', warnThresholdInKb * 1025)
-      };
-
+      const params = { id1: types.Uuid.random(), id2: types.Uuid.random(), sample: utils.stringRepeat('c', 6 * 1024) };
       client.eachRow(query, params, { prepare: true }, utils.noop, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);
-        assert.strictEqual(result.info.warnings.length, 1);
-        helper.assertContains(result.info.warnings[0], 'batch');
-        helper.assertContains(result.info.warnings[0], 'exceeding');
+        assert.lengthOf(result.info.warnings, 1);
+        assert.match(result.info.warnings[0], /batch/i);
+        assert.match(result.info.warnings[0], /exceeding/);
         assert.ok(loggedMessage);
         client.shutdown(done);
       });

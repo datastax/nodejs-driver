@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
+"use strict";
+const sinon = require('sinon');
 const assert = require('assert');
-const util = require('util');
-const rewire = require('rewire');
+
+const StreamIdStack = require('../../lib/stream-id-stack');
 
 describe('StreamIdStack', function () {
+  let clock;
+
+  before(() => clock = sinon.useFakeTimers());
+  after(() => clock.restore());
+
   this.timeout(2000);
-  const osPrecision = 30;
   it('should pop and push', function () {
     const stack = newInstance();
     assert.strictEqual(stack.pop(), 0);
@@ -77,8 +83,8 @@ describe('StreamIdStack', function () {
     assert.strictEqual(stack.groups.length, 4);
     stack.clear();
   });
-  it('should release unused groups', function (done) {
-    const releaseDelay = 100;
+  it('should release unused groups', function () {
+    const releaseDelay = 5000;
     const stack = newInstance(3, releaseDelay);
     //6 groups,
     const length = 128 * 5 + 2;
@@ -97,17 +103,17 @@ describe('StreamIdStack', function () {
     push(stack, 0, 10);
 
     assert.strictEqual(stack.groups.length, 6);
-    setTimeout(function () {
-      //there should be 5 groups now
-      assert.strictEqual(stack.groups.length, 5);
 
-      assert.strictEqual(stack.inUse, length - 12);
+    clock.tick(releaseDelay);
 
-      stack.clear();
-      done();
-    }, releaseDelay + osPrecision);
+    //there should be 5 groups now
+    assert.strictEqual(stack.groups.length, 5);
+
+    assert.strictEqual(stack.inUse, length - 12);
+
+    stack.clear();
   });
-  it('should not release the current group', function (done) {
+  it('should not release the current group', function () {
     const releaseDelay = 100;
     const stack = newInstance(3, releaseDelay);
 
@@ -119,14 +125,14 @@ describe('StreamIdStack', function () {
     //the last group is completed and but can not be released as is the current one
     stack.push(128 * 5 + 1);
     assert.strictEqual(stack.groups.length, 6);
-    setTimeout(function () {
-      //there should be 5 groups now
-      assert.strictEqual(stack.groups.length, 6);
-      stack.clear();
-      done();
-    }, releaseDelay + osPrecision);
+
+    clock.tick(releaseDelay);
+
+    //there should be 5 groups now
+    assert.strictEqual(stack.groups.length, 6);
+    stack.clear();
   });
-  it('should not release more than release size per time', function (done) {
+  it('should not release more than release size per time', function () {
     const releaseDelay = 100;
     const stack = newInstance(3, releaseDelay);
     //12 groups,
@@ -139,24 +145,25 @@ describe('StreamIdStack', function () {
     assert.strictEqual(stack.inUse, 0);
     assert.strictEqual(stack.pop(), 127); //last from the first group
     assert.strictEqual(stack.inUse, 1);
-    setTimeout(function () {
-      //there should be 12 - 4 groups now
-      assert.strictEqual(stack.groups.length, 8);
-    }, releaseDelay + osPrecision);
-    setTimeout(function () {
-      //there should be 12 - 8 groups now
-      assert.strictEqual(stack.groups.length, 4);
-      stack.clear();
-      done();
-    }, releaseDelay * 2 + osPrecision);
+
+    clock.tick(releaseDelay);
+
+    //there should be 12 - 4 groups now
+    assert.strictEqual(stack.groups.length, 8);
+
+    clock.tick(releaseDelay);
+
+    //there should be 12 - 8 groups now
+    assert.strictEqual(stack.groups.length, 4);
+    stack.clear();
   });
 });
 
 /** @returns {StreamIdStack}  */
 function newInstance(version, releaseDelay) {
-  const StreamIdStack = rewire('../../lib/stream-id-stack');
-  StreamIdStack.__set__("releaseDelay", releaseDelay || 100);
-  return new StreamIdStack(version || 3);
+  const stack = new StreamIdStack(version || 3);
+  stack.releaseDelay = releaseDelay || 100;
+  return stack;
 }
 
 function pop(stack, n) {
@@ -168,7 +175,7 @@ function pop(stack, n) {
 }
 
 function push(stack, initialValue, length) {
-  if (util.isArray(initialValue)) {
+  if (Array.isArray(initialValue)) {
     initialValue.forEach(stack.push.bind(stack));
     return;
   }

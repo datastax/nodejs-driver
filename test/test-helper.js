@@ -1117,24 +1117,32 @@ helper.ccm.start = function (nodeLength, options) {
 
 /**
  * Adds a new node to the cluster
- * @param {Number} nodeIndex 1 based index of the node
+ * @param {number|{nodeIndex: number, dc?: string}} options 1 based index of the node or options.
  * @param {Function} callback
  */
-helper.ccm.bootstrapNode = function (nodeIndex, callback) {
+helper.ccm.bootstrapNode = function (options, callback) {
+  if (typeof options === 'number') {
+    options = { nodeIndex: options };
+  }
+
   const ipPrefix = helper.ipPrefix;
-  helper.trace('bootstrapping node', nodeIndex);
+  helper.trace('bootstrapping node', options.nodeIndex);
   const ccmArgs = [
     'add',
-    'node' + nodeIndex,
+    'node' + options.nodeIndex,
     '-i',
-    ipPrefix + nodeIndex,
+    ipPrefix + options.nodeIndex,
     '-j',
-    (7000 + 100 * nodeIndex).toString(),
+    (7000 + 100 * options.nodeIndex).toString(),
     '-b'
   ];
 
   if (helper.getServerInfo().isDse) {
     ccmArgs.push('--dse');
+  }
+
+  if (options.dc) {
+    ccmArgs.push('-d', options.dc);
   }
 
   helper.ccm.exec(ccmArgs, callback);

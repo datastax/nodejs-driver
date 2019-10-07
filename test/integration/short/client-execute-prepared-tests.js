@@ -37,7 +37,8 @@ describe('Client', function () {
 
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
-      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ]
+      queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ],
+      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb:5'] }
     });
 
     it('should execute a prepared query with parameters on all hosts', function (done) {
@@ -588,16 +589,7 @@ describe('Client', function () {
         commonTable,
         commonTable
       );
-
-      const warnThresholdInKb = helper.getServerInfo().isDse ? 64 : 5;
-
-      const params = {
-        id0: types.Uuid.random(),
-        id1: types.Uuid.random(),
-        id2: types.TimeUuid.now(),
-        sample: utils.stringRepeat('c', warnThresholdInKb * 1025)
-      };
-
+      const params = { id0: types.Uuid.random(), id1: types.Uuid.random(), id2: types.TimeUuid.now(), sample: utils.stringRepeat('c', 6 * 1024) };
       client.execute(query, params, {prepare: true}, function (err, result) {
         assert.ifError(err);
         assert.ok(result.info.warnings);
@@ -1167,7 +1159,7 @@ describe('Client', function () {
         const queries = [
           "CREATE KEYSPACE ks_view_prepared WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}",
           "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
-          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT user FROM scores WHERE game IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL PRIMARY KEY (game, score, user, year, month, day) WITH CLUSTERING ORDER BY (score desc)"
+          "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT * FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY (game, score, year, month, day, user) WITH CLUSTERING ORDER BY (score DESC, year DESC, month DESC, day DESC, user DESC)"
         ];
         utils.eachSeries(queries, setupInfo.client.execute.bind(setupInfo.client), helper.wait(2000, done));
       });

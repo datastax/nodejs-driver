@@ -44,7 +44,7 @@ describe('Client', function () {
           ' \'return a / b;\''
       ],
       ccmOptions: {
-        yaml: ['tombstone_failure_threshold:1000', 'enable_user_defined_functions:true'],
+        yaml: ['tombstone_failure_threshold:50', 'tombstone_warn_threshold:5', 'enable_user_defined_functions:true'],
         jvmArgs: ['-Dcassandra.test.fail_writes_ks=' + failWritesKs]
       }
     });
@@ -52,9 +52,9 @@ describe('Client', function () {
       const client = setupInfo.client;
       utils.series([
         function generateTombstones(next) {
-          utils.timesSeries(2000, function (n, timesNext) {
-            const query = 'INSERT INTO read_fail_tbl (pk, cc, v) VALUES (?, ?, ?)';
-            client.execute(query, [ 1, n, null ], { prepare: true }, timesNext);
+          utils.timesSeries(100, function (n, timesNext) {
+            const query = 'DELETE FROM read_fail_tbl WHERE pk = ? AND cc = ?';
+            client.execute(query, [ 1, n ], { prepare: true }, timesNext);
           }, next);
         },
         function (next) {

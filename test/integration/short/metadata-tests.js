@@ -1127,7 +1127,7 @@ describe('metadata', function () {
           "CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh AS SELECT game, year, month, score, user, day FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC, user ASC)"
         ];
         if (helper.isDseGreaterThan('6')) {
-          queries.push("CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh_nodesync AS SELECT user FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC) AND nodesync = { 'enabled': 'true', 'deadline_target_sec': '86400'}");
+          queries.push("CREATE MATERIALIZED VIEW ks_view_meta.dailyhigh_nodesync AS SELECT game, year, month, score, user, day FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY ((game, year, month, day), score, user) WITH CLUSTERING ORDER BY (score DESC, user ASC) AND nodesync = { 'enabled': 'true', 'deadline_target_sec': '86400'}");
         }
         utils.eachSeries(queries, client.execute.bind(client), function (err) {
           client.shutdown();

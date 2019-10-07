@@ -15,7 +15,7 @@
  */
 
 "use strict";
-const assert = require('assert');
+const assert = require('chai').assert;
 const util = require('util');
 
 const Client = require('../../lib/client.js');
@@ -265,7 +265,7 @@ describe('types', function () {
         ].forEach(function (value) {
           assert.throws(function () {
             LocalDate.fromString(value);
-          }, Error, 'For value: ' + value);
+          });
         });
       });
     });
@@ -366,7 +366,7 @@ describe('types', function () {
       const stream = new types.ResultStream();
       
       stream.on('end', function streamEnd() {
-        assert.equal(Buffer.concat(buf).toString(), 'Jimmy McNulty');
+        assert.strictEqual(Buffer.concat(buf).toString(), 'Jimmy McNulty');
         done();
       });
       stream.on('readable', function streamReadable() {
@@ -546,7 +546,7 @@ describe('types', function () {
     it('should generate using date and microseconds parts', function () {
       let date = new Date();
       let value = types.generateTimestamp(date, 123);
-      helper.assertInstanceOf(value, types.Long);
+      assert.instanceOf(value, types.Long);
       assert.strictEqual(value.toString(), types.Long
         .fromNumber(date.getTime())
         .multiply(types.Long.fromInt(1000))
@@ -555,7 +555,7 @@ describe('types', function () {
 
       date = new Date('2010-04-29');
       value = types.generateTimestamp(date, 898);
-      helper.assertInstanceOf(value, types.Long);
+      assert.instanceOf(value, types.Long);
       assert.strictEqual(value.toString(), types.Long
         .fromNumber(date.getTime())
         .multiply(types.Long.fromInt(1000))
@@ -885,14 +885,14 @@ describe('exports', function () {
     //policies modules
     assert.strictEqual(api.policies.loadBalancing, loadBalancing);
     assert.strictEqual(typeof api.policies.loadBalancing.LoadBalancingPolicy, 'function');
-    helper.assertInstanceOf(api.policies.defaultLoadBalancingPolicy(), api.policies.loadBalancing.LoadBalancingPolicy);
+    assert.instanceOf(api.policies.defaultLoadBalancingPolicy(), api.policies.loadBalancing.LoadBalancingPolicy);
     assert.strictEqual(api.policies.retry, retry);
     assert.strictEqual(typeof api.policies.retry.RetryPolicy, 'function');
     assert.strictEqual(typeof api.policies.retry.IdempotenceAwareRetryPolicy, 'function');
-    helper.assertInstanceOf(api.policies.defaultRetryPolicy(), api.policies.retry.RetryPolicy);
+    assert.instanceOf(api.policies.defaultRetryPolicy(), api.policies.retry.RetryPolicy);
     assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
-    helper.assertInstanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
+    assert.instanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
     assert.strictEqual(api.policies.speculativeExecution, speculativeExecution);
     assert.strictEqual(typeof speculativeExecution.NoSpeculativeExecutionPolicy, 'function');
     assert.strictEqual(typeof speculativeExecution.ConstantSpeculativeExecutionPolicy, 'function');
@@ -900,7 +900,7 @@ describe('exports', function () {
     assert.strictEqual(api.policies.timestampGeneration, timestampGeneration);
     assert.strictEqual(typeof timestampGeneration.TimestampGenerator, 'function');
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');
-    helper.assertInstanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
+    assert.instanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
     assert.strictEqual(api.auth, require('../../lib/auth'));
 
     // mapping module

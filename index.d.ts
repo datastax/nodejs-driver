@@ -61,12 +61,12 @@ export class Client extends events.EventEmitter {
           params: ArrayOrObject,
           options: QueryOptions,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: EmptyCallback): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
   eachRow(query: string,
           params: ArrayOrObject,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: EmptyCallback): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
   eachRow(query: string,
           rowCallback: (n: number, row: types.Row) => void): void;

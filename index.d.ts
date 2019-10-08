@@ -57,16 +57,16 @@ export class Client extends events.EventEmitter {
 
   execute(query: string, callback: ValueCallback<types.ResultSet>): void;
 
-  eachRow<T>(query: string,
+  eachRow(query: string,
           params: ArrayOrObject,
           options: QueryOptions,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: ValueCallback<T>): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
-  eachRow<T>(query: string,
+  eachRow(query: string,
           params: ArrayOrObject,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: ValueCallback<T>): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
   eachRow(query: string,
           rowCallback: (n: number, row: types.Row) => void): void;

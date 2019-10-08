@@ -43,10 +43,10 @@ export namespace mapping {
     newObjectInstance(): any;
   }
 
-  interface Result<T = { [key: string]: any }> extends Iterator<T> {
+  interface Result<T = any> extends Iterator<T> {
     wasApplied(): boolean;
 
-    first(): T;
+    first(): T | null;
 
     forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
 
@@ -72,7 +72,7 @@ export namespace mapping {
 
     batch(items: ModelBatchItem[], executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    forModel<T = { [key: string]: any }>(name: string): ModelMapper<T>;
+    forModel<T = any>(name: string): ModelMapper<T>;
   }
 
   type MappingOptions = {
@@ -128,7 +128,7 @@ export namespace mapping {
     update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
   }
 
-  interface ModelMapper<T = { [key: string]: any }> {
+  interface ModelMapper<T = any> {
     name: string;
     batching: ModelBatchMapper;
 

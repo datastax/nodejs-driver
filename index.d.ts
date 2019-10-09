@@ -16,6 +16,7 @@
 
 import * as events from 'events';
 import * as tls from 'tls';
+import { URL } from 'url';
 import { auth } from './lib/auth';
 import { policies } from './lib/policies';
 import { types } from './lib/types';
@@ -179,7 +180,7 @@ export interface ClientOptions {
   }
 
   cloud?: {
-    secureConnectBundle: string;
+    secureConnectBundle: string | URL;
   };
 
   encoding?: {

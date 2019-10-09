@@ -8,7 +8,7 @@
 'use strict';
 
 const assert = require('assert');
-const rewire = require('rewire');
+const proxyquire = require('proxyquire');
 
 const cloudHelper = require('./cloud-helper');
 const helper = require('../../../test-helper');
@@ -62,17 +62,17 @@ vdescribe('3.11', 'Cloud support', function () {
       let resolvedAddress;
       const libPath = '../../../../lib';
 
-      const cc = rewire(`${libPath}/control-connection`);
-      cc.__set__("dns", {
-        resolve4: (name, cb) => {
-          resolvedAddress = name;
-          // Use different loopback addresses
-          cb(null, ['127.0.0.1', '127.0.0.2']);
+      const ControlConnection = proxyquire(`${libPath}/control-connection`, {
+        'dns':  {
+          resolve4: (name, cb) => {
+            resolvedAddress = name;
+            // Use different loopback addresses
+            cb(null, ['127.0.0.1', '127.0.0.2']);
+          }
         }
       });
 
-      const Client = rewire(`${libPath}/client`);
-      Client.__set__("ControlConnection", cc);
+      const Client = proxyquire(`${libPath}/client`, { './control-connection': ControlConnection });
 
       const client = new Client(cloudHelper.getOptions({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1.zip' } }));
 
@@ -116,20 +116,6 @@ vdescribe('3.11', 'Cloud support', function () {
 
           assert.strictEqual(queried.size, 3);
         })
-        .then(() => client.shutdown());
-    });
-
-    it('should allow the user to override sslOptions', () => {
-      let client = cloudHelper.getClient({ });
-
-      return client.connect()
-        .then(() => assert.strictEqual(client.options.sslOptions.rejectUnauthorized, true))
-        .then(() => client.shutdown())
-        // Override one option
-        .then(() => client = cloudHelper.getClient({ sslOptions: { rejectUnauthorized: false }}))
-        .then(() => client.connect())
-        // Validate that the overridden option is maintained
-        .then(() => assert.strictEqual(client.options.sslOptions.rejectUnauthorized, false))
         .then(() => client.shutdown());
     });
 

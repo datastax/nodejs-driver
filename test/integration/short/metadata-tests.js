@@ -1075,7 +1075,10 @@ describe('metadata', function () {
 
               assert.isObject(table.compression);
               assert.strictEqual(table.compression.constructor, Object);
-              assert.isString(table.compression.class);
+
+              if (helper.isCassandraGreaterThan('3.0')) {
+                assert.isString(table.compression.class);
+              }
             }));
 
         vit('2.1', 'should retrieve the secondary indexes metadata using the same representation', () =>

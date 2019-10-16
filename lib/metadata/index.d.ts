@@ -87,7 +87,7 @@ export namespace metadata {
     compactionClass: string;
     compactionOptions: { [option: string]: any; };
     compression: {
-      class: string;
+      class?: string;
       [option: string]: any;
     };
     crcCheckChange?: number;

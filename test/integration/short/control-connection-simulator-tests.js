@@ -125,15 +125,17 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
       function validateInitQueries(next) {
         // validate initialization queries.
         cluster.node(0).getLogs(function (err, logs) {
-          const firstVersionLogs = logs.slice(0, 3);
+          const firstVersionLogs = logs.slice(0, 4);
           // Expect 3 initial messages using the max protocol version:
           // 1 - STARTUP
-          // 2 - local query
-          // 3 - peers query
+          // 2 - OPTIONS
+          // 3 - local query
+          // 4 - peers query
           firstVersionLogs.forEach((log) => {
             assert.strictEqual(log.frame.protocol_version, usedMaxVersion);
           });
-          const remainingLogs = logs.slice(3);
+
+          const remainingLogs = logs.slice(4);
           if (expectedProtocolVersion >= 3) {
             remainingLogs.forEach((log) => {
               assert.strictEqual(log.frame.protocol_version, expectedProtocolVersion);

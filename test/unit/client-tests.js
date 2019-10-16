@@ -67,6 +67,43 @@ describe('Client', function () {
         });
       }
     });
+
+    context('with cloud options', () => {
+      it('should support string secure bundle', () => {
+        assert.doesNotThrow(() => new Client({ cloud: { secureConnectBundle: 'a/b/c' }}));
+      });
+
+      /* eslint-disable no-undef */
+      if (typeof URL !== 'undefined') {
+        it('should support URL secure bundle', () => {
+          assert.doesNotThrow(() => new Client({ cloud: { secureConnectBundle: new URL('https://a/b/c') }}));
+        });
+      }
+      /* eslint-enable no-undef */
+
+      it('should not allow secure bundle of other types', () => {
+        assert.throws(() => new Client({ cloud: { secureConnectBundle: {} }}), TypeError, 'must be of type string');
+        assert.throws(() => new Client({ cloud: { secureConnectBundle: 1 }}), TypeError, 'must be of type string');
+      });
+
+      it('should validate that secure bundle is provided', () => {
+        // Invalid options
+        [
+          { cloud: { secureConnectBundle: null } },
+          { cloud: { secureConnectBundle: undefined }},
+          { cloud: {} }
+        ].forEach(options => assert.throws(() => new Client(options), TypeError, 'must be of type string'));
+      });
+
+      it('should validate that contact points and ssl are not set', () => {
+        // Invalid options
+        [
+          { cloud: { secureConnectBundle: 'abc'}, contactPoints: ['10.0.0.1'] },
+          { cloud: { secureConnectBundle: 'abc' }, sslOptions: {} }
+        ].forEach(options =>
+          assert.throws(() => new Client(options), TypeError, 'can not be defined when cloud settings are provided'));
+      });
+    });
   });
 
   describe('#connect()', function () {

@@ -15,7 +15,7 @@
  */
 
 "use strict";
-const assert = require('assert');
+const assert = require('chai').assert;
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
@@ -1067,13 +1067,15 @@ describe('metadata', function () {
             .then(table => {
               assert.ok(table);
               assert.strictEqual(table.columns.length, 4);
-              assert.strictEqual(typeof table.compactionClass, 'string');
+              assert.isString(table.compactionClass);
 
-              assert.ok(table.compactionOptions);
+              assert.isObject(table.compactionOptions);
+              assert.notInstanceOf(table.compactionOptions, Map);
               assert.strictEqual(table.compactionOptions.constructor, Object);
 
-              assert.ok(table.compression);
+              assert.isObject(table.compression);
               assert.strictEqual(table.compression.constructor, Object);
+              assert.isString(table.compression.class);
             }));
 
         vit('2.1', 'should retrieve the secondary indexes metadata using the same representation', () =>

@@ -796,8 +796,8 @@ describe('clientOptions', function () {
   });
   describe('#defaultOptions()', function () {
     const options = clientOptions.defaultOptions();
-    it('should set LOCAL_QUORUM as default consistency level', function () {
-      assert.strictEqual(types.consistencies.localOne, options.queryOptions.consistency);
+    it('should set not set the default consistency level', function () {
+      assert.strictEqual(options.queryOptions.consistency, undefined);
     });
     it('should set True to warmup option', function () {
       assert.strictEqual(options.pooling.warmup, true);

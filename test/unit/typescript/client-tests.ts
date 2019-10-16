@@ -79,6 +79,15 @@ async function myTest(): Promise<any> {
     applicationVersion: '3.1.2',
     graphOptions: { name: 'graph1', readConsistency: types.consistencies.localQuorum }
   });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' }
+  });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' },
+    credentials: { username: 'a', password: 'b' }
+  });
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

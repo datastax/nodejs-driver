@@ -11,7 +11,7 @@ const format = require('util').format;
 const path = require('path');
 const exec = require('child_process').exec;
 
-const Client = require('../../../../lib/dse-client');
+const Client = require('../../../../lib/client');
 const helper = require('../../../test-helper');
 
 const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
@@ -28,7 +28,7 @@ const cloudHelper = module.exports = {
 
   /**
    * Creates a new client using the default options.
-   * @param {DseClientOptions} [options]
+   * @param {ClientOptions} [options]
    * @return {Client}
    */
   getClient: function (options) {

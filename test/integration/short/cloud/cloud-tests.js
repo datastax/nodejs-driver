@@ -24,7 +24,12 @@ const port = 9042;
 vdescribe('dse-6.7', 'Cloud support', function () {
   // Only run tests with few versions of DSE as SNI project has a fixed C*/DSE version
 
-  this.timeout(240000);
+  if (helper.isWin()) {
+    // Skip altogether for AppVeyor
+    return;
+  }
+
+  this.timeout(300000);
 
   context('with a 3 node cluster', () => {
 

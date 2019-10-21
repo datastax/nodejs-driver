@@ -20,10 +20,10 @@ $ npm install cassandra-driver
 - Automatic reconnection
 - Configurable [load balancing][load-balancing] and [retry policies][retry]
 - Works with any cluster size
+- Built-in [object mapper][doc-mapper]
 - Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
-- Built-in [object mapper][doc-mapper]
-- Built-in TypeScript Support
+- Built-in TypeScript support
 
 ## Documentation
 

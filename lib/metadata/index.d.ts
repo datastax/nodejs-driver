@@ -76,11 +76,14 @@ export namespace metadata {
     columnsByName: { [key: string]: ColumnInfo };
     comment: string;
     compactionClass: string;
-    compactionOptions: object|Map<string, object>;
-    compression: object|Map<string, object>;
+    compactionOptions: { [option: string]: any; };
+    compression: {
+      class?: string;
+      [option: string]: any;
+    };
     crcCheckChange?: number;
     defaultTtl: number;
-    extensions: object|Map<string, object>;
+    extensions: { [option: string]: any; };
     gcGraceSeconds: number;
     localReadRepairChance: number;
     maxIndexInterval?: number;
@@ -89,7 +92,7 @@ export namespace metadata {
     partitionKeys: ColumnInfo[];
     populateCacheOnFlush: boolean;
     readRepairChance: number;
-    speculateRetry: string;
+    speculativeRetry: string;
   }
 
   interface MaterializedView extends DataCollection {
@@ -111,7 +114,7 @@ export namespace metadata {
   interface QueryTrace {
     requestType: string;
     coordinator: InetAddress;
-    parameters: { [key: string]: any } | Map<string, any>;
+    parameters: { [key: string]: any };
     startedAt: number | types.Long;
     duration: number;
     clientAddress: string;

@@ -2,6 +2,22 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 2.3.0
+
+2019-10-21
+
+### Features
+
+- [NODEJS-503] - DataStax Apollo Support
+- [NODEJS-562] - TypeScript: Add generics to Mapper
+
+### Bug fixes
+
+- [NODEJS-556] - TypeScript: Client.stream typedef has incorrect return type
+- [NODEJS-557] - TypeScript: DataCollection speculateRetry should be speculativeRetry
+- [NODEJS-559] - TypeScript: DataCollection object|map types
+- [NODEJS-561] - TypeScript: Missing credentials in ClientOptions
+
 ## 2.2.0
 
 2019-09-23

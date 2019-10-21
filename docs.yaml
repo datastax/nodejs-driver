@@ -32,11 +32,11 @@ links:
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues
   - title: Mailing List
     href:  https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
-  - title: Slack Channel
-    href:  https://academy.datastax.com/slack
   - title: Npm
     href:  https://www.npmjs.org/package/dse-driver
 versions:
+  - name: '2.3'
+    ref: '2.3'
   - name: '2.2'
     ref: '2.2'
   - name: '2.1'

@@ -72,7 +72,7 @@ export class Client extends events.EventEmitter {
   eachRow(query: string,
           rowCallback: (n: number, row: types.Row) => void): void;
 
-  stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): void;
+  stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): events.EventEmitter;
 
   batch(
     queries: Array<string|{query: string, params?: ArrayOrObject}>,

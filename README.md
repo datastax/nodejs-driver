@@ -23,6 +23,7 @@ $ npm install cassandra-driver
 - Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
 - Built-in [object mapper][doc-mapper]
+- Built-in TypeScript Support
 
 ## Documentation
 
@@ -33,7 +34,7 @@ $ npm install cassandra-driver
 
 ## Getting Help
 
-You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira]. Additionally, you can use the `#datastax-drivers` channel in the [DataStax Academy Slack][slack].
+You can use the [project mailing list][mailinglist] or create a ticket on the [Jira issue tracker][jira].
 
 ## Basic usage
 
@@ -237,10 +238,6 @@ The `level` being passed to the listener can be `verbose`, `info`, `warning` or 
 
 Note: DataStax products do not support big-endian systems.
 
-## Feedback Requested
-
-**Help us focus our efforts!** Provide your input on the [Platform and Runtime Survey][survey] (we kept it short).
-
 ## Credits
 
 This driver is based on the original work of [Jorge Bay][jorgebay] on [node-cassandra-cql][old-driver] and adds a series of advanced features that are common across all other [DataStax drivers][drivers] for Apache Cassandra.
@@ -257,31 +254,29 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-[cassandra]: http://cassandra.apache.org/
-[doc-api]: http://docs.datastax.com/en/developer/nodejs-driver/latest/api/
-[doc-index]: http://docs.datastax.com/en/developer/nodejs-driver/latest/
-[doc-datatypes]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/
-[doc-numerical]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/numerical/
+[cassandra]: https://cassandra.apache.org/
+[doc-api]: https://docs.datastax.com/en/developer/nodejs-driver/latest/api/
+[doc-index]: https://docs.datastax.com/en/developer/nodejs-driver/latest/
+[doc-datatypes]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/
+[doc-numerical]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/numerical/
 [doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
-[doc-collections]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
-[doc-udt]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
-[doc-promise-callback]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
+[doc-collections]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
+[doc-udt]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
+[doc-promise-callback]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
 [doc-mapper]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/
 [doc-mapper-start]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/getting-started/
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
-[load-balancing]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
-[retry]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
-[pooling]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
-[batch]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
+[faq]: https://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
+[load-balancing]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
+[retry]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
+[pooling]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
+[batch]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
 [upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
-[streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
-[cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#udts
-[survey]: http://goo.gl/forms/f216tY3Ebr
+[streams2]: https://nodejs.org/api/stream.html#stream_class_stream_readable
+[cql-udt]: https://cassandra.apache.org/doc/latest/cql/types.html#udts
 [dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
-[slack]: https://academy.datastax.com/slack
 [dse]: https://www.datastax.com/products/datastax-enterprise

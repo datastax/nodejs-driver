@@ -55,8 +55,8 @@ describe('MutableLong', function () {
         [ 1, 0 ],
         [ 2, 2],
         [ 1, 4],
-        [ 13 * 163 ],
-        [ 22631153906384 * 199 ],
+        [ 13, 163 ],
+        [ 22631153906384, 199 ],
         [ -1, Math.pow(2, 43) ]
       ].forEach(function (item) {
         const expected = item[0] * item[1];

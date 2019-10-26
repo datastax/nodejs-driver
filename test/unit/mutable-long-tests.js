@@ -83,6 +83,25 @@ describe('MutableLong', function () {
         assert.ok(item[0].multiply(item[1]).equals(item[2]));
       });
     });
+    it('should handle multiplication by the minimum integer value', function () {
+      [
+        // [a, b, c]
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(0),
+          new MutableLong(0) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(1),
+          new MutableLong(0, 0, 0, 0x8000) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(-1),
+          new MutableLong(0, 0, 0, 0x8000) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(2),
+          new MutableLong(0) ],
+      ].forEach(function (item) {
+        const a = Long.fromBits(item[0].getLowBitsUnsigned(), item[0].getHighBitsUnsigned(), false);
+        const b = Long.fromBits(item[1].getLowBitsUnsigned(), item[1].getHighBitsUnsigned(), false);
+        const c = Long.fromBits(item[2].getLowBitsUnsigned(), item[2].getHighBitsUnsigned(), false);
+        assert.ok(a.multiply(b).equals(c));
+        assert.ok(item[0].multiply(item[1]).equals(item[2]));
+      });
+    });
   });
   describe('#shiftRightUnsigned()', function () {
     it('should shift across int16 blocks', function () {

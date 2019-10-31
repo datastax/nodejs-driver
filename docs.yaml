@@ -28,7 +28,7 @@ sections:
     type:     jsdoc
     config:   doc/jsdoc.json
 links:
-  - title: Source Code
+  - title: Code
     href:  https://github.com/datastax/nodejs-driver/
   - title: Issues
     href:  https://datastax-oss.atlassian.net/projects/NODEJS/issues

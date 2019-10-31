@@ -1,5 +1,42 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.3.0
+
+2019-10-21
+
+### Features
+
+- [NODEJS-503] - DataStax Apollo Support
+- [NODEJS-562] - TypeScript: Add generics to Mapper
+
+### Bug fixes
+
+- [NODEJS-556] - TypeScript: Client.stream typedef has incorrect return type
+- [NODEJS-557] - TypeScript: DataCollection speculateRetry should be speculativeRetry
+- [NODEJS-559] - TypeScript: DataCollection object|map types
+- [NODEJS-561] - TypeScript: Missing credentials in ClientOptions
+
+## 4.2.0
+
+2019-09-23
+
+### Features
+
+- [NODEJS-464] - Include TypeScript declaration files on the package
+- [NODEJS-512] - Mapper: support selecting the table or view using clustering keys from "order by"
+- [NODEJS-514] - Support string input for all numeric types
+- [NODEJS-515] - Mapper: support static column updates with only the partition key
+- [NODEJS-545] - Introduce 'credentials' client option
+
+### Bug fixes
+
+- [NODEJS-509] - Mapper: batch items promise usage can lead to unhandled rejections
+- [NODEJS-524] - "RangeError: Index out of range" when fetching tuples
+- [NODEJS-527] - Mapper: select query cache key uses order by portion incorrectly
+- [NODEJS-529] - Tuple constructor incorrectly handles single element values
+- [NODEJS-538] - Mapper query generation error: USING clause is misplaced
+- [NODEJS-546] - Mapper result throws when inspected and result is not ROWS
+
 ## 4.1.0
 
 2019-04-25

@@ -21,8 +21,10 @@ $ npm install cassandra-driver
 - Automatic reconnection
 - Configurable [load balancing][load-balancing] and [retry policies][retry]
 - Works with any cluster size
+- Built-in [object mapper][doc-mapper]
 - Both [promise and callback-based API][doc-promise-callback]
 - [Row streaming and pipes](#row-streaming-and-pipes)
+- Built-in TypeScript support
 
 ## Documentation
 
@@ -182,6 +184,29 @@ await client.batch(queries, { prepare: true });
 console.log('Data updated on cluster');
 ```
 
+## Object Mapper
+
+The driver provides a built-in [object mapper][doc-mapper] that lets you interact with your data like you 
+would interact with a set of documents.
+
+Retrieving objects from the database:
+
+```javascript
+const videos = await videoMapper.find({ userId });
+for (let video of videos) {
+  console.log(video.name);
+}
+```
+
+Updating an object from the database:
+
+```javascript
+await videoMapper.update({ id, userId, name, addedDate, description });
+```
+
+You can read more information about [getting started with the Mapper in our
+documentation][doc-mapper-start].
+
 ----
 
 ## Data types
@@ -238,8 +263,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-collections]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
 [doc-udt]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
 [doc-promise-callback]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
-[doc-paging]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/
-[faq]: http://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
+[doc-mapper]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/
+[doc-mapper-start]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/getting-started/
+[faq]: https://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
 [load-balancing]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
 [retry]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
 [pooling]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
@@ -250,8 +276,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
-[streams2]: http://nodejs.org/api/stream.html#stream_class_stream_readable
-[cql-udt]: http://cassandra.apache.org/doc/latest/cql/types.html#udts
-[survey]: http://goo.gl/forms/f216tY3Ebr
+[streams2]: https://nodejs.org/api/stream.html#stream_class_stream_readable
+[cql-udt]: https://cassandra.apache.org/doc/latest/cql/types.html#udts
 [dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [dse]: https://www.datastax.com/products/datastax-enterprise

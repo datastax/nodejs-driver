@@ -19,20 +19,18 @@
  * Name of the doclets and the maximum amount of occurrences.
  * @private
  */
-var filterDoclets = {
-  'module:types': 1,
-  'Client': 1,
-  'ClientOptions': 0
+const filterDoclets = {
+  'module:types': 1
 };
-var importPropDoclets = {
-  'DseClientOptions': 'ClientOptions'
+const importPropDoclets = {
+
 };
-var filtered = {};
-var importedProps = {};
+const filtered = {};
+const importedProps = {};
 
 exports.handlers = {
   newDoclet: function (e) {
-    var key = e.doclet.longname;
+    const key = e.doclet.longname;
     if (!key) {
       return;
     }
@@ -41,10 +39,10 @@ exports.handlers = {
       importedProps[importPropDoclets[key]] = e.doclet;
     }
     else if (importedProps[key]) {
-      var props = importedProps[key].properties;
+      const props = importedProps[key].properties;
       props.unshift.apply(props, e.doclet.properties);
     }
-    var maxLength = filterDoclets[key];
+    const maxLength = filterDoclets[key];
     if (maxLength === undefined ) {
       return;
     }

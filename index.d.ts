@@ -23,15 +23,16 @@ import { types } from './lib/types';
 import { metrics } from './lib/metrics';
 import { tracker } from './lib/tracker';
 import { metadata } from './lib/metadata';
-import { graph } from './lib/graph';
+import { datastax } from './lib/datastax/';
 import Long = types.Long;
 import Uuid = types.Uuid;
+import graph = datastax.graph;
 
 // Export imported submodules
 export { concurrent } from './lib/concurrent';
 export { mapping } from './lib/mapping';
 export { geometry } from './lib/geometry';
-export { auth, graph, metadata, metrics, policies, tracker, types };
+export { auth, datastax, metadata, metrics, policies, tracker, types };
 
 export const version: number;
 

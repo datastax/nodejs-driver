@@ -20,7 +20,7 @@ const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
 const utils = require('../../../../lib/utils');
 const types = require('../../../../lib/types');
-const dateRangeModule = require('../../../../lib/search/date-range');
+const dateRangeModule = require('../../../../lib/datastax/search/date-range');
 const Client = require('../../../../lib/client');
 const DateRange = dateRangeModule.DateRange;
 

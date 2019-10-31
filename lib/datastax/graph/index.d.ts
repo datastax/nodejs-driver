@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { types } from '../types';
+import { types } from '../../types';
 
 export namespace graph {
   interface Edge extends Element {

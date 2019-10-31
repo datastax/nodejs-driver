@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { auth, concurrent, errors, geometry, graph, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, datastax, geometry, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
+
+import graph = datastax.graph;
 
 let counter:number = 0;
 
@@ -47,8 +49,10 @@ export function generate(): void {
   
 'use strict';
   
-import { auth, concurrent, errors, mapping, geometry, graph, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, datastax, mapping, geometry, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
+
+import graph = datastax.graph;
 
 export async function generatedFn() {
   let n:number;

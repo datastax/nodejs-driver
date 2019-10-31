@@ -38,15 +38,15 @@ describe('API', function () {
     checkConstructor(api, 'Client');
   });
   it('should expose GraphResultSet constructor', function () {
-    checkConstructor(api.graph, 'GraphResultSet');
+    checkConstructor(api.datastax.graph, 'GraphResultSet');
   });
   it('should expose graph types constructor', function () {
-    checkConstructor(api.graph, 'Edge');
-    checkConstructor(api.graph, 'Element');
-    checkConstructor(api.graph, 'Path');
-    checkConstructor(api.graph, 'Property');
-    checkConstructor(api.graph, 'Vertex');
-    checkConstructor(api.graph, 'VertexProperty');
+    checkConstructor(api.datastax.graph, 'Edge');
+    checkConstructor(api.datastax.graph, 'Element');
+    checkConstructor(api.datastax.graph, 'Path');
+    checkConstructor(api.datastax.graph, 'Property');
+    checkConstructor(api.datastax.graph, 'Vertex');
+    checkConstructor(api.datastax.graph, 'VertexProperty');
   });
   it('should expose cassandra driver modules', function () {
     assert.ok(api.errors);

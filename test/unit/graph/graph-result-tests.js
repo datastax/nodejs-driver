@@ -16,9 +16,9 @@
 'use strict';
 
 const assert = require('assert');
-const utils = require('../../lib/utils');
-const ResultSet = require('../../lib/types/result-set');
-const GraphResultSet = require('../../lib/graph/result-set');
+const utils = require('../../../lib/utils');
+const ResultSet = require('../../../lib/types/result-set');
+const GraphResultSet = require('../../../lib/datastax/graph/result-set');
 
 const resultVertex = getResultSet([ {
   "gremlin": JSON.stringify({

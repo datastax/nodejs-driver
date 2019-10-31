@@ -18,7 +18,7 @@
 const assert = require('assert');
 const util = require('util');
 const helper = require('../../test-helper');
-const dateRangeModule = require('../../../lib/search/date-range');
+const dateRangeModule = require('../../../lib/datastax/search/date-range');
 const DateRange = dateRangeModule.DateRange;
 const DateRangeBound = dateRangeModule.DateRangeBound;
 const unbounded = dateRangeModule.unbounded;
@@ -135,7 +135,7 @@ function getUtcDate() {
  * @param {Number} precision1
  * @param {Date} [date2]
  * @param {Number} [precision2]
- * @return {module:search.DateRange}
+ * @return {module:datastax/search~DateRange}
  */
 function getDateRange(date1, precision1, date2, precision2) {
   const lowerBound = date1 ? new DateRangeBound(date1, precision1) : DateRangeBound.unbounded;

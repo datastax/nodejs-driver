@@ -38,7 +38,7 @@ exports.metadata = {
 };
 exports.Encoder = require('./lib/encoder');
 exports.geometry = require('./lib/geometry');
-exports.graph = require('./lib/graph');
+exports.datastax = require('./lib/datastax');
 /**
  * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
  */

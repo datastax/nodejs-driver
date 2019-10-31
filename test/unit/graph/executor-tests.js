@@ -22,8 +22,8 @@ const types = require('../../../lib/types');
 const utils = require('../../../lib/utils');
 const policies = require('../../../lib/policies');
 const ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
-const GraphExecutor = require('../../../lib/graph/graph-executor');
-const GraphExecutionOptions = require('../../../lib/graph/options').GraphExecutionOptions;
+const GraphExecutor = require('../../../lib/datastax/graph/graph-executor');
+const GraphExecutionOptions = require('../../../lib/datastax/graph/options').GraphExecutionOptions;
 const helper = require('../../test-helper');
 
 const proxyExecuteKey = 'ProxyExecute';

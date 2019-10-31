@@ -30,7 +30,7 @@ const InetAddress = types.InetAddress;
 const Uuid = types.Uuid;
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const utils = require('../../../../lib/utils');
-const graphModule = require('../../../../lib/graph');
+const graphModule = require('../../../../lib/datastax/graph');
 const graphTestHelper = require('./graph-test-helper');
 
 vdescribe('dse-5.0', 'Client', function () {

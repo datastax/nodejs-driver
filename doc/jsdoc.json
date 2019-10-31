@@ -2,8 +2,9 @@
   "source": {
     "include": [
       "lib/geometry",
-      "lib/graph",
-      "lib/search",
+      "lib/datastax",
+      "lib/datastax/graph",
+      "lib/datastax/search",
 
       "lib/types",
       "lib/auth",

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { Client, graph } from "../../../index";
-import GraphResultSet = graph.GraphResultSet;
+import { Client, datastax } from "../../../index";
+import GraphResultSet = datastax.graph.GraphResultSet;
 
 
 /*

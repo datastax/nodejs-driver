@@ -69,6 +69,11 @@ async function myTest(): Promise<any> {
   client.batch(queries1, useResult);
   client.batch(queries1, { prepare: true, logged: true, counter: false, executionProfile: 'ep1' }, useResult);
 
+  // EventEmitter methods
+  client.stream(query, params1, { prepare: true, executionProfile: 'ep1' })
+    .on('data', () => {})
+    .on('error', err => console.error(err));
+
   promise = client.shutdown();
   client.shutdown(err => error = err);
 
@@ -87,6 +92,15 @@ async function myTest(): Promise<any> {
     applicationName: 'My app',
     applicationVersion: '3.1.2',
     graphOptions: { name: 'graph1', readConsistency: types.consistencies.localQuorum }
+  });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' }
+  });
+
+  otherClient = new Client({
+    cloud: { secureConnectBundle: 'path/to/bundle' },
+    credentials: { username: 'a', password: 'b' }
   });
 }
 

@@ -16,6 +16,7 @@
 
 import * as events from 'events';
 import * as tls from 'tls';
+import { URL } from 'url';
 import { auth } from './lib/auth';
 import { policies } from './lib/policies';
 import { types } from './lib/types';
@@ -82,17 +83,17 @@ export class Client extends events.EventEmitter {
           params: ArrayOrObject,
           options: QueryOptions,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: EmptyCallback): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
   eachRow(query: string,
           params: ArrayOrObject,
           rowCallback: (n: number, row: types.Row) => void,
-          callback?: EmptyCallback): void;
+          callback?: ValueCallback<types.ResultSet>): void;
 
   eachRow(query: string,
           rowCallback: (n: number, row: types.Row) => void): void;
 
-  stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): void;
+  stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): events.EventEmitter;
 
   batch(
     queries: Array<string|{query: string, params?: ArrayOrObject}>,
@@ -190,7 +191,7 @@ export interface ExecutionOptions {
 }
 
 export interface ClientOptions {
-  contactPoints: string[];
+  contactPoints?: string[];
   localDataCenter?: string;
   keyspace?: string;
   authProvider?: auth.AuthProvider;
@@ -198,6 +199,10 @@ export interface ClientOptions {
     username: string;
     password: string;
   }
+
+  cloud?: {
+    secureConnectBundle: string | URL;
+  };
 
   encoding?: {
     map?: Function;

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
+
+"use strict";
+const assert = require('chai').assert;
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
@@ -1093,13 +1094,18 @@ describe('metadata', function () {
             .then(table => {
               assert.ok(table);
               assert.strictEqual(table.columns.length, 4);
-              assert.strictEqual(typeof table.compactionClass, 'string');
+              assert.isString(table.compactionClass);
 
-              assert.ok(table.compactionOptions);
+              assert.isObject(table.compactionOptions);
+              assert.notInstanceOf(table.compactionOptions, Map);
               assert.strictEqual(table.compactionOptions.constructor, Object);
 
-              assert.ok(table.compression);
+              assert.isObject(table.compression);
               assert.strictEqual(table.compression.constructor, Object);
+
+              if (helper.isDseGreaterThan('5.0')) {
+                assert.isString(table.compression.class);
+              }
             }));
 
         vit('2.1', 'should retrieve the secondary indexes metadata using the same representation', () =>
@@ -1350,6 +1356,12 @@ describe('metadata', function () {
       context('with no callback specified', () => {
         it('should return true when the schema version is the same', () =>
           client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
+      });
+    });
+
+    describe('#isDbaas()', () => {
+      it('should return false for any product type except cloud', () => {
+        assert.strictEqual(setupInfo.client.metadata.isDbaas(), false);
       });
     });
   });

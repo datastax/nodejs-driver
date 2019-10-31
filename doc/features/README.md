@@ -9,6 +9,7 @@ Enterprise.
 - [Authentication](auth)
 - [Batch statements](batch)
 - [Concurrent execution API](concurrent-api)
+- [Connecting to DataStax Apollo database](cloud)
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution profiles](execution-profiles)

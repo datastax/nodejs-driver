@@ -43,14 +43,14 @@ export namespace mapping {
     newObjectInstance(): any;
   }
 
-  interface Result extends Iterator<any> {
+  interface Result<T = any> extends Iterator<T> {
     wasApplied(): boolean;
 
-    first(): any;
+    first(): T | null;
 
-    forEach(callback: (currentValue: any, index: number) => void, thisArg?: any): void;
+    forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
 
-    toArray(): any[];
+    toArray(): T[];
   }
 
   type MappingExecutionOptions = {
@@ -72,7 +72,7 @@ export namespace mapping {
 
     batch(items: ModelBatchItem[], executionOptions?: string | MappingExecutionOptions): Promise<Result>;
 
-    forModel(name: string): ModelMapper;
+    forModel<T = any>(name: string): ModelMapper<T>;
   }
 
   type MappingOptions = {
@@ -128,27 +128,27 @@ export namespace mapping {
     update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
   }
 
-  interface ModelMapper {
+  interface ModelMapper<T = any> {
     name: string;
     batching: ModelBatchMapper;
 
-    get(doc: any, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<any>;
+    get(doc: { [key: string]: any }, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<null | T>;
 
-    find(doc: any, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    find(doc: { [key: string]: any }, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
 
-    findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
 
-    insert(doc: any, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    insert(doc: { [key: string]: any }, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
 
-    update(doc: any, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    update(doc: { [key: string]: any }, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
 
-    remove(doc: any, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result>;
+    remove(doc: { [key: string]: any }, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
 
     mapWithQuery(
       query: string,
       paramsHandler: (doc: any) => any[],
       executionOptions?: string | MappingExecutionOptions
-    ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result>;
+    ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result<T>>;
   }
 
   namespace q {

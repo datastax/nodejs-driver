@@ -4,14 +4,16 @@ schedules:
     schedule: per_commit
     matrix:
       exclude:
-        - nodejs: ['6']
-        - nodejs: ['4']
-          cassandra: ['3.11', 'dse-5.1', 'dse-6.0', 'dse-6.7', 'dse-6.8']
         - nodejs: ['8']
-          cassandra: ['2.1', 'dse-5.1', 'dse-6.7', 'dse-6.8']
+          # Include 2.1, dse-6.0
+          cassandra: ['3.11', 'dse-5.1', 'dse-6.7', 'dse-6.8']
         - nodejs: ['10']
-          # Examples are run on Node.js 10 and against DSE 6.7
-          cassandra: ['2.1', '3.11', 'dse-6.0']
+          # Include 3.11, dse-6.8
+          cassandra: ['2.1', 'dse-5.1', 'dse-6.0', 'dse-6.7']
+        - nodejs: ['12']
+          # Include dse-5.1, dse-6.7
+          # Examples are run against DSE 6.7
+          cassandra: ['2.1', '3.11', 'dse-6.0', 'dse-6.8']
   nightly:
     # nightly job for primary branches to run all configs.
     schedule: nightly
@@ -25,10 +27,9 @@ schedules:
     branches:
       exclude: ["/((\\d+(\\.[\\dx]+)+)|dse|master)/"]
 nodejs:
-  - '4'
-  - '6'
   - '8'
   - '10'
+  - '12'
 os:
   - ubuntu/bionic64/nodejs-driver
 cassandra:

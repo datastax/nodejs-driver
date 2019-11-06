@@ -14,6 +14,7 @@ const utils = require('../../../lib/utils');
 const errors = require('../../../lib/errors');
 const protocolVersion = types.protocolVersion;
 const vdescribe = helper.vdescribe;
+const vit = helper.vit;
 
 describe('Client', function () {
   this.timeout(240000);
@@ -32,14 +33,14 @@ describe('Client', function () {
         'CREATE TABLE ks_func.tbl1 (id int PRIMARY KEY, v1 int, v2 int)',
         'INSERT INTO ks_func.tbl1 (id, v1, v2) VALUES (1, 1, 0)',
         'CREATE FUNCTION ks_func.div(a int, b int) RETURNS NULL ON NULL INPUT RETURNS int LANGUAGE java AS' +
-          ' \'return a / b;\''
+        ' \'return a / b;\''
       ],
       ccmOptions: {
         yaml: ['tombstone_failure_threshold:50', 'tombstone_warn_threshold:5', 'enable_user_defined_functions:true'],
         jvmArgs: ['-Dcassandra.test.fail_writes_ks=' + failWritesKs]
       }
     });
-    it('should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
+    vit('dse-6.0', 'should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
       const client = setupInfo.client;
       utils.series([
         function generateTombstones(next) {

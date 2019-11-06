@@ -45,8 +45,8 @@ describe('MutableLong', function () {
         [ 1, 0 ],
         [ 2, 2],
         [ 1, 4],
-        [ 13 * 163 ],
-        [ 22631153906384 * 199 ],
+        [ 13, 163 ],
+        [ 22631153906384, 199 ],
         [ -1, Math.pow(2, 43) ]
       ].forEach(function (item) {
         const expected = item[0] * item[1];
@@ -65,6 +65,25 @@ describe('MutableLong', function () {
           new MutableLong(0xC3D0, 0x2338, 0x935D, 0xFFEC)],
         [ MutableLong.fromBits(0xe084bca4, 0x28b1), MutableLong.fromBits(0xed558ccd, 0xff51afd7),
           MutableLong.fromBits(0xd7e8bf54, 0x9e9ed5ab)]
+      ].forEach(function (item) {
+        const a = Long.fromBits(item[0].getLowBitsUnsigned(), item[0].getHighBitsUnsigned(), false);
+        const b = Long.fromBits(item[1].getLowBitsUnsigned(), item[1].getHighBitsUnsigned(), false);
+        const c = Long.fromBits(item[2].getLowBitsUnsigned(), item[2].getHighBitsUnsigned(), false);
+        assert.ok(a.multiply(b).equals(c));
+        assert.ok(item[0].multiply(item[1]).equals(item[2]));
+      });
+    });
+    it('should handle multiplication by the minimum integer value', function () {
+      [
+        // [a, b, c]
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(0),
+          new MutableLong(0) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(1),
+          new MutableLong(0, 0, 0, 0x8000) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(-1),
+          new MutableLong(0, 0, 0, 0x8000) ],
+        [ new MutableLong(0, 0, 0, 0x8000), new MutableLong(2),
+          new MutableLong(0) ],
       ].forEach(function (item) {
         const a = Long.fromBits(item[0].getLowBitsUnsigned(), item[0].getHighBitsUnsigned(), false);
         const b = Long.fromBits(item[1].getLowBitsUnsigned(), item[1].getHighBitsUnsigned(), false);

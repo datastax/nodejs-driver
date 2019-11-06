@@ -9,6 +9,7 @@ const assert = require('assert');
 const types = require('../../lib/types');
 const policies = require('../../lib/policies');
 const helper = require('../test-helper');
+const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const RetryPolicy = policies.retry.RetryPolicy;
 const IdempotenceAwareRetryPolicy = policies.retry.IdempotenceAwareRetryPolicy;
 const FallthroughRetryPolicy = policies.retry.FallthroughRetryPolicy;
@@ -85,10 +86,12 @@ describe('IdempotenceAwareRetryPolicy', function () {
           return { decision: RetryPolicy.retryDecision.retry };
         }
       };
+
       const policy = new IdempotenceAwareRetryPolicy(childPolicy);
-      const result = policy.onReadTimeout(1, 2, 3, 4, 5);
+      const info = getRequestInfo(1);
+      const result = policy.onReadTimeout(info, 2, 3, 4, 5);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.retry);
-      assert.deepEqual(actual, { info: 1, consistency: 2, received: 3, blockFor: 4, isDataPresent: 5 });
+      assert.deepStrictEqual(actual, { info, consistency: 2, received: 3, blockFor: 4, isDataPresent: 5 });
     });
   });
   describe('#onRequestError()', function () {
@@ -102,16 +105,18 @@ describe('IdempotenceAwareRetryPolicy', function () {
     it('should rethrow for non-idempotent queries', function () {
       actual = null;
       const policy = new IdempotenceAwareRetryPolicy(childPolicy);
-      const result = policy.onRequestError({ options: { isIdempotent: false } }, 2, 3);
+      const result = policy.onRequestError(getRequestInfo(0), 2, 3);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.rethrow);
       assert.strictEqual(actual, null);
     });
     it('should rely on the child policy when query is idempotent', function () {
       actual = null;
       const policy = new IdempotenceAwareRetryPolicy(childPolicy);
-      const result = policy.onRequestError({ options: { isIdempotent: true } }, 2, 3);
+      const info = getRequestInfo(0);
+      info.executionOptions.isIdempotent = () => true;
+      const result = policy.onRequestError(info, 2, 3);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.retry);
-      assert.deepEqual(actual, { info: { options: { isIdempotent: true } }, consistency: 2, err: 3 });
+      assert.deepEqual(actual, { info, consistency: 2, err: 3 });
     });
   });
   describe('#onWriteTimeout()', function () {
@@ -125,18 +130,18 @@ describe('IdempotenceAwareRetryPolicy', function () {
     it('should rethrow for non-idempotent queries', function () {
       actual = null;
       const policy = new IdempotenceAwareRetryPolicy(childPolicy);
-      const result = policy.onWriteTimeout({ options: { isIdempotent: false } }, 2, 3, 4, 5);
+      const result = policy.onWriteTimeout(getRequestInfo(0), 2, 3, 4, 5);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.rethrow);
       assert.strictEqual(actual, null);
     });
     it('should rely on the child policy when query is idempotent', function () {
       actual = null;
       const policy = new IdempotenceAwareRetryPolicy(childPolicy);
-      const result = policy.onWriteTimeout({ options: { isIdempotent: true } }, 2, 3, 4, 5);
+      const info = getRequestInfo(0);
+      info.executionOptions.isIdempotent = () => true;
+      const result = policy.onWriteTimeout(info, 2, 3, 4, 5);
       assert.strictEqual(result.decision, RetryPolicy.retryDecision.retry);
-      assert.deepEqual(actual, {
-        info: { options: { isIdempotent: true } }, consistency: 2, received: 3, blockFor: 4, writeType: 5
-      });
+      assert.deepStrictEqual(actual, { info, consistency: 2, received: 3, blockFor: 4, writeType: 5 });
     });
   });
   describe('#onUnavailable()', function () {
@@ -198,8 +203,8 @@ describe('FallthroughRetryPolicy', function () {
 
 function getRequestInfo(nbRetry) {
   return {
-    handler: {},
     nbRetry: nbRetry || 0,
-    request: {}
+    query: 'SAMPLE',
+    executionOptions: new ExecutionOptions()
   };
 }

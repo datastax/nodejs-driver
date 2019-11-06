@@ -5,7 +5,7 @@
  * http://www.datastax.com/terms/datastax-dse-driver-license-terms
  */
 
-import { auth, Client, types } from "../../../index";
+import { auth, Client, ExecutionProfile, policies, types } from "../../../index";
 
 /*
  * TypeScript definitions compilation tests for Client class.
@@ -93,6 +93,14 @@ async function myTest(): Promise<any> {
     cloud: { secureConnectBundle: 'path/to/bundle' },
     credentials: { username: 'a', password: 'b' }
   });
+
+  let ep1: ExecutionProfile = new ExecutionProfile('oltp1', { consistency: types.consistencies.localOne });
+
+  ep1 = new ExecutionProfile('oltp2', {
+    consistency: types.consistencies.localOne,
+    serialConsistency: types.consistencies.localSerial,
+    loadBalancing: new policies.loadBalancing.WhiteListPolicy(new policies.loadBalancing.RoundRobinPolicy(), ['host1'])
+  })
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

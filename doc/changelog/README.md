@@ -2,6 +2,16 @@
 
 Changelog for the DataStax Enterprise Node.js Driver.
 
+## 2.3.1
+
+2019-11-06
+
+### Bug fixes
+
+- [NODEJS-541] - Deprecated IdempotencyAwareRetryPolicy checks for options resulting in error
+- [NODEJS-572] - TypeScript: ExecutionProfile parameters should be marked as optional
+- [NODEJS-576] - MutableLong multiplication can cause infinite recursion
+
 ## 2.3.0
 
 2019-10-21

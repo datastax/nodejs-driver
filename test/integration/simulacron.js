@@ -360,6 +360,10 @@ SimulacronCluster.prototype.register = function(dcs, options, callback) {
 
   options = utils.extend({}, simulacronHelper.baseOptions, options);
 
+  if (Array.isArray(dcs)) {
+    dcs = dcs.join(',');
+  }
+
   const urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
     options.clusterName, options.activityLog, options.numTokens));
 

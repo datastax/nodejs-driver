@@ -137,25 +137,23 @@ const simulacronHelper = {
    * @param {Object} [options.clientOptions] The options to use to initialize the client.
    */
   setup: function (dcs, options) {
-    const self = this;
     options = options || utils.emptyObject;
     const clientOptions = options.clientOptions || {};
     const simulacronCluster = new SimulacronCluster();
     const initClient = options.initClient !== false;
     let client;
-    before(function (done) {
-      self.start(function () {
-        simulacronCluster.register(dcs, clientOptions, function() {
-          done();
-        });
-      });
+
+    before((done) => {
+      this.start(() => simulacronCluster.register(dcs, clientOptions, done));
     });
+
     if (initClient) {
-      const baseOptions = { contactPoints: [self.startingIp], localDataCenter: 'dc1' };
+      const baseOptions = { contactPoints: [this.startingIp], localDataCenter: 'dc1' };
       client = new Client(utils.extend({}, options.clientOptions, baseOptions));
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));
     }
+
     afterEach(simulacronCluster.clear.bind(simulacronCluster));
     after(simulacronHelper.stop.bind(simulacronHelper));
 

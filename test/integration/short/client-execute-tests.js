@@ -488,7 +488,7 @@ describe('Client', function () {
         function insert(next) {
           const query = util.format(
             'INSERT INTO %s (id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample) VALUES (%s, %s, \'%s\', %s, %s)',
-            table, id, timeId, '::2233:0:0:bb', -100, "0.1");
+            table, id.toString(), timeId.toString(), '::2233:0:0:bb', -100, "0.1");
           client.execute(query, next);
         },
         function select(next) {
@@ -498,8 +498,8 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 1);
             const row = result.rows[0];
-            const expected = util.format('{"id":"%s",' +
-              '"timeuuid_sample":"%s",' +
+            const expected = util.format('{"id":%j,' +
+              '"timeuuid_sample":%j,' +
               '"inet_sample":"::2233:0:0:bb",' +
               '"bigint_sample":"-100",' +
               '"decimal_sample":"0.1"}', id, timeId);

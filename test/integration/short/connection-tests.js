@@ -263,6 +263,23 @@ describe('Connection', function () {
         next => connection.close(next)
       ], done);
     });
+
+    context('promisify', () => {
+      it('should return a promise', done => {
+        const connection = newInstance();
+        connection.open(err => {
+          assert.ifError(err);
+
+          connection.send(getRequest(helper.queries.basic), null)
+            .then(response => {
+              assert.isArray(response.rows);
+              done();
+            })
+            .catch(err => done(err))
+            .then(() => connection.close());
+        });
+      });
+    });
   });
 });
 

@@ -1,4 +1,4 @@
-# DataStax Node.js Driver for Apache Cassandra
+# DataStax Node.js Driver for Apache Cassandra and DataStax products
 
 A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra and [DSE][dse] using
 exclusively Cassandra's binary protocol and Cassandra Query Language.
@@ -9,7 +9,7 @@ exclusively Cassandra's binary protocol and Cassandra Query Language.
 $ npm install cassandra-driver
 ```
 
-[![Build Status](https://travis-ci.org/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver) [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
+[![Build Status](https://api.travis-ci.com/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver) [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
 
 
 ## Features

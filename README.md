@@ -9,7 +9,8 @@ exclusively Cassandra's binary protocol and Cassandra Query Language.
 $ npm install cassandra-driver
 ```
 
-[![Build Status](https://api.travis-ci.com/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver) [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
+[![Build Status](https://api.travis-ci.com/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver)
+[![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
 
 
 ## Features
@@ -278,5 +279,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: https://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: https://cassandra.apache.org/doc/latest/cql/types.html#udts
-[dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [dse]: https://www.datastax.com/products/datastax-enterprise

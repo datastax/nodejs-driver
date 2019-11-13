@@ -27,5 +27,5 @@
       "outputSourceFiles": false
     }
   },
-  "plugins": ["doc/dse-doc-plugin"]
+  "plugins": ["doc/doc-plugin"]
 }

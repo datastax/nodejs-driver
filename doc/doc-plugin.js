@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
 
 /**
@@ -22,34 +23,27 @@
 const filterDoclets = {
   'module:types': 1
 };
-const importPropDoclets = {
-
-};
 const filtered = {};
-const importedProps = {};
 
 exports.handlers = {
   newDoclet: function (e) {
+
     const key = e.doclet.longname;
     if (!key) {
       return;
     }
-    if (importPropDoclets[key]) {
-      // doclet to import must come after
-      importedProps[importPropDoclets[key]] = e.doclet;
-    }
-    else if (importedProps[key]) {
-      const props = importedProps[key].properties;
-      props.unshift.apply(props, e.doclet.properties);
-    }
+
     const maxLength = filterDoclets[key];
     if (maxLength === undefined ) {
       return;
     }
+
     filtered[key] = filtered[key] || 0;
+
     if (filtered[key]++ < maxLength) {
       return;
     }
+
     e.doclet.access = 'private';
   }
 };

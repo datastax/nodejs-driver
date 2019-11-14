@@ -1342,24 +1342,6 @@ describe('metadata', function () {
       });
     });
 
-    describe('#compareSchemaVersions()', function () {
-      const client = setupInfo.client;
-
-      context('with callback specified', () => {
-        it('should return true when the schema version is the same', done =>
-          client.metadata.checkSchemaAgreement((err, agreement) => {
-            assert.ifError(err);
-            assert.strictEqual(agreement, true);
-            done();
-          }));
-      });
-
-      context('with no callback specified', () => {
-        it('should return true when the schema version is the same', () =>
-          client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
-      });
-    });
-
     describe('#isDbaas()', () => {
       it('should return false for any product type except cloud', () => {
         assert.strictEqual(setupInfo.client.metadata.isDbaas(), false);

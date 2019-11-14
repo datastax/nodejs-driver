@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+const assert = require('chai').assert;
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types/index');
 const simulacron = require('../simulacron');
@@ -122,6 +122,35 @@ describe('Metadata', function () {
           });
         }
       ], done);
+    });
+  });
+
+  describe('#compareSchemaVersions()', function () {
+    const setupInfo = simulacron.setup('6');
+    const client = setupInfo.client;
+
+    // Validate that simulacron is returning values for this queries
+    before(() =>
+      client.execute('SELECT schema_version FROM system.peers')
+        .then(rs => assert.lengthOf(rs.rows, 5)));
+
+    before(() =>
+      client.execute('SELECT schema_version FROM system.local')
+        .then(rs => assert.lengthOf(rs.rows, 1)));
+
+    context('with callback specified', () => {
+
+      it('should return true when the schema version is the same', done =>
+        client.metadata.checkSchemaAgreement((err, agreement) => {
+          assert.ifError(err);
+          assert.strictEqual(agreement, true);
+          done();
+        }));
+    });
+
+    context('with no callback specified', () => {
+      it('should return true when the schema version is the same', () =>
+        client.metadata.checkSchemaAgreement().then(agreement => assert.strictEqual(agreement, true)));
     });
   });
 });

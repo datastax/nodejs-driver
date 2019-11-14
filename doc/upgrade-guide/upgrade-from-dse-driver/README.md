@@ -55,3 +55,8 @@ Becomes:
 const { datastax } = require('cassandra-driver');
 const { graph, search } = datastax;
 ```
+
+## Load balancing policy
+
+The default load balancing policy on the `dse-driver` was `DseLoadBalancingPolicy`. In the `cassandra-driver`, a 
+policy with the same behaviour is called `DefaultLoadBalancingPolicy`, which is the default.

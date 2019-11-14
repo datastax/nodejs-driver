@@ -188,6 +188,8 @@ describe('Startup', function() {
       getStringBuffer(startupOptions.driverVersionKey),
       getStringBuffer(startupOptions.driverVersionValue)]);
 
+    const cqlVersionLength = 22;
+
     it('should include NO_COMPACT in options if true', function() {
       const request = new StartupRequest({ noCompact: true });
       const expectedBuffer = Buffer.concat([
@@ -211,7 +213,7 @@ describe('Startup', function() {
       utils.allocBufferFromArray([
         types.protocolVersion.maxSupported, // protocol version
         0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-        0, 0, 0, 22 + driverNameAndVersionBuffer.length, // length
+        0, 0, 0, cqlVersionLength + driverNameAndVersionBuffer.length, // length
         0, 3, // map size
       ]),
       getStringBuffer(startupOptions.cqlVersionKey),
@@ -229,18 +231,21 @@ describe('Startup', function() {
     });
 
     it('should include client id', () => {
+      const clientKeyBuffer = getStringBuffer(startupOptions.clientIdKey);
+      const clientValueBuffer = getStringBuffer(startupOptions.clientIdValue);
+
       const expected = Buffer.concat([
         utils.allocBufferFromArray([
           types.protocolVersion.maxSupported, // protocol version
           0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-          0, 0, 0, 153, // length
+          0, 0, 0, cqlVersionLength + driverNameAndVersionBuffer.length + clientKeyBuffer.length + clientValueBuffer.length, // length
           0, 4, // map size
         ]),
         getStringBuffer(startupOptions.cqlVersionKey),
         getStringBuffer(startupOptions.cqlVersionValue),
         driverNameAndVersionBuffer,
-        getStringBuffer(startupOptions.clientIdKey),
-        getStringBuffer(startupOptions.clientIdValue)
+        clientKeyBuffer,
+        clientValueBuffer,
       ]);
 
       // ID as a UUID instance
@@ -251,22 +256,26 @@ describe('Startup', function() {
     });
 
     it('should include application name and version', () => {
-      const expected = Buffer.concat([
-        utils.allocBufferFromArray([
-          types.protocolVersion.maxSupported, // protocol version
-          0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
-          0, 0, 0, 208, // length
-          0, 6, // map size
-        ]),
-        getStringBuffer(startupOptions.cqlVersionKey),
-        getStringBuffer(startupOptions.cqlVersionValue),
-        driverNameAndVersionBuffer,
+
+      const clientAndApplicationBuffer = Buffer.concat([
         getStringBuffer(startupOptions.clientIdKey),
         getStringBuffer(startupOptions.clientIdValue),
         getStringBuffer(startupOptions.applicationNameKey),
         getStringBuffer(startupOptions.applicationNameValue),
         getStringBuffer(startupOptions.applicationVersionKey),
-        getStringBuffer(startupOptions.applicationVersionValue)
+        getStringBuffer(startupOptions.applicationVersionValue)]);
+
+      const expected = Buffer.concat([
+        utils.allocBufferFromArray([
+          types.protocolVersion.maxSupported, // protocol version
+          0, 0, 0, 1, // flags + stream id + opcode (1 = startup)
+          0, 0, 0, cqlVersionLength + driverNameAndVersionBuffer.length + clientAndApplicationBuffer.length, // length
+          0, 6, // map size
+        ]),
+        getStringBuffer(startupOptions.cqlVersionKey),
+        getStringBuffer(startupOptions.cqlVersionValue),
+        driverNameAndVersionBuffer,
+        clientAndApplicationBuffer
       ]);
 
       const request = new StartupRequest({ clientId, applicationName, applicationVersion });

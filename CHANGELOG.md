@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.4.0-alpha1
+
+2019-11-14
+
+### Features
+
+- [NODEJS-549] - Unified driver: merge core and DSE drivers into a single package 
+
 ## 4.3.1
 
 2019-11-06

@@ -13,9 +13,8 @@ processed in a different order server-side, and end up with out-of-order timesta
 
 ### Using a timestamp generator
 
-When using Apache Cassandra 2.1+ or DataStax Enterprise 4.7+, it's possible to send the operation timestamp in the
-request. Starting from version 3.2 of the Node.js driver, the driver uses [`MonotonicTimestampGenerator`][mtg] 
-by default to generate the request timestamps.
+The operation timestamp can be sent as part of the request. The driver uses [`MonotonicTimestampGenerator`][mtg] by 
+default to generate the request timestamps.
 
 You can provide a different generator when creating the `Client` instance:
 
@@ -58,7 +57,8 @@ constructors for ways to control the warning interval.
 
 ### Provide the timestamp in the query
 
-Alternatively, if you are using a lower server version, you can explicitly provide the timestamp in your CQL query:
+Alternatively, if you are using an old server version, you can explicitly provide the timestamp in your CQL query (not
+ recommended):
 
 ```javascript
 client.execute('INSERT INTO my_table(c1, c2) VALUES (1, 1) USING TIMESTAMP 1482156745633040');

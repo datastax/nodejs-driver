@@ -3,6 +3,9 @@ module.exports = {
     "commonjs": true,
     "es6": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2017
+  },
   "extends": "eslint:recommended",
   "rules": {
     "indent": [

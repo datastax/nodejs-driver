@@ -386,19 +386,20 @@ describe('metadata', function () {
             .then(function () {
               return client.execute(helper.queries.basic, [], {traceQuery: true});
             })
+            .then(result => new Promise(r => setTimeout(() => r(result), 500)))
             .then(function (result) {
               return Promise.all([
                 client.metadata.getTrace(result.info.traceId),
                 client.metadata.getTrace(result.info.traceId, types.consistencies.all)
-              ])
-                .then(function (traceArray) {
-                  traceArray.forEach(function (trace) {
-                    assert.ok(trace);
-                    assert.strictEqual(typeof trace.duration, 'number');
-                    assert.ok(trace.events.length);
-                  });
-                  return client.shutdown();
-                });
+              ]);
+            })
+            .then(function (traceArray) {
+              traceArray.forEach(function (trace) {
+                assert.ok(trace);
+                assert.strictEqual(typeof trace.duration, 'number');
+                assert.ok(trace.events.length);
+              });
+              return client.shutdown();
             });
         });
       });

@@ -11,7 +11,7 @@ cqlsh> CREATE TABLE points_of_interest(name text PRIMARY KEY, coords 'PointType'
 cqlsh> INSERT INTO points_of_interest (name, coords) VALUES ('Eiffel Tower', 'POINT(48.8582 2.2945)');
 ```
 
-The DSE driver includes encoders and representations of these types in the `geometry` module that can be used directly
+The driver includes encoders and representations of these types in the `geometry` module that can be used directly
 as parameters in queries. All Javascript geospatial types implement `toString()`, that returns the string representation
 in [Well-known text][wkt] format, and `toJSON()`, that returns the JSON representation in [GeoJSON][geojson] format.
 

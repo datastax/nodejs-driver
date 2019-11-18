@@ -146,6 +146,7 @@ describe('Client', function () {
       const contactPoints = ['not1.existent-host', 'not2.existent-host'];
       const options = utils.extend({}, helper.baseOptions, { contactPoints });
       const client = new Client(options);
+
       client.connect(function (err) {
         assert.ok(err);
         assert.instanceOf(err, errors.NoHostAvailableError);
@@ -172,10 +173,10 @@ describe('Client', function () {
         }
       });
       const ccMock = getControlConnectionMock(null, options);
-      ccMock.prototype.init = function (cb) {
+      ccMock.prototype.init = async () => {
         initCounter++;
-        //Async
-        setTimeout(cb, 100);
+        // Async
+        await helper.delayAsync(20);
       };
 
       const Client = proxyquire('../../lib/client.js', {
@@ -207,7 +208,7 @@ describe('Client', function () {
       });
       const client = new Client(options);
       client.controlConnection = {
-        init: helper.callbackNoop,
+        init: async () => { },
         hosts: new HostMap(),
         host: { setDistance: utils.noop },
         profileManager: new ProfileManager(options),
@@ -771,7 +772,8 @@ function getControlConnectionMock(hosts, options) {
     this.host = { setDistance: utils.noop };
     this.shutdown = utils.noop;
   }
-  ControlConnectionMock.prototype.init = setImmediate;
+
+  ControlConnectionMock.prototype.init = async () => {};
 
   return ControlConnectionMock;
 }

@@ -105,69 +105,72 @@ describe('utils', function () {
 
     describe('#getIp()', () => {
 
-      it('should return the resolved addresses in a round-robin fashion', done => {
+      it('should return the resolved addresses in a round-robin fashion', async () => {
         const addresses = ['10.10.10.1', '10.10.10.2'];
         const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: getDnsMock(addresses) });
 
-        resolver.init(err => {
-          assert.ifError(err);
-          const result = new Map();
+        await resolver.init();
 
-          for (let i = 0; i < 10; i++) {
-            const ip = resolver.getIp();
-            result.set(ip, (result.get(ip) || 0) + 1);
-          }
+        const result = new Map();
 
-          assert.deepStrictEqual(Array.from(result.keys()).sort(), addresses);
-          assert.strictEqual(result.get(addresses[0]), 5);
-          assert.strictEqual(result.get(addresses[1]), 5);
+        for (let i = 0; i < 10; i++) {
+          const ip = resolver.getIp();
+          result.set(ip, (result.get(ip) || 0) + 1);
+        }
 
-          done();
-        });
+        assert.deepStrictEqual(Array.from(result.keys()).sort(), addresses);
+        assert.strictEqual(result.get(addresses[0]), 5);
+        assert.strictEqual(result.get(addresses[1]), 5);
       });
     });
 
     describe('#init()', () => {
 
-      it('should callback in error when resolution fails', done => {
+      it('should callback in error when resolution fails', async () => {
         const error = new Error('dummy error');
         const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: getDnsMock(error) });
 
-        resolver.init(err => {
-          assert.strictEqual(err, error);
-          done();
-        });
+        let err;
+
+        try {
+          await resolver.init();
+        } catch (e) {
+          err = e;
+        }
+
+        assert.strictEqual(err, error);
       });
 
-      it('should callback in error when resolution returns empty', done => {
+      it('should callback in error when resolution returns empty', async () => {
         const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: getDnsMock([]) });
 
-        resolver.init(err => {
-          helper.assertInstanceOf(err, Error);
-          helper.assertContains(err.message, 'could not be resolved');
-          done();
-        });
+        let err;
+
+        try {
+          await resolver.init();
+        } catch (e) {
+          err = e;
+        }
+
+        helper.assertInstanceOf(err, Error);
+        helper.assertContains(err.message, 'could not be resolved');
       });
 
-      it('should support a IP address as parameter', done => {
+      it('should support a IP address as parameter', async () => {
         const address = '10.10.10.255';
         const resolver = new AddressResolver({ nameOrIp: address, dns: getDnsMock(new Error('ip must be used')) });
 
-        resolver.init(err => {
-          assert.ifError(err);
+        await resolver.init();
 
-          for (let i = 0; i < 10; i++) {
-            assert.strictEqual(resolver.getIp(), address);
-          }
-
-          done();
-        });
+        for (let i = 0; i < 10; i++) {
+          assert.strictEqual(resolver.getIp(), address);
+        }
       });
     });
 
     describe('#refresh()', () => {
 
-      it('should ignore failures', done => {
+      it('should ignore failures', async () => {
         let initialized = false;
         const address = '10.10.10.1';
 
@@ -183,56 +186,50 @@ describe('utils', function () {
 
         const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: dnsMock });
 
-        resolver.init(err => {
-          assert.ifError(err);
-          assert.strictEqual(resolver.getIp(), address);
-          initialized = true;
+        await resolver.init();
 
-          resolver.refresh(err => {
-            // It shouldn't have an error parameter
-            assert.strictEqual(err, undefined);
+        assert.strictEqual(resolver.getIp(), address);
+        initialized = true;
 
-            // getIp() should work as usual
-            assert.strictEqual(resolver.getIp(), address);
-            done();
-          });
-        });
+        await resolver.refresh();
+
+        // getIp() should work as usual
+        assert.strictEqual(resolver.getIp(), address);
       });
 
-      it('should update the ips returned by getIp() methods', done => {
+      it('should update the ips returned by getIp() methods', async () => {
         const addresses = ['10.10.10.1'];
         const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: getDnsMock(addresses) });
 
-        resolver.init(err => {
-          assert.ifError(err);
+        await resolver.init();
 
-          // Update the addresses that are going to be resolved
-          const initialAddresses = addresses.slice(0);
-          addresses.splice(0, 1);
-          addresses.push('10.10.10.1', '10.10.10.2');
+        // Update the addresses that are going to be resolved
+        const initialAddresses = addresses.slice(0);
+        addresses.splice(0, 1);
+        addresses.push('10.10.10.1', '10.10.10.2');
 
-          // Validate that get ip uses a cached value
-          for (let i = 0; i < 10; i++) {
-            assert.strictEqual(resolver.getIp(), initialAddresses[0]);
-          }
+        // Validate that get ip uses a cached value
+        for (let i = 0; i < 10; i++) {
+          assert.strictEqual(resolver.getIp(), initialAddresses[0]);
+        }
 
-          resolver.refresh(() => {
-            const result = new Map();
+        await resolver.refresh();
 
-            // Should have resolved
-            for (let i = 0; i < 10; i++) {
-              const ip = resolver.getIp();
-              result.set(ip, (result.get(ip) || 0) + 1);
-            }
+        const result = new Map();
 
-            assert.deepStrictEqual(Array.from(result.keys()).sort(), addresses);
-            assert.strictEqual(result.get(addresses[0]), 5);
-            assert.strictEqual(result.get(addresses[1]), 5);
+        // Should have resolved
+        for (let i = 0; i < 10; i++) {
+          const ip = resolver.getIp();
+          result.set(ip, (result.get(ip) || 0) + 1);
+        }
 
-            done();
-          });
-        });
+        assert.deepStrictEqual(Array.from(result.keys()).sort(), addresses);
+        assert.strictEqual(result.get(addresses[0]), 5);
+        assert.strictEqual(result.get(addresses[1]), 5);
       });
+
+      //TODO
+      it('should return the promise instance');
     });
   });
 });

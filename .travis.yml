@@ -18,17 +18,14 @@ jobs:
         - tsc -p .
         - node -e "require('./api-generation-test').generate()" > generated.ts
         - tsc generated.ts
+    - name: "Unit tests - Node.js 12"
+      node_js: "12"
+      script: "npm test"
     - name: "Unit tests - Node.js 10"
       node_js: "10"
       script: "npm test"
     - name: "Unit tests - Node.js 8"
       node_js: "8"
-      script: "npm test"
-    - name: "Unit tests - Node.js 6"
-      node_js: "6"
-      script: "npm test"
-    - name: "Unit tests - Node.js 4"
-      node_js: "4"
       script: "npm test"
     - name: "TypeScript (latest) generation and compilation tests"
       node_js: "10"

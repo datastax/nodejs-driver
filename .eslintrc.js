@@ -102,7 +102,8 @@ module.exports = {
     "arrow-spacing": "error",
     "no-confusing-arrow": ["error", { "allowParens": true }],
     "yoda": "error",
-    "constructor-super": "error"
+    "constructor-super": "error",
+    "require-await": "error"
   },
   "globals": {
     "Buffer": false,

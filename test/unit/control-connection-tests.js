@@ -272,6 +272,7 @@ describe('ControlConnection', function () {
       assert.strictEqual(state.hostsTried.length, 0);
       assert.strictEqual(state.connectionAttempts.length, 1);
       lbp.init(null, cc.hosts, utils.noop);
+
       state.connection.emit('socketClose');
 
       await helper.delayAsync();
@@ -521,25 +522,23 @@ function getContext(options) {
   let index = 0;
 
   return {
-    borrowHostConnection: function (h, callback) {
+    borrowHostConnection: function (h) {
       const i = options.state.hostsTried.length;
       options.state.hostsTried.push(h);
       state.host = h;
       if (failBorrow.indexOf(i) >= 0) {
-        return callback(new Error('Test error'));
+        throw new Error('Test error');
       }
 
-      state.connection = getFakeConnection(h.address, options.queryResults);
-      callback(null, state.connection);
+      return state.connection = getFakeConnection(h.address, options.queryResults);
     },
-    createConnection: function (endpoint, callback) {
+    createConnection: function (endpoint) {
       state.connectionAttempts.push(endpoint);
       if (failBorrow.indexOf(index++) >= 0) {
-        return callback(new Error('Fake connect error'));
+        throw new Error('Fake connect error');
       }
 
-      state.connection = getFakeConnection(endpoint, options.queryResults);
-      callback(null, state.connection);
+      return state.connection = getFakeConnection(endpoint, options.queryResults);
     }
   };
 }

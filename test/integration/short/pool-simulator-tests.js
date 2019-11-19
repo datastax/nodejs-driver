@@ -274,7 +274,7 @@ describe('pool', function () {
         .then(() => client.shutdown());
     });
 
-    it('should have a single connection when warmup is false', () => {
+    it('should have a single connection when warmup is false', async () => {
       // Use a single contact point to make sure control connection uses the first host
       const contactPoints = [ cluster.getContactPoints()[0] ];
 
@@ -284,16 +284,17 @@ describe('pool', function () {
         pooling: { warmup: false, coreConnectionsPerHost: { [types.distance.local]: 3 } }
       });
 
-      after(() => client.shutdown());
+      await client.connect();
 
-      return client.connect()
-        .then(() => {
-          assert.strictEqual(client.hosts.length, 3);
-          const state = client.getState();
-          const hosts = state.getConnectedHosts();
-          assert.deepStrictEqual(hosts.map(h => h.address), contactPoints);
-          assert.strictEqual(state.getOpenConnections(hosts[0]), 1);
-        });
+      try {
+        assert.strictEqual(client.hosts.length, 3);
+        const state = client.getState();
+        const hosts = state.getConnectedHosts();
+        assert.deepStrictEqual(hosts.map(h => h.address), contactPoints);
+        assert.strictEqual(state.getOpenConnections(hosts[0]), 1);
+      } finally {
+        client.shutdown();
+      }
     });
 
     it('should maintain the same ControlConnection host after nodes going UP and DOWN and back UP', () => {

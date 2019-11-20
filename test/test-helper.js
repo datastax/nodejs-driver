@@ -25,7 +25,7 @@ const http = require('http');
 const temp = require('temp').track(true);
 const Client = require('../lib/client');
 const defaultOptions = require('../lib/client-options').defaultOptions;
-const Host = require('../lib/host').Host;
+const { Host, HostMap } = require('../lib/host');
 const OperationState = require('../lib/operation-state');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
@@ -38,6 +38,16 @@ const cassandraVersionByDse = {
   '6.7': '3.11',
   '6.8': '3.11'
 };
+
+const afterNextHandlers = [];
+
+// After each at root level
+afterEach(async () => {
+  while (afterNextHandlers.length > 0) {
+    const handler = afterNextHandlers.pop();
+    await handler();
+  }
+});
 
 const helper = {
   /**
@@ -275,6 +285,14 @@ const helper = {
   },
 
   /**
+   * Invokes the provided function once after the calling test finished.
+   * @param fn
+   */
+  afterThisTest: function(fn) {
+    afterNextHandlers.push(fn);
+  },
+
+  /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client
    * @param {Function} callback
@@ -304,7 +322,7 @@ const helper = {
       fn.apply(context, params);
     });
   },
-  wait: function (ms, callback) {
+  waitCallback: function (ms, callback) {
     if (!ms) {
       ms = 0;
     }
@@ -543,18 +561,31 @@ const helper = {
   /**
    * Given a {Client} and a {Number} returns the host whose last octet
    * ends with the requested number.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Client|HostMap|Array<Host>} hostsOrClient Client to lookup hosts from.
    * @param {Number} number last octet of requested host.
+   * @param {Boolean} [throwWhenNotFound] Determines whether this method should throw an error when the host
+   * can not be found.
    * @returns {Host}
    */
-  findHost: function(client, number) {
-    let host = undefined;
-    const self = this;
-    client.hosts.forEach(function(h) {
-      if(self.lastOctetOf(h) === number.toString()) {
-        host = h;
-      }
-    });
+  findHost: function(hostsOrClient, number, throwWhenNotFound) {
+    let hostArray;
+
+    if (hostsOrClient instanceof HostMap) {
+      hostArray = hostsOrClient.values();
+    } else if (hostsOrClient instanceof Client) {
+      hostArray = hostsOrClient.hosts.values();
+    } else if (Array.isArray(hostsOrClient)) {
+      hostArray = hostsOrClient;
+    } else {
+      throw new Error('First parameter must be the host array/map or the Client');
+    }
+
+    const host = hostArray.find(h => +this.lastOctetOf(h) === +number);
+
+    if (throwWhenNotFound && !host) {
+      throw new Error(`Host ${number} not found`);
+    }
+
     return host;
   },
 
@@ -572,6 +603,34 @@ const helper = {
     };
 
     return self.setIntervalUntilTask(hostIsUp, 1000, 20);
+  },
+  wait: {
+    until: async function(condition, maxAttempts = 500, delay = 20) {
+      for (let i = 0; i <= maxAttempts; i++) {
+        if (!condition()) {
+          if (i === maxAttempts) {
+            throw new Error(`Condition still false after ${maxAttempts * delay}ms: ${condition.toString()}`);
+          }
+          await helper.delayAsync(delay);
+        } else {
+          break;
+        }
+      }
+    },
+    forNodeUp: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
+      const host = helper.findHost(hostsOrClient, lastOctet, true);
+      await this.until(() => host.isUp(), maxAttempts, delay);
+    },
+    forNodeDown: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
+      const host = helper.findHost(hostsOrClient, lastOctet, true);
+      await this.until(() => !host.isUp(), maxAttempts, delay);
+    },
+    forNodeToBeAdded: async function (hostsOrClient, lastOctet, maxAttempts = 1000, delay = 20) {
+      await this.until(() => helper.findHost(hostsOrClient, lastOctet), maxAttempts, delay);
+    },
+    forNodeToBeRemoved: async function (hostsOrClient, lastOctet, maxAttempts = 1000, delay = 20) {
+      await this.until(() => !helper.findHost(hostsOrClient, lastOctet), maxAttempts, delay);
+    }
   },
 
   /**
@@ -1055,7 +1114,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         create.push(options.partitioner);
       }
 
-      self.exec(create, helper.wait(options.sleep, next));
+      self.exec(create, helper.waitCallback(options.sleep, next));
     },
     function (next) {
       const populate = ['populate', '-n', nodeLength.toString()];
@@ -1065,7 +1124,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       if (options.ipFormat) {
         populate.push('--ip-format='+ options.ipFormat);
       }
-      self.exec(populate, helper.wait(options.sleep, next));
+      self.exec(populate, helper.waitCallback(options.sleep, next));
     },
     function (next) {
       if (!options.yaml || !options.yaml.length) {
@@ -1102,7 +1161,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         helper.trace('With jvm args', options.jvmArgs);
       }
 
-      self.exec(start, helper.wait(options.sleep, next));
+      self.exec(start, helper.waitCallback(options.sleep, next));
     },
     self.waitForUp.bind(self)
   ], function (err) {

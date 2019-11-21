@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+const assert = require('chai').assert;
 const dns = require('dns');
+const util = require('util');
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
@@ -910,25 +911,23 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should warn but not fail when warmup is enable and a node is down', function (done) {
-      utils.series([
-        helper.toTask(helper.ccmHelper.exec, null, ['node2', 'stop']),
-        function (next) {
-          const warnings = [];
-          const client = newInstance({ pooling: { warmup: true } });
-          client.on('log', function (level, className, message) {
-            if (level !== 'warning' || className !== 'Client') {
-              return;
-            }
-            warnings.push(message);
-          });
-          client.connect(function (err) {
-            assert.ifError(err);
-            assert.strictEqual(warnings.filter(w => w.indexOf('pool') >= 0).length, 1);
-            client.shutdown(next);
-          });
+    it('should warn but not fail when warmup is enable and a node is down', async () => {
+      await util.promisify(helper.ccmHelper.exec)(['node2', 'stop']);
+
+      const warnings = [];
+      const client = newInstance({ pooling: { warmup: true } });
+      helper.afterThisTest(() => client.shutdown());
+
+      client.on('log', (level, className, message) => {
+        if (level !== 'warning' || className !== 'Client') {
+          return;
         }
-      ], done);
+
+        warnings.push(message);
+      });
+
+      await client.connect();
+      assert.lengthOf(warnings.filter(w => w.indexOf('pool') >= 0), 1);
     });
   });
   describe('#shutdown()', function () {

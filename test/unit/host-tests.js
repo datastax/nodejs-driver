@@ -703,71 +703,64 @@ describe('Host', function () {
       host.shutdown(false);
     });
   });
+
   describe('#warmupPool()', function () {
-    it('should create the exact amount of connections after borrowing when opening is instant', function (done) {
+    it('should create the exact amount of connections after borrowing when opening is instant', async () => {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 4;
-      host.pool._createConnection = () => newConnectionMock({ open: helper.callbackNoop });
-      host.borrowConnection(null, null, function (err) {
-        assert.ifError(err);
-        host.warmupPool(function (err) {
-          assert.ifError(err);
-          assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-          setTimeout(function () {
-            assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-            done();
-          }, 100);
-        });
-      });
+      host.pool._createConnection = () => newConnectionMock({ openAsync: () => {} });
+
+      await host.borrowConnectionAsync(null, null);
+      await host.warmupPool();
+
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
+      await helper.delayAsync(100);
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
     });
-    it('should create the exact amount of connections after borrowing when opening takes some time', function (done) {
+
+    it('should create the exact amount of connections after borrowing when opening takes some time', async () => {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 3;
-      host.pool._createConnection = () => newConnectionMock({ open: (cb) => setTimeout(cb, 20)});
-      host.borrowConnection(null, null, function (err) {
-        assert.ifError(err);
-        host.warmupPool(function (err) {
-          assert.ifError(err);
-          assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-          setTimeout(function () {
-            assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-            done();
-          }, 200);
-        });
-      });
+      host.pool._createConnection = () => newConnectionMock({ openAsync: () => helper.delayAsync(20) });
+
+      await host.borrowConnectionAsync(null, null);
+      await host.warmupPool();
+
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
+      await helper.delayAsync(200);
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
     });
-    it('should create the exact amount of connections when opening is instant', function (done) {
+
+    it('should create the exact amount of connections when opening is instant', async () => {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 4;
-      host.pool._createConnection = () => newConnectionMock({ open: helper.callbackNoop });
-      host.warmupPool(function (err) {
-        assert.ifError(err);
-        assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-        setTimeout(function () {
-          assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-          done();
-        }, 100);
-      });
+      host.pool._createConnection = () => newConnectionMock({ openAsync: () => {} });
+
+      await host.warmupPool();
+
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
+      await helper.delayAsync(100);
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
     });
-    it('should create the exact amount of connections when opening takes some time', function (done) {
+
+    it('should create the exact amount of connections when opening takes some time', async () => {
       const host = newHostInstance(defaultOptions);
       host._distance = types.distance.local;
       host.pool.coreConnectionsLength = 3;
-      host.pool._createConnection = () => newConnectionMock({ open: (cb) => setTimeout(cb, 20)});
-      host.warmupPool(function (err) {
-        assert.ifError(err);
-        assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-        setTimeout(function () {
-          assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
-          done();
-        }, 200);
-      });
+      host.pool._createConnection = () => newConnectionMock({ openAsync: () => helper.delayAsync(20) });
+
+      await host.warmupPool();
+
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
+      await helper.delayAsync(200);
+      assert.strictEqual(host.pool.coreConnectionsLength, host.pool.connections.length);
     });
   });
 });
+
 describe('HostMap', function () {
   describe('#values()', function () {
     it('should return a frozen array', function () {

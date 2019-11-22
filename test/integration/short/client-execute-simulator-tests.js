@@ -27,6 +27,7 @@ const DCAwareRoundRobinPolicy = require('../../../lib/policies').loadBalancing.D
 const WhiteListPolicy = require('../../../lib/policies').loadBalancing.WhiteListPolicy;
 
 const query = "select * from data";
+const clusterSize = 3;
 
 describe('Client', function() {
   this.timeout(30000);
@@ -53,10 +54,10 @@ describe('Client', function() {
     });
   
     after(() => client.shutdown());
-  
+
     it('should send request to host used in options', (done) => {
       utils.times(10, (n, next) => {
-        const nodeIndex = n % 3;
+        const nodeIndex = n % clusterSize;
         const node = cluster.node(nodeIndex);
         const host = client.hosts.get(node.address);
         client.execute(query, [], { host: host }, (err, result) => {
@@ -66,6 +67,24 @@ describe('Client', function() {
           next();
         });
       }, done);
+    });
+
+    it('should send request to host used in options using async function', async () => {
+      for (let i = 0; i < 10; i++) {
+        const nodeIndex = i % clusterSize;
+        const node = cluster.node(nodeIndex);
+        const host = client.hosts.get(node.address);
+        const result = await client.execute(query, [], { host: host });
+        assert.strictEqual(result.info.queriedHost, node.address);
+        assert.deepStrictEqual(Object.keys(result.info.triedHosts), [node.address]);
+      }
+    });
+
+    it('should prepare and send execute requests', async () => {
+      for (let i = 0; i < clusterSize; i++) {
+        const result = await client.execute(query, [], { prepare: true });
+        assert.ok(result.info.queriedHost);
+      }
     });
 
     it('should throw an error if host used raises an error', (done) => {

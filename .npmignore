@@ -20,6 +20,7 @@ support/
 test/
 out/
 ci/
+certs/
 docs.yaml
 testing.js
 .eslintrc.js

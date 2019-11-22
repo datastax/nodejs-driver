@@ -286,10 +286,21 @@ const helper = {
 
   /**
    * Invokes the provided function once after the calling test finished.
-   * @param fn
+   * @param {Function} fn
    */
   afterThisTest: function(fn) {
     afterNextHandlers.push(fn);
+  },
+
+  /**
+   * Invokes client.shutdown() after this test finishes.
+   * @param {Client} client
+   * @returns {Client}
+   */
+  shutdownAfterThisTest: function(client) {
+    this.afterThisTest(() => client.shutdown());
+
+    return client;
   },
 
   /**

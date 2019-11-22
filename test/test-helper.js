@@ -621,6 +621,9 @@ const helper = {
       const host = helper.findHost(hostsOrClient, lastOctet, true);
       await this.until(() => host.isUp(), maxAttempts, delay);
     },
+    forAllNodesUp: async function (client, maxAttempts = 500, delay = 20) {
+      await this.until(() => !client.hosts.values().find(h => !h.isUp()), maxAttempts, delay);
+    },
     forNodeDown: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
       const host = helper.findHost(hostsOrClient, lastOctet, true);
       await this.until(() => !host.isUp(), maxAttempts, delay);

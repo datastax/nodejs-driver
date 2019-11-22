@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+const { assert } = require('chai');
+const sinon = require('sinon');
 const utils = require('../../lib/utils');
 const helper = require('../test-helper');
 const AddressResolver = utils.AddressResolver;
@@ -228,8 +229,26 @@ describe('utils', function () {
         assert.strictEqual(result.get(addresses[1]), 5);
       });
 
-      //TODO
-      it('should return the promise instance');
+      it('should resolve once when called in parallel', async () => {
+        const address = '10.10.10.1';
+
+        const dnsMock = {
+          resolve4: sinon.fake((name, cb) => {
+            cb(null, [ address ]);
+          })
+        };
+
+        const resolver = new AddressResolver({ nameOrIp: 'dummy-host', dns: dnsMock });
+
+        await resolver.init();
+
+        assert.strictEqual(resolver.getIp(), address);
+        assert.isTrue(dnsMock.resolve4.calledOnce);
+
+        await Promise.all(Array(10).fill(0).map(() => resolver.refresh()));
+
+        assert.strictEqual(dnsMock.resolve4.callCount, 2);
+      });
     });
   });
 });

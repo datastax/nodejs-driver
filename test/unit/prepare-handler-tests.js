@@ -30,7 +30,7 @@ describe('PrepareHandler', function () {
     it('should make request when not already prepared', async () => {
       const client = getClient({ prepareOnAllHosts: false });
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
-      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
       const hosts = lbp.getFixedQueryPlan();
       assert.strictEqual(hosts[2].prepareCalled, 1);
       assert.strictEqual(hosts[3].prepareCalled, 0);
@@ -40,7 +40,7 @@ describe('PrepareHandler', function () {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ { } ]);
       await Promise.all(
-        Array(100).fill(0).map(() => PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null)));
+        Array(100).fill(0).map(() => PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null)));
 
       const hosts = lbp.getFixedQueryPlan();
       assert.strictEqual(hosts[0].prepareCalled, 1);
@@ -55,7 +55,7 @@ describe('PrepareHandler', function () {
       let err;
 
       try {
-        await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+        await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
       } catch (e) {
         err = e;
       }
@@ -76,7 +76,7 @@ describe('PrepareHandler', function () {
         cb(null, { id: 100, meta: {} });
       });
 
-      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
 
       const hosts = lbp.getFixedQueryPlan();
       assert.strictEqual(hosts[0].prepareCalled, 1);
@@ -87,7 +87,7 @@ describe('PrepareHandler', function () {
       const client = getClient({ prepareOnAllHosts: true });
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
 
-      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
 
       const hosts = lbp.getFixedQueryPlan();
       assert.strictEqual(hosts[1].prepareCalled, 1);

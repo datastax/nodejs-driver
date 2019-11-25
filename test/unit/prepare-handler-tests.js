@@ -15,7 +15,7 @@
  */
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 const events = require('events');
 const helper = require('../test-helper');
 const PrepareHandler = require('../../lib/prepare-handler');
@@ -24,43 +24,48 @@ const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 
 describe('PrepareHandler', function () {
+
   describe('getPrepared()', function () {
-    it('should make request when not already prepared', function (done) {
+
+    it('should make request when not already prepared', async () => {
       const client = getClient({ prepareOnAllHosts: false });
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[2].prepareCalled, 1);
-        assert.strictEqual(hosts[3].prepareCalled, 0);
-        done();
-      });
+      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[2].prepareCalled, 1);
+      assert.strictEqual(hosts[3].prepareCalled, 0);
     });
-    it('should make the same prepare request once and queue the rest', function (done) {
+
+    it('should make the same prepare request once and queue the rest', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ { } ]);
-      utils.times(100, function (n, next) {
-        PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, next);
-      }, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[0].prepareCalled, 1);
-        done();
-      });
+      await Promise.all(
+        Array(100).fill(0).map(() => PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null)));
+
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[0].prepareCalled, 1);
     });
-    it('should callback in error if request send fails', function (done) {
+
+    it('should callback in error if request send fails', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ {} ], function (q, h, cb) {
         cb(new Error('Test prepare error'));
       });
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ok(err);
-        const host = lbp.getFixedQueryPlan()[0];
-        assert.strictEqual(host.prepareCalled, 1);
-        done();
-      });
+
+      let err;
+
+      try {
+        await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+      } catch (e) {
+        err = e;
+      }
+
+      assert.instanceOf(err, Error);
+      const host = lbp.getFixedQueryPlan()[0];
+      assert.strictEqual(host.prepareCalled, 1);
     });
-    it('should retry on next host if request send fails due to socket error', function (done) {
+
+    it('should retry on next host if request send fails due to socket error', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function (q, h, cb) {
         if (h.address === '0') {
@@ -70,29 +75,29 @@ describe('PrepareHandler', function () {
         }
         cb(null, { id: 100, meta: {} });
       });
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[0].prepareCalled, 1);
-        assert.strictEqual(hosts[1].prepareCalled, 1);
-        done();
-      });
+
+      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[0].prepareCalled, 1);
+      assert.strictEqual(hosts[1].prepareCalled, 1);
     });
-    it('should prepare on all UP hosts not ignored', function (done) {
+
+    it('should prepare on all UP hosts not ignored', async () => {
       const client = getClient({ prepareOnAllHosts: true });
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[1].prepareCalled, 1);
-        assert.strictEqual(hosts[2].prepareCalled, 1);
-        assert.strictEqual(hosts[4].prepareCalled, 1);
-        assert.strictEqual(hosts[0].prepareCalled, 0);
-        assert.strictEqual(hosts[3].prepareCalled, 0);
-        done();
-      });
+
+      await PrepareHandler.getPreparedAsync(client, lbp, 'SELECT QUERY', null);
+
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[1].prepareCalled, 1);
+      assert.strictEqual(hosts[2].prepareCalled, 1);
+      assert.strictEqual(hosts[4].prepareCalled, 1);
+      assert.strictEqual(hosts[0].prepareCalled, 0);
+      assert.strictEqual(hosts[3].prepareCalled, 0);
     });
   });
+
   describe('prepareAllQueries', function () {
     it('should switch keyspace per each keyspace and execute', function (done) {
       const host = helper.getHostsMock([ {} ])[0];
@@ -153,13 +158,13 @@ function getClient(options) {
       getPreparedInfo: function (ks, q) {
         let info = this._infos[ks + '.' + q];
         if (!info) {
-          info = this._infos[ks + '.' + q] = new events.EventEmitter();
+          info = this._infos[ks + '.' + q] = new events.EventEmitter().setMaxListeners(1000);
         }
         return info;
       },
       setPreparedById: utils.noop
     },
-    options: utils.extend(defaultOptions(), options),
+    options: utils.extend({ logEmitter: () => {}}, defaultOptions(), options),
     profileManager: {
       getDistance: function (h) {
         return h.shouldBeIgnored ? types.distance.ignored : types.distance.local;

@@ -826,9 +826,30 @@ const helper = {
               op.setResult(null, {});
             });
             return op;
+          },
+          //TODO: Replace
+          prepareOnceAsync: function (q, ks) {
+            return new Promise((resolve, reject) => {
+              h.prepareCalled++;
+
+              if (prepareQueryCb) {
+                return prepareQueryCb(q, h, (err, result) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    resolve(result);
+                  }
+                });
+              }
+
+              resolve({ id: 1, meta: {} });
+            });
           }
         });
       };
+      //TODO: Replace callback function
+      h.borrowConnectionAsync = util.promisify(h.borrowConnection);
+
       return h;
     });
   },

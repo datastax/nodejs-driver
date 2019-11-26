@@ -99,7 +99,7 @@ describe('PrepareHandler', function () {
   });
 
   describe('prepareAllQueries', function () {
-    it('should switch keyspace per each keyspace and execute', function (done) {
+    it('should switch keyspace per each keyspace and execute', async () => {
       const host = helper.getHostsMock([ {} ])[0];
       const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
@@ -108,27 +108,30 @@ describe('PrepareHandler', function () {
         { keyspace: 'userks', query: 'query4' },
         { keyspace: 'system', query: 'query5' },
       ];
-      PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
-        assert.ifError(err);
-        assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks', null ]);
-        assert.strictEqual(host.prepareCalled, 5);
-        done();
-      });
+
+      await PrepareHandler.prepareAllQueries(host, preparedInfoArray);
+      assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks', null ]);
+      assert.strictEqual(host.prepareCalled, 5);
     });
-    it('should callback when there are no queries to prepare', function (done) {
-      PrepareHandler.prepareAllQueries({}, [], done);
+
+    it('should callback when there are no queries to prepare', async () => {
+      await PrepareHandler.prepareAllQueries({}, []);
     });
-    it('should callback in error when there is an error borrowing a connection', function (done) {
+
+    it('should callback in error when there is an error borrowing a connection', async () => {
       const host = helper.getHostsMock([ {} ])[0];
-      host.borrowConnection = function (ks, c, cb) {
-        cb(new Error('Test error'));
-      };
-      PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }], function (err) {
-        helper.assertInstanceOf(err, Error);
-        done();
-      });
+      host.borrowConnectionAsync = () => Promise.reject(new Error('Test error'));
+
+      let err;
+      try {
+        await PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }]);
+      } catch (e) {
+        err = e;
+      }
+      helper.assertInstanceOf(err, Error);
     });
-    it('should callback in error when there is an error preparing any of the queries', function (done) {
+
+    it('should callback in error when there is an error preparing any of the queries', async () => {
       function prepareOnce(q, h, cb) {
         if (q === 'query3') {
           return cb(new Error('Test error'));
@@ -141,12 +144,17 @@ describe('PrepareHandler', function () {
         { keyspace: null, query: 'query2' },
         { keyspace: 'system', query: 'query3' }
       ];
-      PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
-        helper.assertInstanceOf(err, Error);
-        assert.deepStrictEqual(host.connectionKeyspace, ['system']);
-        assert.strictEqual(host.prepareCalled, 2);
-        done();
-      });
+
+      let err;
+      try {
+        await PrepareHandler.prepareAllQueries(host, preparedInfoArray);
+      } catch (e) {
+        err = e;
+      }
+
+      helper.assertInstanceOf(err, Error);
+      assert.deepStrictEqual(host.connectionKeyspace, ['system']);
+      assert.strictEqual(host.prepareCalled, 2);
     });
   });
 });

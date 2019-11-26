@@ -247,103 +247,121 @@ describe('Client', function () {
         done();
       });
     });
-    it('should build the routingKey based on routingNames', function (done) {
+
+    it('should build the routingKey based on routingNames', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (request, options, client, cb) {
-          assert.ok(options);
-          assert.ok(options.getRoutingKey());
-          // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
-          cb();
-          done();
+        //TODO: Rename back
+        sendAsync: function (request, options) {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const prepareHandlerMock = {
-        getPrepared: function (c, lbp, q, ks, cb) {
-          cb(null, utils.allocBufferFromArray([1]), {
-            columns: [
-              { name: 'key1', type: { code: types.dataTypes.int} },
-              { name: 'key2', type: { code: types.dataTypes.int} }
-            ],
-            partitionKeys: [0, 1]
-          });
-        }
+        getPrepared: () =>
+          Promise.resolve({
+            queryId: utils.allocBufferFromArray([1]),
+            meta: {
+              columns: [
+                {name: 'key1', type: {code: types.dataTypes.int}},
+                {name: 'key2', type: {code: types.dataTypes.int}}
+              ],
+              partitionKeys: [0, 1]
+            }
+          })
       };
+
       const client = newConnectedInstance(requestHandlerMock, null, prepareHandlerMock);
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { prepare: true };
-      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
+      await client.execute(query, { key2: 2, key1: 1 }, queryOptions);
+
+      assert.ok(execOptions.getRoutingKey());
+      // eslint-disable-next-line no-useless-concat
+      assert.strictEqual(execOptions.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
     });
-    it('should build the routingKey based on routingNames for query requests', function (done) {
+
+    it('should build the routingKey based on routingNames for query requests', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (request, options, client, cb) {
-          assert.ok(options);
-          assert.ok(options.getRoutingKey());
-          // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
-          cb();
-          done();
+        //TODO: Rename back
+        sendAsync: function (request, options) {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(requestHandlerMock, null);
       client.controlConnection = { protocolVersion: types.protocolVersion.maxSupported };
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { routingNames: ['key1', 'key2'], hints: { key1: 'int', key2: 'int' } };
-      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
+      await client.execute(query, { key2: 2, key1: 1 }, queryOptions);
+
+      assert.ok(execOptions.getRoutingKey());
+      // eslint-disable-next-line no-useless-concat
+      assert.strictEqual(execOptions.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
     });
-    it('should fill parameter information for string hints', function (done) {
-      let execOptions;
+
+    it('should fill parameter information for string hints', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (r, o, client, cb) {
-          execOptions = o;
-          cb();
+        sendAsync: function (request, options) {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(requestHandlerMock);
-      client.metadata.getUdt = function (ks, n, cb) {
-        cb(null, {keyspace: ks, name: n});
+      client.metadata.getUdt = function (keyspace, name) {
+        return Promise.resolve({ keyspace, name });
       };
+
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
-      client.execute(query, [0, 1, 2, 3, 4], queryOptions, function (err) {
-        assert.ifError(err);
-        assert.ok(execOptions);
-        const hints = execOptions.getHints();
-        assert.ok(hints);
-        assert.ok(hints[0]);
-        assert.strictEqual(hints[0].code, types.dataTypes.int);
-        assert.ok(hints[1]);
-        assert.strictEqual(hints[1].code, types.dataTypes.list);
-        assert.ok(hints[1].info);
-        assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
-        assert.ok(hints[2]);
-        assert.strictEqual(hints[2].code, types.dataTypes.map);
-        assert.ok(util.isArray(hints[2].info));
-        assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
-        assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
-        assert.ok(hints[3]);
-        assert.strictEqual(hints[3].code, types.dataTypes.udt);
-        assert.ok(hints[3].info);
-        assert.strictEqual(hints[3].info.keyspace, 'ks1');
-        //nested collections
-        assert.ok(hints[4]);
-        assert.strictEqual(hints[4].code, types.dataTypes.map);
-        assert.ok(util.isArray(hints[4].info));
-        assert.ok(hints[4].info[0]);
-        assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
-        assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
-        assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
-        done();
-      });
+
+      await client.execute(query, [0, 1, 2, 3, 4], queryOptions);
+
+      assert.ok(execOptions);
+      const hints = execOptions.getHints();
+      assert.ok(hints);
+      assert.ok(hints[0]);
+      assert.strictEqual(hints[0].code, types.dataTypes.int);
+      assert.ok(hints[1]);
+      assert.strictEqual(hints[1].code, types.dataTypes.list);
+      assert.ok(hints[1].info);
+      assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
+      assert.ok(hints[2]);
+      assert.strictEqual(hints[2].code, types.dataTypes.map);
+      assert.ok(util.isArray(hints[2].info));
+      assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
+      assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
+      assert.ok(hints[3]);
+      assert.strictEqual(hints[3].code, types.dataTypes.udt);
+      assert.ok(hints[3].info);
+      assert.strictEqual(hints[3].info.keyspace, 'ks1');
+      //nested collections
+      assert.ok(hints[4]);
+      assert.strictEqual(hints[4].code, types.dataTypes.map);
+      assert.ok(util.isArray(hints[4].info));
+      assert.ok(hints[4].info[0]);
+      assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
+      assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
+      assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
     });
+
     it('should callback with an argument error when the hints are not valid strings', function (done) {
       const requestHandlerMock = {
-        send: function (request, o, client, cb) {
-          cb();
-        }
+        //TODO: Rename back
+        sendAsync: () => Promise.resolve()
       };
+
       const client = newConnectedInstance(requestHandlerMock);
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+
       utils.series([
         function (next) {
           client.execute(query, [], { hints: ['int2']}, function (err) {
@@ -365,7 +383,8 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should use the default execution profile options', function () {
+
+    it('should use the default execution profile options', async () => {
       const profile = new ExecutionProfile('default', {
         consistency: types.consistencies.three,
         readTimeout: 12345,
@@ -375,17 +394,20 @@ describe('Client', function () {
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
-      client.execute('Q', [], { }, utils.noop);
+
+      await client.execute('Q', [], { });
 
       assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
       assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
       assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
       assert.strictEqual(execOptions.getConsistency(), profile.consistency);
     });
-    it('should use the provided execution profile options', function () {
+
+    it('should use the provided execution profile options', async () => {
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
@@ -395,8 +417,9 @@ describe('Client', function () {
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
 
       const items = [
@@ -406,28 +429,32 @@ describe('Client', function () {
         { executionProfile: profile }
       ];
 
-      items.forEach(queryOptions => {
-        client.execute('Q1', [], queryOptions, utils.noop);
+      for (const queryOptions of items) {
+        await client.execute('Q1', [], queryOptions);
 
         // Verify the profile options
         assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
         assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
         assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
         assert.strictEqual(execOptions.getConsistency(), profile.consistency);
-      });
+      }
     });
-    it('should override the provided execution profile options with provided options', function () {
+
+    it('should override the provided execution profile options with provided options', async () => {
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
         serialConsistency: types.consistencies.localSerial
       });
+
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
 
       const items = [
@@ -437,8 +464,8 @@ describe('Client', function () {
         { consistency: types.consistencies.all, executionProfile: profile }
       ];
 
-      items.forEach(queryOptions => {
-        client.execute('Q1', [], queryOptions, utils.noop);
+      for (const queryOptions of items) {
+        await client.execute('Q1', [], queryOptions);
 
         // Verify the profile options
         assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
@@ -447,51 +474,57 @@ describe('Client', function () {
 
         // Verify the overridden option
         assert.strictEqual(execOptions.getConsistency(), types.consistencies.all);
-      });
+      }
     });
-    it('should set the timestamp', function (done) {
-      let execOptions;
+
+    it('should set the timestamp', async () => {
+      let execOptions = null;
       const handlerMock = {
-        send: function (r, o, client, cb) {
+        //TODO: Rename back
+        sendAsync: function (r, o) {
           execOptions = o;
-          cb(null, {});
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock);
-      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+      const protocolVersions = [1, 2, 3, 4];
+
+      for (const version of protocolVersions) {
         client.controlConnection.protocolVersion = version;
-        client.execute('Q', function (err) {
-          assert.ifError(err);
-          assert.ok(execOptions);
-          const timestamp = execOptions.getOrGenerateTimestamp();
-          if (version > 2) {
-            assert.ok(timestamp);
-            assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
-          }
-          else {
-            assert.strictEqual(timestamp, null);
-          }
-          next();
-        });
-      }, done);
+        await client.execute('Q');
+
+        assert.ok(execOptions);
+        const timestamp = execOptions.getOrGenerateTimestamp();
+
+        if (version > 2) {
+          assert.ok(timestamp);
+          assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
+        } else {
+          assert.strictEqual(timestamp, null);
+        }
+      }
     });
-    it('should not set the timestamp when timestampGeneration is null', function (done) {
-      let execOptions;
+
+    it('should not set the timestamp when timestampGeneration is null', async () => {
+      let execOptions = null;
       const handlerMock = {
-        send: function (r, o, client, cb) {
+        //TODO: Rename back
+        sendAsync: function (r, o) {
           execOptions = o;
-          cb(null, {});
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock, { policies: { timestampGeneration: null }});
-      client.controlConnection.protocolVersion = 4;
-      client.execute('Q', function (err) {
-        assert.ifError(err);
-        assert.ok(execOptions);
-        assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
-        done();
-      });
+      client.controlConnection.protocolVersion = types.protocolVersion.v4;
+
+      await client.execute('Q');
+
+      assert.ok(execOptions);
+      assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
     });
+
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
@@ -502,6 +535,7 @@ describe('Client', function () {
           done();
         });
       });
+
       it('should reject the promise when an ExecutionProfile is not found', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
@@ -513,14 +547,11 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#batch()', function () {
     const requestHandlerMock = {
-      send: function (r, o, client, cb) {
-        // Make it async
-        setTimeout(function () {
-          cb(null, {meta: {}});
-        }, 50);
-      }
+      //TODO: Rename back
+      sendAsync: () => Promise.resolve()
     };
 
     const Client = proxyquire('../../lib/client.js', {
@@ -529,22 +560,26 @@ describe('Client', function () {
 
     it('should internally call to connect', function (done) {
       const client = new Client(helper.baseOptions);
-      const connect = sinon.fake(cb => cb());
-      sinon.replace(client, 'connect', connect);
+      const connect = sinon.fake(() => Promise.resolve());
+      sinon.replace(client, '_connect', connect);
+
       client.batch(['q1'], function (err) {
         assert.ifError(err);
         assert.isTrue(connect.calledOnce);
         done();
       });
     });
+
     it('should set the timestamp', function (done) {
       let execOptions;
       const handlerMock = {
-        send: function (r, i, client, cb) {
-          execOptions = i;
-          cb(null, {});
+        //TODO: Rename back
+        sendAsync: function (r, o) {
+          execOptions = o;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock);
       utils.eachSeries([1, 2, 3, 4], function (version, next) {
         client.controlConnection.protocolVersion = version;
@@ -795,6 +830,7 @@ function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
   const client = new Client(utils.extend({}, helper.baseOptions, options));
   client._getEncoder = () => new Encoder(2, {});
   client.connect = helper.callbackNoop;
+  client._connect = async () => {};
 
   return client;
 }

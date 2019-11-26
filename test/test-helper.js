@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+const { assert } = require('chai');
 const util = require('util');
 const path = require('path');
 const policies = require('../lib/policies');
@@ -282,6 +282,33 @@ const helper = {
     expected.forEach((value, key) => {
       assert.deepStrictEqual(actual.get(key), value, `Value for '${key}' does not match`);
     });
+  },
+
+  /**
+   * Asserts promise gets rejected with the provided error
+   */
+  assertThrowsAsync: async (promise, type, message) => {
+    let err;
+    try {
+      await promise;
+    } catch (e) {
+      err = e;
+    }
+
+    assert.instanceOf(err, Error);
+
+    if (type) {
+      assert.instanceOf(err, type);
+    }
+
+    if (message) {
+      let re = message;
+      if (typeof message === 'string') {
+        re = new RegExp(message);
+      }
+
+      assert.match(err.message, re);
+    }
   },
 
   /**

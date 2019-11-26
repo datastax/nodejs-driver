@@ -30,41 +30,36 @@ const proxyExecuteKey = 'ProxyExecute';
 
 describe('GraphExecutor', function () {
   describe('#send()', () => {
-    it('should encode the parameters and build GraphExecutionOptions', function () {
+    it('should encode the parameters and build GraphExecutionOptions', async () => {
       const setup = setupGraphExecutor();
-      setup.instance.send('QUERY1', { a: 1 }, null, helper.noop);
+      await setup.instance.send('QUERY1', { a: 1 }, null);
 
       assert.strictEqual(setup.executionArguments.query, 'QUERY1');
       assert.deepStrictEqual(setup.executionArguments.params, ['{"a":1}']);
       helper.assertInstanceOf(setup.executionArguments.options, GraphExecutionOptions);
       assert.ok(setup.executionArguments.options.getCustomPayload());
-      assert.strictEqual(typeof setup.executionArguments.callback, 'function');
     });
 
-    it('should not allow a namespace of type different than string', function () {
+    it('should not allow a namespace of type different than string', async () => {
       const setup = setupGraphExecutor();
 
-      assert.doesNotThrow(function () {
-        setup.instance.send('Q1', {}, { graphName: 'abc' }, helper.throwop);
-      });
-      assert.throws(function () {
-        setup.instance.send('Q1', {}, { graphName: 123 }, helper.throwop);
-      }, TypeError);
+      // Does not throw
+      await setup.instance.send('Q1', {}, { graphName: 'abc' });
+
+      await helper.assertThrowsAsync(setup.instance.send('Q1', {}, { graphName: 123 }), TypeError);
     });
 
-    it('should not allow a array query parameters', done => {
+    it('should not allow a array query parameters', async () => {
       const setup = setupGraphExecutor();
-      setup.instance.send('Q1', [], { }, function (err) {
-        helper.assertInstanceOf(err, TypeError);
-        assert.strictEqual(err.message, 'Parameters must be a Object instance as an associative array');
-        done();
-      });
+
+      await helper.assertThrowsAsync(setup.instance.send('Q1', [], { }), TypeError,
+        'Parameters must be a Object instance as an associative array');
     });
 
-    it('should set the same default options when not set', () => {
+    it('should set the same default options when not set', async () => {
       const setup = setupGraphExecutor();
 
-      setup.instance.send('Q5', { z: 3 }, null, helper.noop);
+      await setup.instance.send('Q5', { z: 3 }, null);
       const firstOptions = setup.executionArguments.options;
       assert.ok(firstOptions.getRawQueryOptions());
 
@@ -73,7 +68,7 @@ describe('GraphExecutor', function () {
       assert.ok(firstOptions.getCustomPayload());
     });
 
-    it('should set the default payload for the executions', function () {
+    it('should set the default payload for the executions', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -86,7 +81,7 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
       const optionsParameter = { anotherOption: { k: 'v'}};
 
-      setup.instance.send('Q5', { c: 0}, optionsParameter, helper.throwop);
+      await setup.instance.send('Q5', { c: 0}, optionsParameter);
 
       const actualOptions = setup.executionArguments.options;
 
@@ -100,7 +95,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(actualOptions.getCustomPayload()['graph-write-consistency'], undefined);
     });
 
-    it('should set the default readTimeout in the payload', function () {
+    it('should set the default readTimeout in the payload', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -113,7 +108,7 @@ describe('GraphExecutor', function () {
       let actualOptions;
 
       // with options defined
-      setup.instance.send('Q10', { c: 0}, { }, helper.throwop);
+      await setup.instance.send('Q10', { c: 0}, { });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -124,7 +119,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
 
       // with payload defined
-      setup.instance.send('Q10', { c: 0}, { customPayload: { 'z': utils.allocBufferFromString('zValue')} }, helper.throwop);
+      await setup.instance.send('Q10', { c: 0}, { customPayload: { 'z': utils.allocBufferFromString('zValue')} });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -134,7 +129,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
 
       // with timeout defined
-      setup.instance.send('Q10', { c: 0}, { readTimeout: 9999 }, helper.throwop);
+      await setup.instance.send('Q10', { c: 0}, { readTimeout: 9999 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -146,7 +141,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(actualOptions.getReadTimeout(), 9999);
 
       // without options defined
-      setup.instance.send('Q10', { c: 0}, helper.throwop);
+      await setup.instance.send('Q10', { c: 0});
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -155,7 +150,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
     });
 
-    it('should set the read and write consistency levels', function () {
+    it('should set the read and write consistency levels', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -166,7 +161,7 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
       let actualOptions;
 
-      setup.instance.send('Q5', { c: 0}, helper.throwop);
+      await setup.instance.send('Q5', { c: 0});
       actualOptions = setup.executionArguments.options;
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'g');
@@ -177,7 +172,7 @@ describe('GraphExecutor', function () {
       let optionsParameter = {
         graphReadConsistency: types.consistencies.localQuorum
       };
-      setup.instance.send('Q5', { c: 0}, optionsParameter, helper.throwop);
+      await setup.instance.send('Q5', { c: 0}, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.notStrictEqual(optionsParameter, actualOptions);
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
@@ -189,7 +184,7 @@ describe('GraphExecutor', function () {
       optionsParameter = {
         graphWriteConsistency: types.consistencies.quorum
       };
-      setup.instance.send('Q5', { c: 0}, optionsParameter, helper.throwop);
+      await setup.instance.send('Q5', { c: 0}, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.notStrictEqual(optionsParameter, actualOptions);
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
@@ -199,18 +194,18 @@ describe('GraphExecutor', function () {
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'QUORUM');
     });
 
-    it('should reuse the default payload for the executions', () => {
+    it('should reuse the default payload for the executions', async () => {
       const clientOptions = { contactPoints: ['host1'], graphOptions: { name: 'name1' }};
       const setup = setupGraphExecutor(clientOptions);
       const optionsParameter = { anotherOption: { k: 'v2'}};
 
-      setup.instance.send('Q5', { a: 1}, optionsParameter, helper.throwop);
+      await setup.instance.send('Q5', { a: 1}, optionsParameter);
       const firstOptions = setup.executionArguments.options;
-      setup.instance.send('Q6', { b: 1}, optionsParameter, helper.throwop);
+      await setup.instance.send('Q6', { b: 1}, optionsParameter);
       assert.strictEqual(firstOptions.getCustomPayload(), setup.executionArguments.options.getCustomPayload());
     });
 
-    it('should set the payload with the options provided', () => {
+    it('should set the payload with the options provided', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -221,7 +216,7 @@ describe('GraphExecutor', function () {
 
       const setup = setupGraphExecutor(clientOptions);
       const optionsParameter = { anotherOption: { k: 'v3'}};
-      setup.instance.send('Q5', { 'x': 1 }, optionsParameter, helper.throwop);
+      await setup.instance.send('Q5', { 'x': 1 }, optionsParameter);
 
       const actualOptions = setup.executionArguments.options;
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
@@ -233,12 +228,12 @@ describe('GraphExecutor', function () {
       assert.deepStrictEqual(actualOptions.getCustomPayload()['graph-name'], utils.allocBufferFromString('namespace2'));
     });
 
-    it('should set the payload with the user/role provided', function () {
+    it('should set the payload with the user/role provided', async () => {
       const clientOptions = { contactPoints: ['host1'], graphOptions: { name: 'name2' }};
       const setup = setupGraphExecutor(clientOptions);
       let actualOptions;
 
-      setup.instance.send('Q5', { 'x': 1 }, null, helper.throwop);
+      await setup.instance.send('Q5', { 'x': 1 }, null);
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
@@ -246,7 +241,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(actualOptions.getCustomPayload()[proxyExecuteKey], undefined);
       const previousPayload = actualOptions.getCustomPayload();
 
-      setup.instance.send('Q5', { 'x': 1 }, { executeAs: 'alice' }, helper.throwop);
+      await setup.instance.send('Q5', { 'x': 1 }, { executeAs: 'alice' });
       actualOptions = setup.executionArguments.options;
       assert.notStrictEqual(previousPayload, actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
@@ -254,7 +249,7 @@ describe('GraphExecutor', function () {
       helper.assertBufferString(actualOptions.getCustomPayload()[proxyExecuteKey], 'alice');
     });
 
-    it('should set the options according to default profile', function () {
+    it('should set the options according to default profile', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -274,7 +269,7 @@ describe('GraphExecutor', function () {
 
       const setup = setupGraphExecutor(clientOptions);
 
-      setup.instance.send('Q', { 'x': 1 }, null, helper.throwop);
+      await setup.instance.send('Q', { 'x': 1 }, null);
       const actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -285,7 +280,7 @@ describe('GraphExecutor', function () {
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
     });
 
-    it('should set the options according to specified profile', function () {
+    it('should set the options according to specified profile', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         graphOptions: {
@@ -313,7 +308,7 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
       const optionsParameter = { executionProfile: 'graph-olap' };
       let actualOptions;
-      setup.instance.send('Q', { 'x': 1 }, optionsParameter, helper.throwop);
+      await setup.instance.send('Q', { 'x': 1 }, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
@@ -325,7 +320,7 @@ describe('GraphExecutor', function () {
         types.Long.toBuffer(types.Long.fromNumber(99000)));
       const lastOptions = actualOptions;
 
-      setup.instance.send('Q2', { 'x': 2 }, optionsParameter, helper.throwop);
+      await setup.instance.send('Q2', { 'x': 2 }, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.notStrictEqual(actualOptions, lastOptions);
       // Reusing same customPayload instance
@@ -333,12 +328,12 @@ describe('GraphExecutor', function () {
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       optionsParameter.retry = new policies.retry.RetryPolicy();
 
-      setup.instance.send('Q2', { 'x': 3 }, optionsParameter, helper.throwop);
+      await setup.instance.send('Q2', { 'x': 3 }, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.strictEqual(actualOptions.getRetryPolicy(), optionsParameter.retry);
     });
 
-    it('should use the retry policy from the default profile when specified', function () {
+    it('should use the retry policy from the default profile when specified', async () => {
       const retryPolicy1 = new policies.retry.RetryPolicy();
       const retryPolicy2 = new policies.retry.FallthroughRetryPolicy();
       const retryPolicy3 = new policies.retry.FallthroughRetryPolicy();
@@ -356,28 +351,28 @@ describe('GraphExecutor', function () {
 
       const setup = setupGraphExecutor(clientOptions);
       let actualOptions;
-      setup.instance.send('Q', null, null, helper.throwop);
+      await setup.instance.send('Q', null, null);
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy3 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy3);
 
-      setup.instance.send('Q', null, { retry: retryPolicy3 }, helper.throwop);
+      await setup.instance.send('Q', null, { retry: retryPolicy3 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy3);
     });
 
-    it('should use specific retry policy when not specified in the default profile', function () {
+    it('should use specific retry policy when not specified in the default profile',async () => {
       const retryPolicy1 = new policies.retry.RetryPolicy();
       const retryPolicy2 = new policies.retry.RetryPolicy();
       const clientOptions = {
@@ -392,33 +387,33 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
       let actualOptions;
 
-      setup.instance.send('Q', null, null, helper.throwop);
+      await setup.instance.send('Q', null, null);
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
 
-      setup.instance.send('Q', null, { executionProfile: 'default'}, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'default'});
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
 
-      setup.instance.send('Q', null, { retry: retryPolicy2 }, helper.throwop);
+      await setup.instance.send('Q', null, { retry: retryPolicy2 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
     });
 
-    it('should use specific retry policy when no default profile specified', function () {
+    it('should use specific retry policy when no default profile specified', async () => {
       const retryPolicy1 = new policies.retry.RetryPolicy();
       const retryPolicy2 = new policies.retry.RetryPolicy();
       const clientOptions = {
@@ -433,33 +428,33 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
       let actualOptions;
 
-      setup.instance.send('Q', null, null, helper.throwop);
+      await setup.instance.send('Q', null, null);
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
 
-      setup.instance.send('Q', null, { executionProfile: 'default'}, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'default'});
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy1);
 
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap', retry: retryPolicy2 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
 
-      setup.instance.send('Q', null, { retry: retryPolicy2 }, helper.throwop);
+      await setup.instance.send('Q', null, { retry: retryPolicy2 });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions);
       assert.strictEqual(actualOptions.getRetryPolicy(), retryPolicy2);
     });
 
-    it('should use the graph language provided in the profile', function () {
+    it('should use the graph language provided in the profile', async () => {
       const clientOptions = {
         contactPoints: ['host1'],
         profiles: [
@@ -471,19 +466,19 @@ describe('GraphExecutor', function () {
       const setup = setupGraphExecutor(clientOptions);
 
       let actualOptions;
-      setup.instance.send('Q', null, { executionProfile: 'graph-olap' }, helper.throwop);
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions && actualOptions.getCustomPayload());
       assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'lolcode');
 
-      setup.instance.send('Q', null, null, helper.throwop);
+      await setup.instance.send('Q');
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions && actualOptions.getCustomPayload());
       assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'gremlin-groovy');
     });
 
     context('with analytics queries', function () {
-      it('should query for analytics master', () => {
+      it('should query for analytics master', async () => {
         const clientOptions = {
           contactPoints: ['host1'],
           graphOptions: {
@@ -493,14 +488,14 @@ describe('GraphExecutor', function () {
 
         const setup = setupGraphExecutor(clientOptions);
 
-        setup.instance.send('g.V()', null, {}, utils.noop);
+        await setup.instance.send('g.V()', null, {});
         const actualOptions = setup.executionArguments.options;
         assert.ok(actualOptions);
         assert.ok(actualOptions.getPreferredHost());
         assert.ok(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
       });
 
-      it('should query for analytics master when using execution profile', () => {
+      it('should query for analytics master when using execution profile', async () => {
         const clientOptions = {
           contactPoints: ['host1'],
           profiles: [
@@ -514,14 +509,14 @@ describe('GraphExecutor', function () {
 
         const setup = setupGraphExecutor(clientOptions);
 
-        setup.instance.send('g.V()', null, { executionProfile: 'analytics' }, utils.noop);
+        await setup.instance.send('g.V()', null, { executionProfile: 'analytics' });
         const actualOptions = setup.executionArguments.options;
         assert.ok(actualOptions);
         assert.ok(actualOptions.getPreferredHost());
         assert.ok(actualOptions.getPreferredHost().address, '10.10.10.10:9042');
       });
 
-      it('should call address translator', function () {
+      it('should call address translator', async () => {
         let translatorCalled = 0;
         const translator = new policies.addressResolution.AddressTranslator();
         translator.translate = function (ip, port, cb) {
@@ -542,7 +537,7 @@ describe('GraphExecutor', function () {
 
         const setup = setupGraphExecutor(clientOptions);
 
-        setup.instance.send('g.V()', null, null, utils.noop);
+        await setup.instance.send('g.V()', null, null);
         const actualOptions = setup.executionArguments.options;
         assert.ok(actualOptions);
         assert.ok(actualOptions.getPreferredHost());
@@ -550,7 +545,7 @@ describe('GraphExecutor', function () {
         assert.strictEqual(translatorCalled, 1);
       });
 
-      it('should set preferredHost to null when RPC errors', function () {
+      it('should set preferredHost to null when RPC errors', async () => {
         const clientOptions = {
           contactPoints: ['host1'],
           graphOptions: {
@@ -559,18 +554,18 @@ describe('GraphExecutor', function () {
           }};
 
         const clientProperties = {
-          execute: function (q, p, options, cb) {
+          execute: function (q) {
             if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
-              return cb(new Error('Test error'));
+              return Promise.reject(new Error('Test error'));
             }
 
-            cb(null, { rows: []});
+            return Promise.resolve({ rows: []});
           }
         };
 
         const setup = setupGraphExecutor(clientOptions, clientProperties);
 
-        setup.instance.send('g.V()');
+        await setup.instance.send('g.V()');
         const actualOptions = setup.executionArguments.options;
         assert.ok(actualOptions);
         assert.strictEqual(actualOptions.getPreferredHost(), null);
@@ -588,17 +583,18 @@ function setupGraphExecutor(clientOptions, clientProperties) {
     instance: null
   };
 
-  result.instance = new GraphExecutor(client, clientOptions, (query, params, options, callback) => {
-    result.executionArguments = { query, params, options, callback };
+  result.instance = new GraphExecutor(client, clientOptions, (query, params, options) => {
+    result.executionArguments = { query, params, options };
+    return Promise.resolve({ rows: [] });
   });
 
   client.hosts = { get: address => ({ type: 'host', address: address }) };
-  client.execute = function (q, p, options, cb) {
+  client.execute = q => {
     if (q === 'CALL DseClientTool.getAnalyticsGraphServer()') {
-      return cb(null, { rows: [ { result: { location: '10.10.10.10:1234' }} ]});
+      return Promise.resolve({ rows: [ { result: { location: '10.10.10.10:1234' }} ]});
     }
 
-    cb(null, { rows: []});
+    return Promise.resolve({ rows: []});
   };
 
   if (clientProperties) {

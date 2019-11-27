@@ -26,7 +26,7 @@ const errors = require('../../../../lib/errors');
 const auth = require('../../../../lib/auth');
 const utils = require('../../../../lib/utils');
 const types = require('../../../../lib/types');
-const promiseUtils = require("../../../../lib/promise-utils");
+const promiseUtils = require('../../../../lib/promise-utils');
 const vdescribe = helper.vdescribe;
 
 const port = 9042;

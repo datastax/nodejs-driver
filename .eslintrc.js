@@ -103,7 +103,8 @@ module.exports = {
     "no-confusing-arrow": ["error", { "allowParens": true }],
     "yoda": "error",
     "constructor-super": "error",
-    "require-await": "error"
+    "require-await": "error",
+    "require-atomic-updates": "off"
   },
   "globals": {
     "Buffer": false,

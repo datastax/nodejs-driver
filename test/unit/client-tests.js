@@ -252,8 +252,7 @@ describe('Client', function () {
       let execOptions = null;
 
       const requestHandlerMock = {
-        //TODO: Rename back
-        sendAsync: function (request, options) {
+        send: function (request, options) {
           execOptions = options;
           return Promise.resolve();
         }
@@ -287,8 +286,7 @@ describe('Client', function () {
       let execOptions = null;
 
       const requestHandlerMock = {
-        //TODO: Rename back
-        sendAsync: function (request, options) {
+        send: function (request, options) {
           execOptions = options;
           return Promise.resolve();
         }
@@ -309,7 +307,7 @@ describe('Client', function () {
       let execOptions = null;
 
       const requestHandlerMock = {
-        sendAsync: function (request, options) {
+        send: (request, options) => {
           execOptions = options;
           return Promise.resolve();
         }
@@ -355,8 +353,7 @@ describe('Client', function () {
 
     it('should callback with an argument error when the hints are not valid strings', function (done) {
       const requestHandlerMock = {
-        //TODO: Rename back
-        sendAsync: () => Promise.resolve()
+        send: () => Promise.resolve()
       };
 
       const client = newConnectedInstance(requestHandlerMock);
@@ -480,8 +477,7 @@ describe('Client', function () {
     it('should set the timestamp', async () => {
       let execOptions = null;
       const handlerMock = {
-        //TODO: Rename back
-        sendAsync: function (r, o) {
+        send: (r, o) => {
           execOptions = o;
           return Promise.resolve();
         }
@@ -509,8 +505,7 @@ describe('Client', function () {
     it('should not set the timestamp when timestampGeneration is null', async () => {
       let execOptions = null;
       const handlerMock = {
-        //TODO: Rename back
-        sendAsync: function (r, o) {
+        send: (r, o) => {
           execOptions = o;
           return Promise.resolve();
         }
@@ -550,8 +545,7 @@ describe('Client', function () {
 
   describe('#batch()', function () {
     const requestHandlerMock = {
-      //TODO: Rename back
-      sendAsync: () => Promise.resolve()
+      send: () => Promise.resolve()
     };
 
     const Client = proxyquire('../../lib/client.js', {
@@ -573,8 +567,7 @@ describe('Client', function () {
     it('should set the timestamp', function (done) {
       let execOptions;
       const handlerMock = {
-        //TODO: Rename back
-        sendAsync: function (r, o) {
+        send: (r, o) => {
           execOptions = o;
           return Promise.resolve();
         }

@@ -154,14 +154,22 @@ describe('ControlConnection', function () {
       await new Promise(r => lbp.init({ log: utils.noop, options: { localDataCenter: 'dc1' }}, cc.hosts, r));
 
       const hosts = cc.hosts.values();
+
       assert.strictEqual(hosts.length, 2);
-      hosts.forEach(h => h.setDistance(lbp.getDistance(h)));
+
+      for (const h of hosts) {
+        h.setDistance(lbp.getDistance(h));
+        await h.warmupPool();
+      }
+
       const host1 = hosts[0];
       const host2 = hosts[1];
 
-      // there should be a single connection to the first host
+      await host1.warmupPool();
+      await host2.warmupPool();
+
       assert.strictEqual(host1.pool.connections.length, 1);
-      assert.strictEqual(host2.pool.connections.length, 0);
+      assert.strictEqual(host2.pool.connections.length, 1);
 
       await util.promisify(helper.ccmHelper.stopNode)(1);
       await helper.wait.forNodeDown(cc.hosts, 1);
@@ -172,7 +180,6 @@ describe('ControlConnection', function () {
       assert.strictEqual(host2.isUp(), true);
       assert.strictEqual(host1.pool.connections.length, 0);
       assert.strictEqual(host2.pool.connections.length, 1);
-
     });
 
     it('should reconnect when all hosts go down and back up', async () => {
@@ -186,12 +193,15 @@ describe('ControlConnection', function () {
 
       assert.ok(cc.host);
       assert.strictEqual(helper.lastOctetOf(cc.host), '1');
-      await new Promise(r =>
-        cc.options.policies.loadBalancing.init({ log: utils.noop, options: { localDataCenter: 'dc1' }}, cc.hosts, r));
+      const lbp = cc.options.policies.loadBalancing;
+
+      await new Promise(r => lbp.init({ log: utils.noop, options: { localDataCenter: 'dc1' }}, cc.hosts, r));
 
       // the control connection host should be local or remote to trigger DOWN events
-      const distance = options.policies.loadBalancing.getDistance(cc.host);
-      cc.host.setDistance(distance);
+      for (const h of cc.hosts.values()) {
+        h.setDistance(lbp.getDistance(h));
+        await h.warmupPool();
+      }
 
       // stop nodes 1 and 2 and make sure they both go down.
       await util.promisify(helper.ccmHelper.stopNode)(1);

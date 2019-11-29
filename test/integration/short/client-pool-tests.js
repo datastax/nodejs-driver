@@ -278,7 +278,7 @@ describe('Client', function () {
       utils.series([
         function tryConnect(next) {
           client.connect(function (err) {
-            helper.assertInstfanceOf(err, errors.ResponseError);
+            helper.assertInstanceOf(err, errors.ResponseError);
             next();
           });
         },
@@ -802,7 +802,8 @@ describe('Client', function () {
   });
 
   describe('failover', function () {
-    helper.setup(3, { initClient: false });
+    beforeEach(helper.ccmHelper.start(3));
+    afterEach(helper.ccmHelper.remove);
 
     it('should failover after a node goes down', function (done) {
       // treat queries as idempotent so they can be safely retried on another node

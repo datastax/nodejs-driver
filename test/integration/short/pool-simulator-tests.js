@@ -16,7 +16,7 @@
 
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const errors = require('../../../lib/errors');
@@ -24,6 +24,7 @@ const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
 const version = require('../../../index').version;
+const { distance } = types;
 
 const Client = require('../../../lib/client');
 
@@ -424,6 +425,31 @@ describe('pool', function () {
         .then(() => client.shutdown());
     });
 
+    it('should create all connections eventually when warmup is false', async () => {
+      const connectionsLength = 4;
+
+      const client = newInstance(cluster, {
+        pooling: {
+          warmup: false,
+          coreConnectionsPerHost: { [distance.local]: connectionsLength }
+        }
+      });
+
+      await client.connect();
+
+      const hosts = client.hosts.values();
+      assert.lengthOf(hosts, 3);
+
+      for (const h of hosts) {
+        assert.strictEqual(h._distance, distance.local);
+      }
+
+      await helper.wait.until(() =>
+        hosts.reduce((count, h) => count + h.pool.connections.length, 0) === connectionsLength * hosts.length);
+
+      await client.shutdown();
+    });
+
     [
       {
         name: 'using the control connection',
@@ -654,4 +680,17 @@ function promiseFromCallback(handler) {
       }
     });
   });
+}
+
+function newInstance(simulacronCluster, options) {
+  const client = new Client(
+    utils.extend({
+      contactPoints: simulacronCluster.getContactPoints(),
+      localDataCenter: 'dc1'
+    },
+    options));
+
+  helper.shutdownAfterThisTest(client);
+
+  return client;
 }

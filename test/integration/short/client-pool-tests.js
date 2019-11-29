@@ -36,47 +36,28 @@ describe('Client', function () {
   this.timeout(180000);
   describe('#connect()', function () {
     let useLocalhost;
-    before(helper.ccmHelper.start(3));
+
+    helper.setup(3, { initClient: false });
+
     before(function (done) {
       dns.resolve('localhost', function (err) {
         useLocalhost = !err;
         done();
       });
     });
-    after(helper.ccmHelper.remove);
-    it('should discover all hosts in the ring and hosts object can be serializable', function (done) {
+
+    it('should discover all hosts in the ring and hosts object can be serializable', async () => {
       const client = newInstance();
-      client.connect(function (err) {
-        if (err) {
-          return done(err);
-        }
-        assert.strictEqual(client.hosts.length, 3);
-        assert.strictEqual(client.hosts.values().length, 3);
-        assert.strictEqual(client.hosts.keys().length, 3);
-        assert.doesNotThrow(function () {
-          //It should be serializable
-          JSON.stringify(client.hosts);
-        });
-        client.shutdown(done);
-      });
+      await client.connect();
+
+      assert.strictEqual(client.hosts.length, 3);
+      assert.strictEqual(client.hosts.values().length, 3);
+      assert.strictEqual(client.hosts.keys().length, 3);
+
+      //It should be serializable
+      assert.doesNotThrow(() => JSON.stringify(client.hosts));
     });
-    xit('should retrieve the cassandra version of the hosts', function (done) {
-      const client = newInstance();
-      client.connect(function (err) {
-        if (err) {
-          return done(err);
-        }
-        assert.strictEqual(client.hosts.length, 3);
-        client.hosts.values().forEach(function (h) {
-          assert.strictEqual(typeof h.cassandraVersion, 'string');
-          h.cassandraVersion.split('.').slice(0, 2).forEach(function (versionPart) {
-            assert.ok(parseFloat(versionPart) > 0);
-            assert.ok(parseFloat(versionPart) < utils.maxInt);
-          });
-        });
-        client.shutdown(done);
-      });
-    });
+
     it('should fail if the contact points can not be resolved', function (done) {
       const client = newInstance({contactPoints: ['not-a-host']});
       client.connect(function (err) {
@@ -88,6 +69,7 @@ describe('Client', function () {
         });
       });
     });
+
     it('should fail if the contact points can not be reached', function (done) {
       const client = newInstance({contactPoints: ['1.1.1.1']});
       client.connect(function (err) {
@@ -96,6 +78,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+
     it('should select a tokenizer', function (done) {
       const client = newInstance();
       client.connect(function (err) {
@@ -104,6 +87,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+
     it('should allow multiple parallel calls to connect', function (done) {
       const client = newInstance();
       utils.times(100, function (n, next) {
@@ -113,6 +97,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+
     it('should resolve host names', function (done) {
       if (!useLocalhost) {
         return done();
@@ -127,21 +112,26 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
-    it('should fail if the keyspace does not exists', function (done) {
-      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'not-existent-ks'}));
-      utils.times(10, function (n, next) {
-        client.connect(function (err) {
-          assert.ok(err);
-          //Not very nice way to check but here it is
-          //Does the message contains Keyspace
-          assert.ok(err.message.toLowerCase().indexOf('keyspace') >= 0, 'Message mismatch, was: ' + err.message);
-          next();
+
+    [ true, false ].forEach(warmup => {
+      it(`should fail if the keyspace does not exists when warmup is ${warmup}`, function (done) {
+        const client = newInstance({
+          keyspace: 'not-existent-ks',
+          pooling: { warmup }
         });
-      }, function (err) {
-        assert.ifError(err);
-        client.shutdown(done);
+
+        utils.times(10, function (n, next) {
+          client.connect(function (err) {
+            assert.ok(err);
+            //Not very nice way to check but here it is
+            //Does the message contains Keyspace
+            assert.ok(err.message.toLowerCase().indexOf('keyspace') >= 0, 'Message mismatch, was: ' + err.message);
+            next();
+          });
+        }, done);
       });
     });
+
     it('should not use contactPoints that are not part of peers', function (done) {
       const contactPoints = helper.baseOptions.contactPoints.slice(0);
       contactPoints.push('host-not-existent-not-peer');
@@ -160,6 +150,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+
     it('should use the default pooling options according to the protocol version', function (done) {
       const client = newInstance();
       client.connect(function (err) {
@@ -180,6 +171,7 @@ describe('Client', function () {
         });
       });
     });
+
     it('should override default pooling options when specified', function (done) {
       const client = newInstance({ pooling: {
         coreConnectionsPerHost: { '0': 4 }
@@ -209,6 +201,7 @@ describe('Client', function () {
         });
       });
     });
+
     it('should not fail when switching keyspace and a contact point is not valid', function (done) {
       const client = new Client({
         contactPoints: ['1.1.1.1', helper.baseOptions.contactPoints[0]],
@@ -220,6 +213,7 @@ describe('Client', function () {
         client.shutdown(done);
       });
     });
+
     it('should open connections to all hosts when warmup is set', function (done) {
       // do it multiple times
       utils.timesSeries(300, function (n, next) {
@@ -239,6 +233,7 @@ describe('Client', function () {
         });
       }, done);
     });
+
     it('should only warmup connections for hosts with local distance', function (done) {
       const lbPolicy = new RoundRobinPolicy();
       lbPolicy.getDistance = function (host) {
@@ -255,10 +250,12 @@ describe('Client', function () {
       const connectionsPerHost = {};
       connectionsPerHost[types.distance.local] = 3;
       connectionsPerHost[types.distance.remote] = 1;
+
       const client = newInstance({
         policies: { loadBalancing: lbPolicy },
         pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}
       });
+
       client.connect(function (err) {
         assert.ifError(err);
         assert.strictEqual(client.hosts.length, 3);
@@ -266,20 +263,22 @@ describe('Client', function () {
           const id = helper.lastOctetOf(host);
           if(id === '1') {
             assert.strictEqual(host.pool.connections.length, 3);
-          } else {
+          } else if (id !== '2') {
+            //TODO: Include remote
             assert.strictEqual(host.pool.connections.length, 0);
           }
         });
         client.shutdown(done);
       });
     });
+
     it('should connect after unsuccessful attempt caused by a non-existent keyspace', function (done) {
       const keyspace = 'ks_test_after_fail';
       const client = newInstance({ keyspace: keyspace });
       utils.series([
         function tryConnect(next) {
           client.connect(function (err) {
-            helper.assertInstanceOf(err, errors.ResponseError);
+            helper.assertInstfanceOf(err, errors.ResponseError);
             next();
           });
         },
@@ -301,6 +300,7 @@ describe('Client', function () {
         done(err);
       });
     });
+
     it('should set the defaults based on product type', () => {
       const client = newInstance();
 
@@ -458,6 +458,7 @@ describe('Client', function () {
       }
     });
   });
+
   describe('#connect() with nodes failing', function () {
     it('should connect after a failed attempt', function (done) {
       const client = newInstance();
@@ -527,25 +528,46 @@ describe('Client', function () {
     it('should receive socket closed event and set node as down', getReceiveNotificationTest(2));
     it('should receive socket closed event and set node as down (control connection node)', getReceiveNotificationTest(1));
   });
+
   describe('#execute()', function () {
-    before(helper.ccmHelper.start(3));
-    after(helper.ccmHelper.remove);
-    it('should use the keyspace provided', function (done) {
-      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'system'}));
-      //on all hosts
-      utils.times(10, function (n, next) {
+
+    helper.setup(3, { initClient: false });
+
+    [ true, false ].forEach(warmup => {
+      it(`should use the keyspace provided when warmup is ${warmup}`, async () => {
+        const client = newInstance({
+          keyspace: 'system',
+          pooling: { warmup, coreConnectionsPerHost: { [types.distance.local]: 2 }}
+        });
+
+        await client.connect();
+
         assert.strictEqual(client.keyspace, 'system');
-        //A query in the system ks
-        client.execute('SELECT * FROM local', function (err, result) {
-          assert.ifError(err);
+
+        if (!warmup) {
+          // Wait for each pool to be created
+          for (const host of client.hosts.values()) {
+            await helper.wait.until(() => host.pool.connections.length > 0);
+          }
+        } else {
+          // All connections should have switch to the active keyspace
+          client.hosts.values().forEach(h => h.pool.connections.forEach(c =>
+            assert.strictEqual(c.keyspace, client.keyspace)));
+        }
+
+        const promises = Array(30).fill(0).map(async () => {
+          // Target a table on the system keyspace
+          const result = await client.execute('SELECT * FROM local');
           assert.ok(result.rows);
           assert.ok(result.rows.length > 0);
-          next();
         });
-      }, done);
+
+        await Promise.all(promises);
+      });
     });
+
     it('should fail to execute if the keyspace does not exists', function (done) {
-      const client = new Client(utils.extend({}, helper.baseOptions, {keyspace: 'NOT____EXISTS'}));
+      const client = newInstance({ keyspace: 'NOT____EXISTS' });
       // Execute on all hosts, some executions in parallel and some serial
       utils.timesLimit(12, 6, function (n, next) {
         //No matter what, the keyspace does not exists
@@ -555,8 +577,10 @@ describe('Client', function () {
         });
       }, done);
     });
+
     it('should change the active keyspace after USE statement', function (done) {
-      const client = newInstance();
+      // Use a large amount of connections to make it more error prone
+      const client = newInstance({ pooling: { coreConnectionsPerHost: { [types.distance.local]: 10 } } });
       client.execute('USE system', function (err) {
         if (err) {
           return done(err);
@@ -568,14 +592,17 @@ describe('Client', function () {
         }, helper.finish(client, done));
       });
     });
+
     it('should return ResponseError when executing USE with a wrong keyspace', function (done) {
       const client = newInstance();
       client.execute('USE ks_not_exist', function (err) {
         assert.ok(err instanceof errors.ResponseError);
         assert.equal(client.keyspace, null);
+        client.shutdown();
         done();
       });
     });
+
     it('should create the amount of connections determined by the options', function (done) {
       const options = {
         pooling: {
@@ -586,8 +613,9 @@ describe('Client', function () {
           }
         }
       };
-      const client = new Client(utils.extend({}, helper.baseOptions, options));
-      //execute a couple of queries
+      const client = newInstance(options);
+
+      // Execute a couple of queries
       utils.timesLimit(100, 50, function (n, next) {
         client.execute(helper.queries.basic, next);
       }, function (err) {
@@ -604,6 +632,7 @@ describe('Client', function () {
         }, 1000, 20, done);
       });
     });
+
     it('should wait for schema agreement before calling back', function (done) {
       const queries = [
         "CREATE KEYSPACE ks1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};",
@@ -622,7 +651,9 @@ describe('Client', function () {
         "SELECT * FROM ks2.tbl4",
         "SELECT * FROM ks2.tbl4"
       ];
+
       const client = newInstance();
+
       //warmup first
       utils.timesSeries(10, function (n, next) {
         client.execute('SELECT key FROM system.local', next);
@@ -633,7 +664,9 @@ describe('Client', function () {
         }, done);
       });
     });
+
     it('should handle distance changing load balancing policies', changingDistancesTest('2'));
+
     it('should handle distance changing load balancing policies for control connection host', changingDistancesTest('1'));
     [
       new policies.speculativeExecution.NoSpeculativeExecutionPolicy(),
@@ -697,6 +730,7 @@ describe('Client', function () {
         });
       });
     });
+
     function changingDistancesTest(address) {
       return (function doTest(done) {
         const lbp = new RoundRobinPolicy();
@@ -766,9 +800,10 @@ describe('Client', function () {
       });
     }
   });
+
   describe('failover', function () {
-    beforeEach(helper.ccmHelper.start(3));
-    afterEach(helper.ccmHelper.remove);
+    helper.setup(3, { initClient: false });
+
     it('should failover after a node goes down', function (done) {
       // treat queries as idempotent so they can be safely retried on another node
       const client = newInstance({ queryOptions: { isIdempotent: true } });
@@ -836,6 +871,7 @@ describe('Client', function () {
         client.shutdown.bind(client)
       ], done);
     });
+
     it('should failover when a node goes down with some outstanding requests', function (done) {
       const options = utils.extend({ queryOptions: { isIdempotent: true } }, helper.baseOptions);
       options.pooling = {
@@ -911,6 +947,7 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should warn but not fail when warmup is enable and a node is down', async () => {
       await util.promisify(helper.ccmHelper.exec)(['node2', 'stop']);
 
@@ -930,9 +967,10 @@ describe('Client', function () {
       assert.lengthOf(warnings.filter(w => w.indexOf('pool') >= 0), 1);
     });
   });
+
   describe('#shutdown()', function () {
-    before(helper.ccmHelper.start(2));
-    after(helper.ccmHelper.remove);
+    helper.setup(2, { initClient: false });
+
     it('should close all connections to all hosts', function (done) {
       const client = newInstance();
       utils.series([
@@ -968,6 +1006,7 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should not leak any connection when connection pool is still growing', function (done) {
       const client = newInstance({ pooling: { coreConnectionsPerHost: { '0': 4 }}});
       utils.series([
@@ -998,6 +1037,7 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should callback after a NoHostAvailableError', function (done) {
       const client = newInstance({ contactPoints: [ '::1', '::2'] });
       client.connect(function (err) {
@@ -1010,6 +1050,7 @@ describe('Client', function () {
         });
       });
     });
+
     it('should close all connections after connecting with an invalid keyspace', function (done) {
       const client = newInstance({ keyspace: 'KS_DOES_NOT_EXIST' });
       client.connect(function (err) {
@@ -1025,9 +1066,14 @@ describe('Client', function () {
   });
 });
 
-/** @returns {Client}  */
+/**
+ * @param {ClientOptions} [options]
+ * @returns {Client}
+ */
 function newInstance(options) {
-  return new Client(utils.deepExtend({}, helper.baseOptions, options));
+  const client = new Client(utils.deepExtend({}, helper.baseOptions, options));
+  helper.shutdownAfterThisTest(client);
+  return client;
 }
 
 /**

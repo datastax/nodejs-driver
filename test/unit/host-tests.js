@@ -15,6 +15,7 @@
  */
 'use strict';
 const assert = require('assert');
+const sinon = require('sinon');
 const util = require('util');
 const events = require('events');
 
@@ -113,65 +114,35 @@ describe('HostConnectionPool', function () {
   });
 
   describe('#_attemptNewConnection()', function () {
-    it('should create and attempt to open a connection', function (done) {
+    it('should create and attempt to open a connection', async () => {
       const hostPool = newHostConnectionPoolInstance();
-      let openCalled = 0;
-      const c = {
-        open: function (cb) {
-          openCalled++;
-          setImmediate(cb);
-        }
-      };
+      const c = sinon.spy({
+        openAsync: () => Promise.resolve()
+      });
+
       hostPool._createConnection = function () {
         return c;
       };
-      hostPool._attemptNewConnection(utils.noop);
-      setTimeout(function () {
-        assert.strictEqual(1, openCalled);
-        done();
-      }, 50);
+
+      await hostPool._attemptNewConnection();
+
+      assert.strictEqual(1, c.openAsync.callCount);
     });
 
-    it('should callback in error when open fails', function (done) {
+    it('should callback in error when open fails', async () => {
       const hostPool = newHostConnectionPoolInstance();
-      let openCalled = 0;
-      let closeCalled = 0;
-      const c = {
-        open: function (cb) {
-          openCalled++;
-          setImmediate(function () {
-            cb(new Error('test open err'));
-          });
-        },
-        close: function () {
-          closeCalled++;
-        }
-      };
-      hostPool._createConnection = function () {
-        return c;
-      };
-      hostPool._attemptNewConnection(function (err) {
-        helper.assertInstanceOf(err, Error);
-        assert.strictEqual(openCalled, 1);
-        assert.strictEqual(closeCalled, 1);
-        done();
+      const c = sinon.spy({
+        openAsync: () => Promise.reject(new Error('Test dummy error')),
+        closeAsync: () => Promise.resolve()
       });
-    });
 
-    it('should callback when open succeeds', function (done) {
-      const hostPool = newHostConnectionPoolInstance();
-      const c = {
-        open: function (cb) {
-          setImmediate(cb);
-        }
-      };
       hostPool._createConnection = function () {
         return c;
       };
-      hostPool._attemptNewConnection(function (err) {
-        assert.ifError(err);
-        done();
-      });
+
+      await helper.assertThrowsAsync(hostPool._attemptNewConnection());
+      assert.strictEqual(c.openAsync.callCount, 1);
+      assert.strictEqual(c.closeAsync.callCount, 1);
     });
   });
 

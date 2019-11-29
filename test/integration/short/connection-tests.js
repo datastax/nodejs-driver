@@ -134,47 +134,54 @@ describe('Connection', function () {
       });
     });
   });
+
   describe('#changeKeyspace()', function () {
     before(helper.ccmHelper.start(1));
-    // after(helper.ccmHelper.remove);
-    it('should change active keyspace', function (done) {
+    after(helper.ccmHelper.remove);
+
+    it('should change active keyspace', async () => {
       const localCon = newInstance();
       const keyspace = helper.getRandomName();
-      utils.series([
-        localCon.open.bind(localCon),
-        function creating(next) {
-          const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), null, next);
-        },
-        function changing(next) {
-          localCon.changeKeyspace(keyspace, next);
-        },
-        function asserting(next) {
-          assert.strictEqual(localCon.keyspace, keyspace);
-          next();
-        }
-      ], done);
+
+      await localCon.openAsync();
+
+
+      const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+      await localCon.send(getRequest(query), null);
+
+      await localCon.changeKeyspace(keyspace);
+
+      assert.strictEqual(localCon.keyspace, keyspace);
+
+      localCon.close();
     });
-    it('should be case sensitive', function (done) {
+
+    it('should be case sensitive', async () => {
       const localCon = newInstance();
       const keyspace = helper.getRandomName().toUpperCase();
       assert.notStrictEqual(keyspace, keyspace.toLowerCase());
-      utils.series([
-        localCon.open.bind(localCon),
-        function creating(next) {
-          const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), null, next);
-        },
-        function changing(next) {
-          localCon.changeKeyspace(keyspace, next);
-        },
-        function asserting(next) {
-          assert.strictEqual(localCon.keyspace, keyspace);
-          next();
-        }
-      ], done);
+
+      await localCon.openAsync();
+      const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+      await localCon.send(getRequest(query), null);
+
+      await localCon.changeKeyspace(keyspace);
+      assert.strictEqual(localCon.keyspace, keyspace);
+    });
+
+    it('should support multiple parallel calls', async () => {
+      const localCon = newInstance();
+      const keyspace = 'system';
+
+      await localCon.openAsync();
+
+      const promises = Array(10).fill(0).map(() => localCon.changeKeyspace(keyspace));
+      await Promise.all(promises);
+
+      assert.strictEqual(localCon.keyspace, keyspace);
     });
   });
+
   describe('#sendStream()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
@@ -296,7 +303,8 @@ function newInstance(address, protocolVersion, options){
 
   const c = new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
 
-  after(() => c.close());
+  helper.afterThisTest(() => c.close());
+
   return c;
 }
 

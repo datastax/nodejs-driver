@@ -309,6 +309,8 @@ const helper = {
 
       assert.match(err.message, re);
     }
+
+    return err;
   },
 
   /**
@@ -826,16 +828,19 @@ const helper = {
       h.prepareCalled = 0;
       h.sendStreamCalled = 0;
       h.connectionKeyspace = [];
-      h.borrowConnection = function (ks, c, cb) {
+      h.borrowConnection = function () {
         if (!h.isUp() || h.shouldBeIgnored) {
-          return cb(new Error('This host should not be used'));
+          throw new Error('This host should not be used');
         }
 
-        h.connectionKeyspace.push(ks);
-
-        cb(null, {
+        return ({
           protocolVersion: protocolVersion,
           keyspace: 'ks',
+          changeKeyspace: (keyspace) => {
+            this.keyspace = keyspace;
+            h.connectionKeyspace.push(keyspace);
+            return Promise.resolve();
+          },
           prepareOnce: function (q, ks, cb) {
             h.prepareCalled++;
             if (prepareQueryCb) {
@@ -874,15 +879,13 @@ const helper = {
           }
         });
       };
-      //TODO: Replace callback function
-      h.borrowConnectionAsync = util.promisify(h.borrowConnection);
 
       return h;
     });
   },
   getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {
     const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion);
-    return ({
+    const fake = {
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
       },
@@ -908,7 +911,11 @@ const helper = {
           cb();
         }
       }
-    });
+    };
+
+    helper.afterThisTest(() => fake.shutdown());
+
+    return fake;
   },
   /**
    * Returns true if the tests are being run on Windows

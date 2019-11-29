@@ -110,7 +110,7 @@ describe('PrepareHandler', function () {
       ];
 
       await PrepareHandler.prepareAllQueries(host, preparedInfoArray);
-      assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks', null ]);
+      assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks' ]);
       assert.strictEqual(host.prepareCalled, 5);
     });
 
@@ -120,7 +120,7 @@ describe('PrepareHandler', function () {
 
     it('should callback in error when there is an error borrowing a connection', async () => {
       const host = helper.getHostsMock([ {} ])[0];
-      host.borrowConnectionAsync = () => Promise.reject(new Error('Test error'));
+      host.borrowConnection = () => Promise.reject(new Error('Test error'));
 
       let err;
       try {

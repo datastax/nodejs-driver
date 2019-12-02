@@ -15,7 +15,7 @@
  */
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 
 const Client = require('../../../lib/client');
 const types = require('../../../lib/types/index');
@@ -182,7 +182,7 @@ describe('Client', function () {
                 assert.fail('Query no prepared on restarted host');
               }
 
-              assert.strictEqual(logMessages.length, 1);
+              assert.lengthOf(logMessages, 1);
 
               next();
             });

@@ -27,6 +27,7 @@ const Client = require('../lib/client');
 const defaultOptions = require('../lib/client-options').defaultOptions;
 const { Host, HostMap } = require('../lib/host');
 const OperationState = require('../lib/operation-state');
+const promiseUtils = require('../lib/promise-utils');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -800,7 +801,7 @@ const helper = {
       setTimeout(next, delayMs);
     });
   },
-  delayAsync: (delayMs) => new Promise(r => setTimeout(r, delayMs || 0)),
+  delayAsync: (delayMs) => promiseUtils.delay(delayMs),
   queries: {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"

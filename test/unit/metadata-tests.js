@@ -2580,11 +2580,12 @@ describe('Metadata', function () {
 
         const cc = {
           connection: {
-            sendStream: (r, o, cb) => {
+            send: () => {
               if (index++ === failIndex) {
-                return cb(new Error('Test error'));
+                return Promise.reject(new Error('Test error'));
               }
-              cb(null, {rows: [{'schema_version': '123'}]});
+
+              return Promise.resolve(null, {rows: [{'schema_version': '123'}]});
             }
           }
         };
@@ -2597,9 +2598,7 @@ describe('Metadata', function () {
     it('should return true when versions match', () => {
       const cc = {
         connection: {
-          sendStream: (r, o, cb) => {
-            cb(null, {rows: [{'schema_version': '123'}]});
-          }
+          send: () => Promise.resolve({rows: [{'schema_version': '123'}]})
         }
       };
 
@@ -2608,12 +2607,12 @@ describe('Metadata', function () {
         .then(agreement => assert.strictEqual(agreement, true));
     });
 
-    it('should return false when versions match', () => {
+    it('should return false when versions do not match', () => {
       let index = 0;
 
       const cc = {
         connection: {
-          sendStream: (r, o, cb) => setImmediate(() => cb(null, {rows: [{'schema_version': String(index++)}]}))
+          send: () => Promise.resolve({rows: [{'schema_version': String(index++)}]})
         }
       };
 

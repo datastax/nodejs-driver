@@ -739,55 +739,46 @@ describe('Client', function () {
     before(() => clock = sinon.useFakeTimers({ shouldAdvanceTime: true }));
     after(() => clock.restore());
 
-    it('should continue querying until the version matches', function (done) {
+    it('should continue querying until the version matches', async () => {
       const client = new Client(helper.baseOptions);
       client.hosts = { length: 5 };
       let calls = 0;
       client.metadata = {
-        compareSchemaVersions: (c, cb) => {
-          cb(null, ++calls === 3);
+        compareSchemaVersions: (c) => {
+          process.nextTick(() => clock.tick(500));
+          return Promise.resolve(++calls === 3);
         }
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(calls, 3);
-        done();
-      });
-
-      clock.tick(5000);
+      await client._waitForSchemaAgreement(null);
+      assert.strictEqual(calls, 3);
     });
 
-    it('should timeout if there is no agreement', function (done) {
+    it('should timeout if there is no agreement', async () => {
       const client = new Client(utils.extend({}, helper.baseOptions, {
         protocolOptions: { maxSchemaAgreementWaitSeconds: 1 }
       }));
       client.hosts = { length: 5 };
       client.metadata = {
-        compareSchemaVersions: sinon.fake((c, cb) => cb(null, false))
+        compareSchemaVersions: sinon.fake(c => Promise.resolve(false))
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.ifError(err);
-        assert.isAbove(client.metadata.compareSchemaVersions.callCount, 0);
-        done();
-      });
+      process.nextTick(() => clock.tick(5000));
 
-      clock.tick(5000);
+      await client._waitForSchemaAgreement(null);
+      assert.isAbove(client.metadata.compareSchemaVersions.callCount, 0);
     });
 
-    it('should callback when there is an error retrieving versions', function (done) {
+    it('should callback when there is an error retrieving versions', async () => {
       const client = new Client(helper.baseOptions);
       client.hosts = {length: 3};
       const dummyError = new Error('dummy error');
       client.metadata = {
-        compareSchemaVersions: (c, cb) => cb(dummyError)
+        compareSchemaVersions: c => Promise.reject(dummyError)
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.strictEqual(err, dummyError);
-        done();
-      });
+      const err = await helper.assertThrowsAsync(client._waitForSchemaAgreement(null));
+      assert.strictEqual(err, dummyError);
     });
   });
 });

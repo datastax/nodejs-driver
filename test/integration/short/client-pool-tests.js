@@ -248,8 +248,8 @@ describe('Client', function () {
       };
 
       const connectionsPerHost = {};
-      connectionsPerHost[types.distance.local] = 3;
-      connectionsPerHost[types.distance.remote] = 1;
+      connectionsPerHost[types.distance.local] = 5;
+      connectionsPerHost[types.distance.remote] = 3;
 
       const client = newInstance({
         policies: { loadBalancing: lbPolicy },
@@ -262,9 +262,12 @@ describe('Client', function () {
         client.hosts.forEach(function (host) {
           const id = helper.lastOctetOf(host);
           if(id === '1') {
-            assert.strictEqual(host.pool.connections.length, 3);
-          } else if (id !== '2') {
-            //TODO: Include remote
+            assert.strictEqual(host.pool.connections.length, 5);
+          } else if (id === '2') {
+            // It shouldn't have finished creating all the connections
+            assert.isBelow(host.pool.connections.length, 3);
+          } else {
+            // Might cause
             assert.strictEqual(host.pool.connections.length, 0);
           }
         });

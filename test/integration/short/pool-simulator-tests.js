@@ -23,7 +23,8 @@ const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
-const version = require('../../../index').version;
+const promiseUtils = require('../../../lib/promise-utils');
+const { version } = require('../../../index');
 const { distance } = types;
 
 const Client = require('../../../lib/client');
@@ -229,37 +230,44 @@ describe('pool', function () {
         .then(() => client.shutdown());
     });
 
-    it('should reconnect in the background when hosts are back online', () => {
-      const client = new Client({
-        contactPoints: cluster.getContactPoints(),
-        localDataCenter: 'dc1',
+    it('should reconnect in the background when hosts are back online', async () => {
+      const client = newInstance(cluster, {
         policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(200) },
         pooling: { heartBeatInterval: 50 }
       });
 
-      return client.connect()
-        .then(() => client.hosts.values().forEach(h => assert.strictEqual(1, h.pool.connections.length)))
-        .then(() => Promise.all([0, 1, 2].map(n => promiseFromCallback(cb => cluster.dc(0).node(n).stop(cb)))))
-        .then(() => helper.setIntervalUntilPromise(
-          // Validate all nodes are down
-          () => client.hosts.values().reduce((acc, h) => acc && !h.isUp(), true), 20, 5000
-        ))
-        .then(() => assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ false, false, false ]))
-        .then(() => Promise.all([0, 1, 2].map(n => promiseFromCallback(cb => cluster.dc(0).node(n).start(cb)))))
-        .then(() => helper.setIntervalUntilPromise(
-          // Validate all nodes are UP
-          () => client.hosts.values().reduce((acc, h) => acc && h.isUp(), true), 20, 5000
-        ))
-        .then(() => assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ true, true, true ]))
-        .then(() => client.hosts.values().forEach(h => assert.strictEqual(1, h.pool.connections.length)))
-        .then(() => new Promise(r => setTimeout(r, 400)))
-        .then(() => client.shutdown());
+      await client.connect();
+
+      const hosts = client.hosts.values();
+
+      hosts.forEach(h => assert.strictEqual(1, h.pool.connections.length));
+
+      await Promise.all([0, 1, 2].map(n => promiseUtils.fromCallback(cb => cluster.dc(0).node(n).stop(cb))));
+
+      await helper.wait.forAllNodesDown(client);
+
+      assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ false, false, false ]);
+
+      assert.isNull(client.controlConnection.connection);
+
+      // Restart nodes
+      await Promise.all([0, 1, 2].map(n => promiseUtils.fromCallback(cb => cluster.dc(0).node(n).start(cb))));
+
+      await helper.wait.forAllNodesUp(client);
+
+      assert.deepStrictEqual(client.hosts.values().map(h => h.isUp()), [ true, true, true ]);
+      client.hosts.values().forEach(h => assert.strictEqual(1, h.pool.connections.length));
+
+      // ControlConnection should be refreshed
+      await helper.wait.until(() => client.controlConnection.connection);
+      assert.isTrue(client.controlConnection.connection.connected);
+
+      await client.shutdown();
     });
 
     it('should connect when first contact point is down', () => {
       const startIpOctets = simulacron.startingIp.split('.');
       const secondNodeLastOctet = parseInt(startIpOctets[3], 10) + 1;
-
       const client = new Client({
         contactPoints: [
           startIpOctets.join('.'),
@@ -267,7 +275,7 @@ describe('pool', function () {
         localDataCenter: 'dc1',
       });
 
-      return promiseFromCallback(cb => cluster.dc(0).node(0).stop(cb))
+      return promiseUtils.fromCallback(cb => cluster.dc(0).node(0).stop(cb))
         .then(() => client.connect())
         .then(() => assert.strictEqual(
           client.controlConnection.host.address.split(':')[0].split('.')[3],
@@ -317,7 +325,7 @@ describe('pool', function () {
           assert.strictEqual(client.getState().getConnectedHosts().length, 3);
           assert.strictEqual(client.controlConnection.getEndpoint(), firstAddress);
         })
-        .then(() => promiseFromCallback(cb => cluster.node(firstAddress).stop(cb)))
+        .then(() => promiseUtils.fromCallback(cb => cluster.node(firstAddress).stop(cb)))
         .then(() => helper.setIntervalUntilPromise(
           () => (client.controlConnection.getEndpoint() || firstAddress) !== firstAddress, 20, 5000
         ))
@@ -327,7 +335,7 @@ describe('pool', function () {
           assert.notStrictEqual(client.controlConnection.getEndpoint(), firstAddress);
           secondAddress = client.controlConnection.getEndpoint();
         })
-        .then(() => promiseFromCallback(cb => cluster.node(firstAddress).start(cb)))
+        .then(() => promiseUtils.fromCallback(cb => cluster.node(firstAddress).start(cb)))
         .then(() => helper.setIntervalUntilPromise(
           () => client.hosts.values().find(h => !h.isUp()) === undefined, 20, 5000
         ))
@@ -363,7 +371,7 @@ describe('pool', function () {
         .then(() => Promise.all(
           client.hosts.values()
             .map(h => h.address).slice(0, 2)
-            .map(address => promiseFromCallback(cb => cluster.node(address).stop(cb)))
+            .map(address => promiseUtils.fromCallback(cb => cluster.node(address).stop(cb)))
         ))
         .then(() => helper.setIntervalUntilPromise(
           () => (client.controlConnection.getEndpoint() || firstAddress) !== firstAddress, 20, 5000
@@ -581,7 +589,7 @@ describe('pool', function () {
           addressTranslator.withTranslations(new Map());
 
           // Stop the node with the control connection to force a refresh
-          return promiseFromCallback(cb => cluster.dc(0).node(0).stop(cb));
+          return promiseUtils.fromCallback(cb => cluster.dc(0).node(0).stop(cb));
         })
         .then(() =>
           // Force the driver to acknowledge that the node is stopped (avoid half open)
@@ -591,7 +599,7 @@ describe('pool', function () {
           helper.setIntervalUntilPromise(() => client.controlConnection.host !== initialControlConnectionHost, 500, 20))
         .then(() =>
           // Allow reconnection
-          promiseFromCallback(cb => cluster.dc(0).node(0).start(cb)))
+          promiseUtils.fromCallback(cb => cluster.dc(0).node(0).start(cb)))
         .then(() =>
           // Wait for connections to node0 are reestablished
           helper.setIntervalUntilPromise(() => initialControlConnectionHost.pool.connections.length > 0, 500, 40))
@@ -609,22 +617,101 @@ describe('pool', function () {
         .then(() => client.shutdown());
     });
 
-    it('should use different contactPoints as initial control connection', () =>
-      helper.repeat(20, () => {
+    it('should use different contactPoints as initial control connection', async () => {
+
+      const addresses = new Set();
+
+      for (let i = 0; i < 20; i++) {
         const client = new Client({
           contactPoints: cluster.getContactPoints(),
-          localDataCenter: 'dc1'
+          localDataCenter: 'dc1',
+          pooling: { warmup: false }
         });
 
-        let address;
+        try {
+          await client.connect();
+          addresses.add(client.controlConnection.host.address);
+        } finally {
+          await client.shutdown();
+        }
+      }
 
-        return client.connect()
-          .then(() => address = client.controlConnection.host.address)
-          .then(() => client.shutdown())
-          .then(() => address);
+      assert.isAbove(addresses.size, 1);
+    });
 
-      }).then(addresses => assert.ok(new Set(addresses).size > 0))
-    );
+    it('should not create connections to nodes not selected by the load balancing policy on init', async () => {
+      const addresses = cluster
+        .dc(0).nodes.map(n => n.address)
+        .concat(cluster.dc(1).nodes.slice(0, 1).map(n => n.address));
+
+      const client = newInstance(cluster, {
+        policies: { loadBalancing: new helper.OrderedLoadBalancingPolicy(addresses) }
+      });
+
+      await client.connect();
+
+      // Wait for some time, as remote connections are created in the background
+      await helper.delayAsync(500);
+
+      assert.deepStrictEqual(client.getState().getConnectedHosts().map(h => h.address).sort(), addresses.sort());
+
+      await client.shutdown();
+    });
+
+    it('should not create connections to remote nodes when core connections per host is zero', async () => {
+      const localAddresses = cluster.dc(0).nodes.map(n => n.address);
+      const remoteAddresses = cluster.dc(1).nodes.slice(0, 2).map(n => n.address);
+
+      const client = newInstance(cluster, {
+        policies: { loadBalancing: new CustomLoadBalancingPolicy(localAddresses, remoteAddresses) },
+        pooling: { coreConnectionsPerHost: { [types.distance.local]: 2, [types.distance.remote]: 0 }}
+      });
+
+      await client.connect();
+
+      // Wait for some time, as remote connections are created in the background
+      await helper.delayAsync(500);
+
+      // Use private property to validate that two nodes are considered remote
+      assert.lengthOf(client.hosts.values().filter(h => h._distance === types.distance.remote), 2);
+
+      // Only connections to local hosts
+      assert.deepStrictEqual(
+        client.getState().getConnectedHosts().map(h => h.address).sort(),
+        localAddresses.sort());
+
+      await client.shutdown();
+    });
+
+    [true, false].forEach(warmup => {
+      it(`should create connections to remote nodes in the background when warmup is ${warmup}`, async () => {
+        const localAddresses = cluster.dc(0).nodes.map(n => n.address);
+        const remoteAddress = cluster.dc(1).node(0).address;
+
+        const client = newInstance(cluster, {
+          policies: { loadBalancing: new CustomLoadBalancingPolicy(localAddresses, [ remoteAddress ]) },
+          pooling: {
+            coreConnectionsPerHost: { [types.distance.local]: 2, [types.distance.remote]: 1 },
+            warmup
+          }
+        });
+
+        await client.connect();
+
+        // Wait for some time, as remote connections are created in the background
+        await helper.delayAsync(500);
+
+        const remoteHost = client.hosts.get(remoteAddress);
+        const localHostsHosts = localAddresses.map(a => client.hosts.get(a));
+
+        // Two connections to local hosts
+        localHostsHosts.forEach(h => assert.deepStrictEqual(client.getState().getOpenConnections(h), 2));
+
+        await helper.wait.until(() => client.getState().getOpenConnections(remoteHost) === 1);
+
+        await client.shutdown();
+      });
+    });
   });
 });
 
@@ -670,21 +757,42 @@ class CustomTestAddressTranslator extends policies.addressResolution.AddressTran
   }
 }
 
-function promiseFromCallback(handler) {
-  return new Promise((resolve, reject) => {
-    handler((err, result) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
+/**
+ * A load balancing policy suitable for testing.
+ */
+class CustomLoadBalancingPolicy extends policies.loadBalancing.LoadBalancingPolicy {
+  constructor(localAddresses, remoteAddresses) {
+    super();
+
+    this.localAddresses = localAddresses;
+    this.remoteAddresses = remoteAddresses || [];
+  }
+
+  getDistance(host) {
+    if (this.localAddresses.indexOf(host.address) >= 0) {
+      return types.distance.local;
+    }
+
+    if (this.remoteAddresses.indexOf(host.address) >= 0) {
+      return types.distance.remote;
+    }
+
+    return types.distance.ignored;
+  }
+
+  newQueryPlan(keyspace, executionOptions, callback) {
+    callback(null, this._queryPlan());
+  }
+
+  *_queryPlan() {
+    yield* utils.shuffleArray(this.localAddresses.map(a => this.hosts.get(a)));
+    yield* utils.shuffleArray(this.remoteAddresses.map(a => this.hosts.get(a)));
+  }
 }
 
 function newInstance(simulacronCluster, options) {
   const client = new Client(
-    utils.extend({
+    Object.assign({
       contactPoints: simulacronCluster.getContactPoints(),
       localDataCenter: 'dc1'
     },

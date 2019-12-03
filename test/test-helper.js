@@ -665,6 +665,9 @@ const helper = {
     forAllNodesUp: async function (client, maxAttempts = 500, delay = 20) {
       await this.until(() => !client.hosts.values().find(h => !h.isUp()), maxAttempts, delay);
     },
+    forAllNodesDown: async function (client, maxAttempts = 500, delay = 20) {
+      await this.until(() => !client.hosts.values().find(h => h.isUp()), maxAttempts, delay);
+    },
     forNodeDown: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
       const host = helper.findHost(hostsOrClient, lastOctet, true);
       await this.until(() => !host.isUp(), maxAttempts, delay);
@@ -675,38 +678,6 @@ const helper = {
     forNodeToBeRemoved: async function (hostsOrClient, lastOctet, maxAttempts = 1000, delay = 20) {
       await this.until(() => !helper.findHost(hostsOrClient, lastOctet), maxAttempts, delay);
     }
-  },
-
-  /**
-   * Returns a method that repeatedly checks every second until the given host is present in the client's host
-   * map and is down.  This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
-   */
-  waitOnHostDown: function(client, number) {
-    const self = this;
-    const hostIsDown = function() {
-      const host = self.findHost(client, number);
-      return host === undefined ? false : !host.isUp();
-    };
-
-    return self.setIntervalUntilTask(hostIsDown, 1000, 20);
-  },
-
-  /**
-   * Returns a method that repeatedly checks every second until the given host is not present in the client's host
-   * map. This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
-   */
-  waitOnHostGone: function(client, number) {
-    const self = this;
-    const hostIsGone = function() {
-      const host = self.findHost(client, number);
-      return host === undefined;
-    };
-
-    return self.setIntervalUntilTask(hostIsGone, 1000, 20);
   },
 
   /**
@@ -1721,7 +1692,6 @@ function executeIfVersion (testVersion, func, args) {
 
 /**
  * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].
- * @constructor
  */
 class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy {
 
@@ -1739,6 +1709,14 @@ class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy
     }
 
     this.addresses = addresses;
+  }
+
+  getDistance(host) {
+    if (this.addresses.indexOf(host.address) >= 0) {
+      return types.distance.local;
+    }
+
+    return types.distance.ignored;
   }
 
   newQueryPlan(keyspace, info, callback) {

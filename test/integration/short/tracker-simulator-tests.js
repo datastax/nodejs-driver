@@ -16,7 +16,7 @@
 
 'use strict';
 
-const assert = require('chai').assert;
+const { assert } = require('chai');
 const sinon = require('sinon');
 
 const tracker = require('../../../lib/tracker');
@@ -170,17 +170,18 @@ describe('tracker', function () {
           });
       });
 
-      it('should log large queries', () => {
+      it('should log large queries',async () => {
         const query = 'INSERT INTO table1 (id) VALUES (?)';
         const params = [ utils.stringRepeat('a', 2000) ];
 
-        return client.execute(query, params, { prepare: true })
-          .then(() => {
-            assert.strictEqual(slowMessages.length, 0);
-            assert.strictEqual(largeMessages.length, 1);
-            assert.include(largeMessages[0], 'Request exceeded length');
-            assert.include(largeMessages[0], query);
-          });
+        await client.execute(query, params, { prepare: true });
+
+        assert.lengthOf(largeMessages, 1);
+        assert.include(largeMessages[0], 'Request exceeded length');
+        assert.include(largeMessages[0], query);
+
+        // It might be slow on CI, it's usually 0 but it's still ok if it's 0
+        assert.isAtMost(slowMessages.length, 1);
       });
     });
 

@@ -234,7 +234,7 @@ describe('Client', function () {
       }, done);
     });
 
-    it('should only warmup connections for hosts with local distance', function (done) {
+    it('should only warmup connections for hosts with local distance', async () => {
       const lbPolicy = new RoundRobinPolicy();
       lbPolicy.getDistance = function (host) {
         const id = helper.lastOctetOf(host.address);
@@ -248,31 +248,30 @@ describe('Client', function () {
       };
 
       const connectionsPerHost = {};
-      connectionsPerHost[types.distance.local] = 5;
-      connectionsPerHost[types.distance.remote] = 3;
+      connectionsPerHost[types.distance.local] = 2;
+      connectionsPerHost[types.distance.remote] = 10;
 
       const client = newInstance({
         policies: { loadBalancing: lbPolicy },
         pooling: { warmup: true, coreConnectionsPerHost: connectionsPerHost}
       });
 
-      client.connect(function (err) {
-        assert.ifError(err);
-        assert.strictEqual(client.hosts.length, 3);
-        client.hosts.forEach(function (host) {
-          const id = helper.lastOctetOf(host);
-          if(id === '1') {
-            assert.strictEqual(host.pool.connections.length, 5);
-          } else if (id === '2') {
-            // It shouldn't have finished creating all the connections
-            assert.isBelow(host.pool.connections.length, 3);
-          } else {
-            // Might cause
-            assert.strictEqual(host.pool.connections.length, 0);
-          }
-        });
-        client.shutdown(done);
+      await client.connect();
+
+      assert.strictEqual(client.hosts.length, 3);
+      client.hosts.forEach(function (host) {
+        const id = helper.lastOctetOf(host);
+        if(id === '1') {
+          assert.strictEqual(host.pool.connections.length, connectionsPerHost[types.distance.local]);
+        } else if (id === '2') {
+          // It shouldn't have finished creating all the connections
+          assert.isBelow(host.pool.connections.length, connectionsPerHost[types.distance.remote]);
+        } else {
+          assert.strictEqual(host.pool.connections.length, 0);
+        }
       });
+
+      await client.shutdown();
     });
 
     it('should connect after unsuccessful attempt caused by a non-existent keyspace', function (done) {

@@ -144,6 +144,20 @@ describe('HostConnectionPool', function () {
       assert.strictEqual(c.openAsync.callCount, 1);
       assert.strictEqual(c.closeAsync.callCount, 1);
     });
+
+    it('should create a single connection with multiple calls in parallel', async () => {
+      const hostPool = newHostConnectionPoolInstance();
+      const c = sinon.spy({
+        openAsync: () => Promise.resolve()
+      });
+
+      hostPool._createConnection = sinon.spy(() => c);
+
+      await Promise.all(Array(10).fill(0).map(() => hostPool._attemptNewConnection()));
+
+      assert.strictEqual(c.openAsync.callCount, 1);
+      assert.strictEqual(hostPool._createConnection.callCount, 1);
+    });
   });
 
   describe('minInFlight()', function () {

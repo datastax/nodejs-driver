@@ -21,8 +21,8 @@ const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 
-const Client = require('../../../lib/client.js');
-const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
+const Client = require('../../../lib/client');
+const { OrderedLoadBalancingPolicy } = require('../../test-helper');
 
 const query = "select * from data";
 

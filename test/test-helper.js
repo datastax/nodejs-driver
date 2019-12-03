@@ -1712,6 +1712,10 @@ class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy
   }
 
   getDistance(host) {
+    if (!this.addresses) {
+      return types.distance.local;
+    }
+
     if (this.addresses.indexOf(host.address) >= 0) {
       return types.distance.local;
     }

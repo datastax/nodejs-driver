@@ -1436,5 +1436,5 @@ describe('metadata', function () {
 
 /** @returns {Client}  */
 function newInstance(options) {
-  return new Client(utils.deepExtend({}, helper.baseOptions, options));
+  return helper.shutdownAfterThisTest(new Client(utils.deepExtend({}, helper.baseOptions, options)));
 }

@@ -461,14 +461,13 @@ describe('pool', function () {
     [
       {
         name: 'using the control connection',
-        //TODO: Fix
-        fn: (client, cb) => client.controlConnection.query(helper.queries.basic, false, cb)
+        fn: (client) => client.controlConnection.query(helper.queries.basic, false)
       }, {
         name: 'using client execute',
-        fn: (client, cb) => client.execute(helper.queries.basic, cb)
+        fn: (client) => client.execute(helper.queries.basic)
       }
     ].forEach(item => {
-      it(`should reject requests immediately after shutdown ${item.name}`, () => {
+      it(`should reject requests immediately after shutdown ${item.name}`, async () => {
         const client = new Client({
           contactPoints: cluster.getContactPoints(),
           localDataCenter: 'dc1',
@@ -482,55 +481,58 @@ describe('pool', function () {
         let responseCounter = 0;
         const results = [];
         const maxResults = 1000;
+        let failureError = null;
 
-        return client.connect()
-          .then(() => {
-            // Execute queries in the background
-            utils.whilst(
-              () => !stop,
-              next => {
-                utils.timesLimit(100, 32, (i, timesNext) => {
+        await client.connect();
 
-                  const checkReject = client.isShuttingDown;
-                  let timePassed = false;
+        // Execute queries in the background
+        process.nextTick(async () => {
+          while (!stop && responseCounter < maxResults) {
+            // eslint-disable-next-line no-loop-func
+            await promiseUtils.times(100, 32, async () => {
+              const checkReject = client.isShuttingDown;
+              let timePassed = false;
 
-                  if (checkReject) {
-                    setTimeout(() => timePassed = true, 20);
-                  }
+              if (checkReject) {
+                setTimeout(() => timePassed = true, 20);
+              }
 
-                  requestCounter++;
+              requestCounter++;
+              let err = null;
+              try {
+                await item.fn(client);
+              } catch (e) {
+                err = e;
+              }
 
-                  item.fn(client, err => {
-                    responseCounter++;
-                    if (checkReject && results.length < maxResults) {
-                      results.push({ timePassed, err });
-                    }
+              responseCounter++;
+              if (checkReject && results.length < maxResults) {
+                results.push({ timePassed, err });
+              }
 
-                    if (err && client.isShuttingDown) {
-                      err = null;
-                    }
-
-                    timesNext(err);
-                  });
-                }, err => setImmediate(next, err));
-              },
-              utils.noop
-            );
-          })
-          .then(() => new Promise(r => setTimeout(r, 20)))
-          // Shutdown while there are queries in progress
-          .then(() => client.shutdown())
-          .then(() => new Promise(r => setTimeout(r, 200)))
-          .then(() => stop = true)
-          .then(() => new Promise(r => setTimeout(r, 200)))
-          .then(() => {
-            assert.ok(results.length > 0);
-            results.forEach(r => {
-              helper.assertInstanceOf(r.err, Error);
-              assert.strictEqual(r.timePassed, false);
+              if (err && !client.isShuttingDown) {
+                failureError = err;
+              }
             });
-            assert.strictEqual(responseCounter, requestCounter);
-          });
+          }
+        });
+
+        await promiseUtils.delay(20);
+
+        // Shutdown while there are queries in progress
+        await client.shutdown();
+
+        await promiseUtils.delay(200);
+        stop = true;
+        await promiseUtils.delay(200);
+
+        assert.ok(results.length > 0);
+        results.forEach(r => {
+          helper.assertInstanceOf(r.err, Error);
+          assert.strictEqual(r.timePassed, false);
+        });
+        assert.strictEqual(responseCounter, requestCounter);
+        assert.isNull(failureError);
       });
     });
   });

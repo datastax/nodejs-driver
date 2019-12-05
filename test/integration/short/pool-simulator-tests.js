@@ -461,6 +461,7 @@ describe('pool', function () {
     [
       {
         name: 'using the control connection',
+        //TODO: Fix
         fn: (client, cb) => client.controlConnection.query(helper.queries.basic, false, cb)
       }, {
         name: 'using client execute',

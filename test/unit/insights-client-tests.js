@@ -178,7 +178,7 @@ describe('InsightsClient', function () {
 
       const client = getClient({
         rpcCallback: () => rpcCalled++,
-        callbackParameterGetter: () => error
+        errorGetter: () => error
       });
 
       const insights = new InsightsClient(client, {
@@ -437,13 +437,13 @@ describe('InsightsClient', function () {
 
 /**
  * Gets a fake client instance.
- * @param {{rpcCallback, callbackParameterGetter, hostVersions, clientOptions}} [options]
+ * @param {{rpcCallback, errorGetter, hostVersions, clientOptions}} [options]
  */
 function getClient(options) {
   options = options || {};
 
   const rpcCallback = options.rpcCallback || utils.noop;
-  const callbackParameterGetter = options.callbackParameterGetter || utils.noop;
+  const errorGetter = options.errorGetter || utils.noop;
 
   const clientOptions = Object.assign(
     { pooling: { coreConnectionsPerHost: coreConnectionsPerHostV3 }, applicationName: 'My Test Application' },
@@ -452,9 +452,15 @@ function getClient(options) {
   const client = new Client(helper.getOptions(clientOptions));
 
   // Provide a fake control connection
-  client.controlConnection.query = (request, w, callback) => {
+  client.controlConnection.query = (request, w) => {
     rpcCallback(request.params[0]);
-    setImmediate(() => callback(callbackParameterGetter()));
+    const err = errorGetter();
+
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    return Promise.resolve();
   };
   client.controlConnection.protocolVersion = 4;
   client.controlConnection.getLocalAddress = () => '10.10.10.1:9042';

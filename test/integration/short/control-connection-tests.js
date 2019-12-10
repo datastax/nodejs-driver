@@ -46,7 +46,7 @@ describe('ControlConnection', function () {
       await otherClient.execute("CREATE KEYSPACE sample_change_1 " +
         "WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3}");
 
-      await helper.setIntervalUntilPromise(() => cc.metadata.keyspaces['sample_change_1'], 50, 40);
+      await helper.setIntervalUntilPromise(() => cc.metadata.keyspaces['sample_change_1'], 50, 100);
 
       let keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
       assert.ok(keyspaceInfo);
@@ -58,7 +58,7 @@ describe('ControlConnection', function () {
         "{'class': 'SimpleStrategy', 'replication_factor' : 2}");
 
       await helper.setIntervalUntilPromise(
-        () => cc.metadata.keyspaces['sample_change_1'].strategyOptions.replication_factor === '2', 50, 40);
+        () => cc.metadata.keyspaces['sample_change_1'].strategyOptions.replication_factor === '2', 50, 100);
 
       keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
       assert.ok(keyspaceInfo);
@@ -66,7 +66,7 @@ describe('ControlConnection', function () {
 
       await otherClient.execute("DROP keyspace sample_change_1");
 
-      await helper.setIntervalUntilPromise(() => !cc.metadata.keyspaces['sample_change_1'], 50, 40);
+      await helper.setIntervalUntilPromise(() => !cc.metadata.keyspaces['sample_change_1'], 50, 100);
 
       keyspaceInfo = cc.metadata.keyspaces['sample_change_1'];
       assert.ok(!keyspaceInfo);
@@ -95,7 +95,7 @@ describe('ControlConnection', function () {
       // Stop the node and ensure it gets marked down.
       await util.promisify(helper.ccmHelper.stopNode)(2);
 
-      await helper.wait.forNodeDown(cc.hosts, 2);
+      await helper.wait.forNodeDown(cc.hosts, 2, 1000);
 
       const hosts = cc.hosts.values();
 

@@ -498,6 +498,7 @@ function getFakeConnection(endpoint, queryResults) {
     }
   };
   c.close = cb => (cb ? cb() : null);
+  c.closeAsync = () => Promise.resolve();
   c.send = util.promisify(c.sendStream);
   return c;
 }

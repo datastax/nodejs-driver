@@ -42,12 +42,17 @@ const cassandraVersionByDse = {
 
 const afterNextHandlers = [];
 
-// After each at root level
+// Use a afterEach handler at root level
 afterEach(async () => {
   while (afterNextHandlers.length > 0) {
     const handler = afterNextHandlers.pop();
     await handler();
   }
+});
+
+// Add a listener for unhandled rejections and throw the error to exit with 1
+process.on('unhandledRejection', reason => {
+  throw reason;
 });
 
 const helper = {

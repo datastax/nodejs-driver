@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+
+const { assert } = require('chai');
 const sinon = require('sinon');
 const util = require('util');
 const events = require('events');
@@ -317,6 +318,7 @@ describe('Host', function () {
       assert.notStrictEqual(host.pool.connections, initialConnections);
       host.shutdown(false);
     });
+
     it('should issue a new connection attempt when pool size is smaller than config', function () {
       const host = newHostInstance(defaultOptions);
       const initialConnections = [ newConnectionMock(), newConnectionMock() ];
@@ -485,6 +487,7 @@ describe('HostMap', function () {
       assert.strictEqual(values.length, 1);
       assert.ok(Object.isFrozen(values));
     });
+
     it('should return the same instance as long as the value does not change', function () {
       const map = new HostMap();
       map.set('h1', 'h1');
@@ -534,6 +537,7 @@ function newHostInstance(options) {
 function newConnectionMock(properties) {
   return utils.extend({
     close: helper.noop,
+    closeAsync: () => Promise.resolve(),
     getInFlight: helper.functionOf(0)
   }, properties);
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('chai').assert;
+const { assert } = require('chai');
 const util = require('util');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
@@ -636,14 +636,15 @@ describe('Client', function () {
       policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
       logEmitter: helper.noop
     });
+
     it('should set connected flag to false when hosts successfully shutdown', function(done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
 
@@ -657,14 +658,15 @@ describe('Client', function () {
         done();
       });
     });
+
     it('should callback when called multiple times serially', function (done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       const Client = proxyquire('../../lib/client', {
@@ -680,19 +682,21 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should callback when called multiple times in parallel', function (done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       const Client = proxyquire('../../lib/client', {
         './control-connection': getControlConnectionMock(hosts)
       });
+
       const client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -703,6 +707,7 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should not attempt reconnection and log after shutdown', function (done) {
       const rp = new policies.reconnection.ConstantReconnectionPolicy(50);
       const client = new Client(utils.extend({}, helper.baseOptions, { policies: { reconnection: rp } }));
@@ -817,4 +822,8 @@ function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
   client._connect = async () => {};
 
   return client;
+}
+
+function getConnections(length = 1) {
+  return Array(length).fill(0).map(() => ({ closeAsync: sinon.spy(() => Promise.resolve()) }));
 }

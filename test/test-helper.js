@@ -836,7 +836,6 @@ const helper = {
             });
             return op;
           },
-          //TODO: Replace
           prepareOnceAsync: function (q, ks) {
             return new Promise((resolve, reject) => {
               h.prepareCalled++;

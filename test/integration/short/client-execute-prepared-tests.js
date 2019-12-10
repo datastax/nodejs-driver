@@ -1170,6 +1170,8 @@ describe('Client', function () {
           contactPoints: helper.baseOptions.contactPoints
         });
 
+        helper.shutdownAfterThisTest(client);
+
         /** Pre-calculated based on partitioner and initial tokens */
         const replicaByKey = new Map([
           ['0', '1'],
@@ -1350,7 +1352,8 @@ function newInstance(options) {
   options = utils.deepExtend({
     queryOptions: {consistency: types.consistencies.quorum}
   }, options, helper.baseOptions);
-  return new Client(options);
+
+  return helper.shutdownAfterThisTest(new Client(options));
 }
 
 function serializationTest(client, values, columns, done) {

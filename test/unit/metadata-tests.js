@@ -568,27 +568,39 @@ describe('Metadata', function () {
     });
 
     it("should remove excess prepared queries when _maxPrepared has been exceeded", function() {
-      const maxPrepared = 2;
-      const options = Object.assign(clientOptions.defaultOptions(), {maxPrepared: maxPrepared});
+      const maxPrepared = 3;
+      const options = Object.assign(clientOptions.defaultOptions(), { maxPrepared });
       const metadata = new Metadata(options, null);
-      metadata.log = helper.noop;
+      const loggedMessages = [];
+      metadata.log = (level, message) => loggedMessages.push({ level, message });
       // Populate _mapByKey and _mapById, with and without a keyspace
-      metadata._preparedQueries.getOrAdd('myKeyspace', 'query_a');
-      metadata._preparedQueries.setById({queryId: '123', keyspace: 'myKeyspace', query: 'query_a'});
-      metadata._preparedQueries.getOrAdd(null, 'query_b');
-      metadata._preparedQueries.setById({queryId: '456', query: 'query_b'});
-      metadata._preparedQueries.getOrAdd('myKeyspace', 'query_c');
-      metadata._preparedQueries.setById({queryId: '789', keyspace: 'myKeyspace', query: 'query_c'});
-      // Set IDs in _mapByKey (I don't understand how this happens normally).
-      metadata._preparedQueries._mapByKey.myKeyspacequery_a.queryId = '123';
-      metadata._preparedQueries._mapByKey.query_b.queryId = '456';
-      metadata._preparedQueries._mapByKey.myKeyspacequery_c.queryId = '789';
-      // Call getPreparedInfo with a new query to trigger _validateOverflow
-      metadata.getPreparedInfo('myKeyspace', 'query_f');
-      metadata._preparedQueries.setById({queryId: '333', keyspace: 'myKeyspace', query: 'query_f'});
-      assert.strictEqual(metadata._preparedQueries.length, maxPrepared);
-      assert.strictEqual(Object.keys(metadata._preparedQueries._mapByKey).length, maxPrepared);
-      assert.strictEqual(Object.keys(metadata._preparedQueries._mapById).length, maxPrepared);
+      const preparedQueries = metadata._preparedQueries;
+      let info = preparedQueries.getOrAdd('myKeyspace', 'query_a');
+      info.queryId = '123';
+      preparedQueries.setById(info);
+      assert.strictEqual(preparedQueries.length, 1);
+
+      info = preparedQueries.getOrAdd(null, 'query_b');
+      info.queryId = '456';
+      preparedQueries.setById(info);
+      assert.strictEqual(preparedQueries.length, 2);
+
+      info = preparedQueries.getOrAdd('myKeyspace', 'query_c');
+      info.queryId = '789';
+      preparedQueries.setById(info);
+      assert.lengthOf(preparedQueries, 3);
+      assert.lengthOf(loggedMessages, 0);
+
+      // Call getOrAdd() will trigger _validateOverflow
+      info = preparedQueries.getOrAdd('myKeyspace', 'query_f');
+      info.queryId = '333';
+      preparedQueries.setById(info);
+
+      assert.lengthOf(preparedQueries, maxPrepared);
+      assert.lengthOf(Array.from(preparedQueries._mapByKey.keys()), maxPrepared);
+      assert.lengthOf(Array.from(preparedQueries._mapById.keys()), maxPrepared);
+      assert.lengthOf(loggedMessages
+        .filter(({ level, message }) => level === 'warning' && message.indexOf('exceeded maximum') >=0), 1);
     });
   });
 

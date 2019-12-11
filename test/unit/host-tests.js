@@ -500,6 +500,7 @@ describe('HostMap', function () {
       assert.notEqual(values3, values1);
     });
   });
+
   describe('#set()', function () {
     it('should modify the cached values', function () {
       const map = new HostMap();

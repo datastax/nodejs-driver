@@ -49,7 +49,7 @@ describe('Client', function () {
         client.connect(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           assert.strictEqual(Object.keys(err.innerErrors).length, 1);
-          helper.assertInstanceOf(helper.values(err.innerErrors)[0], Error);
+          helper.assertInstanceOf(Object.values(err.innerErrors)[0], Error);
           helper.finish(client, done)();
         });
       });

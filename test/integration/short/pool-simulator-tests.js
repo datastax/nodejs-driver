@@ -107,7 +107,7 @@ describe('pool', function () {
             assert.strictEqual(r.coordinator, null);
             helper.assertInstanceOf(r.err, errors.NoHostAvailableError);
             assert.deepEqual(Object.keys(r.err.innerErrors).sort(), hosts.sort());
-            helper.values(r.err.innerErrors).forEach(err => {
+            Object.values(r.err.innerErrors).forEach(err => {
               helper.assertInstanceOf(err, errors.BusyConnectionError);
             });
           });

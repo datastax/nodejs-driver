@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
+
 const { assert } = require('chai');
 const util = require('util');
 const path = require('path');
@@ -539,20 +541,6 @@ const helper = {
     }
     return filterArr[0];
   },
-  /**
-   * Returns the values of an object
-   * @param {Object} obj
-   */
-  values : function (obj) {
-    const vals = [];
-    for (const key in obj) {
-      if (!obj.hasOwnProperty(key)) {
-        continue;
-      }
-      vals.push(obj[key]);
-    }
-    return vals;
-  },
   Map: MapPolyFill,
   Set: SetPolyFill,
   WhiteListPolicy: WhiteListPolicy,
@@ -603,7 +591,6 @@ const helper = {
     const ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
-
   /**
    * Given a {Client} and a {Number} returns the host whose last octet
    * ends with the requested number.
@@ -636,20 +623,8 @@ const helper = {
   },
 
   /**
-   * Returns a method that repeatedly checks every second until the given host is present in the client's host
-   * map and is up.  This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
+   * Provides utilities to asynchronously wait on conditions.
    */
-  waitOnHostUp: function(client, number) {
-    const self = this;
-    const hostIsUp = function() {
-      const host = self.findHost(client, number);
-      return host === undefined ? false : host.isUp();
-    };
-
-    return self.setIntervalUntilTask(hostIsUp, 1000, 20);
-  },
   wait: {
     until: async function(condition, maxAttempts = 500, delay = 20) {
       for (let i = 0; i <= maxAttempts; i++) {

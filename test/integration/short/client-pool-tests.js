@@ -1097,5 +1097,5 @@ function createRole(client, role, password) {
 function assertAuthError(err) {
   helper.assertInstanceOf(err, errors.NoHostAvailableError);
   assert.ok(err.innerErrors);
-  helper.assertInstanceOf(helper.values(err.innerErrors)[0], errors.AuthenticationError);
+  helper.assertInstanceOf(Object.values(err.innerErrors)[0], errors.AuthenticationError);
 }

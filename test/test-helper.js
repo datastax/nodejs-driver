@@ -653,7 +653,9 @@ const helper = {
   wait: {
     until: async function(condition, maxAttempts = 500, delay = 20) {
       for (let i = 0; i <= maxAttempts; i++) {
-        if (!condition()) {
+        // Condition can be both sync or async
+        const c = await condition();
+        if (!c) {
           if (i === maxAttempts) {
             throw new Error(`Condition still false after ${maxAttempts * delay}ms: ${condition.toString()}`);
           }

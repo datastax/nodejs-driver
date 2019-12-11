@@ -379,31 +379,36 @@ describe('metadata', function () {
           }
         ], done);
       });
+
       describe('with no callback specified', function () {
-        it('should return the trace in a promise', function () {
+        it('should return the trace in a promise', async () => {
           const client = newInstance();
-          return client.connect()
-            .then(function () {
-              return client.execute(helper.queries.basic, [], {traceQuery: true});
-            })
-            .then(result => new Promise(r => setTimeout(() => r(result), 500)))
-            .then(function (result) {
-              return Promise.all([
-                client.metadata.getTrace(result.info.traceId),
-                client.metadata.getTrace(result.info.traceId, types.consistencies.all)
-              ]);
-            })
-            .then(function (traceArray) {
-              traceArray.forEach(function (trace) {
-                assert.ok(trace);
-                assert.strictEqual(typeof trace.duration, 'number');
-                assert.ok(trace.events.length);
-              });
-              return client.shutdown();
-            });
+          await client.connect();
+          const rs = await client.execute(helper.queries.basic, [], { traceQuery: true });
+          const id = rs.info.traceId;
+
+          // As we are going to retrieve the trace below, make sure the trace is saved on all nodes
+          await helper.wait.until(async () => {
+            const query = 'SELECT * FROM system_traces.sessions WHERE session_id=?';
+            const sessionRs = await client.execute(query, [ id ], { consistency: types.consistencies.all });
+            const row = sessionRs.first();
+            return row && row['duration'];
+          });
+
+          const traceArray = await Promise.all([
+            client.metadata.getTrace(id),
+            client.metadata.getTrace(id, types.consistencies.all)
+          ]);
+          traceArray.forEach(function (trace) {
+            assert.ok(trace);
+            assert.strictEqual(typeof trace.duration, 'number');
+            assert.ok(trace.events.length);
+          });
+          client.shutdown();
         });
       });
     });
+
     describe('#refreshKeyspace()', function () {
       describe('with no callback specified', function () {
 

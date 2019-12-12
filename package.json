@@ -20,16 +20,16 @@
   "license": "Apache-2.0",
   "types": "./index.d.ts",
   "dependencies": {
-    "long": "^2.2.0",
+    "@types/long": "^4.0.0",
+    "@types/node": ">=8",
     "adm-zip": "^0.4.13",
-    "@types/node": ">=4",
-    "@types/long": "^4.0.0"
+    "long": "^2.2.0"
   },
   "devDependencies": {
+    "chai": "4.2.0",
     "mocha": "~5.2.0",
     "proxyquire": "~2.1.3",
     "sinon": "~7.5.0",
-    "chai": "4.2.0",
     "temp": ">= 0.8.3"
   },
   "repository": {
@@ -47,6 +47,6 @@
     "eslint": "eslint lib test"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=8"
   }
 }

@@ -21,6 +21,13 @@ jobs:
     - name: "Unit tests - Node.js 12"
       node_js: "12"
       script: "npm test"
+    - name: "Unit tests w/ latest dependencies - Node.js 12"
+      node_js: "12"
+      script:
+        - rm package-lock.json
+        - rm -rf node_modules
+        - npm install
+        - npm test
     - name: "Unit tests - Node.js 10"
       node_js: "10"
       script: "npm test"

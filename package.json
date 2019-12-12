@@ -20,7 +20,8 @@
     "long": "^2.2.0",
     "adm-zip": "^0.4.13",
     "@types/node": ">=4",
-    "@types/long": "^4.0.0"
+    "@types/long": "^4.0.0",
+    "nbufpool": "^0.1.0"
   },
   "devDependencies": {
     "mocha": "~5.2.0",

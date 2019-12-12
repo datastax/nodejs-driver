@@ -306,19 +306,33 @@ export type GraphOptions = {
 };
 
 export class ExecutionProfile {
-  consistency?: number;
+  consistency?: types.consistencies;
   loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
   name: string;
   readTimeout?: number;
   retry?: policies.retry.RetryPolicy;
-  serialConsistency?: number;
+  serialConsistency?: types.consistencies;
+  graphOptions?: {
+    name?: string;
+    language?: string;
+    source?: string;
+    readConsistency?: types.consistencies;
+    writeConsistency?: types.consistencies;
+  };
 
   constructor(name: string, options: {
-    consistency?: number;
+    consistency?: types.consistencies;
     loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
     readTimeout?: number;
     retry?: policies.retry.RetryPolicy;
-    serialConsistency?: number;
+    serialConsistency?: types.consistencies;
+    graphOptions?: {
+      name?: string;
+      language?: string;
+      source?: string;
+      readConsistency?: types.consistencies;
+      writeConsistency?: types.consistencies;
+    };
   });
 }
 

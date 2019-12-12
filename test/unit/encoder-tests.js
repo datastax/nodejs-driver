@@ -993,13 +993,13 @@ describe('encoder', function () {
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
       assert.strictEqual(dataTypes.map, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.bigint, type.info[1].code);
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.tuple, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.int, type.info[1].code);
     });
@@ -1013,7 +1013,7 @@ describe('encoder', function () {
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
       assert.strictEqual(dataTypes.map, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.list, type.info[1].code);
       const subType = type.info[1].info;
@@ -1124,7 +1124,7 @@ describe('encoder', function () {
         assert.ok(dataType, `Type not parsed for ${item[0]}`);
         assert.strictEqual(dataType.code, item[1]);
         assert.notEqual(dataType.info, null);
-        if (util.isArray(item[2])) {
+        if (Array.isArray(item[2])) {
           assert.strictEqual(dataType.info.length, item[2].length);
           dataType.info.forEach(function (childType, i) {
             assert.strictEqual(childType.code, item[2][i]);

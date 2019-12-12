@@ -119,7 +119,7 @@ describe('Client', function () {
       client.execute(helper.queries.basicNoResults, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
-        assert.ok(util.isArray(result.rows));
+        assert.ok(Array.isArray(result.rows));
         helper.assertInstanceOf(result, types.ResultSet);
         assert.strictEqual(result.rows.length, 0);
         done();
@@ -453,7 +453,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.ok(result.rows.length);
             assert.ok(result.columns);
-            assert.ok(util.isArray(result.columns));
+            assert.ok(Array.isArray(result.columns));
             assert.strictEqual(result.columns.length, 6);
             assert.strictEqual(result.columns[1].type.code, types.dataTypes.timestamp);
             assert.equal(result.columns[1].type.info, null);
@@ -786,7 +786,7 @@ describe('Client', function () {
           assert.ok(address);
           assert.strictEqual(address['street'], 'NightMan');
           assert.strictEqual(address['ZIP'], 90988);
-          assert.ok(util.isArray(address['phones']));
+          assert.ok(Array.isArray(address['phones']));
           assert.strictEqual(address['phones'].length, 2);
           assert.strictEqual(address['phones'][0]['alias'], 'personal');
           assert.strictEqual(address['phones'][0]['number'], '555 5678');

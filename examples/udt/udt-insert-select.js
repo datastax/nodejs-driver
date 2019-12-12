@@ -24,7 +24,7 @@ client.connect()
   })
   .then(function () {
     console.log('Inserting');
-    var address = {
+    const address = {
       city: 'Santa Clara',
       state: 'CA',
       street: '3975 Freedom Circle',

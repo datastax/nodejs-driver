@@ -16,7 +16,6 @@
 'use strict';
 
 const assert = require('assert');
-const util = require('util');
 const helper = require('../../test-helper');
 const GraphSONReader = require('../../../lib/datastax/graph/graphson-reader');
 const graphModule = require('../../../lib/datastax/graph');
@@ -94,7 +93,7 @@ describe('GraphSONReader', function () {
       assert.strictEqual(typeof result.id, 'number');
       assert.strictEqual(typeof result.properties, 'object');
       assert.strictEqual(typeof result.properties['name'], 'object');
-      assert.strictEqual(util.isArray(result.properties['name']), true);
+      assert.strictEqual(Array.isArray(result.properties['name']), true);
       assert.strictEqual(result.properties['name'].length, 1);
       helper.assertInstanceOf(result.properties['name'][0].id, types.Long);
       helper.assertInstanceOf(result.properties['age'][0].id, types.Long);

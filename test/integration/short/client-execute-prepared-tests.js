@@ -553,7 +553,7 @@ describe('Client', function () {
             const row = result.first();
             assert.ok(row['map1']);
             assert.strictEqual(Object.keys(row['map1']).length, 2);
-            assert.ok(util.isArray(row['map1']['key1']));
+            assert.ok(Array.isArray(row['map1']['key1']));
             assert.strictEqual(row['map1']['key1'].length, 2);
             assert.strictEqual(row['map1']['key1'][0].toString(), map.key1[0].toString());
             assert.strictEqual(row['map1']['key1'][1].toString(), map.key1[1].toString());
@@ -561,9 +561,9 @@ describe('Client', function () {
             assert.strictEqual(row['map1']['key2'][0].toString(), map.key2[0].toString());
             assert.ok(row['list1']);
             assert.strictEqual(row['list1'].length, 2);
-            assert.ok(util.isArray(row['list1'][0]));
+            assert.ok(Array.isArray(row['list1'][0]));
             assert.strictEqual(row['list1'][0][0].toString(), list[0][0].toString());
-            assert.ok(util.isArray(row['list1'][1]));
+            assert.ok(Array.isArray(row['list1'][1]));
             assert.strictEqual(row['list1'][1][0].toString(), list[1][0].toString());
             assert.strictEqual(row['list1'][1][1].toString(), list[1][1].toString());
             next();

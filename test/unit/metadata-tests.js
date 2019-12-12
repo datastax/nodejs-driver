@@ -18,7 +18,6 @@
 
 const { assert } = require('chai');
 const sinon = require('sinon');
-const util = require('util');
 const events = require('events');
 
 const helper = require('../test-helper.js');
@@ -698,7 +697,7 @@ describe('Metadata', function () {
             return next(err);
           }
           assert.ok(udtInfo);
-          assert.ok(util.isArray(udtInfo.fields));
+          assert.ok(Array.isArray(udtInfo.fields));
           next();
         });
       }, function (err) {
@@ -724,7 +723,7 @@ describe('Metadata', function () {
         metadata.getUdt('ks1', 'udt10', function (err, udtInfo) {
           if (err) {return next(err);}
           assert.ok(udtInfo);
-          assert.ok(util.isArray(udtInfo.fields));
+          assert.ok(Array.isArray(udtInfo.fields));
           next();
         });
       }, function (err) {

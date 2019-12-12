@@ -15,23 +15,23 @@
  */
 
 "use strict";
-const assert = require('chai').assert;
+const { assert } = require('chai');
 const util = require('util');
 
-const Client = require('../../lib/client.js');
-const clientOptions = require('../../lib/client-options.js');
+const Client = require('../../lib/client');
+const clientOptions = require('../../lib/client-options');
 const auth = require('../../lib/auth');
 const types = require('../../lib/types');
-const dataTypes = types.dataTypes;
-const loadBalancing = require('../../lib/policies/load-balancing.js');
-const retry = require('../../lib/policies/retry.js');
+const { dataTypes } = types;
+const loadBalancing = require('../../lib/policies/load-balancing');
+const retry = require('../../lib/policies/retry');
 const speculativeExecution = require('../../lib/policies/speculative-execution');
 const timestampGeneration = require('../../lib/policies/timestamp-generation');
 const Encoder = require('../../lib/encoder');
-const utils = require('../../lib/utils.js');
+const utils = require('../../lib/utils');
 const writers = require('../../lib/writers');
 const OperationState = require('../../lib/operation-state');
-const helper = require('../test-helper.js');
+const helper = require('../test-helper');
 
 const contactPoints = ['a'];
 
@@ -155,7 +155,7 @@ describe('types', function () {
         const t = new Tuple('first2', 'second2', 'third2');
         assert.strictEqual(t.length, 3);
         const values = t.values();
-        assert.ok(util.isArray(values));
+        assert.ok(Array.isArray(values));
         assert.strictEqual(values.length, 3);
         assert.strictEqual(values[0], 'first2');
         assert.strictEqual(values[1], 'second2');

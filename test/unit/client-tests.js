@@ -334,7 +334,7 @@ describe('Client', function () {
       assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
       assert.ok(hints[2]);
       assert.strictEqual(hints[2].code, types.dataTypes.map);
-      assert.ok(util.isArray(hints[2].info));
+      assert.ok(Array.isArray(hints[2].info));
       assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
       assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
       assert.ok(hints[3]);
@@ -344,7 +344,7 @@ describe('Client', function () {
       //nested collections
       assert.ok(hints[4]);
       assert.strictEqual(hints[4].code, types.dataTypes.map);
-      assert.ok(util.isArray(hints[4].info));
+      assert.ok(Array.isArray(hints[4].info));
       assert.ok(hints[4].info[0]);
       assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
       assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);

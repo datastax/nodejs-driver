@@ -34,7 +34,7 @@ const client = new cassandra.Client({
   ]
 });
 
-var modernSchema =
+const modernSchema =
   'schema.config().option("graph.allow_scan").set("true");\n' +
   'schema.propertyKey("name").Text().ifNotExists().create();\n' +
   'schema.propertyKey("age").Int().ifNotExists().create();\n' +

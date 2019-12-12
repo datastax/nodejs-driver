@@ -44,7 +44,7 @@ async function example() {
     console.log(`Finished executing ${info.totalLength} queries with a concurrency level of ${concurrencyLevel}.`);
 
   } finally {
-    client.shutdown();
+    await client.shutdown();
   }
 }
 

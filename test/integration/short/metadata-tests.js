@@ -392,8 +392,8 @@ describe('metadata', function () {
             const query = 'SELECT * FROM system_traces.sessions WHERE session_id=?';
             const sessionRs = await client.execute(query, [ id ], { consistency: types.consistencies.all });
             const row = sessionRs.first();
-            return row && row['duration'];
-          }, 1000, 20);
+            return row && typeof row['duration'] === 'number';
+          });
 
           const traceArray = await Promise.all([
             client.metadata.getTrace(id),

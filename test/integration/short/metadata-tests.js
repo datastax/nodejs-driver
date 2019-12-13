@@ -393,7 +393,7 @@ describe('metadata', function () {
             const sessionRs = await client.execute(query, [ id ], { consistency: types.consistencies.all });
             const row = sessionRs.first();
             return row && row['duration'];
-          });
+          }, 1000, 20);
 
           const traceArray = await Promise.all([
             client.metadata.getTrace(id),

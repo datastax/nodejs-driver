@@ -235,7 +235,7 @@ The `level` being passed to the listener can be `verbose`, `info`, `warning` or 
 
 - Apache Cassandra versions 2.1 and above.
 - DataStax Enterprise versions 4.8 and above.
-- Node.js versions 4 and above.
+- Node.js versions 8 and above.
 
 Note: DataStax products do not support big-endian systems.
 

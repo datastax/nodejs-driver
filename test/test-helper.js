@@ -43,6 +43,7 @@ const cassandraVersionByDse = {
 };
 
 const afterNextHandlers = [];
+let testUnhandledError = null;
 
 // Use a afterEach handler at root level
 afterEach(async () => {
@@ -52,9 +53,17 @@ afterEach(async () => {
   }
 });
 
+afterEach('unhandled check', function () {
+  if (testUnhandledError !== null) {
+    const err = testUnhandledError;
+    testUnhandledError = null;
+    this.test.error(err);
+  }
+});
+
 // Add a listener for unhandled rejections and throw the error to exit with 1
 process.on('unhandledRejection', reason => {
-  throw reason;
+  testUnhandledError = reason;
 });
 
 const helper = {

@@ -139,7 +139,7 @@ vdescribe('3.11', 'Cloud support', function () {
       return client.connect()
         .then(() => {
           helper.assertInstanceOf(client.options.authProvider, auth.PlainTextAuthProvider);
-          assert.strictEqual(client.options.authProvider.username, 'cassandra');
+          assert.strictEqual(client.options.authProvider.username, 'user1');
         })
         .then(() => client.shutdown());
     });

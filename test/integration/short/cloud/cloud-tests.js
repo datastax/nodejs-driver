@@ -137,7 +137,7 @@ vdescribe('dse-6.7', 'Cloud support', function () {
 
       await client.connect();
       assert.instanceOf(client.options.authProvider, auth.DsePlainTextAuthProvider);
-      assert.strictEqual(client.options.authProvider.username, 'cassandra');
+      assert.strictEqual(client.options.authProvider.username, 'user1');
     });
 
     it('should support leaving the auth unset', async () => {

@@ -30,7 +30,8 @@ const createTableNumericValuesCql =
    double_value double,
    float_value float,
    varint_value varint,
-   int_value int)`;
+   int_value int,
+   timestamp_value timestamp)`;
 
 const createTableNumericCollectionsCql =
   `CREATE TABLE tbl_numeric_collections (
@@ -204,5 +205,20 @@ module.exports = function (keyspace, prepare) {
             expect(row['set2']).to.be.instanceOf(Set).and.to.have.all.keys(value);
           });
       })));
+
+    it('should insert and retrieve timestamp values', () => {
+      const insertQuery = 'INSERT INTO tbl_numeric_values (id, timestamp_value) VALUES (?, ?)';
+      const selectQuery = 'SELECT * FROM tbl_numeric_values WHERE id = ?';
+      const id = Uuid.random();
+      const date = new Date();
+
+      return client.execute(insertQuery, [ id, date ], { prepare })
+        .then(() => client.execute(selectQuery, [ id ], { prepare }))
+        .then(rs => {
+          const row = rs.first();
+          expect(row).to.be.instanceOf(types.Row);
+          expect(row['timestamp_value'].getTime()).to.be.equal(date.getTime());
+        });
+    });
   });
 };

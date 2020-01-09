@@ -512,6 +512,27 @@ const helper = {
     }
     return result;
   },
+
+  /** @returns {Promise<Array} */
+  asyncIteratorToArray: async function (iterable) {
+    const result = [];
+    const iterator = iterable[Symbol.asyncIterator]();
+    while (true) {
+      const item = await iterator.next();
+      if (item.done) {
+        break;
+      }
+
+      const length = result.push(item.value);
+
+      if (length > 1000) {
+        throw new Error('Unexpected never ending async iterator');
+      }
+    }
+
+    return result;
+  },
+
   /**
    * @param arr
    * @param {Function|String} predicate function to compare or property name to compare

@@ -26,6 +26,7 @@ const errors = require('../../../lib/errors.js');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const numericTests = require('./numeric-tests');
+const pagingTests = require('./paging-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -215,40 +216,6 @@ describe('Client', function () {
       const hints = [null, 'map<text, text>'];
       const client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
-    });
-    vit('2.0', 'should use pageState and fetchSize', function (done) {
-      const client = setupInfo.client;
-      let pageState = null;
-      utils.series([
-        function truncate(seriesNext) {
-          client.execute('TRUNCATE ' + table, seriesNext);
-        },
-        function insertData(seriesNext) {
-          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          utils.times(100, function (n, next) {
-            client.execute(query, [types.Uuid.random(), n.toString()], next);
-          }, seriesNext);
-        },
-        function selectData(seriesNext) {
-          //Only fetch 70
-          client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 70}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 70);
-            pageState = result.pageState;
-            //ResultSet#pageState is the hex string representation of the rawPageState
-            assert.strictEqual(pageState, result.rawPageState.toString('hex'));
-            seriesNext();
-          });
-        },
-        function selectDataRemaining(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {pageState: pageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        }
-      ], done);
     });
     vit('2.0', 'should not autoPage', function (done) {
       const client = setupInfo.client;
@@ -1159,6 +1126,7 @@ describe('Client', function () {
     });
 
     numericTests(keyspace, false);
+    pagingTests(keyspace, false);
 
     vit('dse-6.0', 'should use keyspace if set on options', () => {
       const client = setupInfo.client;

@@ -28,6 +28,7 @@ const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
 const numericTests = require('./numeric-tests');
+const pagingTests = require('./paging-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -230,51 +231,6 @@ describe('Client', function () {
         assert.strictEqual(typeof result.rows.length, 'number');
         done();
       });
-    });
-    vit('2.0', 'should use pageState and fetchSize', function (done) {
-      const client = newInstance({
-        keyspace: commonKs,
-        queryOptions: { consistency: types.consistencies.quorum }
-      });
-      let pageState;
-      let rawPageState;
-      const table = helper.getRandomName('table');
-      utils.series([
-        helper.toTask(client.execute, client, helper.createTableCql(table)),
-        function insertData(seriesNext) {
-          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          utils.times(100, function (n, next) {
-            client.execute(query, [types.uuid(), n.toString()], {prepare: 1}, next);
-          }, seriesNext);
-        },
-        function selectData(seriesNext) {
-          //Only fetch 70
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 70);
-            pageState = result.pageState;
-            rawPageState = result.rawPageState;
-            seriesNext();
-          });
-        },
-        function selectDataRemaining(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        },
-        function selectDataRemainingWithMetaPageState(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: rawPageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        },
-        client.shutdown.bind(client)
-      ], done);
     });
     it('should encode and decode varint values', function (done) {
       const client = setupInfo.client;
@@ -1200,6 +1156,7 @@ describe('Client', function () {
     });
 
     numericTests(commonKs, true);
+    pagingTests(commonKs, true);
 
     vit('dse-6.0', 'should use keyspace if set on options', () => {
       const client = setupInfo.client;

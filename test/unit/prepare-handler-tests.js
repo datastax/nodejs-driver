@@ -85,16 +85,24 @@ describe('PrepareHandler', function () {
 
     it('should prepare on all UP hosts not ignored', async () => {
       const client = getClient({ prepareOnAllHosts: true });
-      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
+      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, { isUp: false }, { ignored: true }, {} ]);
 
       await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
 
       const hosts = lbp.getFixedQueryPlan();
-      assert.strictEqual(hosts[1].prepareCalled, 1);
-      assert.strictEqual(hosts[2].prepareCalled, 1);
-      assert.strictEqual(hosts[4].prepareCalled, 1);
-      assert.strictEqual(hosts[0].prepareCalled, 0);
-      assert.strictEqual(hosts[3].prepareCalled, 0);
+
+      const consideredHosts = [ hosts[1], hosts[4] ];
+      const avoidedHosts = [ hosts[0], hosts[2], hosts[3] ];
+
+      consideredHosts.forEach(h => {
+        assert.strictEqual(h.prepareCalled, 1);
+        assert.strictEqual(h.borrowConnection.callCount, 1);
+      });
+
+      avoidedHosts.forEach(h => {
+        assert.strictEqual(h.prepareCalled, 0);
+        assert.strictEqual(h.borrowConnection.callCount, 0);
+      });
     });
   });
 

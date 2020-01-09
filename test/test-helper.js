@@ -17,6 +17,7 @@
 'use strict';
 
 const { assert } = require('chai');
+const sinon = require('sinon');
 const util = require('util');
 const path = require('path');
 const policies = require('../lib/policies');
@@ -842,7 +843,7 @@ const helper = {
         });
       };
 
-      return h;
+      return sinon.spy(h);
     });
   },
   getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {

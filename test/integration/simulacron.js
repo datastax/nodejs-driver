@@ -315,6 +315,30 @@ SimulacronTopic.prototype.start = function(callback) {
   }).end();
 };
 
+SimulacronTopic.prototype.pauseReads = function(callback) {
+  this._pauseOrResumeReads(true, callback);
+};
+
+SimulacronTopic.prototype.resumeReads = function(callback) {
+  this._pauseOrResumeReads(false, callback);
+};
+
+SimulacronTopic.prototype.resumeReadsAsync = util.promisify(SimulacronTopic.prototype.resumeReads);
+SimulacronTopic.prototype.pauseReadsAsync = util.promisify(SimulacronTopic.prototype.pauseReads);
+
+SimulacronTopic.prototype._pauseOrResumeReads = function(pause, callback) {
+  const options = {
+    host: this.baseAddress,
+    path: `/pause-reads/${this.id}`,
+    port: this.port,
+    method: pause ? 'PUT' : 'DELETE'
+  };
+
+  _makeRequest(options, function(err, data) {
+    callback(err, data);
+  }).end();
+};
+
 SimulacronTopic.prototype._filterLogs = function(data) {
   return data;
 };

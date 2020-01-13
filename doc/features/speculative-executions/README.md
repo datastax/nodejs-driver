@@ -90,6 +90,7 @@ above, you can change the default cluster-wide:
 // Make all statements idempotent by default:
 const client = new Client({
   contactPoints,
+  localDataCenter,
   queryOptions: { 
     isIdempotent: true
   }
@@ -106,7 +107,10 @@ separated by a fixed delay, the policy is exported under the `<root>.policies.sp
 
 This simple policy uses a constant threshold:
 
-```js
+```javascript
+const { Client, policies } = require('cassandra-driver');
+const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+
 const client = new Client({
   contactPoints,
   policies: {

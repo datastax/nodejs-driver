@@ -14,6 +14,11 @@ attempts to fairly distribute the load based on the amount of in-flight request 
 local replicas are initially shuffled and [between the first two nodes in the shuffled list, the one with fewer
 in-flight requests is selected as coordinator](https://www.eecs.harvard.edu/~michaelm/postscripts/mythesis.pdf).
 
+### Upgrade guide for DSE driver users
+
+There's a dedicated [guide for DSE driver users that plan to migrate to the
+`cassandra-driver`](upgrade-from-dse-driver).
+
 ---
 
 ## 4.2

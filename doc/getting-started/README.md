@@ -5,8 +5,8 @@ Getting started with the DataStax Node.js driver for Apache Cassandra.
 ## Connecting to a cluster
 
 To connect to an Apache Cassandra cluster, you need to provide the address or host name of at least one node
-in the cluster and the local data center name.  The driver will discover all the nodes in the cluster after
-it connects to one node in given list.
+in the cluster and the local data center (DC) name.  The driver will discover all the nodes in the cluster and
+connect to all the nodes in the local data center.
  
 Typically, you should create only a single `Client` instance for a given Cassandra cluster and use it across
 your application.
@@ -25,33 +25,37 @@ client.connect();
 At this point, the driver will be connected to all the nodes in the local data center and discovered the rest
 of the nodes in your cluster.
 
-Even though calling `#connect()` is not required (the execute method internally calls to connect), it is recommended you
-call to `#connect()` on application startup, this way you can ensure that you start your app once your are connected to
-your cluster.
+Even though calling `connect()` is not required (the `execute()` method internally calls to connect), it is
+recommended you call to `#connect()` on application startup, this way you can ensure that you start your app once
+your are connected to your cluster.
 
 ## Retrieving data
 
-The `#execute()` method can be used to send a CQL query to a Cassandra node, a simple way to use would be to provide a
-query and a callback.
+The `execute()` method can be used to send a CQL query to a Cassandra node.
 
 ```javascript
 const query = "SELECT name, email, birthdate FROM users WHERE key = 'mick-jagger'";
-client.execute(query).then(result => {
-  const user = result.first();
-
-  // The row is an Object with column names as property keys. 
-  console.log('My name is %s and my email is %s', user.name, user.email);
-});
+client.execute(query)
+  .then(result => {
+    const row = result.first();
+    
+    // The row is an Object with column names as property keys. 
+    console.log('My name is %s and my email is %s', row['name'], row['email']);
+  });
 ```
+
+Execution methods in the driver return a `Promise`, you can await on the promise to be fulfilled using [async
+functions][async-functions]. Note that for the rest of the documentation, Promise method `then()` and `await` will be
+used interchangeably.
 
 ### Using query parameters and prepared statements
 
-Instead of hard coding your parameters in your query, you can use parameter markers in your queries and provide the
+Instead of hard-coding your parameters in your query, you can use parameter markers in your queries and provide the
 parameters as an Array.
 
 ```javascript
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
-client.execute(query, ['mick-jagger']);
+const result = await client.execute(query, ['mick-jagger']);
 ```
 
 This way you can reuse the query and forget about escaping / stringifying the parameters in your query. 
@@ -66,10 +70,11 @@ parameters to the driver, allowing better type mapping between JavaScript and Ca
 additional info (hints) from the user.
 
 ```javascript
+// Recommended: use query markers for parameters
 const query = 'SELECT name, email, birthdate FROM users WHERE key = ?';
 
-// Set the prepare flag in your queryOptions
-client.execute(query, ['mick-jagger'], { prepare: true }, callback);
+// Recommended: set the prepare flag in your queryOptions
+const result = await client.execute(query, ['mick-jagger'], { prepare: true });
 ```
 
 See the [data types documentation to see how CQL types are mapped to JavaScript types][datatypes]. 
@@ -82,32 +87,48 @@ You can use the `#execute()` method to execute any CQL query.
 const query = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
 const params = ['mick-jagger', 'Sir Mick Jagger', 'mick@rollingstones.com', new Date(1943, 6, 26)];
 
-client.execute(query, params, { prepare: true }, function (err) {
-  assert.ifError(err);
-  //Inserted in the cluster
-});
+await client.execute(query, params, { prepare: true });
 ```
+
+The promise is fulfilled when the data is inserted.
 
 ### Setting the consistency level
 
 To specify how consistent the data must be for a given read or write operation, you can set the
-[consistency level][consistency] per query
+[consistency level][consistency] per query.
 
 ```javascript
 const { types } = cassandra;
 
-client.execute(query, params, { consistency: types.consistencies.quorum }, function (err) {
-  //This callback will be called once it has been written in the number of replicas
-  //satisfying the consistency level specified.
-});
+await client.execute(query, params, { consistency: types.consistencies.quorum });
 ```
 
-Or you can provide a default consistency level for all your queries when creating the `Client` instance (defaults to
+The promise is fulfilled when the data has been written in the number of replicas satisfying the consistency level
+specified.
+
+You can also provide a default consistency level for all your queries when creating the `Client` instance (defaults to
 `localOne`).
 
 ```javascript
-const client = new Client({ queryOptions: { consistency: types.consistencies.quorum } });
+const client = new Client({
+  queryOptions: { consistency: types.consistencies.localQuorum },
+  // ... rest of the options
+});
 ```
+
+## Mapper (optional)
+
+The driver provides [a built-in object mapper][mapper] that lets you interact with your data like you would interact
+with a set of documents.
+
+```javascript
+const userVideos = await videoMapper.find({ userId });
+for (let video of userVideos) {
+  console.log(video.name);
+}
+```
+
+Visit the [Getting Started with the Mapper Guide][mapper-guide] for more information. 
 
 ## Authentication (optional)
 
@@ -154,5 +175,8 @@ client.execute('SELECT * FROM system.local', null, { executionProfile: 'time-ser
 client.executeGraph('g.V().count()', null, { executionProfile: 'graph' });
 ```
 
-[consistency]: https://docs.datastax.com/en/dse/6.0/dse-arch/datastax_enterprise/dbInternals/dbIntConfigConsistency.html
+[consistency]: https://docs.datastax.com/en/dse/6.7/dse-arch/datastax_enterprise/dbInternals/dbIntConfigConsistency.html
 [datatypes]: /features/datatypes/
+[mapper]: /features/mapper/
+[mapper-guide]: /features/mapper/getting-started/
+[async-functions]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function 

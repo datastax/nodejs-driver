@@ -63,6 +63,7 @@ Once "ben" is granted proxy login as "alice":
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({
   contactPoints: [ 'host1', 'host2' ],
+  localDataCenter,
   authProvider: new cassandra.auth.DsePlainTextAuthProvider('ben', 'ben', 'alice')
 });
 
@@ -90,6 +91,7 @@ Once "ben" is granted permission to execute queries as "alice":
 const cassandra = require('cassandra-driver');
 const client = new cassandra.Client({
   contactPoints: [ 'host1', 'host2' ],
+  localDataCenter,
   authProvider: new cassandra.auth.DsePlainTextAuthProvider('ben', 'ben')
 });
 

@@ -1,12 +1,22 @@
 # ChangeLog - DataStax Node.js Driver
 
-## 4.4.0-alpha1
+## 4.4.0
 
-2019-11-14
+2020-01-15
 
 ### Features
 
 - [NODEJS-549] - Unified driver: merge core and DSE drivers into a single package 
+- [NODEJS-574] - Refactor Driver Internals: modernize codebase and use async functions internally
+- [NODEJS-563] - Support paging with async iterator
+- [NODEJS-585] - Implement TCP flow control
+- [NODEJS-516] - Drop support for Node.js 4 and 6 runtime
+
+### Bug fixes
+
+- [NODEJS-583] - Default load balancing policy local hosts cache might exclude hosts that were down
+- [NODEJS-584] - Exclude down hosts when preparing on all hosts
+- [NODEJS-586] - Encode Date as BigInt when useBigIntAsLong is true
 
 ## 4.3.1
 

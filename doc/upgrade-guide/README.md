@@ -16,8 +16,8 @@ in-flight requests is selected as coordinator](https://www.eecs.harvard.edu/~mic
 
 ### Upgrade guide for DSE driver users
 
-There's a dedicated [guide for DSE driver users that plan to migrate to the
-`cassandra-driver`](upgrade-from-dse-driver).
+The DSE driver and the Apache Cassandra driver have been merged into a single package. There's a dedicated [guide for
+ DSE driver users that plan to migrate to the `cassandra-driver`](upgrade-from-dse-driver).
 
 ---
 

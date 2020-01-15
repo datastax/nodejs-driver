@@ -224,12 +224,13 @@ JavaScript representation, like decimal, varint and bigint. Check the documentat
 Instances of `Client()` are `EventEmitter` and emit `log` events:
 
 ```javascript
-client.on('log', function(level, className, message, furtherInfo) {
-  console.log('log event: %s -- %s', level, message);
+client.on('log', (level, loggerName, message, furtherInfo) => {
+  console.log(`${level} - ${loggerName}:  ${message}`);
 });
 ```
 
-The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`.
+The `level` being passed to the listener can be `verbose`, `info`, `warning` or `error`. Visit the [logging
+documentation][doc-logging] for more information. 
 
 ## Compatibility
 
@@ -271,7 +272,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [retry]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy
 [pooling]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
 [batch]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
-[upgrade1]: https://github.com/datastax/nodejs-driver/blob/master/doc/upgrade-guide-2.0.md
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax

@@ -6,8 +6,8 @@ framework.
 The driver's `Client` inherits from [`EventEmitter`][event-emitter] and it triggers `'log'` events.
 
 ```javascript
-client.on('log', (level, className, message, furtherInfo) => {
-  console.log('log event: %s -- %s', level, message);
+client.on('log', (level, loggerName, message, furtherInfo) => {
+  console.log(`${level} - ${loggerName}:  ${message}`);
 });
 ```
 

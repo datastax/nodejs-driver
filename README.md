@@ -267,6 +267,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-promise-callback]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
 [doc-mapper]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/
 [doc-mapper-start]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/mapper/getting-started/
+[doc-logging]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/logging/
 [faq]: https://docs.datastax.com/en/developer/nodejs-driver/latest/faq/
 [load-balancing]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#load-balancing-policy
 [retry]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/tuning-policies/#retry-policy

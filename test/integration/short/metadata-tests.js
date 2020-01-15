@@ -1010,8 +1010,7 @@ describe('metadata', function () {
         const client = setupInfo.client;
         utils.mapSeries([
           ['tbl_nodesync_true', {'enabled': 'true', 'deadline_target_sec': '86400'}],
-          ['tbl_nodesync_false', {'enabled': 'false'}],
-          ['tbl1', null]
+          ['tbl_nodesync_false', {'enabled': 'false'}]
         ], function mapEach(item, next) {
           client.metadata.getTable(keyspace, item[0], function (err, table) {
             assert.ifError(err);

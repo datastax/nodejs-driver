@@ -1,5 +1,5 @@
-title:    DataStax Nodejs Driver
-summary:  DataStax Nodejs Driver for Apache Cassandra
+title:    DataStax Node.js Driver
+summary:  DataStax Node.js Driver for Apache Cassandra
 theme:    datastax
 swiftype_drivers: nodejsdrivers
 sections:

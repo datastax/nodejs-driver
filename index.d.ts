@@ -23,12 +23,16 @@ import { types } from './lib/types';
 import { metrics } from './lib/metrics';
 import { tracker } from './lib/tracker';
 import { metadata } from './lib/metadata';
+import { datastax } from './lib/datastax/';
 import Long = types.Long;
+import Uuid = types.Uuid;
+import graph = datastax.graph;
 
 // Export imported submodules
 export { concurrent } from './lib/concurrent';
 export { mapping } from './lib/mapping';
-export { auth, metadata, metrics, policies, tracker, types };
+export { geometry } from './lib/geometry';
+export { auth, datastax, metadata, metrics, policies, tracker, types };
 
 export const version: number;
 
@@ -44,7 +48,7 @@ export class Client extends events.EventEmitter {
   metadata: metadata.Metadata;
   metrics: metrics.ClientMetrics;
 
-  constructor(options: ClientOptions);
+  constructor(options: DseClientOptions);
 
   connect(): Promise<void>;
 
@@ -57,6 +61,24 @@ export class Client extends events.EventEmitter {
   execute(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet>): void;
 
   execute(query: string, callback: ValueCallback<types.ResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any } | undefined,
+    options: GraphQueryOptions,
+    callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any } | undefined,
+    callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(traversal: string, callback: ValueCallback<graph.GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters?: { [name: string]: any },
+    options?: GraphQueryOptions): Promise<graph.GraphResultSet>;
 
   eachRow(query: string,
           params: ArrayOrObject,
@@ -258,20 +280,59 @@ export interface QueryOptions {
   traceQuery?: boolean;
 }
 
+export interface DseClientOptions extends ClientOptions {
+  id?: Uuid;
+  applicationName?: string;
+  applicationVersion?: string;
+  monitorReporting?: { enabled?: boolean };
+  graphOptions?: GraphOptions;
+}
+
+export interface GraphQueryOptions extends QueryOptions {
+  graphLanguage?: string;
+  graphName?: string;
+  graphReadConsistency?: types.consistencies;
+  graphSource?: string;
+  graphWriteConsistency?: types.consistencies;
+}
+
+export type GraphOptions = {
+  language?: string;
+  name?: string;
+  readConsistency?: types.consistencies;
+  readTimeout?: number;
+  source?: string;
+  writeConsistency?: types.consistencies;
+};
+
 export class ExecutionProfile {
-  consistency?: number;
+  consistency?: types.consistencies;
   loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
   name: string;
   readTimeout?: number;
   retry?: policies.retry.RetryPolicy;
-  serialConsistency?: number;
+  serialConsistency?: types.consistencies;
+  graphOptions?: {
+    name?: string;
+    language?: string;
+    source?: string;
+    readConsistency?: types.consistencies;
+    writeConsistency?: types.consistencies;
+  };
 
   constructor(name: string, options: {
-    consistency?: number;
+    consistency?: types.consistencies;
     loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
     readTimeout?: number;
     retry?: policies.retry.RetryPolicy;
-    serialConsistency?: number;
+    serialConsistency?: types.consistencies;
+    graphOptions?: {
+      name?: string;
+      language?: string;
+      source?: string;
+      readConsistency?: types.consistencies;
+      writeConsistency?: types.consistencies;
+    };
   });
 }
 

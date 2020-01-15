@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 
 const assert = require('assert');
@@ -31,19 +30,19 @@ describe('ControlConnection', function() {
   after(simulacron.stop.bind(simulacron));
 
   describe("#init", function() {
-    it('should downgrade to protocol v3 with versions 3.0 & 2.1', testWithNodes(['3.0.13', '2.1.17'], 3));
-    it('should downgrade to protocol v3 with versions 2.2 & 2.1', testWithNodes(['2.2.11', '2.1.17'], 3));
-    it('should downgrade to protocol v2 with versions 2.2 & 2.0', testWithNodes(['2.2.11', '2.0.17'], 2));
-    it('should downgrade to protocol v1 with versions 2.2 & 1.2', testWithNodes(['2.2.11', '1.2.19'], 1));
+    it('should downgrade to protocol v3 with versions 3.0 & 2.1', testWithNodes(['3.0.13', '2.1.17'], 3, 4));
+    it('should downgrade to protocol v3 with versions 2.2 & 2.1', testWithNodes(['2.2.11', '2.1.17'], 3, 4));
+    it('should downgrade to protocol v2 with versions 2.2 & 2.0', testWithNodes(['2.2.11', '2.0.17'], 2, 4));
+    it('should downgrade to protocol v1 with versions 2.2 & 1.2', testWithNodes(['2.2.11', '1.2.19'], 1, 4));
     it('should downgrade to protocol v2 with versions 2.1 & 2.0', testWithNodes(['2.1.17', '2.0.17'], 2, 3));
     it('should downgrade to protocol v1 with versions 2.1 & 1.2', testWithNodes(['2.1.17', '1.2.19'], 1, 3));
     it('should downgrade to protocol v1 with versions 2.0 & 1.2', testWithNodes(['2.0.17', '1.2.19'], 1, 3));
     // no need to downgrade since both support protocol V4.
-    it('should not downgrade with versions 3.0 & 2.2', testWithNodes(['3.0.13', '3.0.11', '2.2.9'], 4));
+    it('should not downgrade with versions 3.0 & 2.2', testWithNodes(['3.0.13', '3.0.11', '2.2.9'], 4, 4));
     // can't downgrade because C* 3.0 does not support protocol V2.
-    it('should not downgrade with versions 3.0 & 2.0', testWithNodes(['3.0.13', '2.0.17'], 4));
+    it('should not downgrade with versions 3.0 & 2.0', testWithNodes(['3.0.13', '2.0.17'], 4, 4));
     // can't downgrade because C* 3.0 does not support protocol V1.
-    it('should not downgrade with versions 3.0 & 1.2', testWithNodes(['3.0.13', '1.2.19'], 4));
+    it('should not downgrade with versions 3.0 & 1.2', testWithNodes(['3.0.13', '1.2.19'], 4, 4));
   });
 
   describe('#getLocalAddress()', () => {

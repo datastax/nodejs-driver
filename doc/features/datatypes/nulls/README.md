@@ -24,7 +24,7 @@ The driver allows you to control the usage of undefined as unset with the flag u
 in driver versions 3.0 and above:
 
 ```javascript
-const client = new cassandra.Client({
+const client = new Client({
   contactPoints,
   localDataCenter,
   encoding: { useUndefinedAsUnset: false } 

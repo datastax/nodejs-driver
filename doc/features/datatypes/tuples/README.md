@@ -35,9 +35,10 @@ representation of the `Tuple`.
 To create a new `Tuple`, you use the constructor providing the values as parameters.
 
 ```javascript
-const Tuple = require('cassandra-driver').types.Tuple;
+const { Tuple, BigDecimal, TimeUuid } = require('cassandra-driver').types;
+
 // Create a new instance of a Tuple.
-const currencies = new types.Tuple('USD', 'EUR');
+const currencies = new Tuple('USD', 'EUR');
 const query = 'INSERT INTO forex (name, time, currencies, value)  VALUES (?, ?, ?, ?)';
 const params = ['market1', TimeUuid.now(), currencies, new BigDecimal(1, 0)];
 client.execute(query, params, { prepare: true });

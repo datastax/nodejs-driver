@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 const events = require('events');
 const helper = require('../test-helper');
 const PrepareHandler = require('../../lib/prepare-handler');
@@ -25,43 +24,48 @@ const types = require('../../lib/types');
 const utils = require('../../lib/utils');
 
 describe('PrepareHandler', function () {
+
   describe('getPrepared()', function () {
-    it('should make request when not already prepared', function (done) {
+
+    it('should make request when not already prepared', async () => {
       const client = getClient({ prepareOnAllHosts: false });
       const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, { ignored: true }, {}, {} ]);
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[2].prepareCalled, 1);
-        assert.strictEqual(hosts[3].prepareCalled, 0);
-        done();
-      });
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[2].prepareCalled, 1);
+      assert.strictEqual(hosts[3].prepareCalled, 0);
     });
-    it('should make the same prepare request once and queue the rest', function (done) {
+
+    it('should make the same prepare request once and queue the rest', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ { } ]);
-      utils.times(100, function (n, next) {
-        PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, next);
-      }, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[0].prepareCalled, 1);
-        done();
-      });
+      await Promise.all(
+        Array(100).fill(0).map(() => PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null)));
+
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[0].prepareCalled, 1);
     });
-    it('should callback in error if request send fails', function (done) {
+
+    it('should callback in error if request send fails', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ {} ], function (q, h, cb) {
         cb(new Error('Test prepare error'));
       });
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ok(err);
-        const host = lbp.getFixedQueryPlan()[0];
-        assert.strictEqual(host.prepareCalled, 1);
-        done();
-      });
+
+      let err;
+
+      try {
+        await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
+      } catch (e) {
+        err = e;
+      }
+
+      assert.instanceOf(err, Error);
+      const host = lbp.getFixedQueryPlan()[0];
+      assert.strictEqual(host.prepareCalled, 1);
     });
-    it('should retry on next host if request send fails due to socket error', function (done) {
+
+    it('should retry on next host if request send fails due to socket error', async () => {
       const client = getClient();
       const lbp = helper.getLoadBalancingPolicyFake([ {}, {} ], function (q, h, cb) {
         if (h.address === '0') {
@@ -71,31 +75,39 @@ describe('PrepareHandler', function () {
         }
         cb(null, { id: 100, meta: {} });
       });
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[0].prepareCalled, 1);
-        assert.strictEqual(hosts[1].prepareCalled, 1);
-        done();
-      });
+
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
+
+      const hosts = lbp.getFixedQueryPlan();
+      assert.strictEqual(hosts[0].prepareCalled, 1);
+      assert.strictEqual(hosts[1].prepareCalled, 1);
     });
-    it('should prepare on all UP hosts not ignored', function (done) {
+
+    it('should prepare on all UP hosts not ignored', async () => {
       const client = getClient({ prepareOnAllHosts: true });
-      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, {}, { ignored: true }, {} ]);
-      PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null, function (err) {
-        assert.ifError(err);
-        const hosts = lbp.getFixedQueryPlan();
-        assert.strictEqual(hosts[1].prepareCalled, 1);
-        assert.strictEqual(hosts[2].prepareCalled, 1);
-        assert.strictEqual(hosts[4].prepareCalled, 1);
-        assert.strictEqual(hosts[0].prepareCalled, 0);
-        assert.strictEqual(hosts[3].prepareCalled, 0);
-        done();
+      const lbp = helper.getLoadBalancingPolicyFake([ { isUp: false }, {}, { isUp: false }, { ignored: true }, {} ]);
+
+      await PrepareHandler.getPrepared(client, lbp, 'SELECT QUERY', null);
+
+      const hosts = lbp.getFixedQueryPlan();
+
+      const consideredHosts = [ hosts[1], hosts[4] ];
+      const avoidedHosts = [ hosts[0], hosts[2], hosts[3] ];
+
+      consideredHosts.forEach(h => {
+        assert.strictEqual(h.prepareCalled, 1);
+        assert.strictEqual(h.borrowConnection.callCount, 1);
+      });
+
+      avoidedHosts.forEach(h => {
+        assert.strictEqual(h.prepareCalled, 0);
+        assert.strictEqual(h.borrowConnection.callCount, 0);
       });
     });
   });
+
   describe('prepareAllQueries', function () {
-    it('should switch keyspace per each keyspace and execute', function (done) {
+    it('should switch keyspace per each keyspace and execute', async () => {
       const host = helper.getHostsMock([ {} ])[0];
       const preparedInfoArray = [
         { keyspace: 'system', query: 'query1' },
@@ -104,27 +116,30 @@ describe('PrepareHandler', function () {
         { keyspace: 'userks', query: 'query4' },
         { keyspace: 'system', query: 'query5' },
       ];
-      PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
-        assert.ifError(err);
-        assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks', null ]);
-        assert.strictEqual(host.prepareCalled, 5);
-        done();
-      });
+
+      await PrepareHandler.prepareAllQueries(host, preparedInfoArray);
+      assert.deepStrictEqual(host.connectionKeyspace, [ 'system', 'system_schema', 'userks' ]);
+      assert.strictEqual(host.prepareCalled, 5);
     });
-    it('should callback when there are no queries to prepare', function (done) {
-      PrepareHandler.prepareAllQueries({}, [], done);
+
+    it('should callback when there are no queries to prepare', async () => {
+      await PrepareHandler.prepareAllQueries({}, []);
     });
-    it('should callback in error when there is an error borrowing a connection', function (done) {
+
+    it('should callback in error when there is an error borrowing a connection', async () => {
       const host = helper.getHostsMock([ {} ])[0];
-      host.borrowConnection = function (ks, c, cb) {
-        cb(new Error('Test error'));
-      };
-      PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }], function (err) {
-        helper.assertInstanceOf(err, Error);
-        done();
-      });
+      host.borrowConnection = () => Promise.reject(new Error('Test error'));
+
+      let err;
+      try {
+        await PrepareHandler.prepareAllQueries(host, [{ query: 'query1' }]);
+      } catch (e) {
+        err = e;
+      }
+      helper.assertInstanceOf(err, Error);
     });
-    it('should callback in error when there is an error preparing any of the queries', function (done) {
+
+    it('should callback in error when there is an error preparing any of the queries', async () => {
       function prepareOnce(q, h, cb) {
         if (q === 'query3') {
           return cb(new Error('Test error'));
@@ -137,12 +152,17 @@ describe('PrepareHandler', function () {
         { keyspace: null, query: 'query2' },
         { keyspace: 'system', query: 'query3' }
       ];
-      PrepareHandler.prepareAllQueries(host, preparedInfoArray, function (err) {
-        helper.assertInstanceOf(err, Error);
-        assert.deepStrictEqual(host.connectionKeyspace, ['system']);
-        assert.strictEqual(host.prepareCalled, 2);
-        done();
-      });
+
+      let err;
+      try {
+        await PrepareHandler.prepareAllQueries(host, preparedInfoArray);
+      } catch (e) {
+        err = e;
+      }
+
+      helper.assertInstanceOf(err, Error);
+      assert.deepStrictEqual(host.connectionKeyspace, ['system']);
+      assert.strictEqual(host.prepareCalled, 2);
     });
   });
 });
@@ -154,13 +174,13 @@ function getClient(options) {
       getPreparedInfo: function (ks, q) {
         let info = this._infos[ks + '.' + q];
         if (!info) {
-          info = this._infos[ks + '.' + q] = new events.EventEmitter();
+          info = this._infos[ks + '.' + q] = new events.EventEmitter().setMaxListeners(1000);
         }
         return info;
       },
       setPreparedById: utils.noop
     },
-    options: utils.extend(defaultOptions(), options),
+    options: utils.extend({ logEmitter: () => {}}, defaultOptions(), options),
     profileManager: {
       getDistance: function (h) {
         return h.shouldBeIgnored ? types.distance.ignored : types.distance.local;

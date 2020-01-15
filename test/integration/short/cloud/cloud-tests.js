@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
+const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 
 const cloudHelper = require('./cloud-helper');
@@ -26,11 +26,12 @@ const errors = require('../../../../lib/errors');
 const auth = require('../../../../lib/auth');
 const utils = require('../../../../lib/utils');
 const types = require('../../../../lib/types');
+const promiseUtils = require('../../../../lib/promise-utils');
 const vdescribe = helper.vdescribe;
 
 const port = 9042;
 
-vdescribe('3.11', 'Cloud support', function () {
+vdescribe('dse-6.7', 'Cloud support', function () {
   // Only run tests with few versions of DSE as SNI project has a fixed C*/DSE version
 
   if (helper.isWin()) {
@@ -49,27 +50,26 @@ vdescribe('3.11', 'Cloud support', function () {
       ]
     });
 
-    it('should resolve dns name of the proxy, connect and set defaults', () => {
+    it('should resolve dns name of the proxy, connect and set defaults', async () => {
       const client = cloudHelper.getClient();
+      helper.shutdownAfterThisTest(client);
 
-      return client.connect()
-        .then(() => {
-          assert.strictEqual(client.hosts.length, 3);
+      await client.connect();
 
-          assert.ok(client.options.sni.addressResolver.getIp());
-          assert.ok(client.options.sni.port);
-          assert.strictEqual(client.metadata.isDbaas(), true);
-          assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localQuorum);
+      assert.strictEqual(client.hosts.length, 3);
 
-          client.hosts.forEach(h => {
-            assert.ok(h.isUp());
-            helper.assertContains(h.address, `:${port}`);
-            assert.strictEqual(h.pool.connections.length, 1);
-            assert.strictEqual(h.pool.connections[0].endpointFriendlyName,
-              `${client.options.sni.addressResolver.getIp()}:${client.options.sni.port} (${h.hostId})`);
-          });
-        })
-        .then(() => client.shutdown());
+      assert.ok(client.options.sni.addressResolver.getIp());
+      assert.ok(client.options.sni.port);
+      assert.strictEqual(client.metadata.isDbaas(), true);
+      assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localQuorum);
+
+      client.hosts.forEach(h => {
+        assert.ok(h.isUp());
+        helper.assertContains(h.address, `:${port}`);
+        assert.strictEqual(h.pool.connections.length, 1);
+        assert.strictEqual(h.pool.connections[0].endpointFriendlyName,
+          `${client.options.sni.addressResolver.getIp()}:${client.options.sni.port} (${h.hostId})`);
+      });
     });
 
     it('should use all the proxy resolved addresses', () => {
@@ -110,128 +110,125 @@ vdescribe('3.11', 'Cloud support', function () {
         });
     });
 
-    it('should match system.local information of each node', () => {
+    it('should match system.local information of each node', async () => {
       const client = cloudHelper.getClient({ policies: new policies.loadBalancing.RoundRobinPolicy()});
 
+      await client.connect();
+      const queried = new Set();
+
       // Use round robin to make sure that the 3 host are targeted in 3 executions
-      return client.connect()
-        .then(() => Promise.all(new Array(3).fill(0).map(() => client.execute('SELECT * FROM system.local'))))
-        .then(results => {
-          const queried = new Set();
-          results.forEach(rs => {
-            queried.add(rs.info.queriedHost);
-            const host = client.hosts.get(rs.info.queriedHost);
-            const row = rs.first();
+      for (let i = 0; i < 3; i++) {
+        const rs = await client.execute('SELECT * FROM system.local');
+        queried.add(rs.info.queriedHost);
 
-            assert.ok(host);
-            assert.strictEqual(row['host_id'].toString(), host.hostId.toString());
-            assert.strictEqual(host.address, `${row['rpc_address']}:${port}`);
-          });
+        const host = client.hosts.get(rs.info.queriedHost);
+        const row = rs.first();
 
-          assert.strictEqual(queried.size, 3);
-        })
-        .then(() => client.shutdown());
+        assert.ok(host);
+        assert.strictEqual(row['host_id'].toString(), host.hostId.toString());
+        assert.strictEqual(host.address, `${row['rpc_address']}:${port}`);
+      }
+
+      assert.strictEqual(queried.size, 3);
     });
 
-    it('should set the auth provider', () => {
+    it('should set the auth provider', async () => {
       const client = cloudHelper.getClient({ });
 
-      return client.connect()
-        .then(() => {
-          helper.assertInstanceOf(client.options.authProvider, auth.PlainTextAuthProvider);
-          assert.strictEqual(client.options.authProvider.username, 'user1');
-        })
-        .then(() => client.shutdown());
+      await client.connect();
+      assert.instanceOf(client.options.authProvider, auth.DsePlainTextAuthProvider);
+      assert.strictEqual(client.options.authProvider.username, 'user1');
     });
 
-    it('should support leaving the auth unset', () => {
+    it('should support leaving the auth unset', async () => {
       const client = cloudHelper.getClient({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1-wo-creds.zip' } });
 
-      return client.connect()
-        .catch(() => {})
-        .then(() => assert.strictEqual(client.options.authProvider, null))
-        .then(() => client.shutdown());
+      try {
+        await client.connect();
+      } catch (err) {
+        // Ignore auth error
+      }
+
+      assert.strictEqual(client.options.authProvider, null);
     });
 
-    it('should support overriding the auth provider', () => {
-      const authProvider = new auth.PlainTextAuthProvider('user1', '12345678');
+    it('should support overriding the auth provider', async () => {
+      const authProvider = new auth.DsePlainTextAuthProvider('user1', '12345678');
       const client = cloudHelper.getClient({ authProvider });
 
-      return client.connect()
-        .catch(err => {
-          helper.assertInstanceOf(err, errors.NoHostAvailableError);
-          helper.assertInstanceOf(utils.objectValues(err.innerErrors)[0], errors.AuthenticationError);
-        })
-        .then(() => assert.strictEqual(client.options.authProvider, authProvider))
-        .then(() => client.shutdown());
+      try {
+        await client.connect();
+      } catch (err) {
+        assert.instanceOf(err, errors.NoHostAvailableError);
+        assert.instanceOf(utils.objectValues(err.innerErrors)[0], errors.AuthenticationError);
+      }
+
+      assert.strictEqual(client.options.authProvider, authProvider);
     });
 
-    it('should callback in error when bundle file does not exist', () => {
+    it('should callback in error when bundle file does not exist', async () => {
       const client = cloudHelper.getClient({ cloud: { secureConnectBundle: 'certs/bundles/does-not-exist.zip' }});
       let error;
 
-      return client.connect()
-        .catch(err => error = err)
-        .then(() => {
-          helper.assertInstanceOf(error, Error);
-          assert.strictEqual(error.code, 'ENOENT');
-        })
-        .then(() => client.shutdown());
+      try {
+        await client.connect();
+      } catch (err) {
+        error = err;
+      }
+
+      assert.instanceOf(error, Error);
+      assert.strictEqual(error.code, 'ENOENT');
     });
 
-    it('should provide token-aware load balancing by default', () => {
+    it('should provide token-aware load balancing by default', async () => {
       const replicasByKey = [[0, 2], [1, 2], [2, 2], [3, 1], [4, 3], [5, 2]];
 
       const client = cloudHelper.getClient();
 
-      return client.connect()
-        .then(() => Promise.all(replicasByKey.map(item => {
-          const query = 'INSERT INTO ks_network_rf1.table1 (id, name) VALUES (?, ?)';
-          const params = [ item[0], `name for id ${item[0]}`];
-          const replica = item[1].toString();
+      await client.connect();
 
-          return client.execute(query, params, { prepare: true })
-            .then(rs => assert.strictEqual(helper.lastOctetOf(rs.info.queriedHost), replica));
-        })))
-        .then(() => client.shutdown());
+      for (const item of replicasByKey) {
+        const query = 'INSERT INTO ks_network_rf1.table1 (id, name) VALUES (?, ?)';
+        const params = [ item[0], `name for id ${item[0]}`];
+        const replica = item[1].toString();
+
+        const rs = await client.execute(query, params, { prepare: true });
+        assert.strictEqual(helper.lastOctetOf(rs.info.queriedHost), replica);
+      }
     });
 
     context('with nodes going down', () => {
       beforeEach(() => cloudHelper.startAllNodes());
       after(() => cloudHelper.startAllNodes());
 
-      it('should reconnect to the same host and refresh dns resolution', () => {
+      it('should reconnect to the same host and refresh dns resolution', async () => {
         const client = cloudHelper.getClient({
           pooling: { heartBeatInterval: 50 },
           policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(20) }
         });
 
-        let refreshCalled = false;
+        await client.connect();
 
-        return client.connect()
-          .then(() => assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined))
-          .then(() => cloudHelper.stopNode(1))
-          .then(() => helper.setIntervalUntilPromise(() => client.hosts.values().find(h => !h.isUp()), 20, 1000))
-          .then(() => {
-            assert.strictEqual(client.hosts.values().filter(h => h.isUp()).length, 2);
+        assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined);
 
-            // Patch refresh() method
-            const resolver = client.options.sni.addressResolver;
-            const fn = resolver.refresh;
-            resolver.refresh = (cb) => {
-              refreshCalled = true;
-              fn.call(resolver, cb);
-            };
-          })
-          .then(() => cloudHelper.startNode(1))
-          .then(() => helper.setIntervalUntilPromise(() => !client.hosts.values().find(h => !h.isUp()), 20, 1000))
-          .then(() => {
-            assert.strictEqual(client.hosts.values().filter(h => h.isUp()).length, 3);
-            assert.ok(refreshCalled);
-          });
+        await cloudHelper.stopNode(1);
+        await helper.setIntervalUntilPromise(() => client.hosts.values().find(h => !h.isUp()), 20, 1000);
+
+        assert.strictEqual(client.hosts.values().filter(h => h.isUp()).length, 2);
+
+        // Patch refresh() method
+        const resolver = client.options.sni.addressResolver;
+        resolver.refresh = sinon.spy(resolver.refresh);
+
+        await cloudHelper.startNode(1);
+        await helper.wait.forAllNodesUp(client, 1000, 20);
+
+        // Check that the driver was able to reconnect and refresh method was called
+        assert.strictEqual(client.hosts.values().filter(h => h.isUp()).length, 3);
+        assert.ok(resolver.refresh.called);
       });
 
-      it('should continue querying', () => {
+      it('should continue querying', async () => {
         const client = cloudHelper.getClient({
           pooling: { heartBeatInterval: 50 },
           policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(40) },
@@ -240,22 +237,21 @@ vdescribe('3.11', 'Cloud support', function () {
 
         let restarted = false;
 
-        return client.connect()
-          .then(() => assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined))
-          .then(() => {
-            // In the background, stop and restart a node
-            Promise.resolve()
-              .then(() => cloudHelper.stopNode(1))
-              .then(() => promiseDelay(200))
-              .then(() => cloudHelper.startNode(1))
-              .then(() => promiseDelay(500))
-              .then(() => restarted = true);
-          })
-          .then(() => repeatUntil(
-            () => restarted,
-            () => promiseRepeat(1000, 32, () => client.execute(helper.queries.basic))
-          ))
-          .then(() => client.shutdown());
+        await client.connect();
+
+        assert.strictEqual(client.hosts.values().find(h => !h.isUp()), undefined);
+
+        // In the background, stop and restart a node
+        Promise.resolve()
+          .then(() => cloudHelper.stopNode(1))
+          .then(() => helper.delayAsync(200))
+          .then(() => cloudHelper.startNode(1))
+          .then(() => helper.delayAsync(500))
+          .then(() => restarted = true);
+
+        await repeatUntil(
+          () => restarted,
+          () => promiseUtils.times(1000, 32, () => client.execute(helper.queries.basic)));
       });
     });
   });
@@ -271,7 +267,7 @@ vdescribe('3.11', 'Cloud support', function () {
       return client.connect()
         .catch(err => error = err)
         .then(() => {
-          helper.assertInstanceOf(error, errors.NoHostAvailableError);
+          assert.instanceOf(error, errors.NoHostAvailableError);
           assert.strictEqual(error.message, 'There was an error fetching the metadata information');
           assert.deepStrictEqual(Object.keys(error.innerErrors), ['192.0.2.255:30443/metadata']);
         });
@@ -286,7 +282,7 @@ vdescribe('3.11', 'Cloud support', function () {
       return client.connect()
         .catch(err => error = err)
         .then(() => {
-          helper.assertInstanceOf(error, errors.NoHostAvailableError);
+          assert.instanceOf(error, errors.NoHostAvailableError);
           assert.deepStrictEqual(Object.keys(error.innerErrors), ['localhost:30443/metadata']);
         });
     });
@@ -299,32 +295,4 @@ function repeatUntil(conditionFn, promiseFn) {
   }
 
   return promiseFn().then(() => repeatUntil(conditionFn, promiseFn));
-}
-
-
-function promiseRepeat(times, limit, fn){
-  if (times < limit) {
-    limit = times;
-  }
-
-  let counter = 0;
-
-  const promises = new Array(limit);
-
-  function sendNext() {
-    if (counter >= times) {
-      return null;
-    }
-    return fn(counter++).then(sendNext);
-  }
-
-  for (let i = 0; i < limit; i++) {
-    promises[i] = sendNext();
-  }
-
-  return Promise.all(promises).then(() => null);
-}
-
-function promiseDelay(ms) {
-  return new Promise(r => setTimeout(r, ms));
 }

@@ -13,23 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 
 const helper = require('../../test-helper.js');
 const Client = require('../../../lib/client.js');
 const types = require('../../../lib/types');
 const utils = require('../../../lib/utils.js');
+const simulacron = require('../simulacron');
 const loadBalancing = require('../../../lib/policies/load-balancing.js');
 const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 const WhiteListPolicy = loadBalancing.WhiteListPolicy;
 const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 
 describe('ProfileManager', function() {
-  this.timeout(120000);
-  before(helper.ccmHelper.start('2:2'));
-  after(helper.ccmHelper.remove);
+  this.timeout(40000);
+  before(done => simulacron.start(done));
+  after(done => simulacron.stop(done));
+
+  /** @type {SimulacronCluster} */
+  let cluster = null;
+  const nodes = [];
+  let node3 = null;
+  let node4 = null;
+
+  before(done => {
+    cluster = new simulacron.SimulacronCluster();
+    cluster.register([2, 2], null, done);
+  });
+
+  before(() => {
+    node3 = cluster.dc(1).node(0).address;
+    node4 = cluster.dc(1).node(1).address;
+    nodes.push(cluster.dc(0).node(0).address, cluster.dc(0).node(1).address, node3, node4);
+  });
+
 
   /**
    * Updates the input policy's init method to increment a _initCalled counter to track the number of times
@@ -52,7 +70,7 @@ describe('ProfileManager', function() {
     });
     // A profile that targets 127.0.0.4 specifically.
     const wlProfile = new ExecutionProfile('whitelist', {
-      loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [helper.ipPrefix + '4:9042']))
+      loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [ node4 ]))
     });
     // A profile with no defined lbp, it should fallback on the default profile's lbp.
     const emptyProfile = new ExecutionProfile('empty');
@@ -64,15 +82,17 @@ describe('ProfileManager', function() {
   function newInstance(options, profiles) {
     options = options || {};
     options = utils.deepExtend({
-      profiles: profiles || createProfiles()
-    }, helper.baseOptions, options);
-    return new Client(options);
+      profiles: profiles || createProfiles(),
+      contactPoints: cluster.getContactPoints()
+    }, options);
+
+    return helper.shutdownAfterThisTest(new Client(options));
   }
 
-  function ensureOnlyHostsUsed(hostOctets, profile) {
+  function ensureOnlyHostsUsed(nodeIndexes, profile) {
     return (function test(done) {
       const queryOptions = profile ? {executionProfile: profile} : {};
-      const hostsUsed = {};
+      const hostsUsed = new Set();
 
       const client = newInstance();
       utils.series([
@@ -83,12 +103,12 @@ describe('ProfileManager', function() {
               if (err) {
                 return timesNext(err);
               }
-              hostsUsed[helper.lastOctetOf(result.info.queriedHost)] = true;
+              hostsUsed.add(result.info.queriedHost);
               timesNext();
             });
           }, function (err) {
             assert.ifError(err);
-            assert.deepEqual(Object.keys(hostsUsed), hostOctets);
+            assert.deepStrictEqual(Array.from(hostsUsed).sort(), nodeIndexes.map(i => nodes[i]).sort());
             next();
           });
         },
@@ -119,14 +139,14 @@ describe('ProfileManager', function() {
       function validateHostDistances(next) {
         const hosts = client.hosts;
         assert.strictEqual(hosts.length, 4);
+
         hosts.forEach(function(h) {
-          const n = helper.lastOctetOf(h);
           const distance = client.profileManager.getDistance(h);
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
           // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
           // so it should be considered remote.
-          const expectedDistance = n === '3' ? types.distance.remote : types.distance.local;
-          assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + n);
+          const expectedDistance = h.address === node3 ? types.distance.ignored : types.distance.local;
+          assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + h.address);
           assert.ok(h.isUp());
         });
         next();
@@ -134,16 +154,16 @@ describe('ProfileManager', function() {
       client.shutdown.bind(client)
     ], done);
   });
-  it('should only use hosts from the load balancing policy in the default profile', ensureOnlyHostsUsed(['1', '2']));
-  it('should only use hosts from the load balancing policy in the default profile when profile doesn\'t have policy', ensureOnlyHostsUsed(['1', '2'], 'empty'));
-  it('should only use hosts from the load balancing policy in the default profile when specified', ensureOnlyHostsUsed(['1', '2'], 'default'));
-  it('should only use hosts from the load balancing policy in whitelist profile', ensureOnlyHostsUsed(['4'], 'whitelist'));
+  it('should only use hosts from the load balancing policy in the default profile', ensureOnlyHostsUsed([0, 1]));
+  it('should only use hosts from the load balancing policy in the default profile when profile doesn\'t have policy', ensureOnlyHostsUsed([0, 1], 'empty'));
+  it('should only use hosts from the load balancing policy in the default profile when specified', ensureOnlyHostsUsed([0, 1], 'default'));
+  it('should only use hosts from the load balancing policy in whitelist profile', ensureOnlyHostsUsed([3], 'whitelist'));
   it('should fallback on client load balancing policy when default profile has no lbp', function (done) {
     const policy = new DCAwareRoundRobinPolicy('dc2');
     const profiles = [new ExecutionProfile('default'), new ExecutionProfile('empty')];
     // also provide retry policy since the default would be overridden by provided policies options.
     const client = newInstance({policies: {loadBalancing: policy, retry: new helper.RetryMultipleTimes(3)}}, profiles);
-    const hostsUsed = {};
+    const hostsUsed = new Set();
 
     utils.series([
       client.connect.bind(client),
@@ -151,13 +171,13 @@ describe('ProfileManager', function() {
         utils.timesLimit(100, 25, function(n, timesNext) {
           client.execute(helper.queries.basic, [], {executionProfile: 'empty'}, function (err, result) {
             if (err) {return timesNext(err);}
-            hostsUsed[helper.lastOctetOf(result.info.queriedHost)] = true;
+            hostsUsed.add(result.info.queriedHost);
             timesNext();
           });
         }, function (err) {
           assert.ifError(err);
           // Should have only used hosts 3 and 4 since those are in dc2 and the client policy is DCAware on dc2.
-          assert.deepEqual(Object.keys(hostsUsed), ['3', '4']);
+          assert.deepStrictEqual(Array.from(hostsUsed).sort(), [node3, node4]);
           next();
         });
       },

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, datastax, geometry, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
+
+import graph = datastax.graph;
 
 let counter:number = 0;
 
@@ -29,11 +31,28 @@ let counter:number = 0;
  */
 export function generate(): void {
 
-  console.log(`
+  console.log(`/*
+ * Copyright DataStax, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+  
 'use strict';
   
-import { auth, concurrent, errors, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
+import { auth, concurrent, errors, datastax, mapping, geometry, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";
+
+import graph = datastax.graph;
 
 export async function generatedFn() {
   let n:number;
@@ -52,6 +71,8 @@ export async function generatedFn() {
   printClasses(metadata, 'metadata');
   printClasses(metrics, 'metrics');
   printClasses(tracker, 'tracker');
+  printClasses(geometry, 'geometry', new Set(['Geometry']));
+  printClasses(graph, 'graph');
 
   // types
   printEnum(types.dataTypes, 'types.dataTypes');

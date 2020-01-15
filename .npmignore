@@ -8,6 +8,7 @@ lib-cov
 *.pid
 *.gz
 *.tgz
+*.nav
 
 pids
 logs/
@@ -19,9 +20,11 @@ support/
 test/
 out/
 ci/
+certs/
 docs.yaml
 testing.js
 .eslintrc.js
 .DS_Store
 .idea
+.vscode
 node_modules

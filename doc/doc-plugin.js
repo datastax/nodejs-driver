@@ -27,18 +27,23 @@ const filtered = {};
 
 exports.handlers = {
   newDoclet: function (e) {
-    var key = e.doclet.longname;
+
+    const key = e.doclet.longname;
     if (!key) {
       return;
     }
-    var maxLength = filterDoclets[key];
+
+    const maxLength = filterDoclets[key];
     if (maxLength === undefined ) {
       return;
     }
+
     filtered[key] = filtered[key] || 0;
+
     if (filtered[key]++ < maxLength) {
       return;
     }
+
     e.doclet.access = 'private';
   }
 };

@@ -26,96 +26,8 @@ policy is only useful in a few special cases or for testing, but is not optimal 
 
 ### Default load-balancing policy
 
-The default load-balancing policy is the `TokenAwarePolicy` with `DCAwareRoundRobinPolicy` as a child policy. It may
-seem complex but it actually isn't: The policy yields local replicas for a given key and, if not available, it yields
-nodes of the local datacenter in a round-robin manner.
-
-### Setting the load-balancing policy
-
-To use a load-balancing policy, you pass it in as a clientOptions object to the `Client` constructor.
-
-```javascript
-// You can specify the local dc relatively to the node.js app
-const localDatacenter = 'us-east';
-const loadBalancingPolicy = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(localDatacenter); 
-const clientOptions = {
-   policies : {
-      loadBalancing : loadBalancingPolicy
-   }
-}; 
-const client = new cassandra.Client(clientOptions);
-```
-
-### Implementing a custom load-balancing policy
-
-The built-in policies in the Node.js driver cover most common use cases. In the rare case that you need to implement
-your own policy you can do it by inheriting from one of the existent policies or the abstract `LoadBalancingPolicy`
-class.
-
-You have to take into account that the same policy is used for all queries in order to yield the hosts in correct order.
-
-The load-balancing policies are implemented using the [Iterator
-Protocol](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols#iterator), a convention for
-lazy iteration allowing to produce only the next value in the series without producing a full Array of values. Under
-ECMAScript 2015, it enables you to use the new [generators][generators].
-
-**Example**: A policy that selects every node except an specific one.
-
-Note that this policy is a sample and it is not intended for production use. Use datacenter-based policies instead.
-
-```javascript
-function BlackListPolicy(blackListedHost, childPolicy) {
-  this.blackListedHost = blackListedHost;
-  this.childPolicy = childPolicy;
-}
-
-util.inherits(BlackListPolicy, LoadBalancingPolicy);
-
-BlackListPolicy.prototype.init = function (client, hosts, callback) {
-  this.client = client;
-  this.hosts = hosts;
-  //initialize the child policy
-  this.childPolicy.init(client, hosts, callback);
-};
-
-BlackListPolicy.prototype.getDistance = function (host) {
-  return this.childPolicy.getDistance(host);
-};
-
-BlackListPolicy.prototype.newQueryPlan = function (keyspace, queryOptions, callback) {
-  const self = this;
-  this.childPolicy.newQueryPlan(keyspace, queryOptions, function (iterator) {
-    callback(self.filter(iterator));
-  });
-};
-
-BlackListPolicy.prototype.filter = function (childIterator) {
-  const self = this;
-  return {
-    next: function () {
-      var item = childIterator.next();
-      if (!item.done && item.value.address === self.blackListedHost) {
-        // skip
-        return this.next();
-      }
-      return item;
-    }
-  };
-};
-```
-
-Or you can use [ES2015 Generators][generators]:
-
-```javascript
-BlackListPolicy.prototype.filterES6 = function* (childIterator) {
-  for (let host of childIterator) {
-    if (host.address === this.blackListedHost) {
-      continue;
-    }
-    yield host;
-  }
-};
-```
+The default load-balancing policy is `DefaultLoadBalancingPolicy`. The policy yields local replicas for a given 
+key and, if not available, it yields nodes of the local datacenter in a round-robin manner.
 
 ## Reconnection policy
 
@@ -164,7 +76,7 @@ A default and base retry policy are included.
 
 ### Query idempotence
 
-Note that as of version 4.0, the configured `RetryPolicy` is not engaged when a query errors with a
+Note that as of version 2.0, the configured `RetryPolicy` is not engaged when a query errors with a
 `WriteTimeoutException` or request error and the query was not [idempotent][idempotent].
 
 [generators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator

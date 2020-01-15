@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 const assert = require('assert');
 const util = require('util');
@@ -29,6 +28,7 @@ const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;
 const commonKs = helper.getRandomName('ks');
 const numericTests = require('./numeric-tests');
+const pagingTests = require('./paging-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -231,51 +231,6 @@ describe('Client', function () {
         assert.strictEqual(typeof result.rows.length, 'number');
         done();
       });
-    });
-    vit('2.0', 'should use pageState and fetchSize', function (done) {
-      const client = newInstance({
-        keyspace: commonKs,
-        queryOptions: { consistency: types.consistencies.quorum }
-      });
-      let pageState;
-      let rawPageState;
-      const table = helper.getRandomName('table');
-      utils.series([
-        helper.toTask(client.execute, client, helper.createTableCql(table)),
-        function insertData(seriesNext) {
-          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          utils.times(100, function (n, next) {
-            client.execute(query, [types.uuid(), n.toString()], {prepare: 1}, next);
-          }, seriesNext);
-        },
-        function selectData(seriesNext) {
-          //Only fetch 70
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, fetchSize: 70}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 70);
-            pageState = result.pageState;
-            rawPageState = result.rawPageState;
-            seriesNext();
-          });
-        },
-        function selectDataRemaining(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: pageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        },
-        function selectDataRemainingWithMetaPageState(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {prepare: 1, pageState: rawPageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        },
-        client.shutdown.bind(client)
-      ], done);
     });
     it('should encode and decode varint values', function (done) {
       const client = setupInfo.client;
@@ -554,7 +509,7 @@ describe('Client', function () {
             const row = result.first();
             assert.ok(row['map1']);
             assert.strictEqual(Object.keys(row['map1']).length, 2);
-            assert.ok(util.isArray(row['map1']['key1']));
+            assert.ok(Array.isArray(row['map1']['key1']));
             assert.strictEqual(row['map1']['key1'].length, 2);
             assert.strictEqual(row['map1']['key1'][0].toString(), map.key1[0].toString());
             assert.strictEqual(row['map1']['key1'][1].toString(), map.key1[1].toString());
@@ -562,9 +517,9 @@ describe('Client', function () {
             assert.strictEqual(row['map1']['key2'][0].toString(), map.key2[0].toString());
             assert.ok(row['list1']);
             assert.strictEqual(row['list1'].length, 2);
-            assert.ok(util.isArray(row['list1'][0]));
+            assert.ok(Array.isArray(row['list1'][0]));
             assert.strictEqual(row['list1'][0][0].toString(), list[0][0].toString());
-            assert.ok(util.isArray(row['list1'][1]));
+            assert.ok(Array.isArray(row['list1'][1]));
             assert.strictEqual(row['list1'][1][0].toString(), list[1][0].toString());
             assert.strictEqual(row['list1'][1][1].toString(), list[1][1].toString());
             next();
@@ -1162,7 +1117,7 @@ describe('Client', function () {
           "CREATE TABLE ks_view_prepared.scores (user TEXT, game TEXT, year INT, month INT, day INT, score INT, PRIMARY KEY (user, game, year, month, day))",
           "CREATE MATERIALIZED VIEW ks_view_prepared.alltimehigh AS SELECT * FROM scores WHERE game IS NOT NULL AND year IS NOT NULL AND month IS NOT NULL AND day IS NOT NULL AND score IS NOT NULL AND user IS NOT NULL PRIMARY KEY (game, score, year, month, day, user) WITH CLUSTERING ORDER BY (score DESC, year DESC, month DESC, day DESC, user DESC)"
         ];
-        utils.eachSeries(queries, setupInfo.client.execute.bind(setupInfo.client), helper.wait(2000, done));
+        utils.eachSeries(queries, setupInfo.client.execute.bind(setupInfo.client), helper.waitCallback(2000, done));
       });
       it('should choose the correct coordinator based on the partition key', function (done) {
         const client = new Client({
@@ -1170,6 +1125,8 @@ describe('Client', function () {
           keyspace: keyspace,
           contactPoints: helper.baseOptions.contactPoints
         });
+
+        helper.shutdownAfterThisTest(client);
 
         /** Pre-calculated based on partitioner and initial tokens */
         const replicaByKey = new Map([
@@ -1199,6 +1156,148 @@ describe('Client', function () {
     });
 
     numericTests(commonKs, true);
+    pagingTests(commonKs, true);
+
+    vit('dse-6.0', 'should use keyspace if set on options', () => {
+      const client = setupInfo.client;
+      return client.execute('select * from local', {prepare: true}, {keyspace: 'system'})
+        .then((result) => {
+          assert.ok(result);
+        });
+    });
+    it('should not use keyspace if set on options for lower protocol versions', function () {
+      if (helper.isDseGreaterThan('6.0')) {
+        return this.skip();
+      }
+      const client = setupInfo.client;
+      return client.execute('select * from local', {prepare: true}, {keyspace: 'system'})
+        .then((result) => {
+          throw new Error('should have failed');
+        })
+        .catch(function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+        });
+    });
+    describe('With schema changes made while querying', () => {
+      // Note: Since the driver does not make use of result metadata on prepared statement
+      // it should inheritently be resilient to schema changes since it uses the metadata
+      // in the rows responses.  However, if NODEJS-433 is implemented the driver will
+      // need to be more deliberate in handling schema changes made at runtime.
+      const compareMetadata = helper.isDseGreaterThan('6.0');
+
+      // Test with two clients to ensure that a client can handle update the prepared metadata cache
+      // in the following the following cases:
+      //  1) it reprepares the statement on schema change and that updates the cache
+      //  2) server responds with rows response containing new_metadata_id that prompts updating
+      //      the cache.
+      const client = setupInfo.client;
+      const client2 = newInstance({keyspace: commonKs});
+      let table;
+      beforeEach((done) => {
+        table = commonKs + '.' + helper.getRandomName('table');
+        const queries = [
+          util.format('CREATE TABLE %s (k int, a int, c int, primary key (k, a))', table)
+        ];
+
+        for(let i = 0; i < 10; i++) {
+          queries.push(util.format('INSERT INTO %s (k, a, c) values (%d,%d,%d)', table, 0, i, i));
+        }
+        utils.eachSeries(queries, client.execute.bind(client), done);
+      });
+      after((done) => client2.shutdown(done));
+      it('should be resilient to schema change between queries', (done) => {
+        const query = util.format('select * from %s', table);
+        let pageState;
+        let originalResultId;
+        let originalResultId2;
+        let finalResultId2;
+
+        utils.series([
+          (next) => {
+            client.execute(query, null, {prepare: true, fetchSize: 5}, (err, result) => {
+              assert.ifError(err);
+              assert.ok(result);
+              assert.ok(result.pageState);
+              pageState = result.pageState;
+              assert.strictEqual(result.columns.length, 3); // columns k, a, and c should be present.
+              assert.strictEqual(result.rows.length, 5);
+              // data should be present with expected values.
+              result.rows.forEach((row, index) => {
+                assert.strictEqual(row.k, 0);
+                assert.strictEqual(row.a, index);
+                assert.strictEqual(row.c, index);
+              });
+              if (compareMetadata) {
+                // capture current metadata resultId to compare after schema change is made.
+                const info = client.metadata.getPreparedInfo(commonKs, query);
+                originalResultId = info.meta.resultId;
+              }
+              next();
+            });
+          },
+          (next) => {
+            client2.execute(query, null, {prepare: true}, (err, result) => {
+              assert.ok(result);
+              if (compareMetadata) {
+                const info = client2.metadata.getPreparedInfo(commonKs, query);
+                originalResultId2 = info.meta.resultId;
+              }
+              next();
+            });
+          },
+          (next) => {
+            client.execute(util.format('alter table %s add b int', table), next);
+          },
+          (seriesNext) => {
+            // execute query 3 times, so reprepare is done on each node.
+            utils.times(3, function (n, next) {
+              client2.execute(query, null, {prepare: true}, (err, result) => {
+                assert.ifError(err);
+                assert.ok(result);
+                next();
+              });
+            }, () => {
+              if (compareMetadata) {
+                // We expect the metadata resultId to have changed as result of
+                // the server's prepared statement cache being cleared, causing
+                // a reprepare and update of the prepared statement cache for
+                // the client.
+                const info = client2.metadata.getPreparedInfo(commonKs, query);
+                finalResultId2 = info.meta.resultId;
+                assert.notDeepEqual(finalResultId2, originalResultId2);
+              }
+              seriesNext();
+            });
+          },
+          (next) => {
+            // execute query on client, should receive new metadata id since prepared statement
+            // cache is stale.
+            client.execute(query, null, {prepare: true, pageState: pageState}, (err, result) => {
+              assert.ok(result);
+              assert.strictEqual(result.columns.length, 4); // columns k, a, b, and c should be present.
+              assert.strictEqual(result.rows.length, 5);
+              // data should be present with expected values.
+              result.rows.forEach((row, index) => {
+                assert.strictEqual(row.k, 0);
+                assert.strictEqual(row.a, index+5); // offset index by 5 since we're starting from 5th row.
+                assert.strictEqual(row.b, null); // b shall be present but null as no values are present.
+                assert.strictEqual(row.c, index+5);
+              });
+              if (compareMetadata) {
+                // We expect the metadata resultId to have changed as result of
+                // the rows response containing new_metadata_id which should
+                // provoke the client cache to be updated.
+                const info = client.metadata.getPreparedInfo(commonKs, query);
+                const finalResultId = info.meta.resultId;
+                assert.deepEqual(finalResultId, finalResultId2);
+                assert.notDeepEqual(finalResultId, originalResultId);
+              }
+              next();
+            });
+          }
+        ], done);
+      });
+    });
   });
 });
 
@@ -1210,7 +1309,8 @@ function newInstance(options) {
   options = utils.deepExtend({
     queryOptions: {consistency: types.consistencies.quorum}
   }, options, helper.baseOptions);
-  return new Client(options);
+
+  return helper.shutdownAfterThisTest(new Client(options));
 }
 
 function serializationTest(client, values, columns, done) {

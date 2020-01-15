@@ -1,6 +1,7 @@
 # DataStax Node.js Driver for Apache Cassandra
 
-A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra (1.2+) using exclusively Cassandra's binary protocol and Cassandra Query Language v3. _Use the [DSE Node.js driver][dse-driver] for better compatibility and support for DataStax Enterprise_.
+A modern, [feature-rich](#features) and highly tunable Node.js client library for Apache Cassandra and [DSE][dse] using
+exclusively Cassandra's binary protocol and Cassandra Query Language.
 
 ## Installation
 
@@ -8,7 +9,8 @@ A modern, [feature-rich](#features) and highly tunable Node.js client library fo
 $ npm install cassandra-driver
 ```
 
-[![Build Status](https://travis-ci.org/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver) [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
+[![Build Status](https://api.travis-ci.com/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver)
+[![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
 
 
 ## Features
@@ -40,25 +42,29 @@ You can use the [project mailing list][mailinglist] or create a ticket on the [J
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['h1', 'h2'], localDataCenter: 'datacenter1', keyspace: 'ks1' });
+
+const client = new cassandra.Client({
+  contactPoints: ['h1', 'h2'],
+  localDataCenter: 'datacenter1',
+  keyspace: 'ks1'
+});
 
 const query = 'SELECT name, email FROM users WHERE key = ?';
+
 client.execute(query, [ 'someone' ])
   .then(result => console.log('User with email %s', result.rows[0].email));
 ```
 
-Alternatively, you can use the callback-based execution for all asynchronous methods of the API.
+The driver supports both [promises and callbacks][doc-promise-callback] for the asynchronous methods,
+you can choose the approach that suits your needs.
 
-```javascript
-client.execute(query, [ 'someone' ], function(err, result) {
-  assert.ifError(err);
-  console.log('User with email %s', result.rows[0].email);
-});
-```
+Note that in order to have concise code examples in this documentation, we will use the promise-based API of the 
+driver along with the `await` keyword.
 
 ### Prepare your queries
 
 Using prepared statements provides multiple benefits.
+
 Prepared statements are parsed and prepared on the Cassandra nodes and are ready for future execution.
 Also, when preparing, the driver retrieves information about the parameter types which
  **allows an accurate mapping between a JavaScript type and a Cassandra type**.
@@ -69,9 +75,10 @@ The driver will prepare the query once on each host and execute the statement wi
 // Use query markers (?) and parameters
 const query = 'UPDATE users SET birth = ? WHERE key=?'; 
 const params = [ new Date(1942, 10, 1), 'jimi-hendrix' ];
+
 // Set the prepare flag in the query options
-client.execute(query, params, { prepare: true })
-  .then(result => console.log('Row updated on the cluster'));
+await client.execute(query, params, { prepare: true });
+console.log('Row updated on the cluster');
 ```
 
 ### Row streaming and pipes
@@ -81,19 +88,22 @@ When using `#eachRow()` and `#stream()` methods, the driver parses each row as s
 
 ```javascript
 // Reducing a large result
-client.eachRow('SELECT time, val FROM temperature WHERE station_id=', ['abc'],
-  function(n, row) {
+client.eachRow(
+  'SELECT time, val FROM temperature WHERE station_id=',
+  ['abc'],
+  (n, row) => {
     // The callback will be invoked per each row as soon as they are received
-    minTemperature = Math.min(row.val, minTemperature);
+    minTemperature = Math.min(row.val, minTemperature); 
   },
-  function (err) {
-    assert.ifError(err);
+  err => { 
+    // This function will be invoked when all rows where consumed or an error was encountered  
   }
 );
 ```
 
 The `#stream()` method works in the same way but instead of callback it returns a [Readable Streams2][streams2] object
  in `objectMode` that emits instances of `Row`.
+
 It can be **piped** downstream and provides automatic pause/resume logic (it buffers when not read).
 
 ```javascript
@@ -139,12 +149,10 @@ You can retrieve the user address details as a regular JavaScript object.
 
 ```javascript
 const query = 'SELECT name, address FROM users WHERE key = ?';
-client.execute(query, [ key ], { prepare: true })
-  .then(result => {
-    const row = result.first();
-    const address = row.address;
-    console.log('User lives in %s, %s - %s', address.street, address.city, address.state); 
-  });
+const result = await client.execute(query, [ key ], { prepare: true });
+const row = result.first();
+const address = row.address;
+console.log('User lives in %s, %s - %s', address.street, address.city, address.state);
 ```
 
 Read more information  about using [UDTs with the Node.js Driver][doc-udt].
@@ -152,16 +160,11 @@ Read more information  about using [UDTs with the Node.js Driver][doc-udt].
 ### Paging
 
 All driver methods use a default `fetchSize` of 5000 rows, retrieving only first page of results up to a
- maximum of 5000 rows to shield an application against accidentally large result sets. To retrieve the following
- records you can use the `autoPage` flag in the query options of `#eachRow()` and `#stream()` methods.
+maximum of 5000 rows to shield an application against accidentally retrieving large result sets in a single response.
 
-```javascript
-//Imagine a column family with millions of rows
-const query = 'SELECT * FROM largetable';
-client.eachRow(query, [], { autoPage: true }, function (n, row) {
-  // This function will be invoked per each of the rows in all the table
-}, endCallback);
-```
+`stream()` method automatically fetches the following page once the current one was read. You can also use `eachRow()` 
+method to retrieve the following pages by using `autoPage` flag. See [paging documentation for more 
+information][doc-paging].
 
 ### Batch multiple statements
 
@@ -172,17 +175,15 @@ const queries = [
   {
     query: 'UPDATE user_profiles SET email=? WHERE key=?',
     params: [ emailAddress, 'hendrix' ]
-  },
-  {
+  }, {
     query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
     params: [ 'hendrix', 'Changed email', new Date() ]
   }
 ];
-client.batch(queries, { prepare: true })
-  .then(result => console.log('Data updated on cluster'));
+
+await client.batch(queries, { prepare: true });
+console.log('Data updated on cluster');
 ```
-
-
 
 ## Object Mapper
 
@@ -232,9 +233,9 @@ The `level` being passed to the listener can be `verbose`, `info`, `warning` or 
 
 ## Compatibility
 
-- Apache Cassandra versions 2.0 and above.
-- DataStax Enterprise versions 4.5 and above.
-- Node.js versions 4 and above.
+- Apache Cassandra versions 2.1 and above.
+- DataStax Enterprise versions 4.8 and above.
+- Node.js versions 8 and above.
 
 Note: DataStax products do not support big-endian systems.
 
@@ -259,7 +260,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [doc-index]: https://docs.datastax.com/en/developer/nodejs-driver/latest/
 [doc-datatypes]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/
 [doc-numerical]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/numerical/
-[doc-uuid]: http://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
+[doc-uuid]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/uuids/
 [doc-collections]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/collections/
 [doc-udt]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/datatypes/udts/
 [doc-promise-callback]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/promise-callback/
@@ -278,5 +279,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [jira]: https://datastax-oss.atlassian.net/projects/NODEJS/issues
 [streams2]: https://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: https://cassandra.apache.org/doc/latest/cql/types.html#udts
-[dse-driver]: https://docs.datastax.com/en/developer/nodejs-driver-dse/latest/
 [dse]: https://www.datastax.com/products/datastax-enterprise

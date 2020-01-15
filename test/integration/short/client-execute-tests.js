@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 const util = require('util');
 
@@ -27,6 +26,7 @@ const errors = require('../../../lib/errors.js');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const numericTests = require('./numeric-tests');
+const pagingTests = require('./paging-tests');
 
 describe('Client', function () {
   this.timeout(120000);
@@ -120,7 +120,7 @@ describe('Client', function () {
       client.execute(helper.queries.basicNoResults, function (err, result) {
         assert.ifError(err);
         assert.ok(result);
-        assert.ok(util.isArray(result.rows));
+        assert.ok(Array.isArray(result.rows));
         helper.assertInstanceOf(result, types.ResultSet);
         assert.strictEqual(result.rows.length, 0);
         done();
@@ -216,40 +216,6 @@ describe('Client', function () {
       const hints = [null, 'map<text, text>'];
       const client = newInstance({encoding: { map: helper.Map }});
       insertSelectTest(client, table, columns, values, hints, done);
-    });
-    vit('2.0', 'should use pageState and fetchSize', function (done) {
-      const client = setupInfo.client;
-      let pageState = null;
-      utils.series([
-        function truncate(seriesNext) {
-          client.execute('TRUNCATE ' + table, seriesNext);
-        },
-        function insertData(seriesNext) {
-          const query = util.format('INSERT INTO %s (id, text_sample) VALUES (?, ?)', table);
-          utils.times(100, function (n, next) {
-            client.execute(query, [types.Uuid.random(), n.toString()], next);
-          }, seriesNext);
-        },
-        function selectData(seriesNext) {
-          //Only fetch 70
-          client.execute(util.format('SELECT * FROM %s', table), [], {fetchSize: 70}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 70);
-            pageState = result.pageState;
-            //ResultSet#pageState is the hex string representation of the rawPageState
-            assert.strictEqual(pageState, result.rawPageState.toString('hex'));
-            seriesNext();
-          });
-        },
-        function selectDataRemaining(seriesNext) {
-          //The remaining
-          client.execute(util.format('SELECT * FROM %s', table), [], {pageState: pageState}, function (err, result) {
-            assert.ifError(err);
-            assert.strictEqual(result.rows.length, 30);
-            seriesNext();
-          });
-        }
-      ], done);
     });
     vit('2.0', 'should not autoPage', function (done) {
       const client = setupInfo.client;
@@ -454,7 +420,7 @@ describe('Client', function () {
             assert.ifError(err);
             assert.ok(result.rows.length);
             assert.ok(result.columns);
-            assert.ok(util.isArray(result.columns));
+            assert.ok(Array.isArray(result.columns));
             assert.strictEqual(result.columns.length, 6);
             assert.strictEqual(result.columns[1].type.code, types.dataTypes.timestamp);
             assert.equal(result.columns[1].type.info, null);
@@ -489,7 +455,7 @@ describe('Client', function () {
         function insert(next) {
           const query = util.format(
             'INSERT INTO %s (id, timeuuid_sample, inet_sample, bigint_sample, decimal_sample) VALUES (%s, %s, \'%s\', %s, %s)',
-            table, id, timeId, '::2233:0:0:bb', -100, "0.1");
+            table, id.toString(), timeId.toString(), '::2233:0:0:bb', -100, "0.1");
           client.execute(query, next);
         },
         function select(next) {
@@ -499,8 +465,8 @@ describe('Client', function () {
             assert.ifError(err);
             assert.strictEqual(result.rows.length, 1);
             const row = result.rows[0];
-            const expected = util.format('{"id":"%s",' +
-              '"timeuuid_sample":"%s",' +
+            const expected = util.format('{"id":%j,' +
+              '"timeuuid_sample":%j,' +
               '"inet_sample":"::2233:0:0:bb",' +
               '"bigint_sample":"-100",' +
               '"decimal_sample":"0.1"}', id, timeId);
@@ -664,12 +630,12 @@ describe('Client', function () {
             assert.deepStrictEqual(row['list_sample2'], [ 1 ]);
           })));
     });
-    vdescribe('3.0.16', 'with noCompact', function () {
+    vdescribe('dse-5.1.6', 'with noCompact', function () {
       before(function (done) {
-        // While C* 4.0 supports the NO_COMPACT option, there is no way to create
+        // While DSE 6.0 supports the NO_COMPACT option, there is no way to create
         // COMPACT STORAGE tables other than creating with an older C* version and
         // then upgrading which is outside the scope of this test.
-        if (helper.isCassandraGreaterThan('4.0')) {
+        if (helper.isDseGreaterThan('6.0')) {
           this.skip();
           return;
         }
@@ -787,7 +753,7 @@ describe('Client', function () {
           assert.ok(address);
           assert.strictEqual(address['street'], 'NightMan');
           assert.strictEqual(address['ZIP'], 90988);
-          assert.ok(util.isArray(address['phones']));
+          assert.ok(Array.isArray(address['phones']));
           assert.strictEqual(address['phones'].length, 2);
           assert.strictEqual(address['phones'][0]['alias'], 'personal');
           assert.strictEqual(address['phones'][0]['number'], '555 5678');
@@ -1160,6 +1126,28 @@ describe('Client', function () {
     });
 
     numericTests(keyspace, false);
+    pagingTests(keyspace, false);
+
+    vit('dse-6.0', 'should use keyspace if set on options', () => {
+      const client = setupInfo.client;
+      return client.execute('select * from local', null, {keyspace: 'system'})
+        .then((result) => {
+          assert.ok(result);
+        });
+    });
+    it('should not use keyspace if set on options for lower protocol versions', function () {
+      if (helper.isDseGreaterThan('6.0')) {
+        return this.skip();
+      }
+      const client = setupInfo.client;
+      return client.execute('select * from local', null, {keyspace: 'system'})
+        .then((result) => {
+          throw new Error('should have failed');
+        })
+        .catch(function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+        });
+    });
   });
 });
 
@@ -1210,5 +1198,5 @@ function verifyRow(table, id, fields, values, callback) {
  * @returns {Client}
  */
 function newInstance(options) {
-  return new Client(utils.deepExtend({}, helper.baseOptions, options));
+  return helper.shutdownAfterThisTest(new Client(utils.deepExtend({}, helper.baseOptions, options)));
 }

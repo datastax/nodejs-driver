@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 const EventEmitter = require('events');
 const proxyquire = require('proxyquire');
@@ -48,7 +47,7 @@ describe('Connection', function () {
   describe('#prepareOnce()', function () {
     function prepareAndAssert(connection, query) {
       return (function (cb) {
-        connection.prepareOnce(query, function (err, r) {
+        connection.prepareOnce(query, 'ks', function (err, r) {
           assert.ifError(err);
           assert.strictEqual(query, r);
           cb();

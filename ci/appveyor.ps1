@@ -44,23 +44,34 @@ If (!(Test-Path $ant_path)) {
 }
 $env:PATH="$($ant_path)\bin;$($env:PATH)"
 
-$env:CCM_PATH="$($dep_dir)\ccm"
-# Clone CCM from git, it will only be used to access keystores for SSL.
-If (!(Test-Path $env:CCM_PATH)) {
-  Start-Process git -ArgumentList "clone https://github.com/pcmanus/ccm.git $($env:CCM_PATH)" -Wait -NoNewWindow
-}
-
 # Install Python Dependencies for CCM.
 Write-Host "Installing CCM and its dependencies"
-Start-Process python -ArgumentList "-m pip install psutil pyYaml six ccm" -Wait -NoNewWindow
+Start-Process python -ArgumentList "-m pip install psutil pyYaml six" -Wait -NoNewWindow
+
+$env:CCM_PATH="$($dep_dir)\ccm"
+
+# Clone CCM from git
+If (!(Test-Path $env:CCM_PATH)) {
+  Write-Host "Cloning git ccm... $($env:CCM_PATH)"
+  Start-Process git -ArgumentList "clone https://github.com/pcmanus/ccm.git $($env:CCM_PATH)" -Wait -NoNewWindow
+  Write-Host "git ccm cloned"
+}
+
+Write-Host "Installing CCM"
+pushd $env:CCM_PATH
+Start-Process python -ArgumentList "setup.py install" -Wait -NoNewWindow
+popd
+
+Write-Host "Setting execution policy to unrestricted"
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 
 # Predownload cassandra version for CCM if it isn't already downloaded.
-If (!(Test-Path C:\Users\appveyor\.ccm\repository\$env:TEST_CASSANDRA_VERSION)) {
-  Write-Host "Predownloading $env:TEST_CASSANDRA_VERSION"
-  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py create -v $($env:TEST_CASSANDRA_VERSION) -n 1 predownload" -Wait -NoNewWindow
-  Start-Process python -ArgumentList "$env:PYTHON\Scripts\ccm.py remove predownload" -Wait -NoNewWindow
+If (!(Test-Path C:\Users\appveyor\.ccm\repository\$env:CCM_VERSION)) {
+  Write-Host "Predownloading $env:CCM_VERSION"
+  Start-Process python -ArgumentList "$env:CCM_PATH\ccm.py create -v $($env:CCM_VERSION) -n 1 predownload" -Wait -NoNewWindow
+  Start-Process python -ArgumentList "$env:CCM_PATH\ccm.py remove predownload" -Wait -NoNewWindow
 } else {
-  Write-Host "Cassandra $env:TEST_CASSANDRA_VERSION was already preloaded"
+  Write-Host "Cassandra $env:CCM_VERSION was already preloaded"
 }
 
 # Activate the proper nodejs version.
@@ -69,12 +80,12 @@ Install-Product node $env:nodejs_version $env:PLATFORM
 # Enable appveyor reporter
 $env:multi="spec=- mocha-appveyor-reporter=-"
 
-#Download simulacron jar
+# Download simulacron jar
 $simulacron_path = "$($dep_dir)\simulacron.jar"
 If (!(Test-Path $simulacron_path)) {
-  Write-Host "Downloading simulacron jar"
-  $url = "https://github.com/datastax/simulacron/releases/download/0.8.2/simulacron-standalone-0.8.2.jar"
-  (new-object System.Net.WebClient).DownloadFile($url, $simulacron_path)
+    Write-Host "Downloading simulacron jar"
+    $url = "https://github.com/datastax/simulacron/releases/download/0.9.0/simulacron-standalone-0.9.0.jar"
+    (new-object System.Net.WebClient).DownloadFile($url, $simulacron_path)
 }
 
 $env:SIMULACRON_PATH=$simulacron_path

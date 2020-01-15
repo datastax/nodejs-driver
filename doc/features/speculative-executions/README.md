@@ -7,7 +7,7 @@ One thing we can do to improve that is preemptively start a second execution of 
 before the first node has replied or errored out. If that second node replies faster, we can send the response back 
 to the client (we also cancel the first query):
 
-```
+```ditaa
 client           driver          exec1  exec2
 --+----------------+--------------+------+---
   | execute(query) |
@@ -31,7 +31,7 @@ client           driver          exec1  exec2
 Or the first node could reply just after the second execution was started. In this case, we cancel the second execution.
 In other words, whichever node replies faster wins and completes the client query:
 
-```
+```ditaa
 client           driver          exec1  exec2
 --+----------------+--------------+------+---
   | execute(query) |
@@ -90,6 +90,7 @@ above, you can change the default cluster-wide:
 // Make all statements idempotent by default:
 const client = new Client({
   contactPoints,
+  localDataCenter,
   queryOptions: { 
     isIdempotent: true
   }
@@ -106,7 +107,10 @@ separated by a fixed delay, the policy is exported under the `<root>.policies.sp
 
 This simple policy uses a constant threshold:
 
-```js
+```javascript
+const { Client, policies } = require('cassandra-driver');
+const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
+
 const client = new Client({
   contactPoints,
   policies: {
@@ -136,7 +140,7 @@ the decision to the `RetryPolicy`, which might trigger a retry on the same host
 
 Turning speculative executions on does not change this behavior. Each parallel execution trigger retries independently:
 
-```
+```ditaa
 client           driver          exec1  exec2
 --+----------------+--------------+------+---
   | execute(query) |

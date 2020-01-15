@@ -49,7 +49,7 @@ describe('Client', function () {
         jvmArgs: ['-Dcassandra.test.fail_writes_ks=' + failWritesKs]
       }
     });
-    vit('3.11', 'should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
+    vit('dse-6.0', 'should callback with readFailure error when tombstone overwhelmed on replica', function (done) {
       const client = setupInfo.client;
       utils.series([
         function generateTombstones(next) {

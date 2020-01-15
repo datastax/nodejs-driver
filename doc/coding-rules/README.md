@@ -17,43 +17,43 @@ Generally such settings are set once at the application level.
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const DCAwareRoundRobinPolicy = cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy;
 const client = new cassandra.Client({
    contactPoints: ['10.1.1.3', '10.1.1.4', '10.1.1.5'], 
-   localDataCenter: 'eu-west-3'
+   localDataCenter: 'us-east-1'
 });
 ```
 
-A `Client` instance is a long-lived object, and it should not be used in a request-response, short-lived fashion.
-
-Your code should share the same `Client` instance across your application.
+A `Client` instance is a long-lived object, your code should share the same `Client` instance across your application.
 
 ## Prepared statements 
 
 Using prepared statements provides multiple benefits. A prepared statement is parsed and prepared on the Cassandra nodes
-and is ready for future execution. When binding parameters are provided, only they (and the query id) are sent over the wire. These
-performance gains add up when using the same queries (with different parameters) repeatedly. Additionally, when
-preparing, the driver retrieves information about the parameter types which allows an accurate mapping between a
-JavaScript type and a CQL type.
+and is ready for future execution. When binding parameters are provided, only they (and the query id) are sent over
+the wire. These performance gains add up when using the same queries (with different parameters) repeatedly. 
+
+Additionally, when preparing, the driver retrieves information about the parameter types which allows an accurate 
+mapping between a JavaScript type and a CQL type.
 
 Preparing and executing statements in the driver does not require two chained asynchronous calls. You can set the
 `prepare` flag in the query options and the driver handles the rest.
 
 ```javascript
 const query = 'SELECT id, name FROM users WHERE id = ?';
-client.execute(query, [ id ], { prepare: true }, callback);
+client.execute(query, [ id ], { prepare: true });
 ```
 
 ## Batch statements 
 
-The batch statement combines multiple data modification statements (`INSERT`, `UPDATE`, or `DELETE`) into a single logical
-operation that is sent to the server in a single request. Batching together multiple operations also ensures that they
-are executed in an atomic way, (that is, either all succeed or none). To make the best use of `batch()`, read about
-[atomic batches in Cassandra 1.2](http://www.datastax.com/dev/blog/atomic-batches-in-cassandra-1-2), [static columns
-and batching of conditional updates](http://www.datastax.com/dev/dev/blog/cql-in-2-0-6),
-and [CQL documentation][batches].  But take into account that incorrect use of batch statements may increase load to servers.
+The batch statement combines multiple data modification statements (`INSERT`, `UPDATE`, or `DELETE`) into a single
+logical operation that is sent to the server in a single request.
+Batching together multiple operations also ensures 
+that they are executed in an atomic way, (that is, either all succeed or none). To make the best use of `batch()`, 
+read about [atomic batches in Cassandra 1.2](http://www.datastax.com/dev/blog/atomic-batches-in-cassandra-1-2), 
+[static columns and batching of conditional updates](http://www.datastax.com/dev/dev/blog/cql-in-2-0-6),
+and [CQL documentation][batches]. But take into account that incorrect use of batch statements may
+increase load to servers.
 
-Starting with Cassandra 2.0, prepared statements can be used in batch operations.
+Batch queries should be prepared, by setting the `prepare` flag, when possible. 
 
 ```javascript
 const queries = [
@@ -62,11 +62,10 @@ const queries = [
    { query: 'INSERT INTO user_track (key, text, date) VALUES (?, ?, ?)',
       params: ['hendrix', 'Changed email', new Date()]}
 ];
-const queryOptions = { prepare: true, consistency: cassandra.types.consistencies.quorum };
-client.batch(queries, queryOptions, function(err) {
-   assert.ifError(err);
-   console.log('Data updated on cluster');
-});
+const queryOptions = { prepare: true, consistency: cassandra.types.consistencies.localQuorum };
+
+client.batch(queries, queryOptions)
+  .then(() => console.log('Data updated on cluster'));
 ```
 
 [batches]: https://docs.datastax.com/en/cql/3.3/cql/cql_using/useBatchTOC.html

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 const assert = require('assert');
 const util = require('util');
@@ -336,7 +335,8 @@ describe('Client', function () {
   });
   describe('#batch(queries, {prepare: 1}, callback)', function () {
     const keyspace = helper.getRandomName('ks');
-    const table1 = keyspace + '.' + helper.getRandomName('tblA');
+    const table1Short = helper.getRandomName('tblA');
+    const table1 = keyspace + '.' + table1Short;
     const table2 = keyspace + '.' + helper.getRandomName('tblB');
     before(function (done) {
       const client = newInstance();
@@ -552,6 +552,53 @@ describe('Client', function () {
         });
       });
     });
+    vit('dse-6.0', 'should use keyspace if set on options', () => {
+      const client = newInstance({});
+      const insertQuery = 'INSERT INTO %s (id, time, double_sample) VALUES (?, ?, ?)';
+      const selectQuery = 'SELECT * FROM %s WHERE id=?';
+      const id = types.Uuid.random();
+      const ts1 = types.timeuuid();
+      const ts2 = types.timeuuid();
+      const queries = [
+        {query: util.format(insertQuery, table1Short), params: [id, ts1, 1000]},
+        {query: util.format(insertQuery, table1Short), params: [id, ts2, 2000]}
+      ];
+
+      return client.batch(queries, {prepare: true, keyspace: keyspace})
+        .then((result) =>
+          client.execute(util.format(selectQuery, table1Short), [id], {prepare: true, keyspace: keyspace})
+        )
+        .then((result) => {
+          assert.ok(result);
+          assert.ok(result.rows);
+          assert.strictEqual(result.rows.length, 2);
+          assert.equal(result.rows[0].double_sample, 1000);
+          assert.equal(result.rows[1].double_sample, 2000);
+          return client.shutdown();
+        });
+    });
+    it('should not use keyspace if set on options for lower protocol versions', function () {
+      if (helper.isDseGreaterThan('6.0')) {
+        return this.skip();
+      }
+      const client = newInstance({});
+      const insertQuery = 'INSERT INTO %s (id, time, double_sample) VALUES (?, ?, ?)';
+      const id = types.Uuid.random();
+      const ts1 = types.timeuuid();
+      const ts2 = types.timeuuid();
+      const queries = [
+        {query: util.format(insertQuery, table1Short), params: [id, ts1, 1000]},
+        {query: util.format(insertQuery, table1Short), params: [id, ts2, 2000]}
+      ];
+      return client.batch(queries, {prepare: true, keyspace: keyspace})
+        .then((result) => {
+          throw new Error('should have failed');
+        })
+        .catch(function (err) {
+          helper.assertInstanceOf(err, errors.ResponseError);
+          return client.shutdown();
+        });
+    });
   });
 });
 
@@ -559,5 +606,5 @@ describe('Client', function () {
  * @returns {Client}
  */
 function newInstance(options) {
-  return new Client(utils.deepExtend({}, helper.baseOptions, options));
+  return helper.shutdownAfterThisTest(new Client(utils.deepExtend({}, helper.baseOptions, options)));
 }

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-const assert = require('assert');
+const { assert } = require('chai');
+const sinon = require('sinon');
 const util = require('util');
 const utils = require('../../lib/utils');
 const tokenizer = require('../../lib/tokenizer');
@@ -59,6 +59,7 @@ describe('encoder', function () {
       assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
+
     function assertGuessed(value, expectedType, message) {
       const type = Encoder.guessDataType(value);
       if (type === null) {
@@ -70,6 +71,7 @@ describe('encoder', function () {
       assert.strictEqual(type.code, expectedType, message + ': ' + value);
     }
   });
+
   describe('#encode() and #decode()', function () {
     const typeEncoder = new Encoder(2, {});
     it('should encode and decode a guessed double', function () {
@@ -78,12 +80,14 @@ describe('encoder', function () {
       const decoded = typeEncoder.decode(encoded, {code: dataTypes.double});
       assert.strictEqual(decoded, value);
     });
+
     it('should encode and decode a guessed string', function () {
       const value = 'Pennsatucky';
       const encoded = typeEncoder.encode(value);
       const decoded = typeEncoder.decode(encoded, {code: dataTypes.text});
       assert.strictEqual(decoded, value);
     });
+
     it('should encode stringified uuids for backward-compatibility', function () {
       let uuid = types.Uuid.random();
       let encoded = typeEncoder.encode(uuid.toString(), types.dataTypes.uuid);
@@ -93,22 +97,26 @@ describe('encoder', function () {
       encoded = typeEncoder.encode(uuid.toString(), types.dataTypes.uuid);
       assert.strictEqual(encoded.toString('hex'), uuid.getBuffer().toString('hex'));
     });
+
     it('should throw when string is not an uuid', function () {
       assert.throws(function () {
         typeEncoder.encode('', types.dataTypes.uuid);
       }, TypeError);
     });
+
     it('should encode undefined as null', function () {
       const hinted = typeEncoder.encode(undefined, 'set<text>');
       const unHinted = typeEncoder.encode();
       assert.strictEqual(hinted, null);
       assert.strictEqual(unHinted, null);
     });
+
     it('should throw on unknown types', function () {
       assert.throws(function () {
         typeEncoder.encode({});
       }, TypeError);
     });
+
     it('should throw when the typeInfo and the value source type does not match', function () {
       assert.throws(function () {
         typeEncoder.encode('hello', 'int');
@@ -129,6 +137,7 @@ describe('encoder', function () {
         typeEncoder.encode({}, dataTypes.list);
       }, TypeError);
     });
+
     it('should encode Long/Date/Number/String as timestamps', function () {
       const encoder = new Encoder(2, {});
       let buffer = encoder.encode(types.Long.fromBits(0x00fafafa, 0x07090909), dataTypes.timestamp);
@@ -148,6 +157,7 @@ describe('encoder', function () {
         encoder.encode('This is an invalid date string', dataTypes.timestamp);
       }, TypeError);
     });
+
     it('should encode String/Number (not NaN) as int', function () {
       const encoder = new Encoder(2, {});
       let buffer = encoder.encode(0x071272ab, dataTypes.int);
@@ -166,6 +176,7 @@ describe('encoder', function () {
         encoder.encode(NaN, 'int');
       }, TypeError);
     });
+
     it('should encode String/Long/Number as bigint', function () {
       const encoder = new Encoder(2, {});
       let buffer = encoder.encode(types.Long.fromString('506946367331695353'), dataTypes.bigint);
@@ -177,6 +188,7 @@ describe('encoder', function () {
       buffer = encoder.encode(255, dataTypes.bigint);
       assert.strictEqual(buffer.toString('hex'), '00000000000000ff');
     });
+
     it('should encode String/Integer/Number as varint', function () {
       const encoder = new Encoder(2, {});
       let buffer = encoder.encode(types.Integer.fromString('33554433'), dataTypes.varint);
@@ -190,6 +202,7 @@ describe('encoder', function () {
       buffer = encoder.encode(-100, dataTypes.varint);
       assert.strictEqual(buffer.toString('hex'), '9c');
     });
+
     it('should encode String/BigDecimal/Number as decimal', function () {
       const encoder = new Encoder(2, {});
       let buffer = encoder.encode(types.BigDecimal.fromString('0.00256'), dataTypes.decimal);
@@ -203,6 +216,7 @@ describe('encoder', function () {
       buffer = encoder.encode(-25.5, dataTypes.decimal);
       assert.strictEqual(buffer.toString('hex'), '00000001ff01');
     });
+
     it('should encode/decode InetAddress/Buffer as inet', function () {
       const InetAddress = types.InetAddress;
       const encoder = new Encoder(2, {});
@@ -220,6 +234,7 @@ describe('encoder', function () {
       encoded = encoder.encode(val1.getBuffer(), dataTypes.inet);
       assert.strictEqual(encoded.toString('hex'), val1.getBuffer().toString('hex'));
     });
+
     it('should decode uuids into Uuid', function () {
       const uuid = types.Uuid.random();
       const decoded = typeEncoder.decode(uuid.getBuffer(), {code: dataTypes.uuid});
@@ -229,6 +244,7 @@ describe('encoder', function () {
       const decoded2 = typeEncoder.decode(types.Uuid.random().getBuffer(), {code: dataTypes.uuid});
       assert.ok(!decoded.equals(decoded2));
     });
+
     it('should decode timeuuids into TimeUuid', function () {
       const uuid = types.TimeUuid.now();
       const decoded = typeEncoder.decode(uuid.getBuffer(), {code: dataTypes.timeuuid});
@@ -238,6 +254,7 @@ describe('encoder', function () {
       const decoded2 = typeEncoder.decode(types.TimeUuid.now().getBuffer(), {code: dataTypes.timeuuid});
       assert.ok(!decoded.equals(decoded2));
     });
+
     [2, 3].forEach(function (version) {
       const encoder = new Encoder(version, {});
       it(util.format('should encode and decode maps for protocol v%d', version), function () {
@@ -274,6 +291,7 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.text}, {code: dataTypes.int}]});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode maps with stringified keys for protocol v%d', version), function () {
         let value = {};
         value[new Date(1421756675488)] = 'date1';
@@ -363,24 +381,28 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.date}, {code: dataTypes.text}]});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode list<int> for protocol v%d', version), function () {
         const value = [1, 2, 3, 4];
         const encoded = encoder.encode(value, 'list<int>');
         const decoded = encoder.decode(encoded, {code: dataTypes.list, info: {code: dataTypes.int}});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode list<double> for protocol v%d', version), function () {
         const value = [1, 2, 3, 100];
         const encoded = encoder.encode(value, 'list<double>');
         const decoded = encoder.decode(encoded, {code: dataTypes.list, info: {code: dataTypes.double}});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode list<double> without hint for protocol v%d', version), function () {
         const value = [1, 2, 3, 100.1];
         const encoded = encoder.encode(value);
         const decoded = encoder.decode(encoded, {code: dataTypes.list, info: {code: dataTypes.double}});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode set<text> for protocol v%d', version), function () {
         const value = ['Alex Vause', 'Piper Chapman', '3', '4'];
         let encoded = encoder.encode(value, 'set<text>');
@@ -391,12 +413,14 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.set, info: {code: dataTypes.text}});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode and decode list<float> with typeInfo for protocol v%d', version), function () {
         const value = [1.1122000217437744, 2.212209939956665, 3.3999900817871094, 4.412120819091797, -1000, 1];
         const encoded = encoder.encode(value, {code: dataTypes.list, info: {code: dataTypes.float}});
         const decoded = encoder.decode(encoded, {code: dataTypes.list, info: {code: dataTypes.float}});
         assert.strictEqual(util.inspect(decoded), util.inspect(value));
       });
+
       it(util.format('should encode/decode ES6 Set as maps for protocol v%d', version), function () {
         if (typeof Set !== 'function') {
           //Set not supported in Node.js runtime
@@ -422,6 +446,7 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.set, info: {code: dataTypes.text}});
         assert.strictEqual(decoded.toString(), m.toString());
       });
+
       it(util.format('should encode/decode Map polyfills as maps for protocol v%d', version), function () {
         const encoder = new Encoder(version, { encoding: { map: helper.Map}});
         let m = new helper.Map();
@@ -446,6 +471,7 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.text}, {code: dataTypes.int}]});
         assert.strictEqual(decoded.arr.toString(), m.arr.toString());
       });
+
       it(util.format('should encode/decode ES6 Map as maps for protocol v%d', version), function () {
         function getValues(m) {
           const arr = [];
@@ -486,6 +512,7 @@ describe('encoder', function () {
         decoded = encoder.decode(encoded, {code: dataTypes.map, info: [{code: dataTypes.timestamp}, {code: dataTypes.int}]});
         assert.strictEqual(getValues(decoded), getValues(m));
       });
+
       it(util.format('should encode/decode Set polyfills as maps for protocol v%d', version), function () {
         const encoder = new Encoder(version, { encoding: { set: helper.Set}});
         let m = new helper.Set(['k1', 'k2', 'k3']);
@@ -506,6 +533,7 @@ describe('encoder', function () {
         assert.strictEqual(decoded.toString(), m.toString());
       });
     });
+
     it('should encode/decode udts', function () {
       const encoder = new Encoder(3, {});
       const type = { code: dataTypes.udt, info: { fields:[
@@ -516,6 +544,7 @@ describe('encoder', function () {
       assert.strictEqual(decoded['alias'], 'zeta');
       assert.strictEqual(decoded['number'], null);
     });
+
     it('should encode/decode nested collections', function () {
       const encoder = new Encoder(3, {});
       const type = { code: dataTypes.map, info: [{code: dataTypes.text}, {code: dataTypes.set, info: {code: dataTypes.text}}]};
@@ -530,6 +559,7 @@ describe('encoder', function () {
       assert.strictEqual(decoded.key2.length, 1);
       assert.strictEqual(decoded.key2[0], '2-first');
     });
+
     it('should encode/decode tuples', function () {
       const encoder = new Encoder(3, {});
       const type = { code: dataTypes.tuple, info: [ { code: dataTypes.text}, { code: dataTypes.timestamp }]};
@@ -539,6 +569,7 @@ describe('encoder', function () {
       assert.strictEqual(decoded.get(0), 'one');
       assert.strictEqual(decoded.get(1).getTime(), 1429259123607);
     });
+
     it('should encode/decode LocalDate as date', function () {
       const encoder = new Encoder(4, {});
       const type = {code: dataTypes.date};
@@ -586,6 +617,7 @@ describe('encoder', function () {
         }
       });
     });
+
     it('should refuse to encode invalid values as LocalDate.', function () {
       const encoder = new Encoder(4, {});
       const type = {code: dataTypes.date};
@@ -594,6 +626,7 @@ describe('encoder', function () {
       assert.throws(function () { encoder.encode('zzz', type);}, TypeError);
       assert.throws(function () { encoder.encode('', type);}, TypeError);
     });
+
     it('should encode/decode LocalTime as time', function () {
       const encoder = new Encoder(3, {});
       const type = {code: dataTypes.time};
@@ -615,6 +648,7 @@ describe('encoder', function () {
       });
       /* eslint-enable no-multi-spaces */
     });
+
     it('should refuse to encode invalid values as LocalTime.', function () {
       const encoder = new Encoder(4, {});
       const type = {code: dataTypes.time};
@@ -624,33 +658,40 @@ describe('encoder', function () {
       assert.throws(function () { encoder.encode(23.0, type);}, TypeError);
     });
   });
+
   describe('#encode()', function () {
     it('should return null when value is null', function () {
       const encoder = new Encoder(2, {});
       assert.strictEqual(encoder.encode(null), null);
     });
+
     it('should return unset when value is unset', function () {
       const encoder = new Encoder(4, {});
       assert.strictEqual(encoder.encode(types.unset), types.unset);
     });
+
     it('should return null when value is undefined', function () {
       const encoder = new Encoder(2, {});
       assert.strictEqual(encoder.encode(undefined), null);
     });
+
     it('should return unset when value is undefined and flag set', function () {
       const encoder = new Encoder(4, { encoding: { useUndefinedAsUnset: true}});
       assert.strictEqual(encoder.encode(undefined), types.unset);
     });
+
     it('should throw TypeError when value is unset with low protocol version', function () {
       const encoder = new Encoder(2, {});
       assert.throws(function () {
         encoder.encode(types.unset);
       }, TypeError);
     });
+
     it('should return null when value is undefined and flag set with low protocol version', function () {
       const encoder = new Encoder(2, { encoding: { useUndefinedAsUnset: true}});
       assert.strictEqual(encoder.encode(undefined), null);
     });
+
     it('should decode 0-length map values of supported types into 0-length values', function () {
       const input = {'key1': Buffer.from([])};
       [2, 3].forEach(v => {
@@ -665,6 +706,7 @@ describe('encoder', function () {
         });
       });
     });
+
     it('should decode 0-length map values of unsupported types into null values', function () {
       // For some unperceivable reason the server can give us an empty buffer as a map value for any type.
       // We must be able to handle this behaviour.
@@ -785,6 +827,7 @@ describe('encoder', function () {
       //the result should be a single value
       assert.strictEqual(options.getRoutingKey().toString('hex'), '01');
     });
+
     it('should not affect Buffer routing keys', function () {
       let options = getExecOptions({
         routingKey: utils.allocBufferFromArray([1, 2, 3, 4])
@@ -801,6 +844,7 @@ describe('encoder', function () {
       //The routing key should take precedence over routingIndexes
       assert.strictEqual(options.getRoutingKey().toString('hex'), initialRoutingKey);
     });
+
     it('should not affect Token routing keys', function () {
       const token = new tokenizer.Murmur3Tokenizer().hash('4611686018427387904');
       const options = getExecOptions({
@@ -810,6 +854,7 @@ describe('encoder', function () {
       encoder.setRoutingKeyFromUser([1, 'text'], options);
       assert.strictEqual(options.getRoutingKey(), token);
     });
+
     it('should not affect TokenRange routing keys', function () {
       const murmur3 = new tokenizer.Murmur3Tokenizer();
       const start = murmur3.hash('-9223372036854775808');
@@ -822,6 +867,7 @@ describe('encoder', function () {
       encoder.setRoutingKeyFromUser([1, 'text'], options);
       assert.strictEqual(options.getRoutingKey(), range);
     });
+
     it('should build routing key based on routingIndexes', function () {
       let options = getExecOptions({
         hints: ['int'],
@@ -859,6 +905,7 @@ describe('encoder', function () {
         // eslint-disable-next-line no-useless-concat
         '0004' + utils.allocBufferFromString('yeah').toString('hex') + '00' + '0004' + '01010101' + '00');
     });
+
     it('should allow null/undefined routingIndexes', function () {
       const execOptions = getExecOptions({
         hints: ['int', 'text'],
@@ -868,6 +915,7 @@ describe('encoder', function () {
       // It doesn't fail, it bypass routing logic
       assert.strictEqual(execOptions.getRoutingKey(), undefined);
     });
+
     it('should allow null or undefined routingKey parts', function () {
       let options = getExecOptions({
         routingKey: [utils.allocBufferFromArray([0]), null, utils.allocBufferFromArray([1])]
@@ -881,12 +929,14 @@ describe('encoder', function () {
       encoder.setRoutingKeyFromUser([], options);
       assert.strictEqual(options.getRoutingKey(), null);
     });
+
     it('should throw TypeError if invalid routingKey type is provided', function () {
       assert.throws(() => {
         encoder.setRoutingKeyFromUser([1, 'text'], getExecOptions({ routingKey: 123 }));
       }, TypeError);
     });
   });
+
   describe('#parseFqTypeName()', function () {
     it('should parse single type names', function () {
       const encoder = new Encoder(2, {});
@@ -923,6 +973,7 @@ describe('encoder', function () {
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.AsciiType');
       assert.strictEqual(dataTypes.ascii, type.code);
     });
+
     it('should parse complex type names', function () {
       const encoder = new Encoder(2, {});
       let type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)');
@@ -942,16 +993,17 @@ describe('encoder', function () {
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.LongType)');
       assert.strictEqual(dataTypes.map, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.bigint, type.info[1].code);
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.TupleType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type)');
       assert.strictEqual(dataTypes.tuple, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.int, type.info[1].code);
     });
+
     it('should parse frozen types', function () {
       const encoder = new Encoder(2, {});
       let type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.TimeUUIDType))');
@@ -961,13 +1013,14 @@ describe('encoder', function () {
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.FrozenType(org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type)))');
       assert.strictEqual(dataTypes.map, type.code);
-      assert.ok(util.isArray(type.info));
+      assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.list, type.info[1].code);
       const subType = type.info[1].info;
       assert.ok(subType);
       assert.strictEqual(dataTypes.int, subType.code);
     });
+
     it('should parse udt types', function () {
       const encoder = new Encoder(2, {});
       const typeText =
@@ -985,6 +1038,7 @@ describe('encoder', function () {
       assert.strictEqual('number', dataType.info.fields[1].name);
       assert.strictEqual(dataTypes.varchar, dataType.info.fields[1].type.code);
     });
+
     it('should parse nested udt types', function () {
       const encoder = new Encoder(2, {});
       const typeText =
@@ -1021,11 +1075,9 @@ describe('encoder', function () {
       assert.strictEqual('number', phonesSubType.info.fields[1].name);
     });
   });
+
   describe('#parseTypeName()', function () {
-    function throwIfCalled() {
-      throw new Error('This function should not be called');
-    }
-    it('should parse single type names', function (done) {
+    it('should parse single type names', async () => {
       const encoder = new Encoder(4, {});
       /* eslint-disable no-multi-spaces */
       const items = [
@@ -1047,16 +1099,15 @@ describe('encoder', function () {
         ['ascii',      dataTypes.ascii]
       ];
       /* eslint-enable no-multi-spaces */
-      utils.eachSeries(items, function eachCb(item, next) {
-        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
-          assert.ifError(err);
-          assert.ok(dataType);
-          assert.strictEqual(dataType.code, item[1]);
-          next();
-        });
-      }, done);
+
+      for (const item of items) {
+        const dataType = await encoder.parseTypeName('ks1', item[0], 0, null, helper.failop);
+        assert.ok(dataType);
+        assert.strictEqual(dataType.code, item[1]);
+      }
     });
-    it('should parse complex type names', function (done) {
+
+    it('should parse complex type names', async () => {
       const encoder = new Encoder(4, {});
       const items = [
         ['list<int>', dataTypes.list, dataTypes.int],
@@ -1067,170 +1118,88 @@ describe('encoder', function () {
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
         ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
       ];
-      utils.eachSeries(items, function eachCb(item, next) {
-        encoder.parseTypeName('ks1', item[0], 0, null, throwIfCalled, function (err, dataType) {
-          assert.ifError(err);
-          assert.ok(dataType);
-          assert.strictEqual(dataType.code, item[1]);
-          assert.notEqual(dataType.info, null);
-          if (util.isArray(item[2])) {
-            assert.strictEqual(dataType.info.length, item[2].length);
-            dataType.info.forEach(function (childType, i) {
-              assert.strictEqual(childType.code, item[2][i]);
-            });
-          }
-          else {
-            assert.strictEqual(dataType.info.code, item[2]);
-          }
-          next();
-        });
-      }, done);
-    });
-    it('should parse nested subtypes', function (done) {
-      const encoder = new Encoder(4, {});
-      utils.series([
-        function (next) {
-          const name = 'map<text,frozen<list<frozen<map<text,frozen<list<int>>>>>>>';
-          encoder.parseTypeName('ks1', name, 0, null, throwIfCalled, function (err, type) {
-            assert.ifError(err);
-            assert.ok(type);
-            assert.strictEqual(type.code, dataTypes.map);
-            assert.strictEqual(type.info[0].code, dataTypes.text);
-            assert.strictEqual(type.info[1].code, dataTypes.list);
-            const subType1 = type.info[1];
-            assert.strictEqual(subType1.info.code, dataTypes.map);
-            const subType2 = subType1.info.info[1];
-            assert.strictEqual(subType2.code, dataTypes.list);
-            assert.strictEqual(subType2.info.code, dataTypes.int);
-            next();
+
+      for (const item of items) {
+        const dataType = await encoder.parseTypeName('ks1', item[0], 0, null, helper.failop);
+        assert.ok(dataType, `Type not parsed for ${item[0]}`);
+        assert.strictEqual(dataType.code, item[1]);
+        assert.notEqual(dataType.info, null);
+        if (Array.isArray(item[2])) {
+          assert.strictEqual(dataType.info.length, item[2].length);
+          dataType.info.forEach(function (childType, i) {
+            assert.strictEqual(childType.code, item[2][i]);
           });
         }
-      ], done);
-    });
-    it('should parse udts', function (done) {
-      const encoder = new Encoder(4, {});
-      utils.series([
-        function (next) {
-          let called = 0;
-          function udtResolver(ks, udtName, callback) {
-            assert.strictEqual(ks, 'ks2');
-            assert.strictEqual(udtName, 'address');
-            called++;
-            setImmediate(function () {
-              callback(null, 'udt info dummy');
-            });
-          }
-          const name = 'frozen<address>';
-          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
-            assert.ifError(err);
-            assert.ok(type);
-            assert.strictEqual(type.code, dataTypes.udt);
-            assert.strictEqual(type.options.frozen, true);
-            assert.strictEqual(called, 1);
-            next();
-          });
-        },
-        function (next) {
-          let called = 0;
-          function udtResolver(ks, udtName, callback) {
-            assert.strictEqual(ks, 'ks2');
-            assert.strictEqual(udtName, 'address');
-            called++;
-            setImmediate(function () {
-              callback(null, 'udt info dummy');
-            });
-          }
-          const name = 'address';
-          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
-            assert.ifError(err);
-            assert.ok(type);
-            assert.strictEqual(type.code, dataTypes.udt);
-            assert.strictEqual(type.options.frozen, false);
-            assert.strictEqual(called, 1);
-            next();
-          });
+        else {
+          assert.strictEqual(dataType.info.code, item[2]);
         }
-      ], done);
-    });
-    it('should parse quoted udts', function (done) {
-      const encoder = new Encoder(4, {});
-      utils.series([
-        function (next) {
-          let called = 0;
-          function udtResolver(ks, udtName, callback) {
-            assert.strictEqual(ks, 'ks2');
-            assert.strictEqual(udtName, 'PHONE');
-            called++;
-            setImmediate(function () {
-              callback(null, 'udt info dummy');
-            });
-          }
-          const name = 'frozen<"PHONE">';
-          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
-            assert.ifError(err);
-            assert.ok(type);
-            assert.strictEqual(type.code, dataTypes.udt);
-            assert.strictEqual(type.options.frozen, true);
-            assert.strictEqual(called, 1);
-            next();
-          });
-        },
-        function (next) {
-          let called = 0;
-          function udtResolver(ks, udtName, callback) {
-            assert.strictEqual(ks, 'ks2');
-            assert.strictEqual(udtName, 'PhoNe');
-            called++;
-            setImmediate(function () {
-              callback(null, 'udt info dummy');
-            });
-          }
-          const name = '"PhoNe"';
-          encoder.parseTypeName('ks2', name, 0, null, udtResolver, function (err, type) {
-            assert.ifError(err);
-            assert.ok(type);
-            assert.strictEqual(type.code, dataTypes.udt);
-            assert.strictEqual(type.options.frozen, false);
-            assert.strictEqual(called, 1);
-            next();
-          });
-        }
-      ], done);
-    });
-    it('should callback with TypeError when not found', function (done) {
-      const encoder = new Encoder(4, {});
-      let called = 0;
-      function udtResolver(k, u, callback) {
-        called++;
-        setImmediate(function () {
-          callback(null, null);
-        });
       }
-      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
-        helper.assertInstanceOf(err, TypeError);
-        assert.ok(!type);
-        assert.strictEqual(called, 1);
-        done();
+    });
+
+    it('should parse nested subtypes', async () => {
+      const encoder = new Encoder(4, {});
+      const name = 'map<text,frozen<list<frozen<map<text,frozen<list<int>>>>>>>';
+      const type = await encoder.parseTypeName('ks1', name, 0, null, helper.failop);
+      assert.ok(type);
+      assert.strictEqual(type.code, dataTypes.map);
+      assert.strictEqual(type.info[0].code, dataTypes.text);
+      assert.strictEqual(type.info[1].code, dataTypes.list);
+      const subType1 = type.info[1];
+      assert.strictEqual(subType1.info.code, dataTypes.map);
+      const subType2 = subType1.info.info[1];
+      assert.strictEqual(subType2.code, dataTypes.list);
+      assert.strictEqual(subType2.info.code, dataTypes.int);
+    });
+
+    [
+      true, false
+    ].forEach(frozen => {
+      it(`should parse udts with frozen ${frozen}`, async () => {
+        const encoder = new Encoder(4, {});
+        const udtResolver = sinon.spy(() => Promise.resolve('udt info dummy'));
+        const name = frozen ? 'frozen<address>' : 'address';
+        const type = await encoder.parseTypeName('ks_sample', name, 0, null, udtResolver);
+        assert.ok(type);
+        assert.strictEqual(type.code, dataTypes.udt);
+        assert.strictEqual(type.options.frozen, frozen);
+        assert.strictEqual(udtResolver.callCount, 1);
+        assert.deepStrictEqual(udtResolver.firstCall.args, ['ks_sample', 'address']);
       });
     });
-    it('should callback with the same error if udtResolver fails', function (done) {
+
+    [
+      { name: 'PHONE', frozen: true },
+      { name: 'PhoNe', frozen: false }
+    ].forEach(({ name, frozen }) => {
+      it(`should parse quoted udts with frozen ${frozen}`, async () => {
+        const encoder = new Encoder(4, {});
+        const udtResolver = sinon.spy(() => Promise.resolve('udt info dummy'));
+        const nameParameter = frozen ? `frozen<"${name}">` : `"${name}"`;
+        const type = await encoder.parseTypeName('ks_sample2', nameParameter, 0, null, udtResolver);
+        assert.strictEqual(type.code, dataTypes.udt);
+        assert.strictEqual(type.options.frozen, frozen);
+        assert.strictEqual(udtResolver.callCount, 1);
+        assert.deepStrictEqual(udtResolver.firstCall.args, ['ks_sample2', name]);
+      });
+    });
+
+    it('should callback with TypeError when not found', async () => {
       const encoder = new Encoder(4, {});
-      let called = 0;
+      const udtResolver = sinon.spy(() => Promise.resolve(null));
+      await helper.assertThrowsAsync(encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver), TypeError);
+      assert.ok(udtResolver.calledOnce);
+    });
+
+    it('should callback with the same error if udtResolver fails', async () => {
+      const encoder = new Encoder(4, {});
       const testError = new Error('Test error');
-      function udtResolver(k, u, callback) {
-        called++;
-        setImmediate(function () {
-          callback(testError);
-        });
-      }
-      encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver, function (err, type) {
-        assert.strictEqual(err, testError);
-        assert.ok(!type);
-        assert.strictEqual(called, 1);
-        done();
-      });
+      const udtResolver = sinon.spy(() => Promise.reject(testError));
+
+      const err = await helper.assertThrowsAsync(encoder.parseTypeName('ks2', 'WHATEVER', 0, null, udtResolver));
+      assert.strictEqual(err, testError);
     });
   });
+
   describe('#parseKeyTypes', function () {
     const encoder = new Encoder(1, {});
     it('should parse single type', function () {
@@ -1245,6 +1214,7 @@ describe('encoder', function () {
       assert.strictEqual(result.isComposite, false);
       assert.strictEqual(result.hasCollections, false);
     });
+
     it('should parse composites', function () {
       const value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.UTF8Type)';
       const result = encoder.parseKeyTypes(value);
@@ -1254,6 +1224,7 @@ describe('encoder', function () {
       assert.strictEqual(result.isComposite, true);
       assert.strictEqual(result.hasCollections, false);
     });
+
     it('should parse composites with collection types', function () {
       const value = 'org.apache.cassandra.db.marshal.CompositeType(org.apache.cassandra.db.marshal.UTF8Type,org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.ColumnToCollectionType(6c6973745f73616d706c65:org.apache.cassandra.db.marshal.ListType(org.apache.cassandra.db.marshal.Int32Type),6d61705f73616d706c65:org.apache.cassandra.db.marshal.MapType(org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.Int32Type)))';
       const result = encoder.parseKeyTypes(value);
@@ -1264,6 +1235,7 @@ describe('encoder', function () {
       assert.strictEqual(result.types[3].code, types.dataTypes.map);
     });
   });
+
   describe('constructor', function () {
     it('should define instance members', function () {
       const encoder = new Encoder(4, {});
@@ -1272,10 +1244,11 @@ describe('encoder', function () {
       assert.strictEqual(typeof encoder.protocolVersion, 'number');
     });
   });
+
   describe('prototype', function () {
     it('should only expose encode() and decode() functions', function () {
       const keys = Object.keys(Encoder.prototype);
-      assert.deepEqual(keys, ['decode', 'encode']);
+      assert.deepStrictEqual(keys, ['decode', 'encode']);
       keys.forEach(function (k) {
         assert.strictEqual(typeof Encoder.prototype[k], 'function');
       });

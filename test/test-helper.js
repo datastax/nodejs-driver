@@ -14,20 +14,58 @@
  * limitations under the License.
  */
 
-"use strict";
-const assert = require('assert');
+'use strict';
+
+const { assert } = require('chai');
+const sinon = require('sinon');
 const util = require('util');
 const path = require('path');
 const policies = require('../lib/policies');
 const types = require('../lib/types');
-const utils = require('../lib/utils.js');
+const utils = require('../lib/utils');
 const spawn = require('child_process').spawn;
+const http = require('http');
+const temp = require('temp').track(true);
 const Client = require('../lib/client');
 const defaultOptions = require('../lib/client-options').defaultOptions;
-const Host = require('../lib/host').Host;
+const { Host, HostMap } = require('../lib/host');
 const OperationState = require('../lib/operation-state');
+const promiseUtils = require('../lib/promise-utils');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
+
+const cassandraVersionByDse = {
+  '4.8': '2.1',
+  '5.0': '3.0',
+  '5.1': '3.11',
+  '6.0': '3.11',
+  '6.7': '3.11',
+  '6.8': '3.11'
+};
+
+const afterNextHandlers = [];
+let testUnhandledError = null;
+
+// Use a afterEach handler at root level
+afterEach(async () => {
+  while (afterNextHandlers.length > 0) {
+    const handler = afterNextHandlers.pop();
+    await handler();
+  }
+});
+
+afterEach('unhandled check', function () {
+  if (testUnhandledError !== null) {
+    const err = testUnhandledError;
+    testUnhandledError = null;
+    this.test.error(err);
+  }
+});
+
+// Add a listener for unhandled rejections and throw the error to exit with 1
+process.on('unhandledRejection', reason => {
+  testUnhandledError = reason;
+});
 
 const helper = {
   /**
@@ -134,92 +172,8 @@ const helper = {
     return prefix + ('000000000000000' + value.toString()).slice(-16);
   },
   ipPrefix: '127.0.0.',
-  Ccm: Ccm,
-  ccmHelper: {
-    /**
-     * @returns {Function}
-     */
-    start: function (nodeLength, options) {
-      return (function (done) {
-        new Ccm().startAll(nodeLength, options, function (err) {
-          done(err);
-        });
-      });
-    },
-    remove: function (callback) {
-      new Ccm().remove(callback);
-    },
-    removeIfAny: function (callback) {
-      new Ccm().remove(function () {
-        //ignore err
-        if (callback) {
-          callback();
-        }
-      });
-    },
-    pauseNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'pause'], callback);
-    },
-    resumeNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'resume'], callback);
-    },
-    /**
-     * Adds a new node to the cluster
-     * @param {number|{nodeIndex: number, dc?: string}} options 1 based index of the node or options.
-     * @param {Function} callback
-     */
-    bootstrapNode: function (options, callback) {
-      if (typeof options === 'number') {
-        options = { nodeIndex: options };
-      }
-
-      const ipPrefix = helper.ipPrefix;
-      helper.trace('bootstrapping node', options.nodeIndex);
-      const params = [
-        'add',
-        'node' + options.nodeIndex,
-        '-i',
-        ipPrefix + options.nodeIndex,
-        '-j',
-        (7000 + 100 * options.nodeIndex).toString(),
-        '-b'
-      ];
-
-      if (options.dc) {
-        params.push('-d', options.dc);
-      }
-
-      new Ccm().exec(params, callback);
-    },
-    /**
-     * @param {Number} nodeIndex 1 based index of the node
-     * @param {Function} callback
-     */
-    startNode: function (nodeIndex, callback) {
-      const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
-      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
-        args.push('--quiet-windows');
-      }
-      new Ccm().exec(args, callback);
-    },
-    /**
-     * @param {Number} nodeIndex 1 based index of the node
-     * @param {Function} callback
-     */
-    stopNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'stop'], callback);
-    },
-    /**
-     * @param {Number} nodeIndex 1 based index of the node
-     * @param {Function} callback
-     */
-    decommissionNode: function (nodeIndex, callback) {
-      new Ccm().exec(['node' + nodeIndex, 'decommission'], callback);
-    },
-    exec: function (params, callback) {
-      new Ccm().exec(params, callback);
-    }
-  },
+  ccm: {},
+  ads: {},
   /**
    * Returns a cql string with a CREATE TABLE command containing all common types
    * @param {String} tableName
@@ -285,7 +239,7 @@ const helper = {
       val1 = val1.toString();
       val2 = val2.toString();
     }
-    if (util.isArray(val1) ||
+    if (Array.isArray(val1) ||
         (val1.constructor && val1.constructor.name === 'Object') ||
         val1 instanceof helper.Map) {
       val1 = util.inspect(val1, {depth: null});
@@ -349,6 +303,54 @@ const helper = {
   },
 
   /**
+   * Asserts promise gets rejected with the provided error
+   */
+  assertThrowsAsync: async (promise, type, message) => {
+    let err;
+    try {
+      await promise;
+    } catch (e) {
+      err = e;
+    }
+
+    assert.instanceOf(err, Error);
+
+    if (type) {
+      assert.instanceOf(err, type);
+    }
+
+    if (message) {
+      let re = message;
+      if (typeof message === 'string') {
+        re = new RegExp(message);
+      }
+
+      assert.match(err.message, re);
+    }
+
+    return err;
+  },
+
+  /**
+   * Invokes the provided function once after the calling test finished.
+   * @param {Function} fn
+   */
+  afterThisTest: function(fn) {
+    afterNextHandlers.push(fn);
+  },
+
+  /**
+   * Invokes client.shutdown() after this test finishes.
+   * @param {Client} client
+   * @returns {Client}
+   */
+  shutdownAfterThisTest: function(client) {
+    this.afterThisTest(() => client.shutdown());
+
+    return client;
+  },
+
+  /**
    * Returns a function that waits on schema agreement before executing callback
    * @param {Client} client
    * @param {Function} callback
@@ -378,7 +380,7 @@ const helper = {
       fn.apply(context, params);
     });
   },
-  wait: function (ms, callback) {
+  waitCallback: function (ms, callback) {
     if (!ms) {
       ms = 0;
     }
@@ -389,42 +391,93 @@ const helper = {
       setTimeout(callback, ms);
     });
   },
-  getCassandraVersion: function() {
-    let version = process.env.TEST_CASSANDRA_VERSION;
-    if (!version) {
-      version = '3.0.5';
+
+  /**
+   * Gets the Apache Cassandra version.
+   * When the server is DSE, gets the Apache Cassandra equivalent.
+   */
+  getCassandraVersion: function () {
+    const serverInfo = this.getServerInfo();
+
+    if (!serverInfo.isDse) {
+      return serverInfo.version;
     }
-    return version;
+
+    const dseVersion = serverInfo.version.split('.').slice(0, 2).join('.');
+    return cassandraVersionByDse[dseVersion] || cassandraVersionByDse['6.7'];
   },
+
+  /**
+   * Gets the server version and type.
+   * @return {{version, isDse}}
+   */
+  getServerInfo: function () {
+    return {
+      version: process.env['CCM_VERSION'] || '3.11.4',
+      isDse: process.env['CCM_IS_DSE'] === 'true'
+    };
+  },
+
   getSimulatedCassandraVersion: function() {
     let version = this.getCassandraVersion();
     // simulacron does not support protocol V2 and V1, so cap at 2.1.
     if (version < '2.1') {
       version = '2.1.19';
+    } else if (version >= '4.0') {
+      // simulacron does not support protocol V5, so cap at 3.11
+      version = '3.11.2';
     }
     return version;
   },
+
   /**
-   * Determines if the current Cassandra instance version is greater than or equals to the version provided
+   * Determines if the current server is a DSE instance *AND* version is greater than or equals to the version provided
+   * @param {String} version The version in string format, dot separated.
+   * @returns {Boolean}
+   */
+  isDseGreaterThan: function (version) {
+    const serverInfo = this.getServerInfo();
+    if (!serverInfo.isDse) {
+      return false;
+    }
+
+    return helper.versionCompare(serverInfo.version, version);
+  },
+
+  /**
+   * Determines if the current C* or DSE instance version is greater than or equals to the C* version provided
    * @param {String} version The version in string format, dot separated.
    * @returns {Boolean}
    */
   isCassandraGreaterThan: function (version) {
-    const instanceVersion = this.getCassandraVersion().split('.').map(x => parseInt(x, 10));
-    const compareVersion = version.split('.').map(x => parseInt(x, 10) || 0);
+    return helper.versionCompare(helper.getCassandraVersion(), version);
+  },
+
+  versionCompare: function (instanceVersionStr, version) {
+    let expected = [1, 0]; //greater than or equals to
+    if (version.indexOf('<=') === 0) {
+      version = version.substr(2);
+      expected = [-1, 0]; //less than or equals to
+    }
+    else if (version.indexOf('<') === 0) {
+      version = version.substr(1);
+      expected = [-1]; //less than
+    }
+    const instanceVersion = instanceVersionStr.split('.').map(function (x) { return parseInt(x, 10);});
+    const compareVersion = version.split('.').map(function (x) { return parseInt(x, 10) || 0;});
     for (let i = 0; i < compareVersion.length; i++) {
       const compare = compareVersion[i] || 0;
       if (instanceVersion[i] > compare) {
         //is greater
-        return true;
+        return expected.indexOf(1) >= 0;
       }
       else if (instanceVersion[i] < compare) {
         //is smaller
-        return false;
+        return expected.indexOf(-1) >= 0;
       }
     }
     //are equal
-    return true;
+    return expected.indexOf(0) >= 0;
   },
   log: function(levels) {
     if (!levels) {
@@ -459,6 +512,27 @@ const helper = {
     }
     return result;
   },
+
+  /** @returns {Promise<Array} */
+  asyncIteratorToArray: async function (iterable) {
+    const result = [];
+    const iterator = iterable[Symbol.asyncIterator]();
+    while (true) {
+      const item = await iterator.next();
+      if (item.done) {
+        break;
+      }
+
+      const length = result.push(item.value);
+
+      if (length > 1000) {
+        throw new Error('Unexpected never ending async iterator');
+      }
+    }
+
+    return result;
+  },
+
   /**
    * @param arr
    * @param {Function|String} predicate function to compare or property name to compare
@@ -498,20 +572,6 @@ const helper = {
     }
     return filterArr[0];
   },
-  /**
-   * Returns the values of an object
-   * @param {Object} obj
-   */
-  values : function (obj) {
-    const vals = [];
-    for (const key in obj) {
-      if (!obj.hasOwnProperty(key)) {
-        continue;
-      }
-      vals.push(obj[key]);
-    }
-    return vals;
-  },
   Map: MapPolyFill,
   Set: SetPolyFill,
   WhiteListPolicy: WhiteListPolicy,
@@ -542,7 +602,7 @@ const helper = {
 
   /**
    * Version dependent describe() method for mocha test case
-   * @param {String} testVersion Minimum version of Cassandra needed for this test
+   * @param {String} testVersion Minimum version of DSE/Cassandra needed for this test
    * @param {String} title Title of the describe section.
    * @param {Function} func
    */
@@ -562,71 +622,75 @@ const helper = {
     const ipAddress = address.split(':')[0].split('.');
     return ipAddress[ipAddress.length-1];
   },
-
   /**
    * Given a {Client} and a {Number} returns the host whose last octet
    * ends with the requested number.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
+   * @param {Client|HostMap|Array<Host>} hostsOrClient Client to lookup hosts from.
    * @param {Number} number last octet of requested host.
+   * @param {Boolean} [throwWhenNotFound] Determines whether this method should throw an error when the host
+   * can not be found.
    * @returns {Host}
    */
-  findHost: function(client, number) {
-    let host = undefined;
-    const self = this;
-    client.hosts.forEach(function(h) {
-      if(self.lastOctetOf(h) === number.toString()) {
-        host = h;
-      }
-    });
+  findHost: function(hostsOrClient, number, throwWhenNotFound) {
+    let hostArray;
+
+    if (hostsOrClient instanceof HostMap) {
+      hostArray = hostsOrClient.values();
+    } else if (hostsOrClient instanceof Client) {
+      hostArray = hostsOrClient.hosts.values();
+    } else if (Array.isArray(hostsOrClient)) {
+      hostArray = hostsOrClient;
+    } else {
+      throw new Error('First parameter must be the host array/map or the Client');
+    }
+
+    const host = hostArray.find(h => +this.lastOctetOf(h) === +number);
+
+    if (throwWhenNotFound && !host) {
+      throw new Error(`Host ${number} not found`);
+    }
+
     return host;
   },
 
   /**
-   * Returns a method that repeatedly checks every second until the given host is present in the client's host
-   * map and is up.  This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
+   * Provides utilities to asynchronously wait on conditions.
    */
-  waitOnHostUp: function(client, number) {
-    const self = this;
-    const hostIsUp = function() {
-      const host = self.findHost(client, number);
-      return host === undefined ? false : host.isUp();
-    };
-
-    return self.setIntervalUntilTask(hostIsUp, 1000, 20);
-  },
-
-  /**
-   * Returns a method that repeatedly checks every second until the given host is present in the client's host
-   * map and is down.  This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
-   */
-  waitOnHostDown: function(client, number) {
-    const self = this;
-    const hostIsDown = function() {
-      const host = self.findHost(client, number);
-      return host === undefined ? false : !host.isUp();
-    };
-
-    return self.setIntervalUntilTask(hostIsDown, 1000, 20);
-  },
-
-  /**
-   * Returns a method that repeatedly checks every second until the given host is not present in the client's host
-   * map. This is attempted up to 20 times and an error is thrown if the condition is not met.
-   * @param {Client|ControlConnection} client Client to lookup hosts from.
-   * @param {Number} number last octet of requested host.
-   */
-  waitOnHostGone: function(client, number) {
-    const self = this;
-    const hostIsGone = function() {
-      const host = self.findHost(client, number);
-      return host === undefined;
-    };
-
-    return self.setIntervalUntilTask(hostIsGone, 1000, 20);
+  wait: {
+    until: async function(condition, maxAttempts = 500, delay = 20) {
+      for (let i = 0; i <= maxAttempts; i++) {
+        // Condition can be both sync or async
+        const c = await condition();
+        if (!c) {
+          if (i === maxAttempts) {
+            throw new Error(`Condition still false after ${maxAttempts * delay}ms: ${condition.toString()}`);
+          }
+          await helper.delayAsync(delay);
+        } else {
+          break;
+        }
+      }
+    },
+    forNodeUp: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
+      const host = helper.findHost(hostsOrClient, lastOctet, true);
+      await this.until(() => host.isUp(), maxAttempts, delay);
+    },
+    forAllNodesUp: async function (client, maxAttempts = 500, delay = 20) {
+      await this.until(() => !client.hosts.values().find(h => !h.isUp()), maxAttempts, delay);
+    },
+    forAllNodesDown: async function (client, maxAttempts = 500, delay = 20) {
+      await this.until(() => !client.hosts.values().find(h => h.isUp()), maxAttempts, delay);
+    },
+    forNodeDown: async function (hostsOrClient, lastOctet, maxAttempts = 500, delay = 20) {
+      const host = helper.findHost(hostsOrClient, lastOctet, true);
+      await this.until(() => !host.isUp(), maxAttempts, delay);
+    },
+    forNodeToBeAdded: async function (hostsOrClient, lastOctet, maxAttempts = 1000, delay = 20) {
+      await this.until(() => helper.findHost(hostsOrClient, lastOctet), maxAttempts, delay);
+    },
+    forNodeToBeRemoved: async function (hostsOrClient, lastOctet, maxAttempts = 1000, delay = 20) {
+      await this.until(() => !helper.findHost(hostsOrClient, lastOctet), maxAttempts, delay);
+    }
   },
 
   /**
@@ -721,6 +785,7 @@ const helper = {
       setTimeout(next, delayMs);
     });
   },
+  delayAsync: (delayMs) => promiseUtils.delay(delayMs),
   queries: {
     basic: "SELECT key FROM system.local",
     basicNoResults: "SELECT key from system.local WHERE key = 'not_existent'"
@@ -735,9 +800,10 @@ const helper = {
     pooling.coreConnectionsPerHost[types.distance.ignored] = 0;
     return pooling;
   },
-  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb) {
+  getHostsMock: function (hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {
     return hostsInfo.map(function (info, index) {
-      const h = new Host(index.toString(), types.protocolVersion.maxSupported, defaultOptions(), {});
+      protocolVersion = protocolVersion || types.protocolVersion.maxSupported;
+      const h = new Host(index.toString(), protocolVersion, defaultOptions(), {});
       h.isUp = function () {
         return !(info.isUp === false);
       };
@@ -747,15 +813,20 @@ const helper = {
       h.prepareCalled = 0;
       h.sendStreamCalled = 0;
       h.connectionKeyspace = [];
-      h.borrowConnection = function (ks, c, cb) {
+      h.borrowConnection = function () {
         if (!h.isUp() || h.shouldBeIgnored) {
-          return cb(new Error('This host should not be used'));
+          throw new Error('This host should not be used');
         }
 
-        h.connectionKeyspace.push(ks);
-
-        cb(null, {
-          prepareOnce: function (q, cb) {
+        return ({
+          protocolVersion: protocolVersion,
+          keyspace: 'ks',
+          changeKeyspace: (keyspace) => {
+            this.keyspace = keyspace;
+            h.connectionKeyspace.push(keyspace);
+            return Promise.resolve();
+          },
+          prepareOnce: function (q, ks, cb) {
             h.prepareCalled++;
             if (prepareQueryCb) {
               return prepareQueryCb(q, h, cb);
@@ -772,15 +843,33 @@ const helper = {
               op.setResult(null, {});
             });
             return op;
+          },
+          prepareOnceAsync: function (q, ks) {
+            return new Promise((resolve, reject) => {
+              h.prepareCalled++;
+
+              if (prepareQueryCb) {
+                return prepareQueryCb(q, h, (err, result) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    resolve(result);
+                  }
+                });
+              }
+
+              resolve({ id: 1, meta: {} });
+            });
           }
         });
       };
-      return h;
+
+      return sinon.spy(h);
     });
   },
-  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb) {
-    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb);
-    return ({
+  getLoadBalancingPolicyFake: function getLoadBalancingPolicyFake(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion) {
+    const hosts = this.getHostsMock(hostsInfo, prepareQueryCb, sendStreamCb, protocolVersion);
+    const fake = {
       newQueryPlan: function (q, ks, cb) {
         cb(null, utils.arrayIterator(hosts));
       },
@@ -806,7 +895,11 @@ const helper = {
           cb();
         }
       }
-    });
+    };
+
+    helper.afterThisTest(() => fake.shutdown());
+
+    return fake;
   },
   /**
    * Returns true if the tests are being run on Windows
@@ -828,191 +921,146 @@ const helper = {
       arr[i] = fn(i);
     }
     return Promise.all(arr);
-  }
-};
-
-function Ccm() {
-  //Use an instance to maintain state
-}
-
-/**
- * Removes previous and creates a new cluster (create, populate and start)
- * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
- * @param {{vnodes: Boolean, yaml: Array, jvmArgs: Array, ssl: Boolean, sleep: Number, ipFormat: String, partitioner: String}} options
- * @param {Function} callback
- */
-Ccm.prototype.startAll = function (nodeLength, options, callback) {
-  const self = this;
-  options = options || {};
-  // adapt to multi dc format so data center naming is consistent.
-  if (typeof nodeLength === 'number') {
-    nodeLength = nodeLength + ':0';
-  }
-  const version = options.version || helper.getCassandraVersion();
-  helper.trace('Starting test C* cluster v%s with %s node(s)', version, nodeLength);
-  utils.series([
-    function (next) {
-      //it wont hurt to remove
-      self.exec(['remove'], function () {
-        //ignore error
-        next();
-      });
-    },
-    function (next) {
-      let create = ['create', 'test', '-v', version];
-      if (process.env.TEST_CASSANDRA_DIR) {
-        create = ['create', 'test', '--install-dir=' + process.env.TEST_CASSANDRA_DIR];
-        helper.trace('With', create[2]);
-      }
-      else if (process.env.TEST_CASSANDRA_BRANCH) {
-        create = ['create', 'test', '-v', process.env.TEST_CASSANDRA_BRANCH];
-        helper.trace('With branch', create[3]);
-      }
-      if (options.ssl) {
-        create.push('--ssl', self.getPath('ssl'));
-      }
-      if (options.partitioner) {
-        create.push('-p');
-        create.push(options.partitioner);
-      }
-      self.exec(create, helper.wait(options.sleep, next));
-    },
-    function (next) {
-      if (!options.yaml) {
-        return next();
-      }
-      helper.trace('With conf', options.yaml);
-      let i = 0;
-      utils.whilst(
-        function condition() {
-          return i < options.yaml.length;
-        },
-        function iterator(whilstNext) {
-          self.exec(['updateconf', options.yaml[i++]], whilstNext);
-        },
-        next
-      );
-    },
-    function (next) {
-      const populate = ['populate', '-n', nodeLength.toString()];
-      if (options.vnodes) {
-        populate.push('--vnodes');
-      }
-      if (options.ipFormat) {
-        populate.push('--ip-format='+ options.ipFormat);
-      }
-      self.exec(populate, helper.wait(options.sleep, next));
-    },
-    function (next) {
-      const start = ['start', '--wait-for-binary-proto'];
-      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
-        start.push('--quiet-windows');
-      }
-      if (util.isArray(options.jvmArgs)) {
-        options.jvmArgs.forEach(function (arg) {
-          // Windows requires jvm arguments to be quoted, while *nix requires unquoted.
-          const jvmArg = helper.isWin() ? '"' + arg + '"' : arg;
-          start.push('--jvm_arg', jvmArg);
-        }, this);
-        helper.trace('With jvm args', options.jvmArgs);
-      }
-      self.exec(start, helper.wait(options.sleep, next));
-    },
-    self.waitForUp.bind(self)
-  ], function (err) {
-    callback(err);
-  });
-};
-
-Ccm.prototype.exec = function (params, callback) {
-  this.spawn('ccm', params, callback);
-};
-
-Ccm.prototype.spawn = function (processName, params, callback) {
-  if (!callback) {
-    callback = function () {};
-  }
-  params = params || [];
-  const originalProcessName = processName;
-  if (helper.isWin()) {
-    params = ['-ExecutionPolicy', 'Unrestricted', processName].concat(params);
-    processName = 'powershell.exe';
-  }
-  const p = spawn(processName, params);
-  const stdoutArray= [];
-  const stderrArray= [];
-  let closing = 0;
-  p.stdout.setEncoding('utf8');
-  p.stderr.setEncoding('utf8');
-  p.stdout.on('data', function (data) {
-    stdoutArray.push(data);
-  });
-
-  p.stderr.on('data', function (data) {
-    stderrArray.push(data);
-  });
-
-  p.on('close', function (code) {
-    if (closing++ > 0) {
-      //avoid calling multiple times
-      return;
+  },
+  requireOptional: function (moduleName) {
+    try {
+      // eslint-disable-next-line
+      return require(moduleName);
     }
-    const info = {code: code, stdout: stdoutArray, stderr: stderrArray};
-    let err = null;
-    if (code !== 0) {
-      err = new Error(
-        'Error executing ' + originalProcessName + ':\n' +
-        info.stderr.join('\n') +
-        info.stdout.join('\n')
-      );
-      err.info = info;
+    catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        return null;
+      }
+      throw err;
     }
-    callback(err, info);
-  });
-};
-
-Ccm.prototype.remove = function (callback) {
-  this.exec(['remove'], callback);
-};
-
-/**
- * Reads the logs to see if the cql protocol is up
- * @param callback
- */
-Ccm.prototype.waitForUp = function (callback) {
-  let started = false;
-  let retryCount = 0;
-  const self = this;
-  utils.whilst(function () {
-    return !started && retryCount < 10;
-  }, function iterator (next) {
-    self.exec(['node1', 'showlog'], function (err, info) {
-      if (err) {
-        return next(err);
-      }
-      const regex = /Starting listening for CQL clients/mi;
-      started = regex.test(info.stdout.join(''));
-      retryCount++;
-      if (!started) {
-        //wait 1 sec between retries
-        return setTimeout(next, 1000);
-      }
-      return next();
+  },
+  assertBufferString: function (instance, textValue) {
+    this.assertInstanceOf(instance, Buffer);
+    assert.strictEqual(instance.toString(), textValue);
+  },
+  conditionalDescribe: function (condition, text) {
+    if (condition) {
+      return describe;
+    }
+    return (function xdescribeWithText(name, fn) {
+      return xdescribe(util.format('%s [%s]', name, text), fn);
     });
-  }, callback);
-};
-
-/**
- * Gets the path of the ccm
- * @param subPath
- */
-Ccm.prototype.getPath = function (subPath) {
-  let ccmPath = process.env.CCM_PATH;
-  if (!ccmPath) {
-    ccmPath = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
-    ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
+  },
+  getOptions: function (options) {
+    return utils.extend({}, helper.baseOptions, options);
+  },
+  /**
+   * @param {ResultSet} result
+   */
+  keyedById: function (result) {
+    const map = {};
+    const columnKeys = result.columns.map(function (c) { return c.name;});
+    if (columnKeys.indexOf('id') < 0 || columnKeys.indexOf('value') < 0) {
+      throw new Error('ResultSet must contain the columns id and value');
+    }
+    result.rows.forEach(function (row) {
+      map[row['id']] = row['value'];
+    });
+    return map;
+  },
+  /**
+   * Connects to the cluster, makes a few queries and shutsdown the client
+   * @param {Client} client
+   * @param {Function} callback
+   */
+  connectAndQuery: function (client, callback) {
+    const self = this;
+    utils.series([
+      client.connect.bind(client),
+      function doSomeQueries(next) {
+        utils.timesSeries(10, function (n, timesNext) {
+          client.execute(self.queries.basic, timesNext);
+        }, next);
+      },
+      client.shutdown.bind(client)
+    ], callback);
+  },
+  /**
+   * Identifies the host that is the spark master (the one that is listening on port 7077)
+   * and returns it.
+   * @param {Client} client instance that contains host metadata.
+   * @param {Function} callback invoked with the host that is the spark master or error.
+   */
+  findSparkMaster: function (client, callback) {
+    client.execute('call DseClientTool.getAnalyticsGraphServer();', function(err, result) {
+      if(err) {
+        return callback(err);
+      }
+      const row = result.first();
+      const host = row.result.ip;
+      callback(null, host);
+    });
+  },
+  /**
+   * Checks the spark cluster until there are the number of desired expected workers.  This
+   * is required as by the time a node is up and listening on the CQL interface it is not a given
+   * that it is partaking as a spark worker.
+   *
+   * Unfortunately there isn't a very good way to check that workers are listening as spark will choose an arbitrary
+   * port for the worker and there is no other interface that exposes how many workers are active.  The best
+   * alternative is to do a GET on http://master:7080/ and do a regular expression match to resolve the number of
+   * active workers.  This could be somewhat fragile and break easily in future releases.
+   *
+   * @param {Client} client client instace that contains host metadata (used for resolving master address).
+   * @param {Number} expectedWorkers The number of workers expected.
+   * @param {Function} callback Invoked after expectedWorkers found or at least 100 seconds have passed.
+   */
+  waitForWorkers: function(client, expectedWorkers, callback) {
+    helper.trace("Waiting for %d spark workers", expectedWorkers);
+    const workerRE = /Alive Workers:.*(\d+)<\/li>/;
+    let numWorkers = 0;
+    let attempts = 0;
+    const maxAttempts = 1000;
+    utils.whilst(
+      function checkWorkers() {
+        return numWorkers < expectedWorkers && attempts++ < maxAttempts;
+      },
+      function(cb) {
+        setTimeout(function() {
+          let errored = false;
+          // resolve master each time in oft chance it changes (highly unlikely).
+          helper.findSparkMaster(client, function(err, master) {
+            if(err) {
+              cb();
+            }
+            const req = http.get({host: master, port: 7080, path: '/'}, function(response) {
+              let body = '';
+              response.on('data', function (data) {
+                body += data;
+              });
+              response.on('end', function () {
+                const match = body.match(workerRE);
+                if (match) {
+                  numWorkers = parseFloat(match[1]);
+                  helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
+                } else {
+                  helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
+                }
+                if (!errored) {
+                  cb();
+                }
+              });
+            });
+            req.on('error', function (err) {
+              errored = true;
+              helper.trace("(%d/%d) Got error while fetching workers.", attempts+1, maxAttempts, err);
+              cb();
+            });
+          });
+        }, 100);
+      }, function complete() {
+        if(numWorkers < expectedWorkers) {
+          helper.trace('WARNING: After %d attempts only %d/%d workers were active.', maxAttempts, numWorkers, expectedWorkers);
+        }
+        callback();
+      }
+    );
   }
-  return path.join(ccmPath, subPath);
 };
 
 /**
@@ -1023,7 +1071,7 @@ function MapPolyFill(arr) {
   this.arr = arr || [];
   const self = this;
   Object.defineProperty(this, 'size', {
-    get: () => self.arr.length,
+    get: function() { return self.arr.length; },
     configurable: false
   });
 }
@@ -1064,6 +1112,491 @@ SetPolyFill.prototype.add = function (x) {
 SetPolyFill.prototype.toString = function() {
   return this.arr.toString();
 };
+
+// Core driver used ccmHelper
+helper.ccmHelper = helper.ccm;
+
+/**
+ * Removes previous and creates a new cluster (create, populate and start)
+ * @param {Number|String} nodeLength number of nodes in the cluster. If multiple dcs, use the notation x:y:z:...
+ * @param {{[vnodes]: Boolean, [yaml]: Array.<String>, [jvmArgs]: Array.<String>, [ssl]: Boolean,
+ *  [dseYaml]: Array.<String>, [workloads]: Array.<String>, [sleep]: Number, [ipFormat]: String|null, partitioner: String}} options
+ * @param {Function} callback
+ */
+helper.ccm.startAll = function (nodeLength, options, callback) {
+  const self = helper.ccm;
+  options = options || {};
+  // adapt to multi dc format so data center naming is consistent.
+  if (typeof nodeLength === 'number') {
+    nodeLength = nodeLength + ':0';
+  }
+
+  const serverInfo = helper.getServerInfo();
+
+  helper.trace(`Starting ${serverInfo.isDse ? 'DSE' : 'Cassandra'} cluster v${serverInfo.version} with ${nodeLength} node(s)`);
+
+  utils.series([
+    function (next) {
+      //it wont hurt to remove
+      self.exec(['remove'], function () {
+        //ignore error
+        next();
+      });
+    },
+    function (next) {
+      const clusterName = helper.getRandomName('test');
+      let create = ['create', clusterName];
+
+      if (serverInfo.isDse) {
+        create.push('--dse');
+      }
+
+      create.push('-v', serverInfo.version);
+
+      if (process.env['CCM_INSTALL_DIR']) {
+        create = ['create', clusterName, '--install-dir=' + process.env['CCM_INSTALL_DIR']];
+        helper.trace('With', create[2]);
+      }
+
+      if (options.ssl) {
+        create.push('--ssl', self.getPath('ssl'));
+      }
+
+      if (options.partitioner) {
+        create.push('-p');
+        create.push(options.partitioner);
+      }
+
+      self.exec(create, helper.waitCallback(options.sleep, next));
+    },
+    function (next) {
+      const populate = ['populate', '-n', nodeLength.toString()];
+      if (options.vnodes) {
+        populate.push('--vnodes');
+      }
+      if (options.ipFormat) {
+        populate.push('--ip-format='+ options.ipFormat);
+      }
+      self.exec(populate, helper.waitCallback(options.sleep, next));
+    },
+    function (next) {
+      if (!options.yaml || !options.yaml.length) {
+        return next();
+      }
+      helper.trace('With cassandra yaml options', options.yaml);
+      self.exec(['updateconf'].concat(options.yaml), next);
+    },
+    function (next) {
+      if (!options.dseYaml || !options.dseYaml.length) {
+        return next();
+      }
+      helper.trace('With dse yaml options', options.dseYaml);
+      self.exec(['updatedseconf'].concat(options.dseYaml), next);
+    },
+    function (next) {
+      if (!options.workloads || !options.workloads.length) {
+        return next();
+      }
+      helper.trace('With workloads', options.workloads);
+      self.exec(['setworkload', options.workloads.join(',')], next);
+    },
+    function (next) {
+      const start = ['start', '--wait-for-binary-proto'];
+
+      if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
+        start.push('--quiet-windows');
+      }
+
+      if (Array.isArray(options.jvmArgs)) {
+        options.jvmArgs.forEach(function (arg) {
+          start.push('--jvm_arg', arg);
+        }, this);
+        helper.trace('With jvm args', options.jvmArgs);
+      }
+
+      self.exec(start, helper.waitCallback(options.sleep, next));
+    },
+    self.waitForUp.bind(self)
+  ], function (err) {
+    callback(err);
+  });
+};
+
+helper.ccm.start = function (nodeLength, options) {
+  return (function executeStartAll(next) {
+    helper.ccm.startAll(nodeLength, options, next);
+  });
+};
+
+/**
+ * Adds a new node to the cluster
+ * @param {number|{nodeIndex: number, dc?: string}} options 1 based index of the node or options.
+ * @param {Function} callback
+ */
+helper.ccm.bootstrapNode = function (options, callback) {
+  if (typeof options === 'number') {
+    options = { nodeIndex: options };
+  }
+
+  const ipPrefix = helper.ipPrefix;
+  helper.trace('bootstrapping node', options.nodeIndex);
+  const ccmArgs = [
+    'add',
+    'node' + options.nodeIndex,
+    '-i',
+    ipPrefix + options.nodeIndex,
+    '-j',
+    (7000 + 100 * options.nodeIndex).toString(),
+    '-b'
+  ];
+
+  if (helper.getServerInfo().isDse) {
+    ccmArgs.push('--dse');
+  }
+
+  if (options.dc) {
+    ccmArgs.push('-d', options.dc);
+  }
+
+  helper.ccm.exec(ccmArgs, callback);
+};
+
+helper.ccm.decommissionNode = function (nodeIndex, callback) {
+  helper.trace('decommissioning node', nodeIndex);
+  const args = ['node' + nodeIndex, 'decommission'];
+  // Special case for C* 3.12+, DSE 5.1+, force decommission (see CASSANDRA-12510)
+  if (helper.isDseGreaterThan('5.1')) {
+    args.push('--force');
+  }
+  helper.ccm.exec(args, callback);
+};
+
+/**
+ * Sets the workload(s) for a given node.
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Array<String>} workloads workloads to set.
+ * @param {Function} callback
+ */
+helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
+  helper.trace('node', nodeIndex, 'with workloads', workloads);
+  helper.ccm.exec([
+    'node' + nodeIndex,
+    'setworkload',
+    workloads.join(',')
+  ], callback);
+};
+
+/**
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Function} callback
+ */
+helper.ccm.startNode = function (nodeIndex, callback) {
+  const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+
+  if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
+    args.push('--quiet-windows');
+  }
+
+  helper.ccm.exec(args, callback);
+};
+
+/**
+ * @param {Number} nodeIndex 1 based index of the node
+ * @param {Function} callback
+ */
+helper.ccm.stopNode = function (nodeIndex, callback) {
+  helper.ccm.exec(['node' + nodeIndex, 'stop'], callback);
+};
+
+helper.ccm.pauseNode = function (nodeIndex, callback) {
+  helper.ccm.exec(['node' + nodeIndex, 'pause'], callback);
+};
+
+helper.ccm.resumeNode = function (nodeIndex, callback) {
+  helper.ccm.exec(['node' + nodeIndex, 'resume'], callback);
+};
+
+helper.ccm.exec = function (params, callback) {
+  helper.ccm.spawn('ccm', params, callback);
+};
+
+helper.ccm.spawn = function (processName, params, callback) {
+  if (!callback) {
+    callback = function () {};
+  }
+  params = params || [];
+  const originalProcessName = processName;
+  if (process.platform.indexOf('win') === 0) {
+    params = ['/c', processName].concat(params);
+    processName = 'cmd.exe';
+  }
+  const p = spawn(processName, params);
+  const stdoutArray= [];
+  const stderrArray= [];
+  let closing = 0;
+  p.stdout.setEncoding('utf8');
+  p.stderr.setEncoding('utf8');
+  p.stdout.on('data', function (data) {
+    stdoutArray.push(data);
+  });
+
+  p.stderr.on('data', function (data) {
+    stderrArray.push(data);
+  });
+
+  p.on('close', function (code) {
+    if (closing++ > 0) {
+      //avoid calling multiple times
+      return;
+    }
+    const info = {code: code, stdout: stdoutArray, stderr: stderrArray};
+    let err = null;
+    if (code !== 0) {
+      err = new Error(
+        'Error executing ' + originalProcessName + ':\n' +
+        info.stderr.join('\n') +
+        info.stdout.join('\n')
+      );
+      err.info = info;
+    }
+    callback(err, info);
+  });
+};
+
+helper.ccm.remove = function (callback) {
+  helper.ccm.exec(['remove'], callback);
+};
+
+helper.ccm.removeIfAny = function (callback) {
+  helper.ccm.exec(['remove'], function () {
+    // Ignore errors
+    callback();
+  });
+};
+
+/**
+ * Reads the logs to see if the cql protocol is up
+ * @param callback
+ */
+helper.ccm.waitForUp = function (callback) {
+  let started = false;
+  let retryCount = 0;
+  const self = helper.ccm;
+  utils.whilst(function () {
+    return !started && retryCount < 60;
+  }, function iterator (next) {
+    self.exec(['node1', 'showlog'], function (err, info) {
+      if (err) {
+        return next(err);
+      }
+      const regex = /Starting listening for CQL clients/mi;
+      started = regex.test(info.stdout.join(''));
+      retryCount++;
+      if (!started) {
+        //wait 1 sec between retries
+        return setTimeout(next, 1000);
+      }
+      return next();
+    });
+  }, callback);
+};
+
+/**
+ * Gets the path of the ccm
+ * @param subPath
+ */
+helper.ccm.getPath = function (subPath) {
+  let ccmPath = process.env.CCM_PATH;
+  if (!ccmPath) {
+    ccmPath = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
+    ccmPath = path.join(ccmPath, 'workspace/tools/ccm');
+  }
+  return path.join(ccmPath, subPath);
+};
+
+helper.ads._execute = function(processName, params, cb) {
+  const originalProcessName = processName;
+  if (process.platform.indexOf('win') === 0) {
+    params = ['/c', processName].concat(params);
+    processName = 'cmd.exe';
+  }
+  helper.trace('Executing: ' + processName + ' ' + params.join(" "));
+
+  // If process hasn't completed in 10 seconds.
+  let timeout = undefined;
+  if(cb) {
+    timeout = setTimeout(function() {
+      cb("Timed out while waiting for " + processName + " to complete.");
+    }, 10000);
+  }
+
+  const p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
+  p.stdout.setEncoding('utf8');
+  p.stderr.setEncoding('utf8');
+  p.stdout.on('data', function (data) {
+    helper.trace("%s_out> %s", originalProcessName, data);
+  });
+
+  p.stderr.on('data', function (data) {
+    helper.trace("%s_err> %s", originalProcessName, data);
+  });
+
+  p.on('close', function (code) {
+    helper.trace("%s exited with code %d", originalProcessName, code);
+    if(cb) {
+      clearTimeout(timeout);
+      if (code === 0) {
+        cb();
+      } else {
+        cb(Error("Process exited with non-zero exit code: " + code));
+      }
+    }
+  });
+
+  return p;
+};
+
+/**
+ * Starts the embedded-ads jar with ldap (port 10389) and kerberos enabled (port 10088).  Depends on ADS_JAR
+ * environment variable to resolve the absolute file path of the embedded-ads jar.
+ *
+ * @param {Function} cb Callback to invoke when server is started and listening.
+ */
+helper.ads.start = function(cb) {
+  const self = this;
+  temp.mkdir('ads', function(err, dir) {
+    if(err) {
+      cb(err);
+    }
+    self.dir = dir;
+    const jarFile = self.getJar();
+    const processName = 'java';
+    const params = ['-jar', jarFile, '-k', '--confdir', self.dir];
+    let initialized = false;
+
+    const timeout = setTimeout(function() {
+      cb(new Error("Timed out while waiting for ADS server to start."));
+    }, 10000);
+
+    self.process = self._execute(processName, params, function() {
+      if(!initialized) {
+        cb();
+      }
+    });
+    self.process.stdout.on('data', function (data) {
+      // This is a bit of a kludge, check for a particular log statement which indicates
+      // that all principals have been created before invoking the completion callback.
+      if(data.indexOf('Principal Initialization Complete.') !== -1) {
+        initialized = true;
+        // Set KRB5_CONFIG environment variable so kerberos module knows to use it.
+        process.env.KRB5_CONFIG = self.getKrb5ConfigPath();
+        clearTimeout(timeout);
+        cb();
+      }
+    });
+  });
+};
+
+/**
+ * Invokes a klist to list the current registered tickets and their expiration if trace is enabled.
+ *
+ * This is really only useful for debugging.
+ *
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.listTickets = function(cb) {
+  this._execute('klist', [], cb);
+};
+
+/**
+ * Acquires a ticket for the given username and its principal.
+ * @param {String} username Username to acquire ticket for (i.e. cassandra).
+ * @param {String} principal Principal to acquire ticket for (i.e. cassandra@DATASTAX.COM).
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.acquireTicket = function(username, principal, cb) {
+  const keytab = this.getKeytabPath(username);
+
+  // Use ktutil on windows, kinit otherwise.
+  const processName = 'kinit';
+  const params = ['-t', keytab, '-k', principal];
+  if (process.platform.indexOf('win') === 0) {
+    // Not really sure what to do here yet...
+  }
+  this._execute(processName, params, cb);
+};
+
+/**
+ * Destroys all tickets for the given principal.
+ * @param {String} principal Principal for whom its tickets will be destroyed (i.e. dse/127.0.0.1@DATASTAX.COM).
+ * @param {Function} cb Callback to invoke on completion.
+ */
+helper.ads.destroyTicket = function(principal, cb) {
+  if (typeof principal === 'function') {
+    //noinspection JSValidateTypes
+    cb = principal;
+    principal = null;
+  }
+
+  // Use ktutil on windows, kdestroy otherwise.
+  const processName = 'kdestroy';
+  const params = [];
+  if (process.platform.indexOf('win') === 0) {
+    // Not really sure what to do here yet...
+  }
+  this._execute(processName, params, cb);
+};
+
+/**
+ * Stops the server process.
+ * @param {Function} cb Callback to invoke when server stopped or with an error.
+ */
+helper.ads.stop = function(cb) {
+  if(this.process !== undefined) {
+    if(this.process.exitCode) {
+      helper.trace("Server already stopped with exit code %d.", this.process.exitCode);
+      cb();
+    } else {
+      this.process.on('close', function () {
+        cb();
+      });
+      this.process.on('error', cb);
+      this.process.kill('SIGINT');
+    }
+  } else {
+    cb(Error("Process is not defined."));
+  }
+};
+
+/**
+ * Gets the path of the embedded-ads jar.  Resolved from ADS_JAR environment variable or $HOME/embedded-ads.jar.
+ */
+helper.ads.getJar = function () {
+  let adsJar = process.env.ADS_JAR;
+  if (!adsJar) {
+    helper.trace("ADS_JAR environment variable not set, using $HOME/embedded-ads.jar");
+    adsJar = (process.platform === 'win32') ? process.env.HOMEPATH : process.env.HOME;
+    adsJar = path.join(adsJar, 'embedded-ads.jar');
+  }
+  helper.trace("Using %s for embedded ADS server.", adsJar);
+  return adsJar;
+};
+
+/**
+ * Returns the file path to the keytab for the given user.
+ * @param {String} username User to resolve keytab for.
+ */
+helper.ads.getKeytabPath = function(username) {
+  return path.join(this.dir, username + ".keytab");
+};
+
+/**
+ * Returns the file path to the krb5.conf file generated by ads.
+ */
+helper.ads.getKrb5ConfigPath = function() {
+  return path.join(this.dir, 'krb5.conf');
+};
+
 
 /**
  * A retry policy for testing purposes only, retries for a number of times
@@ -1151,14 +1684,26 @@ FallthroughRetryPolicy.prototype.onRequestError = FallthroughRetryPolicy.prototy
  * @param {Array} args the arguments to apply to the function.
  */
 function executeIfVersion (testVersion, func, args) {
-  if (helper.isCassandraGreaterThan(testVersion)) {
+  const serverInfo = helper.getServerInfo();
+  let invokeFunction = false;
+
+  if (testVersion.startsWith('dse-')) {
+    if (serverInfo.isDse) {
+      // Compare only if the server instance is DSE
+      invokeFunction = helper.versionCompare(serverInfo.version, testVersion.substr(4));
+    }
+  } else {
+    // Use the C* version (of DSE or the actual C* version)
+    invokeFunction = helper.versionCompare(helper.getCassandraVersion(), testVersion);
+  }
+
+  if (invokeFunction) {
     func.apply(this, args);
   }
 }
 
 /**
  * Policy only suitable for testing, it creates a fixed query plan containing the nodes in the same order, i.e. [a, b].
- * @constructor
  */
 class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy {
 
@@ -1176,6 +1721,18 @@ class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy
     }
 
     this.addresses = addresses;
+  }
+
+  getDistance(host) {
+    if (!this.addresses) {
+      return types.distance.local;
+    }
+
+    if (this.addresses.indexOf(host.address) >= 0) {
+      return types.distance.local;
+    }
+
+    return types.distance.ignored;
   }
 
   newQueryPlan(keyspace, info, callback) {

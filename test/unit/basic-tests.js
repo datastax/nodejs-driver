@@ -15,23 +15,25 @@
  */
 
 "use strict";
-const assert = require('chai').assert;
+const { assert } = require('chai');
+const sinon = require('sinon');
 const util = require('util');
+const events = require('events');
 
-const Client = require('../../lib/client.js');
-const clientOptions = require('../../lib/client-options.js');
+const Client = require('../../lib/client');
+const clientOptions = require('../../lib/client-options');
 const auth = require('../../lib/auth');
 const types = require('../../lib/types');
-const dataTypes = types.dataTypes;
-const loadBalancing = require('../../lib/policies/load-balancing.js');
-const retry = require('../../lib/policies/retry.js');
+const { dataTypes } = types;
+const loadBalancing = require('../../lib/policies/load-balancing');
+const retry = require('../../lib/policies/retry');
 const speculativeExecution = require('../../lib/policies/speculative-execution');
 const timestampGeneration = require('../../lib/policies/timestamp-generation');
 const Encoder = require('../../lib/encoder');
-const utils = require('../../lib/utils.js');
+const utils = require('../../lib/utils');
 const writers = require('../../lib/writers');
 const OperationState = require('../../lib/operation-state');
-const helper = require('../test-helper.js');
+const helper = require('../test-helper');
 
 const contactPoints = ['a'];
 
@@ -155,7 +157,7 @@ describe('types', function () {
         const t = new Tuple('first2', 'second2', 'third2');
         assert.strictEqual(t.length, 3);
         const values = t.values();
-        assert.ok(util.isArray(values));
+        assert.ok(Array.isArray(values));
         assert.strictEqual(values.length, 3);
         assert.strictEqual(values[0], 'first2');
         assert.strictEqual(values[1], 'second2');
@@ -819,52 +821,91 @@ describe('clientOptions', function () {
     });
   });
 });
+
 describe('writers', function () {
   describe('WriteQueue', function () {
-    it('should buffer until threshold is passed', function (done) {
-      let itemCallbackCounter = 0;
+    it('should buffer until threshold is passed', async () => {
       const coalescingThreshold = 50;
       const buffers = [];
-      let totalLength = 0;
       const socketMock = {
         write: function (buf, cb) {
           buffers.push(buf);
-          totalLength += buf.length;
-          if (cb) {
-            setTimeout(cb, 20);
-          }
-          return (totalLength < coalescingThreshold);
+          setImmediate(cb);
+          return true;
         },
-        on: utils.noop,
-        cork: utils.noop,
-        uncork: utils.noop
+        on: utils.noop
       };
+
       const options = utils.extend({}, clientOptions.defaultOptions());
       options.socketOptions.coalescingThreshold = coalescingThreshold;
       const encoder = new Encoder(3, options);
       const queue = new writers.WriteQueue(socketMock, encoder, options);
       const request = {
-        write: function () {
-          return utils.allocBufferUnsafe(10);
-        }
+        write: () => utils.allocBufferUnsafe(10)
       };
-      function itemCallback() {
-        itemCallbackCounter++;
-      }
+
+      const itemCallback = sinon.spy(() => {});
+
       for (let i = 0; i < 10; i++) {
         queue.push(new OperationState(request, null, utils.noop), itemCallback);
       }
-      helper.setIntervalUntil(() => itemCallbackCounter === 10, 100, 50, () => {
-        // 10 frames
-        assert.strictEqual(itemCallbackCounter, 10);
-        // 10 frames coalesced into 2 buffers of 50b each
-        assert.strictEqual(buffers.length, 2);
-        buffers.forEach(b => assert.strictEqual(b.length, 50));
-        done();
-      });
+
+      await helper.wait.until(() => itemCallback.callCount === 10);
+
+      // 10 frames written
+      assert.strictEqual(itemCallback.callCount, 10);
+      // 10 frames coalesced into 2 buffers of 50b each
+      assert.strictEqual(buffers.length, 2);
+      buffers.forEach(b => assert.strictEqual(b.length, coalescingThreshold));
+    });
+
+    it('should stop writing and wait for the drain event when socket.write() returns false', async () => {
+      let writeReturnValue = true;
+
+      class SocketMock extends events.EventEmitter {
+        write(buffer, cb) {
+          setImmediate(cb);
+          return writeReturnValue;
+        }
+      }
+
+      const socket = sinon.spy(new SocketMock());
+      const options = clientOptions.defaultOptions();
+      const encoder = new Encoder(types.protocolVersion.v4, options);
+      const queue = new writers.WriteQueue(socket, encoder, options);
+      const request = {
+        write: () => utils.allocBufferUnsafe(10)
+      };
+
+      const itemCallback = sinon.spy(() => {});
+
+      queue.push(new OperationState(request, null, utils.noop), itemCallback);
+      await helper.wait.until(() => itemCallback.callCount === 1);
+
+      // Set socket.write() return value to false
+      writeReturnValue = false;
+      queue.push(new OperationState(request, null, utils.noop), itemCallback);
+      await helper.wait.until(() => itemCallback.callCount === 2);
+      assert.strictEqual(socket.write.callCount, 2);
+
+      // Next time an item is added to the queue, it will not be processed.
+      queue.push(new OperationState(request, null, utils.noop), itemCallback);
+
+      // After some time, write should not have been called
+      await helper.delayAsync(20);
+      assert.strictEqual(socket.write.callCount, 2);
+      assert.strictEqual(itemCallback.callCount, 2);
+
+      // It should wait for the drain event to be emitted
+      socket.emit('drain');
+
+      // After some ticks, socket.write() should be called again
+      await helper.wait.until(() => itemCallback.callCount === 3);
+      assert.strictEqual(socket.write.callCount, 3);
     });
   });
 });
+
 describe('exports', function () {
   it('should contain API', function () {
     //test that the exposed API is the one expected

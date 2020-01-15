@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 const util = require('util');
 
@@ -366,5 +365,5 @@ describe('Client', function () {
  * @returns {Client}
  */
 function newInstance(options) {
-  return new Client(utils.deepExtend({}, helper.baseOptions, options));
+  return helper.shutdownAfterThisTest(new Client(utils.deepExtend({}, helper.baseOptions, options)));
 }

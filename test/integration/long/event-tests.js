@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 const assert = require('assert');
 
@@ -26,7 +25,6 @@ const Client = require('../../../lib/client');
 describe('Client', function () {
   describe('events', function () {
     this.timeout(600000);
-    const is1x = helper.getCassandraVersion().charAt(0) === '1';
     beforeEach(helper.ccmHelper.start(2));
     afterEach(helper.ccmHelper.remove);
     it('should emit hostUp hostDown', function (done) {
@@ -72,9 +70,7 @@ describe('Client', function () {
 
           // Special exception for C* 1.x, as it may send duplicate down events
           // for a single host.
-          if(!is1x) {
-            assert.strictEqual(hostsWentDown.length, 1);
-          }
+          assert.strictEqual(hostsWentDown.length, 1);
           hostsWentDown.forEach(function(downHost) {
             helper.assertInstanceOf(downHost, Host);
             assert.strictEqual(helper.lastOctetOf(downHost), '2');

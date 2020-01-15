@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-const assert = require('chai').assert;
+const { assert } = require('chai');
 const util = require('util');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
@@ -55,6 +54,41 @@ describe('Client', function () {
     it('should create Metadata instance', function () {
       const client = new Client({ contactPoints: ['192.168.10.10'] });
       assert.instanceOf(client.metadata, Metadata);
+    });
+
+    it('should validate client id, application name and version', () => {
+      assert.throws(() => new Client(Object.assign({ applicationName: 123 }, helper.baseOptions)),
+        /applicationName should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ applicationVersion: 123 }, helper.baseOptions)),
+        /applicationVersion should be a String/);
+
+      assert.throws(() => new Client(Object.assign({ id: 123 }, helper.baseOptions)),
+        /Client id must be a Uuid/);
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z', applicationVersion: '1.2.3' },
+        helper.baseOptions)));
+
+      assert.doesNotThrow(() =>
+        new Client(Object.assign(
+          { applicationName: 'App_Z', applicationVersion: '1.2.3', id: types.Uuid.random() },
+          helper.baseOptions)));
+
+      assert.doesNotThrow(() => new Client(Object.assign({ applicationName: 'App_Z'}, helper.baseOptions)));
+      assert.doesNotThrow(() => new Client(Object.assign({ id: types.TimeUuid.now() }, helper.baseOptions)));
+    });
+
+    it('should set DefaultLoadBalancingPolicy as default', function () {
+      let client = new Client({ contactPoints: ['host1'] });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DefaultLoadBalancingPolicy);
+      const retryPolicy = new policies.retry.RetryPolicy();
+      client = new Client({
+        contactPoints: ['host1'],
+        // with some of the policies specified
+        policies: { retry: retryPolicy }
+      });
+      helper.assertInstanceOf(client.options.policies.loadBalancing, policies.loadBalancing.DefaultLoadBalancingPolicy);
+      assert.strictEqual(client.options.policies.retry, retryPolicy);
     });
 
     context('with useBigIntAsLong or useBigIntAsVarint set', () => {
@@ -112,6 +146,7 @@ describe('Client', function () {
       const contactPoints = ['not1.existent-host', 'not2.existent-host'];
       const options = utils.extend({}, helper.baseOptions, { contactPoints });
       const client = new Client(options);
+
       client.connect(function (err) {
         assert.ok(err);
         assert.instanceOf(err, errors.NoHostAvailableError);
@@ -138,10 +173,10 @@ describe('Client', function () {
         }
       });
       const ccMock = getControlConnectionMock(null, options);
-      ccMock.prototype.init = function (cb) {
+      ccMock.prototype.init = async () => {
         initCounter++;
-        //Async
-        setTimeout(cb, 100);
+        // Async
+        await helper.delayAsync(20);
       };
 
       const Client = proxyquire('../../lib/client.js', {
@@ -173,7 +208,7 @@ describe('Client', function () {
       });
       const client = new Client(options);
       client.controlConnection = {
-        init: helper.callbackNoop,
+        init: async () => { },
         hosts: new HostMap(),
         host: { setDistance: utils.noop },
         profileManager: new ProfileManager(options),
@@ -212,103 +247,118 @@ describe('Client', function () {
         done();
       });
     });
-    it('should build the routingKey based on routingNames', function (done) {
+
+    it('should build the routingKey based on routingNames', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (request, options, client, cb) {
-          assert.ok(options);
-          assert.ok(options.getRoutingKey());
-          // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
-          cb();
-          done();
+        send: function (request, options) {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const prepareHandlerMock = {
-        getPrepared: function (c, lbp, q, ks, cb) {
-          cb(null, utils.allocBufferFromArray([1]), {
-            columns: [
-              { name: 'key1', type: { code: types.dataTypes.int} },
-              { name: 'key2', type: { code: types.dataTypes.int} }
-            ],
-            partitionKeys: [0, 1]
-          });
-        }
+        getPrepared: () =>
+          Promise.resolve({
+            queryId: utils.allocBufferFromArray([1]),
+            meta: {
+              columns: [
+                {name: 'key1', type: {code: types.dataTypes.int}},
+                {name: 'key2', type: {code: types.dataTypes.int}}
+              ],
+              partitionKeys: [0, 1]
+            }
+          })
       };
+
       const client = newConnectedInstance(requestHandlerMock, null, prepareHandlerMock);
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { prepare: true };
-      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
+      await client.execute(query, { key2: 2, key1: 1 }, queryOptions);
+
+      assert.ok(execOptions.getRoutingKey());
+      // eslint-disable-next-line no-useless-concat
+      assert.strictEqual(execOptions.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
     });
-    it('should build the routingKey based on routingNames for query requests', function (done) {
+
+    it('should build the routingKey based on routingNames for query requests', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (request, options, client, cb) {
-          assert.ok(options);
-          assert.ok(options.getRoutingKey());
-          // eslint-disable-next-line no-useless-concat
-          assert.strictEqual(options.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
-          cb();
-          done();
+        send: function (request, options) {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(requestHandlerMock, null);
       client.controlConnection = { protocolVersion: types.protocolVersion.maxSupported };
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { routingNames: ['key1', 'key2'], hints: { key1: 'int', key2: 'int' } };
-      client.execute(query, { key2: 2, key1: 1 }, queryOptions, helper.throwop);
+      await client.execute(query, { key2: 2, key1: 1 }, queryOptions);
+
+      assert.ok(execOptions.getRoutingKey());
+      // eslint-disable-next-line no-useless-concat
+      assert.strictEqual(execOptions.getRoutingKey().toString('hex'), '00040000000100' + '00040000000200');
     });
-    it('should fill parameter information for string hints', function (done) {
-      let execOptions;
+
+    it('should fill parameter information for string hints', async () => {
+      let execOptions = null;
+
       const requestHandlerMock = {
-        send: function (r, o, client, cb) {
-          execOptions = o;
-          cb();
+        send: (request, options) => {
+          execOptions = options;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(requestHandlerMock);
-      client.metadata.getUdt = function (ks, n, cb) {
-        cb(null, {keyspace: ks, name: n});
+      client.metadata.getUdt = function (keyspace, name) {
+        return Promise.resolve({ keyspace, name });
       };
+
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
       const queryOptions = { prepare: false, hints: ['int', 'list<uuid>', 'map<text, timestamp>', 'udt<ks1.udt1>', 'map<uuid, set<text>>']};
-      client.execute(query, [0, 1, 2, 3, 4], queryOptions, function (err) {
-        assert.ifError(err);
-        assert.ok(execOptions);
-        const hints = execOptions.getHints();
-        assert.ok(hints);
-        assert.ok(hints[0]);
-        assert.strictEqual(hints[0].code, types.dataTypes.int);
-        assert.ok(hints[1]);
-        assert.strictEqual(hints[1].code, types.dataTypes.list);
-        assert.ok(hints[1].info);
-        assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
-        assert.ok(hints[2]);
-        assert.strictEqual(hints[2].code, types.dataTypes.map);
-        assert.ok(util.isArray(hints[2].info));
-        assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
-        assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
-        assert.ok(hints[3]);
-        assert.strictEqual(hints[3].code, types.dataTypes.udt);
-        assert.ok(hints[3].info);
-        assert.strictEqual(hints[3].info.keyspace, 'ks1');
-        //nested collections
-        assert.ok(hints[4]);
-        assert.strictEqual(hints[4].code, types.dataTypes.map);
-        assert.ok(util.isArray(hints[4].info));
-        assert.ok(hints[4].info[0]);
-        assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
-        assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
-        assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
-        done();
-      });
+
+      await client.execute(query, [0, 1, 2, 3, 4], queryOptions);
+
+      assert.ok(execOptions);
+      const hints = execOptions.getHints();
+      assert.ok(hints);
+      assert.ok(hints[0]);
+      assert.strictEqual(hints[0].code, types.dataTypes.int);
+      assert.ok(hints[1]);
+      assert.strictEqual(hints[1].code, types.dataTypes.list);
+      assert.ok(hints[1].info);
+      assert.strictEqual(hints[1].info.code, types.dataTypes.uuid);
+      assert.ok(hints[2]);
+      assert.strictEqual(hints[2].code, types.dataTypes.map);
+      assert.ok(Array.isArray(hints[2].info));
+      assert.strictEqual(hints[2].info[0].code, types.dataTypes.text);
+      assert.strictEqual(hints[2].info[1].code, types.dataTypes.timestamp);
+      assert.ok(hints[3]);
+      assert.strictEqual(hints[3].code, types.dataTypes.udt);
+      assert.ok(hints[3].info);
+      assert.strictEqual(hints[3].info.keyspace, 'ks1');
+      //nested collections
+      assert.ok(hints[4]);
+      assert.strictEqual(hints[4].code, types.dataTypes.map);
+      assert.ok(Array.isArray(hints[4].info));
+      assert.ok(hints[4].info[0]);
+      assert.propertyVal(hints[4].info[0], 'code', types.dataTypes.uuid);
+      assert.strictEqual(hints[4].info[1].code, types.dataTypes.set);
+      assert.strictEqual(hints[4].info[1].info.code, types.dataTypes.text);
     });
+
     it('should callback with an argument error when the hints are not valid strings', function (done) {
       const requestHandlerMock = {
-        send: function (request, o, client, cb) {
-          cb();
-        }
+        send: () => Promise.resolve()
       };
+
       const client = newConnectedInstance(requestHandlerMock);
       const query = 'SELECT * FROM dummy WHERE id2=:key2 and id1=:key1';
+
       utils.series([
         function (next) {
           client.execute(query, [], { hints: ['int2']}, function (err) {
@@ -330,7 +380,8 @@ describe('Client', function () {
         }
       ], done);
     });
-    it('should use the default execution profile options', function () {
+
+    it('should use the default execution profile options', async () => {
       const profile = new ExecutionProfile('default', {
         consistency: types.consistencies.three,
         readTimeout: 12345,
@@ -340,17 +391,20 @@ describe('Client', function () {
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
-      client.execute('Q', [], { }, utils.noop);
+
+      await client.execute('Q', [], { });
 
       assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
       assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
       assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
       assert.strictEqual(execOptions.getConsistency(), profile.consistency);
     });
-    it('should use the provided execution profile options', function () {
+
+    it('should use the provided execution profile options', async () => {
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
@@ -360,8 +414,9 @@ describe('Client', function () {
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
 
       const items = [
@@ -371,28 +426,32 @@ describe('Client', function () {
         { executionProfile: profile }
       ];
 
-      items.forEach(queryOptions => {
-        client.execute('Q1', [], queryOptions, utils.noop);
+      for (const queryOptions of items) {
+        await client.execute('Q1', [], queryOptions);
 
         // Verify the profile options
         assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
         assert.strictEqual(execOptions.getReadTimeout(), profile.readTimeout);
         assert.strictEqual(execOptions.getSerialConsistency(), profile.serialConsistency);
         assert.strictEqual(execOptions.getConsistency(), profile.consistency);
-      });
+      }
     });
-    it('should override the provided execution profile options with provided options', function () {
+
+    it('should override the provided execution profile options with provided options', async () => {
       const profile = new ExecutionProfile('profile1', {
         consistency: types.consistencies.three,
         readTimeout: 54321,
         retry: new policies.retry.RetryPolicy(),
         serialConsistency: types.consistencies.localSerial
       });
+
       const options = getOptions({ profiles: [ profile ] });
       const client = new Client(options);
       let execOptions = null;
-      client._innerExecute = function (q, p, o) {
+
+      client._execute = function (q, p, o) {
         execOptions = o;
+        return Promise.resolve();
       };
 
       const items = [
@@ -402,8 +461,8 @@ describe('Client', function () {
         { consistency: types.consistencies.all, executionProfile: profile }
       ];
 
-      items.forEach(queryOptions => {
-        client.execute('Q1', [], queryOptions, utils.noop);
+      for (const queryOptions of items) {
+        await client.execute('Q1', [], queryOptions);
 
         // Verify the profile options
         assert.strictEqual(execOptions.getRetryPolicy(), profile.retry);
@@ -412,51 +471,55 @@ describe('Client', function () {
 
         // Verify the overridden option
         assert.strictEqual(execOptions.getConsistency(), types.consistencies.all);
-      });
+      }
     });
-    it('should set the timestamp', function (done) {
-      let execOptions;
+
+    it('should set the timestamp', async () => {
+      let execOptions = null;
       const handlerMock = {
-        send: function (r, o, client, cb) {
+        send: (r, o) => {
           execOptions = o;
-          cb(null, {});
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock);
-      utils.eachSeries([1, 2, 3, 4], function (version, next) {
+      const protocolVersions = [1, 2, 3, 4];
+
+      for (const version of protocolVersions) {
         client.controlConnection.protocolVersion = version;
-        client.execute('Q', function (err) {
-          assert.ifError(err);
-          assert.ok(execOptions);
-          const timestamp = execOptions.getOrGenerateTimestamp();
-          if (version > 2) {
-            assert.ok(timestamp);
-            assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
-          }
-          else {
-            assert.strictEqual(timestamp, null);
-          }
-          next();
-        });
-      }, done);
+        await client.execute('Q');
+
+        assert.ok(execOptions);
+        const timestamp = execOptions.getOrGenerateTimestamp();
+
+        if (version > 2) {
+          assert.ok(timestamp);
+          assert.ok((timestamp instanceof types.Long) || typeof timestamp === 'number');
+        } else {
+          assert.strictEqual(timestamp, null);
+        }
+      }
     });
-    it('should not set the timestamp when timestampGeneration is null', function (done) {
-      let execOptions;
+
+    it('should not set the timestamp when timestampGeneration is null', async () => {
+      let execOptions = null;
       const handlerMock = {
-        send: function (r, o, client, cb) {
+        send: (r, o) => {
           execOptions = o;
-          cb(null, {});
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock, { policies: { timestampGeneration: null }});
-      client.controlConnection.protocolVersion = 4;
-      client.execute('Q', function (err) {
-        assert.ifError(err);
-        assert.ok(execOptions);
-        assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
-        done();
-      });
+      client.controlConnection.protocolVersion = types.protocolVersion.v4;
+
+      await client.execute('Q');
+
+      assert.ok(execOptions);
+      assert.strictEqual(execOptions.getOrGenerateTimestamp(), null);
     });
+
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
         const client = new Client(helper.baseOptions);
@@ -467,6 +530,7 @@ describe('Client', function () {
           done();
         });
       });
+
       it('should reject the promise when an ExecutionProfile is not found', function (done) {
         const client = new Client(helper.baseOptions);
         const p = client.execute('Q', [ 1, 2 ], { executionProfile: 'non_existent' });
@@ -478,14 +542,10 @@ describe('Client', function () {
       });
     });
   });
+
   describe('#batch()', function () {
     const requestHandlerMock = {
-      send: function (r, o, client, cb) {
-        // Make it async
-        setTimeout(function () {
-          cb(null, {meta: {}});
-        }, 50);
-      }
+      send: () => Promise.resolve()
     };
 
     const Client = proxyquire('../../lib/client.js', {
@@ -494,22 +554,25 @@ describe('Client', function () {
 
     it('should internally call to connect', function (done) {
       const client = new Client(helper.baseOptions);
-      const connect = sinon.fake(cb => cb());
-      sinon.replace(client, 'connect', connect);
+      const connect = sinon.fake(() => Promise.resolve());
+      sinon.replace(client, '_connect', connect);
+
       client.batch(['q1'], function (err) {
         assert.ifError(err);
         assert.isTrue(connect.calledOnce);
         done();
       });
     });
+
     it('should set the timestamp', function (done) {
       let execOptions;
       const handlerMock = {
-        send: function (r, i, client, cb) {
-          execOptions = i;
-          cb(null, {});
+        send: (r, o) => {
+          execOptions = o;
+          return Promise.resolve();
         }
       };
+
       const client = newConnectedInstance(handlerMock);
       utils.eachSeries([1, 2, 3, 4], function (version, next) {
         client.controlConnection.protocolVersion = version;
@@ -559,7 +622,8 @@ describe('Client', function () {
       });
     });
     it('should callback with error if the queries are undefined', function (done) {
-      const client = newConnectedInstance(undefined, undefined, PrepareHandler);
+      const options = { policies: { loadBalancing: new policies.loadBalancing.RoundRobinPolicy() }};
+      const client = newConnectedInstance(undefined, options, PrepareHandler);
       client.batch([ undefined, undefined, 'q3' ], { prepare: true }, function (err) {
         assert.instanceOf(err, errors.ArgumentError);
         done();
@@ -572,14 +636,15 @@ describe('Client', function () {
       policies: { reconnection: new policies.reconnection.ConstantReconnectionPolicy(100)},
       logEmitter: helper.noop
     });
+
     it('should set connected flag to false when hosts successfully shutdown', function(done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
 
@@ -593,14 +658,15 @@ describe('Client', function () {
         done();
       });
     });
+
     it('should callback when called multiple times serially', function (done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       const Client = proxyquire('../../lib/client', {
@@ -616,19 +682,21 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should callback when called multiple times in parallel', function (done) {
       const hosts = new HostMap();
       const h1 = new Host('192.1.1.1', 1, options);
       h1.datacenter = "dc1";
-      h1.pool.connections = [{close: setImmediate}];
+      h1.pool.connections = getConnections();
       const h2 = new Host('192.1.1.2', 1, options);
       h2.datacenter = "dc1";
-      h2.pool.connections = [{close: setImmediate}];
+      h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
       const Client = proxyquire('../../lib/client', {
         './control-connection': getControlConnectionMock(hosts)
       });
+
       const client = new Client(options);
       utils.series([
         client.connect.bind(client),
@@ -639,6 +707,7 @@ describe('Client', function () {
         }
       ], done);
     });
+
     it('should not attempt reconnection and log after shutdown', function (done) {
       const rp = new policies.reconnection.ConstantReconnectionPolicy(50);
       const client = new Client(utils.extend({}, helper.baseOptions, { policies: { reconnection: rp } }));
@@ -675,55 +744,46 @@ describe('Client', function () {
     before(() => clock = sinon.useFakeTimers({ shouldAdvanceTime: true }));
     after(() => clock.restore());
 
-    it('should continue querying until the version matches', function (done) {
+    it('should continue querying until the version matches', async () => {
       const client = new Client(helper.baseOptions);
       client.hosts = { length: 5 };
       let calls = 0;
       client.metadata = {
-        compareSchemaVersions: (c, cb) => {
-          cb(null, ++calls === 3);
+        compareSchemaVersions: (c) => {
+          process.nextTick(() => clock.tick(500));
+          return Promise.resolve(++calls === 3);
         }
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.ifError(err);
-        assert.strictEqual(calls, 3);
-        done();
-      });
-
-      clock.tick(5000);
+      await client._waitForSchemaAgreement(null);
+      assert.strictEqual(calls, 3);
     });
 
-    it('should timeout if there is no agreement', function (done) {
+    it('should timeout if there is no agreement', async () => {
       const client = new Client(utils.extend({}, helper.baseOptions, {
         protocolOptions: { maxSchemaAgreementWaitSeconds: 1 }
       }));
       client.hosts = { length: 5 };
       client.metadata = {
-        compareSchemaVersions: sinon.fake((c, cb) => cb(null, false))
+        compareSchemaVersions: sinon.fake(c => Promise.resolve(false))
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.ifError(err);
-        assert.isAbove(client.metadata.compareSchemaVersions.callCount, 0);
-        done();
-      });
+      process.nextTick(() => clock.tick(5000));
 
-      clock.tick(5000);
+      await client._waitForSchemaAgreement(null);
+      assert.isAbove(client.metadata.compareSchemaVersions.callCount, 0);
     });
 
-    it('should callback when there is an error retrieving versions', function (done) {
+    it('should callback when there is an error retrieving versions', async () => {
       const client = new Client(helper.baseOptions);
       client.hosts = {length: 3};
       const dummyError = new Error('dummy error');
       client.metadata = {
-        compareSchemaVersions: (c, cb) => cb(dummyError)
+        compareSchemaVersions: c => Promise.reject(dummyError)
       };
 
-      client._waitForSchemaAgreement(null, function (err) {
-        assert.strictEqual(err, dummyError);
-        done();
-      });
+      const err = await helper.assertThrowsAsync(client._waitForSchemaAgreement(null));
+      assert.strictEqual(err, dummyError);
     });
   });
 });
@@ -736,7 +796,8 @@ function getControlConnectionMock(hosts, options) {
     this.host = { setDistance: utils.noop };
     this.shutdown = utils.noop;
   }
-  ControlConnectionMock.prototype.init = setImmediate;
+
+  ControlConnectionMock.prototype.init = async () => {};
 
   return ControlConnectionMock;
 }
@@ -758,6 +819,11 @@ function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
   const client = new Client(utils.extend({}, helper.baseOptions, options));
   client._getEncoder = () => new Encoder(2, {});
   client.connect = helper.callbackNoop;
+  client._connect = async () => {};
 
   return client;
+}
+
+function getConnections(length = 1) {
+  return Array(length).fill(0).map(() => ({ closeAsync: sinon.spy(() => Promise.resolve()) }));
 }

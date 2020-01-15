@@ -1,25 +1,22 @@
 # Frequently Asked Questions
 
-### Which versions of Cassandra does the driver support?
+### Which versions of Apache Cassandra and DSE does the driver support?
 
-The latest version of the driver supports any Cassandra version starting with 2.1.
-
-### Which versions of CQL does the driver support?
-
-It supports [CQL version 3](http://cassandra.apache.org/doc/latest/cql/index.html).
+The driver supports all Apache Cassandra versions starting from 2.1 and [DataStax Enterprise][dse] versions
+from 4.8 to the latest version.
 
 ### How do I generate a random uuid or a time-based uuid?
 
-Use the [Uuid and TimeUuid classes](/features/datatypes/uuids) inside the types module.
+Use the [Uuid and TimeUuid classes](../features/datatypes/uuids) inside the types module.
 
-### Should I create one client instance per module in my application?
+### Should I create one `Client` instance per module in my application?
 
 Normally you should use one `Client` instance per application. You should share that instance between modules within
 your application.
 
 ### Should I shut down the pool after executing a query?
 
-No, only call `client.shutdown()` once in your application's lifetime.
+No, only call `client.shutdown()` once in your application's lifetime, normally when you shutdown your application.
 
 ### How can I use a list of values with the IN operator in a WHERE clause?
 
@@ -35,3 +32,10 @@ const key1 = 'param1';
 const allKeys2 = [ 'val1', 'val2', 'val3' ];
 client.execute(query, [ key1, allKeys2 ], { prepare: true });
 ```
+
+### Can I use a single `Client` instance for graph and CQL?
+
+Yes, you can. You should use [Execution Profiles](../features/execution-profiles/) to define your settings for CQL and
+graph workloads, for example: define which datacenter should be used for graph or for CQL.
+
+[dse]: http://www.datastax.com/products/datastax-enterprise

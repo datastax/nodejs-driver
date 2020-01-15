@@ -1,13 +1,13 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'dc1' });
 client.connect()
   .then(function () {
     console.log('Connected, listing keyspaces:');
-    for (var name in client.metadata.keyspaces) {
+    for (let name in client.metadata.keyspaces) {
       if (!client.metadata.keyspaces.hasOwnProperty(name)) continue;
-      var keyspace = client.metadata.keyspaces[name];
+      const keyspace = client.metadata.keyspaces[name];
       console.log('- %s:\n\tstrategy %s\n\tstrategy options %j',
         keyspace.name, keyspace.strategy,  keyspace.strategyOptions);
     }

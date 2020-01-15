@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 
 const helper = require('../../test-helper');
+const vit = helper.vit;
 const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
@@ -37,6 +37,15 @@ vdescribe('2.2', 'Metadata', function () {
       "CREATE AGGREGATE ks_udf.sum(int) SFUNC plus STYPE int INITCOND 1",
       "CREATE AGGREGATE ks_udf.sum(bigint) SFUNC plus STYPE bigint INITCOND 2"
     ];
+    if (helper.isDseGreaterThan('6')) {
+      queries.push(
+        "CREATE FUNCTION ks_udf.deterministic(dividend int, divisor int) CALLED ON NULL INPUT RETURNS int DETERMINISTIC LANGUAGE java AS 'return dividend / divisor;'",
+        "CREATE FUNCTION ks_udf.monotonic(dividend int, divisor int) CALLED ON NULL INPUT RETURNS int MONOTONIC LANGUAGE java AS 'return dividend / divisor;'",
+        "CREATE FUNCTION ks_udf.md(dividend int, divisor int) CALLED ON NULL INPUT RETURNS int DETERMINISTIC MONOTONIC LANGUAGE java AS 'return dividend / divisor;'",
+        "CREATE FUNCTION ks_udf.monotonic_on(dividend int, divisor int) CALLED ON NULL INPUT RETURNS int MONOTONIC ON dividend LANGUAGE java AS 'return dividend / divisor;'",
+        "CREATE AGGREGATE ks_udf.deta(int) SFUNC plus STYPE int INITCOND 0 DETERMINISTIC;"
+      );
+    }
     utils.eachSeries(queries, client.execute.bind(client), helper.finish(client, done));
   });
   after(helper.ccmHelper.remove);
@@ -128,6 +137,9 @@ vdescribe('2.2', 'Metadata', function () {
             assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
             assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
             assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, false);
+            assert.strictEqual(func.monotonic, false);
+            assert.deepEqual(func.monotonicOn, utils.emptyArray);
             next();
           });
         },
@@ -147,6 +159,101 @@ vdescribe('2.2', 'Metadata', function () {
             assert.strictEqual(func.signature.length, 0);
             assert.strictEqual(func.argumentNames.length, 0);
             assert.strictEqual(func.argumentTypes.length, 0);
+            assert.strictEqual(func.deterministic, false);
+            assert.strictEqual(func.monotonic, false);
+            assert.deepEqual(func.monotonicOn, utils.emptyArray);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('dse-6.0', 'should retrieve the metadata of a deterministic cql function', function (done) {
+      const client = newInstance();
+      utils.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getFunction(keyspace, 'deterministic', ['int', 'int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'deterministic');
+            assert.strictEqual(func.keyspaceName, keyspace);
+            assert.strictEqual(func.argumentTypes.length, 2);
+            assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
+            assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, true);
+            assert.strictEqual(func.monotonic, false);
+            assert.deepEqual(func.monotonicOn, utils.emptyArray);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('dse-6.0', 'should retrieve the metadata of a monotonic cql function', function (done) {
+      const client = newInstance();
+      utils.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getFunction(keyspace, 'monotonic', ['int', 'int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'monotonic');
+            assert.strictEqual(func.keyspaceName, keyspace);
+            assert.strictEqual(func.argumentTypes.length, 2);
+            assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
+            assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, false);
+            assert.strictEqual(func.monotonic, true);
+            assert.deepEqual(func.monotonicOn, ['dividend', 'divisor']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('dse-6.0', 'should retrieve the metadata of a deterministic and monotonic cql function', function (done) {
+      const client = newInstance();
+      utils.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getFunction(keyspace, 'md', ['int', 'int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'md');
+            assert.strictEqual(func.keyspaceName, keyspace);
+            assert.strictEqual(func.argumentTypes.length, 2);
+            assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
+            assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, true);
+            assert.strictEqual(func.monotonic, true);
+            assert.deepEqual(func.monotonicOn, ['dividend', 'divisor']);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('dse-6.0', 'should retrieve the metadata of a partially monotonic cql function', function (done) {
+      const client = newInstance();
+      utils.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getFunction(keyspace, 'monotonic_on', ['int', 'int'], function (err, func) {
+            assert.ifError(err);
+            assert.ok(func);
+            assert.strictEqual(func.name, 'monotonic_on');
+            assert.strictEqual(func.keyspaceName, keyspace);
+            assert.strictEqual(func.argumentTypes.length, 2);
+            assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
+            assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, false);
+            assert.strictEqual(func.monotonic, false);
+            assert.deepEqual(func.monotonicOn, ['dividend']);
             next();
           });
         },
@@ -245,6 +352,9 @@ vdescribe('2.2', 'Metadata', function () {
             assert.strictEqual(func.argumentTypes[0].code, types.dataTypes.int);
             assert.strictEqual(func.argumentTypes[1].code, types.dataTypes.int);
             assert.strictEqual(func.returnType.code, types.dataTypes.int);
+            assert.strictEqual(func.deterministic, false);
+            assert.strictEqual(func.monotonic, false);
+            assert.deepEqual(func.monotonicOn, utils.emptyArray);
           });
       });
     });
@@ -327,6 +437,29 @@ vdescribe('2.2', 'Metadata', function () {
             assert.strictEqual(aggregate.returnType.code, types.dataTypes.int);
             assert.strictEqual(aggregate.stateFunction, 'plus');
             assert.strictEqual(aggregate.initCondition, '1');
+            assert.strictEqual(aggregate.deterministic, false);
+            next();
+          });
+        },
+        client.shutdown.bind(client)
+      ], done);
+    });
+    vit('dse-6.0', 'should retrieve the metadata of a deterministic cql aggregate', function (done) {
+      const client = newInstance();
+      utils.series([
+        client.connect.bind(client),
+        function checkMeta(next) {
+          client.metadata.getAggregate(keyspace, 'deta', ['int'], function (err, aggregate) {
+            assert.ifError(err);
+            assert.ok(aggregate);
+            assert.strictEqual(aggregate.name, 'deta');
+            assert.strictEqual(aggregate.keyspaceName, keyspace);
+            assert.strictEqual(aggregate.argumentTypes.length, 1);
+            assert.strictEqual(aggregate.argumentTypes[0].code, types.dataTypes.int);
+            assert.strictEqual(aggregate.returnType.code, types.dataTypes.int);
+            assert.strictEqual(aggregate.stateFunction, 'plus');
+            assert.strictEqual(aggregate.initCondition, '0');
+            assert.strictEqual(aggregate.deterministic, true);
             next();
           });
         },

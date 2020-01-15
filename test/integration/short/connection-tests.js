@@ -22,13 +22,14 @@ const Connection = require('../../../lib/connection.js');
 const defaultOptions = require('../../../lib/client-options.js').defaultOptions();
 const utils = require('../../../lib/utils.js');
 const requests = require('../../../lib/requests.js');
+const protocolVersion = require('../../../lib/types').protocolVersion;
 const helper = require('../../test-helper.js');
 const errors = require('../../../lib/errors');
 const types = require('../../../lib/types');
 const vit = helper.vit;
 
 describe('Connection', function () {
-  this.timeout(120000);
+  this.timeout(240000);
   describe('#open()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
@@ -60,31 +61,13 @@ describe('Connection', function () {
     });
     vit('2.0', 'should limit the max protocol version based on the protocolOptions', function (done) {
       const options = utils.extend({}, defaultOptions);
-      options.protocolOptions.maxVersion = getProtocolVersion() - 1;
+      options.protocolOptions.maxVersion = protocolVersion.getLowerSupported(getProtocolVersion());
       const localCon = newInstance(null, null, options);
       localCon.open(function (err) {
         assert.ifError(err);
         assert.strictEqual(localCon.protocolVersion, options.protocolOptions.maxVersion);
         localCon.close(done);
       });
-    });
-    it('should open with all the protocol versions supported', function (done) {
-      const maxProtocolVersionSupported = getProtocolVersion();
-      const minProtocolVersionSupported = getMinProtocolVersion();
-      let protocolVersion;
-      if(helper.getCassandraVersion()) {
-        protocolVersion = minProtocolVersionSupported - 1;
-      }
-      utils.whilst(function condition() {
-        return (++protocolVersion) <= maxProtocolVersionSupported;
-      }, function iterator (next) {
-        const localCon = newInstance(null, protocolVersion);
-        localCon.open(function (err) {
-          assert.ifError(err);
-          assert.ok(localCon.connected, 'Must be status connected');
-          localCon.close(next);
-        });
-      }, done);
     });
     it('should fail when the host does not exits', function (done) {
       const localCon = newInstance('1.1.1.1');
@@ -151,47 +134,54 @@ describe('Connection', function () {
       });
     });
   });
+
   describe('#changeKeyspace()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
-    it('should change active keyspace', function (done) {
+
+    it('should change active keyspace', async () => {
       const localCon = newInstance();
       const keyspace = helper.getRandomName();
-      utils.series([
-        localCon.open.bind(localCon),
-        function creating(next) {
-          const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), null, next);
-        },
-        function changing(next) {
-          localCon.changeKeyspace(keyspace, next);
-        },
-        function asserting(next) {
-          assert.strictEqual(localCon.keyspace, keyspace);
-          next();
-        }
-      ], done);
+
+      await localCon.openAsync();
+
+
+      const query = 'CREATE KEYSPACE ' + keyspace + ' WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+      await localCon.send(getRequest(query), null);
+
+      await localCon.changeKeyspace(keyspace);
+
+      assert.strictEqual(localCon.keyspace, keyspace);
+
+      localCon.close();
     });
-    it('should be case sensitive', function (done) {
+
+    it('should be case sensitive', async () => {
       const localCon = newInstance();
       const keyspace = helper.getRandomName().toUpperCase();
       assert.notStrictEqual(keyspace, keyspace.toLowerCase());
-      utils.series([
-        localCon.open.bind(localCon),
-        function creating(next) {
-          const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
-          localCon.sendStream(getRequest(query), null, next);
-        },
-        function changing(next) {
-          localCon.changeKeyspace(keyspace, next);
-        },
-        function asserting(next) {
-          assert.strictEqual(localCon.keyspace, keyspace);
-          next();
-        }
-      ], done);
+
+      await localCon.openAsync();
+      const query = 'CREATE KEYSPACE "' + keyspace + '" WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\' : 1};';
+      await localCon.send(getRequest(query), null);
+
+      await localCon.changeKeyspace(keyspace);
+      assert.strictEqual(localCon.keyspace, keyspace);
+    });
+
+    it('should support multiple parallel calls', async () => {
+      const localCon = newInstance();
+      const keyspace = 'system';
+
+      await localCon.openAsync();
+
+      const promises = Array(10).fill(0).map(() => localCon.changeKeyspace(keyspace));
+      await Promise.all(promises);
+
+      assert.strictEqual(localCon.keyspace, keyspace);
     });
   });
+
   describe('#sendStream()', function () {
     before(helper.ccmHelper.start(1));
     after(helper.ccmHelper.remove);
@@ -280,6 +270,23 @@ describe('Connection', function () {
         next => connection.close(next)
       ], done);
     });
+
+    context('promisify', () => {
+      it('should return a promise', done => {
+        const connection = newInstance();
+        connection.open(err => {
+          assert.ifError(err);
+
+          connection.send(getRequest(helper.queries.basic), null)
+            .then(response => {
+              assert.isArray(response.rows);
+              done();
+            })
+            .catch(err => done(err))
+            .then(() => connection.close());
+        });
+      });
+    });
   });
 });
 
@@ -296,7 +303,8 @@ function newInstance(address, protocolVersion, options){
 
   const c = new Connection(address + ':' + options.protocolOptions.port, protocolVersion, options);
 
-  after(() => c.close());
+  helper.afterThisTest(() => c.close());
+
   return c;
 }
 
@@ -309,31 +317,29 @@ function getRequest(query) {
  * @returns {number}
  */
 function getProtocolVersion() {
-  //expected protocol version
-  if (helper.getCassandraVersion().indexOf('2.1.') === 0) {
-    return 3;
-  }
-  if (helper.getCassandraVersion().indexOf('2.0.') === 0) {
-    return 2;
-  }
-  if (helper.getCassandraVersion().indexOf('1.') === 0) {
-    return 1;
-  }
-  return 4;
-}
+  // Expected protocol version by server
 
-/**
- * Gets the minimum supported protocol version for the current Cassandra version
- *
- * For < C* 3.0 returns 1.  Otherwise returns maximum supported protocol
- * version - 1.
- *
- * @returns {number}
- */
-function getMinProtocolVersion() {
-  if (helper.getCassandraVersion().indexOf('2') === 0
-    || helper.getCassandraVersion().indexOf('1') === 0) {
-    return 1;
+  const serverInfo = helper.getServerInfo();
+
+  if (serverInfo.isDse) {
+    if (helper.isDseGreaterThan('6.0')) {
+      return protocolVersion.dseV2;
+    }
+
+    if (serverInfo.version.startsWith('5.1')) {
+      return protocolVersion.dseV1;
+    }
+
+    if (serverInfo.version.startsWith('4.8')) {
+      return protocolVersion.v3;
+    }
+
+    return protocolVersion.v4;
   }
-  return getProtocolVersion() - 1;
+
+  if (serverInfo.version.startsWith('2.1')) {
+    return protocolVersion.v3;
+  }
+
+  return protocolVersion.v4;
 }

@@ -3,6 +3,9 @@ module.exports = {
     "commonjs": true,
     "es6": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2017
+  },
   "extends": "eslint:recommended",
   "rules": {
     "indent": [
@@ -99,13 +102,16 @@ module.exports = {
     "arrow-spacing": "error",
     "no-confusing-arrow": ["error", { "allowParens": true }],
     "yoda": "error",
-    "constructor-super": "error"
+    "constructor-super": "error",
+    "require-await": "error",
+    "require-atomic-updates": "off"
   },
   "globals": {
     "Buffer": false,
     "Promise": true,
     "Symbol": false,
     "Uint16Array": false,
+    "Int32Array": false,
     "Int8Array": false,
     "BigInt": false,
     "process": false,
@@ -115,7 +121,9 @@ module.exports = {
     "clearInterval": false,
     "clearTimeout": false,
     "describe": false,
+    "xdescribe": false,
     "it": false,
+    "xit": false,
     "context": false,
     "after": false,
     "afterEach": false,

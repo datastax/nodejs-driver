@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 const util = require('util');
 
@@ -50,14 +49,14 @@ describe('Client', function () {
         client.connect(function (err) {
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           assert.strictEqual(Object.keys(err.innerErrors).length, 1);
-          helper.assertInstanceOf(helper.values(err.innerErrors)[0], Error);
+          helper.assertInstanceOf(Object.values(err.innerErrors)[0], Error);
           helper.finish(client, done)();
         });
       });
     });
     describe('#execute()', function () {
       it('should handle multiple requests in parallel', function (done) {
-        const parallelLimit = helper.isCassandraGreaterThan('2.1') ? 800 : 120;
+        const parallelLimit = 800;
         const client = newInstance();
         utils.series([
           client.connect.bind(client),

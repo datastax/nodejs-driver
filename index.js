@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
 const clientOptions = require('./lib/client-options');
 exports.Client = require('./lib/client');
 exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
@@ -39,6 +37,8 @@ exports.metadata = {
   Metadata: Metadata
 };
 exports.Encoder = require('./lib/encoder');
+exports.geometry = require('./lib/geometry');
+exports.datastax = require('./lib/datastax');
 /**
  * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
  */

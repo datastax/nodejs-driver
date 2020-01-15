@@ -53,13 +53,13 @@ To use this implementation, provide an instance when initializing the `Client` o
 
 ```javascript
 const cassandra = require('cassandra-driver');
-const addressResolution = cassandra.policies.addressResolution;
+const { EC2MultiRegionTranslator } = cassandra.policies.addressResolution;
 
-const client = new Client({
+const client = new cassandra.Client({
   contactPoints,
   localDataCenter,
   policies: { 
-    addressResolution: new addressResolution.EC2MultiRegionTranslator() 
+    addressResolution: new EC2MultiRegionTranslator() 
   }
 });
 ```

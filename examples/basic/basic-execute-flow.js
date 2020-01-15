@@ -3,7 +3,7 @@ const cassandra = require('cassandra-driver');
 const async = require('async');
 const assert = require('assert');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'dc1' });
 
 /**
  * Example using async library for avoiding nested callbacks

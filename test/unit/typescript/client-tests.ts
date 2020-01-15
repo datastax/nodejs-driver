@@ -86,6 +86,15 @@ async function myTest(): Promise<any> {
   });
 
   otherClient = new Client({
+    contactPoints: ['h1', 'h2'],
+    localDataCenter: 'dc1',
+    id: types.Uuid.random(),
+    applicationName: 'My app',
+    applicationVersion: '3.1.2',
+    graphOptions: { name: 'graph1', readConsistency: types.consistencies.localQuorum }
+  });
+
+  otherClient = new Client({
     cloud: { secureConnectBundle: 'path/to/bundle' }
   });
 

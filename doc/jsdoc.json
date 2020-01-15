@@ -1,6 +1,11 @@
 {
   "source": {
     "include": [
+      "lib/geometry",
+      "lib/datastax",
+      "lib/datastax/graph",
+      "lib/datastax/search",
+
       "lib/types",
       "lib/auth",
       "lib/policies",

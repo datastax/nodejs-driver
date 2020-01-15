@@ -1,7 +1,7 @@
 "use strict";
 const cassandra = require('cassandra-driver');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'datacenter1' });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], localDataCenter: 'dc1' });
 
 /**
  * Creates a table with a user-defined type, inserts a row and selects a row.
@@ -24,7 +24,7 @@ client.connect()
   })
   .then(function () {
     console.log('Inserting');
-    var address = {
+    const address = {
       city: 'Santa Clara',
       state: 'CA',
       street: '3975 Freedom Circle',

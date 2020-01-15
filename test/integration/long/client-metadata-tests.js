@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
+'use strict';
 const assert = require('assert');
 const util = require('util');
 
@@ -194,7 +193,7 @@ function partitionerSuite(partitionerName) {
             vnodes: vnodes
           };
 
-          const setupInfo = helper.setup('3:0', {
+          const setupInfo = helper.setup("3:0", {
             ccmOptions: ccmOptions,
             queries: [
               'CREATE KEYSPACE ks_simple_rf1 WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': 1}',

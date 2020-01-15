@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 const assert = require('assert');
 const errors = require('../../../lib/errors');
@@ -22,8 +21,8 @@ const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 
-const Client = require('../../../lib/client.js');
-const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
+const Client = require('../../../lib/client');
+const { OrderedLoadBalancingPolicy } = require('../../test-helper');
 
 const query = "select * from data";
 

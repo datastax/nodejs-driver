@@ -44,7 +44,7 @@ const cloudHelper = module.exports = {
     const client = new Client(
       cloudHelper.getOptions({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1.zip' } }, options));
 
-    after(() => client.shutdown());
+    helper.shutdownAfterThisTest(client);
 
     return client;
   },

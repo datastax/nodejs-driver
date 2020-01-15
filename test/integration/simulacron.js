@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 const helper = require('../test-helper');
 const http = require('http');
@@ -138,34 +137,34 @@ const simulacronHelper = {
    * @param {Object} [options.clientOptions] The options to use to initialize the client.
    */
   setup: function (dcs, options) {
-    const self = this;
     options = options || utils.emptyObject;
     const clientOptions = options.clientOptions || {};
     const simulacronCluster = new SimulacronCluster();
     const initClient = options.initClient !== false;
     let client;
-    before(function (done) {
-      self.start(function () {
-        simulacronCluster.register(dcs, clientOptions, function() {
-          done();
-        });
-      });
+
+    before((done) => {
+      this.start(() => simulacronCluster.register(dcs, clientOptions, done));
     });
+
     if (initClient) {
-      const baseOptions = { contactPoints: [self.startingIp], localDataCenter: 'dc1' };
+      const baseOptions = { contactPoints: [this.startingIp], localDataCenter: 'dc1' };
       client = new Client(utils.extend({}, options.clientOptions, baseOptions));
       before(client.connect.bind(client));
       after(client.shutdown.bind(client));
     }
+
     afterEach(simulacronCluster.clear.bind(simulacronCluster));
     after(simulacronHelper.stop.bind(simulacronHelper));
 
     return { cluster: simulacronCluster, client: client };
   },
   baseOptions: (function () {
+    const serverInfo = helper.getServerInfo();
+
     return {
       cassandraVersion: helper.getSimulatedCassandraVersion(),
-      dseVersion: '',
+      dseVersion: serverInfo.isDse ? serverInfo.version : '',
       clusterName: 'testCluster',
       activityLog: true,
       numTokens: 1
@@ -316,6 +315,30 @@ SimulacronTopic.prototype.start = function(callback) {
   }).end();
 };
 
+SimulacronTopic.prototype.pauseReads = function(callback) {
+  this._pauseOrResumeReads(true, callback);
+};
+
+SimulacronTopic.prototype.resumeReads = function(callback) {
+  this._pauseOrResumeReads(false, callback);
+};
+
+SimulacronTopic.prototype.resumeReadsAsync = util.promisify(SimulacronTopic.prototype.resumeReads);
+SimulacronTopic.prototype.pauseReadsAsync = util.promisify(SimulacronTopic.prototype.pauseReads);
+
+SimulacronTopic.prototype._pauseOrResumeReads = function(pause, callback) {
+  const options = {
+    host: this.baseAddress,
+    path: `/pause-reads/${this.id}`,
+    port: this.port,
+    method: pause ? 'PUT' : 'DELETE'
+  };
+
+  _makeRequest(options, function(err, data) {
+    callback(err, data);
+  }).end();
+};
+
 SimulacronTopic.prototype._filterLogs = function(data) {
   return data;
 };
@@ -361,6 +384,10 @@ SimulacronCluster.prototype.register = function(dcs, options, callback) {
 
   options = utils.extend({}, simulacronHelper.baseOptions, options);
 
+  if (Array.isArray(dcs)) {
+    dcs = dcs.join(',');
+  }
+
   const urlPath = encodeURI(util.format(createClusterPath, dcs, options.cassandraVersion, options.dseVersion,
     options.clusterName, options.activityLog, options.numTokens));
 
@@ -387,8 +414,8 @@ SimulacronCluster.prototype.register = function(dcs, options, callback) {
 
 /**
  * Registers and starts cluster with given body.
- * 
- * @param {Object} Request payload body.
+ *
+ * @param {Object} body payload body.
  * @param {Function} callback
  */
 SimulacronCluster.prototype.registerWithBody = function(body, callback) {
@@ -400,7 +427,7 @@ SimulacronCluster.prototype.registerWithBody = function(body, callback) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   };
-  
+
   const request = _makeRequest(requestOptions, function(err, data) {
     if (err) {
       return callback(err);

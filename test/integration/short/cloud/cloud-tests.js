@@ -34,8 +34,8 @@ const port = 9042;
 vdescribe('dse-6.7', 'Cloud support', function () {
   // Only run tests with few versions of DSE as SNI project has a fixed C*/DSE version
 
-  if (helper.isWin()) {
-    // Skip altogether for AppVeyor
+  if (helper.isWin() || process.versions.node.split('.')[0] < 10) {
+    // Skip altogether for AppVeyor and Node.js runtime below 10
     return;
   }
 

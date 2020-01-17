@@ -31,7 +31,8 @@ function getJsFiles(dir, fileArray) {
 }
 
 if (+process.versions.node.split('.')[0] < 10) {
-  throw new Error('Examples were not executed as they were designed to run against Node.js 10+');
+  console.log('Examples were not executed as they were designed to run against Node.js 10+');
+  return;
 }
 
 const runnerFileName = path.basename(module.filename);

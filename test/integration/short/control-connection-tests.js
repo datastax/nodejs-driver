@@ -135,6 +135,15 @@ describe('ControlConnection', function () {
 
       await cc.init();
       await new Promise(r => cc.options.policies.loadBalancing.init(null, cc.hosts, r));
+
+      if (helper.isCassandraGreaterThan('4.0')) {
+        // To avoid issue "Not enough live nodes to maintain replication factor"
+        await cc.query("ALTER KEYSPACE system_traces" +
+          " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}");
+        await cc.query("ALTER KEYSPACE system_distributed" +
+          " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}");
+      }
+
       await util.promisify(helper.ccmHelper.decommissionNode)(2);
 
       await helper.wait.forNodeToBeRemoved(cc.hosts, 2);

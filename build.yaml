@@ -8,8 +8,8 @@ schedules:
           # Include 2.1, dse-6.0, dse-6.7
           cassandra: ['3.11', '4.0', 'dse-5.1', 'dse-6.8']
         - nodejs: ['10']
-          # Include 3.11, 4.0, dse-6.8
-          cassandra: ['2.1', 'dse-5.1', 'dse-6.0', 'dse-6.7']
+          # Include 3.11, dse-6.8
+          cassandra: ['2.1', '4.0', 'dse-5.1', 'dse-6.0', 'dse-6.7']
         - nodejs: ['12']
           # Include 4.0, dse-5.1, dse-6.7
           # Examples are run against DSE 6.7

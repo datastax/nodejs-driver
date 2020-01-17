@@ -35,11 +35,16 @@ describe('Client', function () {
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
     const commonTable = commonKs + '.' + helper.getRandomName('table');
     const commonTable2 = commonKs + '.' + helper.getRandomName('table');
+    const yaml = ['batch_size_warn_threshold_in_kb:5'];
+
+    if (!helper.isDse() && helper.isCassandraGreaterThan('4.0')) {
+      yaml.push('enable_materialized_views:true');
+    }
 
     const setupInfo = helper.setup(3, {
       keyspace: commonKs,
       queries: [ helper.createTableWithClusteringKeyCql(commonTable), helper.createTableCql(commonTable2) ],
-      ccmOptions: { yaml: ['batch_size_warn_threshold_in_kb:5'] }
+      ccmOptions: { yaml }
     });
 
     it('should execute a prepared query with parameters on all hosts', function (done) {

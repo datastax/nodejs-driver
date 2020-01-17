@@ -27,10 +27,19 @@ const vdescribe = helper.vdescribe;
 
 describe('metadata', function () {
   this.timeout(240000);
-  const setupInfo = helper.setup('2:0', { ccmOptions: {
-    vnodes: true,
-    yaml: helper.isDseGreaterThan('6') ? ['cdc_enabled:true'] : null
-  }});
+
+  const yaml = [];
+
+  if (helper.isDseGreaterThan('6')) {
+    yaml.push('cdc_enabled:true');
+  }
+
+  if (!helper.isDse() && helper.isCassandraGreaterThan('4.0')) {
+    yaml.push('enable_materialized_views:true');
+  }
+
+  const setupInfo = helper.setup('2:0', { ccmOptions: { vnodes: true, yaml }});
+
   describe('Metadata', function () {
     describe('#keyspaces', function () {
       it('should keep keyspace information up to date', function (done) {

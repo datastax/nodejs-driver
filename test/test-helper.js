@@ -444,6 +444,11 @@ const helper = {
     return helper.versionCompare(serverInfo.version, version);
   },
 
+  /** Determines if the current server is a DSE instance. */
+  isDse: function () {
+    return this.getServerInfo().isDse;
+  },
+
   /**
    * Determines if the current C* or DSE instance version is greater than or equals to the C* version provided
    * @param {String} version The version in string format, dot separated.

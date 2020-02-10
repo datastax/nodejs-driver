@@ -15,22 +15,21 @@
  */
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 const util = require('util');
 const helper = require('../test-helper');
-const loadBalancing = require('../../lib/policies/load-balancing');
+const policies = require('../../lib/policies');
 const clientOptions = require('../../lib/client-options');
-const hostModule = require('../../lib/host');
+const { Host, HostMap } = require('../../lib/host');
 const types = require('../../lib/types');
 const utils = require('../../lib/utils');
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
+const { ExecutionOptions } = require('../../lib/execution-options');
 const errors = require('../../lib/errors');
 const Client = require('../../lib/client');
 
-const DefaultLoadBalancingPolicy = loadBalancing.DefaultLoadBalancingPolicy;
-const Host = hostModule.Host;
-const HostMap = hostModule.HostMap;
-const lastOctetOf = helper.lastOctetOf;
+const { loadBalancing } = policies;
+const { DefaultLoadBalancingPolicy } = loadBalancing;
+const { lastOctetOf } = helper;
 
 const localDc = 'dc1';
 const remoteDc = 'dc2';
@@ -379,6 +378,19 @@ describe('DefaultLoadBalancingPolicy', () => {
       hosts.slice(0, hosts.length - 1).forEach((h, i) => {
         assert.strictEqual(policy.getDistance(h), i < localDcLength ? types.distance.local : types.distance.ignored);
       });
+    });
+  });
+});
+
+describe('policies.defaultLoadBalancingPolicy()', () => {
+  [
+    { title: 'without the local dc', localDc: undefined },
+    { title: 'with a local dc', localDc: 'my_dc' }
+  ].forEach(({ title, localDc }) => {
+    it(`should support creating a new instance ${title}`, () => {
+      const lbp = policies.defaultLoadBalancingPolicy(localDc);
+      assert.instanceOf(lbp, DefaultLoadBalancingPolicy);
+      assert.strictEqual(lbp.localDc, localDc);
     });
   });
 });

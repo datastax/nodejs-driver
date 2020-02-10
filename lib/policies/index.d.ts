@@ -21,7 +21,7 @@ import { types } from '../types';
 export namespace policies {
   function defaultAddressTranslator(): addressResolution.AddressTranslator;
 
-  function defaultLoadBalancingPolicy(): loadBalancing.LoadBalancingPolicy;
+  function defaultLoadBalancingPolicy(localDc?: string): loadBalancing.LoadBalancingPolicy;
 
   function defaultReconnectionPolicy(): reconnection.ReconnectionPolicy;
 

@@ -21,7 +21,9 @@ const simulacron = require('../simulacron');
 const utils = require('../../../lib/utils');
 const helper = require('../../test-helper');
 const policies = require('../../../lib/policies');
+const errors = require('../../../lib/errors');
 const promiseUtils = require('../../../lib/promise-utils');
+const { ExecutionProfile } = require('../../../lib/execution-profile');
 const Client = require('../../../lib/client');
 const { loadBalancing } = policies;
 
@@ -301,6 +303,44 @@ describe('LoadBalancingPolicy implementations', function() {
             client.execute('SELECT * FROM table1', [], queryOptions)));
         })
         .then(results => assert.ok(results.filter(r => r.info.queriedHost === pausedAddress).length > 0));
+    });
+
+    it('should validate localDc parameter and include available dcs in the error', async () => {
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        profiles: [
+          new ExecutionProfile('default', { loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc }) }),
+          // Use a different LBP instance without setting the local DC
+          new ExecutionProfile('test', { loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy() })
+        ]
+      });
+
+      helper.shutdownAfterThisTest(client);
+
+      await helper.assertThrowsAsync(client.connect(), errors.ArgumentError,
+        /'localDataCenter' is not defined in Client options .* Available DCs are: \[dc1,dc2]/);
+
+      await client.shutdown();
+    });
+
+    it('should validate that the local dc matches the topology and include available dcs in the error', async () => {
+      const client = new Client({
+        contactPoints: cluster.getContactPoints(),
+        profiles: [
+          new ExecutionProfile('default', { loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc }) }),
+          // Use a different LBP instance setting the local DC to an invalid one
+          new ExecutionProfile('test', {
+            loadBalancing: new loadBalancing.DefaultLoadBalancingPolicy({ localDc: 'dc_invalid' })
+          })
+        ]
+      });
+
+      helper.shutdownAfterThisTest(client);
+
+      await helper.assertThrowsAsync(client.connect(), errors.ArgumentError,
+        /Datacenter dc_invalid was not found\. Available DCs are: \[dc1,dc2]/);
+
+      await client.shutdown();
     });
   });
 

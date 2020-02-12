@@ -307,11 +307,14 @@ describe('DefaultLoadBalancingPolicy', () => {
       const options = utils.extend({}, helper.baseOptions);
       delete options.localDataCenter;
       const hosts = new HostMap();
-      hosts.set('1', createHost('1'));
-      policy.init(new Client(options), hosts, (err) => {
+      hosts.set('1', createHost('1', 'dc1'));
+      hosts.set('2', createHost('2', 'dc2'));
+      const client = new Client(options);
+      policy.init(client, hosts, (err) => {
         helper.assertInstanceOf(err, errors.ArgumentError);
-        assert.strictEqual(err.message, '\'localDataCenter\' is not defined in Client options and also was not specified' +
-          ' in constructor. At least one is required.');
+        assert.strictEqual(err.message,
+          `'localDataCenter' is not defined in Client options and also was not specified in constructor.` +
+          ` At least one is required. Available DCs are: [dc1,dc2]`);
         done();
       });
     });
@@ -336,7 +339,7 @@ describe('DefaultLoadBalancingPolicy', () => {
           const event = logEvents[0];
           assert.strictEqual(event.level, 'info');
           assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' +
-            ' DCAwareRoundRobinPolicy. It is more preferable to specify the local data center using' +
+            ' the LoadBalancingPolicy. It is more preferable to specify the local data center using' +
             ' \'localDataCenter\' in Client options instead when your application is targeting a single data center.');
           next();
         }
@@ -496,7 +499,7 @@ function getQueryPlan(policy, repeat, keyspace, routingKey, preferredHost) {
 function createHost(address, dc) {
   const options = clientOptions.extend({}, helper.baseOptions);
   const h = new Host(address, types.protocolVersion.maxSupported, options);
-  h.datacenter = dc;
+  h.datacenter = dc || 'dc1';
   return h;
 }
 

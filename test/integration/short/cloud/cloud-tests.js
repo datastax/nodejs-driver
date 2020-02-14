@@ -63,6 +63,9 @@ vdescribe('dse-6.7', 'Cloud support', function () {
       assert.strictEqual(client.metadata.isDbaas(), true);
       assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localQuorum);
 
+      // It should use the proxy address to validate the server identity
+      assert.match(client.options.sslOptions.checkServerIdentity.toString(), /sni\.address/);
+
       client.hosts.forEach(h => {
         assert.ok(h.isUp());
         helper.assertContains(h.address, `:${port}`);

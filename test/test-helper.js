@@ -1065,6 +1065,46 @@ const helper = {
         callback();
       }
     );
+  },
+
+  //TODO: Remove previous
+  waitForWorkersAsync: async function(client, expectedWorkers, callback) {
+    helper.trace("Waiting for %d spark workers", expectedWorkers);
+    const workerRE = /Alive Workers:.*(\d+)<\/li>/;
+    let numWorkers = 0;
+    let attempts = 0;
+    const maxAttempts = 1000;
+    const delay = 100;
+
+    const findSparkMasterAsync = util.promisify(helper.findSparkMaster);
+
+    while (numWorkers < expectedWorkers && attempts++ < maxAttempts) {
+      await promiseUtils.delay(delay);
+      let master;
+      try {
+        master = await findSparkMasterAsync(client);
+      } catch (err) {
+        await promiseUtils.delay(delay);
+        continue;
+      }
+
+      try {
+        const body = makeRequest({ host: master, port: 7080, path: '/'});
+        const match = body.match(workerRE);
+        if (match) {
+          numWorkers = parseFloat(match[1]);
+          helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
+        } else {
+          helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
+        }
+      } catch (err) {
+        helper.trace("(%d/%d) Got error while fetching workers: %s", attempts+1, maxAttempts, err);
+      }
+    }
+
+    if(numWorkers < expectedWorkers) {
+      helper.trace('WARNING: After %d attempts only %d/%d workers were active.', maxAttempts, numWorkers, expectedWorkers);
+    }
   }
 };
 

@@ -985,126 +985,32 @@ const helper = {
       client.shutdown.bind(client)
     ], callback);
   },
+
   /**
-   * Identifies the host that is the spark master (the one that is listening on port 7077)
-   * and returns it.
-   * @param {Client} client instance that contains host metadata.
-   * @param {Function} callback invoked with the host that is the spark master or error.
+   * Makes a http request and returns the body.
+   * @param {{host, port, path}} requestOptions
+   * @returns {Promise<string>}
    */
-  findSparkMaster: function (client, callback) {
-    client.execute('call DseClientTool.getAnalyticsGraphServer();', function(err, result) {
-      if(err) {
-        return callback(err);
-      }
-      const row = result.first();
-      const host = row.result.ip;
-      callback(null, host);
-    });
-  },
-  /**
-   * Checks the spark cluster until there are the number of desired expected workers.  This
-   * is required as by the time a node is up and listening on the CQL interface it is not a given
-   * that it is partaking as a spark worker.
-   *
-   * Unfortunately there isn't a very good way to check that workers are listening as spark will choose an arbitrary
-   * port for the worker and there is no other interface that exposes how many workers are active.  The best
-   * alternative is to do a GET on http://master:7080/ and do a regular expression match to resolve the number of
-   * active workers.  This could be somewhat fragile and break easily in future releases.
-   *
-   * @param {Client} client client instace that contains host metadata (used for resolving master address).
-   * @param {Number} expectedWorkers The number of workers expected.
-   * @param {Function} callback Invoked after expectedWorkers found or at least 100 seconds have passed.
-   */
-  waitForWorkers: function(client, expectedWorkers, callback) {
-    helper.trace("Waiting for %d spark workers", expectedWorkers);
-    const workerRE = /Alive Workers:.*(\d+)<\/li>/;
-    let numWorkers = 0;
-    let attempts = 0;
-    const maxAttempts = 1000;
-    utils.whilst(
-      function checkWorkers() {
-        return numWorkers < expectedWorkers && attempts++ < maxAttempts;
-      },
-      function(cb) {
-        setTimeout(function() {
-          let errored = false;
-          // resolve master each time in oft chance it changes (highly unlikely).
-          helper.findSparkMaster(client, function(err, master) {
-            if(err) {
-              cb();
+  makeWebRequest: function(requestOptions) {
+    const timeoutMs = 500;
+    return new Promise((resolve, reject) => {
+      const req = http.get(Object.assign({ timeout: timeoutMs }, requestOptions), res => {
+        let data = '';
+
+        res
+          .on('data', chunk => data += chunk.toString())
+          .on('end', () => {
+            if (res.statusCode !== 200) {
+              return reject(new Error(`Obtained http status ${res.statusCode}`));
             }
-            const req = http.get({host: master, port: 7080, path: '/'}, function(response) {
-              let body = '';
-              response.on('data', function (data) {
-                body += data;
-              });
-              response.on('end', function () {
-                const match = body.match(workerRE);
-                if (match) {
-                  numWorkers = parseFloat(match[1]);
-                  helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
-                } else {
-                  helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
-                }
-                if (!errored) {
-                  cb();
-                }
-              });
-            });
-            req.on('error', function (err) {
-              errored = true;
-              helper.trace("(%d/%d) Got error while fetching workers.", attempts+1, maxAttempts, err);
-              cb();
-            });
+
+            resolve(data);
           });
-        }, 100);
-      }, function complete() {
-        if(numWorkers < expectedWorkers) {
-          helper.trace('WARNING: After %d attempts only %d/%d workers were active.', maxAttempts, numWorkers, expectedWorkers);
-        }
-        callback();
-      }
-    );
-  },
+      });
 
-  //TODO: Remove previous
-  waitForWorkersAsync: async function(client, expectedWorkers, callback) {
-    helper.trace("Waiting for %d spark workers", expectedWorkers);
-    const workerRE = /Alive Workers:.*(\d+)<\/li>/;
-    let numWorkers = 0;
-    let attempts = 0;
-    const maxAttempts = 1000;
-    const delay = 100;
-
-    const findSparkMasterAsync = util.promisify(helper.findSparkMaster);
-
-    while (numWorkers < expectedWorkers && attempts++ < maxAttempts) {
-      await promiseUtils.delay(delay);
-      let master;
-      try {
-        master = await findSparkMasterAsync(client);
-      } catch (err) {
-        await promiseUtils.delay(delay);
-        continue;
-      }
-
-      try {
-        const body = makeRequest({ host: master, port: 7080, path: '/'});
-        const match = body.match(workerRE);
-        if (match) {
-          numWorkers = parseFloat(match[1]);
-          helper.trace("(%d/%d) Found workers: %d/%d", attempts+1, maxAttempts, numWorkers, expectedWorkers);
-        } else {
-          helper.trace("(%d/%d) Found no workers in body", attempts+1, maxAttempts);
-        }
-      } catch (err) {
-        helper.trace("(%d/%d) Got error while fetching workers: %s", attempts+1, maxAttempts, err);
-      }
-    }
-
-    if(numWorkers < expectedWorkers) {
-      helper.trace('WARNING: After %d attempts only %d/%d workers were active.', maxAttempts, numWorkers, expectedWorkers);
-    }
+      req.on('error', err => reject(err));
+      req.setTimeout(timeoutMs, () => req.abort());
+    });
   }
 };
 

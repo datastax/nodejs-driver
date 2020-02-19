@@ -338,9 +338,10 @@ describe('DefaultLoadBalancingPolicy', () => {
           assert.strictEqual(logEvents.length, 1);
           const event = logEvents[0];
           assert.strictEqual(event.level, 'info');
-          assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' +
-            ' the LoadBalancingPolicy. It is more preferable to specify the local data center using' +
-            ' \'localDataCenter\' in Client options instead when your application is targeting a single data center.');
+          assert.strictEqual(event.message,
+            `Local data center 'dc1' was provided as an argument to the load-balancing policy. It is preferable` +
+            ` to specify the local data center using 'localDataCenter' in Client options instead when your` +
+            ` application is targeting a single data center.`);
           next();
         }
       ], done);

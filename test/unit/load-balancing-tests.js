@@ -250,16 +250,13 @@ describe('DCAwareRoundRobinPolicy', function () {
     const options = utils.extend({}, helper.baseOptions);
     delete options.localDataCenter;
     const client = new Client(options);
-    const logEvents = [];
-    client.on('log', function(level, className, message, furtherInfo) {
-      logEvents.push({level: level, className: className, message: message, furtherInfo: furtherInfo});
-    });
     const hosts = new HostMap();
     hosts.set('1', createHost('1', client.options));
     policy.init(client, hosts, (err) => {
       helper.assertInstanceOf(err, errors.ArgumentError);
-      assert.strictEqual(err.message, '\'localDataCenter\' is not defined in Client options and also was not specified' + 
-        ' in constructor. At least one is required.');
+      assert.strictEqual(err.message,
+        `'localDataCenter' is not defined in Client options and also was not specified in constructor.` +
+        ` At least one is required. Available DCs are: [dc1]`);
       done();
     });
   });
@@ -282,9 +279,10 @@ describe('DCAwareRoundRobinPolicy', function () {
         assert.strictEqual(logEvents.length, 1);
         const event = logEvents[0];
         assert.strictEqual(event.level, 'info');
-        assert.strictEqual(event.message, 'Local data center \'dc1\' was provided as an argument to' + 
-          ' DCAwareRoundRobinPolicy. It is more preferable to specify the local data center using' + 
-          ' \'localDataCenter\' in Client options instead when your application is targeting a single data center.');
+        assert.strictEqual(event.message,
+          `Local data center 'dc1' was provided as an argument to the load-balancing policy.` +
+          ` It is preferable to specify the local data center using 'localDataCenter' in Client options` +
+          ` instead when your application is targeting a single data center.`);
         next();
       }
     ], done);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
+const { assert } = require('chai');
 const api = require('../../index');
 const auth = require('../../lib/auth');
 const helper = require('../test-helper');
@@ -28,18 +28,22 @@ describe('API', function () {
       assert.ok(new api.auth.DseGssapiAuthProvider() instanceof auth.AuthProvider);
     }
   });
+
   it('should expose geometry module', function () {
     assert.ok(api.geometry);
     checkConstructor(api.geometry, 'LineString');
     checkConstructor(api.geometry, 'Point');
     checkConstructor(api.geometry, 'Polygon');
   });
+
   it('should expose Client constructor', function () {
     checkConstructor(api, 'Client');
   });
+
   it('should expose GraphResultSet constructor', function () {
     checkConstructor(api.datastax.graph, 'GraphResultSet');
   });
+
   it('should expose graph types constructor', function () {
     checkConstructor(api.datastax.graph, 'Edge');
     checkConstructor(api.datastax.graph, 'Element');
@@ -48,6 +52,28 @@ describe('API', function () {
     checkConstructor(api.datastax.graph, 'Vertex');
     checkConstructor(api.datastax.graph, 'VertexProperty');
   });
+
+  it('should expose graph wrappers', () => {
+    [
+      'asUdt',
+      'asInt',
+      'asFloat',
+      'asDouble',
+      'asTimestamp'
+    ].forEach(functionName => {
+      assert.isFunction(api.datastax.graph[functionName]);
+    });
+
+    checkConstructor(api.datastax.graph, 'UdtGraphWrapper');
+    checkConstructor(api.datastax.graph, 'GraphTypeWrapper');
+  });
+
+  it('should expose the custom type serializers', () => {
+    assert.isObject(api.datastax.graph.getCustomTypeSerializers());
+    assert.isObject(api.datastax.graph.getCustomTypeSerializers()['dse:UDT']);
+    assert.isObject(api.datastax.graph.getCustomTypeSerializers()['dse:Tuple']);
+  });
+
   it('should expose cassandra driver modules', function () {
     assert.ok(api.errors);
     assert.ok(api.policies);

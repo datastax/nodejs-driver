@@ -35,19 +35,17 @@ module.exports = {
   /**
    * Sets the schema mode to "production".
    * @param {Client} client
-   * @param {Function} callback
    */
-  makeStrict: function (client, callback) {
-    client.executeGraph(makeStrictQuery, null, { graphName: 'name1'}, callback);
+  makeStrict: function (client) {
+    return client.executeGraph(makeStrictQuery, null, { graphName: 'name1'});
   },
 
   /**
    * Sets the allow_scan flag.
    * @param {Client} client
-   * @param {Function} callback
    */
-  allowScans: function (client, callback) {
-    client.executeGraph(allowScansQuery, null, { graphName: 'name1'}, callback);
+  allowScans: function (client) {
+    return client.executeGraph(allowScansQuery, null, { graphName: 'name1'});
   }
 };
 

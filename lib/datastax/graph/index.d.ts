@@ -61,4 +61,14 @@ export namespace graph {
     key: string
     properties?: any
   }
+
+  function asDouble(value: number): object;
+
+  function asFloat(value: number): object;
+
+  function asInt(value: number): object;
+
+  function asTimestamp(value: Date): object;
+
+  function asUdt(value: object): object;
 }

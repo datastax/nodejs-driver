@@ -15,17 +15,21 @@
  */
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
 const helper = require('../../test-helper');
-const GraphSONReader = require('../../../lib/datastax/graph/graphson-reader');
+const { GraphSON2Reader, GraphSON3Reader, GraphSON3Writer } = require('../../../lib/datastax/graph/graph-serializer');
+const getCustomTypeSerializers = require('../../../lib/datastax/graph/custom-type-serializers');
 const graphModule = require('../../../lib/datastax/graph');
 const types = require('../../../lib/types');
 const utils = require('../../../lib/utils');
 const geometry = require('../../../lib/geometry');
+const { Tuple } = types;
+const { asInt, asDouble, asTimestamp } = graphModule;
 
-describe('GraphSONReader', function () {
+describe('GraphSON2Reader', function () {
+  const reader = new GraphSON2Reader({ serializers: getCustomTypeSerializers() });
+
   describe('#read()', function () {
-    const reader = new GraphSONReader();
     const buffer = utils.allocBufferFromString('010203', 'hex');
     (function defineObjectTest() {
       [
@@ -115,6 +119,67 @@ describe('GraphSONReader', function () {
       assert.ok(result.objects[1] instanceof graphModule.Vertex);
       assert.strictEqual(result.objects[0].label, 'person');
       assert.strictEqual(result.objects[1].label, 'software');
+    });
+  });
+});
+
+describe('GraphSON3Reader', function () {
+  const reader = new GraphSON3Reader({ serializers: getCustomTypeSerializers() });
+
+  describe('read', () => {
+    it('should support list and sets', () => {
+      [ 'g:List', 'g:Set' ].forEach(key => {
+        const obj = {
+          '@type': key,
+          '@value': ['a', 'b', { "@type": "g:Int32", "@value": 31 }]
+        };
+
+        const actual = reader.read(obj);
+        assert.isArray(actual);
+        assert.deepEqual(actual, ['a', 'b', 31 ]);
+      });
+    });
+
+    it('should support maps', () => {
+      const obj = {
+        '@type': 'g:Map',
+        '@value': [ 'key1', 'a', { '@type': 'g:Int32', '@value': -1 }, 'b' ]
+      };
+
+      const actual = reader.read(obj);
+      helper.assertMapEqual(actual, new Map([['key1', 'a'], [-1, 'b']]));
+    });
+  });
+});
+
+describe('GraphSON3Writer', function () {
+  const writer = new GraphSON3Writer({ serializers: getCustomTypeSerializers() });
+
+  describe('adaptObject', () => {
+    it('should support wrapped values', () => {
+      [
+        [ asInt(101), { '@type': 'g:Int32', '@value': 101 } ],
+        [ asDouble(1.1), { '@type': 'g:Double', '@value': 1.1 }],
+        [ asTimestamp(new Date(1580477249207)), { '@type': 'g:Timestamp', '@value': 1580477249207 }]
+      ].forEach(item => {
+        const result = writer.adaptObject(item[0]);
+        assert.deepEqual(result, item[1]);
+      });
+    });
+
+    it('should support simple tuples', () => {
+      [
+        [new Tuple(1, 'a'), ['double', 'text']],
+        [new Tuple('h', 'i'), ['text', 'text']],
+        [new Tuple('a', asInt(10)), ['text', 'int'], ['a', { '@type': 'g:Int32', '@value': 10 }]],
+        [new Tuple('b', types.Uuid.fromString('bb6d7af7-f674-4de7-8b4c-c0fdcdaa5cca')), ['text', 'uuid'], ['b', { '@type': 'g:UUID', '@value': 'bb6d7af7-f674-4de7-8b4c-c0fdcdaa5cca' }]],
+        [new Tuple('b', types.Long.fromString('1234')), ['text', 'bigint'], ['b', { '@type': 'g:Int64', '@value': '1234' }]],
+      ].forEach(item => {
+        const tuple = item[0];
+        const result = writer.adaptObject(tuple);
+        assert.deepEqual(result['@value'].value, item[2] || tuple.elements);
+        assert.deepEqual(result['@value'].definition.map(d => d.cqlType), item[1]);
+      });
     });
   });
 });

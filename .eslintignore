@@ -3,3 +3,6 @@
 
 # Integer is part of the Closure Library
 /lib/types/integer.js
+
+# TinkerPop-based files
+/lib/datastax/graph/type-serializers.js

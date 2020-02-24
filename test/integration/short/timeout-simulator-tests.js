@@ -19,6 +19,7 @@
 const { assert } = require('chai');
 const Client = require('../../../lib/client');
 const errors = require('../../../lib/errors');
+const promiseUtils = require('../../../lib/promise-utils');
 const helper = require('../../test-helper');
 const simulacron = require('../simulacron');
 const { OrderedLoadBalancingPolicy } = helper;
@@ -97,18 +98,34 @@ describe('client read timeouts', function () {
     await client.shutdown();
   });
 
-  //TODO
-  it('defunct the connection when the threshold passed');
+  it('defunct the connection when the threshold passed', async () => {
+    const defunctReadTimeoutThreshold = 10;
+    const readTimeout = 400;
+    const client = newInstance({ socketOptions: { defunctReadTimeoutThreshold, readTimeout }});
+    await client.connect();
+    let hostDown = null;
 
-  //TODO
-  it('should move to next host for eachRow() executions');
+    // The driver should mark the host as down when the pool closes all connections
+    client.on('hostDown', h => hostDown = h);
+    const coordinators = new Set();
+
+    await promiseUtils.times(100, 32, async () => {
+      const rs = await client.execute(queryDelayedOnNode0);
+      coordinators.add(rs.info.queriedHost);
+    });
+
+    // First node should not have responded
+    assert.doesNotHaveAllKeys(coordinators, [ simulacronCluster.node(0).address ]);
+
+    // Node should be marked as down
+    assert.ok(hostDown);
+    assert.strictEqual(hostDown.address, simulacronCluster.node(0).address);
+
+    await client.shutdown();
+  });
 
   describe('with prepared batches', function () {
-
-    //TODO: Eval if needed
-    const getOptions = (readTimeout) => ({
-      socketOptions: { readTimeout }
-    });
+    const getOptions = (readTimeout) => ({ socketOptions: { readTimeout } });
 
     it('should retry when preparing multiple queries', async () => {
       const client = newInstance(getOptions(500));
@@ -121,7 +138,7 @@ describe('client read timeouts', function () {
     });
 
     it('should produce a NoHostAvailableError when execution timed out on all hosts', async () => {
-      const client = newInstance(getOptions(50));
+      const client = newInstance(getOptions(readTimeout));
 
       await client.connect();
       const err = await helper.assertThrowsAsync(
@@ -137,7 +154,7 @@ describe('client read timeouts', function () {
     });
 
     it('should produce a NoHostAvailableError when prepare tried and timed out on all hosts', async () => {
-      const client = newInstance(getOptions(50));
+      const client = newInstance(getOptions(readTimeout));
 
       await client.connect();
       // Throws on prepare

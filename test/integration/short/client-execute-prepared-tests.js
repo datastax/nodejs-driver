@@ -30,7 +30,7 @@ const commonKs = helper.getRandomName('ks');
 const numericTests = require('./numeric-tests');
 const pagingTests = require('./paging-tests');
 
-describe('Client', function () {
+describe('Client @SERVER_API', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 1}, callback)', function () {
     const commonTable = commonKs + '.' + helper.getRandomName('table');

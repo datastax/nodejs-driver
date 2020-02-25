@@ -23,7 +23,7 @@ const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const vit = helper.vit;
 
-describe('custom payload', function () {
+describe('custom payload @SERVER_API', function () {
   this.timeout(60000);
   const keyspace = helper.getRandomName('ks');
   const table = keyspace + '.' + helper.getRandomName('tbl');

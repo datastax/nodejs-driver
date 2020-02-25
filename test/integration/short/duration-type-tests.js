@@ -23,7 +23,7 @@ const utils = require('../../../lib/utils');
 const vdescribe = helper.vdescribe;
 const Duration = types.Duration;
 
-vdescribe('3.10', 'Duration', function () {
+vdescribe('3.10', 'Duration @SERVER_API', function () {
 
   this.timeout(120000);
 

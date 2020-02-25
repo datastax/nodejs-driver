@@ -20,7 +20,7 @@ const DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-au
 const Client = require('../../../../lib/client');
 const vdescribe = helper.vdescribe;
 
-vdescribe('dse-5.0', 'DsePlainTextAuthProvider', function () {
+vdescribe('dse-5.0', 'DsePlainTextAuthProvider @SERVER_API', function () {
   this.timeout(180000);
   it('should authenticate against DSE daemon instance', function (done) {
     const testClusterOptions = {

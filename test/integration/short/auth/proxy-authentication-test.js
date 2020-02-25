@@ -26,7 +26,7 @@ const vdescribe = helper.vdescribe;
 const ads = helper.ads;
 const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
-vdescribe('dse-5.1', 'Proxy Authentication', function () {
+vdescribe('dse-5.1', 'Proxy Authentication @SERVER_API', function () {
   this.timeout(180000);
   before(function (done) {
     utils.series([

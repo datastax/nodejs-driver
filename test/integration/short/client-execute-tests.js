@@ -28,7 +28,7 @@ const vdescribe = helper.vdescribe;
 const numericTests = require('./numeric-tests');
 const pagingTests = require('./paging-tests');
 
-describe('Client', function () {
+describe('Client @SERVER_API', function () {
   this.timeout(120000);
   describe('#execute(query, params, {prepare: 0}, callback)', function () {
     const keyspace = helper.getRandomName('ks');

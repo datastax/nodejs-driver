@@ -27,7 +27,7 @@ const Polygon = geometry.Polygon;
 const Uuid = types.Uuid;
 const Tuple = types.Tuple;
 
-vdescribe('dse-5.0', 'Polygon', function () {
+vdescribe('dse-5.0', 'Polygon @SERVER_API', function () {
   this.timeout(120000);
   before(function (done) {
     const client = new Client(helper.getOptions());

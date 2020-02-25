@@ -33,7 +33,7 @@ const utils = require('../../../../lib/utils');
 const graphModule = require('../../../../lib/datastax/graph');
 const graphTestHelper = require('./graph-test-helper');
 
-vdescribe('dse-5.0', 'Client', function () {
+vdescribe('dse-5.0', 'Client @SERVER_API', function () {
   this.timeout(120000);
   before(function (done) {
     const client = new Client(helper.getOptions());

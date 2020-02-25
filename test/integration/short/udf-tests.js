@@ -23,7 +23,7 @@ const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 const vdescribe = helper.vdescribe;
 
-vdescribe('2.2', 'Metadata', function () {
+vdescribe('2.2', 'Metadata @SERVER_API', function () {
   this.timeout(60000);
   before(helper.ccmHelper.start(1, { yaml: ['enable_user_defined_functions:true']}));
   const keyspace = 'ks_udf';

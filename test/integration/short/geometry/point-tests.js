@@ -26,7 +26,7 @@ const Point = geometry.Point;
 const Uuid = types.Uuid;
 const Tuple = types.Tuple;
 
-vdescribe('dse-5.0', 'Point', function () {
+vdescribe('dse-5.0', 'Point @SERVER_API', function () {
   this.timeout(120000);
   before(function (done) {
     const client = new Client(helper.getOptions());

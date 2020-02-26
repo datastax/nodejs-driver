@@ -27,7 +27,7 @@ const LineString = geometry.LineString;
 const Uuid = types.Uuid;
 const Tuple = types.Tuple;
 
-vdescribe('dse-5.0', 'LineString', function () {
+vdescribe('dse-5.0', 'LineString @SERVER_API', function () {
   this.timeout(120000);
   before(function (done) {
     const client = new Client(helper.getOptions());

@@ -25,7 +25,7 @@ const packageInfo = require('../../../package.json');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 
-describe('metadata', function () {
+describe('metadata @SERVER_API', function () {
   this.timeout(240000);
 
   const yaml = [];

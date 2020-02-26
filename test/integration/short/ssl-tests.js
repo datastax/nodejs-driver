@@ -23,7 +23,7 @@ const errors = require('../../../lib/errors');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 
-describe('Client', function () {
+describe('Client @SERVER_API', function () {
   this.timeout(60000);
   context('with ssl enabled', function () {
     const keyspace = helper.getRandomName('ks');

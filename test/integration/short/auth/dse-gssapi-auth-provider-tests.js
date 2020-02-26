@@ -24,7 +24,7 @@ const cDescribe = helper.conditionalDescribe(
   helper.requireOptional('kerberos') && helper.isDseGreaterThan('5.0'), 'kerberos and DSE required to run');
 const vit = helper.vit;
 
-cDescribe('DseGssapiAuthProvider', function () {
+cDescribe('DseGssapiAuthProvider @SERVER_API', function () {
   this.timeout(180000);
   before(function (done) {
     ads.start(function(err) {

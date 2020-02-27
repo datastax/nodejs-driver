@@ -1001,12 +1001,13 @@ vdescribe('dse-5.0', 'Client', function () {
           await client.executeGraph(insertTraversal, { myId: id, tuple1, tuple2 }, { graphName });
 
           const selectTraversal =
-            `g.V().hasLabel('label_complex').has('id', myId).values('prop_tuple1', 'prop_tuple2')`;
+            `g.V().hasLabel('label_complex').has('id', myId).valueMap('prop_tuple1', 'prop_tuple2')`;
           const rs = await client.executeGraph(selectTraversal, { myId: id }, { graphName });
-          const result = rs.toArray();
-          result.forEach(t => assert.instanceOf(t, Tuple));
-          assert.deepEqual(result[0].elements, [1, 'one']);
-          assert.deepEqual(result[1], tuple2);
+          const result = rs.first();
+          assert.instanceOf(result, Map);
+          result.forEach(v => assert.instanceOf(v[0], Tuple));
+          assert.deepEqual(result.get('prop_tuple1')[0].elements, [1, 'one']);
+          assert.deepEqual(result.get('prop_tuple2')[0], tuple2);
         });
 
         it('should deserialize udts', async () => {

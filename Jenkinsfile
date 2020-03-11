@@ -2,17 +2,19 @@
 
 def initializeEnvironment() {
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
+  env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
     env.DRIVER_DISPLAY_NAME = 'private ' + env.DRIVER_DISPLAY_NAME
+    env.DRIVER_METRIC_TYPE = 'oss-private'
   } else if (env.GIT_URL.contains('nodejs-dse-driver')) {
     env.DRIVER_DISPLAY_NAME = 'DSE Node.js Driver'
+    env.DRIVER_METRIC_TYPE = 'dse'
   }
 
   env.GIT_SHA = "${env.GIT_COMMIT.take(7)}"
   env.GITHUB_PROJECT_URL = "https://${GIT_URL.replaceFirst(/(git@|http:\/\/|https:\/\/)/, '').replace(':', '/').replace('.git', '')}"
   env.GITHUB_BRANCH_URL = "${GITHUB_PROJECT_URL}/tree/${env.BRANCH_NAME}"
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
-  env.BLUE_OCEAN_URL = "${env.BUILD_URL.replaceFirst('job', 'blue/organizations/jenkins').replaceFirst('job', 'detail')}"
 
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
     nodenv global ${NODEJS_VERSION}
@@ -109,7 +111,7 @@ def notifySlack(status = 'started') {
   }
 
   def message = """Build ${status} for ${env.DRIVER_DISPLAY_NAME} [${buildType}]
-<${env.GITHUB_BRANCH_URL}|${env.BRANCH_NAME}> - <${env.BLUE_OCEAN_URL}|#${env.BUILD_NUMBER}> - <${env.GITHUB_COMMIT_URL}|${env.GIT_SHA}>"""
+<${env.GITHUB_BRANCH_URL}|${env.BRANCH_NAME}> - <${env.RUN_DISPLAY_URL}|#${env.BUILD_NUMBER}> - <${env.GITHUB_COMMIT_URL}|${env.GIT_SHA}>"""
   if (!status.equalsIgnoreCase('Started')) {
     message += """
 ${status} after ${currentBuild.durationString - ' and counting'}"""
@@ -118,6 +120,25 @@ ${status} after ${currentBuild.durationString - ' and counting'}"""
 //  slackSend color: "${color}",
 //            channel: "#nodejs-driver-dev-bots",
 //            message: "${message}"
+}
+
+def submitCIMetrics(buildType) {
+  long durationMs = currentBuild.duration
+  long durationSec = durationMs / 1000
+  long nowSec = (currentBuild.startTimeInMillis + durationMs) / 1000
+  def branchNameNoPeriods = env.BRANCH_NAME.replaceAll('\\.', '_')
+  def durationMetric = "okr.ci.nodejs.${env.DRIVER_METRIC_TYPE}.${buildType}.${branchNameNoPeriods} ${durationSec} ${nowSec}"
+
+  timeout(time: 1, unit: 'MINUTES') {
+    withCredentials([string(credentialsId: 'lab-grafana-address', variable: 'LAB_GRAFANA_ADDRESS'),
+                     string(credentialsId: 'lab-grafana-port', variable: 'LAB_GRAFANA_PORT')]) {
+      withEnv(["DURATION_METRIC=${durationMetric}"]) {
+        sh label: 'Send runtime metrics to labgrafana', script: '''#!/bin/bash -lex
+          echo "${DURATION_METRIC}" | nc -q 5 ${LAB_GRAFANA_ADDRESS} ${LAB_GRAFANA_PORT}
+        '''
+      }
+    }
+  }
 }
 
 def describePerCommitStage() {
@@ -407,6 +428,11 @@ pipeline {
         }
       }
       post {
+        always {
+          node('master') {
+            submitCIMetrics('commit')
+          }
+        }
         aborted {
           notifySlack('aborted')
         }

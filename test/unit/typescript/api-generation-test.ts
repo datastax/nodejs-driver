@@ -72,7 +72,7 @@ export async function generatedFn() {
   printClasses(metrics, 'metrics');
   printClasses(tracker, 'tracker');
   printClasses(geometry, 'geometry', new Set(['Geometry']));
-  printClasses(graph, 'graph');
+  printClasses(graph, 'graph', new Set(['UdtGraphWrapper', 'GraphTypeWrapper']));
 
   // types
   printEnum(types.dataTypes, 'types.dataTypes');

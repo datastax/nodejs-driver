@@ -23,7 +23,7 @@ const utils = require('../../../lib/utils');
 const policies = require('../../../lib/policies');
 const ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
 const GraphExecutor = require('../../../lib/datastax/graph/graph-executor');
-const GraphExecutionOptions = require('../../../lib/datastax/graph/options').GraphExecutionOptions;
+const { GraphExecutionOptions, graphProtocol } = require('../../../lib/datastax/graph/options');
 const helper = require('../../test-helper');
 
 const proxyExecuteKey = 'ProxyExecute';
@@ -85,10 +85,10 @@ describe('GraphExecutor', function () {
 
       const actualOptions = setup.executionArguments.options;
 
-      assert.notStrictEqual(optionsParameter, actualOptions.getRawQueryOptions());
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'a1');
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'name1');
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'LOCAL_ONE');
@@ -113,6 +113,7 @@ describe('GraphExecutor', function () {
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
       assert.strictEqual(actualOptions.getCustomPayload()['graph-read-consistency'], undefined);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'TWO');
@@ -124,6 +125,7 @@ describe('GraphExecutor', function () {
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
       helper.assertBufferString(actualOptions.getCustomPayload()['z'], 'zValue');
       assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
@@ -134,6 +136,7 @@ describe('GraphExecutor', function () {
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
       assert.strictEqual(actualOptions.getCustomPayload()['z'], undefined);
       assert.deepEqual(actualOptions.getCustomPayload()['request-timeout'],
@@ -146,6 +149,7 @@ describe('GraphExecutor', function () {
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'x');
       assert.strictEqual(typeof actualOptions.getCustomPayload()['request-timeout'], 'undefined');
     });
@@ -178,6 +182,7 @@ describe('GraphExecutor', function () {
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'LOCAL_QUORUM');
       assert.strictEqual(actualOptions.getCustomPayload()['graph-write-consistency'], undefined);
 
@@ -190,11 +195,32 @@ describe('GraphExecutor', function () {
       assert.strictEqual(optionsParameter.anotherOption, actualOptions.anotherOption);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
       assert.strictEqual(actualOptions.getCustomPayload()['graph-read-consistency'], undefined);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-write-consistency'], 'QUORUM');
     });
 
-    it('should reuse the default payload for the executions', async () => {
+    it('should set graph results', async () => {
+      const setup = setupGraphExecutor({ contactPoints: ['host1'] });
+
+      await setup.instance.send('Q5', { c: 0});
+      let actualOptions = setup.executionArguments.options;
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
+      const optionsParameter = {
+        graphResults: 'graphson-3.0'
+      };
+      await setup.instance.send('Q5', { c: 0}, optionsParameter);
+      actualOptions = setup.executionArguments.options;
+      assert.notStrictEqual(optionsParameter, actualOptions);
+      //shallow copy the properties
+      assert.strictEqual(optionsParameter.anotherOption, actualOptions.getRawQueryOptions().anotherOption);
+      assert.ok(actualOptions.getCustomPayload());
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], 'graphson-3.0');
+    });
+
+    it('should reuse the values from the default payload for the executions', async () => {
       const clientOptions = { contactPoints: ['host1'], graphOptions: { name: 'name1' }};
       const setup = setupGraphExecutor(clientOptions);
       const optionsParameter = { anotherOption: { k: 'v2'}};
@@ -202,7 +228,13 @@ describe('GraphExecutor', function () {
       await setup.instance.send('Q5', { a: 1}, optionsParameter);
       const firstOptions = setup.executionArguments.options;
       await setup.instance.send('Q6', { b: 1}, optionsParameter);
-      assert.strictEqual(firstOptions.getCustomPayload(), setup.executionArguments.options.getCustomPayload());
+
+      Object.keys(firstOptions.getCustomPayload())
+        .filter(k => k !== 'graph-results')
+        .forEach(k => {
+          assert.strictEqual(
+            firstOptions.getCustomPayload()[k], setup.executionArguments.options.getCustomPayload()[k]);
+        });
     });
 
     it('should set the payload with the options provided', async () => {
@@ -274,6 +306,7 @@ describe('GraphExecutor', function () {
       assert.ok(actualOptions);
       assert.ok(actualOptions.getCustomPayload());
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'groovy1');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson2);
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-source'], 'source1');
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-name'], 'nameZ');
       helper.assertBufferString(actualOptions.getCustomPayload()['graph-read-consistency'], 'TWO');
@@ -323,8 +356,6 @@ describe('GraphExecutor', function () {
       await setup.instance.send('Q2', { 'x': 2 }, optionsParameter);
       actualOptions = setup.executionArguments.options;
       assert.notStrictEqual(actualOptions, lastOptions);
-      // Reusing same customPayload instance
-      assert.strictEqual(actualOptions.getCustomPayload(), lastOptions.getCustomPayload());
       helper.assertInstanceOf(actualOptions.getRetryPolicy(), policies.retry.FallthroughRetryPolicy);
       optionsParameter.retry = new policies.retry.RetryPolicy();
 
@@ -469,12 +500,37 @@ describe('GraphExecutor', function () {
       await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions && actualOptions.getCustomPayload());
-      assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'lolcode');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'lolcode');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson2);
 
       await setup.instance.send('Q');
       actualOptions = setup.executionArguments.options;
       assert.ok(actualOptions && actualOptions.getCustomPayload());
-      assert.strictEqual(actualOptions.getCustomPayload()['graph-language'].toString(), 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-language'], 'gremlin-groovy');
+      helper.assertBufferString(actualOptions.getCustomPayload()['graph-results'], graphProtocol.graphson1);
+    });
+
+    it('should use the graph results provided in the profile', async () => {
+      const clientOptions = {
+        contactPoints: ['host1'],
+        profiles: [
+          new ExecutionProfile('graph-olap', {
+            graphOptions: { results: graphProtocol.graphson2 }
+          })
+        ]
+      };
+      const setup = setupGraphExecutor(clientOptions);
+
+      let actualOptions;
+      await setup.instance.send('Q', null, { executionProfile: 'graph-olap' });
+      actualOptions = setup.executionArguments.options;
+      assert.ok(actualOptions && actualOptions.getCustomPayload());
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-results'].toString(), graphProtocol.graphson2);
+      await setup.instance.send('Q', null, null);
+      actualOptions = setup.executionArguments.options;
+      assert.ok(actualOptions && actualOptions.getCustomPayload());
+      // Default for gremlin groovy
+      assert.strictEqual(actualOptions.getCustomPayload()['graph-results'].toString(), graphProtocol.graphson1);
     });
 
     context('with analytics queries', function () {

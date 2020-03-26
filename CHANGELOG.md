@@ -1,5 +1,21 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.5.0
+
+2020-03-26
+
+### Features
+
+- [NODEJS-489] - Initial DS Graph 6.8 Support
+- [NODEJS-482] - Remove unnecessary allocations during GraphExecutionOptions creation
+- [NODEJS-564] - Include available dcs in all localDataCenter errors
+- [NODEJS-571] - Apollo: Validate server certificate CN against the proxy host name
+- [NODEJS-573] - Expose a method to build the default load balancing policy with the data center name
+
+### Bug fixes
+
+- [NODEJS-594] - Cloud support uses fs.promises which is marked as experimental in Node.js
+
 ## 4.4.0
 
 2020-01-15

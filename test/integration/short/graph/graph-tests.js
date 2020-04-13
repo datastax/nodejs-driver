@@ -28,7 +28,7 @@ const { InetAddress, Uuid, Tuple } = types;
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const utils = require('../../../../lib/utils');
 const graphModule = require('../../../../lib/datastax/graph');
-const { asInt, asFloat, asUdt } = graphModule;
+const { asInt, asFloat, asUdt, t } = graphModule;
 const { graphProtocol } = require('../../../../lib/datastax/graph/options');
 const graphTestHelper = require('./graph-test-helper');
 
@@ -946,6 +946,20 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
         const selectTraversal = `g.V().hasLabel('label_test').has('id', myId).values('prop_duration')`;
         const rs = await client.executeGraph(selectTraversal, { myId: id }, { executionProfile: 'profile1' });
         assert.deepEqual(rs.toArray(), [value]);
+      });
+
+      it('should support elementMap() tokens', async () => {
+        const id = schemaCounter++;
+        const insertTraversal = `g.addV('label_test').property('id', ${id}).property('prop_text', 'sample')`;
+        await client.executeGraph(insertTraversal, null, { graphName });
+
+        const traversalText = `g.V().has('label_test', 'id', ${id}).elementMap()`;
+        const rs = await client.executeGraph(traversalText, null, { graphName });
+        const map = rs.first();
+        assert.strictEqual(map.get('id'), id);
+        assert.strictEqual(map.get('prop_text'), 'sample');
+        assert.strictEqual(typeof map.get(t.id), 'string');
+        assert.strictEqual(map.get(t.label), 'label_test');
       });
 
       context('with complex types', () => {

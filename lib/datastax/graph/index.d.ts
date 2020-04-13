@@ -71,4 +71,15 @@ export namespace graph {
   function asTimestamp(value: Date): object;
 
   function asUdt(value: object): object;
+
+  interface EnumValue {
+    toString(): string
+  }
+
+  namespace t {
+    const id: EnumValue;
+    const key: EnumValue;
+    const label: EnumValue;
+    const value: EnumValue;
+  }
 }

@@ -74,6 +74,21 @@ describe('API', function () {
     assert.isObject(api.datastax.graph.getCustomTypeSerializers()['dse:Tuple']);
   });
 
+  it('should expose graph tokens', () => {
+    [
+      'id',
+      'key',
+      'label',
+      'value'
+    ].forEach(name => {
+      assert.isObject(api.datastax.graph.t[name]);
+      assert.equal(api.datastax.graph.t[name].toString(), name);
+    });
+
+    checkConstructor(api.datastax.graph, 'UdtGraphWrapper');
+    checkConstructor(api.datastax.graph, 'GraphTypeWrapper');
+  });
+
   it('should expose cassandra driver modules', function () {
     assert.ok(api.errors);
     assert.ok(api.policies);

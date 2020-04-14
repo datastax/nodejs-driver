@@ -35,4 +35,8 @@ async function myTest(client: Client): Promise<any> {
   await client.executeGraph('g.V()', cb);
   await client.executeGraph('g.V(id)', { id: 1}, cb);
   await client.executeGraph('g.V()', {}, { executionProfile: 'ep1' }, cb);
+
+  let tokenString: string;
+  tokenString = datastax.graph.t.id.toString();
+  tokenString = datastax.graph.t.label.toString();
 }

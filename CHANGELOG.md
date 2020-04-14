@@ -2,6 +2,14 @@
 
 ## 4.5.0
 
+2020-04-14
+
+### Bug fixes
+
+- [NODEJS-605] - Graph: TSerializer does not deserialize T elements correctly
+
+## 4.5.0
+
 2020-03-26
 
 ### Features

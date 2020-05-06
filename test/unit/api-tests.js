@@ -85,6 +85,15 @@ describe('API', function () {
       assert.equal(api.datastax.graph.t[name].toString(), name);
     });
 
+    [
+      'in',
+      'out',
+      'both'
+    ].forEach(name => {
+      assert.isObject(api.datastax.graph.direction[name]);
+      assert.equal(api.datastax.graph.direction[name].toString().toLowerCase(), name);
+    });
+
     checkConstructor(api.datastax.graph, 'UdtGraphWrapper');
     checkConstructor(api.datastax.graph, 'GraphTypeWrapper');
   });

@@ -28,7 +28,7 @@ const { InetAddress, Uuid, Tuple } = types;
 const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
 const utils = require('../../../../lib/utils');
 const graphModule = require('../../../../lib/datastax/graph');
-const { asInt, asFloat, asUdt, t } = graphModule;
+const { asInt, asFloat, asUdt, t, Edge, direction } = graphModule;
 const { graphProtocol } = require('../../../../lib/datastax/graph/options');
 const graphTestHelper = require('./graph-test-helper');
 
@@ -857,8 +857,8 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
       return client.executeGraph(query, null, { graphName });
     });
 
-    before(() => {
-      const createLabelQuery = `schema.vertexLabel('label_test').ifNotExists().partitionBy('id', Int)
+    before(async () => {
+      const createVertexLabel1Query = `schema.vertexLabel('label_test').ifNotExists().partitionBy('id', Int)
           .property('prop_double', Double)
           .property('prop_text', Text)
           .property('prop_uuid', Uuid)
@@ -866,7 +866,16 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
           .property('prop_blob', Blob)
           .property('prop_duration', Duration)
           .create()`;
-      return client.executeGraph(createLabelQuery, null, { graphName });
+      const createVertexLabel2Query = `schema.vertexLabel('label_test2').ifNotExists().partitionBy('id', Int)
+          .property('prop_text', Text)
+          .create()`;
+      const createEdgeLabelQuery = `schema.edgeLabel('created')
+        .from('label_test').to('label_test2')
+        .property('tag', Text)
+        .create()`;
+      await client.executeGraph(createVertexLabel1Query, null, { graphName });
+      await client.executeGraph(createVertexLabel2Query, null, { graphName });
+      await client.executeGraph(createEdgeLabelQuery, null, { graphName });
     });
 
     after(() => client.shutdown());
@@ -909,6 +918,43 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
         const selectTraversal = `g.V().hasLabel('label_test').has('id', ${id}).values('prop_text')`;
         const rs = await client.executeGraph(selectTraversal, null, { executionProfile: 'profile1' });
         assert.deepEqual(rs.toArray(), ['value1']);
+      });
+
+      it('should be able to add a edge and retrieve it', async () => {
+        const id1 = schemaCounter++;
+        const id2 = schemaCounter++;
+        const addTraversal = `g.addV('label_test')
+            .property('id', ${id1})
+            .property('prop_text', 'value1')
+            .as('first')
+          .addV('label_test2')
+            .property('id', ${id2})
+            .property('prop_text', 'value2')
+            .as('second')
+          .addE('created').from('first').to('second').property('tag', 'sample')`;
+        await client.executeGraph(addTraversal, null, { graphName });
+
+        const retrieveMapTraversal = `g.V().hasLabel('label_test').has('id', ${id1}).outE('created').elementMap()`;
+        let rs = await client.executeGraph(retrieveMapTraversal, null, { executionProfile: 'profile1' });
+        const map = rs.first();
+        assert.instanceOf(map, Map);
+        assert.equal(map.get('tag'), 'sample');
+        assert.equal(map.get(t.label), 'created');
+        const outMap = map.get(direction.out);
+        const inMap = map.get(direction.in);
+        assert.instanceOf(outMap, Map);
+        assert.equal(outMap.get(t.label), 'label_test');
+        assert.instanceOf(inMap, Map);
+        assert.equal(inMap.get(t.label), 'label_test2');
+
+        const retrieveEdgeTraversal = `g.V().hasLabel('label_test').has('id', ${id1}).outE('created')`;
+        rs = await client.executeGraph(retrieveEdgeTraversal, null, { executionProfile: 'profile1' });
+        const edge = rs.first();
+        assert.instanceOf(edge, Edge);
+        assert.equal(edge.label, 'created');
+        assert.equal(edge.outVLabel, 'label_test');
+        assert.equal(edge.inVLabel, 'label_test2');
+        assert.typeOf(edge.outV, 'string');
       });
 
       it('should support named parameters', async () => {

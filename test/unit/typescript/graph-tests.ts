@@ -39,4 +39,7 @@ async function myTest(client: Client): Promise<any> {
   let tokenString: string;
   tokenString = datastax.graph.t.id.toString();
   tokenString = datastax.graph.t.label.toString();
+  tokenString = datastax.graph.direction.in_.toString();
+  tokenString = datastax.graph.direction.out.toString();
+  tokenString = datastax.graph.direction.both.toString();
 }

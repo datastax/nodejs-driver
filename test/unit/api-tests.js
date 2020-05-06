@@ -94,6 +94,8 @@ describe('API', function () {
       assert.equal(api.datastax.graph.direction[name].toString().toLowerCase(), name);
     });
 
+    assert.equal(api.datastax.graph.direction['in_'].toString(), 'IN');
+
     checkConstructor(api.datastax.graph, 'UdtGraphWrapper');
     checkConstructor(api.datastax.graph, 'GraphTypeWrapper');
   });

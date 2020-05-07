@@ -82,4 +82,11 @@ export namespace graph {
     const label: EnumValue;
     const value: EnumValue;
   }
+
+  namespace direction {
+    // `in` is a reserved word
+    const in_: EnumValue;
+    const out: EnumValue;
+    const both: EnumValue;
+  }
 }

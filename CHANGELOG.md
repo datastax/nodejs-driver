@@ -1,6 +1,14 @@
 # ChangeLog - DataStax Node.js Driver
 
-## 4.5.0
+## 4.5.2
+
+2020-05-07
+
+### Bug fixes
+
+- [NODEJS-606] - Graph: Direction serializer does not serialize direction elements
+
+## 4.5.1
 
 2020-04-14
 

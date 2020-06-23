@@ -10,7 +10,7 @@ DataStax products.
 - [Batch statements](batch)
 - [Cluster and schema metadata](metadata)
 - [Concurrent execution API](concurrent-api)
-- [Connecting to DataStax Apollo database](cloud)
+- [Connecting to DataStax Astra](cloud)
 - [Connection pooling](connection-pooling)
 - [CQL data types to JavaScript types](datatypes)
 - [Execution profiles](execution-profiles)

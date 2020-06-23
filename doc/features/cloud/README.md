@@ -1,12 +1,12 @@
-# Connecting to your DataStax Apollo database using a secure connection bundle
+# Connecting to your DataStax Astra database using a secure connection bundle
 
 ## Quickstart
 
-Use the `ClientOptions` property `cloud` to connect to your [DataStax Apollo database on Constellation] using 
+Use the `ClientOptions` property `cloud` to connect to your [DataStax Astra database][cloud] using 
 your secure connection bundle (`secure-connect-DATABASE_NAME.zip`) and `credentials` property to provide your [CQL 
 credentials].
 
-Here is an example of the minimum configuration needed to connect to your DataStax Apollo database using the
+Here is an example of the minimum configuration needed to connect to your DataStax Astra database using the
 secure connection bundle:
 
 ```javascript
@@ -30,5 +30,5 @@ const client = new Client({
 
 Note that `contactPoints` and `sslOptions` should not be set when using `secureConnectBundle`.
 
-[DataStax Apollo database on Constellation]: https://constellation.datastax.com/
+[cloud]: https://www.datastax.com/products/datastax-astra
 [CQL credentials]: https://cassandra.apache.org/doc/latest/cql/security.html#cql-roles

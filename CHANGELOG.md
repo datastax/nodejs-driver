@@ -25,7 +25,7 @@
 - [NODEJS-489] - Initial DS Graph 6.8 Support
 - [NODEJS-482] - Remove unnecessary allocations during GraphExecutionOptions creation
 - [NODEJS-564] - Include available dcs in all localDataCenter errors
-- [NODEJS-571] - Apollo: Validate server certificate CN against the proxy host name
+- [NODEJS-571] - Astra: Validate server certificate CN against the proxy host name
 - [NODEJS-573] - Expose a method to build the default load balancing policy with the data center name
 
 ### Bug fixes
@@ -66,7 +66,7 @@
 
 ### Features
 
-- [NODEJS-503] - DataStax Apollo Support
+- [NODEJS-503] - DataStax Astra Support
 - [NODEJS-562] - TypeScript: Add generics to Mapper
 
 ### Bug fixes

@@ -1,6 +1,8 @@
 #!groovy
 
+
 def initializeEnvironment() {
+  def nodeVersions = ['8': '8.16.2', '10': '10.17.0', '12': '12.13.0']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -15,10 +17,11 @@ def initializeEnvironment() {
   env.GITHUB_PROJECT_URL = "https://${GIT_URL.replaceFirst(/(git@|http:\/\/|https:\/\/)/, '').replace(':', '/').replace('.git', '')}"
   env.GITHUB_BRANCH_URL = "${GITHUB_PROJECT_URL}/tree/${env.BRANCH_NAME}"
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
+  env.NODEJS_VERSION_FULL = nodeVersions[env.NODEJS_VERSION]
 
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
-    NODEJS_VERSION_FULL=$(nodenv versions | grep -m1 "^${NODEJS_VERSION}\\..*")
-    echo "Using Node.js runtime ${NODEJS_VERSION_FULL}"
+    nodenv versions
+    echo "Using ${NODEJS_VERSION} (${NODEJS_VERSION_FULL})"
     nodenv global ${NODEJS_VERSION_FULL}
   '''
 

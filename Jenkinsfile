@@ -144,12 +144,7 @@ def submitCIMetrics(buildType) {
 def describePerCommitStage() {
   script {
     currentBuild.displayName = "Per-Commit"
-    currentBuild.description = '''Per-Commit build and testing of against Node.js v8.16.2, v10.17.0, and 12.13.0
-<ul>
-  <li>8.16.2  - Apache Cassandra&reg; v2.1.x, DataStax Enterprise v6.0.x and v6.7.x</li>
-  <li>10.17.0 - Apache Cassandra&reg; v2.1.x and development DataStax Enterprise v6.8.x</li>
-  <li>12.13.0 - Development Apache Cassandra&reg; v4.0.x, DataStax Enterprise v5.1.x and v6.7.x (with examples)</li>
-</ul>'''
+    currentBuild.description = '''Per-Commit build and testing'''
   }
 }
 

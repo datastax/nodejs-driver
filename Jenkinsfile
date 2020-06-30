@@ -17,7 +17,9 @@ def initializeEnvironment() {
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
 
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
-    nodenv global ${NODEJS_VERSION}
+    nodenv versions
+    #nodenv global ${NODEJS_VERSION}
+    nodenv global 10
   '''
 
   sh label: 'Download Apache Cassandra or DataStax Enterprise', script: '''#!/bin/bash -lex

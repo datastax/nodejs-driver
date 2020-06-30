@@ -146,9 +146,9 @@ def describePerCommitStage() {
     currentBuild.displayName = "Per-Commit"
     currentBuild.description = '''Per-Commit build and testing of against Node.js v8.16.2, v10.17.0, and 12.13.0
 <ul>
-  <li>8.16.2  - Apache Cassandara&reg; v2.1.x, DataStax Enterprise v6.0.x and v6.7.x</li>
-  <li>10.17.0 - Apache Cassandara&reg; v2.1.x and development DataStax Enterprise v6.8.x</li>
-  <li>12.13.0 - Development Apache Cassandara&reg; v4.0.x, DataStax Enterprise v5.1.x and v6.7.x (with examples)</li>
+  <li>8.16.2  - Apache Cassandra&reg; v2.1.x, DataStax Enterprise v6.0.x and v6.7.x</li>
+  <li>10.17.0 - Apache Cassandra&reg; v2.1.x and development DataStax Enterprise v6.8.x</li>
+  <li>12.13.0 - Development Apache Cassandra&reg; v4.0.x, DataStax Enterprise v5.1.x and v6.7.x (with examples)</li>
 </ul>'''
   }
 }
@@ -157,14 +157,14 @@ def describeScheduledTestingStage() {
   script {
     def type = params.CI_SCHEDULE.toLowerCase().capitalize()
     currentBuild.displayName = "${type} schedule"
-    currentBuild.description = "${type} scheduled build and testing of all supported Apache Cassandara&reg; and DataStax Enterprise against Node.js v8.16.2, v10.17.0, and 12.13.0"
+    currentBuild.description = "${type} scheduled build and testing of all supported Apache Cassandra&reg; and DataStax Enterprise against Node.js v8.16.2, v10.17.0, and 12.13.0"
   }
 }
 
 def describeAdhocTestingStage() {
   script {
     def serverType = params.ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION.split('-')[0]
-    def serverDisplayName = 'Apache Cassandara&reg;'
+    def serverDisplayName = 'Apache Cassandra&reg;'
     def serverVersion = " v${serverType}"
     if (serverType == 'ALL') {
       serverDisplayName = "all ${serverDisplayName} and DataStax Enterprise server versions"
@@ -234,15 +234,15 @@ pipeline {
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
-      choices: ['2.1',     // Legacy Apache Cassandara®
-                '3.11',    // Current Apache Cassandara®
-                '4.0',     // Development Apache Cassandara®
+      choices: ['2.1',     // Legacy Apache Cassandra
+                '3.11',    // Current Apache Cassandra
+                '4.0',     // Development Apache Cassandra
                 'dse-5.1', // Legacy DataStax Enterprise
                 'dse-6.0', // Previous DataStax Enterprise
                 'dse-6.7', // Current DataStax Enterprise
                 'dse-6.8', // Development DataStax Enterprise
                 'ALL'],
-      description: '''Apache Cassandara&reg; and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
+      description: '''Apache Cassandra&reg; and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
                         <col width="15%">
                         <col width="85%">
@@ -252,15 +252,15 @@ pipeline {
                         </tr>
                         <tr>
                           <td><strong>2.1</strong></td>
-                          <td>Apache Cassandara&reg; v2.1.x</td>
+                          <td>Apache Cassandra&reg; v2.1.x</td>
                         </tr>
                         <tr>
                           <td><strong>3.11</strong></td>
-                          <td>Apache Cassandara&reg; v3.11.x</td>
+                          <td>Apache Cassandra&reg; v3.11.x</td>
                         </tr>
                         <tr>
                           <td><strong>4.0</strong></td>
-                          <td>Apache Cassandara&reg; v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>Apache Cassandra&reg; v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
                         </tr>
                         <tr>
                           <td><strong>dse-5.1</strong></td>
@@ -329,9 +329,9 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',     // Legacy Apache Cassandara®
-                   '3.11',    // Current Apache Cassandara®
-                   '4.0',     // Development Apache Cassandara®
+            values '2.1',     // Legacy Apache Cassandra
+                   '3.11',    // Current Apache Cassandra
+                   '4.0',     // Development Apache Cassandra
                    'dse-5.1', // Legacy DataStax Enterprise
                    'dse-6.0', // Previous DataStax Enterprise
                    'dse-6.7', // Current DataStax Enterprise
@@ -462,9 +462,9 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',     // Legacy Apache Cassandara®
-                   '3.11',    // Current Apache Cassandara®
-                   '4.0',     // Development Apache Cassandara®
+            values '2.1',     // Legacy Apache Cassandra
+                   '3.11',    // Current Apache Cassandra
+                   '4.0',     // Development Apache Cassandra
                    'dse-5.1', // Legacy DataStax Enterprise
                    'dse-6.0', // Previous DataStax Enterprise
                    'dse-6.7', // Current DataStax Enterprise
@@ -556,9 +556,9 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',      // Legacy Apache Cassandara®
-                   '3.11',     // Current Apache Cassandara®
-                   '4.0',      // Development Apache Cassandara®
+            values '2.1',      // Legacy Apache Cassandra
+                   '3.11',     // Current Apache Cassandra
+                   '4.0',      // Development Apache Cassandra
                    'dse-5.1',  // Legacy DataStax Enterprise
                    'dse-6.0',  // Previous DataStax Enterprise
                    'dse-6.7',  // Current DataStax Enterprise

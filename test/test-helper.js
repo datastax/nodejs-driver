@@ -1395,8 +1395,7 @@ helper.ads._spawnAndWait = function(processName, params, cb) {
   }, 10000);
 
   const p = spawn(processName, params, {
-    env: {KRB5_CONFIG: this.getKrb5ConfigPath()},
-    shell: true
+    env: Object.assign({ KRB5_CONFIG: this.getKrb5ConfigPath()}, process.env)
   });
 
   p.stdout.on('data', function (data) {

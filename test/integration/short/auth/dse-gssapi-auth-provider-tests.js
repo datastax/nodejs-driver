@@ -24,11 +24,16 @@ const cDescribe = helper.conditionalDescribe(
   helper.requireOptional('kerberos') && helper.isDseGreaterThan('5.0'), 'kerberos and DSE required to run');
 const vit = helper.vit;
 
+
 cDescribe('DseGssapiAuthProvider @SERVER_API', function () {
   this.timeout(180000);
   before(function (done) {
     ads.start(function(err) {
-      assert.ifError(err);
+      if (err) {
+        helper.trace('--exiting with err', err);
+        return done(err);
+      }
+      helper.trace('--acquiring ticket');
       ads.acquireTicket('cassandra', 'cassandra@DATASTAX.COM', done);
     });
   });

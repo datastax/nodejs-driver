@@ -20,7 +20,7 @@ def initializeEnvironment() {
     nodenv global ${NODEJS_VERSION}
   '''
 
-  sh label: 'Download Apache Cassandra&reg; or DataStax Enterprise', script: '''#!/bin/bash -lex
+  sh label: 'Download Apache Cassandra or DataStax Enterprise', script: '''#!/bin/bash -lex
     . ${CCM_ENVIRONMENT_SHELL} ${CASSANDRA_VERSION}
   '''
 

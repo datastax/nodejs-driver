@@ -21,7 +21,7 @@ def initializeEnvironment() {
 
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
     nodenv versions
-    echo "Using ${NODEJS_VERSION} (${NODEJS_VERSION_FULL})"
+    echo "Using Node.js runtime ${NODEJS_VERSION} (${NODEJS_VERSION_FULL})"
     nodenv global ${NODEJS_VERSION_FULL}
   '''
 

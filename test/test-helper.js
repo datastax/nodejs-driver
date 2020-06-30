@@ -1395,8 +1395,7 @@ helper.ads._spawnAndWait = function(processName, params, cb) {
   }, 10000);
 
   const p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
-  p.stdout.setEncoding('utf8');
-  p.stderr.setEncoding('utf8');
+
   p.stdout.on('data', function (data) {
     helper.trace("%s_out> %s", originalProcessName, data);
     if(data.indexOf('Principal Initialization Complete.') !== -1) {
@@ -1406,6 +1405,11 @@ helper.ads._spawnAndWait = function(processName, params, cb) {
 
   p.stderr.on('data', function (data) {
     helper.trace("%s_err> %s", originalProcessName, data);
+  });
+
+  p.on('error', function (err) {
+    helper.trace('Sub-process emitted error', processName, err);
+    callbackOnce(err);
   });
 
   p.on('close', function (code) {
@@ -1433,14 +1437,14 @@ helper.ads.start = function(cb) {
     }
     self.dir = dir;
     const jarFile = self.getJar();
-    const processName = 'java';
     const params = ['-jar', jarFile, '-k', '--confdir', self.dir];
 
-    self.process = self._spawnAndWait(processName, params, function(err) {
+    self.process = self._spawnAndWait('java', params, function(err) {
       if (!err) {
         // Set KRB5_CONFIG environment variable so kerberos module knows to use it.
         process.env.KRB5_CONFIG = self.getKrb5ConfigPath();
       }
+
       cb(err);
     });
   });

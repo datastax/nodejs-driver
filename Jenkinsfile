@@ -17,9 +17,9 @@ def initializeEnvironment() {
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
 
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
-    nodenv versions
-    #nodenv global ${NODEJS_VERSION}
-    nodenv global 10
+    NODEJS_VERSION_FULL=$(nodenv versions | grep -m1 "^${NODEJS_VERSION}\\..*")
+    echo "Using Node.js runtime ${NODEJS_VERSION_FULL}"
+    nodenv global ${NODEJS_VERSION_FULL}
   '''
 
   sh label: 'Download Apache Cassandra or DataStax Enterprise', script: '''#!/bin/bash -lex
@@ -154,14 +154,15 @@ def describeScheduledTestingStage() {
   script {
     def type = params.CI_SCHEDULE.toLowerCase().capitalize()
     currentBuild.displayName = "${type} schedule"
-    currentBuild.description = "${type} scheduled build and testing of all supported Apache Cassandra&reg; and DataStax Enterprise against Node.js v8.16.2, v10.17.0, and 12.13.0"
+    currentBuild.description = "${type} scheduled build and testing of all supported Apache Cassandra and DataStax " +
+            "Enterprise against multiple Node.js runtimes"
   }
 }
 
 def describeAdhocTestingStage() {
   script {
     def serverType = params.ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION.split('-')[0]
-    def serverDisplayName = 'Apache Cassandra&reg;'
+    def serverDisplayName = 'Apache Cassandra'
     def serverVersion = " v${serverType}"
     if (serverType == 'ALL') {
       serverDisplayName = "all ${serverDisplayName} and DataStax Enterprise server versions"
@@ -227,7 +228,7 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['8.16.2', '10.17.0', '12.13.0', 'ALL'],
+      choices: ['8', '10', '12.13.0', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
@@ -239,7 +240,7 @@ pipeline {
                 'dse-6.7', // Current DataStax Enterprise
                 'dse-6.8', // Development DataStax Enterprise
                 'ALL'],
-      description: '''Apache Cassandra&reg; and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
+      description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
                         <col width="15%">
                         <col width="85%">
@@ -249,15 +250,15 @@ pipeline {
                         </tr>
                         <tr>
                           <td><strong>2.1</strong></td>
-                          <td>Apache Cassandra&reg; v2.1.x</td>
+                          <td>Apache Cassandra v2.1.x</td>
                         </tr>
                         <tr>
                           <td><strong>3.11</strong></td>
-                          <td>Apache Cassandra&reg; v3.11.x</td>
+                          <td>Apache Cassandra v3.11.x</td>
                         </tr>
                         <tr>
                           <td><strong>4.0</strong></td>
-                          <td>Apache Cassandra&reg; v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>Apache Cassandra v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
                         </tr>
                         <tr>
                           <td><strong>dse-5.1</strong></td>
@@ -336,14 +337,14 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8.16.2', '10.17.0', '12.13.0'
+            values '8', '10', '12'
           }
         }
         excludes {
           exclude {
             axis {
               name 'NODEJS_VERSION'
-              values '8.16.2'
+              values '8'
             }
             axis {
               name 'CASSANDRA_VERSION'
@@ -353,7 +354,7 @@ pipeline {
           exclude {
             axis {
               name 'NODEJS_VERSION'
-              values '10.17.0'
+              values '10'
             }
             axis {
               name 'CASSANDRA_VERSION'
@@ -363,7 +364,7 @@ pipeline {
           exclude {
             axis {
               name 'NODEJS_VERSION'
-              values '12.13.0'
+              values '12'
             }
             axis {
               name 'CASSANDRA_VERSION'
@@ -469,7 +470,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8.16.2', '10.17.0', '12.13.0'
+            values '8', '10', '12'
           }
         }
 
@@ -563,7 +564,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8.16.2', '10.17.0', '12.13.0'
+            values '8', '10', '12'
           }
         }
         when {

@@ -30,10 +30,9 @@ cDescribe('DseGssapiAuthProvider @SERVER_API', function () {
   before(function (done) {
     ads.start(function(err) {
       if (err) {
-        helper.trace('--exiting with err', err);
+        helper.trace('ADS could not be started', err);
         return done(err);
       }
-      helper.trace('--acquiring ticket');
       ads.acquireTicket('cassandra', 'cassandra@DATASTAX.COM', done);
     });
   });

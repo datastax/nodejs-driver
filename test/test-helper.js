@@ -1427,7 +1427,7 @@ helper.ads.start = function(cb) {
 
     const timeout = setTimeout(function() {
       cb(new Error("Timed out while waiting for ADS server to start."));
-    }, 10000);
+    }, 30000);
 
     self.process = self._execute(processName, params, function() {
       if(!initialized) {
@@ -1466,6 +1466,7 @@ helper.ads.listTickets = function(cb) {
  * @param {Function} cb Callback to invoke on completion.
  */
 helper.ads.acquireTicket = function(username, principal, cb) {
+  helper.trace('Acquiring ticket');
   const keytab = this.getKeytabPath(username);
 
   // Use ktutil on windows, kinit otherwise.

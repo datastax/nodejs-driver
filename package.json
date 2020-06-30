@@ -41,7 +41,7 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
-    "ci_jenkins": "./node_modules/.bin/mocha test/integration/short/auth test/integration/short/cloud test/integration/short/*simul* test/integration/short/client-execute-* --recursive -R mocha-jenkins-reporter --exit",
+    "ci_jenkins": "./node_modules/.bin/mocha test/integration/short/auth/dse-gssapi-auth-provider-tests.js test/integration/short/cloud test/integration/short/*simul* test/integration/short/client-execute-* --recursive -R mocha-jenkins-reporter --exit",
     "ci_appveyor": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
     "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit --recursive -R mocha-appveyor-reporter --exit",
     "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",

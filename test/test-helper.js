@@ -1394,7 +1394,10 @@ helper.ads._spawnAndWait = function(processName, params, cb) {
     callbackOnce(new Error("Timed out while waiting for " + processName + " to complete."));
   }, 10000);
 
-  const p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
+  const p = spawn(processName, params, {
+    env: {KRB5_CONFIG: this.getKrb5ConfigPath()},
+    shell: true
+  });
 
   p.stdout.on('data', function (data) {
     helper.trace("%s_out> %s", originalProcessName, data);

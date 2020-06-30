@@ -51,6 +51,9 @@ def installDriverAndDependencies() {
 def executeLinter() {
   sh label: 'Perform static analysis of source code', script: '''#!/bin/bash -lex
     npm run eslint
+
+    mkdir /home/jenkins/k-temp
+    java -jar /home/jenkins/embedded-ads.jar -k --confdir /home/jenkins/k-temp
   '''
 }
 

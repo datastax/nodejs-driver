@@ -24,6 +24,7 @@ const policies = require('../lib/policies');
 const types = require('../lib/types');
 const utils = require('../lib/utils');
 const spawn = require('child_process').spawn;
+const childProcessExec = require('child_process').exec;
 const http = require('http');
 const temp = require('temp').track(true);
 const Client = require('../lib/client');
@@ -1365,7 +1366,11 @@ helper.ccm.getPath = function (subPath) {
   return path.join(ccmPath, subPath);
 };
 
-helper.ads._execute = function(processName, params, cb) {
+helper.ads._spawnAndWait = function(processName, params, cb) {
+  if (!cb) {
+    throw new Error("Callback is required");
+  }
+
   const originalProcessName = processName;
   if (process.platform.indexOf('win') === 0) {
     params = ['/c', processName].concat(params);
@@ -1373,34 +1378,47 @@ helper.ads._execute = function(processName, params, cb) {
   }
   helper.trace('Executing: ' + processName + ' ' + params.join(" "));
 
-  // If process hasn't completed in 10 seconds.
-  let timeout = undefined;
-  if(cb) {
-    timeout = setTimeout(function() {
-      cb("Timed out while waiting for " + processName + " to complete.");
-    }, 10000);
-  }
+  // eslint-disable-next-line prefer-const
+  let timeout;
 
-  const p = spawn(processName, params, {env:{KRB5_CONFIG: this.getKrb5ConfigPath()}});
-  p.stdout.setEncoding('utf8');
-  p.stderr.setEncoding('utf8');
+  const callbackOnce = (err) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    cb(err);
+    cb = utils.noop;
+  };
+
+  // If process hasn't completed in 10 seconds.
+  timeout = setTimeout(function() {
+    callbackOnce(new Error("Timed out while waiting for " + processName + " to complete."));
+  }, 10000);
+
+  const p = spawn(processName, params, {
+    env: Object.assign({ KRB5_CONFIG: this.getKrb5ConfigPath()}, process.env)
+  });
+
   p.stdout.on('data', function (data) {
     helper.trace("%s_out> %s", originalProcessName, data);
+    if(data.indexOf('Principal Initialization Complete.') !== -1) {
+      callbackOnce();
+    }
   });
 
   p.stderr.on('data', function (data) {
     helper.trace("%s_err> %s", originalProcessName, data);
   });
 
+  p.on('error', function (err) {
+    helper.trace('Sub-process emitted error', processName, err);
+    callbackOnce(err);
+  });
+
   p.on('close', function (code) {
     helper.trace("%s exited with code %d", originalProcessName, code);
-    if(cb) {
-      clearTimeout(timeout);
-      if (code === 0) {
-        cb();
-      } else {
-        cb(Error("Process exited with non-zero exit code: " + code));
-      }
+    clearTimeout(timeout);
+    if (code !== 0) {
+      callbackOnce(new Error("Process exited with non-zero exit code: " + code));
     }
   });
 
@@ -1421,29 +1439,15 @@ helper.ads.start = function(cb) {
     }
     self.dir = dir;
     const jarFile = self.getJar();
-    const processName = 'java';
     const params = ['-jar', jarFile, '-k', '--confdir', self.dir];
-    let initialized = false;
 
-    const timeout = setTimeout(function() {
-      cb(new Error("Timed out while waiting for ADS server to start."));
-    }, 10000);
-
-    self.process = self._execute(processName, params, function() {
-      if(!initialized) {
-        cb();
-      }
-    });
-    self.process.stdout.on('data', function (data) {
-      // This is a bit of a kludge, check for a particular log statement which indicates
-      // that all principals have been created before invoking the completion callback.
-      if(data.indexOf('Principal Initialization Complete.') !== -1) {
-        initialized = true;
+    self.process = self._spawnAndWait('java', params, function(err) {
+      if (!err) {
         // Set KRB5_CONFIG environment variable so kerberos module knows to use it.
         process.env.KRB5_CONFIG = self.getKrb5ConfigPath();
-        clearTimeout(timeout);
-        cb();
       }
+
+      cb(err);
     });
   });
 };
@@ -1456,7 +1460,7 @@ helper.ads.start = function(cb) {
  * @param {Function} cb Callback to invoke on completion.
  */
 helper.ads.listTickets = function(cb) {
-  this._execute('klist', [], cb);
+  this._exec('klist', [], cb);
 };
 
 /**
@@ -1466,6 +1470,7 @@ helper.ads.listTickets = function(cb) {
  * @param {Function} cb Callback to invoke on completion.
  */
 helper.ads.acquireTicket = function(username, principal, cb) {
+  helper.trace('Acquiring ticket');
   const keytab = this.getKeytabPath(username);
 
   // Use ktutil on windows, kinit otherwise.
@@ -1474,7 +1479,8 @@ helper.ads.acquireTicket = function(username, principal, cb) {
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
-  this._execute(processName, params, cb);
+
+  this._exec(processName, params, cb);
 };
 
 /**
@@ -1495,7 +1501,17 @@ helper.ads.destroyTicket = function(principal, cb) {
   if (process.platform.indexOf('win') === 0) {
     // Not really sure what to do here yet...
   }
-  this._execute(processName, params, cb);
+
+  this._exec(processName, params, cb);
+};
+
+helper.ads._exec = function(processName, params, callback) {
+  if (params.length === 0) {
+    childProcessExec(processName, callback);
+    return;
+  }
+
+  childProcessExec(`${processName} ${params.join(' ')}`, callback);
 };
 
 /**

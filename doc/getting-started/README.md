@@ -29,6 +29,15 @@ Even though calling `connect()` is not required (the `execute()` method internal
 recommended you call to `#connect()` on application startup, this way you can ensure that you start your app once
 your are connected to your cluster.
 
+When using [DataStax Astra][astra] you can configure your client by setting the secure bundle and the user credentials:
+
+```javascript
+const client = new cassandra.Client({
+  cloud: { secureConnectBundle: 'path/to/secure-connect-DATABASE_NAME.zip' },
+  credentials: { username: 'user_name', password: 'p@ssword1' }
+});
+```
+
 ## Retrieving data
 
 The `execute()` method can be used to send a CQL query to a Cassandra node.
@@ -180,3 +189,4 @@ client.executeGraph('g.V().count()', null, { executionProfile: 'graph' });
 [mapper]: /features/mapper/
 [mapper-guide]: /features/mapper/getting-started/
 [async-functions]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function 
+[astra]: https://www.datastax.com/products/datastax-astra

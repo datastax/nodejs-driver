@@ -198,12 +198,16 @@ def describeAdhocTestingStage() {
   }
 }
 
+// branch pattern for cron
+def branchPatternCron = ~"(master)"
+
 pipeline {
   agent none
 
   // Global pipeline timeout
   options {
-    timeout(time: 10, unit: 'HOURS')
+    disableConcurrentBuilds()
+    timeout(time: 5, unit: 'HOURS')
     buildDiscarder(logRotator(artifactNumToKeepStr: '10', // Keep only the last 10 artifacts
                               numToKeepStr: '50'))        // Keep only the last 50 build records
   }
@@ -299,10 +303,10 @@ pipeline {
   }
 
   triggers {
-    parameterizedCron("""
+    parameterizedCron(branchPatternCron.matcher(env.BRANCH_NAME).matches() ? """
       # Every weeknight (Monday - Friday) around 3:00 AM
       H 3 * * 1-5 %CI_SCHEDULE=WEEKNIGHTS
-    """)
+    """ : "")
   }
 
   environment {

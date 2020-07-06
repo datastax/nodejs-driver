@@ -112,9 +112,15 @@ export namespace mapping {
   type ModelOptions = {
     tables?: string[] | ModelTables[];
     mappings?: TableMappings;
-    columns?: { [key: string]: string };
+    columns?: { [key: string]: string|ModelColumnOptions };
     keyspace?: string;
   }
+
+  type ModelColumnOptions = {
+    name: string;
+    toModel?: (columnValue: any) => any;
+    fromModel?: (modelValue: any) => any;
+  };
 
   interface ModelBatchItem {
 

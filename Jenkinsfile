@@ -304,8 +304,8 @@ pipeline {
 
   triggers {
     parameterizedCron(branchPatternCron.matcher(env.BRANCH_NAME).matches() ? """
-      # Every weeknight (Monday - Friday) around 3:00 AM
-      H 3 * * 1-5 %CI_SCHEDULE=WEEKNIGHTS
+      # Every weeknight (Monday - Friday) around 7 PM
+      H 19 * * 1-5 %CI_SCHEDULE=WEEKNIGHTS
     """ : "")
   }
 
@@ -347,6 +347,7 @@ pipeline {
             values '8', '10', '12'
           }
         }
+
         excludes {
           exclude {
             axis {
@@ -478,6 +479,19 @@ pipeline {
           axis {
             name 'NODEJS_VERSION'
             values '8', '10', '12'
+          }
+        }
+
+        excludes {
+          exclude {
+            axis {
+              name 'NODEJS_VERSION'
+              values '10'
+            }
+            axis {
+              name 'CASSANDRA_VERSION'
+              values '2.1', '3.11', '4.0', 'dse-5.1', 'dse-6.0', 'dse-6.7'
+            }
           }
         }
 

@@ -61,6 +61,16 @@ you can choose the approach that suits your needs.
 Note that in order to have concise code examples in this documentation, we will use the promise-based API of the 
 driver along with the `await` keyword.
 
+If you are using [DataStax Astra][astra] you can configure your client by setting the secure bundle and the
+ user credentials:
+
+```javascript
+const client = new cassandra.Client({
+  cloud: { secureConnectBundle: 'path/to/secure-connect-DATABASE_NAME.zip' },
+  credentials: { username: 'user_name', password: 'p@ssword1' }
+});
+```
+
 ### Prepare your queries
 
 Using prepared statements provides multiple benefits.
@@ -281,3 +291,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [streams2]: https://nodejs.org/api/stream.html#stream_class_stream_readable
 [cql-udt]: https://cassandra.apache.org/doc/latest/cql/types.html#udts
 [dse]: https://www.datastax.com/products/datastax-enterprise
+[astra]: https://www.datastax.com/products/datastax-astra

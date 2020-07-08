@@ -122,6 +122,26 @@ describe('ModelMapper', () => {
       ]
     }));
 
+    it('should support mapping IN values with a mapping function', () => testQueries({
+      methodName: 'find',
+      models: {
+        'Sample': {
+          tables: [ 'table1' ],
+          columns: {
+            'id2': { fromModel: a => a + '_mapped_value' }
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: q.in_(['first', 'second']) },
+          query:
+            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 IN ?',
+          params: [ 'value_id1', ['first_mapped_value', 'second_mapped_value'] ]
+        }
+      ]
+    }));
+
     it('should throw an error when filter, fields or orderBy are not valid', () =>
       Promise.all([
         {

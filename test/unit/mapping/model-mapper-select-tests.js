@@ -89,38 +89,43 @@ describe('ModelMapper', () => {
         params: [ 'value2' ]
       }]));
 
-    it('should support model mapping functions', () => testQueries({
-      methodName: 'find',
-      models: {
-        'Sample': {
-          tables: [ 'table1' ],
-          columns: {
-            'id2': { fromModel: a => a + '_after_function' },
-            'location_type': 'locationType'
+    it('should support model mapping functions', () => {
+      // Create a closure
+      const suffix = '_after_function';
+
+      return testQueries({
+        methodName: 'find',
+        models: {
+          'Sample': {
+            tables: ['table1'],
+            columns: {
+              'id2': { fromModel: a => a + suffix },
+              'location_type': 'locationType'
+            }
           }
-        }
-      },
-      items: [
-        {
-          doc: { id1: 'value_id1', id2: 'value_id2' },
-          query:
-            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
-          params: [ 'value_id1', 'value_id2_after_function' ]
         },
-        {
-          doc: { id1: 'value_id1', id2: q.gt('value_id2') },
-          query:
-            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 > ?',
-          params: [ 'value_id1', 'value_id2_after_function' ]
-        },
-        {
-          doc: { id1: 'value_id1', id2: q.and(q.gte('a'), q.lt('z')) },
-          query:
-            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 < ?',
-          params: [ 'value_id1', 'a_after_function', 'z_after_function' ]
-        }
-      ]
-    }));
+        items: [
+          {
+            doc: { id1: 'value_id1', id2: 'value_id2' },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+            params: [ 'value_id1', 'value_id2' + suffix ]
+          },
+          {
+            doc: { id1: 'value_id1', id2: q.gt('value_id2') },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 > ?',
+            params: [ 'value_id1', 'value_id2' + suffix ]
+          },
+          {
+            doc: { id1: 'value_id1', id2: q.and(q.gte('a'), q.lt('z')) },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 < ?',
+            params: [ 'value_id1', 'a' + suffix, 'z' + suffix ]
+          }
+        ]
+      });
+    });
 
     it('should support mapping IN values with a mapping function', () => testQueries({
       methodName: 'find',

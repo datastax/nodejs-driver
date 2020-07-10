@@ -319,7 +319,7 @@ export namespace types {
     toString(): string;
   }
 
-  interface ResultSet extends Iterator<Row> {
+  interface ResultSet extends Iterable<Row>, AsyncIterable<Row> {
     info: {
       queriedHost: string,
       triedHosts: { [key: string]: any; },

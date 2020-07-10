@@ -121,6 +121,25 @@ describe('ModelMapper', () => {
           helper.assertContains(clientInfo.logMessages[0].message, `ModelMapper cache reached ${cacheHighWaterMark}`);
         });
     });
+
+    it('should use the mapping function in the insert values', () => testQueries({
+      methodName: 'insert',
+      models: {
+        'Sample': {
+          tables: ['table1'],
+          columns: {
+            'name': { fromModel: JSON.stringify },
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2', name: { prop1: 1, prop2: 'two' } },
+          query: 'INSERT INTO ks1.table1 (id1, id2, name) VALUES (?, ?, ?)',
+          params: [ 'value_id1', 'value_id2', '{"prop1":1,"prop2":"two"}']
+        }
+      ]
+    }));
   });
 
   describe('#update()', () => {
@@ -294,6 +313,33 @@ describe('ModelMapper', () => {
         params: [ 'x', 'y' ]
       }
     ]));
+
+    it('should use the mapping function in the WHERE and IF clauses', () => testQueries({
+      methodName: 'remove',
+      models: {
+        'Sample': {
+          tables: ['table1'],
+          columns: {
+            'name': { fromModel: JSON.stringify },
+            'id2': { fromModel: v => v + "_suffix" }
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2' },
+          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+          params: [ 'value_id1', 'value_id2_suffix' ]
+        },
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2' },
+          docInfo: { when: { name: { a: 1 } }},
+          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ? IF name = ?',
+          params: [ 'value_id1', 'value_id2_suffix', '{"a":1}' ],
+          isIdempotent: false
+        },
+      ]
+    }));
   });
 });
 

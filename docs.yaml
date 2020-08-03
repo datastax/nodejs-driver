@@ -38,7 +38,7 @@ links:
     href:  https://www.npmjs.org/package/cassandra-driver
 versions:
   - name: '4.5'
-    ref: 'master'
+    ref: '4.5'
   - name: '4.4'
     ref: '4.4'
   - name: '4.3'

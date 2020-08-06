@@ -21,10 +21,7 @@ const helper = require('../../test-helper');
 const Client = require('../../../lib/client');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
-const loadBalancing = require('../../../lib/policies/load-balancing');
-const RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
-const WhiteListPolicy = loadBalancing.WhiteListPolicy;
+const { RoundRobinPolicy, AllowListPolicy, TokenAwarePolicy} = require('../../../lib/policies/load-balancing');
 const vdescribe = helper.vdescribe;
 
 const maxInFlightRequests = 16;
@@ -112,9 +109,9 @@ context('with a reusable 3 node cluster', function () {
       'ALTER KEYSPACE system_traces WITH replication = {\'class\': \'SimpleStrategy\', \'replication_factor\': \'1\'}'
     ]
   });
-  vdescribe('2.0', 'WhiteListPolicy', function () {
-    it('should use the hosts in the white list only', function (done) {
-      const policy = new WhiteListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
+  vdescribe('2.0', 'AllowListPolicy', function () {
+    it('should use the hosts in the allow list only', function (done) {
+      const policy = new AllowListPolicy(new RoundRobinPolicy(), ['127.0.0.1:9042', '127.0.0.2:9042']);
       const client = newInstance(policy);
       utils.timesLimit(100, maxInFlightRequests, function (n, next) {
         client.execute(helper.queries.basic, function (err, result) {

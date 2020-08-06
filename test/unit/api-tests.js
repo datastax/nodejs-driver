@@ -104,6 +104,9 @@ describe('API', function () {
     assert.ok(api.errors);
     assert.ok(api.policies);
     assert.ok(api.policies.loadBalancing);
+    checkConstructor(api.policies.loadBalancing, 'AllowListPolicy');
+    // For backward compatibility only
+    checkConstructor(api.policies.loadBalancing, 'WhiteListPolicy');
     assert.ok(api.policies.retry);
     assert.ok(api.policies.reconnection);
     assert.ok(api.metadata);

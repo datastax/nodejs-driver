@@ -108,8 +108,8 @@ async function myTest(): Promise<any> {
   ep1 = new ExecutionProfile('oltp2', {
     consistency: types.consistencies.localOne,
     serialConsistency: types.consistencies.localSerial,
-    loadBalancing: new policies.loadBalancing.WhiteListPolicy(new policies.loadBalancing.RoundRobinPolicy(), ['host1'])
-  })
+    loadBalancing: new policies.loadBalancing.AllowListPolicy(new policies.loadBalancing.RoundRobinPolicy(), ['host1'])
+  });
 }
 
 function useResult(err: Error, rs: types.ResultSet): void {

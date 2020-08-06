@@ -19,18 +19,13 @@ const assert = require('assert');
 const helper = require('../test-helper.js');
 const errors = require('../../lib/errors');
 const Client = require('../../lib/client.js');
-const clientOptions = require('../../lib/client-options.js');
-const Host = require('../../lib/host.js').Host;
-const HostMap = require('../../lib/host.js').HostMap;
+const clientOptions = require('../../lib/client-options');
+const { Host, HostMap } = require('../../lib/host');
 const types = require('../../lib/types');
-const utils = require('../../lib/utils.js');
-const loadBalancing = require('../../lib/policies/load-balancing.js');
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
-const LoadBalancingPolicy = loadBalancing.LoadBalancingPolicy;
-const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
-const RoundRobinPolicy = loadBalancing.RoundRobinPolicy;
-const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
-const WhiteListPolicy = loadBalancing.WhiteListPolicy;
+const utils = require('../../lib/utils');
+const { ExecutionOptions } = require('../../lib/execution-options');
+const { AllowListPolicy, LoadBalancingPolicy, TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy } =
+  require('../../lib/policies/load-balancing');
 
 describe('RoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
@@ -447,7 +442,7 @@ describe('TokenAwarePolicy', function () {
     });
   });
 });
-describe('WhiteListPolicy', function () {
+describe('AllowListPolicy', function () {
   it('should use the childPolicy to determine the distance', function () {
     let getDistanceCalled = 0;
     const childPolicy = {
@@ -456,7 +451,7 @@ describe('WhiteListPolicy', function () {
         return types.distance.local;
       }
     };
-    const policy = new WhiteListPolicy(childPolicy, ['h1:9042', 'h2:9042']);
+    const policy = new AllowListPolicy(childPolicy, ['h1:9042', 'h2:9042']);
     assert.strictEqual(policy.getDistance({ address: 'h1:9042'}), types.distance.local);
     assert.strictEqual(getDistanceCalled, 1);
     assert.strictEqual(policy.getDistance({ address: 'h2:9042'}), types.distance.local);
@@ -471,7 +466,7 @@ describe('WhiteListPolicy', function () {
         cb(null, utils.arrayIterator([{ address: '1.1.1.1:9042'}, { address: '1.1.1.2:9042'}, { address: '1.1.1.3:9042'}]));
       }
     };
-    const policy = new WhiteListPolicy(childPolicy, ['1.1.1.3:9042', '1.1.1.1:9042']);
+    const policy = new AllowListPolicy(childPolicy, ['1.1.1.3:9042', '1.1.1.1:9042']);
     policy.newQueryPlan('ks1', {}, function (err, iterator) {
       assert.ifError(err);
       const hosts = helper.iteratorToArray(iterator);
@@ -484,8 +479,8 @@ describe('WhiteListPolicy', function () {
 
   describe('#getOptions()', () => {
     it('should return a Map with the child policy name', () => {
-      helper.assertMapEqual(new WhiteListPolicy(new RoundRobinPolicy(), ['a', 'b']).getOptions(),
-        new Map([['childPolicy', 'RoundRobinPolicy'], ['whitelist', ['a', 'b']]]));
+      helper.assertMapEqual(new AllowListPolicy(new RoundRobinPolicy(), ['a', 'b']).getOptions(),
+        new Map([['childPolicy', 'RoundRobinPolicy'], ['allowList', ['a', 'b']]]));
     });
   });
 });

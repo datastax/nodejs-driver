@@ -580,7 +580,7 @@ const helper = {
   },
   Map: MapPolyFill,
   Set: SetPolyFill,
-  WhiteListPolicy: WhiteListPolicy,
+  AllowListPolicy: AllowListPolicy,
   FallthroughRetryPolicy: FallthroughRetryPolicy,
   /**
    * Determines if test tracing is enabled
@@ -1601,18 +1601,18 @@ RetryMultipleTimes.prototype.onWriteTimeout = function (requestInfo) {
  * @param [childPolicy]
  * @constructor
  */
-function WhiteListPolicy(list, childPolicy) {
+function AllowListPolicy(list, childPolicy) {
   this.list = list;
   this.childPolicy = childPolicy || new policies.loadBalancing.RoundRobinPolicy();
 }
 
-util.inherits(WhiteListPolicy, policies.loadBalancing.LoadBalancingPolicy);
+util.inherits(AllowListPolicy, policies.loadBalancing.LoadBalancingPolicy);
 
-WhiteListPolicy.prototype.init = function (client, hosts, callback) {
+AllowListPolicy.prototype.init = function (client, hosts, callback) {
   this.childPolicy.init(client, hosts, callback);
 };
 
-WhiteListPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
+AllowListPolicy.prototype.newQueryPlan = function (keyspace, info, callback) {
   const list = this.list;
   this.childPolicy.newQueryPlan(keyspace, info, function (err, iterator) {
     callback(err, {

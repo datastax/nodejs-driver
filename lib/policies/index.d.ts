@@ -63,8 +63,11 @@ export namespace policies {
       constructor(childPolicy: LoadBalancingPolicy);
     }
 
-    class WhiteListPolicy extends LoadBalancingPolicy {
-      constructor(childPolicy: LoadBalancingPolicy, whiteList: string[]);
+    class AllowListPolicy extends LoadBalancingPolicy {
+      constructor(childPolicy: LoadBalancingPolicy, allowList: string[]);
+    }
+
+    class WhiteListPolicy extends AllowListPolicy {
     }
 
     class RoundRobinPolicy extends LoadBalancingPolicy {

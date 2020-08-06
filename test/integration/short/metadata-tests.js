@@ -325,7 +325,7 @@ describe('metadata @SERVER_API', function () {
     describe('#getTrace()', function () {
       it('should retrieve the trace immediately after', function (done) {
         // use a single node
-        const lbp = new helper.WhiteListPolicy(['1']);
+        const lbp = new helper.AllowListPolicy(['1']);
         const client = newInstance({policies: {loadBalancing: lbp}});
         let traceId;
         utils.series([
@@ -363,7 +363,7 @@ describe('metadata @SERVER_API', function () {
       });
       it('should retrieve the trace a few seconds after', function (done) {
         // use a single node
-        const lbp = new helper.WhiteListPolicy(['2']);
+        const lbp = new helper.AllowListPolicy(['2']);
         const client = newInstance({policies: {loadBalancing: lbp}});
         let traceId;
         utils.series([

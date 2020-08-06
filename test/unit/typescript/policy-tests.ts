@@ -33,6 +33,8 @@ function myTest(): void {
   let retryPolicy:RetryPolicy;
 
   lbp = new policies.loadBalancing.DCAwareRoundRobinPolicy('dc1');
+  lbp = new policies.loadBalancing.AllowListPolicy(lbp, [ 'a', 'b', 'c' ]);
+  // For backward compatibility only
   lbp = new policies.loadBalancing.WhiteListPolicy(lbp, [ 'a', 'b', 'c' ]);
   lbp = new TokenAwarePolicy(lbp);
   lbp.getOptions();

@@ -25,8 +25,7 @@ const errors = require('../../../lib/errors');
 
 const { responseErrorCodes } = require('../../../lib/types');
 const Client = require('../../../lib/client');
-const DCAwareRoundRobinPolicy = require('../../../lib/policies').loadBalancing.DCAwareRoundRobinPolicy;
-const WhiteListPolicy = require('../../../lib/policies').loadBalancing.WhiteListPolicy;
+const { AllowListPolicy, DCAwareRoundRobinPolicy } = require('../../../lib/policies').loadBalancing;
 
 const query = "select * from data";
 const clusterSize = 3;
@@ -46,7 +45,7 @@ describe('Client', function() {
         localDataCenter: 'dc1',
         policies: {
           // define an LBP that includes all nodes except node 3
-          loadBalancing: new WhiteListPolicy(new DCAwareRoundRobinPolicy(), [
+          loadBalancing: new AllowListPolicy(new DCAwareRoundRobinPolicy(), [
             cluster.node(0).address,
             cluster.node(1).address,
             cluster.node(2).address

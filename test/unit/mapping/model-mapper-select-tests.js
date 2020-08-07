@@ -89,6 +89,64 @@ describe('ModelMapper', () => {
         params: [ 'value2' ]
       }]));
 
+    it('should support model mapping functions', () => {
+      // Create a closure
+      const suffix = '_after_function';
+
+      return testQueries({
+        methodName: 'find',
+        models: {
+          'Sample': {
+            tables: ['table1'],
+            columns: {
+              'id2': { fromModel: a => a + suffix },
+              'location_type': 'locationType'
+            }
+          }
+        },
+        items: [
+          {
+            doc: { id1: 'value_id1', id2: 'value_id2' },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+            params: [ 'value_id1', 'value_id2' + suffix ]
+          },
+          {
+            doc: { id1: 'value_id1', id2: q.gt('value_id2') },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 > ?',
+            params: [ 'value_id1', 'value_id2' + suffix ]
+          },
+          {
+            doc: { id1: 'value_id1', id2: q.and(q.gte('a'), q.lt('z')) },
+            query:
+              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 < ?',
+            params: [ 'value_id1', 'a' + suffix, 'z' + suffix ]
+          }
+        ]
+      });
+    });
+
+    it('should support mapping IN values with a mapping function', () => testQueries({
+      methodName: 'find',
+      models: {
+        'Sample': {
+          tables: [ 'table1' ],
+          columns: {
+            'id2': { fromModel: a => a + '_mapped_value' }
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: q.in_(['first', 'second']) },
+          query:
+            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 IN ?',
+          params: [ 'value_id1', ['first_mapped_value', 'second_mapped_value'] ]
+        }
+      ]
+    }));
+
     it('should throw an error when filter, fields or orderBy are not valid', () =>
       Promise.all([
         {
@@ -255,23 +313,30 @@ describe('ModelMapper', () => {
   });
 });
 
-function testQueries(methodName, items) {
+async function testQueries(methodName, items) {
+  let models = null;
   const columns = [ 'id1', 'id2', 'name', 'description', 'location_type'];
+
+  if (typeof methodName === 'object') {
+    // Its an object with properties as parameters
+    models = methodName.models;
+    items = methodName.items;
+    methodName = methodName.methodName;
+  }
+
   const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1', emptyResponse);
-  const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
+  const modelMapper = mapperTestHelper.getModelMapper(clientInfo, models);
 
-  return Promise.all(items.map((item, index) => {
-    const p = methodName !== 'findAll'
-      ? modelMapper[methodName](item.doc, item.docInfo, item.executionOptions)
-      : modelMapper[methodName](item.docInfo, item.executionOptions);
+  for (const item of items) {
+    if (methodName !== 'findAll') {
+      await modelMapper[methodName](item.doc, item.docInfo, item.executionOptions);
+    } else {
+      await modelMapper[methodName](item.docInfo, item.executionOptions);
+    }
 
-    return p.then(() => {
-      assert.strictEqual(clientInfo.executions.length, items.length);
-      const execution = clientInfo.executions[index];
-      assert.strictEqual(execution.query, item.query);
-      assert.deepStrictEqual(execution.params, item.params);
-      const expectedOptions = {prepare: true, isIdempotent: true};
-      helper.assertProperties(execution.options, expectedOptions);
-    });
-  }));
+    const execution = clientInfo.executions.pop();
+    assert.strictEqual(execution.query, item.query);
+    assert.deepStrictEqual(execution.params, item.params);
+    helper.assertProperties(execution.options, { prepare: true, isIdempotent: true });
+  }
 }

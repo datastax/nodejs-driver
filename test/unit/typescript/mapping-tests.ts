@@ -30,7 +30,20 @@ async function myTest(client: Client): Promise<any> {
   let result: Result;
 
   const mapper: Mapper = new Mapper(client, {
-    models: { 'Video': { tables: ['videos'] } }
+    models: {
+      'Video': {
+        tables: ['videos'],
+        columns: {
+          'videoid': 'videoId',
+          'userid': { name: 'userId' },
+          'video_media': {
+            name: 'media',
+            toModel: (value) => JSON.parse(value),
+            fromModel: (value) => JSON.stringify(value)
+          }
+        }
+      }
+    }
   });
 
   const videoMapper: ModelMapper = mapper.forModel('Video');

@@ -121,6 +121,25 @@ describe('ModelMapper', () => {
           helper.assertContains(clientInfo.logMessages[0].message, `ModelMapper cache reached ${cacheHighWaterMark}`);
         });
     });
+
+    it('should use the mapping function in the insert values', () => testQueries({
+      methodName: 'insert',
+      models: {
+        'Sample': {
+          tables: ['table1'],
+          columns: {
+            'name': { fromModel: JSON.stringify },
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2', name: { prop1: 1, prop2: 'two' } },
+          query: 'INSERT INTO ks1.table1 (id1, id2, name) VALUES (?, ?, ?)',
+          params: [ 'value_id1', 'value_id2', '{"prop1":1,"prop2":"two"}']
+        }
+      ]
+    }));
   });
 
   describe('#update()', () => {
@@ -217,6 +236,33 @@ describe('ModelMapper', () => {
         params: [ 360, 'value_name1', 'value_id1', 'value_id2' ]
       }
     ]));
+
+    it('should use the mapping function in the SET WHERE and IF clauses', () => testQueries({
+      methodName: 'update',
+      models: {
+        'Sample': {
+          tables: ['table1'],
+          columns: {
+            'name': { fromModel: JSON.stringify },
+            'id2': { fromModel: v => v + "_suffix" }
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2', name: { prop1: 1, prop2: 'two' } },
+          query: 'UPDATE ks1.table1 SET name = ? WHERE id1 = ? AND id2 = ?',
+          params: [ '{"prop1":1,"prop2":"two"}', 'value_id1', 'value_id2_suffix' ]
+        },
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2', description: 'my description' },
+          docInfo: { when: { name: { a: 'a', b: 2 } } },
+          query: 'UPDATE ks1.table1 SET description = ? WHERE id1 = ? AND id2 = ? IF name = ?',
+          params: [ 'my description', 'value_id1', 'value_id2_suffix', '{"a":"a","b":2}' ],
+          isIdempotent: false
+        }
+      ]
+    }));
   });
 
   describe('#remove()', () => {
@@ -267,6 +313,33 @@ describe('ModelMapper', () => {
         params: [ 'x', 'y' ]
       }
     ]));
+
+    it('should use the mapping function in the WHERE and IF clauses', () => testQueries({
+      methodName: 'remove',
+      models: {
+        'Sample': {
+          tables: ['table1'],
+          columns: {
+            'name': { fromModel: JSON.stringify },
+            'id2': { fromModel: v => v + "_suffix" }
+          }
+        }
+      },
+      items: [
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2' },
+          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+          params: [ 'value_id1', 'value_id2_suffix' ]
+        },
+        {
+          doc: { id1: 'value_id1', id2: 'value_id2' },
+          docInfo: { when: { name: { a: 1 } }},
+          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ? IF name = ?',
+          params: [ 'value_id1', 'value_id2_suffix', '{"a":1}' ],
+          isIdempotent: false
+        },
+      ]
+    }));
   });
 });
 
@@ -288,18 +361,26 @@ function testErrors(methodName, items) {
   }));
 }
 
-function testQueries(methodName, items) {
+async function testQueries(methodName, items) {
+  let models = null;
   const columns = [ 'id1', 'id2', 'name', { name: 'list1', type: { code: dataTypes.list }}, 'description'];
-  const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ]);
-  const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
-  return Promise.all(items.map((item, index) => modelMapper[methodName](item.doc, item.docInfo, item.executionOptions)
-    .then(() => {
-      assert.strictEqual(clientInfo.executions.length, items.length);
-      const execution = clientInfo.executions[index];
-      assert.strictEqual(execution.query, item.query);
-      assert.deepStrictEqual(execution.params, item.params);
-      const expectedOptions = { prepare: true, isIdempotent: item.isIdempotent !== false };
-      helper.assertProperties(execution.options, expectedOptions);
-    })));
+  if (typeof methodName === 'object') {
+    // Its an object with properties as parameters
+    models = methodName.models;
+    items = methodName.items;
+    methodName = methodName.methodName;
+  }
+
+  const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ]);
+  const modelMapper = mapperTestHelper.getModelMapper(clientInfo, models);
+
+  for (const item of items) {
+    await modelMapper[methodName](item.doc, item.docInfo, item.executionOptions);
+    const execution = clientInfo.executions.pop();
+    assert.strictEqual(execution.query, item.query);
+    assert.deepStrictEqual(execution.params, item.params);
+    const expectedOptions = { prepare: true, isIdempotent: item.isIdempotent !== false };
+    helper.assertProperties(execution.options, expectedOptions);
+  }
 }

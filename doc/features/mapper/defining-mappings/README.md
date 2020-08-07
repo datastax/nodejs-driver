@@ -64,7 +64,7 @@ To use multiple tables/views with the same model, specify the names in the `Mapp
 ```javascript
 const mappingOptions = {
   models: {
-    'User': {
+    'Video': {
       tables: [ 'videos', 'user_videos', 'latest_videos' ],
       mappings: new UnderscoreCqlToCamelCaseMappings(),
       columns: {
@@ -90,6 +90,38 @@ When selecting rows, the most suitable table will be used according to the table
 const result = await videoMapper.find({ userId });
 ```
 
+## Using custom type conversions
+
+When representing your model properties in a way that requires transformation from and to the column values, you can
+define `fromModel` and `toModel` functions to perform the conversions.
+
+For example, consider a `text` column that contains a JSON string and you want to represent it as an JavaScript
+`Object`.
+
+```javascript
+const mappingOptions = {
+  models: {
+    'User': {
+      tables: ['users'],
+      mappings: new UnderscoreCqlToCamelCaseMappings(),
+      columns: {
+        'userid': 'userId',
+        'info': {
+          name: 'user_info',
+          fromModel: JSON.stringify,
+          toModel: JSON.parse
+        }
+      }
+    }
+  }
+};
+```
+
+Now, you can interact with the model property as an `Object` rather than as a `String`.
+
+```javascript
+await userMapper.insert({ userId, info: { birthdate, favoriteBrowser } });
+```
 
 ## Mapping to a Materialized View
 

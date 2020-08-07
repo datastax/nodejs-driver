@@ -10,8 +10,8 @@ const Mapper = cassandra.mapping.Mapper;
 const client = new Client({ contactPoints, localDataCenter, keyspace });
 ```
 
-Create a `Mapper` instance and reuse it across your application. You can specify you model properties and how those
-are mapped to table columns can be defined in the [MappingOptions](../defining-mappings/). 
+Create a `Mapper` instance and reuse it across your application. You can define how your model properties are mapped
+to table columns in the [MappingOptions](../defining-mappings/). 
 
 ```javascript
 const mapper = new Mapper(client, { 

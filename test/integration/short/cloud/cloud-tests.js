@@ -152,7 +152,7 @@ vdescribe('dse-6.7', 'Cloud support', function () {
         // Ignore auth error
       }
 
-      assert.strictEqual(client.options.authProvider, null);
+      assert.instanceOf(client.options.authProvider, auth.NoAuthProvider);
     });
 
     it('should support overriding the auth provider', async () => {

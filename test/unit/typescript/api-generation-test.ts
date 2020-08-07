@@ -64,7 +64,7 @@ export async function generatedFn() {
   printClasses(root, 'root', new Set([ 'Encoder' ]));
   printObjects(root, 'root', new Set([ 'token' ]));
 
-  printClasses(auth, 'auth');
+  printClasses(auth, 'auth', new Set(['NoAuthProvider']));
   printClasses(errors, 'errors');
   printFunctions(concurrent, 'concurrent');
   printClasses(concurrent, 'concurrent');

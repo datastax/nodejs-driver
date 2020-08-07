@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('chai').assert;
+
+const { assert } = require('chai');
 const dns = require('dns');
 const util = require('util');
 
@@ -27,7 +28,7 @@ const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
 const RoundRobinPolicy = require('../../../lib/policies/load-balancing.js').RoundRobinPolicy;
 const Murmur3Tokenizer = require('../../../lib/tokenizer.js').Murmur3Tokenizer;
-const PlainTextAuthProvider = require('../../../lib/auth/plain-text-auth-provider.js');
+const { PlainTextAuthProvider } = require('../../../lib/auth');
 const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 const vit = helper.vit;
@@ -382,6 +383,13 @@ describe('Client', function () {
           next();
         });
       }, helper.finish(client, done));
+    });
+
+    it('should return an AuthenticationError when authProvider is not set', async () => {
+      const client = newInstance();
+      const err = await helper.assertThrowsAsync(client.connect());
+      assertAuthError(err, /requires authentication, but no authenticator found in the options/);
+      await client.shutdown();
     });
 
     context('with credentials', () => {
@@ -1094,8 +1102,13 @@ function createRole(client, role, password) {
   return client.execute(`CREATE ROLE IF NOT EXISTS ${role} WITH PASSWORD = '${password}' AND LOGIN = true`);
 }
 
-function assertAuthError(err) {
+function assertAuthError(err, message) {
   helper.assertInstanceOf(err, errors.NoHostAvailableError);
   assert.ok(err.innerErrors);
-  helper.assertInstanceOf(Object.values(err.innerErrors)[0], errors.AuthenticationError);
+  const firstErr = Object.values(err.innerErrors)[0];
+  helper.assertInstanceOf(firstErr, errors.AuthenticationError);
+
+  if (message) {
+    assert.match(firstErr.message, message);
+  }
 }

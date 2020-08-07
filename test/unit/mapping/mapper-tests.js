@@ -16,8 +16,10 @@
 
 'use strict';
 
-const assert = require('assert');
+const { assert } = require('chai');
+const sinon = require('sinon');
 const Mapper = require('../../../lib/mapping/mapper');
+const ModelMapper = require('../../../lib/mapping/model-mapper');
 const helper = require('../../test-helper');
 const mapperTestHelper = require('./mapper-unit-test-helper');
 
@@ -60,7 +62,40 @@ describe('Mapper', () => {
     it('should validate that the client keyspace is set when mapping options has not been specified', () => {
       const mapper = new Mapper({});
       assert.throws(() => mapper.forModel('Sample'),
-        /You must set the Client keyspace or specify the keyspace of the model in the MappingOptions/);
+        /No mapping information found for model 'Sample'\. Mapper .+ without setting the keyspace$/);
+    });
+
+    it('should log when creating a ModelMapper instance using mapping information', () => {
+      const client = sinon.spy({ log: () => {} });
+      const mapper = new Mapper(client, { models: { 'T': { tables: ['t1', 't2'], keyspace: 'ks1' }}});
+
+      // call forModel() multiple times
+      for (let i = 0; i < 10; i++) {
+        const m = mapper.forModel('T');
+        assert.instanceOf(m, ModelMapper);
+      }
+
+      // Only should be logged once
+      assert.ok(client.log.calledOnce);
+      const args = client.log.getCall(0).args;
+      assert.strictEqual(args[0], 'info');
+      assert.match(args[1], /Creating model mapper for 'T' using mapping information. Keyspace: ks1; Tables: t1,t2.$/);
+    });
+
+    it('should log when creating a ModelMapper instance using defaults', () => {
+      const client = sinon.spy({ log: () => {}, keyspace: 'abc' });
+      const mapper = new Mapper(client);
+
+      // call forModel() multiple times
+      for (let i = 0; i < 10; i++) {
+        const m = mapper.forModel('user');
+        assert.instanceOf(m, ModelMapper);
+      }
+
+      assert.ok(client.log.calledOnce);
+      const args = client.log.getCall(0).args;
+      assert.strictEqual(args[0], 'info');
+      assert.match(args[1], /Mapping information for model 'user' not found, creating .+Keyspace: abc; Table: user.$/);
     });
   });
 

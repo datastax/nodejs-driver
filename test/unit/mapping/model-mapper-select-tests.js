@@ -285,7 +285,7 @@ describe('ModelMapper', () => {
   });
 
   describe('#mapWithQuery', () => {
-    it('should warn when cache reaches 100 different queries', () => {
+    it('should warn when cache reaches 100 different queries', async () => {
       const clientInfo = mapperTestHelper.getClient(['id1'], [ 1 ], 'ks1', emptyResponse);
       const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
@@ -297,18 +297,19 @@ describe('ModelMapper', () => {
         promises.push(executor());
       }
 
-      return Promise.all(promises)
-        // No warnings logged when there are 99 different queries
-        .then(() => assert.strictEqual(clientInfo.logMessages.length, 0))
-        // One more query
-        .then(() => modelMapper.mapWithQuery(`query-limit`, () => [])())
-        .then(() => {
-          assert.strictEqual(clientInfo.logMessages.length, 1);
-          assert.strictEqual(clientInfo.logMessages[0].level, 'warning');
-          assert.strictEqual(clientInfo.logMessages[0].message,
-            `Custom queries cache reached ${cacheHighWaterMark} items, this could be caused by ` +
-            `hard-coding parameter values inside the query, which should be avoided`);
-        });
+      await Promise.all(promises);
+
+      // No warnings logged when there are 99 different queries
+      assert.strictEqual(clientInfo.logMessages.filter(l => l.level === 'warning').length, 0);
+
+      // One more query
+      await modelMapper.mapWithQuery(`query-limit`, () => [])();
+
+      const warnings = clientInfo.logMessages.filter(l => l.level === 'warning');
+      assert.strictEqual(warnings.length, 1);
+      assert.strictEqual(warnings[0].message,
+        `Custom queries cache reached ${cacheHighWaterMark} items, this could be caused by ` +
+        `hard-coding parameter values inside the query, which should be avoided`);
     });
   });
 });

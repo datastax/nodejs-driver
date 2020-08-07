@@ -66,6 +66,7 @@ describe('ModelMapper', () => {
       const client = {
         connect: () => Promise.resolve(),
         keyspace: 'ks1',
+        log: () => {},
         metadata: {
           getTable: () => Promise.reject(error)
         }
@@ -99,7 +100,7 @@ describe('ModelMapper', () => {
       }
     ]));
 
-    it('should warn when cache reaches 100 different queries', () => {
+    it('should warn when cache reaches 100 different queries', async () => {
       const clientInfo = mapperTestHelper.getClient(['id1'], [ 1 ], 'ks1');
       const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
@@ -110,16 +111,17 @@ describe('ModelMapper', () => {
         promises.push(modelMapper.insert({ id1: 1, [`col${i % (cacheHighWaterMark-1)}`]: 1}));
       }
 
-      return Promise.all(promises)
-        // No warnings logged when there are 99 different queries
-        .then(() => assert.strictEqual(clientInfo.logMessages.length, 0))
-        // One more query
-        .then(() => modelMapper.insert({ id1: 1, anotherColumn: 1 }))
-        .then(() => {
-          assert.strictEqual(clientInfo.logMessages.length, 1);
-          assert.strictEqual(clientInfo.logMessages[0].level, 'warning');
-          helper.assertContains(clientInfo.logMessages[0].message, `ModelMapper cache reached ${cacheHighWaterMark}`);
-        });
+      await Promise.all(promises);
+
+      // No warnings logged when there are 99 different queries
+      assert.strictEqual(clientInfo.logMessages.filter(l => l.level === 'warning').length, 0);
+
+      // One more query
+      await modelMapper.insert({ id1: 1, anotherColumn: 1 });
+
+      const warnings = clientInfo.logMessages.filter(l => l.level === 'warning');
+      assert.strictEqual(warnings.length, 1);
+      helper.assertContains(warnings[0].message, `ModelMapper cache reached ${cacheHighWaterMark}`);
     });
 
     it('should use the mapping function in the insert values', () => testQueries({

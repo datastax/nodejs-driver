@@ -14,24 +14,27 @@
  * limitations under the License.
  */
 
-import { types } from "../../../index";
+import { types, Client } from "../../../index";
 import Uuid = types.Uuid;
 import TimeUuid = types.TimeUuid;
 import Long = types.Long;
 import BigDecimal = types.BigDecimal;
 import InetAddress = types.InetAddress;
 import Tuple = types.Tuple;
+import ResultSet = types.ResultSet;
+import Row = types.Row;
 
 /*
  * TypeScript definitions compilation tests for types module.
  */
 
-function myTest(): void {
+async function myTest(): Promise<void> {
   let id:Uuid;
   let tid:TimeUuid;
   let b: boolean;
   let s: string;
   let buffer: Buffer;
+  let rs: ResultSet;
 
   types.protocolVersion.isSupported(types.protocolVersion.v4);
 
@@ -61,4 +64,23 @@ function myTest(): void {
   long.div(long);
   // Use constructor
   long = new Long(1, 2);
+
+  const client = new Client({
+    contactPoints: ['host1'],
+    localDataCenter: 'dc1'
+  });
+
+  rs = await client.execute('SELECT * FROM ks1.table1');
+  // Test iteration
+  for (const row of rs) {
+    // Check is of type Row
+    const r: Row = row;
+  }
+
+  rs = await client.execute('SELECT * FROM ks1.table1');
+  // Test async iteration
+  for await (const row of rs) {
+    // Check is of type Row
+    const r: Row = row;
+  }
 }

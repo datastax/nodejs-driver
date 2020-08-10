@@ -218,7 +218,7 @@ describe('InsightsClient', function () {
         insights.shutdown();
 
         // The startup and status events are expected
-        assert.ok(messages.length > 4, `Message length should be greater than 4, was ${messages.length}`);
+        assert.ok(messages.length > 2, `Message length should be greater than 2, was ${messages.length}`);
 
         const startupMessage = JSON.parse(messages[0]);
         assert.strictEqual(startupMessage.metadata.name, startupEventName);
@@ -227,6 +227,7 @@ describe('InsightsClient', function () {
 
         const firstStatusMessage = JSON.parse(messages[1]);
 
+        // Following status messages should be identical
         messages.slice(1).forEach(m => {
           const statusMessage = JSON.parse(m);
           assert.strictEqual(statusMessage.metadata.clientId, startupMessage.metadata.clientId);

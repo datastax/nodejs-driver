@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
+
 const assert = require('assert');
 
-const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
 const types = require('../../../lib/types');
-const utils = require('../../../lib/utils.js');
+const utils = require('../../../lib/utils');
 const simulacron = require('../simulacron');
-const loadBalancing = require('../../../lib/policies/load-balancing.js');
-const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
-const WhiteListPolicy = loadBalancing.WhiteListPolicy;
-const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
+const { AllowListPolicy, DCAwareRoundRobinPolicy } = require('../../../lib/policies/load-balancing');
+const { ExecutionProfile } = require('../../../lib/execution-profile');
 
 describe('ProfileManager', function() {
   this.timeout(40000);
@@ -69,8 +69,8 @@ describe('ProfileManager', function() {
       loadBalancing: decorateInitWithCounter(new DCAwareRoundRobinPolicy('dc1'))
     });
     // A profile that targets 127.0.0.4 specifically.
-    const wlProfile = new ExecutionProfile('whitelist', {
-      loadBalancing: decorateInitWithCounter(new WhiteListPolicy(new DCAwareRoundRobinPolicy('dc2'), [ node4 ]))
+    const wlProfile = new ExecutionProfile('allowlist', {
+      loadBalancing: decorateInitWithCounter(new AllowListPolicy(new DCAwareRoundRobinPolicy('dc2'), [ node4 ]))
     });
     // A profile with no defined lbp, it should fallback on the default profile's lbp.
     const emptyProfile = new ExecutionProfile('empty');
@@ -143,7 +143,7 @@ describe('ProfileManager', function() {
         hosts.forEach(function(h) {
           const distance = client.profileManager.getDistance(h);
           // all hosts except 3 should be at a distance of local since a profile exists for all DCs
-          // with DC2 white listing host 4.  While host 5 is ignored in whitelist profile, it is remote in others
+          // with DC2 allow-listing host 4.  While host 5 is ignored in allowlist profile, it is remote in others
           // so it should be considered remote.
           const expectedDistance = h.address === node3 ? types.distance.ignored : types.distance.local;
           assert.strictEqual(distance, expectedDistance, "Expected distance of " + expectedDistance + " for host " + h.address);
@@ -157,7 +157,7 @@ describe('ProfileManager', function() {
   it('should only use hosts from the load balancing policy in the default profile', ensureOnlyHostsUsed([0, 1]));
   it('should only use hosts from the load balancing policy in the default profile when profile doesn\'t have policy', ensureOnlyHostsUsed([0, 1], 'empty'));
   it('should only use hosts from the load balancing policy in the default profile when specified', ensureOnlyHostsUsed([0, 1], 'default'));
-  it('should only use hosts from the load balancing policy in whitelist profile', ensureOnlyHostsUsed([3], 'whitelist'));
+  it('should only use hosts from the load balancing policy in allowlist profile', ensureOnlyHostsUsed([3], 'allowlist'));
   it('should fallback on client load balancing policy when default profile has no lbp', function (done) {
     const policy = new DCAwareRoundRobinPolicy('dc2');
     const profiles = [new ExecutionProfile('default'), new ExecutionProfile('empty')];

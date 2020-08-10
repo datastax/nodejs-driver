@@ -20,8 +20,8 @@ hosts in the remote data centers, but those are always tried after the local nod
 - `RoundRobinPolicy`: a policy that yields nodes in a round-robin fashion.
 - `TokenAwarePolicy`: a policy that yields replica nodes for a given partition key and keyspace. The token-aware policy
 uses a child policy to retrieve the next nodes in case the replicas for a partition key are not available.
-- `WhiteListPolicy`: a policy that wraps the provided child policy but only "allow" hosts from the provided
-whilelist. Keep in mind however that this policy defeats somewhat the host auto-detection of the driver. As such, this 
+- `AllowListPolicy`: a policy that wraps the provided child policy but only "allow" hosts from the provided
+list. Keep in mind however that this policy defeats somewhat the host auto-detection of the driver. As such, this 
 policy is only useful in a few special cases or for testing, but is not optimal in general.
 
 ### Default load-balancing policy

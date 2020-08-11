@@ -1,5 +1,21 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.6.0
+
+2020-08-11
+
+### Features
+
+- [NODEJS-587] - Mapper: Add ability to provide a encoding/decoding functions to ModelOptions.columns
+- [NODEJS-607] - Mapper: Add clear error messages when the model can not be found
+- [NODEJS-611] - Use "allow list" terminology instead of whitelist
+
+### Bug fixes
+
+- [NODEJS-609] - NodeJS driver doesn't support transitional authentication
+- [NODEJS-610] - TypeScript error on Type 'ResultSet' must have a '[Symbol.asyncIterator]()' method that returns an
+ async iterator.
+
 ## 4.5.2
 
 2020-05-07

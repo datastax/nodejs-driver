@@ -885,6 +885,12 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
         await client.executeGraph('g.V()', null, { graphName });
       });
 
+      it('should internally connect the Client instance if its not already connected', async () => {
+        const client = helper.shutdownAfterThisTest(new Client(helper.getOptions()));
+        await client.executeGraph('g.V()', null, { graphName });
+        assert.isTrue(client.connected);
+      });
+
       it('should default to the correct graph results based on the execution profile', async () => {
         await client.executeGraph('g.V()', null, { executionProfile: 'profile1' });
       });

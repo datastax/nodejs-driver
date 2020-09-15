@@ -213,5 +213,39 @@ describe('Mapper', () => {
             assert.strictEqual(clientInfo.batchExecutions[0].options.isIdempotent, isIdempotent);
           });
       })));
+
+    it('should be able to batch using custom field parser', () => {
+      const modelWithCustomParser = {
+        'Sample': {
+          tables: [ 'table1' ],
+          columns: {
+            key: 'key',
+            field: {
+              fromModel: JSON.stringify,
+              toModel: JSON.parse,
+            }
+          }
+        }
+      };
+
+    
+      const clientInfo = mapperTestHelper.getClient(['key', 'field'], [ 1 ]);
+      const mapper = mapperTestHelper.getMapper(clientInfo, modelWithCustomParser);
+      const modelMapper = mapper.forModel('Sample');
+
+      const someFakeJson = { value: 'someValue' };
+
+      const items = [
+        modelMapper.batching.insert({ key: 1, field: someFakeJson }),
+        modelMapper.batching.update({ key: 2, field: someFakeJson }),
+      ];
+
+      mapper.batch(items)
+        .then(() => {
+          assert.lengthOf(clientInfo.batchExecutions[0].queries, 2);
+          assert.isTrue(clientInfo.batchExecutions[0].queries[0].params[1] === JSON.stringify(someFakeJson));
+          assert.isTrue(clientInfo.batchExecutions[0].queries[1].params[0] === JSON.stringify(someFakeJson));
+        }); 
+    });
   });
 });

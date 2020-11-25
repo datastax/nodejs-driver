@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.6.1
+
+2020-11-25
+
+### Bug fixes
+
+- [NODEJS-622] - Mapper: Batching with custom mapping does not work
+
 ## 4.6.0
 
 2020-08-11

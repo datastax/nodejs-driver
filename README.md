@@ -71,6 +71,14 @@ const client = new cassandra.Client({
 });
 ```
 
+or with Astra token authentication by setting your username to `token` and password to a token created in the Astra cconsle:
+```javascript
+const client = new cassandra.Client({
+  cloud: { secureConnectBundle: 'path/to/secure-connect-DATABASE_NAME.zip' },
+  credentials: { username: 'token', password: 'MY_ASTRA_TOKEN' }
+});
+```
+
 ### Prepare your queries
 
 Using prepared statements provides multiple benefits.

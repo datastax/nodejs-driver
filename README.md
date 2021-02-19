@@ -71,7 +71,7 @@ const client = new cassandra.Client({
 });
 ```
 
-or with Astra token authentication by setting your username to `token` and password to a token created in the Astra cconsle:
+or with Astra token authentication by setting your username to `token` and password to a token created in the Astra console:
 ```javascript
 const client = new cassandra.Client({
   cloud: { secureConnectBundle: 'path/to/secure-connect-DATABASE_NAME.zip' },

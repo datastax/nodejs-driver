@@ -22,7 +22,7 @@
   "dependencies": {
     "@types/long": "^4.0.0",
     "@types/node": ">=8",
-    "adm-zip": "^0.4.13",
+    "adm-zip": "^0.5.3",
     "long": "^2.2.0"
   },
   "devDependencies": {

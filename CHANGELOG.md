@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.6.2
+
+2021-03-30
+
+### Bug fixes
+
+- [NODEJS-630] - upgraded vulnerable version of adm-zip dependency
+
 ## 4.6.1
 
 2020-11-25

@@ -635,7 +635,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { param.ADHOC_BUILD_AND_EXECUTE_TESTS_EXECUTE_EXAMPLES }
+              expression { params.ADHOC_BUILD_AND_EXECUTE_TESTS_EXECUTE_EXAMPLES }
             }
             steps {
               executeExamples()

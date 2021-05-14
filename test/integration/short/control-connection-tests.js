@@ -116,7 +116,7 @@ describe('ControlConnection', function () {
       await cc.init();
       await new Promise(r => options.policies.loadBalancing.init(null, cc.hosts, r));
 
-      await util.promisify(helper.ccmHelper.bootstrapNode)(3);
+      await util.promisify(helper.ccmHelper.bootstrapNode)({nodeIndex: 3, dc: 'dc1'});
       await util.promisify(helper.ccmHelper.startNode)(3);
 
       // While the host is started, it's not a given that it will have been connected and marked up,

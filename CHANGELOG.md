@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.6.3
+
+2021-05-??
+
+### Bug fixes
+
+- [NODEJS-632] - Re-resolve contact points on reconnect when all nodes are unavailable
+
 ## 4.6.2
 
 2021-03-30

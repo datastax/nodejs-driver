@@ -422,8 +422,9 @@ describe('ControlConnection', function () {
         yield this.delay;
       };
 
-      const cc = newInstance({ contactPoints: [ '::1' ], policies: { loadBalancing: lbp, reconnection: rp } },
-        getContext({ state: state, queryResults: { 'peers': [ {'rpc_address': types.InetAddress.fromString('::2') } ] }}));
+      const cc = newInstance(
+        { contactPoints: [ '::1' ], policies: { loadBalancing: lbp, reconnection: rp } },
+        getContext({ state: state, queryResults: { 'peers': [ {'rpc_address': types.InetAddress.fromString('::2') } ] }, failBorrow: [-1,1]}));
 
       await cc.init();
 

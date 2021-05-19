@@ -7,6 +7,7 @@
 ### Bug fixes
 
 - [NODEJS-632] - Re-resolve contact points on reconnect when all nodes are unavailable
+- [NODEJS-634] - Downgrade protocol versions when encountering versions beyond what we support
 
 ## 4.6.2
 

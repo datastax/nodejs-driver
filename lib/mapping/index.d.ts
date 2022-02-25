@@ -59,7 +59,7 @@ export namespace mapping {
     logged?: boolean;
     timestamp?: number | Long;
     fetchSize?: number;
-    pageState?: number;
+    pageState?: string | Buffer;
   }
 
   interface ModelTables {

@@ -101,6 +101,7 @@ export namespace types {
     v3 = 0x03,
     v4 = 0x04,
     v5 = 0x05,
+    v6 = 0x06,
     dseV1 = 0x41,
     dseV2 = 0x42,
     maxSupported = dseV2,

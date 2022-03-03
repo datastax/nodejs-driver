@@ -67,6 +67,14 @@ describe('Tree', function () {
       const k = assertNode(j.edges[0], [ 'k' ], 8, 1);
       assertNode(k.edges[0], [ 'l' ], 6, 0);
     });
+
+    it('should set value if a node not a leaf and it is a match', () => {
+      const tree = new Tree();
+      tree.getOrCreate(['a', 'b', 'c'], () => true);
+      tree.getOrCreate(['a', 'b', 'd'], () => true);
+      assert.strictEqual(tree.getOrCreate(['a', 'b'], () => true), true);
+    });
+
   });
 });
 

@@ -282,6 +282,58 @@ describe('ControlConnection', function () {
       cc.shutdown();
       cc.hosts.values().forEach(h => h.shutdown());
     });
+
+    it('should add an address if previous resolution failed', async () => {
+      let dnsWorks = false;
+      const hostname = 'my-host-name';
+      const resolvedAddresses = ['1','2'];
+
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
+        resolve4: function (name, cb) {
+          if (dnsWorks) {
+            cb(null, resolvedAddresses);
+          }
+          else {
+            cb(null, []);
+          }
+        },
+        resolve6: function (name, cb) {
+          throw new Error('IPv6 resolution errors should be ignored');
+        },
+        lookup: function () {
+          throw new Error('dns.lookup() should not be used');
+        }
+      }});
+      const cc = new ControlConnectionMock(
+        clientOptions.extend({ contactPoints: [hostname] }),
+        null,
+        getContext());
+
+      let err = null;
+
+      try {
+        await cc.init();
+      } catch (e) {
+        err = e;
+      }
+      assert.instanceOf(err, errors.NoHostAvailableError);
+      assert.deepStrictEqual(cc.getResolvedContactPoints().get(hostname), utils.emptyArray);
+
+      // Make DNS resolution magically work and re-run initialization
+      err = null;
+      dnsWorks = true;
+
+      try {
+        await cc.init();
+      } catch (e) {
+        err = e;
+      }
+
+      assert.isNull(err);
+      assert.deepStrictEqual(
+        cc.getResolvedContactPoints().get(hostname),
+        resolvedAddresses.map(a => a + ":9042"));
+    });
   });
 
   describe('#getAddressForPeerHost()', function() {

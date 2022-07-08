@@ -1,5 +1,16 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.6.4
+
+2022-07-11
+
+### Bug fixes
+
+- [NODEJS-633] - Mapper error: TypeError: Cannot read property 'executor' of null
+- [NODEJS-645] - Travis builds are failing due to TypeScript errors
+- [NODEJS-646] - Unable to add address for initially unresolved host
+- [NODEJS-647] - Log negotiated SSL/TLS versions when using encrypted connections
+
 ## 4.6.3
 
 2021-05-18

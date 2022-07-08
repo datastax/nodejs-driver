@@ -41,9 +41,11 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
+    "unit": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
+    "integration_short": "./node_modules/.bin/mocha test/integration/short -R spec -t 5000 --recursive",
+    "integration_long": "./node_modules/.bin/mocha test/integration/long -R spec -t 5000 --recursive",
     "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter --exit",
     "ci_appveyor": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
-    "foo": "./node_modules/.bin/mocha test/integration/short --recursive -R spec --exit -g 'should subscribe to TOPOLOGY_CHANGE'",
     "ci_unit_appveyor": "./node_modules/.bin/mocha test/unit --recursive -R mocha-appveyor-reporter --exit",
     "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",
     "eslint": "eslint lib test"

@@ -127,25 +127,6 @@ ${status} after ${currentBuild.durationString - ' and counting'}"""
 //            message: "${message}"
 }
 
-def submitCIMetrics(buildType) {
-  long durationMs = currentBuild.duration
-  long durationSec = durationMs / 1000
-  long nowSec = (currentBuild.startTimeInMillis + durationMs) / 1000
-  def branchNameNoPeriods = env.BRANCH_NAME.replaceAll('\\.', '_')
-  def durationMetric = "okr.ci.nodejs.${env.DRIVER_METRIC_TYPE}.${buildType}.${branchNameNoPeriods} ${durationSec} ${nowSec}"
-
-  timeout(time: 1, unit: 'MINUTES') {
-    withCredentials([string(credentialsId: 'lab-grafana-address', variable: 'LAB_GRAFANA_ADDRESS'),
-                     string(credentialsId: 'lab-grafana-port', variable: 'LAB_GRAFANA_PORT')]) {
-      withEnv(["DURATION_METRIC=${durationMetric}"]) {
-        sh label: 'Send runtime metrics to labgrafana', script: '''#!/bin/bash -lex
-          echo "${DURATION_METRIC}" | nc -q 5 ${LAB_GRAFANA_ADDRESS} ${LAB_GRAFANA_PORT}
-        '''
-      }
-    }
-  }
-}
-
 def describePerCommitStage() {
   script {
     currentBuild.displayName = "Per-Commit"
@@ -199,7 +180,9 @@ def describeAdhocTestingStage() {
 }
 
 // branch pattern for cron
-def branchPatternCron = ~"(master)"
+def branchPatternCron() {
+  ~"(master)"
+}
 
 pipeline {
   agent none
@@ -303,7 +286,7 @@ pipeline {
   }
 
   triggers {
-    parameterizedCron(branchPatternCron.matcher(env.BRANCH_NAME).matches() ? """
+    parameterizedCron(branchPatternCron().matcher(env.BRANCH_NAME).matches() ? """
       # Every weeknight (Monday - Friday) around 7 PM
       H 19 * * 1-5 %CI_SCHEDULE=WEEKNIGHTS
     """ : "")
@@ -434,11 +417,6 @@ pipeline {
         }
       }
       post {
-        always {
-          node('master') {
-            submitCIMetrics('commit')
-          }
-        }
         aborted {
           notifySlack('aborted')
         }

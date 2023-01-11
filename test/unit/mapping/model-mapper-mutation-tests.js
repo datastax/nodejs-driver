@@ -36,7 +36,7 @@ describe('ModelMapper', () => {
         .then(() => {
           assert.strictEqual(clientInfo.executions.length, 1);
           const execution = clientInfo.executions[0];
-          assert.strictEqual(execution.query, 'INSERT INTO ks1.table1 (id2, id1) VALUES (?, ?)');
+          assert.strictEqual(execution.query, 'INSERT INTO ks1.table1 ("id2", "id1") VALUES (?, ?)');
           assert.deepStrictEqual(execution.params, Object.keys(doc).map(key => doc[key]));
           helper.assertProperties(execution.options, { prepare: true, isIdempotent: true });
         });
@@ -46,7 +46,7 @@ describe('ModelMapper', () => {
       {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1' },
         docInfo: { ifNotExists: true },
-        query: 'INSERT INTO ks1.table1 (id2, id1, name) VALUES (?, ?, ?) IF NOT EXISTS',
+        query: 'INSERT INTO ks1.table1 ("id2", "id1", "name") VALUES (?, ?, ?) IF NOT EXISTS',
         params: [ 'value2', 'value1', 'name1' ],
         isIdempotent: false
       }
@@ -56,7 +56,7 @@ describe('ModelMapper', () => {
       {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1' },
         docInfo: { ttl: 1000 },
-        query: 'INSERT INTO ks1.table1 (id2, id1, name) VALUES (?, ?, ?) USING TTL ?',
+        query: 'INSERT INTO ks1.table1 ("id2", "id1", "name") VALUES (?, ?, ?) USING TTL ?',
         params: [ 'value2', 'value1', 'name1', 1000 ]
       }
     ]));
@@ -137,7 +137,7 @@ describe('ModelMapper', () => {
       items: [
         {
           doc: { id1: 'value_id1', id2: 'value_id2', name: { prop1: 1, prop2: 'two' } },
-          query: 'INSERT INTO ks1.table1 (id1, id2, name) VALUES (?, ?, ?)',
+          query: 'INSERT INTO ks1.table1 ("id1", "id2", "name") VALUES (?, ?, ?)',
           params: [ 'value_id1', 'value_id2', '{"prop1":1,"prop2":"two"}']
         }
       ]
@@ -150,7 +150,7 @@ describe('ModelMapper', () => {
     it('should retrieve the table that apply and make a single execution', () => testQueries('update', [
       {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1' },
-        query: 'UPDATE ks1.table1 SET name = ? WHERE id2 = ? AND id1 = ?',
+        query: 'UPDATE ks1.table1 SET "name" = ? WHERE "id2" = ? AND "id1" = ?',
         params: ['name1', 'value2', 'value1'],
         isIdempotent: true
       }]));
@@ -159,7 +159,7 @@ describe('ModelMapper', () => {
       {
         doc: {id2: 'value2', id1: 'value1', name: 'name1'},
         docInfo: {when: {name: 'previous name'}},
-        query: 'UPDATE ks1.table1 SET name = ? WHERE id2 = ? AND id1 = ? IF name = ?',
+        query: 'UPDATE ks1.table1 SET "name" = ? WHERE "id2" = ? AND "id1" = ? IF "name" = ?',
         params: ['name1', 'value2', 'value1', 'previous name'],
         isIdempotent: false
       }]));
@@ -167,12 +167,12 @@ describe('ModelMapper', () => {
     it('should append/prepend to a list', () => testQueries('update', [
       {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1', list1: q.append(['a', 'b']) },
-        query: 'UPDATE ks1.table1 SET name = ?, list1 = list1 + ? WHERE id2 = ? AND id1 = ?',
+        query: 'UPDATE ks1.table1 SET "name" = ?, "list1" = "list1" + ? WHERE "id2" = ? AND "id1" = ?',
         params: ['name1', ['a', 'b'], 'value2', 'value1'],
         isIdempotent: false
       }, {
         doc: { id2: 'value2' , id1: 'value1', name: 'name1', list1: q.prepend(['a', 'b']) },
-        query: 'UPDATE ks1.table1 SET name = ?, list1 = ? + list1 WHERE id2 = ? AND id1 = ?',
+        query: 'UPDATE ks1.table1 SET "name" = ?, "list1" = ? + "list1" WHERE "id2" = ? AND "id1" = ?',
         params: ['name1', ['a', 'b'], 'value2', 'value1'],
         isIdempotent: false
       }]));
@@ -183,10 +183,10 @@ describe('ModelMapper', () => {
       const items = [
         {
           doc: { id2: 'value2' , id1: 'value1', c1: q.incr(10) },
-          query: 'UPDATE ks1.table1 SET c1 = c1 + ? WHERE id2 = ? AND id1 = ?'
+          query: 'UPDATE ks1.table1 SET "c1" = "c1" + ? WHERE "id2" = ? AND "id1" = ?'
         }, {
           doc: { id2: 'another id 2' , id1: 'another id 1', c1: q.decr(10) },
-          query: 'UPDATE ks1.table1 SET c1 = c1 - ? WHERE id2 = ? AND id1 = ?'
+          query: 'UPDATE ks1.table1 SET "c1" = "c1" - ? WHERE "id2" = ? AND "id1" = ?'
         }];
 
       return Promise.all(items.map((item, index) => modelMapper.update(item.doc).then(() => {
@@ -226,7 +226,7 @@ describe('ModelMapper', () => {
       {
         doc: { id2: 'value2', id1: 'value1', name: 'name1', description: 'description1' },
         docInfo: { fields: [ 'id1', 'id2', 'description' ] },
-        query: 'UPDATE ks1.table1 SET description = ? WHERE id1 = ? AND id2 = ?',
+        query: 'UPDATE ks1.table1 SET "description" = ? WHERE "id1" = ? AND "id2" = ?',
         params: ['description1', 'value1', 'value2']
       }]));
 
@@ -234,7 +234,7 @@ describe('ModelMapper', () => {
       {
         doc: { id1: 'value_id1', id2: 'value_id2', name: 'value_name1' },
         docInfo: { ttl: 360 },
-        query: 'UPDATE ks1.table1 USING TTL ? SET name = ? WHERE id1 = ? AND id2 = ?',
+        query: 'UPDATE ks1.table1 USING TTL ? SET "name" = ? WHERE "id1" = ? AND "id2" = ?',
         params: [ 360, 'value_name1', 'value_id1', 'value_id2' ]
       }
     ]));
@@ -253,13 +253,13 @@ describe('ModelMapper', () => {
       items: [
         {
           doc: { id1: 'value_id1', id2: 'value_id2', name: { prop1: 1, prop2: 'two' } },
-          query: 'UPDATE ks1.table1 SET name = ? WHERE id1 = ? AND id2 = ?',
+          query: 'UPDATE ks1.table1 SET "name" = ? WHERE "id1" = ? AND "id2" = ?',
           params: [ '{"prop1":1,"prop2":"two"}', 'value_id1', 'value_id2_suffix' ]
         },
         {
           doc: { id1: 'value_id1', id2: 'value_id2', description: 'my description' },
           docInfo: { when: { name: { a: 'a', b: 2 } } },
-          query: 'UPDATE ks1.table1 SET description = ? WHERE id1 = ? AND id2 = ? IF name = ?',
+          query: 'UPDATE ks1.table1 SET "description" = ? WHERE "id1" = ? AND "id2" = ? IF "name" = ?',
           params: [ 'my description', 'value_id1', 'value_id2_suffix', '{"a":"a","b":2}' ],
           isIdempotent: false
         }
@@ -294,24 +294,24 @@ describe('ModelMapper', () => {
     it('should generate the query, params and set the idempotency', () => testQueries('remove', [
       {
         doc: { id1: 'x', 'id2': 'y' },
-        query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+        query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
         params: [ 'x', 'y' ]
       }, {
         doc: { id1: 'x', 'id2': 'y' },
         docInfo: { when: { name: 'a' }},
-        query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ? IF name = ?',
+        query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ? IF "name" = ?',
         params: [ 'x', 'y', 'a' ],
         isIdempotent: false
       }, {
         doc: { id1: 'x', 'id2': 'y' },
         docInfo: { ifExists: true },
-        query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ? IF EXISTS',
+        query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ? IF EXISTS',
         params: [ 'x', 'y' ],
         isIdempotent: false
       }, {
         doc: { id1: 'x', 'id2': 'y' },
         docInfo: { fields: [ 'id1', 'id2', 'name' ], deleteOnlyColumns: true },
-        query: 'DELETE name FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+        query: 'DELETE "name" FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
         params: [ 'x', 'y' ]
       }
     ]));
@@ -330,13 +330,13 @@ describe('ModelMapper', () => {
       items: [
         {
           doc: { id1: 'value_id1', id2: 'value_id2' },
-          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+          query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
           params: [ 'value_id1', 'value_id2_suffix' ]
         },
         {
           doc: { id1: 'value_id1', id2: 'value_id2' },
           docInfo: { when: { name: { a: 1 } }},
-          query: 'DELETE FROM ks1.table1 WHERE id1 = ? AND id2 = ? IF name = ?',
+          query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ? IF "name" = ?',
           params: [ 'value_id1', 'value_id2_suffix', '{"a":1}' ],
           isIdempotent: false
         },

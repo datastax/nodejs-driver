@@ -43,7 +43,7 @@ CCM_BRANCH=${DSE_FIXED_VERSION}
 DSE_BRANCH=${DSE_FIXED_VERSION}
 ENVIRONMENT_EOF
       '''
-    }
+  }
 
   sh label: 'Display Node.js and environment information', script: '''#!/bin/bash -le
     # Load CCM environment variables

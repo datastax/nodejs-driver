@@ -339,7 +339,7 @@ pipeline {
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.0.18', // Previous DataStax Enterprise
                    'dse-6.7.17', // Current DataStax Enterprise
-                   'dse-6.8.30', // Development DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -468,7 +468,7 @@ pipeline {
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.0.18', // Previous DataStax Enterprise
                    'dse-6.7.17', // Current DataStax Enterprise
-                   'dse-6.8.30', // Development DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -575,7 +575,7 @@ pipeline {
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.0.18', // Previous DataStax Enterprise
                    'dse-6.7.17', // Current DataStax Enterprise
-                   'dse-6.8.30', // Development DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'

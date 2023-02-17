@@ -28,6 +28,22 @@ def initializeEnvironment() {
   sh label: 'Download Apache Cassandra or DataStax Enterprise', script: '''#!/bin/bash -lex
     . ${CCM_ENVIRONMENT_SHELL} ${CASSANDRA_VERSION}
   '''
+  
+  if (env.CASSANDRA_VERSION.split('-')[0] == 'dse') {
+      env.DSE_FIXED_VERSION = env.CASSANDRA_VERSION.split('-')[1]
+      sh label: 'Update environment for DataStax Enterprise', script: '''#!/bin/bash -le
+        cat >> ${HOME}/environment.txt << ENVIRONMENT_EOF
+CCM_PATH=${HOME}/ccm
+CCM_CASSANDRA_VERSION=${DSE_FIXED_VERSION} # maintain for backwards compatibility
+CCM_VERSION=${DSE_FIXED_VERSION}
+CCM_SERVER_TYPE=dse
+DSE_VERSION=${DSE_FIXED_VERSION}
+CCM_IS_DSE=true
+CCM_BRANCH=${DSE_FIXED_VERSION}
+DSE_BRANCH=${DSE_FIXED_VERSION}
+ENVIRONMENT_EOF
+      '''
+  }
 
   sh label: 'Display Node.js and environment information', script: '''#!/bin/bash -le
     # Load CCM environment variables
@@ -225,10 +241,10 @@ pipeline {
       choices: ['2.1',     // Legacy Apache Cassandra
                 '3.11',    // Current Apache Cassandra
                 '4.0',     // Development Apache Cassandra
-                'dse-5.1', // Legacy DataStax Enterprise
-                'dse-6.0', // Previous DataStax Enterprise
-                'dse-6.7', // Current DataStax Enterprise
-                'dse-6.8', // Development DataStax Enterprise
+                'dse-5.1.35', // Legacy DataStax Enterprise
+                'dse-6.0.18', // Previous DataStax Enterprise
+                'dse-6.7.17', // Current DataStax Enterprise
+                'dse-6.8.30', // Development DataStax Enterprise
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
@@ -320,10 +336,10 @@ pipeline {
             values '2.1',     // Legacy Apache Cassandra
                    '3.11',    // Current Apache Cassandra
                    '4.0',     // Development Apache Cassandra
-                   'dse-5.1', // Legacy DataStax Enterprise
-                   'dse-6.0', // Previous DataStax Enterprise
-                   'dse-6.7', // Current DataStax Enterprise
-                   'dse-6.8'  // Development DataStax Enterprise
+                   'dse-5.1.35', // Legacy DataStax Enterprise
+                   'dse-6.0.18', // Previous DataStax Enterprise
+                   'dse-6.7.17', // Current DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -339,7 +355,7 @@ pipeline {
             }
             axis {
               name 'CASSANDRA_VERSION'
-              values '3.11', '4.0', 'dse-5.1', 'dse-6.8'
+              values '3.11', '4.0', 'dse-5.1.35', 'dse-6.8.30'
             }
           }
           exclude {
@@ -349,7 +365,7 @@ pipeline {
             }
             axis {
               name 'CASSANDRA_VERSION'
-              values '2.1', '4.0', 'dse-5.1', 'dse-6.0', 'dse-6.7'
+              values '2.1', '4.0', 'dse-5.1.35', 'dse-6.0.18', 'dse-6.7.17'
             }
           }
           exclude {
@@ -359,7 +375,7 @@ pipeline {
             }
             axis {
               name 'CASSANDRA_VERSION'
-              values '2.1', '3.11', 'dse-6.0', 'dse-6.8'
+              values '2.1', '3.11', 'dse-6.0.18', 'dse-6.8.30'
             }
           }
         }
@@ -408,7 +424,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.7' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.7.17' }
             }
             steps {
               executeExamples()
@@ -449,10 +465,10 @@ pipeline {
             values '2.1',     // Legacy Apache Cassandra
                    '3.11',    // Current Apache Cassandra
                    '4.0',     // Development Apache Cassandra
-                   'dse-5.1', // Legacy DataStax Enterprise
-                   'dse-6.0', // Previous DataStax Enterprise
-                   'dse-6.7', // Current DataStax Enterprise
-                   'dse-6.8'  // Development DataStax Enterprise
+                   'dse-5.1.35', // Legacy DataStax Enterprise
+                   'dse-6.0.18', // Previous DataStax Enterprise
+                   'dse-6.7.17', // Current DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -468,7 +484,7 @@ pipeline {
             }
             axis {
               name 'CASSANDRA_VERSION'
-              values '2.1', '3.11', '4.0', 'dse-5.1', 'dse-6.0', 'dse-6.7'
+              values '2.1', '3.11', '4.0', 'dse-5.1.35', 'dse-6.0.18', 'dse-6.7.17'
             }
           }
         }
@@ -517,7 +533,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.7' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.7.17' }
             }
             steps {
               executeExamples()
@@ -556,10 +572,10 @@ pipeline {
             values '2.1',      // Legacy Apache Cassandra
                    '3.11',     // Current Apache Cassandra
                    '4.0',      // Development Apache Cassandra
-                   'dse-5.1',  // Legacy DataStax Enterprise
-                   'dse-6.0',  // Previous DataStax Enterprise
-                   'dse-6.7',  // Current DataStax Enterprise
-                   'dse-6.8' // Development DataStax Enterprise
+                   'dse-5.1.35', // Legacy DataStax Enterprise
+                   'dse-6.0.18', // Previous DataStax Enterprise
+                   'dse-6.7.17', // Current DataStax Enterprise
+                   'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'

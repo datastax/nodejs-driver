@@ -138,9 +138,9 @@ def notifySlack(status = 'started') {
 ${status} after ${currentBuild.durationString - ' and counting'}"""
   }
 
-//  slackSend color: "${color}",
-//            channel: "#nodejs-driver-dev-bots",
-//            message: "${message}"
+  slackSend color: "${color}",
+            channel: "#nodejs-driver-dev-bots",
+            message: "${message}"
 }
 
 def describePerCommitStage() {

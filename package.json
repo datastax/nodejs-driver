@@ -23,7 +23,8 @@
     "@types/long": "^4.0.0",
     "@types/node": ">=8",
     "adm-zip": "^0.5.3",
-    "long": "^2.2.0"
+    "long": "^2.2.0",
+    "typescript": "2.9"
   },
   "devDependencies": {
     "chai": "4.2.0",

@@ -31,7 +31,7 @@ export namespace graph {
   }
 
   class GraphResultSet implements Iterator<any> {
-    constructor(rs: types.ResultSet<T>);
+    constructor(rs: types.ResultSet<any>);
 
     first(): any;
 

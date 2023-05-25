@@ -54,13 +54,13 @@ export class Client extends events.EventEmitter {
 
   connect(callback: EmptyCallback): void;
 
-  execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<types.ResultSet>;
+  execute<T = any>(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<types.ResultSet<T>>;
 
-  execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<types.ResultSet>): void;
+  execute<T = any>(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<types.ResultSet<T>>): void;
 
-  execute(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet>): void;
+  execute<T = any>(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet<T>>): void;
 
-  execute(query: string, callback: ValueCallback<types.ResultSet>): void;
+  execute<T = any>(query: string, callback: ValueCallback<types.ResultSet<T>>): void;
 
   executeGraph(
     traversal: string,
@@ -80,34 +80,34 @@ export class Client extends events.EventEmitter {
     parameters?: { [name: string]: any },
     options?: GraphQueryOptions): Promise<graph.GraphResultSet>;
 
-  eachRow(query: string,
+  eachRow<T = any>(query: string,
           params: ArrayOrObject,
           options: QueryOptions,
-          rowCallback: (n: number, row: types.Row) => void,
-          callback?: ValueCallback<types.ResultSet>): void;
+          rowCallback: (n: number, row: types.Row<T>) => void,
+          callback?: ValueCallback<types.ResultSet<T>>): void;
 
-  eachRow(query: string,
+  eachRow<T = any>(query: string,
           params: ArrayOrObject,
-          rowCallback: (n: number, row: types.Row) => void,
-          callback?: ValueCallback<types.ResultSet>): void;
+          rowCallback: (n: number, row: types.Row<T>) => void,
+          callback?: ValueCallback<types.ResultSet<T>>): void;
 
-  eachRow(query: string,
-          rowCallback: (n: number, row: types.Row) => void): void;
+  eachRow<T = any>(query: string,
+          rowCallback: (n: number, row: types.Row<T>) => void): void;
 
   stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): events.EventEmitter;
 
-  batch(
+  batch<T = any>(
     queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    options?: QueryOptions): Promise<types.ResultSet>;
+    options?: QueryOptions): Promise<types.ResultSet<T>>;
 
-  batch(
+  batch<T = any>(
     queries: Array<string|{query: string, params?: ArrayOrObject}>,
     options: QueryOptions,
-    callback: ValueCallback<types.ResultSet>): void;
+    callback: ValueCallback<types.ResultSet<T>>): void;
 
-  batch(
+  batch<T = any>(
     queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    callback: ValueCallback<types.ResultSet>): void;
+    callback: ValueCallback<types.ResultSet<T>>): void;
 
   shutdown(): Promise<void>;
 

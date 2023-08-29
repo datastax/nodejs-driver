@@ -309,7 +309,7 @@ pipeline {
   }
 
   environment {
-    OS_VERSION = 'ubuntu/bionic64/nodejs-driver'
+    OS_VERSION = 'ubuntu/jammy64/nodejs-driver'
     JUNIT_REPORT_STACK = "${params.JUNIT_REPORT_STACK ? '1' : '0'}"
     JUNIT_REPORT_PATH = '.'
     TEST_TRACE = "${params.TEST_TRACE ? 'on' : 'off'}"

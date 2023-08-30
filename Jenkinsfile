@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['8': '8.16.2', '10': '10.17.0', '12': '12.13.0']
+  def nodeVersions = ['16': '16.20.2', '18': '18.17.1', '20': '20.5.1']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -234,16 +234,14 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['8', '10', '12.13.0', 'ALL'],
+      choices: ['16', '18', '20', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
-      choices: ['2.1',     // Legacy Apache Cassandra
+      choices: [
                 '3.11',    // Current Apache Cassandra
                 '4.0',     // Development Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
-                'dse-6.0.18', // Previous DataStax Enterprise
-                'dse-6.7.17', // Current DataStax Enterprise
                 'dse-6.8.30', // Development DataStax Enterprise
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
@@ -253,10 +251,6 @@ pipeline {
                         <tr>
                           <th align="left">Choice</th>
                           <th align="left">Description</th>
-                        </tr>
-                        <tr>
-                          <td><strong>2.1</strong></td>
-                          <td>Apache Cassandra v2.1.x</td>
                         </tr>
                         <tr>
                           <td><strong>3.11</strong></td>
@@ -269,14 +263,6 @@ pipeline {
                         <tr>
                           <td><strong>dse-5.1</strong></td>
                           <td>DataStax Enterprise v5.1.x</td>
-                        </tr>
-                        <tr>
-                          <td><strong>dse-6.0</strong></td>
-                          <td>DataStax Enterprise v6.0.x</td>
-                        </tr>
-                        <tr>
-                          <td><strong>dse-6.7</strong></td>
-                          <td>DataStax Enterprise v6.7.x</td>
                         </tr>
                         <tr>
                           <td><strong>dse-6.8</strong></td>
@@ -309,7 +295,7 @@ pipeline {
   }
 
   environment {
-    OS_VERSION = 'ubuntu/bionic64/nodejs-driver'
+    OS_VERSION = 'ubuntu/jammy64/nodejs-driver'
     JUNIT_REPORT_STACK = "${params.JUNIT_REPORT_STACK ? '1' : '0'}"
     JUNIT_REPORT_PATH = '.'
     TEST_TRACE = "${params.TEST_TRACE ? 'on' : 'off'}"
@@ -333,50 +319,14 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',     // Legacy Apache Cassandra
-                   '3.11',    // Current Apache Cassandra
+            values '3.11',    // Current Apache Cassandra
                    '4.0',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.0.18', // Previous DataStax Enterprise
-                   'dse-6.7.17', // Current DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12'
-          }
-        }
-
-        excludes {
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '8'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '3.11', '4.0', 'dse-5.1.35', 'dse-6.8.30'
-            }
-          }
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '10'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '2.1', '4.0', 'dse-5.1.35', 'dse-6.0.18', 'dse-6.7.17'
-            }
-          }
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '12'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '2.1', '3.11', 'dse-6.0.18', 'dse-6.8.30'
-            }
+            values '16', '18', '20'
           }
         }
 
@@ -424,7 +374,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.7.17' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' }
             }
             steps {
               executeExamples()
@@ -462,30 +412,14 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',     // Legacy Apache Cassandra
-                   '3.11',    // Current Apache Cassandra
+            values '3.11',    // Current Apache Cassandra
                    '4.0',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.0.18', // Previous DataStax Enterprise
-                   'dse-6.7.17', // Current DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12'
-          }
-        }
-
-        excludes {
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '10'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '2.1', '3.11', '4.0', 'dse-5.1.35', 'dse-6.0.18', 'dse-6.7.17'
-            }
+            values '16', '18', '20'
           }
         }
 
@@ -533,7 +467,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.7.17' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' }
             }
             steps {
               executeExamples()
@@ -569,17 +503,14 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '2.1',      // Legacy Apache Cassandra
-                   '3.11',     // Current Apache Cassandra
+            values '3.11',     // Current Apache Cassandra
                    '4.0',      // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.0.18', // Previous DataStax Enterprise
-                   'dse-6.7.17', // Current DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12'
+            values '16', '18', '20'
           }
         }
         when {

@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['8': '8.16.2', '10': '10.17.0', '12': '12.13.0', '16': '16.20.2', '18': '18.17.1', '20': '20.5.1']
+  def nodeVersions = ['16': '16.20.2', '18': '18.17.1', '20': '20.5.1']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -234,7 +234,7 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['8', '10', '12.13.0', '16', '18', '20', 'ALL'],
+      choices: ['16', '18', '20', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
@@ -326,40 +326,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12', '16', '18', '20'
-          }
-        }
-
-        excludes {
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '8'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '3.11', '4.0', 'dse-5.1.35', 'dse-6.8.30'
-            }
-          }
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '16'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '2.1', '4.0', 'dse-5.1.35'
-            }
-          }
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '20'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '2.1', '3.11', 'dse-6.8.30'
-            }
+            values '16', '18', '20'
           }
         }
 
@@ -452,20 +419,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12', '16', '18', '20'
-          }
-        }
-
-        excludes {
-          exclude {
-            axis {
-              name 'NODEJS_VERSION'
-              values '10'
-            }
-            axis {
-              name 'CASSANDRA_VERSION'
-              values '3.11', '4.0', 'dse-5.1.35', 'dse-6.8.30'
-            }
+            values '16', '18', '20'
           }
         }
 
@@ -556,7 +510,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '8', '10', '12', '16', '18', '20'
+            values '16', '18', '20'
           }
         }
         when {

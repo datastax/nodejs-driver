@@ -1130,7 +1130,6 @@ describe('encoder', function () {
 
       for (const item of items) {
         const dataType = await encoder.parseTypeName('ks1', item[0], 0, null, helper.failop);
-        console.log(dataType)
         assert.ok(dataType, `Type not parsed for ${item[0]}`);
         assert.strictEqual(dataType.code, item[1]);
         assert.notEqual(dataType.info, null);

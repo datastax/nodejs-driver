@@ -57,6 +57,7 @@ describe('encoder', function () {
       assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
       assertGuessed(new types.LocalDate(2010, 4, 29), dataTypes.date, 'Guess type for a date value failed');
       assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
+      assertGuessed(new Float32Array([1.2, 3.4, 5.6]), dataTypes.custom, 'Guess type for a Float32 TypedArray value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
 
@@ -1002,6 +1003,13 @@ describe('encoder', function () {
       assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.int, type.info[1].code);
+
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
+      assert.strictEqual(dataTypes.custom, type.code);
+      assert.ok(Array.isArray(type.info));
+      assert.strictEqual(type.info.length, 2)
+      assert.strictEqual(dataTypes.float, type.info[0].code);
+      assert.strictEqual(10, type.info[1]);
     });
 
     it('should parse frozen types', function () {
@@ -1116,18 +1124,21 @@ describe('encoder', function () {
         ['map<varchar,bigint>', dataTypes.map, [dataTypes.varchar, dataTypes.bigint]],
         ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
-        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
+        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]],
+        ['vector<float,20>', dataTypes.custom, [dataTypes.float, 20]]
       ];
 
       for (const item of items) {
         const dataType = await encoder.parseTypeName('ks1', item[0], 0, null, helper.failop);
+        console.log(dataType)
         assert.ok(dataType, `Type not parsed for ${item[0]}`);
         assert.strictEqual(dataType.code, item[1]);
         assert.notEqual(dataType.info, null);
         if (Array.isArray(item[2])) {
           assert.strictEqual(dataType.info.length, item[2].length);
           dataType.info.forEach(function (childType, i) {
-            assert.strictEqual(childType.code, item[2][i]);
+            // If it's an object use the code property, otherwise just use the value itself
+            assert.strictEqual((childType.code || childType), item[2][i]);
           });
         }
         else {

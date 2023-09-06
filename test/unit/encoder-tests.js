@@ -1076,10 +1076,10 @@ describe('encoder', function () {
 
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
       assert.strictEqual(dataTypes.custom, type.code);
-      assert.ok(Array.isArray(type.info));
-      assert.strictEqual(type.info.length, 2);
-      assert.strictEqual(dataTypes.float, type.info[0].code);
-      assert.strictEqual(10, type.info[1]);
+      assert.ok(typeof type.info === 'object');
+      assert.strictEqual(Object.keys(type.info).length, 2);
+      assert.strictEqual(dataTypes.float, type.info["subtype"].code);
+      assert.strictEqual(10, type.info["dimensions"]);
     });
 
     it('should parse frozen types', function () {
@@ -1195,7 +1195,7 @@ describe('encoder', function () {
         ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
         ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]],
-        ['vector<float,20>', dataTypes.custom, [dataTypes.float, 20]]
+        ['vector<float,20>', dataTypes.custom, {subtype: {code: dataTypes.float}, dimensions: 20}]
       ];
 
       for (const item of items) {
@@ -1209,6 +1209,10 @@ describe('encoder', function () {
             // If it's an object use the code property, otherwise just use the value itself
             assert.strictEqual((childType.code || childType), item[2][i]);
           });
+        }
+        else if (typeof item[2] === 'object') {
+          assert.strictEqual(dataType.info.subtype.code, item[2].subtype.code);
+          assert.strictEqual(dataType.info.dimensions, item[2].dimensions);
         }
         else {
           assert.strictEqual(dataType.info.code, item[2]);

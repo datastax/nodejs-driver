@@ -669,7 +669,6 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, {code: dataTypes.custom, info: encodeType});
       const decoded = encoder.decode(encoded, {code: dataTypes.custom, info: decodeType});
       helper.assertInstanceOf(decoded, Float32Array);
-      var expect = assert.expect;
       for (const k in decoded) {
         assert.equal(decoded[k],refVal[k]);
       }
@@ -683,7 +682,6 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, type);
       const decoded = encoder.decode(encoded, type);
       helper.assertInstanceOf(decoded, Float32Array);
-      var expect = assert.expect;
       for (const k in decoded) {
         assert.equal(decoded[k],refVal[k]);
       }
@@ -1069,7 +1067,7 @@ describe('encoder', function () {
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
       assert.strictEqual(dataTypes.custom, type.code);
       assert.ok(Array.isArray(type.info));
-      assert.strictEqual(type.info.length, 2)
+      assert.strictEqual(type.info.length, 2);
       assert.strictEqual(dataTypes.float, type.info[0].code);
       assert.strictEqual(10, type.info[1]);
     });

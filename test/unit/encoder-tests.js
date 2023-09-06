@@ -670,7 +670,12 @@ describe('encoder', function () {
       const decoded = encoder.decode(encoded, {code: dataTypes.custom, info: decodeType});
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
-        assert.equal(decoded[k],refVal[k]);
+        if (Object.hasOwn(decoded,k)) {
+          assert.equal(decoded[k],refVal[k]);
+        }
+        else {
+          assert.fail();
+        }
       }
     });
 
@@ -683,7 +688,12 @@ describe('encoder', function () {
       const decoded = encoder.decode(encoded, type);
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
-        assert.equal(decoded[k],refVal[k]);
+        if (Object.hasOwn(decoded,k)) {
+          assert.equal(decoded[k],refVal[k]);
+        }
+        else {
+          assert.fail();
+        }
       }
     });
 

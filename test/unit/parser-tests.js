@@ -962,11 +962,10 @@ describe('Parser', function () {
       const emitter = new TestEmitter();
       const doneParsing = new Promise((resolve,reject) => {
 
-        var cnt = 0;
+        let cnt = 0;
         emitter.on('parseDone', () => {
           cnt += 1;
           if (cnt === expected.length) {
-            console.log(`Observed ${expected.length} events, all done`);
             resolve();
           }
         });
@@ -975,8 +974,8 @@ describe('Parser', function () {
       const protocol = new streams.Protocol({ objectMode: true });
       const parser = newInstance();
       protocol.pipe(parser);
-      var result;
-      var byRowCompleted;
+      let result;
+      let byRowCompleted;
       parser.on('readable', function () {
         let item;
         while ((item = parser.read())) {

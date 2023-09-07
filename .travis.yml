@@ -9,33 +9,33 @@ jobs:
     - stage: "tests"
       name: "Run eslint"
       script: "npm install -g eslint@4; npm run eslint;"
-      node_js: "10"
-    - name: "TypeScript 2.9 generation and compilation tests"
-      node_js: "10"
+      node_js: "18"
+    - name: "TypeScript 4.9 generation and compilation tests"
+      node_js: "18"
       script:
-        - npm install -g typescript@2.9;
+        - npm install -g typescript@4.9;
         - pushd test/unit/typescript/
         - tsc -p .
         - node -e "require('./api-generation-test').generate()" > generated.ts
         - tsc generated.ts
-    - name: "Unit tests - Node.js 12"
-      node_js: "12"
+    - name: "Unit tests - Node.js 20"
+      node_js: "20"
       script: "npm test"
-    - name: "Unit tests w/ latest dependencies - Node.js 12"
-      node_js: "12"
+    - name: "Unit tests w/ latest dependencies - Node.js 20"
+      node_js: "20"
       script:
         - rm package-lock.json
         - rm -rf node_modules
         - npm install
         - npm test
-    - name: "Unit tests - Node.js 10"
-      node_js: "10"
+    - name: "Unit tests - Node.js 18"
+      node_js: "18"
       script: "npm test"
-    - name: "Unit tests - Node.js 8"
-      node_js: "8"
+    - name: "Unit tests - Node.js 16"
+      node_js: "16"
       script: "npm test"
     - name: "TypeScript (latest) generation and compilation tests"
-      node_js: "10"
+      node_js: "18"
       script:
         - npm install -g typescript;
         - pushd test/unit/typescript/

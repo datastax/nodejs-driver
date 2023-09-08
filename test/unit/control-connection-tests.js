@@ -17,7 +17,6 @@
 const { assert } = require('chai');
 const events = require('events');
 const proxyquire = require('proxyquire');
-const dns = require('dns');
 const util = require('util');
 
 const helper = require('../test-helper.js');
@@ -40,32 +39,15 @@ describe('ControlConnection', function () {
   });
   describe('#init()', function () {
     this.timeout(20000);
-    let useLocalhost;
-    let useIp6;
 
-    before(function (done) {
-      dns.resolve('localhost', function (err) {
-        if (err) {
-          helper.trace('localhost can not be resolved');
-        }
-        useLocalhost = !err;
-
-        done();
-      });
-    });
-
-    before(done => dns.resolve6('localhost', (err, addresses) => {
-      useIp6 = !err && addresses.length > 0;
-      done();
-    }));
-
-    async function testResolution(CcMock, expectedHosts, expectedResolved) {
+    async function testResolution(CcMock, expectedHosts, expectedResolved, hostName) {
       if (!expectedResolved) {
         expectedResolved = expectedHosts;
       }
 
+      const contactPointHostName = (hostName || 'my-host-name');
       const state = {};
-      const cc = new CcMock(clientOptions.extend({ contactPoints: ['my-host-name'] }), null, getContext({
+      const cc = new CcMock(clientOptions.extend({ contactPoints: [contactPointHostName] }), null, getContext({
         failBorrow: 10, state
       }));
 
@@ -81,44 +63,44 @@ describe('ControlConnection', function () {
       assert.instanceOf(err, errors.NoHostAvailableError);
       assert.deepStrictEqual(state.connectionAttempts.sort(), expectedHosts.sort());
       const resolvedContactPoints = cc.getResolvedContactPoints();
-      assert.deepStrictEqual(resolvedContactPoints.get('my-host-name'), expectedResolved);
+      assert.deepStrictEqual(resolvedContactPoints.get(contactPointHostName), expectedResolved);
     }
 
-    it('should resolve IPv4 and IPv6 addresses', async () => {
-      if (!useLocalhost || !useIp6 ) {
-        return;
-      }
+    it('should resolve IPv4 and IPv6 addresses', () => {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
+        resolve4: function (name, cb) {
+          cb(null, ['127.0.0.1']);
+        },
+        resolve6: function (name, cb) {
+          cb(null, ['::1']);
+        },
+        lookup: function () {
+          throw new Error('dns.lookup() should not be used');
+        }
+      }});
 
-      const state = {};
-      const cc = newInstance({ contactPoints: [ 'localhost' ] }, getContext({ state, failBorrow: [ 0, 1 ]}));
-
-      let err;
-      try {
-        await cc.init();
-      } catch (e) {
-        err = e;
-      }
-
-      cc.shutdown();
-      helper.assertInstanceOf(err, errors.NoHostAvailableError);
-      assert.deepEqual(state.connectionAttempts.sort(), [ '127.0.0.1:9042', '::1:9042' ]);
+      return testResolution(ControlConnectionMock,
+        [ '127.0.0.1:9042', '::1:9042' ],
+        [ '127.0.0.1:9042', '[::1]:9042' ]);
     });
 
-    it('should resolve IPv4 and IPv6 addresses with non default port', async () => {
-      if (!useLocalhost) {
-        return;
-      }
+    it('should resolve IPv4 and IPv6 addresses with non default port', () => {
+      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
+        resolve4: function (name, cb) {
+          cb(null, ['127.0.0.1']);
+        },
+        resolve6: function (name, cb) {
+          cb(null, ['::1']);
+        },
+        lookup: function () {
+          throw new Error('dns.lookup() should not be used');
+        }
+      }});
 
-      const cc = newInstance({ contactPoints: [ 'localhost:9999' ] }, getContext());
-
-      await cc.init();
-
-      cc.shutdown();
-      cc.hosts.values().forEach(h => h.shutdown());
-      const hosts = cc.hosts.values();
-      assert.strictEqual(hosts.length, 1);
-      // Resolved to ::1 or 127.0.0.
-      helper.assertContains(hosts[0].address, '1:9999');
+      return testResolution(ControlConnectionMock,
+        [ '127.0.0.1:9999', '::1:9999' ],
+        [ '127.0.0.1:9999', '[::1]:9999' ],
+        'localhost:9999');
     });
 
     it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', () => {

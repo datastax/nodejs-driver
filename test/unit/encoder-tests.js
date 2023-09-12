@@ -86,6 +86,10 @@ describe('encoder', function () {
     });
 
     it('should return false for other types', function () {
+      assert.notOk(Encoder.isTypedArray(100));
+      assert.notOk(Encoder.isTypedArray([]));
+      assert.notOk(Encoder.isTypedArray([1,2,3]));
+      assert.notOk(Encoder.isTypedArray([1.2, 3.4, 5.6]));
     });
   });
 

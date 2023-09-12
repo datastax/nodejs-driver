@@ -73,6 +73,22 @@ describe('encoder', function () {
     }
   });
 
+  describe('Encoder.isTypedArray()', function () {
+    it('should return true for TypedArray subclasses', function () {
+      assert.ok(Encoder.isTypedArray(new Float32Array([])));
+      assert.ok(Encoder.isTypedArray(new Float32Array([1.2, 3.4, 5.6])));
+      assert.ok(Encoder.isTypedArray(new Float64Array([])));
+      assert.ok(Encoder.isTypedArray(new Float64Array([1.2, 3.4, 5.6])));
+      assert.ok(Encoder.isTypedArray(new Int8Array([])));
+      assert.ok(Encoder.isTypedArray(new Int8Array([1, 2, 3])));
+      assert.ok(Encoder.isTypedArray(new Uint8Array([])));
+      assert.ok(Encoder.isTypedArray(new Uint8Array([1, 2, 3])));
+    });
+
+    it('should return false for other types', function () {
+    });
+  });
+
   describe('#encode() and #decode()', function () {
     const typeEncoder = new Encoder(2, {});
     it('should encode and decode a guessed double', function () {

@@ -960,7 +960,7 @@ describe('Parser', function () {
 
       class TestEmitter extends events.EventEmitter {}
       const emitter = new TestEmitter();
-      const doneParsing = new Promise((resolve,reject) => {
+      const doneParsing = new Promise((resolve) => {
 
         let cnt = 0;
         emitter.on('parseDone', () => {

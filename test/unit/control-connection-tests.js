@@ -40,12 +40,14 @@ describe('ControlConnection', function () {
   describe('#init()', function () {
     this.timeout(20000);
 
+    const localhost = 'localhost';
+
     async function testResolution(CcMock, expectedHosts, expectedResolved, hostName) {
       if (!expectedResolved) {
         expectedResolved = expectedHosts;
       }
 
-      const contactPointHostName = (hostName || 'my-host-name');
+      const contactPointHostName = (hostName || localhost);
       const state = {};
       const cc = new CcMock(clientOptions.extend({ contactPoints: [contactPointHostName] }), null, getContext({
         failBorrow: 10, state
@@ -66,13 +68,22 @@ describe('ControlConnection', function () {
       assert.deepStrictEqual(resolvedContactPoints.get(contactPointHostName), expectedResolved);
     }
 
-    it('should resolve IPv4 and IPv6 addresses', () => {
+    // Simple utility function to return a value only if we actually get a request for the name
+    // "localhost".  Allows us to make our mocks a bit more stringent.
+    function ifLocalhost(name, localhostVal) {
+      if (name === localhost) {
+        return localhostVal;
+      }
+      return [];
+    }
+
+    it('should resolve IPv4 and IPv6 addresses, default host (localhost) and port', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
-          cb(null, ['127.0.0.1']);
+          cb(null, ifLocalhost(name, ['127.0.0.1']));
         },
         resolve6: function (name, cb) {
-          cb(null, ['::1']);
+          cb(null, ifLocalhost(name, ['::1']));
         },
         lookup: function () {
           throw new Error('dns.lookup() should not be used');
@@ -87,10 +98,10 @@ describe('ControlConnection', function () {
     it('should resolve IPv4 and IPv6 addresses with non default port', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
         resolve4: function (name, cb) {
-          cb(null, ['127.0.0.1']);
+          cb(null, ifLocalhost(name, ['127.0.0.1']));
         },
         resolve6: function (name, cb) {
-          cb(null, ['::1']);
+          cb(null, ifLocalhost(name, ['::1']));
         },
         lookup: function () {
           throw new Error('dns.lookup() should not be used');

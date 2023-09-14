@@ -15,8 +15,7 @@ install:
   - ps: .\ci\appveyor.ps1
   - npm install
   - npm install mocha mocha-appveyor-reporter
-  - echo "list dir"
-  - dir /b /s ./node_modules/
+  - dir /b /s
 build: off
 test_script:
   - "npm run %ci_type%"

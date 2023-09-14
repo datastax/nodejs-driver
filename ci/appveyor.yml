@@ -16,7 +16,8 @@ install:
   - npm install
   - npm install mocha mocha-appveyor-reporter
   - npm audit fix --force
-  - ls -l ./node_modules/.bin/
+  - echo "list dir"
+  - ls ./node_modules/
 build: off
 test_script:
   - "npm run %ci_type%"

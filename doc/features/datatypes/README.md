@@ -29,6 +29,7 @@ tuple|[Tuple](tuples)
 uuid|[Uuid](uuids)
 varchar|String
 varint|[Integer](numerical)
+vector|[Float32Array](collections)
 
 ## Encoding data 
 

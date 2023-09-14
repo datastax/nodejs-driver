@@ -1,4 +1,4 @@
-$env:JAVA_HOME="C:\Program Files\Java\jdk1.8.0"
+$env:JAVA_HOME="C:\Program Files\Java\jdk1.11.0"
 $env:PYTHON="C:\Python27-x64"
 $env:PATH="$($env:PYTHON);$($env:PYTHON)\Scripts;$($env:JAVA_HOME)\bin;$($env:PATH)"
 $env:CCM_PATH="C:\Users\appveyor\ccm"

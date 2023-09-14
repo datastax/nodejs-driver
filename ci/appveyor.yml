@@ -14,7 +14,7 @@ install:
   - ps: .\ci\hardwareinfo.ps1
   - ps: .\ci\appveyor.ps1
   - npm install
-  - npm install mocha-appveyor-reporter
+  - npm install mocha mocha-appveyor-reporter -g
 build: off
 test_script:
   - "npm run %ci_type%"

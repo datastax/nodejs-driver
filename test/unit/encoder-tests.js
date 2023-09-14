@@ -680,14 +680,11 @@ describe('encoder', function () {
     });
 
     it('should encode/decode FloatArray as vector, encoder guesses type', function () {
-      // When decoding a vector we'll always have access to full type information (since metadata will always be provided
-      // in row data).
       const encoder = new Encoder(4, {});
-      const encodeType = 'org.apache.cassandra.db.marshal.VectorType';
-      const decodeType = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
       const refVal = new Float32Array([1.2, 3.4, 5.6]);
-      const encoded = encoder.encode(refVal, {code: dataTypes.custom, info: encodeType});
-      const decoded = encoder.decode(encoded, {code: dataTypes.custom, info: decodeType});
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      const encoded = encoder.encode(refVal, guessedTypeObj);
+      const decoded = encoder.decode(encoded, guessedTypeObj);
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
         if (Object.hasOwn(decoded,k)) {
@@ -701,11 +698,11 @@ describe('encoder', function () {
 
     it('should encode/decode FloatArray as vector, encoder provided with full type', function () {
       const encoder = new Encoder(4, {});
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
-      const type = {code: dataTypes.custom, info: typeName};
       const refVal = new Float32Array([1.2, 3.4, 5.6]);
-      const encoded = encoder.encode(refVal, type);
-      const decoded = encoder.decode(encoded, type);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      const typeObj = {code: dataTypes.custom, info: typeName};
+      const encoded = encoder.encode(refVal, typeObj);
+      const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
         if (Object.hasOwn(decoded,k)) {
@@ -719,34 +716,30 @@ describe('encoder', function () {
 
     it('should fail to encode if full type provided and input vector fails to match dimensions of type', function () {
       const encoder = new Encoder(4, {});
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
-      const type = {code: dataTypes.custom, info: typeName};
       const refVal = new Float32Array([1.2, 3.4, 5.6, 7.8]);
-      assert.throws(function() { encoder.encode(refVal, type); }, TypeError);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
 
     it('should fail to encode if input vector is not Float32Array, encoder guesses type', function () {
       const encoder = new Encoder(4, {});
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType';
-      const type = {code: dataTypes.custom, info: typeName};
       const refVal = new Int32Array([1, 2, 3]);
-      assert.throws(function() { encoder.encode(refVal, type); }, TypeError);
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: guessedTypeObj}); }, TypeError);
     });
 
     it('should fail to encode if input vector is not Float32Array, encoder provided with full type', function () {
       const encoder = new Encoder(4, {});
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
-      const type = {code: dataTypes.custom, info: typeName};
       const refVal = new Int32Array([1, 2, 3]);
-      assert.throws(function() { encoder.encode(refVal, type); }, TypeError);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
 
     it('should fail to encode if full type provided and subtype is not FloatType', function () {
       const encoder = new Encoder(4, {});
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type,3)';
-      const type = {code: dataTypes.custom, info: typeName};
       const refVal = new Float32Array([1, 2, 3]);
-      assert.throws(function() { encoder.encode(refVal, type); }, TypeError);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
   });
 

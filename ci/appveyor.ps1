@@ -84,7 +84,7 @@ $env:multi="spec=- mocha-appveyor-reporter=-"
 $simulacron_path = "$($dep_dir)\simulacron.jar"
 If (!(Test-Path $simulacron_path)) {
     Write-Host "Downloading simulacron jar"
-    $url = "https://github.com/datastax/simulacron/releases/download/0.9.0/simulacron-standalone-0.9.0.jar"
+    $url = "https://github.com/datastax/simulacron/releases/download/0.12.0/simulacron-standalone-0.12.0.jar"
     (new-object System.Net.WebClient).DownloadFile($url, $simulacron_path)
 }
 

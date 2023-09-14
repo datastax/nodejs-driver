@@ -15,6 +15,7 @@
  */
 'use strict';
 const assert = require('assert');
+const events = require('events');
 
 const Encoder = require('../../lib/encoder');
 const streams = require('../../lib/streams');
@@ -948,6 +949,28 @@ describe('Parser', function () {
       });
     });
     describe('with multiple chunk lengths piped', function () {
+
+      const expected = [
+        { columnLength: 3, rowLength: 10 },
+        { columnLength: 5, rowLength: 5 },
+        { columnLength: 6, rowLength: 15 },
+        { columnLength: 6, rowLength: 15 },
+        { columnLength: 1, rowLength: 20 }
+      ];
+
+      class TestEmitter extends events.EventEmitter {}
+      const emitter = new TestEmitter();
+      const doneParsing = new Promise((resolve) => {
+
+        let cnt = 0;
+        emitter.on('parseDone', () => {
+          cnt += 1;
+          if (cnt === expected.length) {
+            resolve();
+          }
+        });
+      });
+
       const protocol = new streams.Protocol({ objectMode: true });
       const parser = newInstance();
       protocol.pipe(parser);
@@ -961,6 +984,7 @@ describe('Parser', function () {
           }
           byRowCompleted = item.byRowCompleted;
           if (byRowCompleted) {
+            emitter.emit('parseDone');
             continue;
           }
           assert.strictEqual(item.header.opcode, types.opcodes.result);
@@ -969,13 +993,6 @@ describe('Parser', function () {
           result[item.header.streamId].push(item.row);
         }
       });
-      const expected = [
-        { columnLength: 3, rowLength: 10 },
-        { columnLength: 5, rowLength: 5 },
-        { columnLength: 6, rowLength: 15 },
-        { columnLength: 6, rowLength: 15 },
-        { columnLength: 1, rowLength: 20 }
-      ];
       [1, 2, 7, 11].forEach(function (chunkLength) {
         it('should emit rows chunked with chunk length of ' + chunkLength, function (done) {
           result = {};
@@ -992,15 +1009,18 @@ describe('Parser', function () {
             }
             protocol._transform(buffer.slice(j, end), null, helper.throwop);
           }
-          process.nextTick(() => {
-            assert.ok(byRowCompleted);
-            //assert result
-            expected.forEach(function (expectedItem, index) {
-              assert.ok(result[index], 'Result not found for index ' + index);
-              assert.strictEqual(result[index].length, expectedItem.rowLength);
-              assert.strictEqual(result[index][0].keys().length, expectedItem.columnLength);
+          doneParsing.then(() => {
+
+            process.nextTick(() => {
+              assert.ok(byRowCompleted);
+              //assert result
+              expected.forEach(function (expectedItem, index) {
+                assert.ok(result[index], 'Result not found for index ' + index);
+                assert.strictEqual(result[index].length, expectedItem.rowLength);
+                assert.strictEqual(result[index][0].keys().length, expectedItem.columnLength);
+              });
+              done();
             });
-            done();
           });
         });
       });

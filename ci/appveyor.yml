@@ -18,7 +18,7 @@ install:
   - dir /b /s
 build: off
 test_script:
-  - "npm run %ci_type%"
+  - .\node_modules\.bin\mocha test\unit --recursive -R mocha-appveyor-reporter --exit
 on_finish:
   - ps: .\ci\hardwareinfo.ps1
 cache:

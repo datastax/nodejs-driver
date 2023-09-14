@@ -1,5 +1,16 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.7.0
+
+2023-09-14
+
+### Features
+- [NODEJS-653] - Update supported platforms to reflect more modern versions of node.js
+- [NODEJS-655] - Support vector type
+
+### Bug fixes
+- [PR #391] - Escape column names with quotes (emr)
+
 ## 4.6.4
 
 2022-07-11

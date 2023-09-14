@@ -15,7 +15,6 @@ install:
   - ps: .\ci\appveyor.ps1
   - npm install
   - npm install mocha mocha-appveyor-reporter
-  - npm audit fix --force
   - echo "list dir"
   - dir /b /s ./node_modules/
 build: off

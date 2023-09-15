@@ -244,9 +244,12 @@ documentation][doc-logging] for more information.
 
 ## Compatibility
 
-- Apache Cassandra versions 2.1 and above.
-- DataStax Enterprise versions 4.8 and above.
-- Node.js versions 8 and above.
+The driver supports all versions of Node.js, Cassandra and DSE which are not EOL at the time of release.  For Node.js we support only
+LTS eligible branches (i.e. even numbered releases).  You can find more information about the Node.js release cycle in the [project documentation].  Consistent with this policy the current version of the driver offers support for the following:
+
+- Apache Cassandra versions 3.0 and above.
+- DataStax Enterprise versions 5.1 and 6.8.
+- Node.js versions 18.x and 20.x.
 
 Note: DataStax products do not support big-endian systems.
 
@@ -284,6 +287,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [pooling]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/connection-pooling/
 [batch]: https://docs.datastax.com/en/developer/nodejs-driver/latest/features/batch/
 [old-driver]: https://github.com/jorgebay/node-cassandra-cql
+[project documentation]: https://github.com/nodejs/release#release-schedule
 [jorgebay]: https://github.com/jorgebay
 [drivers]: https://github.com/datastax
 [mailinglist]: https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user

@@ -1,14 +1,27 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.7.1
+
+2023-09-18
+
+This release contains only documentation updates; the code is unchanged from version 4.7.0.
+
+### Bug fixes
+
+- [NODEJS-644] - Fix documentation erroneously left out of 4.7.0
+
 ## 4.7.0
 
 2023-09-14
 
 ### Features
+
 - [NODEJS-653] - Update supported platforms to reflect more modern versions of node.js
 - [NODEJS-655] - Support vector type
+- [NODEJS-659] - Update dependencies in package.json to address CVEs
 
 ### Bug fixes
+
 - [PR #391] - Escape column names with quotes (emr)
 
 ## 4.6.4

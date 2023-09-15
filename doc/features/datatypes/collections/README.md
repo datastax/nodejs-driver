@@ -74,7 +74,7 @@ client.execute('SELECT map_val FROM tbl')
 ### Vector
 
 As of version 4.7.0 the driver also includes support for the vector type available in Cassandra 5.0.  Vectors are represented as instances of
-the [Float32Array] class.  For example, to create and write to a vector with three dimensions you might do something like the following:
+the [Float32Array] class.  For example, to create and write to a vector with three dimensions you can do the following:
 
 ```javascript
 await c.connect()

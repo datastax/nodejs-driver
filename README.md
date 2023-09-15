@@ -244,9 +244,8 @@ documentation][doc-logging] for more information.
 
 ## Compatibility
 
-The driver supports all versions of Node.js, Cassandra, and DSE that are not EOL at the time of release. 
-Only LTS eligible branches (i.e. even numbered releases) are supported for Node.js.
-See the [project documentation] for more information about the Node.js release cycle. 
+The driver supports all versions of Node.js, Cassandra, and DSE that are not EOL at the time of release.  Only LTS eligible branches (i.e. even numbered releases) are supported for Node.js.  See the [project documentation] for more information about the Node.js release cycle.
+
 The current version of the driver offers support consistent with this policy for the following:
 
 - Apache Cassandra versions 3.0 and above.

@@ -8,7 +8,7 @@ This release contains only documentation updates; the code is unchanged from ver
 
 ### Bug fixes
 
-- [NODEJS-644] - Fix documentation erroneously left out of 4.7.0
+- [NODEJS-664] - Fix documentation erroneously left out of 4.7.0
 
 ## 4.7.0
 

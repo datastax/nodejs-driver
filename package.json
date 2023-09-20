@@ -23,7 +23,6 @@
     "@types/long": "~5.0.0",
     "@types/node": ">=8",
     "adm-zip": "~0.5.10",
-    "eslint": "^8.49.0",
     "long": "~5.2.3"
   },
   "devDependencies": {

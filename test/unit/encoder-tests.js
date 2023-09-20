@@ -57,6 +57,7 @@ describe('encoder', function () {
       assertGuessed(new types.Tuple(1, 2, 3), dataTypes.tuple, 'Guess type for a tuple value failed');
       assertGuessed(new types.LocalDate(2010, 4, 29), dataTypes.date, 'Guess type for a date value failed');
       assertGuessed(new types.LocalTime(types.Long.fromString('6331999999911')), dataTypes.time, 'Guess type for a time value failed');
+      assertGuessed(new Float32Array([1.2, 3.4, 5.6]), dataTypes.custom, 'Guess type for a Float32 TypedArray value failed');
       assertGuessed({}, null, 'Objects must not be guessed');
     });
 
@@ -70,6 +71,26 @@ describe('encoder', function () {
       }
       assert.strictEqual(type.code, expectedType, message + ': ' + value);
     }
+  });
+
+  describe('Encoder.isTypedArray()', function () {
+    it('should return true for TypedArray subclasses', function () {
+      assert.ok(Encoder.isTypedArray(new Float32Array([])));
+      assert.ok(Encoder.isTypedArray(new Float32Array([1.2, 3.4, 5.6])));
+      assert.ok(Encoder.isTypedArray(new Float64Array([])));
+      assert.ok(Encoder.isTypedArray(new Float64Array([1.2, 3.4, 5.6])));
+      assert.ok(Encoder.isTypedArray(new Int8Array([])));
+      assert.ok(Encoder.isTypedArray(new Int8Array([1, 2, 3])));
+      assert.ok(Encoder.isTypedArray(new Uint8Array([])));
+      assert.ok(Encoder.isTypedArray(new Uint8Array([1, 2, 3])));
+    });
+
+    it('should return false for other types', function () {
+      assert.notOk(Encoder.isTypedArray(100));
+      assert.notOk(Encoder.isTypedArray([]));
+      assert.notOk(Encoder.isTypedArray([1,2,3]));
+      assert.notOk(Encoder.isTypedArray([1.2, 3.4, 5.6]));
+    });
   });
 
   describe('#encode() and #decode()', function () {
@@ -657,6 +678,69 @@ describe('encoder', function () {
       // Non string/LocalTime value.
       assert.throws(function () { encoder.encode(23.0, type);}, TypeError);
     });
+
+    it('should encode/decode FloatArray as vector, encoder guesses type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Float32Array([1.2, 3.4, 5.6]);
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      const encoded = encoder.encode(refVal, guessedTypeObj);
+      const decoded = encoder.decode(encoded, guessedTypeObj);
+      helper.assertInstanceOf(decoded, Float32Array);
+      for (const k in decoded) {
+        if (Object.hasOwn(decoded,k)) {
+          assert.equal(decoded[k],refVal[k]);
+        }
+        else {
+          assert.fail();
+        }
+      }
+    });
+
+    it('should encode/decode FloatArray as vector, encoder provided with full type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Float32Array([1.2, 3.4, 5.6]);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      const typeObj = {code: dataTypes.custom, info: typeName};
+      const encoded = encoder.encode(refVal, typeObj);
+      const decoded = encoder.decode(encoded, typeObj);
+      helper.assertInstanceOf(decoded, Float32Array);
+      for (const k in decoded) {
+        if (Object.hasOwn(decoded,k)) {
+          assert.equal(decoded[k],refVal[k]);
+        }
+        else {
+          assert.fail();
+        }
+      }
+    });
+
+    it('should fail to encode if full type provided and input vector fails to match dimensions of type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Float32Array([1.2, 3.4, 5.6, 7.8]);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
+    });
+
+    it('should fail to encode if input vector is not Float32Array, encoder guesses type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Int32Array([1, 2, 3]);
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: guessedTypeObj}); }, TypeError);
+    });
+
+    it('should fail to encode if input vector is not Float32Array, encoder provided with full type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Int32Array([1, 2, 3]);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
+    });
+
+    it('should fail to encode if full type provided and subtype is not FloatType', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Float32Array([1, 2, 3]);
+      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type,3)';
+      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
+    });
   });
 
   describe('#encode()', function () {
@@ -1002,6 +1086,13 @@ describe('encoder', function () {
       assert.ok(Array.isArray(type.info));
       assert.strictEqual(dataTypes.varchar, type.info[0].code);
       assert.strictEqual(dataTypes.int, type.info[1].code);
+
+      type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
+      assert.strictEqual(dataTypes.custom, type.code);
+      assert.ok(typeof type.info === 'object');
+      assert.strictEqual(Object.keys(type.info).length, 2);
+      assert.strictEqual(dataTypes.float, type.info["subtype"].code);
+      assert.strictEqual(10, type.info["dimensions"]);
     });
 
     it('should parse frozen types', function () {
@@ -1116,7 +1207,8 @@ describe('encoder', function () {
         ['map<varchar,bigint>', dataTypes.map, [dataTypes.varchar, dataTypes.bigint]],
         ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
-        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]]
+        ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]],
+        ['vector<float,20>', dataTypes.custom, {subtype: {code: dataTypes.float}, dimensions: 20}]
       ];
 
       for (const item of items) {
@@ -1127,8 +1219,13 @@ describe('encoder', function () {
         if (Array.isArray(item[2])) {
           assert.strictEqual(dataType.info.length, item[2].length);
           dataType.info.forEach(function (childType, i) {
-            assert.strictEqual(childType.code, item[2][i]);
+            // If it's an object use the code property, otherwise just use the value itself
+            assert.strictEqual((childType.code || childType), item[2][i]);
           });
+        }
+        else if (typeof item[2] === 'object') {
+          assert.strictEqual(dataType.info.subtype.code, item[2].subtype.code);
+          assert.strictEqual(dataType.info.dimensions, item[2].dimensions);
         }
         else {
           assert.strictEqual(dataType.info.code, item[2]);

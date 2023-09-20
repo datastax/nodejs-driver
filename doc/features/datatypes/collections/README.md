@@ -70,3 +70,22 @@ client.execute('SELECT map_val FROM tbl')
     console.log(result.rows[0]['map_val'] instanceof Map); // true
   });
 ```
+
+### Vector
+
+As of version 4.7.0 the driver also includes support for the vector type available in Cassandra 5.0.  Vectors are represented as instances of
+the [Float32Array] class.  For example, to create and write to a vector with three dimensions you can do the following:
+
+```javascript
+await c.connect()
+  .then(() => c.execute("drop keyspace if exists test"))
+  .then(() => c.execute("create KEYSPACE test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"))
+  .then(() => c.execute("create table test.foo(i varint primary key, j vector<float,3>)"))
+  .then(() => c.execute("create custom index ann_index on test.foo(j) using 'StorageAttachedIndex'"))
+
+  // Base inserts using simple and prepared statements
+  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(1), new Float32Array([8, 2.3, 58])]))
+  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(5), new Float32Array([23, 18, 3.9])], {prepare: true}));
+```
+
+[Float32Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array

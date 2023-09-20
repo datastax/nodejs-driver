@@ -32,7 +32,7 @@ describe('ModelMapper', () => {
       {
         doc: { id1: 'value1', id2: q.gte('e') },
         docInfo: { limit: 100 },
-        query: 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? LIMIT ?',
+        query: 'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ? LIMIT ?',
         params: [ 'value1', 'e', 100 ]
       }]));
 
@@ -40,22 +40,22 @@ describe('ModelMapper', () => {
       {
         doc: { id1: 'value1', id2: q.gte('e') },
         docInfo: { fields: ['name', 'description', 'locationType'] },
-        query: 'SELECT name, description, location_type FROM ks1.table1 WHERE id1 = ? AND id2 >= ?',
+        query: 'SELECT "name", "description", "location_type" FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ?',
         params: [ 'value1', 'e' ]
       }]));
 
     it('should support relational operators, orderBy, limit and fields', () => testQueries('find', [
       {
         doc: {id1: 'value1', id2: q.gte('m')},
-        query: 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ?',
+        query: 'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ?',
         params: ['value1', 'm']
       }, {
         doc: {id1: 'value1', id2: q.and(q.gte('a'), q.lt('z'))},
-        query: 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 < ?',
+        query: 'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ? AND "id2" < ?',
         params: ['value1', 'a', 'z']
       }, {
         doc: {id1: 'value1', id2: q.and(q.gte('a'), q.and(q.gte('e'), q.lt('z')))},
-        query: 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 >= ? AND id2 < ?',
+        query: 'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ? AND "id2" >= ? AND "id2" < ?',
         params: ['value1', 'a', 'e', 'z']
       }]));
 
@@ -64,19 +64,19 @@ describe('ModelMapper', () => {
         doc: { id1: 'value2' },
         docInfo: { orderBy: {'id2': 'desc' }},
         query:
-          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 DESC',
+          'SELECT * FROM ks1.table1 WHERE "id1" = ? ORDER BY "id2" DESC',
         params: [ 'value2' ]
       }, {
         doc: { id1: 'value3' },
         docInfo: { orderBy: {'id2': 'asc' }},
         query:
-          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC',
+          'SELECT * FROM ks1.table1 WHERE "id1" = ? ORDER BY "id2" ASC',
         params: [ 'value3' ]
       }, {
         doc: { id1: 'value1', id2: q.gte('e') },
         docInfo: { fields: ['name'], limit: 20, orderBy: {'id2': 'asc' }},
         query:
-          'SELECT name FROM ks1.table1 WHERE id1 = ? AND id2 >= ? ORDER BY id2 ASC LIMIT ?',
+          'SELECT "name" FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ? ORDER BY "id2" ASC LIMIT ?',
         params: [ 'value1', 'e', 20 ]
       }]));
 
@@ -85,7 +85,7 @@ describe('ModelMapper', () => {
         doc: { id1: 'value2' },
         docInfo: { orderBy: {'id2': 'asc' }},
         query:
-          'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC',
+          'SELECT * FROM ks1.table1 WHERE "id1" = ? ORDER BY "id2" ASC',
         params: [ 'value2' ]
       }]));
 
@@ -108,19 +108,19 @@ describe('ModelMapper', () => {
           {
             doc: { id1: 'value_id1', id2: 'value_id2' },
             query:
-              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?',
+              'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
             params: [ 'value_id1', 'value_id2' + suffix ]
           },
           {
             doc: { id1: 'value_id1', id2: q.gt('value_id2') },
             query:
-              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 > ?',
+              'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" > ?',
             params: [ 'value_id1', 'value_id2' + suffix ]
           },
           {
             doc: { id1: 'value_id1', id2: q.and(q.gte('a'), q.lt('z')) },
             query:
-              'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 >= ? AND id2 < ?',
+              'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" >= ? AND "id2" < ?',
             params: [ 'value_id1', 'a' + suffix, 'z' + suffix ]
           }
         ]
@@ -141,7 +141,7 @@ describe('ModelMapper', () => {
         {
           doc: { id1: 'value_id1', id2: q.in_(['first', 'second']) },
           query:
-            'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 IN ?',
+            'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" IN ?',
           params: [ 'value_id1', ['first_mapped_value', 'second_mapped_value'] ]
         }
       ]
@@ -191,7 +191,7 @@ describe('ModelMapper', () => {
 
       return modelMapper.find({ id1: 'x', id2: 'y'}).then(() => {
         const execution = clientInfo.executions[0];
-        assert.strictEqual(execution.query, 'SELECT * FROM ks1.table1 WHERE id1 = ? AND id2 = ?');
+        assert.strictEqual(execution.query, 'SELECT * FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?');
       });
     });
 
@@ -203,7 +203,7 @@ describe('ModelMapper', () => {
 
       return modelMapper.find({ id1: 'x', id2: 'y'}).then(() => {
         const execution = clientInfo.executions[0];
-        assert.strictEqual(execution.query, 'SELECT * FROM ks1.NoTableSpecified WHERE id1 = ? AND id2 = ?');
+        assert.strictEqual(execution.query, 'SELECT * FROM ks1.NoTableSpecified WHERE "id1" = ? AND "id2" = ?');
       });
     });
 
@@ -234,11 +234,11 @@ describe('ModelMapper', () => {
         .then(() => {
           [
             // Selected "table2" for the first query
-            'SELECT * FROM ks1.table2 WHERE id1 = ? ORDER BY id3 ASC',
+            'SELECT * FROM ks1.table2 WHERE "id1" = ? ORDER BY "id3" ASC',
             // Selected "table1" for the second query
-            'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 DESC, id3 DESC',
+            'SELECT * FROM ks1.table1 WHERE "id1" = ? ORDER BY "id2" DESC, "id3" DESC',
             // Selected "table1" for the third query
-            'SELECT * FROM ks1.table1 WHERE id1 = ? ORDER BY id2 ASC'
+            'SELECT * FROM ks1.table1 WHERE "id1" = ? ORDER BY "id2" ASC'
           ].forEach((query, index) => {
             assert.strictEqual(clientInfo.executions[index].query, query);
             assert.deepStrictEqual(clientInfo.executions[index].params, [ 'a' ]);
@@ -279,7 +279,7 @@ describe('ModelMapper', () => {
     it('should support fields to specify the selection columns', () => testQueries('findAll', [
       {
         docInfo: { fields: ['name', 'description', 'locationType'] },
-        query: 'SELECT name, description, location_type FROM ks1.table1',
+        query: 'SELECT "name", "description", "location_type" FROM ks1.table1',
         params: []
       }]));
   });

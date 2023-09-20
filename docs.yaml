@@ -80,6 +80,7 @@ checks:
       - 'https://micrometer.io/docs'
       - 'http://datastax.github.io/java-driver/features/shaded_jar/'
       - 'https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true'
+      - 'https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master'
       - 'https://github.com/datastax/nodejs-dse-driver'
   internal_links:
     exclude:

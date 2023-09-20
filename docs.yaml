@@ -88,8 +88,6 @@ checks:
       - '%5Bguava%20eviction%5D'
 
 rewrites:
-  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/'
-    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/'
   - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-metadata-Metadata.html'
     replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.metadata/'
   - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html'
@@ -100,3 +98,5 @@ rewrites:
     replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.LocalTime/'
   - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-ResultSet.html'
     replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.ResultSet/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/'

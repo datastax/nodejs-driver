@@ -687,7 +687,7 @@ describe('encoder', function () {
       const decoded = encoder.decode(encoded, guessedTypeObj);
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
-        if (Object.hasOwn(decoded,k)) {
+        if (decoded.hasOwnProperty(k)) {
           assert.equal(decoded[k],refVal[k]);
         }
         else {
@@ -705,7 +705,7 @@ describe('encoder', function () {
       const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Float32Array);
       for (const k in decoded) {
-        if (Object.hasOwn(decoded,k)) {
+        if (decoded.hasOwnProperty(k)) {
           assert.equal(decoded[k],refVal[k]);
         }
         else {

@@ -1,5 +1,13 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.7.2
+
+2023-09-21
+
+### Bug fixes
+
+- [NODEJS-665] - Driver does not work for versions <16.9.0
+
 ## 4.7.1
 
 2023-09-18

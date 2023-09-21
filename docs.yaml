@@ -67,3 +67,39 @@ versions:
     ref: '3.1'
   - name: '3.0'
     ref: '3.0'
+checks:
+  external_links:
+    exclude:
+      - 'https://twitter.com/dsJavaDriver'
+      - 'https://twitter.com/datastaxeng'
+      - 'https://twitter.com/datastax'
+      - 'https://projectreactor.io'
+      - 'https://docs.datastax.com/en/drivers/java/4.[0-9]+/com/datastax/oss/driver/internal/'
+      - 'http://www.planetcassandra.org/blog/user-defined-functions-in-cassandra-3-0/'
+      - 'http://www.planetcassandra.org/making-the-change-from-thrift-to-cql/'
+      - 'https://academy.datastax.com/slack'
+      - 'https://community.datastax.com/index.html'
+      - 'https://micrometer.io/docs'
+      - 'http://datastax.github.io/java-driver/features/shaded_jar/'
+      - 'https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true'
+      - 'https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master'
+      - 'https://github.com/datastax/nodejs-dse-driver'
+  internal_links:
+    exclude:
+      - 'netty_pipeline/'
+      - '../core/'
+      - '%5Bguava%20eviction%5D'
+
+rewrites:
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-metadata-Metadata.html'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.metadata/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-InetAddress.html'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.InetAddress/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-LocalDate.html'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.LocalDate/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-LocalTime.html'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.LocalTime/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/module-types-ResultSet.html'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/module.types/class.ResultSet/'
+  - search: 'http://docs.datastax.com/en/latest-nodejs-driver-api/'
+    replace: 'https://docs.datastax.com/en/developer/nodejs-driver/latest/api/'

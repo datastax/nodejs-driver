@@ -24,6 +24,7 @@ import { metrics } from './lib/metrics';
 import { tracker } from './lib/tracker';
 import { metadata } from './lib/metadata';
 import { datastax } from './lib/datastax/';
+import { ClientRequestArgs } from 'http';
 import Long = types.Long;
 import Uuid = types.Uuid;
 import graph = datastax.graph;
@@ -191,7 +192,11 @@ export interface ExecutionOptions {
   setHints(hints: string[]): void;
 }
 
+export type WebSocketClientOptions = (ClientOptions | ClientRequestArgs) 
+    & {protocols?: string | string[] | undefined};
+
 export interface ClientOptions {
+  transport?: 'SecureWebSocket' | 'WebSocket' | undefined
   contactPoints?: string[];
   localDataCenter?: string;
   keyspace?: string;
@@ -253,6 +258,7 @@ export interface ClientOptions {
     tcpNoDelay?: boolean;
   };
   sslOptions?: tls.ConnectionOptions;
+  webSocketOptions?: WebSocketClientOptions;
 }
 
 export interface QueryOptions {

@@ -273,43 +273,46 @@ describe('ModelMapper', () => {
     it('should throw an error when filter or conditions are not valid', () => testErrors('remove', [
       {
         doc: { id1: 'x', notAValidProp: 'y' },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,notAValidProp]'
+        message: 'No table matches (must specify all partition key and top-level clustering columns) fields: [id1,notAValidProp]'
       }, {
         doc: { id1: 'x'},
         docInfo: { fields: ['notAValidProp'] },
-        message: 'No table matches (all PKs have to be specified) fields: [notAValidProp]'
+        message: 'No table matches (must specify all partition key and top-level clustering columns) fields: [notAValidProp]'
       }, {
         doc: { id1: 'x', name: 'y' },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,name]'
+        message: 'No table matches (must specify all partition key and top-level clustering columns) fields: [id1,name]'
       }, {
-        doc: { id1: 'x', id2: 'y', name: 'z'},
+        doc: { id1: 'x', id2: 'y'},
         docInfo: { when: { notAValidProp: 'm'} },
-        message: 'No table matches (all PKs have to be specified) fields: [id1,id2,name]; condition: [notAValidProp]'
+        message: 'No table matches (must specify all partition key and top-level clustering columns) fields: [id1,id2]; condition: [notAValidProp]'
       }, {
         doc: {},
         message: 'Expected object with keys'
+      }, {
+        doc: { id1: 'x', id3: 'y' },
+        message: 'No table matches (must specify all partition key and top-level clustering columns) fields: [id1,id3]'
       }
     ]));
 
     it('should generate the query, params and set the idempotency', () => testQueries('remove', [
       {
-        doc: { id1: 'x', 'id2': 'y' },
+        doc: { id1: 'x', id2: 'y' },
         query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
         params: [ 'x', 'y' ]
       }, {
-        doc: { id1: 'x', 'id2': 'y' },
+        doc: { id1: 'x', id2: 'y' },
         docInfo: { when: { name: 'a' }},
         query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ? IF "name" = ?',
         params: [ 'x', 'y', 'a' ],
         isIdempotent: false
       }, {
-        doc: { id1: 'x', 'id2': 'y' },
+        doc: { id1: 'x', id2: 'y' },
         docInfo: { ifExists: true },
         query: 'DELETE FROM ks1.table1 WHERE "id1" = ? AND "id2" = ? IF EXISTS',
         params: [ 'x', 'y' ],
         isIdempotent: false
       }, {
-        doc: { id1: 'x', 'id2': 'y' },
+        doc: { id1: 'x', id2: 'y' },
         docInfo: { fields: [ 'id1', 'id2', 'name' ], deleteOnlyColumns: true },
         query: 'DELETE "name" FROM ks1.table1 WHERE "id1" = ? AND "id2" = ?',
         params: [ 'x', 'y' ]
@@ -347,8 +350,8 @@ describe('ModelMapper', () => {
 
 function testErrors(methodName, items) {
   return Promise.all(items.map(item => {
-    const columns = [ 'id1', 'id2', 'name'];
-    const clientInfo = mapperTestHelper.getClient(columns, [ 1, 1 ], 'ks1');
+    const columns = [ 'id1', 'id2', 'id3', 'name'];
+    const clientInfo = mapperTestHelper.getClient(columns, [ 1, 2 ], 'ks1');
     const modelMapper = mapperTestHelper.getModelMapper(clientInfo);
 
     let catchCalled = false;

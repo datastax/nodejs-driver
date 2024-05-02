@@ -5,9 +5,6 @@ environment:
     - nodejs_version: 16
     - nodejs_version: 18
     - nodejs_version: 20
-    - nodejs_version: 18
-      CCM_VERSION: 4.0.12
-      ci_type: ci_appveyor
 image: Visual Studio 2017
 platform:
   - x64

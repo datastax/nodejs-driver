@@ -82,6 +82,12 @@ def executeTests() {
     . ${HOME}/environment.txt
     set +o allexport
 
+    # Fix Java version at Java8 for now because of dependencies in DSE.
+    # TODO: This should last us through testing against Cassandra 4.1.x at least but
+    # will eventually need to be made more generic.
+    . ${JABBA_SHELL}
+    jabba use 1.8
+
     npm run ci_jenkins
   '''
 }
@@ -302,6 +308,7 @@ pipeline {
     SIMULACRON_PATH = '/home/jenkins/simulacron.jar'
     CCM_PATH = '/home/jenkins/ccm'
     CCM_ENVIRONMENT_SHELL = '/usr/local/bin/ccm_environment.sh'
+    JABBA_SHELL = '/usr/lib/jabba/jabba.sh'
   }
 
   stages {

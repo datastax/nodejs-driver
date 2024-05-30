@@ -51,6 +51,8 @@ export namespace mapping {
     forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
 
     toArray(): T[];
+
+    [Symbol.iterator](): Iterator<T>;
   }
 
   type MappingExecutionOptions = {

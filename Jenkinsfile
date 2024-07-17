@@ -245,8 +245,9 @@ pipeline {
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
       choices: [
-                '3.11',    // Current Apache Cassandra
-                '4.0',     // Development Apache Cassandra
+                '3.11',    // Legacy Apache Cassandra
+                '4.0',     // Current Apache Cassandra
+                '5.0-beta1', // Development Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
                 'dse-6.8.30', // Development DataStax Enterprise
                 'ALL'],
@@ -263,8 +264,12 @@ pipeline {
                           <td>Apache Cassandra v3.11.x</td>
                         </tr>
                         <tr>
+                          <td><strong>5.0-beta1</strong></td>
+                          <td>Apache Cassandra v5.0-beta1 (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                        </tr>
+                        <tr>
                           <td><strong>4.0</strong></td>
-                          <td>Apache Cassandra v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>Apache Cassandra v4.x</td>
                         </tr>
                         <tr>
                           <td><strong>dse-5.1</strong></td>
@@ -272,7 +277,7 @@ pipeline {
                         </tr>
                         <tr>
                           <td><strong>dse-6.8</strong></td>
-                          <td>DataStax Enterprise v6.8.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>DataStax Enterprise v6.8.x</td>
                         </tr>
                       </table>''')
     booleanParam(
@@ -327,9 +332,10 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
+                   '4.0',     // Current Apache Cassandra
+                   '5.0-beta1',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+                   'dse-6.8.30' // Current DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -420,7 +426,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
+                   '4.0',     // Current Apache Cassandra
+                   '5.0-beta1',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
           }
@@ -511,7 +518,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',     // Current Apache Cassandra
-                   '4.0',      // Development Apache Cassandra
+                   '4.0',      // Current Apache Cassandra
+                   '5.0-beta1',      // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
           }

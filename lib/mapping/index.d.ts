@@ -43,7 +43,7 @@ export namespace mapping {
     newObjectInstance(): any;
   }
 
-  interface Result<T = any> extends Iterator<T> {
+  interface Result<T = any> extends IterableIterator<T> {
     wasApplied(): boolean;
 
     first(): T | null;
@@ -51,8 +51,6 @@ export namespace mapping {
     forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
 
     toArray(): T[];
-
-    [Symbol.iterator](): Iterator<T>;
   }
 
   type MappingExecutionOptions = {

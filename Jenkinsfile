@@ -331,7 +331,7 @@ pipeline {
                    '4.0',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.8.30', // Development DataStax Enterprise
-                    'dse-6.9.0', // Current DataStax Enterprise
+                    'dse-6.9.0' // Current DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'

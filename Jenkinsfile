@@ -245,10 +245,11 @@ pipeline {
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
       choices: [
-                '3.11',    // Current Apache Cassandra
-                '4.0',     // Development Apache Cassandra
+                '3.11',    // Previous Apache Cassandra
+                '4.0',     // Previous Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
-                'dse-6.8.30', // Development DataStax Enterprise
+                'dse-6.8.30', // Previoius DataStax Enterprise
+                'dse-6.9.0', // Current DataStax Enterprise
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
@@ -330,6 +331,7 @@ pipeline {
                    '4.0',     // Development Apache Cassandra
                    'dse-5.1.35', // Legacy DataStax Enterprise
                    'dse-6.8.30' // Development DataStax Enterprise
+                    'dse-6.9.0', // Current DataStax Enterprise
           }
           axis {
             name 'NODEJS_VERSION'
@@ -381,7 +383,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' or  }
             }
             steps {
               executeExamples()

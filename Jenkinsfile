@@ -383,7 +383,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' or  }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30'  }
             }
             steps {
               executeExamples()

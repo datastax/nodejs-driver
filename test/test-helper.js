@@ -1269,6 +1269,7 @@ helper.ccm.resumeNode = function (nodeIndex, callback) {
 };
 
 helper.ccm.exec = function (params, callback) {
+  // eslint-disable-next-line no-console, no-undef
   console.log("Executing ccm command: ", params);
   helper.ccm.spawn('ccm', params, callback);
 };

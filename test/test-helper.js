@@ -32,6 +32,7 @@ const defaultOptions = require('../lib/client-options').defaultOptions;
 const { Host, HostMap } = require('../lib/host');
 const OperationState = require('../lib/operation-state');
 const promiseUtils = require('../lib/promise-utils');
+const { Console } = require('console');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -80,7 +81,7 @@ const helper = {
    * @param {String} [options.keyspace] Name of the keyspace to create.
    * @param {Number} [options.replicationFactor] Keyspace replication factor.
    * @param {Array<String>} [options.queries] Queries to run after client creation.
-   * @param {Boolean} [options.removeClusterAfter=true] Determines whether ccm remove should be called on after().
+   * @param {Boolean} [options.removeClusterAfter=false] Determines whether ccm remove should be called on after().
    */
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
@@ -491,7 +492,7 @@ const helper = {
     }
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
-        // eslint-disable-next-line no-console, no-undef
+
         console.log.apply(console, arguments);
       }
     });
@@ -988,6 +989,33 @@ const helper = {
   },
 
   /**
+ * 
+ * @param {Array.<String>} yamlToFix 
+ */
+  fixYaml : function (yamlToFix) {
+    if (helper.isCassandraGreaterThan("4.1.0")) {
+      // fix the yaml options that turned obsolete since 4.1.0
+      yamlToFix = yamlToFix.map(keyValue => {
+        const [key, value] = keyValue.split(':');
+        var m = /^(\w+)_in_ms$/.exec(key);
+        if (m) {
+          return `${m[1]}:${value}ms`;
+        }
+        m = /^(\w+)_in_kb$/.exec(key);
+        if (m) {
+          return `${m[1]}:${value}KiB`;
+        }
+        m = /enable_(\w+)$/.exec(key);
+        if (m) {
+          return `${m[1]}_enabled:${value}`;
+        }
+        return keyValue
+      });
+    }
+    return yamlToFix;
+  },
+
+  /**
    * Makes a http request and returns the body.
    * @param {{host, port, path}} requestOptions
    * @returns {Promise<string>}
@@ -1135,6 +1163,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       if (!options.yaml || !options.yaml.length) {
         return next();
       }
+      options.yaml = helper.fixYaml(options.yaml);
       helper.trace('With cassandra yaml options', options.yaml);
       self.exec(['updateconf'].concat(options.yaml), next);
     },
@@ -1269,6 +1298,8 @@ helper.ccm.resumeNode = function (nodeIndex, callback) {
 };
 
 helper.ccm.exec = function (params, callback) {
+  // eslint-disable-next-line no-console, no-undef
+  console.log("Executing ccm command: ", params);
   helper.ccm.spawn('ccm', params, callback);
 };
 
@@ -1563,7 +1594,6 @@ helper.ads.getKeytabPath = function(username) {
 helper.ads.getKrb5ConfigPath = function() {
   return path.join(this.dir, 'krb5.conf');
 };
-
 
 /**
  * A retry policy for testing purposes only, retries for a number of times

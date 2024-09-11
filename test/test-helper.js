@@ -996,17 +996,17 @@ const helper = {
       // fix the yaml options that turned obsolete since 4.1.0
       yamlToFix = yamlToFix.map(keyValue => {
         const [key, value] = keyValue.split(':');
-        let a = /^(\w+)_in_ms$/.exec(key);
+        const a = /^(\w+)_in_ms$/.exec(key);
         if (a) {
-          return `${m[1]}:${value}ms`;
+          return `${a[1]}:${value}ms`;
         }
-        let b = /^(\w+)_in_kb$/.exec(key);
+        const b = /^(\w+)_in_kb$/.exec(key);
         if (b) {
-          return `${m[1]}:${value}KiB`;
+          return `${b[1]}:${value}KiB`;
         }
-        let c = /enable_(\w+)$/.exec(key);
+        const c = /enable_(\w+)$/.exec(key);
         if (c) {
-          return `${m[1]}_enabled:${value}`;
+          return `${c[1]}_enabled:${value}`;
         }
         return keyValue;
       });

@@ -1057,11 +1057,8 @@ describe('metadata @SERVER_API', function () {
                   'ssl_enabled', 'ssl_protocol', 'username']);
               }
             });
-        } else {
-          // lower than 4.0, skip
-          this.skip();
-        }
-
+        } 
+        // else, lower than 4.0, skip
       });
       it('should retrieve the updated metadata after a schema change', function (done) {
         const client = newInstance();

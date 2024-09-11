@@ -1029,37 +1029,39 @@ describe('metadata @SERVER_API', function () {
         }, done);
       });
       it('should retrieve the metadata of a virtual table', function () {
-        if (!helper.isCassandraGreaterThan('3.9')){
-          this.skip();
-        }
-        const client = setupInfo.client;
-        return client.metadata.getTable('system_views', 'clients')
-          .then((table) => {
-            assert.ok(table);
-            assert.ok(table.virtual);
-            assert.strictEqual(table.name, 'clients');
-            if (helper.isCassandraGreaterThan('4.0')) {
-              if (helper.isCassandraGreaterThan('4.1')) {
+        if (helper.isCassandraGreaterThan('4.0')) {
+          const client = setupInfo.client;
+          return client.metadata.getTable('system_views', 'clients')
+            .then((table) => {
+              assert.ok(table);
+              assert.ok(table.virtual);
+              assert.strictEqual(table.name, 'clients');
+              assert.deepEqual(table.clusteringOrder, ['ASC']);
+              assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);
+              assert.deepEqual(table.clusteringKeys.map(c => c.name), ['port']);
+
+              if (helper.isCassandraGreaterThan('5.0')) {
                 // 5.0 and above
                 assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
                   'driver_version', 'hostname', 'keyspace_name', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
                   'ssl_enabled', 'ssl_protocol', 'username']);
-              }else{
+              } else if (helper.isCassandraGreaterThan('4.1')) {
                 // 4.1
                 assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
                   'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
                   'ssl_enabled', 'ssl_protocol', 'username']);
+              } else {
+                // 4.0
+                assert.deepEqual(table.columns.map(c => c.name), ['address', 'connection_stage', 'driver_name',
+                  'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
+                  'ssl_enabled', 'ssl_protocol', 'username']);
               }
-            }else{
-              // 4.0
-              assert.deepEqual(table.columns.map(c => c.name), ['address', 'connection_stage', 'driver_name',
-                'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
-                'ssl_enabled', 'ssl_protocol', 'username']);
-            }
-            assert.deepEqual(table.clusteringOrder, ['ASC']);
-            assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);
-            assert.deepEqual(table.clusteringKeys.map(c => c.name), ['port']);
-          });
+            });
+        } else {
+          // lower than 4.0, skip
+          this.skip();
+        }
+
       });
       it('should retrieve the updated metadata after a schema change', function (done) {
         const client = newInstance();

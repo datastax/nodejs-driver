@@ -1028,8 +1028,8 @@ describe('metadata @SERVER_API', function () {
           });
         }, done);
       });
-      vit('4.0', 'should retrieve the metadata of a virtual table', () => {
-        if(helper.isCassandraGreaterThan('4.0')){
+      it('should retrieve the metadata of a virtual table', function () {
+        if (!helper.isCassandraGreaterThan('3.9')){
           this.skip();
         }
         const client = setupInfo.client;
@@ -1038,24 +1038,24 @@ describe('metadata @SERVER_API', function () {
             assert.ok(table);
             assert.ok(table.virtual);
             assert.strictEqual(table.name, 'clients');
-            assert.deepEqual(table.columns.map(c => c.name), ['address', 'connection_stage', 'driver_name',
-              'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
-              'ssl_enabled', 'ssl_protocol', 'username']);
-            assert.deepEqual(table.clusteringOrder, ['ASC']);
-            assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);
-            assert.deepEqual(table.clusteringKeys.map(c => c.name), ['port']);
-          });
-      });
-      vit('4.1', 'should retrieve the metadata of a virtual table above 4.1 version', () => {
-        const client = setupInfo.client;
-        return client.metadata.getTable('system_views', 'clients')
-          .then((table) => {
-            assert.ok(table);
-            assert.ok(table.virtual);
-            assert.strictEqual(table.name, 'clients');
-            assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
-              'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
-              'ssl_enabled', 'ssl_protocol', 'username']);
+            if (helper.isCassandraGreaterThan('4.0')) {
+              if (helper.isCassandraGreaterThan('4.1')) {
+                // 5.0 and above
+                assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
+                  'driver_version', 'hostname', 'keyspace_name', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
+                  'ssl_enabled', 'ssl_protocol', 'username']);
+              }else{
+                // 4.1
+                assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
+                  'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
+                  'ssl_enabled', 'ssl_protocol', 'username']);
+              }
+            }else{
+              // 4.0
+              assert.deepEqual(table.columns.map(c => c.name), ['address', 'connection_stage', 'driver_name',
+                'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
+                'ssl_enabled', 'ssl_protocol', 'username']);
+            }
             assert.deepEqual(table.clusteringOrder, ['ASC']);
             assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);
             assert.deepEqual(table.clusteringKeys.map(c => c.name), ['port']);

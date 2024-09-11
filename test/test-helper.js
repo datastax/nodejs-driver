@@ -32,7 +32,6 @@ const defaultOptions = require('../lib/client-options').defaultOptions;
 const { Host, HostMap } = require('../lib/host');
 const OperationState = require('../lib/operation-state');
 const promiseUtils = require('../lib/promise-utils');
-const { Console } = require('console');
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -492,7 +491,7 @@ const helper = {
     }
     return (function (l) {
       if (levels.indexOf(l) >= 0) {
-
+        // eslint-disable-next-line no-console, no-undef
         console.log.apply(console, arguments);
       }
     });
@@ -997,19 +996,19 @@ const helper = {
       // fix the yaml options that turned obsolete since 4.1.0
       yamlToFix = yamlToFix.map(keyValue => {
         const [key, value] = keyValue.split(':');
-        var m = /^(\w+)_in_ms$/.exec(key);
-        if (m) {
+        let a = /^(\w+)_in_ms$/.exec(key);
+        if (a) {
           return `${m[1]}:${value}ms`;
         }
-        m = /^(\w+)_in_kb$/.exec(key);
-        if (m) {
+        let b = /^(\w+)_in_kb$/.exec(key);
+        if (b) {
           return `${m[1]}:${value}KiB`;
         }
-        m = /enable_(\w+)$/.exec(key);
-        if (m) {
+        let c = /enable_(\w+)$/.exec(key);
+        if (c) {
           return `${m[1]}_enabled:${value}`;
         }
-        return keyValue
+        return keyValue;
       });
     }
     return yamlToFix;

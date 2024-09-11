@@ -1054,7 +1054,7 @@ describe('metadata @SERVER_API', function () {
             assert.ok(table.virtual);
             assert.strictEqual(table.name, 'clients');
             assert.deepEqual(table.columns.map(c => c.name), ['address', 'client_options', 'connection_stage', 'driver_name',
-              'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_sui`te',
+              'driver_version', 'hostname', 'port', 'protocol_version', 'request_count', 'ssl_cipher_suite',
               'ssl_enabled', 'ssl_protocol', 'username']);
             assert.deepEqual(table.clusteringOrder, ['ASC']);
             assert.deepEqual(table.partitionKeys.map(c => c.name), ['address']);

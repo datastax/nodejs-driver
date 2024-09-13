@@ -41,9 +41,21 @@ CCM_CASSANDRA_VERSION=${DSE_FIXED_VERSION} # maintain for backwards compatibilit
 CCM_VERSION=${DSE_FIXED_VERSION}
 CCM_SERVER_TYPE=dse
 DSE_VERSION=${DSE_FIXED_VERSION}
-CCM_IS_DSE=true
+CCM_DISTRIBUTION=dse
 CCM_BRANCH=${DSE_FIXED_VERSION}
 DSE_BRANCH=${DSE_FIXED_VERSION}
+ENVIRONMENT_EOF
+      '''
+  }
+
+  if (env.CASSANDRA_VERSION.split('-')[0] == 'hcd'){
+    env.HCD_FIXED_VERSION = env.CASSANDRA_VERSION.split('-')[1]
+    sh label: 'Update environment for HCD', script: '''#!/bin/bash -le
+        cat >> ${HOME}/environment.txt << ENVIRONMENT_EOF
+CCM_PATH=${HOME}/ccm
+CCM_CASSANDRA_VERSION=${HCD_FIXED_VERSION} # maintain for backwards compatibility
+CCM_VERSION=${HCD_FIXED_VERSION}
+CCM_DISTRIBUTION=hcd
 ENVIRONMENT_EOF
       '''
   }
@@ -332,11 +344,12 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.0',     // Previous Apache Cassandra
-                    '4.1.0',    // Previous Apache Cassandra 
-                    '5.0-beta1'
+                    // '4.1.0',    // Previous Apache Cassandra 
+                    '5.0-beta1',
                    // 'dse-5.1.35', // Legacy DataStax Enterprise
                    // 'dse-6.8.30', // Development DataStax Enterprise
                    //  'dse-6.9.0' // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'

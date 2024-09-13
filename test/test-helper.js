@@ -45,6 +45,10 @@ const cassandraVersionByDse = {
   '6.9': '3.11'
 };
 
+const cassandraVersionByHcd = {
+  '1.0': '4.0',
+}
+
 const afterNextHandlers = [];
 let testUnhandledError = null;
 
@@ -81,7 +85,7 @@ const helper = {
    * @param {String} [options.keyspace] Name of the keyspace to create.
    * @param {Number} [options.replicationFactor] Keyspace replication factor.
    * @param {Array<String>} [options.queries] Queries to run after client creation.
-   * @param {Boolean} [options.removeClusterAfter=false] Determines whether ccm remove should be called on after().
+   * @param {Boolean} [options.removeClusterAfter=true] Determines whether ccm remove should be called on after().
    */
   setup: function (nodeLength, options) {
     options = options || utils.emptyObject;
@@ -104,14 +108,14 @@ const helper = {
       }
       after(client.shutdown.bind(client));
     }
-    if (options.removeClusterAfter !== false) {
-      after(function (callback) {
-        if (this.currentTest.state !== 'failed') {
-          helper.ccmHelper.remove(callback);
-        }
-      });
-    }
-
+    after(function (callback) {
+      if (this.currentTest?.state !== 'failed') {
+        console.log('Test status: ', this.currentTest.state);
+        helper.ccmHelper.remove(callback);
+      }else{
+        callback();
+      }
+    });
     return {
       client: client,
       keyspace: keyspace
@@ -400,28 +404,34 @@ const helper = {
 
   /**
    * Gets the Apache Cassandra version.
-   * When the server is DSE, gets the Apache Cassandra equivalent.
+   * When the server is DSE/HCD, gets the Apache Cassandra equivalent.
    */
   getCassandraVersion: function () {
     const serverInfo = this.getServerInfo();
 
-    if (!serverInfo.isDse) {
+    if (serverInfo.distribution === 'cassandra') {
       return serverInfo.version;
     }
-
-    const dseVersion = serverInfo.version.split('.').slice(0, 2).join('.');
-    return cassandraVersionByDse[dseVersion] || cassandraVersionByDse['6.7'];
+    const literalVersion = serverInfo.version.split('.').slice(0, 2).join('.');
+    if (serverInfo.distribution === 'hcd') {
+      return cassandraVersionByHcd[literalVersion] || cassandraVersionByHcd['1.0'];
+    }
+    if (serverInfo.distribution === 'dse') {
+      return cassandraVersionByDse[literalVersion] || cassandraVersionByDse['6.7'];
+    }
+    throw new Error('Unknown distribution ' + serverInfo.distribution);
   },
 
   /**
    * Gets the server version and type.
-   * @return {{version, isDse}}
+   * @return {{version: String, isDse: Boolean, isHcd: Boolean, distribution: String}}
    */
   getServerInfo: function () {
     return {
       version: process.env['CCM_VERSION'] || '3.11.4',
-      isDse: process.env['CCM_IS_DSE'] === 'true',
-      isHcd: process.env['CCM_IS_HCD'] === 'true'
+      isDse: process.env['CCM_DISTRIBUTION'] === 'dse',
+      isHcd: process.env['CCM_DISTRIBUTION'] === 'hcd',
+      distribution: process.env['CCM_DISTRIBUTION'] || 'cassandra'
     };
   },
 
@@ -454,6 +464,11 @@ const helper = {
   /** Determines if the current server is a DSE instance. */
   isDse: function () {
     return this.getServerInfo().isDse;
+  },
+
+  /** Determines if the current server is a HCD instance. */
+  isHcd: function () {
+    return this.getServerInfo().isHcd;
   },
 
   /**
@@ -1136,6 +1151,10 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         create.push('--dse');
       }
 
+      if(serverInfo.isHcd) {
+        create.push('--hcd');
+      }
+
       create.push('-v', serverInfo.version);
 
       if (process.env['CCM_INSTALL_DIR']) {
@@ -1238,6 +1257,10 @@ helper.ccm.bootstrapNode = function (options, callback) {
 
   if (helper.getServerInfo().isDse) {
     ccmArgs.push('--dse');
+  }
+
+  if (helper.getServerInfo().isHcd) {
+    ccmArgs.push('--hcd');
   }
 
   if (options.dc) {
@@ -1352,10 +1375,12 @@ helper.ccm.spawn = function (processName, params, callback) {
 };
 
 helper.ccm.remove = function (callback) {
-  // helper.ccm.exec(['remove'], callback);
+  console.log("helper.ccm.remove");
+  helper.ccm.exec(['remove'], callback);
 };
 
 helper.ccm.removeIfAny = function (callback) {
+  console.log("helper.ccm.removeIfAny");
   helper.ccm.exec(['remove'], function () {
     // Ignore errors
     callback();

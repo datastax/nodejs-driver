@@ -130,7 +130,12 @@ vdescribe('dse-5.0', 'Polygon @SERVER_API', function () {
                     normalizedCoordinates.push([c[0], c[2], c[1], c[3]]);
                   }
                 }
-                assert.deepEqual(normalizedCoordinates, polygon.toJSON().coordinates);
+                if (helper.isDseGreaterThan('6.9')) {
+                  //TODO: find documentation
+                  assert.deepEqual(value, polygon.toJSON());
+                }else{
+                  assert.deepEqual(normalizedCoordinates, polygon.toJSON().coordinates);
+                }
                 eachNext();
               });
             });

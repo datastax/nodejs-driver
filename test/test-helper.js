@@ -41,7 +41,8 @@ const cassandraVersionByDse = {
   '5.1': '3.11',
   '6.0': '3.11',
   '6.7': '3.11',
-  '6.8': '3.11'
+  '6.8': '3.11',
+  '6.9': '3.11'
 };
 
 const afterNextHandlers = [];
@@ -104,7 +105,11 @@ const helper = {
       after(client.shutdown.bind(client));
     }
     if (options.removeClusterAfter !== false) {
-      after(helper.ccmHelper.remove);
+      after(function (callback) {
+        if (this.currentTest.state !== 'failed') {
+          helper.ccmHelper.remove(callback);
+        }
+      });
     }
 
     return {
@@ -415,7 +420,8 @@ const helper = {
   getServerInfo: function () {
     return {
       version: process.env['CCM_VERSION'] || '3.11.4',
-      isDse: process.env['CCM_IS_DSE'] === 'true'
+      isDse: process.env['CCM_IS_DSE'] === 'true',
+      isHcd: process.env['CCM_IS_HCD'] === 'true'
     };
   },
 
@@ -1346,7 +1352,7 @@ helper.ccm.spawn = function (processName, params, callback) {
 };
 
 helper.ccm.remove = function (callback) {
-  helper.ccm.exec(['remove'], callback);
+  // helper.ccm.exec(['remove'], callback);
 };
 
 helper.ccm.removeIfAny = function (callback) {

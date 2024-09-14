@@ -47,7 +47,7 @@ const cassandraVersionByDse = {
 
 const cassandraVersionByHcd = {
   '1.0': '4.0',
-}
+};
 
 const afterNextHandlers = [];
 let testUnhandledError = null;
@@ -109,8 +109,7 @@ const helper = {
       after(client.shutdown.bind(client));
     }
     after(function (callback) {
-      if (this.currentTest?.state !== 'failed') {
-        console.log('Test status: ', this.currentTest.state);
+      if (this.currentTest && this.currentTest.state !== 'failed') {
         helper.ccmHelper.remove(callback);
       }else{
         callback();
@@ -1375,12 +1374,10 @@ helper.ccm.spawn = function (processName, params, callback) {
 };
 
 helper.ccm.remove = function (callback) {
-  console.log("helper.ccm.remove");
   helper.ccm.exec(['remove'], callback);
 };
 
 helper.ccm.removeIfAny = function (callback) {
-  console.log("helper.ccm.removeIfAny");
   helper.ccm.exec(['remove'], function () {
     // Ignore errors
     callback();

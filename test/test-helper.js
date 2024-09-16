@@ -1249,8 +1249,6 @@ helper.ccm.bootstrapNode = function (options, callback) {
     'node' + options.nodeIndex,
     '-i',
     ipPrefix + options.nodeIndex,
-    '-j',
-    (7000 + 100 * options.nodeIndex).toString(),
     '-b'
   ];
 
@@ -1299,7 +1297,7 @@ helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
  * @param {Function} callback
  */
 helper.ccm.startNode = function (nodeIndex, callback) {
-  const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+  const args = ['node' + nodeIndex, 'start', '--wait-for-binary-proto'];
 
   if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
     args.push('--quiet-windows');

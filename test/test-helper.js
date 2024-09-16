@@ -1146,6 +1146,8 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       const clusterName = helper.getRandomName('test');
       let create = ['create', clusterName];
 
+      create.push('-i', '127.0.0.');
+      
       if (serverInfo.isDse) {
         create.push('--dse');
       }
@@ -1249,7 +1251,6 @@ helper.ccm.bootstrapNode = function (options, callback) {
     'node' + options.nodeIndex,
     '-i',
     ipPrefix + options.nodeIndex,
-    '-b'
   ];
 
   if (helper.getServerInfo().isDse) {

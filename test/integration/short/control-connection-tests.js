@@ -121,8 +121,8 @@ describe('ControlConnection', function () {
 
       // While the host is started, it's not a given that it will have been connected and marked up,
       // wait for that to be the case.
-      await helper.wait.forNodeToBeAdded(cc.hosts, 3);
-      await helper.wait.forNodeUp(cc.hosts, 3, 5000, 200);
+      await helper.wait.forNodeToBeAdded(cc.hosts, 3, 5000, 200);
+      await helper.wait.forNodeUp(cc.hosts, 3);
 
       const countUp = cc.hosts.values().reduce((value, host) => value + (host.isUp() ? 1 : 0), 0);
       assert.strictEqual(countUp, 3);

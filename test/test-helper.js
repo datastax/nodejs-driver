@@ -108,13 +108,9 @@ const helper = {
       }
       after(client.shutdown.bind(client));
     }
-    after(function (callback) {
-      if (this.currentTest && this.currentTest.state !== 'failed') {
-        helper.ccmHelper.remove(callback);
-      }else{
-        callback();
-      }
-    });
+    if (options.removeClusterAfter !== false) {
+      after(helper.ccmHelper.remove);
+    }
     return {
       client: client,
       keyspace: keyspace
@@ -1146,8 +1142,6 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       const clusterName = helper.getRandomName('test');
       let create = ['create', clusterName];
 
-      create.push('-i', '127.0.0.');
-      
       if (serverInfo.isDse) {
         create.push('--dse');
       }
@@ -1251,6 +1245,9 @@ helper.ccm.bootstrapNode = function (options, callback) {
     'node' + options.nodeIndex,
     '-i',
     ipPrefix + options.nodeIndex,
+    '-j',
+    (7000 + 100 * options.nodeIndex).toString(),
+    '-b'
   ];
 
   if (helper.getServerInfo().isDse) {
@@ -1324,8 +1321,6 @@ helper.ccm.resumeNode = function (nodeIndex, callback) {
 };
 
 helper.ccm.exec = function (params, callback) {
-  // eslint-disable-next-line no-console, no-undef
-  console.log("Executing ccm command: ", params);
   helper.ccm.spawn('ccm', params, callback);
 };
 

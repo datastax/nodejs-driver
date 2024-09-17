@@ -342,9 +342,8 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1',
+            values '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1', // Current Apache Cassandra
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
           }

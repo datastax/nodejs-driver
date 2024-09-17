@@ -1146,8 +1146,6 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       const clusterName = helper.getRandomName('test');
       let create = ['create', clusterName];
 
-      create.push('-i', '127.0.0.');
-      
       if (serverInfo.isDse) {
         create.push('--dse');
       }
@@ -1251,6 +1249,9 @@ helper.ccm.bootstrapNode = function (options, callback) {
     'node' + options.nodeIndex,
     '-i',
     ipPrefix + options.nodeIndex,
+    '-j',
+    (7000 + 100 * options.nodeIndex).toString(),
+    '-b'
   ];
 
   if (helper.getServerInfo().isDse) {
@@ -1298,7 +1299,7 @@ helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
  * @param {Function} callback
  */
 helper.ccm.startNode = function (nodeIndex, callback) {
-  const args = ['node' + nodeIndex, 'start', '--wait-for-binary-proto'];
+  const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
 
   if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
     args.push('--quiet-windows');

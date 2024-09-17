@@ -344,11 +344,11 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.0',     // Previous Apache Cassandra
-                    // '4.1.0',    // Previous Apache Cassandra 
-                    '5.0-beta1',
-                   // 'dse-5.1.35', // Legacy DataStax Enterprise
-                   // 'dse-6.8.30', // Development DataStax Enterprise
-                   //  'dse-6.9.0' // Current DataStax Enterprise
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1',
+                   'dse-5.1.35', // Legacy DataStax Enterprise
+                   'dse-6.8.30', // Development DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
           }
           axis {
@@ -439,10 +439,11 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1', // Current Apache Cassandra 
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
@@ -530,12 +531,15 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',     // Previous Apache Cassandra
-                   '4.0',      // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra
-                   'dse-5.1.35', // Previous DataStax Enterprise
-                   'dse-6.8.30', // Previous DataStax Enterprise
-                    'dse-6.9.0' // Current DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.0',     // Previous Apache Cassandra
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1',
+                   'dse-5.1.35', // Legacy DataStax Enterprise
+                   'dse-6.8.30', // Development DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
+                    
           }
           axis {
             name 'NODEJS_VERSION'

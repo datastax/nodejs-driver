@@ -41,7 +41,12 @@ const cassandraVersionByDse = {
   '5.1': '3.11',
   '6.0': '3.11',
   '6.7': '3.11',
-  '6.8': '3.11'
+  '6.8': '3.11',
+  '6.9': '3.11'
+};
+
+const cassandraVersionByHcd = {
+  '1.0': '4.0',
 };
 
 const afterNextHandlers = [];
@@ -106,7 +111,6 @@ const helper = {
     if (options.removeClusterAfter !== false) {
       after(helper.ccmHelper.remove);
     }
-
     return {
       client: client,
       keyspace: keyspace
@@ -395,27 +399,34 @@ const helper = {
 
   /**
    * Gets the Apache Cassandra version.
-   * When the server is DSE, gets the Apache Cassandra equivalent.
+   * When the server is DSE/HCD, gets the Apache Cassandra equivalent.
    */
   getCassandraVersion: function () {
     const serverInfo = this.getServerInfo();
 
-    if (!serverInfo.isDse) {
+    if (serverInfo.distribution === 'cassandra') {
       return serverInfo.version;
     }
-
-    const dseVersion = serverInfo.version.split('.').slice(0, 2).join('.');
-    return cassandraVersionByDse[dseVersion] || cassandraVersionByDse['6.7'];
+    const literalVersion = serverInfo.version.split('.').slice(0, 2).join('.');
+    if (serverInfo.distribution === 'hcd') {
+      return cassandraVersionByHcd[literalVersion] || cassandraVersionByHcd['1.0'];
+    }
+    if (serverInfo.distribution === 'dse') {
+      return cassandraVersionByDse[literalVersion] || cassandraVersionByDse['6.7'];
+    }
+    throw new Error('Unknown distribution ' + serverInfo.distribution);
   },
 
   /**
    * Gets the server version and type.
-   * @return {{version, isDse}}
+   * @return {{version: String, isDse: Boolean, isHcd: Boolean, distribution: String}}
    */
   getServerInfo: function () {
     return {
       version: process.env['CCM_VERSION'] || '3.11.4',
-      isDse: process.env['CCM_IS_DSE'] === 'true'
+      isDse: process.env['CCM_DISTRIBUTION'] === 'dse',
+      isHcd: process.env['CCM_DISTRIBUTION'] === 'hcd',
+      distribution: process.env['CCM_DISTRIBUTION'] || 'cassandra'
     };
   },
 
@@ -448,6 +459,11 @@ const helper = {
   /** Determines if the current server is a DSE instance. */
   isDse: function () {
     return this.getServerInfo().isDse;
+  },
+
+  /** Determines if the current server is a HCD instance. */
+  isHcd: function () {
+    return this.getServerInfo().isHcd;
   },
 
   /**
@@ -988,6 +1004,33 @@ const helper = {
   },
 
   /**
+ * 
+ * @param {Array.<String>} yamlToFix 
+ */
+  fixYaml : function (yamlToFix) {
+    if (helper.isCassandraGreaterThan("4.1.0")) {
+      // fix the yaml options that turned obsolete since 4.1.0
+      yamlToFix = yamlToFix.map(keyValue => {
+        const [key, value] = keyValue.split(':');
+        const a = /^(\w+)_in_ms$/.exec(key);
+        if (a) {
+          return `${a[1]}:${value}ms`;
+        }
+        const b = /^(\w+)_in_kb$/.exec(key);
+        if (b) {
+          return `${b[1]}:${value}KiB`;
+        }
+        const c = /enable_(\w+)$/.exec(key);
+        if (c) {
+          return `${c[1]}_enabled:${value}`;
+        }
+        return keyValue;
+      });
+    }
+    return yamlToFix;
+  },
+
+  /**
    * Makes a http request and returns the body.
    * @param {{host, port, path}} requestOptions
    * @returns {Promise<string>}
@@ -1103,6 +1146,10 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
         create.push('--dse');
       }
 
+      if(serverInfo.isHcd) {
+        create.push('--hcd');
+      }
+
       create.push('-v', serverInfo.version);
 
       if (process.env['CCM_INSTALL_DIR']) {
@@ -1135,6 +1182,7 @@ helper.ccm.startAll = function (nodeLength, options, callback) {
       if (!options.yaml || !options.yaml.length) {
         return next();
       }
+      options.yaml = helper.fixYaml(options.yaml);
       helper.trace('With cassandra yaml options', options.yaml);
       self.exec(['updateconf'].concat(options.yaml), next);
     },
@@ -1206,6 +1254,10 @@ helper.ccm.bootstrapNode = function (options, callback) {
     ccmArgs.push('--dse');
   }
 
+  if (helper.getServerInfo().isHcd) {
+    ccmArgs.push('--hcd');
+  }
+
   if (options.dc) {
     ccmArgs.push('-d', options.dc);
   }
@@ -1243,7 +1295,7 @@ helper.ccm.setWorkload = function (nodeIndex, workloads, callback) {
  * @param {Function} callback
  */
 helper.ccm.startNode = function (nodeIndex, callback) {
-  const args = ['node' + nodeIndex, 'start', '--wait-other-notice', '--wait-for-binary-proto'];
+  const args = ['node' + nodeIndex, 'start', '--wait-for-binary-proto'];
 
   if (helper.isWin() && helper.isCassandraGreaterThan('2.2.4')) {
     args.push('--quiet-windows');
@@ -1563,7 +1615,6 @@ helper.ads.getKeytabPath = function(username) {
 helper.ads.getKrb5ConfigPath = function() {
   return path.join(this.dir, 'krb5.conf');
 };
-
 
 /**
  * A retry policy for testing purposes only, retries for a number of times

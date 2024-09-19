@@ -19,6 +19,9 @@ def initializeEnvironment() {
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
   env.NODEJS_VERSION_FULL = nodeVersions[env.NODEJS_VERSION]
 
+  env.JAVA8_HOME="${JABBA_HOME}/jdk/1.8"
+  env.JAVA11_HOME="${JABBA_HOME}/jdk/openjdk@1.11"
+  
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
     nodenv versions
     echo "Using Node.js runtime ${NODEJS_VERSION} (${NODEJS_VERSION_FULL})"
@@ -38,9 +41,21 @@ CCM_CASSANDRA_VERSION=${DSE_FIXED_VERSION} # maintain for backwards compatibilit
 CCM_VERSION=${DSE_FIXED_VERSION}
 CCM_SERVER_TYPE=dse
 DSE_VERSION=${DSE_FIXED_VERSION}
-CCM_IS_DSE=true
+CCM_DISTRIBUTION=dse
 CCM_BRANCH=${DSE_FIXED_VERSION}
 DSE_BRANCH=${DSE_FIXED_VERSION}
+ENVIRONMENT_EOF
+      '''
+  }
+
+  if (env.CASSANDRA_VERSION.split('-')[0] == 'hcd'){
+    env.HCD_FIXED_VERSION = env.CASSANDRA_VERSION.split('-')[1]
+    sh label: 'Update environment for HCD', script: '''#!/bin/bash -le
+        cat >> ${HOME}/environment.txt << ENVIRONMENT_EOF
+CCM_PATH=${HOME}/ccm
+CCM_CASSANDRA_VERSION=${HCD_FIXED_VERSION} # maintain for backwards compatibility
+CCM_VERSION=${HCD_FIXED_VERSION}
+CCM_DISTRIBUTION=hcd
 ENVIRONMENT_EOF
       '''
   }
@@ -246,10 +261,11 @@ pipeline {
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
       choices: [
-                '3.11',    // Current Apache Cassandra
-                '4.0',     // Development Apache Cassandra
+                '3.11',    // Previous Apache Cassandra
+                '4.0',     // Previous Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
-                'dse-6.8.30', // Development DataStax Enterprise
+                'dse-6.8.30', // Previoius DataStax Enterprise
+                'dse-6.9.0', // Current DataStax Enterprise
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
@@ -327,10 +343,11 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1', // Current Apache Cassandra
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
@@ -382,7 +399,7 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30'  }
             }
             steps {
               executeExamples()
@@ -420,10 +437,11 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1', // Current Apache Cassandra 
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
@@ -511,10 +529,12 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',     // Current Apache Cassandra
-                   '4.0',      // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1.0',    // Previous Apache Cassandra 
+                   '5.0-beta1', // Current Apache Cassandra
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
+                    
           }
           axis {
             name 'NODEJS_VERSION'

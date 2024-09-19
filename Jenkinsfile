@@ -72,6 +72,7 @@ def installDriverAndDependencies() {
 def executeLinter() {
   sh label: 'Perform static analysis of source code', script: '''#!/bin/bash -lex
     npm run eslint
+    nodenv install -list
   '''
 }
 

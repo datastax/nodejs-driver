@@ -386,20 +386,6 @@ pipeline {
           }
         }
       }
-      post {
-        aborted {
-          notifySlack('aborted')
-        }
-        success {
-          notifySlack('completed')
-        }
-        unstable {
-          notifySlack('unstable')
-        }
-        failure {
-          notifySlack('FAILED')
-        }
-      }
     }
 
     stage('Scheduled-Testing') {

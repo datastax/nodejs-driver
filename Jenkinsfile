@@ -269,47 +269,7 @@ pipeline {
                 'dse-6.9.0', // Current DataStax Enterprise
                 'hcd-1.0.0', // HCD
                 'ALL'],
-      description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
-                      <table style="width:100%">
-                        <col width="15%">
-                        <col width="85%">
-                        <tr>
-                          <th align="left">Choice</th>
-                          <th align="left">Description</th>
-                        </tr>
-                        <tr>
-                          <td><strong>3.11</strong></td>
-                          <td>Apache Cassandra v3.11.x</td>
-                        </tr>
-                        <tr>
-                          <td><strong>4.0</strong></td>
-                          <td>Apache Cassandra v4.0</td>
-                        </tr>
-                        <tr>
-                          <td><strong>4.1</strong></td>
-                          <td>Apache Cassandra v4.1</td>
-                        </tr>
-                        <tr>
-                          <td><strong>5.0-beta1</strong></td>
-                          <td>Apache Cassandra v5.0</td>
-                        </tr>
-                        <tr>
-                          <td><strong>dse-5.1</strong></td>
-                          <td>DataStax Enterprise v5.1.x</td>
-                        </tr>
-                        <tr>
-                          <td><strong>dse-6.8</strong></td>
-                          <td>DataStax Enterprise v6.8 </td>
-                        </tr>
-                        <tr>
-                          <td><strong>dse-6.9</strong></td>
-                          <td>DataStax Enterprise v6.9 </td>
-                        </tr>
-                        <tr>
-                          <td><strong>hcd-1.0.0</strong></td>
-                          <td>Hyper-Converged Database v1.0.0</td>
-                        </tr>
-                      </table>''')
+      description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>''')
     booleanParam(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_EXECUTE_EXAMPLES',
       defaultValue: false,

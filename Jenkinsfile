@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['18': '18.17.1', '20': '20.5.1']
+  def nodeVersions = ['18': '18.20.4', '20': '20.17.0', '22': '22.8.0']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -262,9 +262,12 @@ pipeline {
       choices: [
                 '3.11',    // Previous Apache Cassandra
                 '4.0',     // Previous Apache Cassandra
+                '4.1.0',    // Previous Apache Cassandra 
+                '5.0-beta1', // Current Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
                 'dse-6.8.30', // Previoius DataStax Enterprise
                 'dse-6.9.0', // Current DataStax Enterprise
+                'hcd-1.0.0', // HCD
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
@@ -280,7 +283,15 @@ pipeline {
                         </tr>
                         <tr>
                           <td><strong>4.0</strong></td>
-                          <td>Apache Cassandra v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>Apache Cassandra v4.0</td>
+                        </tr>
+                        <tr>
+                          <td><strong>4.1</strong></td>
+                          <td>Apache Cassandra v4.1</td>
+                        </tr>
+                        <tr>
+                          <td><strong>5.0-beta1</strong></td>
+                          <td>Apache Cassandra v5.0</td>
                         </tr>
                         <tr>
                           <td><strong>dse-5.1</strong></td>
@@ -288,7 +299,15 @@ pipeline {
                         </tr>
                         <tr>
                           <td><strong>dse-6.8</strong></td>
-                          <td>DataStax Enterprise v6.8.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                          <td>DataStax Enterprise v6.8 </td>
+                        </tr>
+                        <tr>
+                          <td><strong>dse-6.9</strong></td>
+                          <td>DataStax Enterprise v6.9 </td>
+                        </tr>
+                        <tr>
+                          <td><strong>hcd-1.0.0</strong></td>
+                          <td>Hyper-Converged Database v1.0.0</td>
                         </tr>
                       </table>''')
     booleanParam(
@@ -345,12 +364,13 @@ pipeline {
             values '3.11',    // Previous Apache Cassandra
                    '4.1.0',    // Previous Apache Cassandra 
                    '5.0-beta1', // Current Apache Cassandra
+                   'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20'
+            values '18', '20', '22'
           }
         }
 
@@ -439,12 +459,13 @@ pipeline {
             values '3.11',    // Previous Apache Cassandra
                    '4.1.0',    // Previous Apache Cassandra 
                    '5.0-beta1', // Current Apache Cassandra 
+                   'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20'
+            values '18', '20', '22'
           }
         }
 
@@ -531,13 +552,14 @@ pipeline {
             values '3.11',    // Previous Apache Cassandra
                    '4.1.0',    // Previous Apache Cassandra 
                    '5.0-beta1', // Current Apache Cassandra
+                   'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
                     
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20'
+            values '18', '20', '22'
           }
         }
         when {

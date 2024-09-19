@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['16': '16.20.2', '18': '18.17.1', '20': '20.5.1']
+  def nodeVersions = ['18': '18.17.1', '20': '20.5.1']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -87,7 +87,6 @@ def installDriverAndDependencies() {
 def executeLinter() {
   sh label: 'Perform static analysis of source code', script: '''#!/bin/bash -lex
     npm run eslint
-    nodenv install -list
   '''
 }
 
@@ -256,7 +255,7 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['16', '18', '20', 'ALL'],
+      choices: ['18', '20', '22', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
@@ -351,7 +350,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20'
           }
         }
 
@@ -445,7 +444,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20'
           }
         }
 
@@ -538,7 +537,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20'
           }
         }
         when {

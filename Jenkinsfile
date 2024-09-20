@@ -378,12 +378,26 @@ pipeline {
           }
           stage('Execute-Examples') {
             when {
-              expression { env.CASSANDRA_VERSION == 'dse-6.8.30'  }
+              expression { env.CASSANDRA_VERSION == 'dse-6.8.30' }
             }
             steps {
               executeExamples()
             }
           }
+        }
+      }
+      post {
+        aborted {
+          notifySlack('aborted')
+        }
+        success {
+          notifySlack('completed')
+        }
+        unstable {
+          notifySlack('unstable')
+        }
+        failure {
+          notifySlack('FAILED')
         }
       }
     }

@@ -21,7 +21,7 @@
   "types": "./index.d.ts",
   "dependencies": {
     "@types/long": "~5.0.0",
-    "@types/node": "^18.20.4",
+    "@types/node": "^18.11.18",
     "adm-zip": "~0.5.10",
     "long": "~5.2.3"
   },

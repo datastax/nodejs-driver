@@ -45,14 +45,14 @@ vdescribe('5.0.0', 'Vector tests', function () {
             if(!client) return done(new Error('client is not defined'));
             const id = types.Uuid.random();
             const v1 = new Float32Array([1.1, 2.2, 3.3]);
-            const query = `INSERT INTO ${table} (id, v1) VALUES (${id}, [${v1.toString()}])`;
-            client.execute(query, [], {}, function(err){
+            const query = `INSERT INTO ${table} (id, v1) VALUES (?, ?)`;
+            client.execute(query, [id, v1], {prepare : true}, function(err){
                 if (err) return done(err);
                 client.execute(`SELECT v1 FROM ${table} WHERE id = ?`, [id], { prepare: true }, function(err, result){
                     if (err) return done(err);
                     assert.strictEqual(result.rows.length, 1);
                     assert.strictEqual(result.rows[0].v1.length, 3);
-                    assert.strictEqual(result.rows[0].v1[0], v1[0]);
+                    assert.strictEqual(result.rows[0].v1[0], v1[0]); 
                     assert.strictEqual(result.rows[0].v1[1], v1[1]);
                     assert.strictEqual(result.rows[0].v1[2], v1[2]);
                     done();

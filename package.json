@@ -21,11 +21,12 @@
   "types": "./index.d.ts",
   "dependencies": {
     "@types/long": "~5.0.0",
-    "@types/node": ">=8",
+    "@types/node": "^18.11.18",
     "adm-zip": "~0.5.10",
     "long": "~5.2.3"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.8",
     "chai": "~4.3.8",
     "kerberos": "~2.0.3",
     "mocha": "~10.2.0",

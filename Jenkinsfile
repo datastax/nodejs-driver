@@ -217,6 +217,12 @@ def describeAdhocTestingStage() {
   }
 }
 
+def describeInstallAndLint(){
+  describePerCommitStage()
+  installDriverAndDependencies()
+  executeLinter()
+}
+
 // branch pattern for cron
 def branchPatternCron() {
   ~"(master)"
@@ -350,19 +356,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describePerCommitStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {
@@ -390,6 +386,12 @@ pipeline {
       post {
         aborted {
           notifySlack('aborted')
+        }
+        success {
+          notifySlack('completed')
+        }
+        unstable {
+          notifySlack('unstable')
         }
         failure {
           notifySlack('FAILED')
@@ -479,6 +481,12 @@ pipeline {
       post {
         aborted {
           notifySlack('aborted')
+        }
+        success {
+          notifySlack('completed')
+        }
+        unstable {
+          notifySlack('unstable')
         }
         failure {
           notifySlack('FAILED')

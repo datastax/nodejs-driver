@@ -450,8 +450,10 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
             });
           }));
           // if dse-6.9.0, skip this test because NODEJS-676 and DSP-24336
-          (helper.getServerInfo().version === '6.9.0' && helper.getServerInfo().isDse) ?
-            it.skip : it('should retrieve a Int64 scalar', wrapClient(function (client, done) {
+          if (helper.getServerInfo().version === '6.9.0' && helper.getServerInfo().isDse) {
+            it.skip('should retrieve a Int64 scalar');
+          } else {
+            it('should retrieve a Int64 scalar', wrapClient(function (client, done) {
               const query = JSON.stringify({
                 '@type': 'g:Bytecode',
                 '@value': {
@@ -466,6 +468,7 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
                 done();
               });
             }));
+          }
           it('should allow graph language to be set from the execution profile', wrapClient(function (client, done) {
             const query = JSON.stringify({
               '@type': 'g:Bytecode',

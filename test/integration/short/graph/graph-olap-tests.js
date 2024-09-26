@@ -135,16 +135,20 @@ vdescribe('dse-5.0', 'Client with spark workload', function () {
     );
     context('with no callback specified', function () {
       // if dse-6.9.0, skip this test because NODEJS-676 and DSP-24336
-      (helper.getServerInfo().version === '6.9.0' && helper.getServerInfo().isDse) ?
-        it.skip : it('should return a promise for OLAP query', function () {
-          const client = newInstance();
-          const p = client.executeGraph('g.V().count()', { graphSource: 'a' });
-          helper.assertInstanceOf(p, Promise);
-          return p.then(function (result) {
-            helper.assertInstanceOf(result, graphModule.GraphResultSet);
-            assert.strictEqual(typeof result.first(), 'number');
+      if (helper.getServerInfo().version === '6.9.0' && helper.getServerInfo().isDse) {
+        xit('should return a promise for OLAP query');
+      } else {
+        it(
+          'should return a promise for OLAP query', function () {
+            const client = newInstance();
+            const p = client.executeGraph('g.V().count()', { graphSource: 'a' });
+            helper.assertInstanceOf(p, Promise);
+            return p.then(function (result) {
+              helper.assertInstanceOf(result, graphModule.GraphResultSet);
+              assert.strictEqual(typeof result.first(), 'number');
+            });
           });
-        });
+      }
     });
   });
 });

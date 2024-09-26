@@ -21,6 +21,7 @@ def initializeEnvironment() {
 
   env.JAVA8_HOME="${JABBA_HOME}/jdk/1.8"
   env.JAVA11_HOME="${JABBA_HOME}/jdk/openjdk@1.11"
+  env.JAVA17_HOME="${JABBA_HOME}/jdk/openjdk@1.17"
   
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
     nodenv versions
@@ -91,6 +92,10 @@ def executeLinter() {
 }
 
 def executeTests() {
+  def javaVersion = '1.8'
+  if (env.CASSANDRA_VERSION == '5.0') {
+    javaVersion = 'openjdk@1.17'
+  }
   sh label: 'Execute tests', script: '''#!/bin/bash -lex
     # Load CCM environment variables
     set -o allexport
@@ -101,7 +106,7 @@ def executeTests() {
     # TODO: This should last us through testing against Cassandra 4.1.x at least but
     # will eventually need to be made more generic.
     . ${JABBA_SHELL}
-    jabba use 1.8
+    jabba use ''' + javaVersion + '''
 
     npm run ci_jenkins
   '''
@@ -262,8 +267,8 @@ pipeline {
       choices: [
                 '3.11',    // Previous Apache Cassandra
                 '4.0',     // Previous Apache Cassandra
-                '4.1.0',    // Previous Apache Cassandra 
-                '5.0-beta1', // Current Apache Cassandra
+                '4.1',    // Previous Apache Cassandra 
+                '5.0', // Current Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
                 'dse-6.8.30', // Previoius DataStax Enterprise
                 'dse-6.9.0', // Current DataStax Enterprise
@@ -322,8 +327,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
@@ -411,8 +416,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra 
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra 
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
@@ -498,8 +503,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD

@@ -441,19 +441,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describeScheduledTestingStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {

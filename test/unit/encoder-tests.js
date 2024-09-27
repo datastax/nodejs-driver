@@ -20,7 +20,7 @@ const util = require('util');
 const utils = require('../../lib/utils');
 const tokenizer = require('../../lib/tokenizer');
 const token = require('../../lib/token');
-
+const Vector = require('../../lib/types/vector');
 const Encoder = require('../../lib/encoder');
 const types = require('../../lib/types');
 const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
@@ -685,7 +685,7 @@ describe('encoder', function () {
       const guessedTypeObj = Encoder.guessDataType(refVal);
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
-      helper.assertInstanceOf(decoded, Float32Array);
+      helper.assertInstanceOf(decoded, Vector);
       for (const k in decoded) {
         if (decoded.hasOwnProperty(k)) {
           assert.equal(decoded[k],refVal[k]);

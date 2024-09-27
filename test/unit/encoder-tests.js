@@ -703,7 +703,7 @@ describe('encoder', function () {
       const typeObj = {code: dataTypes.custom, info: typeName};
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
-      helper.assertInstanceOf(decoded, Float32Array);
+      helper.assertInstanceOf(decoded, Vector);
       for (const k in decoded) {
         if (decoded.hasOwnProperty(k)) {
           assert.equal(decoded[k],refVal[k]);
@@ -735,12 +735,6 @@ describe('encoder', function () {
       assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
 
-    it('should fail to encode if full type provided and subtype is not FloatType', function () {
-      const encoder = new Encoder(4, {});
-      const refVal = new Float32Array([1, 2, 3]);
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type,3)';
-      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
-    });
   });
 
   describe('#encode()', function () {

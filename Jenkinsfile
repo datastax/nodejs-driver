@@ -354,7 +354,7 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.1',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8', // Previous DataStax Enterprise
                    'dse-6.9', // Current DataStax Enterprise
                    'hcd-1.0' // HCD

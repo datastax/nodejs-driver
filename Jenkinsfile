@@ -270,7 +270,7 @@ pipeline {
                 '3.11',    // Previous Apache Cassandra
                 '4.0',     // Previous Apache Cassandra
                 '4.1',    // Previous Apache Cassandra 
-                '5.0-beta1', // Current Apache Cassandra
+                '5.0', // Current Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
                 'dse-6.8.30', // Previoius DataStax Enterprise
                 'dse-6.9.0', // Current DataStax Enterprise
@@ -354,9 +354,9 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.1',    // Previous Apache Cassandra 
-                   '5.0.1', // Current Apache Cassandra
-                   'dse-6.8.34', // Previous DataStax Enterprise
-                   'dse-6.8.33', // Current DataStax Enterprise
+                   '5.0', // Current Apache Cassandra
+                   'dse-6.8.30', // Previous DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
           }
           axis {
@@ -439,7 +439,7 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.1',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra 
+                   '5.0', // Current Apache Cassandra 
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
@@ -516,7 +516,7 @@ pipeline {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
                    '4.1',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD

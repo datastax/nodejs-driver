@@ -91,7 +91,6 @@ def executeLinter() {
 }
 
 def executeTests() {
-  def javaVersion = '1.8'
   sh label: 'Execute tests', script: '''#!/bin/bash -lex
     # Load CCM environment variables
     set -o allexport

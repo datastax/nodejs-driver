@@ -15,18 +15,10 @@
  */
 'use strict';
 const assert = require('assert');
-const util = require('util');
 const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
-const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 
 const { types } = require('../../../index.js');
-const utils = require('../../../lib/utils.js');
-const errors = require('../../../lib/errors.js');
-const vit = helper.vit;
 const vdescribe = helper.vdescribe;
-const numericTests = require('./numeric-tests.js');
-const pagingTests = require('./paging-tests.js');
 
 vdescribe('5.0.0', 'Vector tests TypeScript', function () {
     this.timeout(120000);

@@ -15,50 +15,41 @@
  */
 'use strict';
 const assert = require('assert');
-const util = require('util');
 const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
-const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
 
 const { types } = require('../../../index.js');
-const utils = require('../../../lib/utils.js');
-const errors = require('../../../lib/errors.js');
-const vit = helper.vit;
 const vdescribe = helper.vdescribe;
-const numericTests = require('./numeric-tests.js');
-const pagingTests = require('./paging-tests.js');
-const Vector = require('../../../lib/types/vector.js');
 
 vdescribe('5.0.0', 'Vector tests', function () {
-    this.timeout(120000);
-    describe('#execute with vectors', function () {
-        const keyspace = helper.getRandomName('ks');
-        const table = keyspace + '.' + helper.getRandomName('table');
-        const createTableCql = `CREATE TABLE ${table} (id uuid PRIMARY KEY, v1 vector<float, 3>);`;
+  this.timeout(120000);
+  describe('#execute with vectors', function () {
+    const keyspace = helper.getRandomName('ks');
+    const table = keyspace + '.' + helper.getRandomName('table');
+    const createTableCql = `CREATE TABLE ${table} (id uuid PRIMARY KEY, v1 vector<float, 3>);`;
     
-        const setupInfo = helper.setup(1, {
-          keyspace: keyspace,
-          queries: [ createTableCql ]
-        });
-        it('should insert and select vectors', function(done){
-            const client = setupInfo.client;
-            // if client undefined, raise error
-            if(!client) return done(new Error('client is not defined'));
-            const id = types.Uuid.random();
-            const v1 = new Float32Array([1.1, 2.2, 3.3]);
-            const query = `INSERT INTO ${table} (id, v1) VALUES (?, ?)`;
-            client.execute(query, [id, v1], {prepare : true}, function(err){
-                if (err) return done(err);
-                client.execute(`SELECT v1 FROM ${table} WHERE id = ?`, [id], { prepare: true }, function(err, result){
-                    if (err) return done(err);
-                    assert.strictEqual(result.rows.length, 1);
-                    assert.strictEqual(result.rows[0].v1.length, 3);
-                    assert.strictEqual(result.rows[0].v1[0], v1[0]); 
-                    assert.strictEqual(result.rows[0].v1[1], v1[1]);
-                    assert.strictEqual(result.rows[0].v1[2], v1[2]);
-                    done();
-                });
-            });
-        });
+    const setupInfo = helper.setup(1, {
+      keyspace: keyspace,
+      queries: [ createTableCql ]
     });
+    it('should insert and select vectors', function(done){
+      const client = setupInfo.client;
+      // if client undefined, raise error
+      if(!client) {return done(new Error('client is not defined'));}
+      const id = types.Uuid.random();
+      const v1 = new Float32Array([1.1, 2.2, 3.3]);
+      const query = `INSERT INTO ${table} (id, v1) VALUES (?, ?)`;
+      client.execute(query, [id, v1], {prepare : true}, function(err){
+        if (err) {return done(err);}
+        client.execute(`SELECT v1 FROM ${table} WHERE id = ?`, [id], { prepare: true }, function(err, result){
+          if (err) {return done(err);}
+          assert.strictEqual(result.rows.length, 1);
+          assert.strictEqual(result.rows[0].v1.length, 3);
+          assert.strictEqual(result.rows[0].v1[0], v1[0]); 
+          assert.strictEqual(result.rows[0].v1[1], v1[1]);
+          assert.strictEqual(result.rows[0].v1[2], v1[2]);
+          done();
+        });
+      });
+    });
+  });
 });

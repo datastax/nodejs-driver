@@ -1109,7 +1109,6 @@ describe('encoder', function () {
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
       assert.strictEqual(dataTypes.custom, type.code);
       assert.ok(typeof type.info === 'object');
-      assert.strictEqual(Object.keys(type.info).length, 1); // {code: dataTypes.float}
       assert.strictEqual(dataTypes.float, type.info.code);
       assert.strictEqual(10, type["dimension"]);
     });

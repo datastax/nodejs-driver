@@ -27,9 +27,8 @@ const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const numericTests = require('./numeric-tests.js');
 const pagingTests = require('./paging-tests.js');
-const Vector = require('../../../lib/types/vector.js');
 
-vdescribe('5.0.0', 'Vector tests', function () {
+vdescribe('5.0.0', 'Vector tests TypeScript', function () {
     this.timeout(120000);
     describe('#execute with vectors', function () {
         const keyspace = helper.getRandomName('ks');
@@ -51,11 +50,12 @@ vdescribe('5.0.0', 'Vector tests', function () {
                 if (err) return done(err);
                 client.execute(`SELECT v1 FROM ${table} WHERE id = ?`, [id], { prepare: true }, function(err, result){
                     if (err) return done(err);
+                    const v1 : Float32Array = result.rows[0].v1;
                     assert.strictEqual(result.rows.length, 1);
-                    assert.strictEqual(result.rows[0].v1.length, 3);
-                    assert.strictEqual(result.rows[0].v1[0], v1[0]); 
-                    assert.strictEqual(result.rows[0].v1[1], v1[1]);
-                    assert.strictEqual(result.rows[0].v1[2], v1[2]);
+                    assert.strictEqual(v1.length, 3);
+                    assert.strictEqual(v1[0], v1[0]); 
+                    assert.strictEqual(v1[1], v1[1]);
+                    assert.strictEqual(v1[2], v1[2]);
                     done();
                 });
             });

@@ -735,6 +735,23 @@ describe('encoder', function () {
       assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
 
+    it('should encode/decode nested type as vector, encoder guesses type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Vector([new Float32Array([1.2, 3.4, 5.6]), new Float32Array([7.8, 9.0, 11.2])]);
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      const encoded = encoder.encode(refVal, guessedTypeObj);
+      const decoded = encoder.decode(encoded, guessedTypeObj);
+      helper.assertInstanceOf(decoded, Vector);
+      // for (const k in decoded) {
+      //   if (decoded.hasOwnProperty(k)) {
+      //     assert.equal(decoded[k],refVal[k]);
+      //   }
+      //   else {
+      //     assert.fail();
+      //   }
+      // }
+    });
+
   });
 
   describe('#encode()', function () {

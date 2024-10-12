@@ -96,7 +96,7 @@ describe('encoder', function () {
   describe('#encode() and #decode()', function () {
     const typeEncoder = new Encoder(2, {});
     it('should encode and decode a guessed double', function () {
-      const value = 1111;
+      const value = 1111.1;
       const encoded = typeEncoder.encode(value);
       const decoded = typeEncoder.decode(encoded, {code: dataTypes.double});
       assert.strictEqual(decoded, value);
@@ -685,7 +685,6 @@ describe('encoder', function () {
       const guessedTypeObj = Encoder.guessDataType(refVal);
       if (guessedTypeObj == null){
         assert.fail();
-        return;
       }
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
@@ -717,6 +716,25 @@ describe('encoder', function () {
         }
       }
     });
+
+    it('should encode/decode Vector of texts as vector, encoder provided with full type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Vector(['a', 'bc', 'de']);
+      /** @type {import('../../lib/encoder').VectorColumnInfo} */
+      const typeObj = {code: dataTypes.custom, info: {code : dataTypes.ascii}, dimension : 3, customTypeName : 'vector'};
+      const encoded = encoder.encode(refVal, typeObj);
+      const decoded = encoder.decode(encoded, typeObj);
+      helper.assertInstanceOf(decoded, Vector);
+      for (const k in decoded) {
+        if (decoded.hasOwnProperty(k)) {
+          assert.equal(decoded[k],refVal[k]);
+        }
+        else {
+          assert.fail();
+        }
+      }
+    });
+
 
     it('should fail to encode if full type provided and input vector fails to match dimensions of type', function () {
       const encoder = new Encoder(4, {});

@@ -689,13 +689,8 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
       helper.assertInstanceOf(decoded, Vector);
-      for (const k in decoded) {
-        if (decoded.hasOwnProperty(k)) {
-          assert.equal(decoded[k],refVal[k]);
-        }
-        else {
-          assert.fail();
-        }
+      for (var i = 0; i < decoded.length; i++) {
+        assert.strictEqual(decoded[i],refVal[i]);
       }
     });
 
@@ -707,13 +702,8 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Vector);
-      for (const k in decoded) {
-        if (decoded.hasOwnProperty(k)) {
-          assert.equal(decoded[k],refVal[k]);
-        }
-        else {
-          assert.fail();
-        }
+      for (let i = 0; i < decoded.length; i++) {
+        assert.strictEqual(decoded[i],refVal[i]);
       }
     });
 
@@ -725,13 +715,8 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Vector);
-      for (const k in decoded) {
-        if (decoded.hasOwnProperty(k)) {
-          assert.equal(decoded[k],refVal[k]);
-        }
-        else {
-          assert.fail();
-        }
+      for (let k = 0; k < decoded.length; k++) {
+        assert.strictEqual(decoded[k],refVal[k]);
       }
     });
 

@@ -19,7 +19,7 @@ const helper = require('../../test-helper.js');
 
 const { types } = require('../../../index.js');
 const Vector = require('../../../lib/types/vector.js');
-const { util } = require('chai');
+const util = require('node:util');
 const vdescribe = helper.vdescribe;
 
 const dataProvider = [
@@ -48,7 +48,7 @@ const dataProvider = [
     value: [1.1, 2.2, 3.3]
   },
   {
-    subtypeString: 'text',
+    subtypeString: 'varchar',
     typeInfo: {
       code: types.dataTypes.custom,
       info: {
@@ -58,6 +58,19 @@ const dataProvider = [
       dimension: 3
     },
     value: ['ab', 'b', 'cde']
+  },
+  {
+    subtypeString: 'list<float>',
+    typeInfo: {
+      code: types.dataTypes.custom,
+      info: {
+        code: types.dataTypes.list,
+        subTypes: [{ code: types.dataTypes.float }]
+      },
+      customTypeName: 'vector',
+      dimension: 3
+    },
+    value: [[1.1122000217437744, 2.212209939956665], [2.212209939956665, 2.212209939956665], [1.1122000217437744, 1.1122000217437744]]
   }
 ];
 
@@ -70,7 +83,7 @@ vdescribe('5.0.0', 'Vector tests', function () {
     const table = keyspace + '.' + helper.getRandomName('table');
     let createTableCql = `CREATE TABLE ${table} (id uuid PRIMARY KEY`;
     dataProvider.forEach(data => {
-      createTableCql += `, v${data.subtypeString} vector<${data.subtypeString}, 3>`;
+      createTableCql += `, ${subtypeStringToColumnName(data.subtypeString)} vector<${data.subtypeString}, 3>`;
     });
     createTableCql += ');';
 
@@ -86,19 +99,42 @@ vdescribe('5.0.0', 'Vector tests', function () {
       it('should insert and select vector of subtype ' + data.subtypeString, function (done) {
         const id = types.Uuid.random();
         const vector = new Vector(data.value, data.subtypeString);
-        const query = `INSERT INTO ${table} (id, v${data.subtypeString}) VALUES (?, ?)`;
+        const query = `INSERT INTO ${table} (id, ${subtypeStringToColumnName(data.subtypeString)}) VALUES (?, ?)`;
         client.execute(query, [id, vector], { prepare: true }, function (err) {
           if (err) { return done(err); }
-          client.execute(`SELECT v${data.subtypeString} FROM ${table} WHERE id = ?`, [id], { prepare: true }, function (err, result) {
+          client.execute(`SELECT ${subtypeStringToColumnName(data.subtypeString)} FROM ${table} WHERE id = ?`, [id], { prepare: true }, function (err, result) {
             if (err) { return done(err); }
             assert.strictEqual(result.rows.length, 1);
-            assert.strictEqual(util.inspect(result.rows[0][`v${data.subtypeString}`]), util.inspect(vector));
+            assert.strictEqual(util.inspect(result.rows[0][subtypeStringToColumnName(data.subtypeString)]), util.inspect(vector));
+            done();
+          });
+        });
+      });
+
+      it('should insert and select vector of subtype ' + data.subtypeString + ' while guessing data type', function (done) {
+        const id = types.Uuid.random();
+        const vector = new Vector(data.value, data.subtypeString);
+        const query = `INSERT INTO ${table} (id, ${subtypeStringToColumnName(data.subtypeString)}) VALUES (?, ?)`;
+        client.execute(query, [id, vector], { prepare: true }, function (err) {
+          if (err) { return done(err); }
+          client.execute(`SELECT ${subtypeStringToColumnName(data.subtypeString)} FROM ${table} WHERE id = ?`, [id], { prepare: true }, function (err, result) {
+            if (err) { return done(err); }
+            assert.strictEqual(result.rows.length, 1);
+            assert.strictEqual(util.inspect(result.rows[0][subtypeStringToColumnName(data.subtypeString)]), util.inspect(vector));
+
             done();
           });
         });
       });
     });
-
   });
-
 });
+
+/**
+ * 
+ * @param {string} subtypeString 
+ * @returns 
+ */
+function subtypeStringToColumnName(subtypeString) {
+  return "v" + subtypeString.replace('<', '_').replace('>', '_');
+}

@@ -131,6 +131,17 @@ describe('Vector tests', function () {
       const decoded = encoder.decode(encoded, data.typeInfo);
       assert.strictEqual(util.inspect(decoded), util.inspect(vector));
     });
+
+    it(`should encode and decode vector of ${data.subtypeString} while guessing data type`, function (){
+      const vector = new Vector(data.value, data.subtypeString);
+      const guessedType = Encoder.guessDataType(vector);
+      if (!guessedType) {
+        throw new Error('Can not guess type');
+      }
+      const encoded = encoder.encode(vector, guessedType);
+      const decoded = encoder.decode(encoded, guessedType);
+      assert.strictEqual(util.inspect(decoded), util.inspect(vector));
+    });
   });
 
   it('should encode and decode vector of float', function(){

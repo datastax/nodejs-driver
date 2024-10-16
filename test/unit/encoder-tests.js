@@ -689,7 +689,7 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
       helper.assertInstanceOf(decoded, Vector);
-      for (var i = 0; i < decoded.length; i++) {
+      for (let i = 0; i < decoded.length; i++) {
         assert.strictEqual(decoded[i],refVal[i]);
       }
     });
@@ -753,14 +753,11 @@ describe('encoder', function () {
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
       helper.assertInstanceOf(decoded, Vector);
-      // for (const k in decoded) {
-      //   if (decoded.hasOwnProperty(k)) {
-      //     assert.equal(decoded[k],refVal[k]);
-      //   }
-      //   else {
-      //     assert.fail();
-      //   }
-      // }
+      for (let i = 0; i < decoded.length; i++) {
+        for (let j = 0; j < decoded[i].length; j++) {
+          assert.strictEqual(decoded[i][j],refVal[i][j]);
+        }
+      }
     });
 
   });

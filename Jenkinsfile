@@ -216,6 +216,12 @@ def describeAdhocTestingStage() {
   }
 }
 
+def describeInstallAndLint(){
+  describePerCommitStage()
+  installDriverAndDependencies()
+  executeLinter()
+}
+
 // branch pattern for cron
 def branchPatternCron() {
   ~"(master)"
@@ -262,14 +268,38 @@ pipeline {
       choices: [
                 '3.11',    // Previous Apache Cassandra
                 '4.0',     // Previous Apache Cassandra
-                '4.1.0',    // Previous Apache Cassandra 
-                '5.0-beta1', // Current Apache Cassandra
+                '4.1',    // Previous Apache Cassandra 
+                '5.0', // Current Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
                 'dse-6.8.30', // Previoius DataStax Enterprise
                 'dse-6.9.0', // Current DataStax Enterprise
                 'hcd-1.0.0', // HCD
                 'ALL'],
-      description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>''')
+      description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
+                      <table style="width:100%">
+                        <col width="15%">
+                        <col width="85%">
+                        <tr>
+                          <th align="left">Choice</th>
+                          <th align="left">Description</th>
+                        </tr>
+                        <tr>
+                          <td><strong>3.11</strong></td>
+                          <td>Apache Cassandra v3.11.x</td>
+                        </tr>
+                        <tr>
+                          <td><strong>4.0</strong></td>
+                          <td>Apache Cassandra v4.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                        </tr>
+                        <tr>
+                          <td><strong>dse-5.1</strong></td>
+                          <td>DataStax Enterprise v5.1.x</td>
+                        </tr>
+                        <tr>
+                          <td><strong>dse-6.8</strong></td>
+                          <td>DataStax Enterprise v6.8.x (<b>CURRENTLY UNDER DEVELOPMENT</b>)</td>
+                        </tr>
+                      </table>''')
     booleanParam(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_EXECUTE_EXAMPLES',
       defaultValue: false,
@@ -322,8 +352,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
@@ -349,19 +379,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describePerCommitStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {
@@ -390,6 +410,12 @@ pipeline {
         aborted {
           notifySlack('aborted')
         }
+        success {
+          notifySlack('completed')
+        }
+        unstable {
+          notifySlack('unstable')
+        }
         failure {
           notifySlack('FAILED')
         }
@@ -411,8 +437,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra 
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra 
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD
@@ -438,19 +464,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describeScheduledTestingStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {
@@ -498,8 +514,8 @@ pipeline {
           axis {
             name 'CASSANDRA_VERSION'
             values '3.11',    // Previous Apache Cassandra
-                   '4.1.0',    // Previous Apache Cassandra 
-                   '5.0-beta1', // Current Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
                    'dse-6.8.30', // Previous DataStax Enterprise
                    'dse-6.9.0', // Current DataStax Enterprise
                    'hcd-1.0.0' // HCD

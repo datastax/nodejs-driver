@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['16': '16.20.2', '18': '18.17.1', '20': '20.5.1']
+  def nodeVersions = ['18': '18.20.4', '20': '20.17.0', '22': '22.8.0']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -19,6 +19,9 @@ def initializeEnvironment() {
   env.GITHUB_COMMIT_URL = "${GITHUB_PROJECT_URL}/commit/${env.GIT_COMMIT}"
   env.NODEJS_VERSION_FULL = nodeVersions[env.NODEJS_VERSION]
 
+  env.JAVA8_HOME="${JABBA_HOME}/jdk/1.8"
+  env.JAVA11_HOME="${JABBA_HOME}/jdk/openjdk@1.11"
+  
   sh label: 'Assign Node.js global environment', script: '''#!/bin/bash -lex
     nodenv versions
     echo "Using Node.js runtime ${NODEJS_VERSION} (${NODEJS_VERSION_FULL})"
@@ -38,9 +41,21 @@ CCM_CASSANDRA_VERSION=${DSE_FIXED_VERSION} # maintain for backwards compatibilit
 CCM_VERSION=${DSE_FIXED_VERSION}
 CCM_SERVER_TYPE=dse
 DSE_VERSION=${DSE_FIXED_VERSION}
-CCM_IS_DSE=true
+CCM_DISTRIBUTION=dse
 CCM_BRANCH=${DSE_FIXED_VERSION}
 DSE_BRANCH=${DSE_FIXED_VERSION}
+ENVIRONMENT_EOF
+      '''
+  }
+
+  if (env.CASSANDRA_VERSION.split('-')[0] == 'hcd'){
+    env.HCD_FIXED_VERSION = env.CASSANDRA_VERSION.split('-')[1]
+    sh label: 'Update environment for HCD', script: '''#!/bin/bash -le
+        cat >> ${HOME}/environment.txt << ENVIRONMENT_EOF
+CCM_PATH=${HOME}/ccm
+CCM_CASSANDRA_VERSION=${HCD_FIXED_VERSION} # maintain for backwards compatibility
+CCM_VERSION=${HCD_FIXED_VERSION}
+CCM_DISTRIBUTION=hcd
 ENVIRONMENT_EOF
       '''
   }
@@ -201,6 +216,12 @@ def describeAdhocTestingStage() {
   }
 }
 
+def describeInstallAndLint(){
+  describePerCommitStage()
+  installDriverAndDependencies()
+  executeLinter()
+}
+
 // branch pattern for cron
 def branchPatternCron() {
   ~"(master)"
@@ -240,15 +261,19 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['16', '18', '20', 'ALL'],
+      choices: ['18', '20', '22', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
       choices: [
-                '3.11',    // Current Apache Cassandra
-                '4.0',     // Development Apache Cassandra
+                '3.11',    // Previous Apache Cassandra
+                '4.0',     // Previous Apache Cassandra
+                '4.1',    // Previous Apache Cassandra 
+                '5.0', // Current Apache Cassandra
                 'dse-5.1.35', // Legacy DataStax Enterprise
-                'dse-6.8.30', // Development DataStax Enterprise
+                'dse-6.8.30', // Previoius DataStax Enterprise
+                'dse-6.9.0', // Current DataStax Enterprise
+                'hcd-1.0.0', // HCD
                 'ALL'],
       description: '''Apache Cassandra and DataStax Enterprise server version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>
                       <table style="width:100%">
@@ -326,14 +351,16 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
+                   'dse-6.8.30', // Previous DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20', '22'
           }
         }
 
@@ -352,19 +379,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describePerCommitStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {
@@ -419,14 +436,16 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',    // Current Apache Cassandra
-                   '4.0',     // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra 
+                   'dse-6.8.30', // Previous DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20', '22'
           }
         }
 
@@ -445,19 +464,9 @@ pipeline {
               }
             }
           }
-          stage('Describe-Build') {
+          stage('Describe-Install-And-Lint') {
             steps {
-              describeScheduledTestingStage()
-            }
-          }
-          stage('Install-Driver-And-Dependencies') {
-            steps {
-              installDriverAndDependencies()
-            }
-          }
-          stage('Execute-Linter') {
-            steps {
-              executeLinter()
+              describeInstallAndLint()
             }
           }
           stage('Execute-Tests') {
@@ -486,12 +495,6 @@ pipeline {
         aborted {
           notifySlack('aborted')
         }
-        success {
-          notifySlack('completed')
-        }
-        unstable {
-          notifySlack('unstable')
-        }
         failure {
           notifySlack('FAILED')
         }
@@ -510,14 +513,17 @@ pipeline {
         axes {
           axis {
             name 'CASSANDRA_VERSION'
-            values '3.11',     // Current Apache Cassandra
-                   '4.0',      // Development Apache Cassandra
-                   'dse-5.1.35', // Legacy DataStax Enterprise
-                   'dse-6.8.30' // Development DataStax Enterprise
+            values '3.11',    // Previous Apache Cassandra
+                   '4.1',    // Previous Apache Cassandra 
+                   '5.0', // Current Apache Cassandra
+                   'dse-6.8.30', // Previous DataStax Enterprise
+                   'dse-6.9.0', // Current DataStax Enterprise
+                   'hcd-1.0.0' // HCD
+                    
           }
           axis {
             name 'NODEJS_VERSION'
-            values '16', '18', '20'
+            values '18', '20', '22'
           }
         }
         when {

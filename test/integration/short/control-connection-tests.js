@@ -121,7 +121,7 @@ describe('ControlConnection', function () {
 
       // While the host is started, it's not a given that it will have been connected and marked up,
       // wait for that to be the case.
-      await helper.wait.forNodeToBeAdded(cc.hosts, 3);
+      await helper.wait.forNodeToBeAdded(cc.hosts, 3, 5000, 200);
       await helper.wait.forNodeUp(cc.hosts, 3);
 
       const countUp = cc.hosts.values().reduce((value, host) => value + (host.isUp() ? 1 : 0), 0);
@@ -220,7 +220,7 @@ describe('ControlConnection', function () {
 
       // restart node 2 and make sure it comes up.
       await util.promisify(helper.ccmHelper.startNode)(2);
-      await helper.wait.forNodeUp(cc.hosts, 2);
+      await helper.wait.forNodeUp(cc.hosts, 2, 5000, 200);
 
       // check that host 1 is down, host 2 is up and the control connection is to host 2.
       cc.hosts.forEach(h => {
@@ -232,7 +232,7 @@ describe('ControlConnection', function () {
         }
       });
 
-      await helper.wait.until(() => cc.host);
+      await helper.wait.until(() => cc.host, 5000, 200);
 
       assert.strictEqual(helper.lastOctetOf(cc.host), '2');
     });

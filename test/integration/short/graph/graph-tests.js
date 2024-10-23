@@ -449,21 +449,26 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
               done();
             });
           }));
-          it('should retrieve a Int64 scalar', wrapClient(function (client, done) {
-            const query = JSON.stringify({
-              '@type': 'g:Bytecode',
-              '@value': {
-                'step': [["V"], ["count"]]
-              }
-            });
-            client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
-              assert.ifError(err);
-              helper.assertInstanceOf(result, graphModule.GraphResultSet);
-              const count = result.first();
-              helper.assertInstanceOf(count, types.Long);
-              done();
-            });
-          }));
+          // if dse-6.9.0, skip this test because NODEJS-676 and DSP-24336
+          if (helper.getServerInfo().version === '6.9.0' && helper.getServerInfo().isDse) {
+            it.skip('should retrieve a Int64 scalar');
+          } else {
+            it('should retrieve a Int64 scalar', wrapClient(function (client, done) {
+              const query = JSON.stringify({
+                '@type': 'g:Bytecode',
+                '@value': {
+                  'step': [["V"], ["count"]]
+                }
+              });
+              client.executeGraph(query, null, { graphLanguage: 'bytecode-json' }, function (err, result) {
+                assert.ifError(err);
+                helper.assertInstanceOf(result, graphModule.GraphResultSet);
+                const count = result.first();
+                helper.assertInstanceOf(count, types.Long);
+                done();
+              });
+            }));
+          }
           it('should allow graph language to be set from the execution profile', wrapClient(function (client, done) {
             const query = JSON.stringify({
               '@type': 'g:Bytecode',
@@ -480,7 +485,7 @@ vdescribe('dse-5.0', 'Client @SERVER_API', function () {
               });
               done();
             });
-          }, { profiles: [ new ExecutionProfile('graph-profile1', { graphOptions: { language: 'bytecode-json' } }) ]}));
+          }, { profiles: [new ExecutionProfile('graph-profile1', { graphOptions: { language: 'bytecode-json' } })] }));
         });
       });
       it('should use list as a parameter', wrapClient(function(client, done) {

@@ -320,7 +320,7 @@ export namespace types {
     toString(): string;
   }
 
-  interface ResultSet extends Iterable<Row>, AsyncIterable<Row> {
+  interface ResultSet<T = any> extends Iterable<Row<T>>, AsyncIterable<Row<T>> {
     info: {
       queriedHost: string,
       triedHosts: { [key: string]: any; },
@@ -335,9 +335,9 @@ export namespace types {
     nextPage: (() => void) | null;
     pageState: string;
     rowLength: number;
-    rows: Row[];
+    rows: Row<T>[];
 
-    first(): Row;
+    first(): Row<T>;
 
     wasApplied(): boolean;
   }
@@ -349,16 +349,14 @@ export namespace types {
     add(chunk: Buffer): void;
   }
 
-  interface Row {
-    get(columnName: string | number): any;
+  type Row<T = any> = T & {
+    get<K extends keyof T>(columnName: K): T[K];
 
-    keys(): string[];
+    keys(): (keyof T)[];
 
-    forEach(callback: (row: Row) => void): void;
+    forEach(callback: (row: Row<T>) => void): void;
 
-    values(): any[];
-
-    [key: string]: any;
+    values(): T[];
   }
 
   class TimeUuid extends Uuid {

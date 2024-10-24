@@ -244,8 +244,8 @@ const dataProviderWithCollections = dataProvider.flatMap(data => [
       info: {
         code: types.dataTypes.list,
         info: {
-          code: data.typeInfo.code,
-          info: data.typeInfo.info
+          code: data.typeInfo.info.code,
+          info: data.typeInfo.info.info
         }
       },
       customTypeName: 'vector',
@@ -262,7 +262,7 @@ const dataProviderWithCollections = dataProvider.flatMap(data => [
         code: types.dataTypes.map,
         info: [
           { code: types.dataTypes.int },
-          { code: data.typeInfo.code, info: data.typeInfo.info }
+          { code: data.typeInfo.info.code, info: data.typeInfo.info.info }
         ]
       },
       customTypeName: 'vector',
@@ -278,8 +278,8 @@ const dataProviderWithCollections = dataProvider.flatMap(data => [
       info: {
         code: types.dataTypes.set,
         info: {
-          code: data.typeInfo.code,
-          info: data.typeInfo.info
+          code: data.typeInfo.info.code,
+          info: data.typeInfo.info.info
         }
       },
       customTypeName: 'vector',
@@ -295,8 +295,8 @@ const dataProviderWithCollections = dataProvider.flatMap(data => [
       info: {
         code: types.dataTypes.tuple,
         info: [
-          { code: data.typeInfo.code, info: data.typeInfo.info },
-          { code: data.typeInfo.code, info: data.typeInfo.info }
+          { code: data.typeInfo.info.code, info: data.typeInfo.info.info },
+          { code: data.typeInfo.info.code, info: data.typeInfo.info.info }
         ]
       },
       customTypeName: 'vector',
@@ -311,7 +311,10 @@ const dataProviderWithCollections = dataProvider.flatMap(data => [
       code: types.dataTypes.custom,
       info: {
         code: types.dataTypes.custom,
-        info: data.typeInfo.info,
+        info: {
+          code: data.typeInfo.info.code,
+          info: data.typeInfo.info.info
+        },
         customTypeName: 'vector',
         dimension: 3
       },

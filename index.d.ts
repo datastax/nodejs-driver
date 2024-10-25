@@ -349,6 +349,10 @@ export namespace errors {
     constructor(address: string, maxRequestsPerConnection: number, connectionLength: number);
   }
 
+  class VIntOutOfRangeException extends DriverError {
+    constructor(long: Long);
+  }
+
   abstract class DriverError extends Error {
     info: string;
 

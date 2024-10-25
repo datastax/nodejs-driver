@@ -364,7 +364,7 @@ vdescribe('5.0.0', 'Vector tests', function () {
     if (!client) { throw new Error('client setup failed'); }
 
     dataProviderWithCollections.forEach(data => {
-      it('should insert and select vector of subtype ' + data.subtypeString, function (done) {
+      it('should insert, select, and update vector of subtype ' + data.subtypeString, function (done) {
         const id = types.Uuid.random();
         const vector = new Vector(data.value, data.subtypeString);
         const query = `INSERT INTO ${table} (id, ${subtypeStringToColumnName(data.subtypeString)}) VALUES (?, ?)`;
@@ -374,16 +374,25 @@ vdescribe('5.0.0', 'Vector tests', function () {
             if (err) { return done(err); }
             assert.strictEqual(result.rows.length, 1);
             assert.strictEqual(util.inspect(result.rows[0][subtypeStringToColumnName(data.subtypeString)]), util.inspect(vector));
-            done();
-          });
+
+            const updatedValues = data.value.slice();
+            updatedValues[0] = updatedValues[1];
+            client.execute(`UPDATE ${table} SET ${subtypeStringToColumnName(data.subtypeString)} = ? WHERE id = ?`, [new Vector(updatedValues, data.subtypeString), id], { prepare: true }, function (err, result) {
+              if (err) { return done(err); }
+              done();
+            } );
+          })
         });
       });
 
-      it('should insert and select vector of subtype ' + data.subtypeString + ' while guessing data type', function (done) {
+      it('should insert and select vector of subtype ' + data.subtypeString + ' with prepare to be false', function (done) {
+        if (data.subtypeString === 'my_udt') {
+          this.skip();
+        }
         const id = types.Uuid.random();
         const vector = new Vector(data.value, data.subtypeString);
         const query = `INSERT INTO ${table} (id, ${subtypeStringToColumnName(data.subtypeString)}) VALUES (?, ?)`;
-        client.execute(query, [id, vector], { prepare: true }, function (err) {
+        client.execute(query, [id, vector], { prepare: false }, function (err) {
           if (err) { return done(err); }
           client.execute(`SELECT ${subtypeStringToColumnName(data.subtypeString)} FROM ${table} WHERE id = ?`, [id], { prepare: true }, function (err, result) {
             if (err) { return done(err); }

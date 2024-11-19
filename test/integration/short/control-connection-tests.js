@@ -151,6 +151,27 @@ describe('ControlConnection', function () {
       assert.strictEqual(cc.hosts.length, 1);
     });
 
+    it('should not break when refreshing concurrently', async () => {
+      const cc = newInstance();
+      cc.options.policies.loadBalancing = new policies.loadBalancing.RoundRobinPolicy();
+      disposeAfter(cc);
+
+      await cc.init();
+      await new Promise(r => cc.options.policies.loadBalancing.init(null, cc.hosts, r));
+
+      /** @type {Array<Promise>} */
+      const refreshPromises = [];
+      // randomly emit 200 times cc._refresh
+      for (let i = 0; i < 200; i++) {
+        refreshPromises.push(cc._refresh());
+        // interval of random number
+        await helper.delayAsync(Math.floor(Math.random() * 200));
+      }
+      Promise.all(refreshPromises);
+      assert.ok(cc.host);
+      assert.ok(cc.connection);
+    });
+
     it('should reconnect when host used goes down', async () => {
       const options = clientOptions.extend(
         utils.extend({ pooling: helper.getPoolingOptions(1, 1, 500) }, helper.baseOptions));

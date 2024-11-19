@@ -1441,10 +1441,10 @@ helper.ads._spawnAndWait = function(processName, params, cb) {
     cb = utils.noop;
   };
 
-  // If process hasn't completed in 10 seconds.
+  // If process hasn't completed in 20 seconds.
   timeout = setTimeout(function() {
     callbackOnce(new Error("Timed out while waiting for " + processName + " to complete."));
-  }, 10000);
+  }, 20000);
 
   const p = spawn(processName, params, {
     env: Object.assign({ KRB5_CONFIG: this.getKrb5ConfigPath()}, process.env)

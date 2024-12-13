@@ -24,3 +24,4 @@ out/
 **/typescript/*.js
 **/typescript/*.js.map
 **/typescript/generated.ts
+dist

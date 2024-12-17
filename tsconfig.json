@@ -16,7 +16,7 @@
     "target": "es2015",
     "lib": ["es2015"],
     "module": "CommonJS",
-    "strict": true,
+    // "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

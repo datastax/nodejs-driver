@@ -107,4 +107,4 @@ PlainTextAuthenticator.prototype.evaluateChallenge = function (challenge, callba
   ]));
 };
 
-module.exports = DsePlainTextAuthProvider;
+export default DsePlainTextAuthProvider;

@@ -152,4 +152,4 @@ class StandardGssClient extends GssapiClient {
   }
 }
 
-module.exports = GssapiClient;
+export default GssapiClient;

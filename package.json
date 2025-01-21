@@ -18,7 +18,6 @@
     "graphdb"
   ],
   "license": "Apache-2.0",
-  "types": "./index.d.ts",
   "dependencies": {
     "@types/node": "^18.11.18",
     "adm-zip": "~0.5.10",

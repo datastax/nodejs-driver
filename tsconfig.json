@@ -7,18 +7,16 @@
       "strict": false,
       "noImplicitAny": false,
       "outDir": "out",
-      "declaration": true,
-      "allowJs": true,
+      // "declaration": true,
+      // "allowJs": true,
       "esModuleInterop": true,
       "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
-      "checkJs": true,
-      "declarationMap": true
+      // "checkJs": true,
+      // "declarationMap": true
     },
     "include": [
         "lib/**/*.ts",
-        "index.js",
-        "indes.d.ts"
+        "index.ts"
     ],
     "exclude": [
       "node_modules"

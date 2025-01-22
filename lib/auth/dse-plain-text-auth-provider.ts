@@ -15,8 +15,8 @@
  */
 'use strict';
 const util = require('util');
-const { AuthProvider } = require('./provider');
-const BaseDseAuthenticator = require('./base-dse-authenticator');
+import { AuthProvider } from './provider';
+import BaseDseAuthenticator from './base-dse-authenticator';
 const utils = require('../utils');
 
 const mechanism = utils.allocBufferFromString('PLAIN');

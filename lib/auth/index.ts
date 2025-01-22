@@ -29,7 +29,7 @@ import DseGssapiAuthProvider from './dse-gssapi-auth-provider';
 import DsePlainTextAuthProvider from './dse-plain-text-auth-provider';
 import NoAuthProvider from './no-auth-provider';
 
-export default {
+export {
   Authenticator,
   AuthProvider,
   DseGssapiAuthProvider,

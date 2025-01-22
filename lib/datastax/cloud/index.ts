@@ -24,7 +24,7 @@ const { URL } = require('url');
 
 const errors = require('../../errors');
 const utils = require('../../utils');
-const { DsePlainTextAuthProvider, NoAuthProvider } = require('../../auth');
+import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth';
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);

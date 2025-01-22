@@ -16,8 +16,8 @@
 'use strict';
 const util = require('util');
 const { AuthProvider } = require('./provider');
-const BaseDseAuthenticator = require('./base-dse-authenticator');
-const GssapiClient = require('./gssapi-client');
+import BaseDseAuthenticator from './base-dse-authenticator';
+import GssapiClient from './gssapi-client';
 const dns = require('dns');
 const utils = require('../utils');
 

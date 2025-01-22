@@ -22,7 +22,7 @@ const events = require('events');
 
 const Client = require('../../lib/client');
 const clientOptions = require('../../lib/client-options');
-const auth = require('../../lib/auth');
+import * as auth from '../../lib/auth';
 const types = require('../../lib/types');
 const { dataTypes } = types;
 const loadBalancing = require('../../lib/policies/load-balancing');

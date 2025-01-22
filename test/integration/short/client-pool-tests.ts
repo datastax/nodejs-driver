@@ -28,7 +28,7 @@ const types = require('../../../lib/types');
 const policies = require('../../../lib/policies');
 const RoundRobinPolicy = require('../../../lib/policies/load-balancing').RoundRobinPolicy;
 const Murmur3Tokenizer = require('../../../lib/tokenizer').Murmur3Tokenizer;
-const { PlainTextAuthProvider } = require('../../../lib/auth');
+import { PlainTextAuthProvider } from '../../../lib/auth';
 const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 const vit = helper.vit;

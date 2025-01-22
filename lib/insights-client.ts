@@ -26,7 +26,7 @@ const requests = require('./requests');
 const { ExecutionOptions } = require('./execution-options');
 const packageInfo = require('../package.json');
 const VersionNumber = require('./types/version-number');
-const { NoAuthProvider } = require('./auth');
+import { NoAuthProvider } from './auth';
 
 let kerberosModule;
 

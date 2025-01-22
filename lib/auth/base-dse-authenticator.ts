@@ -15,7 +15,7 @@
  */
 'use strict';
 const util = require('util');
-const { Authenticator } = require('./provider');
+import { Authenticator } from './provider';
 
 const dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
 

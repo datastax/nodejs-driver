@@ -15,7 +15,7 @@
  */
 'use strict';
 const assert = require('assert');
-const DseGssapiAuthProvider = require('../../lib/auth/dse-gssapi-auth-provider');
+import DseGssapiAuthProvider from '../../lib/auth/dse-gssapi-auth-provider';
 const helper = require('../test-helper');
 const utils = require('../../lib/utils');
 const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');

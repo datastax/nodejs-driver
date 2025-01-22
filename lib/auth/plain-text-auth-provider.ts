@@ -16,7 +16,7 @@
 'use strict';
 const util = require('util');
 
-const provider = require('./provider');
+import * as provider from './provider';
 const utils = require('../utils');
 const AuthProvider = provider.AuthProvider;
 const Authenticator = provider.Authenticator;

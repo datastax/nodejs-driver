@@ -16,7 +16,7 @@
 'use strict';
 const assert = require('assert');
 const helper = require('../../../test-helper');
-const DseGssapiAuthProvider = require('../../../../lib/auth/dse-gssapi-auth-provider');
+import DseGssapiAuthProvider from '../../../../lib/auth/dse-gssapi-auth-provider';
 const Client = require('../../../../lib/client');
 const errors = require('../../../../lib/errors');
 const ads = helper.ads;

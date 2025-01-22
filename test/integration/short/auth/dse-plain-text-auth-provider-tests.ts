@@ -16,7 +16,7 @@
 'use strict';
 const { assert } = require('chai');
 const helper = require('../../../test-helper');
-const DsePlainTextAuthProvider = require('../../../../lib/auth/dse-plain-text-auth-provider');
+import DsePlainTextAuthProvider from '../../../../lib/auth/dse-plain-text-auth-provider';
 const Client = require('../../../../lib/client');
 const vdescribe = helper.vdescribe;
 

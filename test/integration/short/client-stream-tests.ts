@@ -17,12 +17,12 @@
 const assert = require('assert');
 const util = require('util');
 
-const helper = require('../../test-helper.js');
+const helper = require('../../test-helper');
 const vit = helper.vit;
-const Client = require('../../../lib/client.js');
+const Client = require('../../../lib/client');
 const types = require('../../../lib/types');
-const utils = require('../../../lib/utils.js');
-const errors = require('../../../lib/errors.js');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
 
 describe('Client', function () {
   this.timeout(120000);

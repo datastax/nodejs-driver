@@ -18,12 +18,12 @@
 const assert = require('chai').assert;
 const sinon = require('sinon');
 
-const Connection = require('../../../lib/connection.js');
-const defaultOptions = require('../../../lib/client-options.js').defaultOptions();
-const utils = require('../../../lib/utils.js');
-const requests = require('../../../lib/requests.js');
+const Connection = require('../../../lib/connection');
+const defaultOptions = require('../../../lib/client-options').defaultOptions();
+const utils = require('../../../lib/utils');
+const requests = require('../../../lib/requests');
 const protocolVersion = require('../../../lib/types').protocolVersion;
-const helper = require('../../test-helper.js');
+const helper = require('../../test-helper');
 const errors = require('../../../lib/errors');
 const types = require('../../../lib/types');
 const vit = helper.vit;

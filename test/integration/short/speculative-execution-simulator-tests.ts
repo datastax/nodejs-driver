@@ -20,7 +20,7 @@ const simulacron = require('../simulacron');
 const helper = require('../../test-helper');
 const utils = require('../../../lib/utils');
 
-const Client = require('../../../lib/client.js');
+const Client = require('../../../lib/client');
 const ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
 const NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;

@@ -17,8 +17,8 @@
 
 const util = require('util');
 const types = require('../types');
-const utils = require('../utils.js');
-const errors = require('../errors.js');
+const utils = require('../utils');
+const errors = require('../errors');
 
 const doneIteratorObject = Object.freeze({ done: true });
 const newlyUpInterval = 60000;

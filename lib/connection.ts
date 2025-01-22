@@ -21,7 +21,7 @@ const util = require('util');
 const tls = require('tls');
 const net = require('net');
 
-const Encoder = require('./encoder.js');
+const Encoder = require('./encoder');
 const { WriteQueue } = require('./writers');
 const requests = require('./requests');
 const streams = require('./streams');

@@ -17,10 +17,10 @@
 const assert = require('assert');
 const util = require('util');
 
-const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
-const utils = require('../../../lib/utils.js');
-const loadBalancing = require('../../../lib/policies/load-balancing.js');
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const utils = require('../../../lib/utils');
+const loadBalancing = require('../../../lib/policies/load-balancing');
 const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 

@@ -27,8 +27,8 @@ catch (e) {
   console.log(e);
 }
 
-const helper = require('../../test-helper.js');
-const cassandra = require('../../../index.js');
+const helper = require('../../test-helper');
+const cassandra = require('../../../index');
 const Client = cassandra.Client;
 const types = cassandra.types;
 const utils = require('../../../lib/utils');

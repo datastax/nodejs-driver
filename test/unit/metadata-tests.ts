@@ -20,9 +20,9 @@ const { assert } = require('chai');
 const sinon = require('sinon');
 const events = require('events');
 
-const helper = require('../test-helper.js');
-const clientOptions = require('../../lib/client-options.js');
-const Host = require('../../lib/host.js').Host;
+const helper = require('../test-helper');
+const clientOptions = require('../../lib/client-options');
+const Host = require('../../lib/host').Host;
 const HostMap = require('../../lib/host').HostMap;
 const Metadata = require('../../lib/metadata');
 const TableMetadata = require('../../lib/metadata/table-metadata');

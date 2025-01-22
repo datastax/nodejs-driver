@@ -911,7 +911,7 @@ describe('exports', function () {
     //test that the exposed API is the one expected
     //it looks like a dumb test and it is, but it is necessary!
     /* eslint-disable global-require */
-    const api = require('../../index.js');
+    const api = require('../../index');
     assert.strictEqual(api.Client, Client);
     assert.ok(api.errors);
     assert.strictEqual(typeof api.errors.DriverError, 'function');

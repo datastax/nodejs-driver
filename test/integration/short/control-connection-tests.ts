@@ -18,7 +18,7 @@ const assert = require('assert');
 const util = require('util');
 
 const helper = require('../../test-helper');
-const Client = require('../../../lib/client.js');
+const Client = require('../../../lib/client');
 const ControlConnection = require('../../../lib/control-connection');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');

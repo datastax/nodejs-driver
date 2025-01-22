@@ -179,7 +179,7 @@ describe('Client', function () {
         await helper.delayAsync(20);
       };
 
-      const Client = proxyquire('../../lib/client.js', {
+      const Client = proxyquire('../../lib/client', {
         './control-connection': ccMock
       });
       const client = new Client(options);
@@ -548,7 +548,7 @@ describe('Client', function () {
       send: () => Promise.resolve()
     };
 
-    const Client = proxyquire('../../lib/client.js', {
+    const Client = proxyquire('../../lib/client', {
       './request-handler': requestHandlerMock
     });
 

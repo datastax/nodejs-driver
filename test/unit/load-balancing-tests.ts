@@ -16,9 +16,9 @@
 'use strict';
 const assert = require('assert');
 
-const helper = require('../test-helper.js');
+const helper = require('../test-helper');
 const errors = require('../../lib/errors');
-const Client = require('../../lib/client.js');
+const Client = require('../../lib/client');
 const clientOptions = require('../../lib/client-options');
 const { Host, HostMap } = require('../../lib/host');
 const types = require('../../lib/types');

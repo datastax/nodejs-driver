@@ -19,7 +19,7 @@ const events = require('events');
 const proxyquire = require('proxyquire');
 const util = require('util');
 
-const helper = require('../test-helper.js');
+const helper = require('../test-helper');
 const ControlConnection = require('../../lib/control-connection');
 const Host = require('../../lib/host').Host;
 const utils = require('../../lib/utils');

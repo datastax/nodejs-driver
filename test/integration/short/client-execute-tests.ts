@@ -17,12 +17,12 @@
 const assert = require('assert');
 const util = require('util');
 
-const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
-const ExecutionProfile = require('../../../lib/execution-profile.js').ExecutionProfile;
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
+const ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
 const types = require('../../../lib/types');
-const utils = require('../../../lib/utils.js');
-const errors = require('../../../lib/errors.js');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const numericTests = require('./numeric-tests');

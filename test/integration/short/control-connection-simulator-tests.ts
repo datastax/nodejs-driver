@@ -21,7 +21,7 @@ const simulacron = require('../simulacron');
 const utils = require('../../../lib/utils');
 const types = require('../../../lib/types');
 
-const Client = require('../../../lib/client.js');
+const Client = require('../../../lib/client');
 
 describe('ControlConnection', function() {
   this.timeout(5000);

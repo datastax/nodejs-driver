@@ -19,11 +19,11 @@ const assert = require('chai').assert;
 const util = require('util');
 const sinon = require('sinon');
 
-const helper = require('../../test-helper.js');
-const Client = require('../../../lib/client.js');
+const helper = require('../../test-helper');
+const Client = require('../../../lib/client');
 const types = require('../../../lib/types');
-const utils = require('../../../lib/utils.js');
-const errors = require('../../../lib/errors.js');
+const utils = require('../../../lib/utils');
+const errors = require('../../../lib/errors');
 const vit = helper.vit;
 
 describe('Client', function () {

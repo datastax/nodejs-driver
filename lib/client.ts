@@ -18,8 +18,8 @@
 const events = require('events');
 const util = require('util');
 
-const utils = require('./utils.js');
-const errors = require('./errors.js');
+const utils = require('./utils');
+const errors = require('./errors');
 const types = require('./types');
 const { ProfileManager } = require('./execution-profile');
 const requests = require('./requests');

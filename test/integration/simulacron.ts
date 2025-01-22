@@ -19,8 +19,8 @@ const http = require('http');
 const spawn = require('child_process').spawn;
 const util = require('util');
 const fs = require('fs');
-const utils = require('../../lib/utils.js');
-const Client = require('../../lib/client.js');
+const utils = require('../../lib/utils');
+const Client = require('../../lib/client');
 
 const simulacronHelper = {
   _execute: function(processName, params, cb) {

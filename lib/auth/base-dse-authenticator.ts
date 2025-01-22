@@ -73,4 +73,4 @@ BaseDseAuthenticator.prototype._isDseAuthenticator = function () {
   return this.authenticatorName === dseAuthenticatorName;
 };
 
-module.exports = BaseDseAuthenticator;
+export default BaseDseAuthenticator;

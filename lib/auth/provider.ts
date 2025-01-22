@@ -75,5 +75,7 @@ Authenticator.prototype.onAuthenticationSuccess = function (token) {
 
 };
 
-exports.AuthProvider = AuthProvider;
-exports.Authenticator = Authenticator;
+export {
+  Authenticator,
+  AuthProvider
+}

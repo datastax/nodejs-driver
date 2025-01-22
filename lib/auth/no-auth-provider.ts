@@ -67,4 +67,4 @@ class TransitionalModePlainTextAuthenticator extends PlainTextAuthenticator {
   }
 }
 
-module.exports = NoAuthProvider;
+export default NoAuthProvider;

@@ -228,4 +228,4 @@ GssapiAuthenticator.prototype.onAuthenticationSuccess = function (token) {
 };
 
 
-module.exports = DseGssapiAuthProvider;
+export default DseGssapiAuthProvider;

@@ -75,7 +75,7 @@ PlainTextAuthenticator.prototype.evaluateChallenge = function (challenge, callba
   callback();
 };
 
-module.exports = {
+export {
   PlainTextAuthenticator,
   PlainTextAuthProvider,
 };

@@ -12,7 +12,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "checkJs": true,
     "declarationMap": true,
     "moduleDetection": "force"
   },

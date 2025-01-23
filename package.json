@@ -1,10 +1,10 @@
 {
-  "name": "cassandra-driver",
-  "version": "4.7.2",
+  "name": "@SiyaoIsHiding/cassandra-driver",
+  "version": "0.0.4",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
-  "main": "index.js",
-  "types": "dist/cassandra-driver.d.ts",
+  "main": "out/index.js",
+  "types": "out/index.d.ts",
   "keywords": [
     "cassandra",
     "cql",

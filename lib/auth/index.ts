@@ -23,17 +23,19 @@
  * @module auth
  */
 
-import { Authenticator, AuthProvider } from './provider';
-import { PlainTextAuthProvider } from './plain-text-auth-provider';
-import DseGssapiAuthProvider from './dse-gssapi-auth-provider';
-import DsePlainTextAuthProvider from './dse-plain-text-auth-provider';
-import NoAuthProvider from './no-auth-provider';
+// import { Authenticator, AuthProvider } from './provider';
+// import { PlainTextAuthProvider } from './plain-text-auth-provider';
+// import DseGssapiAuthProvider from './dse-gssapi-auth-provider';
+// import DsePlainTextAuthProvider from './dse-plain-text-auth-provider';
+// import NoAuthProvider from './no-auth-provider';
 
-export {
-  Authenticator,
-  AuthProvider,
-  DseGssapiAuthProvider,
-  DsePlainTextAuthProvider,
-  NoAuthProvider,
-  PlainTextAuthProvider
-};
+// export {
+//   Authenticator,
+//   AuthProvider,
+//   DseGssapiAuthProvider,
+//   DsePlainTextAuthProvider,
+//   NoAuthProvider,
+//   PlainTextAuthProvider
+// };
+
+export * from './provider';

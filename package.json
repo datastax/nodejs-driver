@@ -1,6 +1,6 @@
 {
   "name": "@SiyaoIsHiding/cassandra-driver",
-  "version": "0.0.4",
+  "version": "0.0.8",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
   "main": "out/index.js",
@@ -53,7 +53,8 @@
     "ci_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
     "ci_unit_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit --recursive -R mocha-appveyor-reporter --exit",
     "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",
-    "eslint": "eslint lib test"
+    "eslint": "eslint lib test",
+    "test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
   },
   "engines": {
     "node": ">=16"

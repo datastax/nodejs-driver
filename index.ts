@@ -15,34 +15,50 @@
  */
 'use strict';
 const clientOptions = require('./lib/client-options');
-exports.Client = require('./lib/client');
-exports.ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
-exports.ExecutionOptions = require('./lib/execution-options').ExecutionOptions;
-exports.types = require('./lib/types');
-exports.errors = require('./lib/errors');
-exports.policies = require('./lib/policies');
-exports.auth = require('./lib/auth');
-exports.mapping = require('./lib/mapping');
-exports.tracker = require('./lib/tracker');
-exports.metrics = require('./lib/metrics');
-exports.concurrent = require('./lib/concurrent');
-
+const Client = require('./lib/client');
+const ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
+const ExecutionOptions = require('./lib/execution-options').ExecutionOptions;
+const types = require('./lib/types');
+const errors = require('./lib/errors');
+const policies = require('./lib/policies');
+import * as auth from './lib/auth';
+const mapping = require('./lib/mapping');
+const tracker = require('./lib/tracker');
+const metrics = require('./lib/metrics');
+const concurrent = require('./lib/concurrent');
 const token = require('./lib/token');
-exports.token = {
-  Token: token.Token,
-  TokenRange: token.TokenRange
-};
 const Metadata = require('./lib/metadata');
-exports.metadata = {
-  Metadata: Metadata
+const Encoder = require('./lib/encoder');
+const geometry = require('./lib/geometry');
+const datastax = require('./lib/datastax');
+
+export default {
+  Client,
+  ExecutionProfile,
+  ExecutionOptions,
+  types,
+  errors,
+  policies,
+  auth,
+  mapping,
+  tracker,
+  metrics,
+  concurrent,
+  token: {
+    Token: token.Token,
+    TokenRange: token.TokenRange
+  },
+  metadata: {
+    Metadata: Metadata
+  },
+  Encoder,
+  geometry,
+  datastax,
+  /**
+   * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+   */
+  defaultOptions: function () {
+    return clientOptions.defaultOptions();
+  },
+  version: require('./package.json').version
 };
-exports.Encoder = require('./lib/encoder');
-exports.geometry = require('./lib/geometry');
-exports.datastax = require('./lib/datastax');
-/**
- * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
- */
-exports.defaultOptions = function () {
-  return clientOptions.defaultOptions();
-};
-exports.version = require('./package.json').version;

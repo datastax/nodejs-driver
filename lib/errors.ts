@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+
 'use strict';
-const util = require('util');
+
 /**
  * Contains the error classes exposed by the driver.
  * @module errors

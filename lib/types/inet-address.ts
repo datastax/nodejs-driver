@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import utils from "../utils.js";
 
-const utils = require('../utils');
+'use strict';
 
 /** @module types */
 /**
@@ -245,4 +245,4 @@ function isValidIPv4Mapped(buffer) {
   return !(buffer[10] !== 255 || buffer[11] !== 255);
 }
 
-module.exports = InetAddress;
+export default InetAddress;

@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "../utils.js";
+import QueryGenerator from "./query-generator.js";
+import ResultMapper from "./result-mapper.js";
+import Result from "./result.js";
+import Cache from "./cache.js";
+import Tree from "./tree.js";
+import ObjectSelector from "./object-selector.js";
+import DocInfoAdapter from "./doc-info-adapter.js";
 
 'use strict';
-
-const utils = require('../utils');
-const QueryGenerator = require('./query-generator');
-const ResultMapper = require('./result-mapper');
-const Result = require('./result');
-const Cache = require('./cache');
-const Tree = require('./tree');
-const ObjectSelector = require('./object-selector');
-const DocInfoAdapter = require('./doc-info-adapter');
-
 const cacheHighWaterMark = 100;
 
 /**
@@ -409,4 +407,4 @@ class MappingHandler {
   }
 }
 
-module.exports = MappingHandler;
+export default MappingHandler;

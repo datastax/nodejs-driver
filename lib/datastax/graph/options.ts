@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import types from "../../types/index.js";
+import utils from "../../utils.js";
+import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options.js";
+
 'use strict';
-const util = require('util');
-const types = require('../../types');
-const utils = require('../../utils');
-const { DefaultExecutionOptions, proxyExecuteKey } = require('../../execution-options');
 const Long = types.Long;
 
 let consistencyNames;
@@ -326,9 +327,3 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
     this.setCustomPayload(payload);
   }
 }
-
-module.exports = {
-  GraphExecutionOptions,
-  graphProtocol,
-  payloadKeys
-};

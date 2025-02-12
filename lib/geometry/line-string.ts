@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import utils from "../utils.js";
+import Geometry from "./geometry.js";
+import Point from "./point.js";
+
 'use strict';
-const util = require('util');
-const utils = require('../utils');
-const Geometry = require('./geometry');
-const Point = require('./point');
 
 /**
  * Creates a new {@link LineString} instance.
@@ -194,4 +195,4 @@ LineString.prototype.toJSON = function () {
   })};
 };
 
-module.exports = LineString;
+export default LineString;

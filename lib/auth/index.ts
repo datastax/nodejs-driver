@@ -38,4 +38,4 @@
 //   PlainTextAuthProvider
 // };
 
-export * from './provider';
+export * from './provider.js';

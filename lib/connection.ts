@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import events from "events";
+import util from "util";
+import tls from "tls";
+import net from "net";
+import Encoder from "./encoder.js";
+import { WriteQueue } from "./writers.js";
+import requests from "./requests.js";
+import streams from "./streams.js";
+import utils from "./utils.js";
+import types from "./types/index.js";
+import errors from "./errors.js";
+import StreamIdStack from "./stream-id-stack.js";
+import OperationState from "./operation-state.js";
+import promiseUtils from "./promise-utils.js";
+import { ExecutionOptions } from "./execution-options.js";
 
 'use strict';
-
-const events = require('events');
-const util = require('util');
-const tls = require('tls');
-const net = require('net');
-
-const Encoder = require('./encoder');
-const { WriteQueue } = require('./writers');
-const requests = require('./requests');
-const streams = require('./streams');
-const utils = require('./utils');
-const types = require('./types');
-const errors = require('./errors');
-const StreamIdStack = require('./stream-id-stack');
-const OperationState = require('./operation-state');
-const promiseUtils = require('./promise-utils');
-const { ExecutionOptions } = require('./execution-options');
 
 /**
  * Represents a connection to a Cassandra node
@@ -787,4 +785,4 @@ class Connection extends events.EventEmitter {
   }
 }
 
-module.exports = Connection;
+export default Connection;

@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import errors from "./errors.js";
+import requests from "./requests.js";
+import retry from "./policies/retry.js";
+import types from "./types/index.js";
+import utils from "./utils.js";
+import promiseUtils from "./promise-utils.js";
+
 'use strict';
-
-const errors = require('./errors');
-const requests = require('./requests');
-const retry = require('./policies/retry');
-const types = require('./types');
-const utils = require('./utils');
-const promiseUtils = require('./promise-utils');
-
 const retryOnCurrentHost = Object.freeze({
   decision: retry.RetryPolicy.retryDecision.retry,
   useCurrentHost: true,
@@ -494,4 +493,4 @@ class RequestExecution {
   }
 }
 
-module.exports = RequestExecution;
+export default RequestExecution;

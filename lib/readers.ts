@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import utils from "./utils.js";
+import types from "./types/index.js";
+import errors from "./errors.js";
 
 'use strict';
-
-const util = require('util');
-const utils = require('./utils');
-const types = require('./types');
-const errors = require('./errors');
-
 /**
  * Information on the formatting of the returned rows
  */
@@ -538,5 +536,3 @@ class FrameReader {
     return result;
   }
 }
-
-module.exports = { FrameReader };

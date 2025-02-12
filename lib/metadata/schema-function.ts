@@ -94,4 +94,4 @@ function SchemaFunction() {
   this.monotonicOn = null;
 }
 
-module.exports = SchemaFunction;
+export default SchemaFunction;

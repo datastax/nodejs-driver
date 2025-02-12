@@ -130,4 +130,4 @@ Geometry.prototype.useBESerialization = function () {
   throw new Error('Not Implemented');
 };
 
-module.exports = Geometry;
+export default Geometry;

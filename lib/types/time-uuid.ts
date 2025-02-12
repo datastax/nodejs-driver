@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import crypto from "crypto";
+import Long from "long";
+import Uuid from "./uuid.js";
+import utils from "../utils.js";
+
 'use strict';
-const util = require('util');
-const crypto = require('crypto');
-const Long = require('long');
-
-const Uuid = require('./uuid');
-const utils = require('../utils');
-
 /** @module types */
 /**
  * Oct 15, 1582 in milliseconds since unix epoch
@@ -407,4 +406,4 @@ function generateBuffer(date, ticks, nodeId, clockId) {
   return buffer;
 }
 
-module.exports = TimeUuid;
+export default TimeUuid;

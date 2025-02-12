@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import errors from "../errors.js";
+import TimeUuid from "./time-uuid.js";
+import Uuid from "./uuid.js";
+import protocolVersion from "./protocol-version.js";
+import utils from "../utils.js";
+import Long from "long";
+
 'use strict';
-const util = require('util');
-
-const errors = require('../errors');
-const TimeUuid = require('./time-uuid');
-const Uuid = require('./uuid');
-const protocolVersion = require('./protocol-version');
-const utils = require('../utils');
-
-/** @module types */
-/**
- * Long constructor, wrapper of the internal library used: {@link https://github.com/dcodeIO/long.js Long.js}.
- * @constructor
- */
-const Long = require('long');
-
 /**
  * Consistency levels
  * @type {Object}

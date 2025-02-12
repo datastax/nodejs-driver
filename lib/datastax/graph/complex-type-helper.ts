@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers.js";
+import types from "../../types/index.js";
+import Encoder from "../../encoder.js";
 
 'use strict';
-
-const { GraphTypeWrapper, UdtGraphWrapper } = require('./wrappers');
-const types = require('../../types');
-const Encoder = require('../../encoder');
 const { dataTypes } = types;
 
 function getTypeDefinitionByValue(value) {
@@ -95,5 +94,3 @@ function getUdtTypeDefinition(udtInfo) {
 function getUdtTypeDefinitionByValue(wrappedValue) {
   return getUdtTypeDefinition(wrappedValue.udtInfo);
 }
-
-module.exports = { getTypeDefinitionByValue, getUdtTypeDefinitionByValue };

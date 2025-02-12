@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import qModule from "./q.js";
 
 'use strict';
-
-const qModule = require('./q');
 const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
 
@@ -204,4 +203,4 @@ class Cache {
   }
 }
 
-module.exports = Cache;
+export default Cache;

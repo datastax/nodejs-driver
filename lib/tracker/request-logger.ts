@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import events from "events";
+import RequestTracker from "./request-tracker.js";
+import errors from "../errors.js";
+import { format } from "util";
 
 'use strict';
-
-const events = require('events');
-const RequestTracker = require('./request-tracker');
-const errors = require('../errors');
-const { format } = require('util');
-
 const nanosToMillis = 1000000;
 const defaultMessageMaxQueryLength = 500;
 const defaultMaxParameterValueLength = 50;
@@ -291,4 +289,4 @@ function formatSize(length) {
   return length > 1000 ? Math.round(length / 1024) + ' KB' : length + ' bytes';
 }
 
-module.exports = RequestLogger;
+export default RequestLogger;

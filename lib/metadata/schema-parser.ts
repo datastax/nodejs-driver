@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import events from "events";
+import types from "../types/index.js";
+import utils from "../utils.js";
+import errors from "../errors.js";
+import promiseUtils from "../promise-utils.js";
+import TableMetadata from "./table-metadata.js";
+import Aggregate from "./aggregate.js";
+import SchemaFunction from "./schema-function.js";
+import Index from "./schema-index.js";
+import MaterializedView from "./materialized-view.js";
 
 'use strict';
-const util = require('util');
-const events = require('events');
-const types = require('../types');
-const utils = require('../utils');
-const errors = require('../errors');
-const promiseUtils = require('../promise-utils');
-const TableMetadata = require('./table-metadata');
-const Aggregate = require('./aggregate');
-const SchemaFunction = require('./schema-function');
-const Index = require('./schema-index');
-const MaterializedView = require('./materialized-view');
 const { format } = util;
 
 /**

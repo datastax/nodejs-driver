@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import types from "./types/index.js";
+import token from "./token.js";
+import utils from "./utils.js";
+import MutableLong from "./types/mutable-long.js";
 
-const types = require('./types');
-const token = require('./token');
-const utils = require('./utils');
-const MutableLong = require('./types/mutable-long');
+'use strict';
 const { Integer } = types;
 
 // Murmur3 constants

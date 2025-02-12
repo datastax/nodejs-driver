@@ -16,10 +16,9 @@
 
 'use strict';
 
-import { AuthProvider, Authenticator } from './provider';
-import { PlainTextAuthenticator } from './plain-text-auth-provider';
-const errors = require('../errors');
-
+import { AuthProvider, Authenticator } from './provider.js';
+import { PlainTextAuthenticator } from './plain-text-auth-provider.js';
+import errors from "../errors.js";
 const dseAuthenticator = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
 
 /**

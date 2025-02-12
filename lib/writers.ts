@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const events = require('events');
+import events from "events";
+import types from "./types/index.js";
+import utils from "./utils.js";
 
-const types = require('./types');
-const utils = require('./utils');
+'use strict';
 const FrameHeader = types.FrameHeader;
 
 /**
@@ -306,5 +306,3 @@ class WriteQueue extends events.EventEmitter {
     }
   }
 }
-
-module.exports = { FrameWriter, WriteQueue };

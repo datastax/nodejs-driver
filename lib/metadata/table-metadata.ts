@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import DataCollection from "./data-collection.js";
+
 'use strict';
 
-const util = require('util');
-const DataCollection = require('./data-collection');
 /**
  * Creates a new instance of TableMetadata
  * @classdesc Describes a table
@@ -74,4 +75,4 @@ function TableMetadata(name) {
 
 util.inherits(TableMetadata, DataCollection);
 
-module.exports = TableMetadata;
+export default TableMetadata;

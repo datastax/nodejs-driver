@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import types from "../../types/index.js";
 
 'use strict';
-
-const types = require('../../types');
 const { dataTypes } = types;
 
 /**
@@ -80,5 +79,3 @@ function asTimestamp(value) { return new GraphTypeWrapper(value, dataTypes.times
  * @param {{name: string, keyspace: string, fields: Array}} udtInfo The UDT metadata as defined by the driver.
  */
 function asUdt(value, udtInfo) { return new UdtGraphWrapper(value, udtInfo); }
-
-module.exports = { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper };

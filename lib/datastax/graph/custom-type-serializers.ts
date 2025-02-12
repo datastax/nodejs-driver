@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import types from "../../types/index.js";
+import utils from "../../utils.js";
+import { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } from "./complex-type-helper.js";
+import { Point, Polygon, LineString } from "../../geometry/index.js";
+import { Edge } from "./structure.js";
+import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers.js";
 
-const types = require('../../types');
-const utils = require('../../utils');
-const { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } = require('./complex-type-helper');
-const { Point, Polygon, LineString } = require('../../geometry');
-const { Edge } = require('./structure');
-const { GraphTypeWrapper, UdtGraphWrapper } = require('./wrappers');
+'use strict';
 const { Tuple, dataTypes } = types;
 
 const typeKey = '@type';
@@ -359,4 +359,4 @@ function getCustomSerializers() {
   return customSerializers;
 }
 
-module.exports = getCustomSerializers;
+export default getCustomSerializers;

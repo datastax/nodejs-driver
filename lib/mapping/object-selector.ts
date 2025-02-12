@@ -318,4 +318,4 @@ function staticColumnCount(table) {
   return table.columns.reduce((acc, column) => acc + (column.isStatic ? 1 : 0), 0);
 }
 
-module.exports = ObjectSelector;
+export default ObjectSelector;

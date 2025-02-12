@@ -77,4 +77,4 @@ Row.prototype.forEach = function (callback) {
   }
 };
 
-module.exports = Row;
+export default Row;

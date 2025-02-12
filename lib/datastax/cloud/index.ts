@@ -15,16 +15,14 @@
  */
 
 'use strict';
-
-const https = require('https');
-const fs = require('fs');
-const util = require('util');
-const AdmZip = require('adm-zip');
-const { URL } = require('url');
-
-const errors = require('../../errors');
-const utils = require('../../utils');
-import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth';
+import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index.js';
+import https from "https";
+import fs from "fs";
+import util from "util";
+import AdmZip from "adm-zip";
+import { URL } from "url";
+import errors from "../../errors.js";
+import utils from "../../utils.js";
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);
@@ -331,8 +329,3 @@ function checkParts(hostParts, pattern) {
 
   return true;
 }
-
-module.exports = {
-  checkServerIdentity,
-  init
-};

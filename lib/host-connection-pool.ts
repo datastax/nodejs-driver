@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import events from "events";
+import Connection from "./connection.js";
+import utils from "./utils.js";
+import promiseUtils from "./promise-utils.js";
+import errors from "./errors.js";
+import clientOptions from "./client-options.js";
+
 'use strict';
-const util = require('util');
-const events = require('events');
-
-const Connection = require('./connection');
-const utils = require('./utils');
-const promiseUtils = require('./promise-utils');
-const errors = require('./errors');
-const clientOptions = require('./client-options');
-
 // Used to get the index of the connection with less in-flight requests
 let connectionIndex = 0;
 const connectionIndexOverflow = Math.pow(2, 15);
@@ -519,4 +518,4 @@ function getDefaultOptions() {
   return defaultOptions;
 }
 
-module.exports = HostConnectionPool;
+export default HostConnectionPool;

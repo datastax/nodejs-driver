@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const util = require('util');
+import util from "util";
+import types from "./types/index.js";
+import MutableLong from "./types/mutable-long.js";
+import utils from "./utils.js";
+import token from "./token.js";
+import { DateRange } from "./datastax/search/index.js";
+import geo from "./geometry/index.js";
 
-const types = require('./types');
+'use strict';
 const dataTypes = types.dataTypes;
 const Long = types.Long;
 const Integer = types.Integer;
 const BigDecimal = types.BigDecimal;
-const MutableLong = require('./types/mutable-long');
-const utils = require('./utils');
-const token = require('./token');
-const { DateRange } = require('./datastax/search');
-const geo = require('./geometry');
 const Geometry = geo.Geometry;
 const LineString = geo.LineString;
 const Point = geo.Point;
@@ -2012,4 +2012,4 @@ Encoder.isTypedArray = function(arg) {
   return (arg instanceof Object.getPrototypeOf(Uint8Array));
 };
 
-module.exports = Encoder;
+export default Encoder;

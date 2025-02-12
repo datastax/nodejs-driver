@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+import g from "./index.js";
 
 /**
  * @module datastax/graph/tinkerpop/typeSerializers
@@ -34,7 +35,6 @@ const t = {
 };
 const ts = { TraversalStrategy: UnsupportedType };
 const Bytecode = UnsupportedType;
-const g = require('./index');
 const utils = { Long: UnsupportedType };
 t.t = g.t;
 t.direction = g.direction;
@@ -472,30 +472,3 @@ class SetSerializer extends ArraySerializer {
     super('g:Set');
   }
 }
-
-module.exports = {
-  BulkSetSerializer,
-  BytecodeSerializer,
-  DateSerializer,
-  DirectionSerializer,
-  EdgeSerializer,
-  EnumSerializer,
-  LambdaSerializer,
-  ListSerializer,
-  LongSerializer,
-  MapSerializer,
-  NumberSerializer,
-  Path3Serializer,
-  PathSerializer,
-  PropertySerializer,
-  PSerializer,
-  TextPSerializer,
-  SetSerializer,
-  TSerializer,
-  TraverserSerializer,
-  TraversalStrategySerializer,
-  typeKey,
-  valueKey,
-  VertexPropertySerializer,
-  VertexSerializer
-};

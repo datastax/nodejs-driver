@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+import typeSerializers from "./type-serializers.js";
 
 /**
  * @module datastax/graph/tinkerpop/graphSerializers
@@ -27,8 +28,6 @@
  * @author Jorge Bay Gondra
  */
 'use strict';
-
-const typeSerializers = require('./type-serializers');
 
 /**
  * GraphSON2 writer.
@@ -249,12 +248,3 @@ const graphSON3Serializers = graphSON2Serializers.concat([
   typeSerializers.SetSerializer,
   typeSerializers.MapSerializer
 ]);
-
-module.exports = {
-  GraphSON3Writer,
-  GraphSON3Reader,
-  GraphSON2Writer,
-  GraphSON2Reader,
-  GraphSONWriter: GraphSON3Writer,
-  GraphSONReader: GraphSON3Reader
-};

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const util = require('util');
-const utils = require('../utils');
-const types = require('../types');
+import util from "util";
+import utils from "../utils.js";
+import types from "../types/index.js";
 
+'use strict';
 /** @private */
 const kind = {
   custom: 0,
@@ -146,4 +146,4 @@ function getKindByName(name) {
   return kind[name.toLowerCase()];
 }
 
-module.exports = Index;
+export default Index;

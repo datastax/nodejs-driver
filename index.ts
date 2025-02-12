@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 'use strict';
-const clientOptions = require('./lib/client-options');
-const Client = require('./lib/client');
 const ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
 const ExecutionOptions = require('./lib/execution-options').ExecutionOptions;
-const types = require('./lib/types');
-const errors = require('./lib/errors');
-const policies = require('./lib/policies');
-import * as auth from './lib/auth';
-const mapping = require('./lib/mapping');
-const tracker = require('./lib/tracker');
-const metrics = require('./lib/metrics');
-const concurrent = require('./lib/concurrent');
-const token = require('./lib/token');
-const Metadata = require('./lib/metadata');
-const Encoder = require('./lib/encoder');
-const geometry = require('./lib/geometry');
-const datastax = require('./lib/datastax');
-
+import * as auth from './lib/auth/index.js';
+import clientOptions from "./lib/client-options.js";
+import Client from "./lib/client.js";
+import types from "./lib/types/index.js";
+import errors from "./lib/errors.js";
+import policies from "./lib/policies/index.js";
+import mapping from "./lib/mapping/index.js";
+import tracker from "./lib/tracker/index.js";
+import metrics from "./lib/metrics/index.js";
+import concurrent from "./lib/concurrent/index.js";
+import token from "./lib/token.js";
+import Metadata from "./lib/metadata/index.js";
+import Encoder from "./lib/encoder.js";
+import geometry from "./lib/geometry/index.js";
+import datastax from "./lib/datastax/index.js";
 export default {
   Client,
   ExecutionProfile,

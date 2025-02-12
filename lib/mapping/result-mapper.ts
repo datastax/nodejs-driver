@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import vm from "vm";
+import utils from "../utils.js";
+import types from "../types/index.js";
 
 'use strict';
-
-const vm = require('vm');
-const utils = require('../utils');
-const types = require('../types');
 
 /**
  * @ignore
@@ -109,4 +108,4 @@ class ResultMapper {
   }
 }
 
-module.exports = ResultMapper;
+export default ResultMapper;

@@ -15,18 +15,17 @@
  */
 
 'use strict';
-
-const os = require('os');
-const path = require('path');
-const fs = require('fs');
-const utils = require('./utils');
-const promiseUtils = require('./promise-utils');
-const types = require('./types');
-const requests = require('./requests');
-const { ExecutionOptions } = require('./execution-options');
-const packageInfo = require('../package.json');
-const VersionNumber = require('./types/version-number');
-import { NoAuthProvider } from './auth';
+import { NoAuthProvider } from './auth/index.js';
+import os from "os";
+import path from "path";
+import fs from "fs";
+import utils from "./utils.js";
+import promiseUtils from "./promise-utils.js";
+import types from "./types/index.js";
+import requests from "./requests.js";
+import { ExecutionOptions } from "./execution-options.js";
+import packageInfo from "../package.json" with { type: "json" };
+import VersionNumber from "./types/version-number.js";
 
 let kerberosModule;
 
@@ -404,7 +403,7 @@ class InsightsClient {
   }
 }
 
-module.exports = InsightsClient;
+export default InsightsClient;
 
 function mapToObject(map) {
   const result = {};

@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import net from "net";
+import { EventEmitter } from "events";
+import errors from "./errors.js";
+import promiseUtils from "./promise-utils.js";
+
 'use strict';
-
-const util = require('util');
-const net = require('net');
-const { EventEmitter } = require('events');
-
-const errors = require('./errors');
-const promiseUtils = require('./promise-utils');
-
 /**
  * Max int that can be accurately represented with 64-bit Number (2^53)
  * @type {number}

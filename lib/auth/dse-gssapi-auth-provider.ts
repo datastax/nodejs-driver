@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 'use strict';
-const util = require('util');
-const { AuthProvider } = require('./provider');
-import BaseDseAuthenticator from './base-dse-authenticator';
-import GssapiClient from './gssapi-client';
-const dns = require('dns');
-const utils = require('../utils');
-
+import BaseDseAuthenticator from './base-dse-authenticator.js';
+import GssapiClient from './gssapi-client.js';
+import util from "util";
+import { AuthProvider } from "./provider.js";
+import dns from "dns";
+import utils from "../utils.js";
 const mechanism = utils.allocBufferFromString('GSSAPI');
 const initialServerChallenge = 'GSSAPI-START';
 const emptyBuffer = utils.allocBuffer(0);

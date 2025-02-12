@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import types from "./types/index.js";
+import util from "util";
+
 'use strict';
-
-const types = require('./types');
-const util = require('util');
-
 const _Murmur3TokenType = types.dataTypes.getByName('bigint');
 const _RandomTokenType = types.dataTypes.getByName('varint');
 const _OrderedTokenType = types.dataTypes.getByName('blob');

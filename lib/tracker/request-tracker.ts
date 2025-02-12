@@ -71,4 +71,4 @@ class RequestTracker {
   }
 }
 
-module.exports = RequestTracker;
+export default RequestTracker;

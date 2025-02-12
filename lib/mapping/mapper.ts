@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import ModelMapper from "./model-mapper.js";
+import MappingHandler from "./mapping-handler.js";
+import DocInfoAdapter from "./doc-info-adapter.js";
+import errors from "../errors.js";
+import Result from "./result.js";
+import ResultMapper from "./result-mapper.js";
+import ModelMappingInfo from "./model-mapping-info.js";
+import { ModelBatchItem } from "./model-batch-item.js";
 
 'use strict';
-
-const ModelMapper = require('./model-mapper');
-const MappingHandler = require('./mapping-handler');
-const DocInfoAdapter = require('./doc-info-adapter');
-const errors = require('../errors');
-const Result = require('./result');
-const ResultMapper = require('./result-mapper');
-const ModelMappingInfo = require('./model-mapping-info');
-const { ModelBatchItem } = require('./model-batch-item');
 
 /**
  * Represents an object mapper for Apache Cassandra and DataStax Enterprise.
@@ -171,23 +170,4 @@ class Mapper {
   }
 }
 
-/**
- * Represents the mapping options.
- * @typedef {Object} module:mapping~MappingOptions
- * @property {Object<String, ModelOptions>} models An associative array containing the
- * name of the model as key and the table and column information as value.
- */
-
-/**
- * Represents a set of options that applies to a certain model.
- * @typedef {Object} module:mapping~ModelOptions
- * @property {Array<String>|Array<{name, isView}>} tables An Array containing the name of the tables or An Array
- * containing the name and isView property to describe the table.
- * @property {TableMappings} mappings The TableMappings implementation instance that is used to convert from column
- * names to property names and the other way around.
- * @property {Object.<String, String>} [columnNames] An associative array containing the name of the columns and
- * properties that doesn't follow the convention defined in the <code>TableMappings</code>.
- * @property {String} [keyspace] The name of the keyspace. Only mandatory when the Client is not using a keyspace.
- */
-
-module.exports = Mapper;
+export default Mapper;

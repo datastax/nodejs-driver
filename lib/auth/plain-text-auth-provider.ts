@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-const util = require('util');
-
-import * as provider from './provider';
-const utils = require('../utils');
+import * as provider from './provider.js';
+import util from "util";
+import utils from "../utils.js";
 const AuthProvider = provider.AuthProvider;
 const Authenticator = provider.Authenticator;
 /**

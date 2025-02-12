@@ -1,25 +1,21 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "lib": ["es2015"],
-    "target": "es2015",
-    "sourceMap": true,
-    "strict": false,
-    "noImplicitAny": false,
-    "outDir": "out",
-    "declaration": true,
-    "allowJs": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declarationMap": true,
-    "moduleDetection": "force"
-  },
-  "include": [
-      "lib/**/*.ts",
-      "index.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+	"compilerOptions": {
+		"module": "nodenext",
+		"lib": ["es2015"],
+		"target": "es2015",
+		"sourceMap": true,
+		"strict": false,
+		"noImplicitAny": false,
+		"outDir": "out",
+		"declaration": true,
+		"allowJs": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"declarationMap": true,
+		"moduleDetection": "force",
+		"moduleResolution": "nodenext"
+	},
+	"include": ["lib/**/*.ts", "index.ts"],
+	"exclude": ["node_modules"]
 }

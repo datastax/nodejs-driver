@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const util = require('util');
+import util from "util";
+import errors from "./errors.js";
+import types from "./types/index.js";
+import utils from "./utils.js";
+import RequestExecution from "./request-execution.js";
+import promiseUtils from "./promise-utils.js";
 
-const errors = require('./errors');
-const types = require('./types');
-const utils = require('./utils');
-const RequestExecution = require('./request-execution');
-const promiseUtils = require('./promise-utils');
+'use strict';
 
 /**
  * Handles a BATCH, QUERY and EXECUTE request to the server, dealing with host fail-over and retries on error
@@ -308,4 +308,4 @@ class RequestHandler {
   }
 }
 
-module.exports = RequestHandler;
+export default RequestHandler;

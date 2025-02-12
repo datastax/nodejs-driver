@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Tree from "./tree.js";
+import moduleBatchItemModule from "./model-batch-item.js";
 
 'use strict';
-
-const Tree = require('./tree');
-const moduleBatchItemModule = require('./model-batch-item');
 const InsertModelBatchItem = moduleBatchItemModule.InsertModelBatchItem;
 const UpdateModelBatchItem = moduleBatchItemModule.UpdateModelBatchItem;
 const RemoveModelBatchItem = moduleBatchItemModule.RemoveModelBatchItem;
@@ -122,4 +121,4 @@ class ModelBatchMapper {
   }
 }
 
-module.exports = ModelBatchMapper;
+export default ModelBatchMapper;

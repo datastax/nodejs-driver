@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import events from "events";
+
 'use strict';
-const util = require('util');
-const events = require('events');
+
 /**
  * Creates a new instance of DataCollection
  * @param {String} name Name of the data object.
@@ -170,4 +172,4 @@ function DataCollection(name) {
 
 util.inherits(DataCollection, events.EventEmitter);
 
-module.exports = DataCollection;
+export default DataCollection;

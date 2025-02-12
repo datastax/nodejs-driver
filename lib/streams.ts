@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import { Transform, Writable } from "stream";
+import types from "./types/index.js";
+import utils from "./utils.js";
+import errors from "./errors.js";
+import { FrameReader } from "./readers.js";
 
 'use strict';
-
-const util = require('util');
-const { Transform, Writable } = require('stream');
-
-const types = require('./types');
-const utils = require('./utils');
-const errors = require('./errors');
 const { FrameHeader } = types;
-const { FrameReader } = require('./readers');
 
 /**
  * Transforms chunks, emits data objects {header, chunk}

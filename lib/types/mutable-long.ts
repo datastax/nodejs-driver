@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Long from "long";
+
 "use strict";
-
-const Long = require('long');
-
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
 
@@ -326,4 +325,4 @@ class MutableLong {
 
 MutableLong.one = new MutableLong(1, 0, 0, 0);
 
-module.exports = MutableLong;
+export default MutableLong;

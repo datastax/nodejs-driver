@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Long from "long";
+import util from "util";
+import utils from "../utils.js";
+
 'use strict';
-const Long = require('long');
-const util = require('util');
-const utils = require('../utils');
 /** @module types */
 
 /**
@@ -292,4 +293,4 @@ function formatTime(values) {
   return result;
 }
 
-module.exports = LocalTime;
+export default LocalTime;

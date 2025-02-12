@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import ClientMetrics from "./client-metrics.js";
+import EventEmitter from "events";
 
 'use strict';
-
-const ClientMetrics = require('./client-metrics');
-const EventEmitter = require('events');
 
 /**
  * A default implementation of [ClientMetrics]{@link module:metrics~ClientMetrics} that exposes the driver events as
@@ -195,4 +194,4 @@ class DefaultMetrics extends ClientMetrics {
   }
 }
 
-module.exports = DefaultMetrics;
+export default DefaultMetrics;

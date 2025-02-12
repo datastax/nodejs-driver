@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import events from "events";
+import util from "util";
+import utils from "./utils.js";
+import errors from "./errors.js";
+import types from "./types/index.js";
+import { ProfileManager } from "./execution-profile.js";
+import requests from "./requests.js";
+import clientOptions from "./client-options.js";
+import ClientState from "./metadata/client-state.js";
+import { version } from "../package.json" with { type: "json" };
+import { DefaultExecutionOptions } from "./execution-options.js";
+import ControlConnection from "./control-connection.js";
+import RequestHandler from "./request-handler.js";
+import PrepareHandler from "./prepare-handler.js";
+import InsightsClient from "./insights-client.js";
+import cloud from "./datastax/cloud/index.js";
+import GraphExecutor from "./datastax/graph/graph-executor.js";
+import promiseUtils from "./promise-utils.js";
+
 'use strict';
-
-const events = require('events');
-const util = require('util');
-
-const utils = require('./utils');
-const errors = require('./errors');
-const types = require('./types');
-const { ProfileManager } = require('./execution-profile');
-const requests = require('./requests');
-const clientOptions = require('./client-options');
-const ClientState = require('./metadata/client-state');
 const description = require('../package.json').description;
-const { version } = require('../package.json');
-const { DefaultExecutionOptions } = require('./execution-options');
-const ControlConnection = require('./control-connection');
-const RequestHandler = require('./request-handler');
-const PrepareHandler = require('./prepare-handler');
-const InsightsClient = require('./insights-client');
-const cloud = require('./datastax/cloud');
-const GraphExecutor = require('./datastax/graph/graph-executor');
-const promiseUtils = require('./promise-utils');
-
 /**
  * Max amount of pools being warmup in parallel, when warmup is enabled
  * @private
@@ -1170,11 +1168,4 @@ Client.prototype._setRoutingInfo = async function (execOptions, params, meta) {
   }
 };
 
-/**
- * Callback used by execution methods.
- * @callback ResultCallback
- * @param {Error} err Error occurred in the execution of the query.
- * @param {ResultSet} [result] Result of the execution of the query.
- */
-
-module.exports = Client;
+export default Client;

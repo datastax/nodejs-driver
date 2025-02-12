@@ -126,4 +126,4 @@ class ClientMetrics {
   }
 }
 
-module.exports = ClientMetrics;
+export default ClientMetrics;

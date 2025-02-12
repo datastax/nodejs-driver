@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import { Long } from "../types/index.js";
+import errors from "../errors.js";
+
 'use strict';
-
-const util = require('util');
-const { Long } = require('../types');
-const errors = require('../errors');
-
 /** @module policies/timestampGeneration */
 
 /**

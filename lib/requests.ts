@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import { FrameWriter } from "./writers.js";
+import types from "./types/index.js";
+import utils from "./utils.js";
+import { ExecutionOptions } from "./execution-options.js";
+import packageInfo from "../package.json" with { type: "json" };
+
 'use strict';
-const util = require('util');
-
-const { FrameWriter } = require('./writers');
-const types = require('./types');
-const utils = require('./utils');
-const { ExecutionOptions } = require('./execution-options');
-const packageInfo = require('../package.json');
-
 /**
  * Options for the execution of the query / prepared statement
  * @private

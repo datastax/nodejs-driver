@@ -13,16 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import ClientMetrics from "./client-metrics.js";
+import DefaultMetrics from "./default-metrics.js";
 
 'use strict';
-
-const ClientMetrics = require('./client-metrics');
-const DefaultMetrics = require('./default-metrics');
-
-/**
- * The <code>metrics</code> module contains interfaces and implementations used by the driver to expose
- * measurements of its internal behavior and of the server as seen from the driver side.
- * @module metrics
- */
-
-module.exports = { ClientMetrics, DefaultMetrics };

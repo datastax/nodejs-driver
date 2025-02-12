@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "./utils.js";
+import types from "./types/index.js";
+import errors from "./errors.js";
 
 'use strict';
-
-const utils = require('./utils');
-const types = require('./types');
-const errors = require('./errors');
-
 const proxyExecuteKey = 'ProxyExecute';
 
 /**
@@ -615,5 +613,3 @@ function ifUndefined3(v1, v2, v3) {
   }
   return v2 !== undefined ? v2 : v3;
 }
-
-module.exports = { ExecutionOptions, DefaultExecutionOptions, proxyExecuteKey };

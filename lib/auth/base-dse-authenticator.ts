@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-const util = require('util');
-import { Authenticator } from './provider';
+import { Authenticator } from './provider.js';
+import util from "util";
 
 const dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';
 

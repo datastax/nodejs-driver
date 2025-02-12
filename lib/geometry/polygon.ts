@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import utils from "../utils.js";
+import Geometry from "./geometry.js";
+import Point from "./point.js";
+import LineString from "./line-string.js";
+
 'use strict';
-const util = require('util');
-const utils = require('../utils');
-const Geometry = require('./geometry');
-const Point = require('./point');
-const LineString = require('./line-string');
 
 /**
  * Creates a new {@link Polygon} instance.
@@ -236,4 +237,4 @@ Polygon.prototype.toJSON = function () {
   })};
 };
 
-module.exports = Polygon;
+export default Polygon;

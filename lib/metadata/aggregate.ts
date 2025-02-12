@@ -75,4 +75,4 @@ function Aggregate() {
   this.deterministic = null;
 }
 
-module.exports = Aggregate;
+export default Aggregate;

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const Long = require('long');
-const util = require('util');
-const utils = require('../utils');
+import Long from "long";
+import util from "util";
+import utils from "../utils.js";
 
+'use strict';
 /** @module types */
 
 // Reuse the same buffers that should perform slightly better than built-in buffer pool
@@ -711,4 +711,4 @@ const VIntCoding = (function () {
   };
 })();
 
-module.exports = Duration;
+export default Duration;

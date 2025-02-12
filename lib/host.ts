@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import events from "events";
+import utils from "./utils.js";
+import types from "./types/index.js";
+import HostConnectionPool from "./host-connection-pool.js";
+import PrepareHandler from "./prepare-handler.js";
+import promiseUtils from "./promise-utils.js";
 
 'use strict';
-
-const events = require('events');
-
-const utils = require('./utils');
-const types = require('./types');
-const HostConnectionPool = require('./host-connection-pool');
-const PrepareHandler = require('./prepare-handler');
-const promiseUtils = require('./promise-utils');
-
 const healthResponseCountInterval = 200;
 
 /**
@@ -651,8 +648,3 @@ class HostMap extends events.EventEmitter{
     return obj;
   }
 }
-
-module.exports = {
-  Host,
-  HostMap
-};

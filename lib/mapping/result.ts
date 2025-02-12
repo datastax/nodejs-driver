@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import utils from "../utils.js";
 
 'use strict';
-
-const util = require('util');
-const utils = require('../utils');
 const inspectMethod = util.inspect.custom || 'inspect';
 
 /**
@@ -133,4 +132,4 @@ class Result {
   }
 }
 
-module.exports = Result;
+export default Result;

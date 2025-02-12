@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "../../utils.js";
+import policies from "../../policies/index.js";
+import GraphResultSet from "./result-set.js";
+import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer.js";
+import getCustomTypeSerializers from "./custom-type-serializers.js";
+import { GraphExecutionOptions, graphProtocol } from "./options.js";
 
 'use strict';
-
-const utils = require('../../utils');
-const policies = require('../../policies');
-const GraphResultSet = require('./result-set');
-const { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } = require('./graph-serializer');
-const getCustomTypeSerializers = require('./custom-type-serializers');
-const { GraphExecutionOptions, graphProtocol } = require('./options');
-
 const graphLanguageGroovyString = 'gremlin-groovy';
 const graphEngineCore = 'Core';
 
@@ -277,4 +275,4 @@ function getDefaultWriter(writer) {
   return value => writer.write(value);
 }
 
-module.exports = GraphExecutor;
+export default GraphExecutor;

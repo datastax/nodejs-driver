@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import errors from "./errors.js";
+import utils from "./utils.js";
+import types from "./types/index.js";
+import promiseUtils from "./promise-utils.js";
 
-const errors = require('./errors');
-const utils = require('./utils');
-const types = require('./types');
-const promiseUtils = require('./promise-utils');
+'use strict';
 
 /**
  * Encapsulates the logic for dealing with the different prepare request and response flows, including failover when
@@ -294,4 +294,4 @@ class PrepareHandler {
   }
 }
 
-module.exports = PrepareHandler;
+export default PrepareHandler;

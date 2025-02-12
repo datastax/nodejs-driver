@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import errors from "../errors.js";
+import utils from "../utils.js";
 
 'use strict';
-
-const errors = require('../errors');
-const utils = require('../utils');
 
 /**
  * Provides utility methods to adapt and map user provided docInfo and executionOptions to a predictable object format.
@@ -159,4 +158,4 @@ class DocInfoAdapter {
   }
 }
 
-module.exports = DocInfoAdapter;
+export default DocInfoAdapter;

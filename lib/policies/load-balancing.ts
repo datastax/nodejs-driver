@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import types from "../types/index.js";
+import utils from "../utils.js";
+import errors from "../errors.js";
+
 'use strict';
-
-const util = require('util');
-const types = require('../types');
-const utils = require('../utils');
-const errors = require('../errors');
-
 const doneIteratorObject = Object.freeze({ done: true });
 const newlyUpInterval = 60000;
 
@@ -870,14 +869,3 @@ function setLocalDc(lbp, client, hosts) {
 function getDataCenters(hosts) {
   return new Set(hosts.values().map(h => h.datacenter));
 }
-
-module.exports = {
-  AllowListPolicy,
-  DCAwareRoundRobinPolicy,
-  DefaultLoadBalancingPolicy,
-  LoadBalancingPolicy,
-  RoundRobinPolicy,
-  TokenAwarePolicy,
-  // Deprecated: for backward compatibility only.
-  WhiteListPolicy
-};

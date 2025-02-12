@@ -13,27 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import events from "events";
+import util from "util";
+import t from "../tokenizer.js";
+import utils from "../utils.js";
+import errors from "../errors.js";
+import types from "../types/index.js";
+import requests from "../requests.js";
+import schemaParserFactory from "./schema-parser.js";
+import promiseUtils from "../promise-utils.js";
+import { TokenRange } from "../token.js";
+import { ExecutionOptions } from "../execution-options.js";
 
 'use strict';
-
-const events = require('events');
-const util = require('util');
-
-/**
- * Module containing classes and fields related to metadata.
- * @module metadata
- */
-
-const t = require('../tokenizer');
-const utils = require('../utils');
-const errors = require('../errors');
-const types = require('../types');
-const requests = require('../requests');
-const schemaParserFactory = require('./schema-parser');
-const promiseUtils = require('../promise-utils');
-const { TokenRange } = require('../token');
-const { ExecutionOptions } = require('../execution-options');
-
 /**
  * @const
  * @private
@@ -1021,4 +1013,4 @@ class PreparedQueries {
   }
 }
 
-module.exports = Metadata;
+export default Metadata;

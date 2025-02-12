@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import vm from "vm";
+import qModule from "./q.js";
+import types from "../types/index.js";
 
 'use strict';
-
-const vm = require('vm');
-const qModule = require('./q');
 const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
-const types = require('../types');
 const dataTypes = types.dataTypes;
 
 const vmFileName = 'gen-param-getter.js';
@@ -443,4 +442,4 @@ class QueryGenerator {
   }
 }
 
-module.exports = QueryGenerator;
+export default QueryGenerator;

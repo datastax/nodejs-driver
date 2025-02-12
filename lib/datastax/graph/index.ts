@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import GraphResultSet from "./result-set.js";
+import getCustomTypeSerializers from "./custom-type-serializers.js";
+import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers.js";
+import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure.js";
+
 'use strict';
-
-/**
- * Graph module.
- * @module datastax/graph
- */
-
-const GraphResultSet = require('./result-set');
-const getCustomTypeSerializers = require('./custom-type-serializers');
-const { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} = require('./wrappers');
-const { Edge, Element, Path, Property, Vertex, VertexProperty } = require('./structure');
 
 class EnumValue {
   constructor(typeName, elementName) {
@@ -59,24 +54,3 @@ const direction = {
 // TinkerPop JavaScript GLV only exposes `in` but it can lead to issues for TypeScript users and others.
 // Expose an extra property to represent `Direction.IN`.
 direction.in_ = direction.in;
-
-module.exports = {
-  Edge,
-  Element,
-  Path,
-  Property,
-  Vertex,
-  VertexProperty,
-
-  asInt,
-  asDouble,
-  asFloat,
-  asTimestamp,
-  asUdt,
-  direction,
-  getCustomTypeSerializers,
-  GraphResultSet,
-  GraphTypeWrapper,
-  t,
-  UdtGraphWrapper
-};

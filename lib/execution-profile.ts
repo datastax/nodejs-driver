@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "./utils.js";
+import types from "./types/index.js";
+import promiseUtils from "./promise-utils.js";
 
 'use strict';
-
-const utils = require('./utils');
-const types = require('./types');
-const promiseUtils = require('./promise-utils');
 
 /**
  * Creates a new instance of {@link ExecutionProfile}.
@@ -259,8 +258,3 @@ class ProfileManager {
     return this._defaultConfiguredRetryPolicy;
   }
 }
-
-module.exports = {
-  ProfileManager,
-  ExecutionProfile
-};

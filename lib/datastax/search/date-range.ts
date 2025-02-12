@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "../../utils.js";
+import Long from "long";
+
 'use strict';
-
-const utils = require('../../utils');
-const Long = require('long');
-
 /**
  * Regex to parse dates in the following format YYYY-MM-DDThh:mm:ss.mssZ
  * Looks cumbersome but it's straightforward:

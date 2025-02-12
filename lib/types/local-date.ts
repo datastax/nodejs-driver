@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const util = require('util');
+import util from "util";
+import utils from "../utils.js";
 
-const utils = require('../utils');
+'use strict';
 /** @module types */
 
 /**
@@ -249,4 +249,4 @@ function fillZeros(value, amount) {
   return utils.stringRepeat('0', amount - value.length) + value;
 }
 
-module.exports = LocalDate;
+export default LocalDate;

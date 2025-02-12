@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import tableMappingsModule from "./table-mappings.js";
 
 'use strict';
-
-const tableMappingsModule = require('./table-mappings');
 const TableMappings = tableMappingsModule.TableMappings;
 const DefaultTableMappings = tableMappingsModule.DefaultTableMappings;
 
@@ -191,4 +190,4 @@ class ModelColumnInfo {
   }
 }
 
-module.exports = ModelMappingInfo;
+export default ModelMappingInfo;

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Stream } from "stream";
+import utils from "../utils.js";
 
 'use strict';
-
-const { Stream } = require('stream');
-const utils = require('../utils');
 
 /**
  * Utilities for concurrent query execution with the DataStax Node.js Driver.

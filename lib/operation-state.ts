@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import util from "util";
+import utils from "./utils.js";
+import errors from "./errors.js";
+import requests from "./requests.js";
 
-const util = require('util');
-const utils = require('./utils');
-const errors = require('./errors');
-const requests = require('./requests');
+'use strict';
 const ExecuteRequest = requests.ExecuteRequest;
 const QueryRequest = requests.QueryRequest;
 
@@ -161,4 +161,4 @@ class OperationState {
   }
 }
 
-module.exports = OperationState;
+export default OperationState;

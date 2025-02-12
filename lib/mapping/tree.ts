@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import EventEmitter from "events";
 
 'use strict';
-
-const EventEmitter = require('events');
 
 /**
  * Represents a tree node where the key is composed by 1 or more strings.
@@ -148,4 +147,4 @@ function iteratorToArray(value, iterator) {
   return values;
 }
 
-module.exports = Tree;
+export default Tree;

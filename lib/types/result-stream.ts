@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Readable } from "stream";
+import utils from "../utils.js";
+import errors from "../errors.js";
+import clientOptions from "../client-options.js";
 
 'use strict';
-
-const { Readable } = require('stream');
-const utils = require('../utils');
-const errors = require('../errors');
-const clientOptions = require('../client-options');
 
 /** @module types */
 /**
@@ -145,4 +144,4 @@ class ResultStream extends Readable {
   }
 }
 
-module.exports = ResultStream;
+export default ResultStream;

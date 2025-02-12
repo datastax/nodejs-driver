@@ -141,4 +141,4 @@ class VersionNumber {
   }
 }
 
-module.exports = VersionNumber;
+export default VersionNumber;

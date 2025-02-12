@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "../utils.js";
+import errors from "../errors.js";
 
 'use strict';
-
-const utils = require('../utils');
-const errors = require('../errors');
-
 const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';
 
 /** @module types */
@@ -272,4 +270,4 @@ ResultSet.prototype.isPaged = function() {
   return !!this.rawPageState;
 };
 
-module.exports = ResultSet;
+export default ResultSet;

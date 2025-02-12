@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Cache from "./cache.js";
 
 'use strict';
-
-const Cache = require('./cache');
 
 /**
  * Represents a query or a set of queries used to perform a mutation in a batch.
@@ -187,5 +186,3 @@ class RemoveModelBatchItem extends ModelBatchItem {
     return this.handler.createDeleteQueries(docKeys, this.doc, this.docInfo);
   }
 }
-
-module.exports = { ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem };

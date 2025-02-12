@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import tableMappingsModule from "./table-mappings.js";
 
 'use strict';
 
@@ -26,7 +27,6 @@ exports.ModelMapper = require('./model-mapper');
 exports.ModelBatchMapper = require('./model-batch-mapper');
 exports.ModelBatchItem = require('./model-batch-item').ModelBatchItem;
 exports.Result = require('./result');
-const tableMappingsModule = require('./table-mappings');
 exports.TableMappings = tableMappingsModule.TableMappings;
 exports.DefaultTableMappings = tableMappingsModule.DefaultTableMappings;
 exports.UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;

@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import dns from "dns";
+import util from "util";
+import utils from "../utils.js";
+
 'use strict';
-const dns = require('dns');
-const util = require('util');
-const utils = require('../utils');
+
 /** @module policies/addressResolution */
 /**
  * @class

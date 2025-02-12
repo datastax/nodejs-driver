@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
+import policies from "./policies/index.js";
+import types from "./types/index.js";
+import utils from "./utils.js";
+import tracker from "./tracker/index.js";
+import metrics from "./metrics/index.js";
+import auth from "./auth/index.js";
+
 'use strict';
-
-const util = require('util');
-const policies = require('./policies');
-const types = require('./types');
-const utils = require('./utils');
-const tracker = require('./tracker');
-const metrics = require('./metrics');
-const auth = require('./auth');
-
 /** Core connections per host for protocol versions 1 and 2 */
 const coreConnectionsPerHostV2 = {
   [types.distance.local]: 2,

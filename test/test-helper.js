@@ -1722,6 +1722,18 @@ const dataProvider = [
     value: [-1, 0, -3]
   },
   {
+    subtypeString: 'duration',
+    typeInfo: {
+      code: types.dataTypes.custom,
+      info: [{
+        code: types.dataTypes.custom,
+        info: 'org.apache.cassandra.db.marshal.DurationType'
+      },3],
+      customTypeName: 'vector',
+    },
+    value: [new types.Duration(1, 2, 3), new types.Duration(4, 5, 6), new types.Duration(7, 8, 9)]
+  },
+  {
     subtypeString: 'date',
     typeInfo: {
       code: types.dataTypes.custom,

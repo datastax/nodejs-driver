@@ -698,7 +698,7 @@ describe('encoder', function () {
       const encoder = new Encoder(4, {});
       const refVal = new Float32Array([1.2, 3.4, 5.6]);
       /** @type {import('../../lib/encoder').VectorColumnInfo} */
-      const typeObj = {code: dataTypes.custom, info: {code : dataTypes.float}, dimension : 3, customTypeName : 'vector'};
+      const typeObj = {code: dataTypes.custom, info: [{code : dataTypes.float},3], customTypeName : 'vector'};
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Vector);
@@ -711,7 +711,7 @@ describe('encoder', function () {
       const encoder = new Encoder(4, {});
       const refVal = new Vector(['a', 'bc', 'de']);
       /** @type {import('../../lib/encoder').VectorColumnInfo} */
-      const typeObj = {code: dataTypes.custom, info: {code : dataTypes.ascii}, dimension : 3, customTypeName : 'vector'};
+      const typeObj = {code: dataTypes.custom, info: [{code : dataTypes.ascii},3], customTypeName : 'vector'};
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
       helper.assertInstanceOf(decoded, Vector);
@@ -1109,8 +1109,8 @@ describe('encoder', function () {
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
       assert.strictEqual(dataTypes.custom, type.code);
       assert.ok(typeof type.info === 'object');
-      assert.strictEqual(dataTypes.float, type.info.code);
-      assert.strictEqual(10, type["dimension"]);
+      assert.strictEqual(dataTypes.float, type.info[0].code);
+      assert.strictEqual(10, type.info[1]);
     });
 
     it('should parse frozen types', function () {
@@ -1242,8 +1242,8 @@ describe('encoder', function () {
           });
         }
         else if (typeof item[2] === 'object') {
-          assert.strictEqual(dataType.info.code, item[2].code);
-          assert.strictEqual(dataType.dimension, item[2].dimension);
+          assert.strictEqual(dataType.info[0].code, item[2].code);
+          assert.strictEqual(dataType.info[1], item[2].dimension);
         }
         else {
           assert.strictEqual(dataType.info.code, item[2]);

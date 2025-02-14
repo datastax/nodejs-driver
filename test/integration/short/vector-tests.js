@@ -80,7 +80,7 @@ vdescribe('5.0.0', 'Vector tests', function () {
         const query = `INSERT INTO ${table} (id, ${subtypeStringToColumnName(data.subtypeString)}) VALUES (?, ?)`;
         client.execute(query, [id, vector], { prepare: false }, function (err) {
           if (err) { return done(err); }
-          client.execute(`SELECT ${subtypeStringToColumnName(data.subtypeString)} FROM ${table} WHERE id = ?`, [id], { prepare: true }, function (err, result) {
+          client.execute(`SELECT ${subtypeStringToColumnName(data.subtypeString)} FROM ${table} WHERE id = ?`, [id], { prepare: false }, function (err, result) {
             if (err) { return done(err); }
             assert.strictEqual(result.rows.length, 1);
             assert.strictEqual(util.inspect(result.rows[0][subtypeStringToColumnName(data.subtypeString)]), util.inspect(vector));

@@ -29,6 +29,10 @@ vdescribe('5.0.0', 'Vector tests', function () {
     const table = keyspace + '.' + helper.getRandomName('table');
     let createTableCql = `CREATE TABLE ${table} (id uuid PRIMARY KEY`;
     helper.dataProviderWithCollections.forEach(data => {
+      // skip set<duration> because it's not allowed in C* 5.0
+      if (data.subtypeString === 'set<duration>') {
+        return;
+      }
       createTableCql += `, ${subtypeStringToColumnName(data.subtypeString)} vector<${data.subtypeString}, 3>`;
     });
     createTableCql += ');';
@@ -42,6 +46,10 @@ vdescribe('5.0.0', 'Vector tests', function () {
     if (!client) { throw new Error('client setup failed'); }
 
     helper.dataProviderWithCollections.forEach(data => {
+      // skip set<duration> because it's not allowed in C* 5.0
+      if (data.subtypeString === 'set<duration>') {
+        return;
+      }
       it('should insert, select, and update vector of subtype ' + data.subtypeString, function (done) {
         const id = types.Uuid.random();
         const vector = new Vector(data.value, data.subtypeString);
@@ -58,7 +66,7 @@ vdescribe('5.0.0', 'Vector tests', function () {
             client.execute(`UPDATE ${table} SET ${subtypeStringToColumnName(data.subtypeString)} = ? WHERE id = ?`, [new Vector(updatedValues, data.subtypeString), id], { prepare: true }, function (err, result) {
               if (err) { return done(err); }
               done();
-            } );
+            });
           });
         });
       });

@@ -461,8 +461,8 @@ export namespace types {
     getSubtype(): string | null;
     /**
        *
-       * @returns {ArrayIterator}
+       * @returns {IterableIterator<any>}
        */
-    [Symbol.iterator](): ArrayIterator<any>;
+    [Symbol.iterator](): IterableIterator<any>;
   }
 }

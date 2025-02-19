@@ -89,5 +89,4 @@ await c.connect()
 
 In driver versions 4.7.0 - 4.7.2, the vector of floats was represented as a [Float32Array]. This is still supported for backward compatibility, but it is deprecated, and it is recommended to use the `cassandra.types.Vector` class instead.
 
-```javascript
 [Float32Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array

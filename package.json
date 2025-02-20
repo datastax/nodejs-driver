@@ -1,6 +1,6 @@
 {
   "name": "cassandra-driver",
-  "version": "4.7.2",
+  "version": "4.8.0",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
   "keywords": [

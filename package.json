@@ -52,6 +52,6 @@
     "eslint": "eslint lib test"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   }
 }

@@ -1,5 +1,18 @@
 # ChangeLog - DataStax Node.js Driver
 
+## 4.8.0
+
+2025-02-20
+
+### Features
+
+- [NODEJS-666] - Extend driver vector support to arbitrary subtypes and fix handling of variable length types (OSS C* 5.0)
+- [NODEJS-671] - Remove @types/long dependency
+- [NODEJS-674] - Add support for Cassandra 4.1.x and 5.0 releases to CI
+- [NODEJS-677] - Add support for DSE 6.9.x and HCD releases to CI
+- [NODEJS-678] - Add node.js 22.x to CI
+- [NODEJS-682] - Replace deprecated usages of `util.isDate` & `util.isString`
+
 ## 4.7.2
 
 2023-09-21

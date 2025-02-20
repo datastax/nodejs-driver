@@ -20,9 +20,9 @@ const util = require('util');
 const utils = require('../../lib/utils');
 const tokenizer = require('../../lib/tokenizer');
 const token = require('../../lib/token');
-
+const Vector = require('../../lib/types/vector');
 const Encoder = require('../../lib/encoder');
-const types = require('../../lib/types');
+const { types } = require('../../index.js');
 const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
 const dataTypes = types.dataTypes;
 const helper = require('../test-helper');
@@ -96,7 +96,7 @@ describe('encoder', function () {
   describe('#encode() and #decode()', function () {
     const typeEncoder = new Encoder(2, {});
     it('should encode and decode a guessed double', function () {
-      const value = 1111;
+      const value = 1111.1;
       const encoded = typeEncoder.encode(value);
       const decoded = typeEncoder.decode(encoded, {code: dataTypes.double});
       assert.strictEqual(decoded, value);
@@ -683,36 +683,43 @@ describe('encoder', function () {
       const encoder = new Encoder(4, {});
       const refVal = new Float32Array([1.2, 3.4, 5.6]);
       const guessedTypeObj = Encoder.guessDataType(refVal);
+      if (guessedTypeObj == null){
+        assert.fail();
+      }
       const encoded = encoder.encode(refVal, guessedTypeObj);
       const decoded = encoder.decode(encoded, guessedTypeObj);
-      helper.assertInstanceOf(decoded, Float32Array);
-      for (const k in decoded) {
-        if (decoded.hasOwnProperty(k)) {
-          assert.equal(decoded[k],refVal[k]);
-        }
-        else {
-          assert.fail();
-        }
+      helper.assertInstanceOf(decoded, Vector);
+      for (let i = 0; i < decoded.length; i++) {
+        assert.strictEqual(decoded[i],refVal[i]);
       }
     });
 
     it('should encode/decode FloatArray as vector, encoder provided with full type', function () {
       const encoder = new Encoder(4, {});
       const refVal = new Float32Array([1.2, 3.4, 5.6]);
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,3)';
-      const typeObj = {code: dataTypes.custom, info: typeName};
+      /** @type {import('../../lib/encoder').VectorColumnInfo} */
+      const typeObj = {code: dataTypes.custom, info: [{code : dataTypes.float},3], customTypeName : 'vector'};
       const encoded = encoder.encode(refVal, typeObj);
       const decoded = encoder.decode(encoded, typeObj);
-      helper.assertInstanceOf(decoded, Float32Array);
-      for (const k in decoded) {
-        if (decoded.hasOwnProperty(k)) {
-          assert.equal(decoded[k],refVal[k]);
-        }
-        else {
-          assert.fail();
-        }
+      helper.assertInstanceOf(decoded, Vector);
+      for (let i = 0; i < decoded.length; i++) {
+        assert.strictEqual(decoded[i],refVal[i]);
       }
     });
+
+    it('should encode/decode Vector of texts as vector, encoder provided with full type', function () {
+      const encoder = new Encoder(4, {});
+      const refVal = new Vector(['a', 'bc', 'de']);
+      /** @type {import('../../lib/encoder').VectorColumnInfo} */
+      const typeObj = {code: dataTypes.custom, info: [{code : dataTypes.ascii},3], customTypeName : 'vector'};
+      const encoded = encoder.encode(refVal, typeObj);
+      const decoded = encoder.decode(encoded, typeObj);
+      helper.assertInstanceOf(decoded, Vector);
+      for (let k = 0; k < decoded.length; k++) {
+        assert.strictEqual(decoded[k],refVal[k]);
+      }
+    });
+
 
     it('should fail to encode if full type provided and input vector fails to match dimensions of type', function () {
       const encoder = new Encoder(4, {});
@@ -735,12 +742,24 @@ describe('encoder', function () {
       assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
     });
 
-    it('should fail to encode if full type provided and subtype is not FloatType', function () {
+    it('should encode/decode nested type as vector, encoder guesses type', function () {
       const encoder = new Encoder(4, {});
-      const refVal = new Float32Array([1, 2, 3]);
-      const typeName = 'org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type,3)';
-      assert.throws(function() { encoder.encode(refVal, {code: dataTypes.custom, info: typeName}); }, TypeError);
+      const refVal = new Vector([new Float32Array([1.2, 3.4, 5.6]), new Float32Array([7.8, 9.0, 11.2])]);
+      const guessedTypeObj = Encoder.guessDataType(refVal);
+      if (guessedTypeObj == null){
+        assert.fail();
+        return;
+      }
+      const encoded = encoder.encode(refVal, guessedTypeObj);
+      const decoded = encoder.decode(encoded, guessedTypeObj);
+      helper.assertInstanceOf(decoded, Vector);
+      for (let i = 0; i < decoded.length; i++) {
+        for (let j = 0; j < decoded[i].length; j++) {
+          assert.strictEqual(decoded[i][j],refVal[i][j]);
+        }
+      }
     });
+
   });
 
   describe('#encode()', function () {
@@ -1090,9 +1109,8 @@ describe('encoder', function () {
       type = encoder.parseFqTypeName('org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType,10)');
       assert.strictEqual(dataTypes.custom, type.code);
       assert.ok(typeof type.info === 'object');
-      assert.strictEqual(Object.keys(type.info).length, 2);
-      assert.strictEqual(dataTypes.float, type.info["subtype"].code);
-      assert.strictEqual(10, type.info["dimensions"]);
+      assert.strictEqual(dataTypes.float, type.info[0].code);
+      assert.strictEqual(10, type.info[1]);
     });
 
     it('should parse frozen types', function () {
@@ -1208,7 +1226,7 @@ describe('encoder', function () {
         ['tuple<varchar,int>', dataTypes.tuple, [dataTypes.varchar, dataTypes.int]],
         ['frozen<list<timeuuid>>', dataTypes.list, dataTypes.timeuuid],
         ['map<text,frozen<list<int>>>', dataTypes.map, [dataTypes.text, dataTypes.list]],
-        ['vector<float,20>', dataTypes.custom, {subtype: {code: dataTypes.float}, dimensions: 20}]
+        ['vector<float,20>', dataTypes.custom, {code: dataTypes.float, dimension: 20}]
       ];
 
       for (const item of items) {
@@ -1224,8 +1242,8 @@ describe('encoder', function () {
           });
         }
         else if (typeof item[2] === 'object') {
-          assert.strictEqual(dataType.info.subtype.code, item[2].subtype.code);
-          assert.strictEqual(dataType.info.dimensions, item[2].dimensions);
+          assert.strictEqual(dataType.info[0].code, item[2].code);
+          assert.strictEqual(dataType.info[1], item[2].dimension);
         }
         else {
           assert.strictEqual(dataType.info.code, item[2]);

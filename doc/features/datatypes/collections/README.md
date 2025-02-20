@@ -83,7 +83,7 @@ await c.connect()
   .then(() => c.execute("create custom index ann_index on test.foo(j) using 'StorageAttachedIndex'"))
 
   // Base inserts using simple and prepared statements
-  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(1), new cassandra.types.Vector([8, 2.3, 58])]))
+  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(1), new cassandra.types.Vector([8, 2.3, 58], 'float')]))
   .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(5), new cassandra.types.Vector([23, 18, 3.9])], {prepare: true}));
 ```
 

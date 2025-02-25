@@ -250,7 +250,7 @@ The current version of the driver offers support consistent with this policy for
 
 - Apache Cassandra versions 3.0 and above.
 - DataStax Enterprise versions 5.1 and 6.8.
-- Node.js versions 18.x and 20.x.
+- Node.js versions 18.x, 20.x, and 22.x.
 
 Note: DataStax products do not support big-endian systems.
 

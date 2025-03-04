@@ -24,8 +24,9 @@ import promiseUtils from "./promise-utils.js";
 import types from "./types/index.js";
 import requests from "./requests.js";
 import { ExecutionOptions } from "./execution-options.js";
-import packageInfo from "../package.json" with { type: "json" };
+import packageInfo from "../package.json" assert {type: 'json'};
 import VersionNumber from "./types/version-number.js";
+import { assert } from 'console';
 
 let kerberosModule;
 

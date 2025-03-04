@@ -24,5 +24,11 @@
  * @module datastax
  */
 
-exports.graph = require('./graph');
-exports.search = require('./search');
+import graph from "./graph/index.js";
+import { DateRange } from "./search/index.js";
+
+export default {
+    graph,
+    DateRange
+};
+

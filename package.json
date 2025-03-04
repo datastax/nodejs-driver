@@ -56,6 +56,5 @@
 		"eslint": "eslint lib test",
 		"test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
 	},
-	"engines": {"node": ">=16"},
-	"type": "module"
+	"engines": {"node": ">=16"}
 }

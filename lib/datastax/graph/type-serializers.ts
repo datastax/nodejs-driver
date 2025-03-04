@@ -472,3 +472,30 @@ class SetSerializer extends ArraySerializer {
     super('g:Set');
   }
 }
+
+export default {
+  BulkSetSerializer,
+  BytecodeSerializer,
+  DateSerializer,
+  DirectionSerializer,
+  EdgeSerializer,
+  EnumSerializer,
+  LambdaSerializer,
+  ListSerializer,
+  LongSerializer,
+  MapSerializer,
+  NumberSerializer,
+  Path3Serializer,
+  PathSerializer,
+  PropertySerializer,
+  PSerializer,
+  TextPSerializer,
+  SetSerializer,
+  TSerializer,
+  TraverserSerializer,
+  TraversalStrategySerializer,
+  typeKey,
+  valueKey,
+  VertexPropertySerializer,
+  VertexSerializer
+};

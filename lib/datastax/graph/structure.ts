@@ -155,3 +155,12 @@ function Path(labels, objects) {
   this.labels = labels;
   this.objects = objects;
 }
+
+export {
+  Edge,
+  Element,
+  Path,
+  Property,
+  Vertex,
+  VertexProperty
+};

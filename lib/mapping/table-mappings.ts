@@ -117,6 +117,14 @@ class DefaultTableMappings extends TableMappings {
   }
 }
 
-exports.TableMappings = TableMappings;
-exports.UnderscoreCqlToCamelCaseMappings = UnderscoreCqlToCamelCaseMappings;
-exports.DefaultTableMappings = DefaultTableMappings;
+export default {
+  TableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  DefaultTableMappings
+}
+
+export {
+  TableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  DefaultTableMappings
+}

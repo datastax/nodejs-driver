@@ -648,3 +648,13 @@ class HostMap extends events.EventEmitter{
     return obj;
   }
 }
+
+export {
+  Host,
+  HostMap
+};
+
+export default {
+  Host,
+  HostMap
+};

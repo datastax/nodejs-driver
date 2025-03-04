@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import tableMappingsModule from "./table-mappings.js";
+import Mapper from './mapper.js';
+import ModelMapper from "./model-mapper.js";
+import ModelBatchMapper from "./model-batch-mapper.js";
+import { ModelBatchItem } from './model-batch-item.js';
+import Result from "./result.js";
+import { q } from "./q.js";
+import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings.js";
 
 'use strict';
 
@@ -22,12 +28,26 @@ import tableMappingsModule from "./table-mappings.js";
  * @module mapping
  */
 
-exports.Mapper = require('./mapper');
-exports.ModelMapper = require('./model-mapper');
-exports.ModelBatchMapper = require('./model-batch-mapper');
-exports.ModelBatchItem = require('./model-batch-item').ModelBatchItem;
-exports.Result = require('./result');
-exports.TableMappings = tableMappingsModule.TableMappings;
-exports.DefaultTableMappings = tableMappingsModule.DefaultTableMappings;
-exports.UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
-exports.q = require('./q').q;
+export {
+    Mapper,
+    ModelMapper,
+    ModelBatchMapper,
+    ModelBatchItem,
+    Result,
+    TableMappings,
+    DefaultTableMappings,
+    UnderscoreCqlToCamelCaseMappings,
+    q
+}
+
+export default {
+    Mapper,
+    ModelMapper,
+    ModelBatchMapper,
+    ModelBatchItem,
+    Result,
+    TableMappings,
+    DefaultTableMappings,
+    UnderscoreCqlToCamelCaseMappings,
+    q
+}

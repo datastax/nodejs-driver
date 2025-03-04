@@ -17,3 +17,6 @@ import ClientMetrics from "./client-metrics.js";
 import DefaultMetrics from "./default-metrics.js";
 
 'use strict';
+
+export { ClientMetrics, DefaultMetrics };
+export default { ClientMetrics, DefaultMetrics };

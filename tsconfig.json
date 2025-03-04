@@ -1,21 +1,26 @@
 {
 	"compilerOptions": {
-		"module": "nodenext",
-		"lib": ["es2015"],
-		"target": "es2015",
-		"sourceMap": true,
-		"strict": false,
-		"noImplicitAny": false,
-		"outDir": "out",
-		"declaration": true,
-		"allowJs": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"declarationMap": true,
-		"moduleDetection": "force",
-		"moduleResolution": "nodenext"
+	  "module": "NodeNext",
+	  "lib": ["es2015"],
+	  "target": "es2015",
+	  "sourceMap": true,
+	  "strict": false,
+	  "noImplicitAny": false,
+	  "outDir": "out",
+	  "declaration": true,
+	  "allowJs": true,
+	  "esModuleInterop": true,
+	  "skipLibCheck": true,
+	  "forceConsistentCasingInFileNames": true,
+	  "declarationMap": true,
+	  "moduleDetection": "force",
+	  "resolveJsonModule": true
 	},
-	"include": ["lib/**/*.ts", "index.ts"],
-	"exclude": ["node_modules"]
-}
+	"include": [
+		"lib/**/*.ts",
+		"index.ts"
+	],
+	"exclude": [
+	  "node_modules"
+	]
+  }

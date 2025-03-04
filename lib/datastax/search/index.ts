@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import dateRangeModule from "./date-range.js";
-
 'use strict';
+
 /**
  * Search module.
  * <p>
@@ -24,6 +23,4 @@ import dateRangeModule from "./date-range.js";
  * @module datastax/search
  */
 
-exports.DateRange = dateRangeModule.DateRange;
-exports.DateRangeBound = dateRangeModule.DateRangeBound;
-exports.dateRangePrecision = dateRangeModule.dateRangePrecision;
+export * from "./date-range.js";

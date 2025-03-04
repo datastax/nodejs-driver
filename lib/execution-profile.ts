@@ -258,3 +258,13 @@ class ProfileManager {
     return this._defaultConfiguredRetryPolicy;
   }
 }
+
+export {
+  ProfileManager,
+  ExecutionProfile
+};
+
+export default {
+  ProfileManager,
+  ExecutionProfile
+};

@@ -869,3 +869,25 @@ function setLocalDc(lbp, client, hosts) {
 function getDataCenters(hosts) {
   return new Set(hosts.values().map(h => h.datacenter));
 }
+
+export {
+  AllowListPolicy,
+  DCAwareRoundRobinPolicy,
+  DefaultLoadBalancingPolicy,
+  LoadBalancingPolicy,
+  RoundRobinPolicy,
+  TokenAwarePolicy,
+  // Deprecated: for backward compatibility only.
+  WhiteListPolicy
+};
+
+export default {
+  AllowListPolicy,
+  DCAwareRoundRobinPolicy,
+  DefaultLoadBalancingPolicy,
+  LoadBalancingPolicy,
+  RoundRobinPolicy,
+  TokenAwarePolicy,
+  // Deprecated: for backward compatibility only.
+  WhiteListPolicy
+};

@@ -186,3 +186,5 @@ class RemoveModelBatchItem extends ModelBatchItem {
     return this.handler.createDeleteQueries(docKeys, this.doc, this.docInfo);
   }
 }
+
+export { ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem };

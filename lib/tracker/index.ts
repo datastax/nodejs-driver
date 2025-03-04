@@ -21,5 +21,13 @@
  * @module tracker
  */
 
-exports.RequestLogger = require('./request-logger');
-exports.RequestTracker = require('./request-tracker');
+import RequestTracker from "./request-tracker.js";
+import RequestLogger from "./request-logger.js";
+export {
+    RequestTracker,
+    RequestLogger
+}
+export default {
+    RequestTracker,
+    RequestLogger
+}

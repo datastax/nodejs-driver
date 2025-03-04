@@ -530,7 +530,9 @@ BoundaryBuilder.prototype.build = function () {
   return new DateRangeBound(date, this._index);
 };
 
-exports.unbounded = unbounded;
-exports.dateRangePrecision = dateRangePrecision;
-exports.DateRange = DateRange;
-exports.DateRangeBound = DateRangeBound;
+export {
+  unbounded,
+  dateRangePrecision,
+  DateRange,
+  DateRangeBound
+}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import Tree from "./tree.js";
-import moduleBatchItemModule from "./model-batch-item.js";
+import * as moduleBatchItemModule from "./model-batch-item.js";
 
 'use strict';
 const InsertModelBatchItem = moduleBatchItemModule.InsertModelBatchItem;

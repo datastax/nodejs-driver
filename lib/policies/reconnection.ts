@@ -153,6 +153,14 @@ ExponentialReconnectionPolicy.prototype.getOptions = function () {
   ]);
 };
 
-exports.ReconnectionPolicy = ReconnectionPolicy;
-exports.ConstantReconnectionPolicy = ConstantReconnectionPolicy;
-exports.ExponentialReconnectionPolicy = ExponentialReconnectionPolicy;
+export {
+    ReconnectionPolicy,
+    ConstantReconnectionPolicy,
+    ExponentialReconnectionPolicy
+}
+
+export default {
+  ReconnectionPolicy,
+  ConstantReconnectionPolicy,
+  ExponentialReconnectionPolicy
+}

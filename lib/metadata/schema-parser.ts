@@ -1173,5 +1173,7 @@ function getByVersion(options, cc, udtResolver, version, currentInstance) {
   return currentInstance;
 }
 
-exports.getByVersion = getByVersion;
-exports.isDoneForToken = isDoneForToken;
+export default {
+  getByVersion,
+  isDoneForToken
+}

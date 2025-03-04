@@ -613,3 +613,5 @@ function ifUndefined3(v1, v2, v3) {
   }
   return v2 !== undefined ? v2 : v3;
 }
+
+export { ExecutionOptions, DefaultExecutionOptions, proxyExecuteKey };

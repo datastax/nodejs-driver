@@ -329,3 +329,13 @@ function checkParts(hostParts, pattern) {
 
   return true;
 }
+
+export {
+  checkServerIdentity,
+  init
+};
+
+export default {
+  checkServerIdentity,
+  init
+};

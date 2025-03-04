@@ -83,7 +83,7 @@ TimestampGenerator.prototype.next = function (client) {
  * @extends {TimestampGenerator}
  * @constructor
  */
-function MonotonicTimestampGenerator(warningThreshold, minLogInterval) {
+function MonotonicTimestampGenerator(warningThreshold?, minLogInterval?) {
   if (warningThreshold < 0) {
     throw new errors.ArgumentError('warningThreshold can not be lower than 0');
   }
@@ -165,5 +165,12 @@ MonotonicTimestampGenerator.prototype._generateMicroseconds = function () {
     .add(Long.fromInt(this._micros));
 };
 
-exports.TimestampGenerator = TimestampGenerator;
-exports.MonotonicTimestampGenerator = MonotonicTimestampGenerator;
+export {
+  TimestampGenerator,
+  MonotonicTimestampGenerator
+}
+
+export default{
+  TimestampGenerator,
+  MonotonicTimestampGenerator
+}

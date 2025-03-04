@@ -579,6 +579,14 @@ function fromSignedByte(value) {
   return new MutableLong((value - 256) & 0xffff, 0xffff, 0xffff, 0xffff);
 }
 
-exports.Murmur3Tokenizer = Murmur3Tokenizer;
-exports.RandomTokenizer = RandomTokenizer;
-exports.ByteOrderedTokenizer = ByteOrderedTokenizer;
+export {
+  Murmur3Tokenizer,
+  RandomTokenizer,
+  ByteOrderedTokenizer
+}
+
+export default {
+  Murmur3Tokenizer,
+  RandomTokenizer,
+  ByteOrderedTokenizer
+}

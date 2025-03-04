@@ -54,3 +54,24 @@ const direction = {
 // TinkerPop JavaScript GLV only exposes `in` but it can lead to issues for TypeScript users and others.
 // Expose an extra property to represent `Direction.IN`.
 direction.in_ = direction.in;
+
+export default {
+  Edge,
+  Element,
+  Path,
+  Property,
+  Vertex,
+  VertexProperty,
+
+  asInt,
+  asDouble,
+  asFloat,
+  asTimestamp,
+  asUdt,
+  direction,
+  getCustomTypeSerializers,
+  GraphResultSet,
+  GraphTypeWrapper,
+  t,
+  UdtGraphWrapper
+};

@@ -22,7 +22,6 @@ import { ProfileManager } from "./execution-profile.js";
 import requests from "./requests.js";
 import clientOptions from "./client-options.js";
 import ClientState from "./metadata/client-state.js";
-import { version } from "../package.json" with { type: "json" };
 import { DefaultExecutionOptions } from "./execution-options.js";
 import ControlConnection from "./control-connection.js";
 import RequestHandler from "./request-handler.js";
@@ -31,9 +30,13 @@ import InsightsClient from "./insights-client.js";
 import cloud from "./datastax/cloud/index.js";
 import GraphExecutor from "./datastax/graph/graph-executor.js";
 import promiseUtils from "./promise-utils.js";
+import packageInfo from '../package.json' assert {type: 'json'};
 
 'use strict';
-const description = require('../package.json').description;
+
+const version = packageInfo.version;
+
+const description = packageInfo.description;
 /**
  * Max amount of pools being warmup in parallel, when warmup is enabled
  * @private

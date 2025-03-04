@@ -330,5 +330,12 @@ class ResultSetGroup {
   }
 }
 
-exports.executeConcurrent = executeConcurrent;
-exports.ResultSetGroup = ResultSetGroup;
+export {
+  executeConcurrent,
+  ResultSetGroup
+};
+
+export default {
+  executeConcurrent,
+  ResultSetGroup
+};

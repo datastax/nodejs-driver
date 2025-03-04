@@ -148,6 +148,14 @@ const q = {
   }
 };
 
-exports.q = q;
-exports.QueryAssignment = QueryAssignment;
-exports.QueryOperator = QueryOperator;
+export default {
+  q,
+  QueryAssignment,
+  QueryOperator,
+}
+
+export {
+  q,
+  QueryAssignment,
+  QueryOperator,
+}

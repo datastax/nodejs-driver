@@ -271,6 +271,14 @@ FallthroughRetryPolicy.prototype.onWriteTimeout = function () {
  * @property {Number} nbRetry The number of retries already performed for this operation.
  */
 
-exports.IdempotenceAwareRetryPolicy = IdempotenceAwareRetryPolicy;
-exports.FallthroughRetryPolicy = FallthroughRetryPolicy;
-exports.RetryPolicy = RetryPolicy;
+export {
+  IdempotenceAwareRetryPolicy,
+  FallthroughRetryPolicy,
+  RetryPolicy
+}
+
+export default {
+  IdempotenceAwareRetryPolicy,
+  FallthroughRetryPolicy,
+  RetryPolicy
+}

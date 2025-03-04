@@ -20,6 +20,17 @@ import Uuid from "./uuid.js";
 import protocolVersion from "./protocol-version.js";
 import utils from "../utils.js";
 import Long from "long";
+import BigDecimal from './big-decimal.js';
+import Duration from './duration.js';
+import InetAddress from './inet-address.js';
+import Integer from './integer.js';
+import LocalDate from './local-date.js';
+import LocalTime from './local-time.js';
+import ResultSet from './result-set.js';
+import ResultStream from './result-stream.js';
+import Row from './row.js';
+import Tuple from './tuple.js';
+
 
 'use strict';
 /**
@@ -588,35 +599,72 @@ function TimeoutError (message) {
 }
 util.inherits(TimeoutError, errors.DriverError);
 
-exports.opcodes = opcodes;
-exports.consistencies = consistencies;
-exports.consistencyToString = consistencyToString;
-exports.dataTypes = dataTypes;
-exports.getDataTypeNameByCode = getDataTypeNameByCode;
-exports.distance = distance;
-exports.frameFlags = frameFlags;
-exports.protocolEvents = protocolEvents;
-exports.protocolVersion = protocolVersion;
-exports.responseErrorCodes = responseErrorCodes;
-exports.resultKind = resultKind;
-exports.timeuuid = timeuuid;
-exports.uuid = uuid;
-exports.BigDecimal = require('./big-decimal');
-exports.Duration = require('./duration');
-exports.FrameHeader = FrameHeader;
-exports.InetAddress = require('./inet-address');
-exports.Integer = require('./integer');
-exports.LocalDate = require('./local-date');
-exports.LocalTime = require('./local-time');
-exports.Long = Long;
-exports.ResultSet = require('./result-set');
-exports.ResultStream = require('./result-stream');
-exports.Row = require('./row');
-//export DriverError for backward-compatibility
-exports.DriverError = errors.DriverError;
-exports.TimeoutError = TimeoutError;
-exports.TimeUuid = TimeUuid;
-exports.Tuple = require('./tuple');
-exports.Uuid = Uuid;
-exports.unset = unset;
-exports.generateTimestamp = generateTimestamp;
+const DriverError = errors.DriverError;
+
+export {
+  opcodes,
+  consistencies,
+  consistencyToString,
+  dataTypes,
+  getDataTypeNameByCode,
+  distance,
+  frameFlags,
+  protocolEvents,
+  protocolVersion,
+  responseErrorCodes,
+  resultKind,
+  timeuuid,
+  uuid,
+  BigDecimal,
+  Duration,
+  FrameHeader,
+  InetAddress,
+  Integer,
+  LocalDate,
+  LocalTime,
+  Long,
+  ResultSet,
+  ResultStream,
+  Row,
+  DriverError,
+  TimeoutError,
+  TimeUuid,
+  Tuple,
+  Uuid,
+  unset,
+  generateTimestamp
+}
+
+export default {
+  opcodes,
+  consistencies,
+  consistencyToString,
+  dataTypes,
+  getDataTypeNameByCode,
+  distance,
+  frameFlags,
+  protocolEvents,
+  protocolVersion,
+  responseErrorCodes,
+  resultKind,
+  timeuuid,
+  uuid,
+  BigDecimal,
+  Duration,
+  FrameHeader,
+  InetAddress,
+  Integer,
+  LocalDate,
+  LocalTime,
+  Long,
+  ResultSet,
+  ResultStream,
+  Row,
+  DriverError,
+  TimeoutError,
+  TimeUuid,
+  Tuple,
+  Uuid,
+  unset,
+  generateTimestamp
+}

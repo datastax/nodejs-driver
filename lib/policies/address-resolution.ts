@@ -137,5 +137,7 @@ EC2MultiRegionTranslator.prototype.logError = function (address, err) {
   //Do nothing by default
 };
 
-exports.AddressTranslator = AddressTranslator;
-exports.EC2MultiRegionTranslator = EC2MultiRegionTranslator;
+export {
+  AddressTranslator,
+  EC2MultiRegionTranslator
+}

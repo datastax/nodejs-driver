@@ -248,3 +248,12 @@ const graphSON3Serializers = graphSON2Serializers.concat([
   typeSerializers.SetSerializer,
   typeSerializers.MapSerializer
 ]);
+
+export {
+  GraphSON3Writer,
+  GraphSON3Reader,
+  GraphSON2Writer,
+  GraphSON2Reader,
+  GraphSON3Writer as GraphSONWriter,
+  GraphSON3Reader as GraphSONReader
+};

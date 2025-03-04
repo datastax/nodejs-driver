@@ -94,3 +94,7 @@ function getUdtTypeDefinition(udtInfo) {
 function getUdtTypeDefinitionByValue(wrappedValue) {
   return getUdtTypeDefinition(wrappedValue.udtInfo);
 }
+
+export { 
+  getTypeDefinitionByValue, 
+  getUdtTypeDefinitionByValue };

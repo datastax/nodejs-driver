@@ -163,3 +163,15 @@ function toCallback(promise, callback) {
       // Avoid marking the promise as rejected
       err => process.nextTick(() => callback(err)));
 }
+
+export default {
+  delay,
+  fromCallback,
+  fromEvent,
+  getCallback,
+  newQueryPlan,
+  optionalCallback,
+  times,
+  toBackground,
+  toCallback
+};

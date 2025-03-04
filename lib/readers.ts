@@ -536,3 +536,6 @@ class FrameReader {
     return result;
   }
 }
+
+export { FrameReader };
+export default { FrameReader };

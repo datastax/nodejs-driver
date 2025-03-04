@@ -575,6 +575,13 @@ ResultEmitter.prototype.bufferAndEmit = function (item) {
   }
 };
 
-exports.Protocol = Protocol;
-exports.Parser = Parser;
-exports.ResultEmitter = ResultEmitter;
+export {
+  Protocol,
+  Parser,
+  ResultEmitter
+}
+export default {
+  Protocol,
+  Parser,
+  ResultEmitter
+}

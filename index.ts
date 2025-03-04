@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const ExecutionProfile = require('./lib/execution-profile').ExecutionProfile;
-const ExecutionOptions = require('./lib/execution-options').ExecutionOptions;
-import * as auth from './lib/auth/index.js';
+import auth from './lib/auth/index.js';
 import clientOptions from "./lib/client-options.js";
 import Client from "./lib/client.js";
 import types from "./lib/types/index.js";
@@ -26,12 +23,28 @@ import mapping from "./lib/mapping/index.js";
 import tracker from "./lib/tracker/index.js";
 import metrics from "./lib/metrics/index.js";
 import concurrent from "./lib/concurrent/index.js";
-import token from "./lib/token.js";
+import Token from "./lib/token.js";
 import Metadata from "./lib/metadata/index.js";
 import Encoder from "./lib/encoder.js";
 import geometry from "./lib/geometry/index.js";
 import datastax from "./lib/datastax/index.js";
-export default {
+import packageJson from './package.json';
+
+import { ExecutionProfile } from './lib/execution-profile.js';
+import { ExecutionOptions } from './lib/execution-options.js';
+
+const token = {
+  Token: Token.Token,
+  TokenRange: Token.TokenRange
+}
+const metadata = {Metadata: Metadata};
+const defaultOptions = function () {
+  return clientOptions.defaultOptions();
+}
+const version = packageJson.version;
+
+
+export {
   Client,
   ExecutionProfile,
   ExecutionOptions,
@@ -43,21 +56,14 @@ export default {
   tracker,
   metrics,
   concurrent,
-  token: {
-    Token: token.Token,
-    TokenRange: token.TokenRange
-  },
-  metadata: {
-    Metadata: Metadata
-  },
+  token,
+  metadata,
   Encoder,
   geometry,
   datastax,
   /**
    * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
    */
-  defaultOptions: function () {
-    return clientOptions.defaultOptions();
-  },
-  version: require('./package.json').version
+  defaultOptions,
+  version
 };

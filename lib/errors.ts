@@ -166,12 +166,14 @@ function BusyConnectionError(address, maxRequestsPerConnection, connectionLength
 
 util.inherits(BusyConnectionError, DriverError);
 
-exports.ArgumentError = ArgumentError;
-exports.AuthenticationError = AuthenticationError;
-exports.BusyConnectionError = BusyConnectionError;
-exports.DriverError = DriverError;
-exports.OperationTimedOutError = OperationTimedOutError;
-exports.DriverInternalError = DriverInternalError;
-exports.NoHostAvailableError = NoHostAvailableError;
-exports.NotSupportedError = NotSupportedError;
-exports.ResponseError = ResponseError;
+export default {
+    ArgumentError,
+    AuthenticationError,
+    BusyConnectionError,
+    DriverError,
+    OperationTimedOutError,
+    DriverInternalError,
+    NoHostAvailableError,
+    NotSupportedError,
+    ResponseError
+}

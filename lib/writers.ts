@@ -306,3 +306,5 @@ class WriteQueue extends events.EventEmitter {
     }
   }
 }
+
+export { FrameWriter, WriteQueue };

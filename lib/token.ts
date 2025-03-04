@@ -278,8 +278,18 @@ class TokenRange {
   }
 }
 
-exports.Token = Token;
-exports.TokenRange = TokenRange;
-exports.ByteOrderedToken = ByteOrderedToken;
-exports.Murmur3Token = Murmur3Token;
-exports.RandomToken = RandomToken;
+export {
+  Token,
+  TokenRange,
+  ByteOrderedToken,
+  Murmur3Token,
+  RandomToken
+}
+
+export default {
+  Token,
+  TokenRange,
+  ByteOrderedToken,
+  Murmur3Token,
+  RandomToken
+}

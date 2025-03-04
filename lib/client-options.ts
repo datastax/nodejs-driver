@@ -348,13 +348,28 @@ function setMetadataDependent(client) {
     {}, { coreConnectionsPerHost, maxRequestsPerConnection }, client.options.pooling);
 }
 
-exports.extend = extend;
-exports.defaultOptions = defaultOptions;
-exports.coreConnectionsPerHostV2 = coreConnectionsPerHostV2;
-exports.coreConnectionsPerHostV3 = coreConnectionsPerHostV3;
-exports.maxRequestsPerConnectionV2 = maxRequestsPerConnectionV2;
-exports.maxRequestsPerConnectionV3 = maxRequestsPerConnectionV3;
-exports.setMetadataDependent = setMetadataDependent;
-exports.continuousPageUnitBytes = continuousPageUnitBytes;
-exports.continuousPageDefaultSize = continuousPageDefaultSize;
-exports.continuousPageDefaultHighWaterMark = continuousPageDefaultHighWaterMark;
+export {
+  extend,
+  defaultOptions,
+  coreConnectionsPerHostV2,
+  coreConnectionsPerHostV3,
+  maxRequestsPerConnectionV2,
+  maxRequestsPerConnectionV3,
+  setMetadataDependent,
+  continuousPageUnitBytes,
+  continuousPageDefaultSize,
+  continuousPageDefaultHighWaterMark
+};
+
+export default {
+  extend,
+  defaultOptions,
+  coreConnectionsPerHostV2,
+  coreConnectionsPerHostV3,
+  maxRequestsPerConnectionV2,
+  maxRequestsPerConnectionV3,
+  setMetadataDependent,
+  continuousPageUnitBytes,
+  continuousPageDefaultSize,
+  continuousPageDefaultHighWaterMark
+};

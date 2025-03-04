@@ -24,7 +24,21 @@
  * @module geometry
  */
 
-exports.Geometry = require('./geometry');
-exports.LineString = require('./line-string');
-exports.Point = require('./point');
-exports.Polygon = require('./polygon');
+import Point from './point.js';
+import LineString from './line-string.js';
+import Polygon from './polygon.js';
+import Geometry from './geometry.js';
+
+export default {
+    Point,
+    LineString,
+    Polygon,
+    Geometry
+}
+
+export {
+    Point,
+    LineString,
+    Polygon,
+    Geometry
+}

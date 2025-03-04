@@ -327,3 +327,9 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
     this.setCustomPayload(payload);
   }
 }
+
+export {
+  GraphExecutionOptions,
+  graphProtocol,
+  payloadKeys
+};

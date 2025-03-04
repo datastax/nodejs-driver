@@ -79,3 +79,5 @@ function asTimestamp(value) { return new GraphTypeWrapper(value, dataTypes.times
  * @param {{name: string, keyspace: string, fields: Array}} udtInfo The UDT metadata as defined by the driver.
  */
 function asUdt(value, udtInfo) { return new UdtGraphWrapper(value, udtInfo); }
+
+export { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper };

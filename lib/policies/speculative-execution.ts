@@ -138,6 +138,14 @@ ConstantSpeculativeExecutionPolicy.prototype.getOptions = function () {
   ]);
 };
 
-exports.NoSpeculativeExecutionPolicy = NoSpeculativeExecutionPolicy;
-exports.SpeculativeExecutionPolicy = SpeculativeExecutionPolicy;
-exports.ConstantSpeculativeExecutionPolicy = ConstantSpeculativeExecutionPolicy;
+export {
+  NoSpeculativeExecutionPolicy,
+  SpeculativeExecutionPolicy,
+  ConstantSpeculativeExecutionPolicy
+}
+
+export default{
+  NoSpeculativeExecutionPolicy,
+  SpeculativeExecutionPolicy,
+  ConstantSpeculativeExecutionPolicy
+}

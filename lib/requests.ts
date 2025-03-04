@@ -18,7 +18,7 @@ import { FrameWriter } from "./writers.js";
 import types from "./types/index.js";
 import utils from "./utils.js";
 import { ExecutionOptions } from "./execution-options.js";
-import packageInfo from "../package.json" with { type: "json" };
+import packageInfo from "../package.json" assert {type: 'json'};
 
 'use strict';
 /**
@@ -528,14 +528,30 @@ class OptionsRequest extends Request {
 
 const options = new OptionsRequest();
 
-exports.AuthResponseRequest = AuthResponseRequest;
-exports.BatchRequest = BatchRequest;
-exports.CancelRequest = CancelRequest;
-exports.CredentialsRequest = CredentialsRequest;
-exports.ExecuteRequest = ExecuteRequest;
-exports.PrepareRequest = PrepareRequest;
-exports.QueryRequest = QueryRequest;
-exports.Request = Request;
-exports.RegisterRequest = RegisterRequest;
-exports.StartupRequest = StartupRequest;
-exports.options = options;
+export {
+  AuthResponseRequest,
+  BatchRequest,
+  CancelRequest,
+  CredentialsRequest,
+  ExecuteRequest,
+  PrepareRequest,
+  QueryRequest,
+  Request,
+  RegisterRequest,
+  StartupRequest,
+  options
+};
+
+export default {
+  AuthResponseRequest,
+  BatchRequest,
+  CancelRequest,
+  CredentialsRequest,
+  ExecuteRequest,
+  PrepareRequest,
+  QueryRequest,
+  Request,
+  RegisterRequest,
+  StartupRequest,
+  options
+};

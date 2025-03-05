@@ -42,6 +42,7 @@ class NoAuthProvider extends AuthProvider {
  * @ignore
  */
 class NoAuthAuthenticator extends Authenticator {
+  endpoint: any;
   constructor(endpoint) {
     super();
     this.endpoint = endpoint;

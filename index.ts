@@ -44,7 +44,7 @@ const defaultOptions = function () {
 const version = packageJson.version;
 
 
-export {
+export default {
   Client,
   ExecutionProfile,
   ExecutionOptions,
@@ -67,3 +67,4 @@ export {
   defaultOptions,
   version
 };
+

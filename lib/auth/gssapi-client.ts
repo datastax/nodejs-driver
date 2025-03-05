@@ -23,11 +23,13 @@ import utils from "../utils.js";
  * @ignore
  */
 class GssapiClient {
+  authorizationId: string;
+  service: string;
   /**
    * @param {String} [authorizationId]
    * @param {String} [service]
    */
-  constructor(authorizationId, service) {
+  constructor(authorizationId: string, service: string) {
     this.authorizationId = authorizationId;
     this.service = service !== undefined ? service : 'dse';
   }
@@ -37,7 +39,7 @@ class GssapiClient {
    * @param {String} host Host name or ip
    * @param {Function} callback
    */
-  init(host, callback) {
+  init(host: string, callback: Function) {
     throw new Error('Not implemented');
   }
 
@@ -46,7 +48,7 @@ class GssapiClient {
    * @param {Function} callback
    * @abstract
    */
-  evaluateChallenge(challenge, callback) {
+  evaluateChallenge(challenge: Buffer, callback: Function) {
     throw new Error('Not implemented');
   }
 
@@ -54,7 +56,7 @@ class GssapiClient {
    * @abstract
    * @param {Function} [callback]
    */
-  shutdown(callback) {
+  shutdown(callback: Function) {
     throw new Error('Not implemented');
   }
 
@@ -65,7 +67,7 @@ class GssapiClient {
    * @param {String} [service] The service to use. (defaults to 'dse')
    * @returns GssapiClient
    */
-  static createNew(kerberosModule, authorizationId, service) {
+  static createNew(kerberosModule: object, authorizationId?: string, service?: string) {
     return new StandardGssClient(kerberosModule, authorizationId, service);
   }
 }
@@ -75,6 +77,10 @@ class GssapiClient {
  * @ignore
  */
 class StandardGssClient extends GssapiClient {
+  kerberos: any;
+  transitionIndex: number;
+  host: any;
+  kerberosClient: any;
   constructor(kerberosModule, authorizationId, service) {
     if (typeof kerberosModule.initializeClient !== 'function') {
       throw new Error('The driver expects version 1.x of the kerberos library');

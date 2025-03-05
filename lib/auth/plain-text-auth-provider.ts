@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-import * as provider from './provider.js';
-import util from "util";
+import { AuthProvider, Authenticator } from './provider.js';
 import utils from "../utils.js";
-const AuthProvider = provider.AuthProvider;
-const Authenticator = provider.Authenticator;
+
 /**
- * Creates a new instance of the Authenticator provider
  * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
  * connecting to a host.
  * @extends module:auth~AuthProvider
@@ -28,51 +25,68 @@ const Authenticator = provider.Authenticator;
  * var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
  * //Set the auth provider in the clientOptions when creating the Client instance
  * const client = new Client({ contactPoints: contactPoints, authProvider: authProvider });
- * @param {String} username User name in plain text
- * @param {String} password Password in plain text
  * @alias module:auth~PlainTextAuthProvider
- * @constructor
  */
-function PlainTextAuthProvider(username, password) {
-  this.username = username;
-  this.password = password;
+class PlainTextAuthProvider extends AuthProvider {
+  username: string;
+  password: string;
+
+  /**
+   * Creates a new instance of the Authenticator provider
+   * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
+   * connecting to a host.
+   * @example
+   * var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+   * //Set the auth provider in the clientOptions when creating the Client instance
+   * const client = new Client({ contactPoints: contactPoints, authProvider: authProvider });
+   * @param {String} username User name in plain text
+   * @param {String} password Password in plain text
+   * @alias module:auth~PlainTextAuthProvider
+   * @constructor
+   */
+  constructor(username: string, password: string) {
+    super();
+    this.username = username;
+    this.password = password;
+  }
+
+  /**
+   * Returns a new [Authenticator]{@link module:auth~Authenticator} instance to be used for plain text authentication.
+   * @override
+   * @returns {Authenticator}
+   */
+  newAuthenticator(): Authenticator {
+    return new PlainTextAuthenticator(this.username, this.password);
+  }
 }
-
-util.inherits(PlainTextAuthProvider, AuthProvider);
-
-/**
- * Returns a new [Authenticator]{@link module:auth~Authenticator} instance to be used for plain text authentication.
- * @override
- * @returns {Authenticator}
- */
-PlainTextAuthProvider.prototype.newAuthenticator = function () {
-  return new PlainTextAuthenticator(this.username, this.password);
-};
 
 /**
  * @ignore
  */
-function PlainTextAuthenticator(username, password) {
-  this.username = username;
-  this.password = password;
+class PlainTextAuthenticator extends Authenticator {
+  username: any;
+  password: any;
+  constructor(username, password) {
+    super();
+    this.username = username;
+    this.password = password;
+  }
+
+  initialResponse(callback) {
+    const initialToken = Buffer.concat([
+      utils.allocBufferFromArray([0]),
+      utils.allocBufferFromString(this.username, 'utf8'),
+      utils.allocBufferFromArray([0]),
+      utils.allocBufferFromString(this.password, 'utf8')
+    ]);
+    callback(null, initialToken);
+  }
+
+  evaluateChallenge(challenge, callback) {
+    // noop
+    callback();
+  }
 }
-
-util.inherits(PlainTextAuthenticator, Authenticator);
-
-PlainTextAuthenticator.prototype.initialResponse = function (callback) {
-  const initialToken = Buffer.concat([
-    utils.allocBufferFromArray([0]),
-    utils.allocBufferFromString(this.username, 'utf8'),
-    utils.allocBufferFromArray([0]),
-    utils.allocBufferFromString(this.password, 'utf8')
-  ]);
-  callback(null, initialToken);
-};
-
-PlainTextAuthenticator.prototype.evaluateChallenge = function (challenge, callback) {
-  //noop
-  callback();
-};
 
 export {
   PlainTextAuthenticator,

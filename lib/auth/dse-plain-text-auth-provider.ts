@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 'use strict';
-import { AuthProvider } from './provider.js';
+import { Authenticator, AuthProvider } from './provider.js';
 import BaseDseAuthenticator from './base-dse-authenticator.js';
-import util from "util";
 import utils from "../utils.js";
+
 const mechanism = utils.allocBufferFromString('PLAIN');
 const separatorBuffer = utils.allocBufferFromArray([0]);
 const initialServerChallenge = 'PLAIN-START';
 
 /**
- * Creates a new instance of <code>DsePlainTextAuthProvider</code>.
  * @classdesc
  * AuthProvider that provides plain text authenticator instances for clients to connect
  * to DSE clusters secured with the DseAuthenticator.
- * @param {String} username The username; cannot be <code>null</code>.
- * @param {String} password The password; cannot be <code>null</code>.
- * @param {String} [authorizationId] The optional authorization ID. Providing an authorization ID allows the currently
- * authenticated user to act as a different user (a.k.a. proxy authentication).
  * @extends AuthProvider
  * @alias module:auth~DsePlainTextAuthProvider
  * @example
@@ -38,72 +33,100 @@ const initialServerChallenge = 'PLAIN-START';
  *   contactPoints: ['h1', 'h2'],
  *   authProvider: new cassandra.auth.DsePlainTextAuthProvider('user', 'p@ssword1');
  * });
- * @constructor
  */
-function DsePlainTextAuthProvider(username, password, authorizationId) {
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    // Validate for null and undefined
-    throw new TypeError('Username and password must be a string');
+class DsePlainTextAuthProvider extends AuthProvider {
+  username: string;
+  password: string;
+  authorizationId: string;
+  /**
+   * Creates a new instance of <code>DsePlainTextAuthProvider</code>.
+   * @classdesc
+   * AuthProvider that provides plain text authenticator instances for clients to connect
+   * to DSE clusters secured with the DseAuthenticator.
+   * @param {String} username The username; cannot be <code>null</code>.
+   * @param {String} password The password; cannot be <code>null</code>.
+   * @param {String} [authorizationId] The optional authorization ID. Providing an authorization ID allows the currently
+   * authenticated user to act as a different user (a.k.a. proxy authentication).
+   * @extends AuthProvider
+   * @alias module:auth~DsePlainTextAuthProvider
+   * @example
+   * const client = new cassandra.Client({
+   *   contactPoints: ['h1', 'h2'],
+   *   authProvider: new cassandra.auth.DsePlainTextAuthProvider('user', 'p@ssword1');
+   * });
+   * @constructor
+   */
+  constructor(username: string, password: string, authorizationId?: string) {
+    super();
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      // Validate for null and undefined
+      throw new TypeError('Username and password must be a string');
+    }
+    this.username = username;
+    this.password = password;
+    this.authorizationId = authorizationId;
   }
-  this.username = username;
-  this.password = password;
-  this.authorizationId = authorizationId;
+
+  /**
+   * Returns an Authenticator instance to be used by the driver when connecting to a host.
+   * @param {String} endpoint The IP address and port number in the format ip:port.
+   * @param {String} name Authenticator name.
+   * @override
+   * @returns {Authenticator}
+   */
+  newAuthenticator(endpoint: string, name: string): Authenticator {
+    return new PlainTextAuthenticator(name, this.username, this.password, this.authorizationId);
+  }
 }
 
-util.inherits(DsePlainTextAuthProvider, AuthProvider);
-
 /**
- * Returns an Authenticator instance to be used by the driver when connecting to a host.
- * @param {String} endpoint The IP address and port number in the format ip:port.
- * @param {String} name Authenticator name.
- * @override
- * @returns {Authenticator}
- */
-DsePlainTextAuthProvider.prototype.newAuthenticator = function (endpoint, name) {
-  return new PlainTextAuthenticator(name, this.username, this.password, this.authorizationId);
-};
-
-/**
- * @param {String} authenticatorName
- * @param {String} authenticatorId
- * @param {String} password
- * @param {String} authorizationId
  * @extends BaseDseAuthenticator
- * @constructor
  * @private
  */
-function PlainTextAuthenticator(authenticatorName, authenticatorId, password, authorizationId) {
-  BaseDseAuthenticator.call(this, authenticatorName);
-  this.authenticatorId = utils.allocBufferFromString(authenticatorId);
-  this.password = utils.allocBufferFromString(password);
-  this.authorizationId = utils.allocBufferFromString(authorizationId || '');
-}
+class PlainTextAuthenticator extends BaseDseAuthenticator {
+  authenticatorId: Buffer;
+  password: Buffer;
+  authorizationId: Buffer;
 
-util.inherits(PlainTextAuthenticator, BaseDseAuthenticator);
-
-/** @override */
-PlainTextAuthenticator.prototype.getMechanism = function () {
-  return mechanism;
-};
-
-/** @override */
-PlainTextAuthenticator.prototype.getInitialServerChallenge = function () {
-  return utils.allocBufferFromString(initialServerChallenge);
-};
-
-/** @override */
-PlainTextAuthenticator.prototype.evaluateChallenge = function (challenge, callback) {
-  if (!challenge || challenge.toString() !== initialServerChallenge) {
-    return callback(new Error('Incorrect SASL challenge from server'));
+  /**
+   * @param {String} authenticatorName
+   * @param {String} authenticatorId
+   * @param {String} password
+   * @param {String} authorizationId
+   * @constructor
+   * @private
+   */
+  constructor(authenticatorName: string, authenticatorId: string, password: string, authorizationId: string) {
+    super(authenticatorName);
+    this.authenticatorId = utils.allocBufferFromString(authenticatorId);
+    this.password = utils.allocBufferFromString(password);
+    this.authorizationId = utils.allocBufferFromString(authorizationId || '');
   }
-  // The SASL plain text format is authorizationId 0 username 0 password
-  callback(null, Buffer.concat([
-    this.authorizationId,
-    separatorBuffer,
-    this.authenticatorId,
-    separatorBuffer,
-    this.password
-  ]));
-};
+
+  /** @override */
+  getMechanism() {
+    return mechanism;
+  }
+
+  /** @override */
+  getInitialServerChallenge() {
+    return utils.allocBufferFromString(initialServerChallenge);
+  }
+
+  /** @override */
+  evaluateChallenge(challenge, callback) {
+    if (!challenge || challenge.toString() !== initialServerChallenge) {
+      return callback(new Error('Incorrect SASL challenge from server'));
+    }
+    // The SASL plain text format is authorizationId 0 username 0 password
+    callback(null, Buffer.concat([
+      this.authorizationId,
+      separatorBuffer,
+      this.authenticatorId,
+      separatorBuffer,
+      this.password
+    ]));
+  }
+}
 
 export default DsePlainTextAuthProvider;

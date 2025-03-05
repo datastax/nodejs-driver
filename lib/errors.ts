@@ -166,14 +166,27 @@ function BusyConnectionError(address, maxRequestsPerConnection, connectionLength
 
 util.inherits(BusyConnectionError, DriverError);
 
+/**
+ * 
+ * @param {Long} long 
+ */
+function VIntOutOfRangeException(long){
+  const message = `Value ${long.toString} is out of range for a JavaScript Number`;
+  DriverError.call(this, message, this.constructor);
+  this.info = 'Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn\'t have enough space to fit the value that was decoded';
+}
+
+util.inherits(VIntOutOfRangeException, DriverError);
+
 export default {
-    ArgumentError,
-    AuthenticationError,
-    BusyConnectionError,
-    DriverError,
-    OperationTimedOutError,
-    DriverInternalError,
-    NoHostAvailableError,
-    NotSupportedError,
-    ResponseError
+  ArgumentError,
+  AuthenticationError,
+  BusyConnectionError,
+  DriverError,
+  OperationTimedOutError,
+  DriverInternalError,
+  NoHostAvailableError,
+  NotSupportedError,
+  ResponseError,
+  VIntOutOfRangeException
 }

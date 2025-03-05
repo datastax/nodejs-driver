@@ -424,4 +424,45 @@ export namespace types {
 
     toJSON(): string;
   }
+
+  class Vector {
+    static get [Symbol.species](): typeof Vector;
+    /**
+       *
+       * @param {Float32Array | Array<any>} elements
+       * @param {string?} subtype
+       */
+    constructor(elements: Float32Array | Array<any>, subtype?: string | null);
+    elements: any[];
+    /**
+         * Returns the number of the elements.
+         * @type Number
+         */
+    length: number;
+    subtype: string;
+    /**
+       * Returns the string representation of the vector.
+       * @returns {string}
+       */
+    toString(): string;
+    /**
+       *
+       * @param {number} index
+       */
+    at(index: number): any;
+    /**
+       *
+       * @param {(value: any, index: number, array: any[]) => void} callback
+       */
+    forEach(callback: (value: any, index: number, array: any[]) => void): void;
+    /**
+     * @returns {string | null} get the subtype string, e.g., "float", but it's optional so it can return null
+     */
+    getSubtype(): string | null;
+    /**
+       *
+       * @returns {IterableIterator<any>}
+       */
+    [Symbol.iterator](): IterableIterator<any>;
+  }
 }

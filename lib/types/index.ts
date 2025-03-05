@@ -30,6 +30,7 @@ import ResultSet from './result-set.js';
 import ResultStream from './result-stream.js';
 import Row from './row.js';
 import Tuple from './tuple.js';
+import Vector from "./vector.js";
 
 
 'use strict';
@@ -139,8 +140,8 @@ const dataTypes = {
   tuple:      0x0031,
   /**
    * Returns the typeInfo of a given type name
-   * @param name
-   * @returns {{code: number, info: *|Object}}
+   * @param {string} name
+   * @returns {import('../encoder').ColumnInfo}
    */
   getByName:  function(name) {
     name = name.toLowerCase();
@@ -165,8 +166,16 @@ const dataTypes = {
           return this.getByName(x.trim());
         }, this)};
       }
+      const vectorMatches = /^vector<\s*(.+)\s*,\s*(\d+)\s*>$/.exec(name);
+      if(vectorMatches){
+        return {
+          code: this.custom,
+          customTypeName: 'vector',
+          info: [this.getByName(vectorMatches[1]), parseInt(vectorMatches[2], 10)]
+        };
+      }
     }
-    const typeInfo = { code: this[name], info: null};
+    const typeInfo = { code: this[name]};
     if (typeof typeInfo.code !== 'number') {
       throw new TypeError('Data type with name ' + name + ' not valid');
     }
@@ -178,8 +187,10 @@ const dataTypes = {
  * Map of Data types by code
  * @internal
  * @private
+ * @type {Record<number, string>}
  */
 const _dataTypesByCode = (function () {
+  /**@type {Record<number, string>} */
   const result = {};
   for (const key in dataTypes) {
     if (!dataTypes.hasOwnProperty(key)) {
@@ -406,10 +417,11 @@ function uuid(options, buffer, offset) {
 }
 
 /**
- * Gets the data type name for a given type definition
+ * Gets the data type name for a given type definition, it may not work for udt or custom type
  * @internal
  * @ignore
  * @throws {ArgumentError}
+ * @param {import('../encoder').ColumnInfo} item 
  */
 function getDataTypeNameByCode(item) {
   if (!item || typeof item.code !== 'number') {
@@ -419,8 +431,12 @@ function getDataTypeNameByCode(item) {
   if (!typeName) {
     throw new errors.ArgumentError(util.format('Type with code %d not found', item.code));
   }
-  if (!item.info) {
+  if (!('info' in item) || !item.info) {
     return typeName;
+  }
+  // special case for vector
+  if (item.code === dataTypes.custom && 'customTypeName' in item && item.customTypeName === 'vector') {
+    return 'vector<' + getDataTypeNameByCode(item.info[0]) + ', ' + item.info[1] + '>';
   }
   if (Array.isArray(item.info)) {
     return (typeName +
@@ -432,6 +448,9 @@ function getDataTypeNameByCode(item) {
   }
   if (typeof item.info.code === 'number') {
     return typeName + '<' + getDataTypeNameByCode(item.info) + '>';
+  }
+  if (item.code === dataTypes.udt) {
+    return (/**@type {UdtColumnInfo}*/item).info.name;
   }
   return typeName;
 }
@@ -632,7 +651,8 @@ export {
   Tuple,
   Uuid,
   unset,
-  generateTimestamp
+  generateTimestamp,
+  Vector
 }
 
 export default {
@@ -666,5 +686,6 @@ export default {
   Tuple,
   Uuid,
   unset,
-  generateTimestamp
+  generateTimestamp,
+  Vector
 }

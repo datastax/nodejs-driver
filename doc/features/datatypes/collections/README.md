@@ -73,8 +73,7 @@ client.execute('SELECT map_val FROM tbl')
 
 ### Vector
 
-As of version 4.7.0 the driver also includes support for the vector type available in Cassandra 5.0.  Vectors are represented as instances of
-the [Float32Array] class.  For example, to create and write to a vector with three dimensions you can do the following:
+The driver supports vectors of arbitrary subtypes available in Apache Cassandra 5.0. Vectors are represented as instances of `cassandra.types.Vector` class. For example, to create and write to a vector with three dimensions you can do the following:
 
 ```javascript
 await c.connect()
@@ -84,8 +83,10 @@ await c.connect()
   .then(() => c.execute("create custom index ann_index on test.foo(j) using 'StorageAttachedIndex'"))
 
   // Base inserts using simple and prepared statements
-  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(1), new Float32Array([8, 2.3, 58])]))
-  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(5), new Float32Array([23, 18, 3.9])], {prepare: true}));
+  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(1), new cassandra.types.Vector([8, 2.3, 58], 'float')]))
+  .then(() => c.execute(`insert into test.foo (i, j) values (?, ?)`, [cassandra.types.Integer.fromInt(5), new cassandra.types.Vector([23, 18, 3.9])], {prepare: true}));
 ```
+
+In driver versions 4.7.0 - 4.7.2, the vector of floats was represented as a [Float32Array]. This is still supported for backward compatibility, but it is deprecated, and it is recommended to use the `cassandra.types.Vector` class instead.
 
 [Float32Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import ModelMapper from "./model-mapper.js";
-import MappingHandler from "./mapping-handler.js";
-import DocInfoAdapter from "./doc-info-adapter.js";
-import errors from "../errors.js";
-import Result from "./result.js";
-import ResultMapper from "./result-mapper.js";
-import ModelMappingInfo from "./model-mapping-info.js";
-import { ModelBatchItem } from "./model-batch-item.js";
+import ModelMapper from "./model-mapper";
+import MappingHandler from "./mapping-handler";
+import DocInfoAdapter from "./doc-info-adapter";
+import errors from "../errors";
+import Result from "./result";
+import ResultMapper from "./result-mapper";
+import ModelMappingInfo from "./model-mapping-info";
+import { ModelBatchItem } from "./model-batch-item";
 
 'use strict';
 

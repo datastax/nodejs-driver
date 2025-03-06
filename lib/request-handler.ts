@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import util from "util";
-import errors from "./errors.js";
-import types from "./types/index.js";
-import utils from "./utils.js";
-import RequestExecution from "./request-execution.js";
-import promiseUtils from "./promise-utils.js";
+import errors from "./errors";
+import types from "./types/index";
+import utils from "./utils";
+import RequestExecution from "./request-execution";
+import promiseUtils from "./promise-utils";
 
 'use strict';
 

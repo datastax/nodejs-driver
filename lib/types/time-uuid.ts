@@ -16,8 +16,8 @@
 import util from "util";
 import crypto from "crypto";
 import Long from "long";
-import Uuid from "./uuid.js";
-import utils from "../utils.js";
+import Uuid from "./uuid";
+import utils from "../utils";
 
 'use strict';
 /** @module types */

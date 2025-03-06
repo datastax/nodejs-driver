@@ -16,8 +16,8 @@
 import util from "util";
 import net from "net";
 import { EventEmitter } from "events";
-import errors from "./errors.js";
-import promiseUtils from "./promise-utils.js";
+import errors from "./errors";
+import promiseUtils from "./promise-utils";
 
 'use strict';
 /**
@@ -1368,6 +1368,53 @@ const VIntCoding = (function () {
 
 
 export default {
+  adaptNamedParamsPrepared,
+  adaptNamedParamsWithHints,
+  AddressResolver,
+  allocBuffer,
+  allocBufferUnsafe,
+  allocBufferFromArray,
+  allocBufferFromString,
+  arrayIterator,
+  binarySearch,
+  callbackOnce,
+  copyBuffer,
+  deepExtend,
+  each,
+  eachSeries,
+  emptyArray,
+  emptyObject,
+  extend,
+  fixStack,
+  forEachOf,
+  funcCompare,
+  ifUndefined,
+  ifUndefined3,
+  insertSorted,
+  iteratorToArray,
+  log,
+  map,
+  mapSeries,
+  maxInt,
+  noop,
+  objectValues,
+  parallel,
+  promiseWrapper,
+  propCompare,
+  series,
+  shuffleArray,
+  stringRepeat,
+  times,
+  timesLimit,
+  timesSeries,
+  totalLength,
+  validateFn,
+  whilst,
+  HashSet,
+  VIntCoding
+};
+
+export {
   adaptNamedParamsPrepared,
   adaptNamedParamsWithHints,
   AddressResolver,

@@ -23,11 +23,11 @@
  * @module auth
  */
 
-import { Authenticator, AuthProvider } from './provider.js';
-import { PlainTextAuthProvider } from './plain-text-auth-provider.js';
-import DseGssapiAuthProvider from './dse-gssapi-auth-provider.js';
-import DsePlainTextAuthProvider from './dse-plain-text-auth-provider.js';
-import NoAuthProvider from './no-auth-provider.js';
+import { Authenticator, AuthProvider } from './provider';
+import { PlainTextAuthProvider } from './plain-text-auth-provider';
+import DseGssapiAuthProvider from './dse-gssapi-auth-provider';
+import DsePlainTextAuthProvider from './dse-plain-text-auth-provider';
+import NoAuthProvider from './no-auth-provider';
 
 export {
   Authenticator,

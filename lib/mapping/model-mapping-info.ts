@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import tableMappingsModule from "./table-mappings.js";
+import tableMappingsModule from "./table-mappings";
 
 'use strict';
 const TableMappings = tableMappingsModule.TableMappings;

@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 import util from "util";
-import errors from "../errors.js";
-import TimeUuid from "./time-uuid.js";
-import Uuid from "./uuid.js";
-import protocolVersion from "./protocol-version.js";
-import utils from "../utils.js";
+import errors from "../errors";
+import TimeUuid from "./time-uuid";
+import Uuid from "./uuid";
+import protocolVersion from "./protocol-version";
+import utils from "../utils";
 import Long from "long";
-import BigDecimal from './big-decimal.js';
-import Duration from './duration.js';
-import InetAddress from './inet-address.js';
-import Integer from './integer.js';
-import LocalDate from './local-date.js';
-import LocalTime from './local-time.js';
-import ResultSet from './result-set.js';
-import ResultStream from './result-stream.js';
-import Row from './row.js';
-import Tuple from './tuple.js';
-import Vector from "./vector.js";
+import BigDecimal from './big-decimal';
+import Duration from './duration';
+import InetAddress from './inet-address';
+import Integer from './integer';
+import LocalDate from './local-date';
+import LocalTime from './local-time';
+import ResultSet from './result-set';
+import ResultStream from './result-stream';
+import Row from './row';
+import Tuple from './tuple';
+import Vector from "./vector";
 
 
 'use strict';

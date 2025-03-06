@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "./utils.js";
-import types from "./types/index.js";
-import errors from "./errors.js";
+import utils from "./utils";
+import types from "./types/index";
+import errors from "./errors";
 
 'use strict';
 const proxyExecuteKey = 'ProxyExecute';

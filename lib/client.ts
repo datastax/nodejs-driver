@@ -15,21 +15,21 @@
  */
 import events from "events";
 import util from "util";
-import utils from "./utils.js";
-import errors from "./errors.js";
-import types from "./types/index.js";
-import { ProfileManager } from "./execution-profile.js";
-import requests from "./requests.js";
-import clientOptions from "./client-options.js";
-import ClientState from "./metadata/client-state.js";
-import { DefaultExecutionOptions } from "./execution-options.js";
-import ControlConnection from "./control-connection.js";
-import RequestHandler from "./request-handler.js";
-import PrepareHandler from "./prepare-handler.js";
-import InsightsClient from "./insights-client.js";
-import cloud from "./datastax/cloud/index.js";
-import GraphExecutor from "./datastax/graph/graph-executor.js";
-import promiseUtils from "./promise-utils.js";
+import utils from "./utils";
+import errors from "./errors";
+import types from "./types/index";
+import { ProfileManager } from "./execution-profile";
+import requests from "./requests";
+import clientOptions from "./client-options";
+import ClientState from "./metadata/client-state";
+import { DefaultExecutionOptions } from "./execution-options";
+import ControlConnection from "./control-connection";
+import RequestHandler from "./request-handler";
+import PrepareHandler from "./prepare-handler";
+import InsightsClient from "./insights-client";
+import cloud from "./datastax/cloud/index";
+import GraphExecutor from "./datastax/graph/graph-executor";
+import promiseUtils from "./promise-utils";
 import packageInfo from '../package.json' assert {type: 'json'};
 
 'use strict';

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Mapper from './mapper.js';
-import ModelMapper from "./model-mapper.js";
-import ModelBatchMapper from "./model-batch-mapper.js";
-import { ModelBatchItem } from './model-batch-item.js';
-import Result from "./result.js";
-import { q } from "./q.js";
-import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings.js";
+import Mapper from './mapper';
+import ModelMapper from "./model-mapper";
+import ModelBatchMapper from "./model-batch-mapper";
+import { ModelBatchItem } from './model-batch-item';
+import Result from "./result";
+import { q } from "./q";
+import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
 
 'use strict';
 

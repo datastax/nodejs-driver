@@ -21,8 +21,8 @@
  * @module tracker
  */
 
-import RequestTracker from "./request-tracker.js";
-import RequestLogger from "./request-logger.js";
+import RequestTracker from "./request-tracker";
+import RequestLogger from "./request-logger";
 export {
     RequestTracker,
     RequestLogger

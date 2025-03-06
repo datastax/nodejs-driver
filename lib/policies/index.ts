@@ -15,12 +15,12 @@
  */
 'use strict';
 
-import * as addressResolution from './address-resolution.js';
-import * as loadBalancing from './load-balancing.js';
-import * as reconnection from './reconnection.js';
-import * as retry from './retry.js';
-import * as speculativeExecution from './speculative-execution.js';
-import * as timestampGeneration from './timestamp-generation.js';
+import * as addressResolution from './address-resolution';
+import * as loadBalancing from './load-balancing';
+import * as reconnection from './reconnection';
+import * as retry from './retry';
+import * as speculativeExecution from './speculative-execution';
+import * as timestampGeneration from './timestamp-generation';
 
 /**
  * Returns a new instance of the default address translator policy used by the driver.

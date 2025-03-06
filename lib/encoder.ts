@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import util from "util";
-import types from "./types/index.js";
-import MutableLong from "./types/mutable-long.js";
-import utils from "./utils.js";
-import token from "./token.js";
-import { DateRange } from "./datastax/search/index.js";
-import geo from "./geometry/index.js";
-import Vector from "./types/vector.js";
+import types from "./types/index";
+import MutableLong from "./types/mutable-long";
+import utils from "./utils";
+import token from "./token";
+import { DateRange } from "./datastax/search/index";
+import geo from "./geometry/index";
+import Vector from "./types/vector";
 
 'use strict';
 const dataTypes = types.dataTypes;

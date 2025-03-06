@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import auth from './lib/auth/index.js';
-import clientOptions from "./lib/client-options.js";
-import Client from "./lib/client.js";
-import types from "./lib/types/index.js";
-import errors from "./lib/errors.js";
-import policies from "./lib/policies/index.js";
-import mapping from "./lib/mapping/index.js";
-import tracker from "./lib/tracker/index.js";
-import metrics from "./lib/metrics/index.js";
-import concurrent from "./lib/concurrent/index.js";
-import Token from "./lib/token.js";
-import Metadata from "./lib/metadata/index.js";
-import Encoder from "./lib/encoder.js";
-import geometry from "./lib/geometry/index.js";
-import datastax from "./lib/datastax/index.js";
+import auth from './lib/auth/index';
+import clientOptions from "./lib/client-options";
+import Client from "./lib/client";
+import types from "./lib/types/index";
+import errors from "./lib/errors";
+import policies from "./lib/policies/index";
+import mapping from "./lib/mapping/index";
+import tracker from "./lib/tracker/index";
+import metrics from "./lib/metrics/index";
+import concurrent from "./lib/concurrent/index";
+import Token from "./lib/token";
+import Metadata from "./lib/metadata/index";
+import Encoder from "./lib/encoder";
+import geometry from "./lib/geometry/index";
+import datastax from "./lib/datastax/index";
 import packageJson from './package.json';
 
-import { ExecutionProfile } from './lib/execution-profile.js';
-import { ExecutionOptions } from './lib/execution-options.js';
+import { ExecutionProfile } from './lib/execution-profile';
+import { ExecutionOptions } from './lib/execution-options';
 
 const token = {
   Token: Token.Token,

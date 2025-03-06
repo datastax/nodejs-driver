@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "../utils.js";
-import Geometry from "./geometry.js";
+import utils from "../utils";
+import Geometry from "./geometry";
 
 'use strict';
 

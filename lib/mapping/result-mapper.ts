@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import vm from "vm";
-import utils from "../utils.js";
-import types from "../types/index.js";
+import utils from "../utils";
+import types from "../types/index";
 
 'use strict';
 

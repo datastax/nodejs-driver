@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Stream } from "stream";
-import utils from "../utils.js";
+import utils from "../utils";
 
 'use strict';
 

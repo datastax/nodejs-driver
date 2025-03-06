@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import util from "util";
-import DataCollection from "./data-collection.js";
+import DataCollection from "./data-collection";
 
 'use strict';
 

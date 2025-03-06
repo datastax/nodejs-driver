@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-import * as provider from './provider.js';
+import * as provider from './provider';
 import util from "util";
-import utils from "../utils.js";
+import utils from "../utils";
 const AuthProvider = provider.AuthProvider;
 const Authenticator = provider.Authenticator;
 /**

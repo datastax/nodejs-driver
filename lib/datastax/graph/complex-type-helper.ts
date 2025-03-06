@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers.js";
-import types from "../../types/index.js";
-import Encoder from "../../encoder.js";
+import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
+import types from "../../types/index";
+import Encoder from "../../encoder";
 
 'use strict';
 const { dataTypes } = types;

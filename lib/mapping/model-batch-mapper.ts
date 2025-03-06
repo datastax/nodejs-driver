@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Tree from "./tree.js";
-import * as moduleBatchItemModule from "./model-batch-item.js";
+import Tree from "./tree";
+import * as moduleBatchItemModule from "./model-batch-item";
 
 'use strict';
 const InsertModelBatchItem = moduleBatchItemModule.InsertModelBatchItem;

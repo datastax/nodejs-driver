@@ -15,14 +15,14 @@
  */
 
 'use strict';
-import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index.js';
+import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index';
 import https from "https";
 import fs from "fs";
 import util from "util";
 import AdmZip from "adm-zip";
 import { URL } from "url";
-import errors from "../../errors.js";
-import utils from "../../utils.js";
+import errors from "../../errors";
+import utils from "../../utils";
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);

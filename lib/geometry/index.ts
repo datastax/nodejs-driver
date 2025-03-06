@@ -24,10 +24,10 @@
  * @module geometry
  */
 
-import Point from './point.js';
-import LineString from './line-string.js';
-import Polygon from './polygon.js';
-import Geometry from './geometry.js';
+import Point from './point';
+import LineString from './line-string';
+import Polygon from './polygon';
+import Geometry from './geometry';
 
 export default {
     Point,

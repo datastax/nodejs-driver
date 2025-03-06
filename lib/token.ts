@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import types from "./types/index.js";
+import types from "./types/index";
 import util from "util";
 
 'use strict';

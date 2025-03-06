@@ -15,15 +15,15 @@
  */
 import util from "util";
 import events from "events";
-import types from "../types/index.js";
-import utils from "../utils.js";
-import errors from "../errors.js";
-import promiseUtils from "../promise-utils.js";
-import TableMetadata from "./table-metadata.js";
-import Aggregate from "./aggregate.js";
-import SchemaFunction from "./schema-function.js";
-import Index from "./schema-index.js";
-import MaterializedView from "./materialized-view.js";
+import types from "../types/index";
+import utils from "../utils";
+import errors from "../errors";
+import promiseUtils from "../promise-utils";
+import TableMetadata from "./table-metadata";
+import Aggregate from "./aggregate";
+import SchemaFunction from "./schema-function";
+import Index from "./schema-index";
+import MaterializedView from "./materialized-view";
 
 'use strict';
 const { format } = util;

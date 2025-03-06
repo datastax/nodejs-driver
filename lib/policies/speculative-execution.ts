@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import util from "util";
-import errors from "../errors.js";
+import errors from "../errors";
 
 'use strict';
 

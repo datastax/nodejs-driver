@@ -15,10 +15,10 @@
  */
 import util from "util";
 import { Transform, Writable } from "stream";
-import types from "./types/index.js";
-import utils from "./utils.js";
-import errors from "./errors.js";
-import { FrameReader } from "./readers.js";
+import types from "./types/index";
+import utils from "./utils";
+import errors from "./errors";
+import { FrameReader } from "./readers";
 
 'use strict';
 const { FrameHeader } = types;

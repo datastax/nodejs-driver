@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-import { AuthProvider } from './provider.js';
-import BaseDseAuthenticator from './base-dse-authenticator.js';
+import { AuthProvider } from './provider';
+import BaseDseAuthenticator from './base-dse-authenticator';
 import util from "util";
-import utils from "../utils.js";
+import utils from "../utils";
 const mechanism = utils.allocBufferFromString('PLAIN');
 const separatorBuffer = utils.allocBufferFromArray([0]);
 const initialServerChallenge = 'PLAIN-START';

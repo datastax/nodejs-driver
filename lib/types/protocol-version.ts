@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../utils.js";
-import VersionNumber from "./version-number.js";
+import utils from "../utils";
+import VersionNumber from "./version-number";
 
 'use strict';
 const v200 = VersionNumber.parse('2.0.0');

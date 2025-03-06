@@ -15,17 +15,17 @@
  */
 
 'use strict';
-import { NoAuthProvider } from './auth/index.js';
+import { NoAuthProvider } from './auth/index';
 import os from "os";
 import path from "path";
 import fs from "fs";
-import utils from "./utils.js";
-import promiseUtils from "./promise-utils.js";
-import types from "./types/index.js";
-import requests from "./requests.js";
-import { ExecutionOptions } from "./execution-options.js";
+import utils from "./utils";
+import promiseUtils from "./promise-utils";
+import types from "./types/index";
+import requests from "./requests";
+import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json" assert {type: 'json'};
-import VersionNumber from "./types/version-number.js";
+import VersionNumber from "./types/version-number";
 import { assert } from 'console';
 
 let kerberosModule;

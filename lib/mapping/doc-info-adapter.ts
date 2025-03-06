@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import errors from "../errors.js";
-import utils from "../utils.js";
+import errors from "../errors";
+import utils from "../utils";
 
 'use strict';
 

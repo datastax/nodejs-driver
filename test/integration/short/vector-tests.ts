@@ -15,10 +15,10 @@
  */
 'use strict';
 const assert = require('assert');
-const helper = require('../../test-helper.js');
+const helper = require('../../test-helper');
 
-const { types } = require('../../../index.js');
-const Vector = require('../../../lib/types/vector.js');
+const { types } = require('../../../index');
+const Vector = require('../../../lib/types/vector');
 const util = require('node:util');
 const vdescribe = helper.vdescribe;
 vdescribe('5.0.0', 'Vector tests', function () {

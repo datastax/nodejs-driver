@@ -1,4 +1,4 @@
-import utils from "../utils.js";
+import utils from "../utils";
 
 // Copyright 2009 The Closure Library Authors. All Rights Reserved.
 //

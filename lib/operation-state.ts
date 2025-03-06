@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "./utils.js";
-import errors from "./errors.js";
-import requests from "./requests.js";
+import utils from "./utils";
+import errors from "./errors";
+import requests from "./requests";
 
 'use strict';
 const ExecuteRequest = requests.ExecuteRequest;

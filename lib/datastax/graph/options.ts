@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
-import types from "../../types/index.js";
-import utils from "../../utils.js";
-import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options.js";
+import types from "../../types/index";
+import utils from "../../utils";
+import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
 
 'use strict';
 const Long = types.Long;

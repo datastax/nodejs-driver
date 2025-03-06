@@ -17,17 +17,17 @@ import events from "events";
 import util from "util";
 import tls from "tls";
 import net from "net";
-import Encoder from "./encoder.js";
-import { WriteQueue } from "./writers.js";
-import requests from "./requests.js";
-import streams from "./streams.js";
-import utils from "./utils.js";
-import types from "./types/index.js";
-import errors from "./errors.js";
-import StreamIdStack from "./stream-id-stack.js";
-import OperationState from "./operation-state.js";
-import promiseUtils from "./promise-utils.js";
-import { ExecutionOptions } from "./execution-options.js";
+import Encoder from "./encoder";
+import { WriteQueue } from "./writers";
+import requests from "./requests";
+import streams from "./streams";
+import utils from "./utils";
+import types from "./types/index";
+import errors from "./errors";
+import StreamIdStack from "./stream-id-stack";
+import OperationState from "./operation-state";
+import promiseUtils from "./promise-utils";
+import { ExecutionOptions } from "./execution-options";
 
 'use strict';
 

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 import vm from "vm";
-import qModule from "./q.js";
-import types from "../types/index.js";
+import qModule from "./q";
+import types from "../types/index";
 
 'use strict';
 const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
 const dataTypes = types.dataTypes;
 
-const vmFileName = 'gen-param-getter.js';
+const vmFileName = 'gen-param-getter';
 
 /**
  * Provides methods to generate a query and parameter handlers.

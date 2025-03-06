@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-import { Authenticator, AuthProvider } from './provider.js';
-import BaseDseAuthenticator from './base-dse-authenticator.js';
-import utils from "../utils.js";
+import { Authenticator, AuthProvider } from './provider';
+import BaseDseAuthenticator from './base-dse-authenticator';
+import utils from "../utils";
 
 const mechanism = utils.allocBufferFromString('PLAIN');
 const separatorBuffer = utils.allocBufferFromArray([0]);

@@ -26,6 +26,7 @@
     "long": "~5.2.3"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "chai": "~4.3.8",
     "kerberos": "~2.0.3",
     "mocha": "~10.2.0",
@@ -51,7 +52,7 @@
     "ci_unit_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit --recursive -R mocha-appveyor-reporter --exit",
     "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",
     "eslint": "eslint lib test",
-	"test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
+    "test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
   },
   "engines": {
     "node": ">=18"

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import types from "../../types/index.js";
-import utils from "../../utils.js";
-import { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } from "./complex-type-helper.js";
-import { Point, Polygon, LineString } from "../../geometry/index.js";
-import { Edge } from "./structure.js";
-import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers.js";
+import types from "../../types/index";
+import utils from "../../utils";
+import { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } from "./complex-type-helper";
+import { Point, Polygon, LineString } from "../../geometry/index";
+import { Edge } from "./structure";
+import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 
 'use strict';
 const { Tuple, dataTypes } = types;

@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-import g from "./index.js";
+import g from "./index";
 
 /**
  * @module datastax/graph/tinkerpop/typeSerializers

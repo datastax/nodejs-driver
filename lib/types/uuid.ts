@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import crypto from "crypto";
-import utils from "../utils.js";
+import utils from "../utils";
 
 'use strict';
 

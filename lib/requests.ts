@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import util from "util";
-import { FrameWriter } from "./writers.js";
-import types from "./types/index.js";
-import utils from "./utils.js";
-import { ExecutionOptions } from "./execution-options.js";
+import { FrameWriter } from "./writers";
+import types from "./types/index";
+import utils from "./utils";
+import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json" assert {type: 'json'};
 
 'use strict';

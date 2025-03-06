@@ -23,4 +23,4 @@
  * @module datastax/search
  */
 
-export * from "./date-range.js";
+export * from "./date-range";

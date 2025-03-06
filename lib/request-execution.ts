@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import errors from "./errors.js";
-import requests from "./requests.js";
-import retry from "./policies/retry.js";
-import types from "./types/index.js";
-import utils from "./utils.js";
-import promiseUtils from "./promise-utils.js";
+import errors from "./errors";
+import requests from "./requests";
+import retry from "./policies/retry";
+import types from "./types/index";
+import utils from "./utils";
+import promiseUtils from "./promise-utils";
 
 'use strict';
 const retryOnCurrentHost = Object.freeze({

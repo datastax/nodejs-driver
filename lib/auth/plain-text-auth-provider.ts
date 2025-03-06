@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-import { AuthProvider, Authenticator } from './provider.js';
-import utils from "../utils.js";
+import { AuthProvider, Authenticator } from './provider';
+import utils from "../utils";
 
 /**
  * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when

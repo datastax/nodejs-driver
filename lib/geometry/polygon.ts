@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "../utils.js";
-import Geometry from "./geometry.js";
-import Point from "./point.js";
-import LineString from "./line-string.js";
+import utils from "../utils";
+import Geometry from "./geometry";
+import Point from "./point";
+import LineString from "./line-string";
 
 'use strict';
 

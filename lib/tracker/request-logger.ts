@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import events from "events";
-import RequestTracker from "./request-tracker.js";
-import errors from "../errors.js";
+import RequestTracker from "./request-tracker";
+import errors from "../errors";
 import { format } from "util";
 
 'use strict';

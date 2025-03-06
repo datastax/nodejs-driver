@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import { Readable } from "stream";
-import utils from "../utils.js";
-import errors from "../errors.js";
-import clientOptions from "../client-options.js";
+import utils from "../utils";
+import errors from "../errors";
+import clientOptions from "../client-options";
 
 'use strict';
 

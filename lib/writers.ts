@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import events from "events";
-import types from "./types/index.js";
-import utils from "./utils.js";
+import types from "./types/index";
+import utils from "./utils";
 
 'use strict';
 const FrameHeader = types.FrameHeader;

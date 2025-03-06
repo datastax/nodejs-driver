@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../../utils.js";
-import policies from "../../policies/index.js";
-import GraphResultSet from "./result-set.js";
-import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer.js";
-import getCustomTypeSerializers from "./custom-type-serializers.js";
-import { GraphExecutionOptions, graphProtocol } from "./options.js";
+import utils from "../../utils";
+import policies from "../../policies/index";
+import GraphResultSet from "./result-set";
+import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer";
+import getCustomTypeSerializers from "./custom-type-serializers";
+import { GraphExecutionOptions, graphProtocol } from "./options";
 
 'use strict';
 const graphLanguageGroovyString = 'gremlin-groovy';

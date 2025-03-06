@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "./utils.js";
-import types from "./types/index.js";
-import errors from "./errors.js";
+import utils from "./utils";
+import types from "./types/index";
+import errors from "./errors";
 
 'use strict';
 /**

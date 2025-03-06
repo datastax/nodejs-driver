@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "../utils.js";
-import promiseUtils from "../promise-utils.js";
+import utils from "../utils";
+import promiseUtils from "../promise-utils";
 
 'use strict';
 const _queueOverflowThreshold = 1000;

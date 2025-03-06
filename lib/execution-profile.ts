@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "./utils.js";
-import types from "./types/index.js";
-import promiseUtils from "./promise-utils.js";
+import utils from "./utils";
+import types from "./types/index";
+import promiseUtils from "./promise-utils";
 
 'use strict';
 

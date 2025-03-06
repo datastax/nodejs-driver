@@ -15,7 +15,7 @@
  */
 import Long from "long";
 import util from "util";
-import utils from "../utils.js";
+import utils from "../utils";
 
 const VIntCoding = utils.VIntCoding;
 

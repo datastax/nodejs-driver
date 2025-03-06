@@ -24,8 +24,8 @@
  * @module datastax
  */
 
-import graph from "./graph/index.js";
-import { DateRange } from "./search/index.js";
+import graph from "./graph/index";
+import { DateRange } from "./search/index";
 
 export default {
     graph,

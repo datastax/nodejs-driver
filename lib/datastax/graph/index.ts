@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import GraphResultSet from "./result-set.js";
-import getCustomTypeSerializers from "./custom-type-serializers.js";
-import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers.js";
-import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure.js";
+import GraphResultSet from "./result-set";
+import getCustomTypeSerializers from "./custom-type-serializers";
+import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers";
+import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
 
 'use strict';
 

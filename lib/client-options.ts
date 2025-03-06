@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import util from "util";
-import policies from "./policies/index.js";
-import types from "./types/index.js";
-import utils from "./utils.js";
-import tracker from "./tracker/index.js";
-import metrics from "./metrics/index.js";
-import auth from "./auth/index.js";
+import policies from "./policies/index";
+import types from "./types/index";
+import utils from "./utils";
+import tracker from "./tracker/index";
+import metrics from "./metrics/index";
+import auth from "./auth/index";
 
 'use strict';
 /** Core connections per host for protocol versions 1 and 2 */

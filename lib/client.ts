@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//TODO: fix the types
 import events from "events";
 import util from "util";
 import utils from "./utils";
 import errors from "./errors";
-import types from "./types/index";
+import types, { Long } from "./types/index";
 import { ProfileManager } from "./execution-profile";
 import requests from "./requests";
 import clientOptions from "./client-options";
@@ -31,6 +32,7 @@ import cloud from "./datastax/cloud/index";
 import GraphExecutor from "./datastax/graph/graph-executor";
 import promiseUtils from "./promise-utils";
 import packageInfo from '../package.json' assert {type: 'json'};
+import { AuthProvider } from "./auth";
 
 'use strict';
 
@@ -243,6 +245,72 @@ const warmupLimit = 32;
  *   [Promise constructor]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise}.
  * </p>
  */
+interface ClientOptions {
+  contactPoints: Array<string>;
+  localDataCenter?: String;
+  keyspace?: String;
+  credentials?: {
+    username?: String;
+    password?: String;
+  };
+  // id?: Uuid;
+  applicationName?: String;
+  applicationVersion?: String;
+  monitorReporting?: {
+    enabled?: Boolean;
+  };
+  cloud?: {
+    secureConnectBundle: String | URL;
+  };
+  refreshSchemaDelay?: Number;
+  isMetadataSyncEnabled?: Boolean;
+  prepareOnAllHosts?: Boolean;
+  rePrepareOnUp?: Boolean;
+  maxPrepared?: Number;
+  policies?: {
+    // loadBalancing?: LoadBalancingPolicy;
+    // retry?: RetryPolicy;
+    // reconnection?: ReconnectionPolicy;
+    // addressResolution?: AddressTranslator;
+    // speculativeExecution?: SpeculativeExecutionPolicy;
+    // timestampGeneration?: TimestampGenerator;
+  };
+  queryOptions?: QueryOptions;
+  pooling?: {
+    heartBeatInterval?: Number;
+    coreConnectionsPerHost?: Object;
+    maxRequestsPerConnection?: Number;
+    warmup?: Boolean;
+  };
+  protocolOptions?: {
+    port?: Number;
+    maxSchemaAgreementWaitSeconds?: Number;
+    maxVersion?: Number;
+    noCompact?: Boolean;
+  };
+  socketOptions?: {
+    connectTimeout?: Number;
+    defunctReadTimeoutThreshold?: Number;
+    keepAlive?: Boolean;
+    keepAliveDelay?: Number;
+    readTimeout?: Number;
+    tcpNoDelay?: Boolean;
+    coalescingThreshold?: Number;
+  };
+  authProvider?: AuthProvider;
+  // requestTracker?: RequestTracker;
+  sslOptions?: Object;
+  encoding?: {
+    map?: Function;
+    set?: Function;
+    copyBuffer?: Boolean;
+    useUndefinedAsUnset?: Boolean;
+    useBigIntAsLong?: Boolean;
+    useBigIntAsVarint?: Boolean;
+  };
+  // profiles?: Array<ExecutionProfile>;
+  promiseFactory?: Function;
+}
 
 /**
  * Query options
@@ -371,6 +439,39 @@ const warmupLimit = 32;
  * @property {Number} [graphOptions.writeConsistency] Overrides the [consistency
  * level]{@link module:types~consistencies} defined in the query options for graph write queries.
  */
+interface QueryOptions {
+  autoPage?: Boolean;
+  captureStackTrace?: Boolean;
+  consistency?: Number;
+  customPayload?: Object;
+  executeAs?: String;
+  // executionProfile?: String | ExecutionProfile;
+  fetchSize?: Number;
+  hints?: Array<string> | Array<Array<string>>;
+  // host?: Host;
+  isIdempotent?: Boolean;
+  keyspace?: String;
+  logged?: Boolean;
+  counter?: Boolean;
+  pageState?: Buffer | String;
+  prepare?: Boolean;
+  readTimeout?: Number;
+  // retry?: RetryPolicy;
+  // routingIndexes?: Array;
+  // routingKey?: Buffer | Array;
+  // routingNames?: Array;
+  serialConsistency?: Number;
+  timestamp?: Number | Long;
+  traceQuery?: Boolean;
+  graphOptions?: {
+    language?: String;
+    name?: String;
+    readConsistency?: Number;
+    readTimeout?: Number;
+    source?: String;
+    writeConsistency?: Number;
+  };
+}
 
 /**
  * Creates a new instance of {@link Client}.
@@ -1172,3 +1273,9 @@ Client.prototype._setRoutingInfo = async function (execOptions, params, meta) {
 };
 
 export default Client;
+
+export {
+  Client,
+  ClientOptions,
+  QueryOptions
+}

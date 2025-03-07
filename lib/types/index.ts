@@ -19,7 +19,7 @@ import TimeUuid from "./time-uuid";
 import Uuid from "./uuid";
 import protocolVersion from "./protocol-version";
 import utils from "../utils";
-import Long from "long";
+import ExternalLong from "long";
 import BigDecimal from './big-decimal';
 import Duration from './duration';
 import InetAddress from './inet-address';
@@ -181,7 +181,7 @@ const dataTypes = {
     }
     return typeInfo;
   }
-};
+} as const;
 
 /**
  * Map of Data types by code
@@ -345,7 +345,7 @@ const unset = Object.freeze({'unset': true});
  * @const
  * @private
  */
-const _longOneThousand = Long.fromInt(1000);
+const _longOneThousand = ExternalLong.fromInt(1000);
 
 /**
  * Counter used to generate up to 1000 different timestamp values with the same Date
@@ -534,46 +534,49 @@ FrameHeader.prototype.toBuffer = function () {
   buf.writeUInt32BE(this.bodyLength, offset);
   return buf;
 };
-/**
- * Returns a long representation.
- * Used internally for deserialization
- */
-Long.fromBuffer = function (value) {
-  if (!(value instanceof Buffer)) {
-    throw new TypeError('Expected Buffer, obtained ' + util.inspect(value));
-  }
-  return new Long(value.readInt32BE(4), value.readInt32BE(0));
-};
 
-/**
- * Returns a big-endian buffer representation of the Long instance
- * @param {Long} value
- */
-Long.toBuffer = function (value) {
-  if (!(value instanceof Long)) {
-    throw new TypeError('Expected Long, obtained ' + util.inspect(value));
-  }
-  const buffer = utils.allocBufferUnsafe(8);
-  buffer.writeUInt32BE(value.getHighBitsUnsigned(), 0);
-  buffer.writeUInt32BE(value.getLowBitsUnsigned(), 4);
-  return buffer;
-};
+class Long extends ExternalLong {
+  /**
+   * Returns a long representation.
+   * Used internally for deserialization
+   */
+  static fromBuffer = function (value: Buffer) : Long {
+    if (!(value instanceof Buffer)) {
+      throw new TypeError('Expected Buffer, obtained ' + util.inspect(value));
+    }
+    return new Long(value.readInt32BE(4), value.readInt32BE(0));
+  };
 
-/**
- * Provide the name of the constructor and the string representation
- * @returns {string}
- */
-Long.prototype.inspect = function () {
-  return 'Long: ' + this.toString();
-};
+  /**
+   * Returns a big-endian buffer representation of the Long instance
+   * @param {Long} value
+   */
+  static toBuffer = function (value: Long) : Buffer {
+    if (!(value instanceof Long)) {
+      throw new TypeError('Expected Long, obtained ' + util.inspect(value));
+    }
+    const buffer = utils.allocBufferUnsafe(8);
+    buffer.writeUInt32BE(value.getHighBitsUnsigned(), 0);
+    buffer.writeUInt32BE(value.getLowBitsUnsigned(), 4);
+    return buffer;
+  };
 
-/**
- * Returns the string representation.
- * Method used by the native JSON.stringify() to serialize this instance
- */
-Long.prototype.toJSON = function () {
-  return this.toString();
-};
+  /**
+   * Provide the name of the constructor and the string representation
+   * @returns {string}
+   */
+  inspect(): string {
+    return 'Long: ' + this.toString();
+  };
+
+  /**
+   * Returns the string representation.
+   * Method used by the native JSON.stringify() to serialize this instance
+   */
+  toJSON = function (): string {
+    return this.toString();
+  };
+}
 
 /**
  * Generates a value representing the timestamp for the query in microseconds based on the date and the microseconds provided

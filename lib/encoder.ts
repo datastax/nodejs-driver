@@ -21,16 +21,11 @@ import token from "./token";
 import { DateRange } from "./datastax/search/index";
 import geo from "./geometry/index";
 import Vector from "./types/vector";
+import { ClientOptions } from "./client";
+import {dataTypes, Long, Integer, BigDecimal} from "./types/index";
+import {Geometry, LineString, Point, Polygon} from "./geometry/index";
 
 'use strict';
-const dataTypes = types.dataTypes;
-const Long = types.Long;
-const Integer = types.Integer;
-const BigDecimal = types.BigDecimal;
-const Geometry = geo.Geometry;
-const LineString = geo.LineString;
-const Point = geo.Point;
-const Polygon = geo.Polygon;
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -62,7 +57,7 @@ const complexTypeNames = Object.freeze({
   composite : 'org.apache.cassandra.db.marshal.CompositeType',
   empty     : 'org.apache.cassandra.db.marshal.EmptyType',
   collection: 'org.apache.cassandra.db.marshal.ColumnToCollectionType'
-});
+} as const);
 const cqlNames = Object.freeze({
   frozen: 'frozen',
   list: 'list',
@@ -72,7 +67,7 @@ const cqlNames = Object.freeze({
   empty: 'empty',
   duration: 'duration',
   vector: 'vector'
-});
+} as const);
 const singleTypeNames = Object.freeze({
   'org.apache.cassandra.db.marshal.UTF8Type':           dataTypes.varchar,
   'org.apache.cassandra.db.marshal.AsciiType':          dataTypes.ascii,
@@ -94,7 +89,7 @@ const singleTypeNames = Object.freeze({
   'org.apache.cassandra.db.marshal.DecimalType':        dataTypes.decimal,
   'org.apache.cassandra.db.marshal.IntegerType':        dataTypes.varint,
   'org.apache.cassandra.db.marshal.CounterColumnType':  dataTypes.counter
-});
+} as const);
 
 // eslint-disable-next-line no-unused-vars
 const singleTypeNamesByDataType = invertObject(singleTypeNames);
@@ -109,7 +104,7 @@ const customTypeNames = Object.freeze({
   polygon: 'org.apache.cassandra.db.marshal.PolygonType',
   dateRange: 'org.apache.cassandra.db.marshal.DateRangeType',
   vector: 'org.apache.cassandra.db.marshal.VectorType'
-});
+} as const);
 
 const nullValueBuffer = utils.allocBufferFromArray([255, 255, 255, 255]);
 const unsetValueBuffer = utils.allocBufferFromArray([255, 255, 255, 254]);
@@ -120,7 +115,7 @@ const unsetValueBuffer = utils.allocBufferFromArray([255, 255, 255, 254]);
  * @private
  * @type {Set}
  */
-const zeroLengthTypesSupported = new Set([
+const zeroLengthTypesSupported: Set<number> = new Set([
   dataTypes.text,
   dataTypes.ascii,
   dataTypes.varchar,
@@ -128,53 +123,101 @@ const zeroLengthTypesSupported = new Set([
   dataTypes.blob
 ]);
 
-/**
- * @typedef {(singleTypeNames[keyof singleTypeNames] | types.dataTypes.duration | types.dataTypes.text)} SingleTypeCodes
- * @typedef {('point' | 'polygon' | 'duration' | 'lineString' | 'dateRange')} CustomSimpleTypeCodes
- * @typedef {(customTypeNames[CustomSimpleTypeCodes]) | CustomSimpleTypeCodes | 'empty'} CustomSimpleTypeNames
- * @typedef {{code : SingleTypeCodes, info?: null, options? : {frozen?:boolean, reversed?:boolean} }} SingleColumnInfo
- * @typedef {{code : (types.dataTypes.custom), info : CustomSimpleTypeNames, options? : {frozen?:boolean, reversed?:boolean}}} CustomSimpleColumnInfo
- * @typedef {{code : (types.dataTypes.map), info : [ColumnInfo, ColumnInfo], options?: {frozen?: Boolean, reversed?: Boolean}}} MapColumnInfo
- * @typedef {{code : (types.dataTypes.tuple), info : Array<ColumnInfo>, options?: {frozen?: Boolean, reversed?: Boolean}}} TupleColumnInfo 
- * @typedef {{code : (types.dataTypes.tuple | types.dataTypes.list)}} TupleListColumnInfoWithoutSubtype TODO: guessDataType can return null on tuple/list info, why?
- * @typedef {{code : (types.dataTypes.list | types.dataTypes.set), info : ColumnInfo, options?: {frozen?: Boolean, reversed?: Boolean}}} ListSetColumnInfo
- * @typedef {{code : (types.dataTypes.udt), info : {name : string, fields : Array<{name : string, type : ColumnInfo}>}, options? : {frozen?: Boolean, reversed?: Boolean}}} UdtColumnInfo
- * @typedef {{code : (types.dataTypes.custom), customTypeName : ('vector'), info : [ColumnInfo, number], options? : {frozen?:boolean, reversed?:boolean}}} VectorColumnInfo
- * @typedef {{code : (types.dataTypes.custom), info : string, options? : {frozen?:boolean, reversed?:boolean}}} OtherCustomColumnInfo
- * @typedef {SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype} ColumnInfo If this is a simple type, info is null; if this is a collection type with a simple subtype, info is a string, if this is a nested collection type, info is a ColumnInfo object
- */
+type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | typeof dataTypes.duration | typeof dataTypes.text);
 
-/**
- * Serializes and deserializes to and from a CQL type and a Javascript Type.
- * @param {Number} protocolVersion
- * @param {import('./client.js').ClientOptions} options
- * @constructor
- */
-function Encoder(protocolVersion, options) {
-  this.encodingOptions = options.encoding || utils.emptyObject;
-  defineInstanceMembers.call(this);
-  this.setProtocolVersion(protocolVersion);
-  setEncoders.call(this);
-  if (this.encodingOptions.copyBuffer) {
-    this.handleBuffer = handleBufferCopy;
-  }
-  else {
-    this.handleBuffer = handleBufferRef;
-  }
-}
+type CustomSimpleTypeCodes = ('point' | 'polygon' | 'duration' | 'lineString' | 'dateRange');
 
-/**
- * Declares the privileged instance members.
- * @private
- */
-function defineInstanceMembers() {
+type CustomSimpleTypeNames = (typeof customTypeNames[CustomSimpleTypeCodes]) | CustomSimpleTypeCodes | 'empty';
+
+type SingleColumnInfo = { code: SingleTypeCodes; info?: null; options?: { frozen?: boolean; reversed?: boolean; }; };
+
+type CustomSimpleColumnInfo = { code: (typeof dataTypes.custom); info: CustomSimpleTypeNames; options?: { frozen?: boolean; reversed?: boolean; }; };
+
+type MapColumnInfo = { code: (typeof dataTypes.map); info: [ColumnInfo, ColumnInfo]; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+
+type TupleColumnInfo = { code: (typeof dataTypes.tuple); info: Array<ColumnInfo>; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+
+type TupleListColumnInfoWithoutSubtype = { code: (typeof dataTypes.tuple | typeof dataTypes.list); };
+
+type ListSetColumnInfo = { code: (typeof dataTypes.list | typeof dataTypes.set); info: ColumnInfo; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+
+type UdtColumnInfo = { code: (typeof dataTypes.udt); info: { name: string; fields: Array<{ name: string; type: ColumnInfo; }>; }; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+
+type VectorColumnInfo = { code: (typeof dataTypes.custom); customTypeName: ('vector'); info: [ColumnInfo, number]; options?: { frozen?: boolean; reversed?: boolean; }; };
+
+type OtherCustomColumnInfo = { code: (typeof dataTypes.custom); info: string; options?: { frozen?: boolean; reversed?: boolean; }; };
+
+type ColumnInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
+
+
+class Encoder{
+  private encodingOptions: ClientOptions['encoding'];
+  private handleBuffer: (buffer: Buffer) => Buffer;
+  private decodeCollectionLength : (bytes: any, offset: any) => number;
+  private getLengthBuffer: (value: Buffer | number) => Buffer;
+  private collectionLengthSize : number;
+  private protocolVersion: number;
+  private decodeLong: ((bytes: Buffer) => bigint | Long);
+  private decodeVarint: ((bytes: Buffer) => bigint | Integer);
+  private encodeLong: (value: string | number | Buffer | Long) => any;
+  private encodeVarint: (value: Integer | Buffer | string | number) => Buffer;
+    
+  private readonly customDecoders = {
+    [customTypeNames.duration]: decodeDuration,
+    [customTypeNames.lineString]: decodeLineString,
+    [customTypeNames.point]: decodePoint,
+    [customTypeNames.polygon]: decodePolygon,
+    [customTypeNames.dateRange]: decodeDateRange
+  };
+
+  private readonly customEncoders = {
+    [customTypeNames.duration]: encodeDuration,
+    [customTypeNames.lineString]: encodeLineString,
+    [customTypeNames.point]: encodePoint,
+    [customTypeNames.polygon]: encodePolygon,
+    [customTypeNames.dateRange]: encodeDateRange
+  };
+
   /**
+   * Serializes and deserializes to and from a CQL type and a Javascript Type.
+   * @param {Number} protocolVersion
+   * @param {ClientOptions} options
+   * @constructor
+   */
+  constructor(protocolVersion: number, options: ClientOptions) {
+    this.encodingOptions = options.encoding || utils.emptyObject;
+    this.setProtocolVersion(protocolVersion);
+    if (this.encodingOptions.copyBuffer) {
+      this.handleBuffer = handleBufferCopy;
+    }
+    else {
+      this.handleBuffer = handleBufferRef;
+    }
+
+    this.decodeLong = this.encodingOptions.useBigIntAsLong
+      ? this._decodeCqlLongAsBigInt
+      : this._decodeCqlLongAsLong;
+
+    this.decodeVarint = this.encodingOptions.useBigIntAsVarint
+    ? this._decodeVarintAsBigInt
+    : this._decodeVarintAsInteger;
+
+    this.encodeLong = this.encodingOptions.useBigIntAsLong
+    ? this._encodeBigIntFromBigInt
+    : this._encodeBigIntFromLong;
+
+    this.encodeVarint = this.encodingOptions.useBigIntAsVarint
+      ? this._encodeVarintFromBigInt
+      : this._encodeVarintFromInteger;
+  }
+
+    /**
    * Sets the protocol version and the encoding/decoding methods depending on the protocol version
    * @param {Number} value
    * @ignore
    * @internal
    */
-  this.setProtocolVersion = function (value) {
+  private setProtocolVersion = function (value: number) {
     this.protocolVersion = value;
     //Set the collection serialization based on the protocol version
     this.decodeCollectionLength = decodeCollectionLengthV3;
@@ -187,24 +230,9 @@ function defineInstanceMembers() {
     }
   };
 
-  const customDecoders = {
-    [customTypeNames.duration]: decodeDuration,
-    [customTypeNames.lineString]: decodeLineString,
-    [customTypeNames.point]: decodePoint,
-    [customTypeNames.polygon]: decodePolygon,
-    [customTypeNames.dateRange]: decodeDateRange
-  };
-
-  const customEncoders = {
-    [customTypeNames.duration]: encodeDuration,
-    [customTypeNames.lineString]: encodeLineString,
-    [customTypeNames.point]: encodePoint,
-    [customTypeNames.polygon]: encodePolygon,
-    [customTypeNames.dateRange]: encodeDateRange
-  };
 
   // Decoding methods
-  this.decodeBlob = function (bytes) {
+  private decodeBlob = function (bytes) {
     return this.handleBuffer(bytes);
   };
 
@@ -214,7 +242,7 @@ function defineInstanceMembers() {
    * @param {OtherCustomColumnInfo | VectorColumnInfo} columnInfo
    * @returns 
    */
-  this.decodeCustom = function (bytes, columnInfo) {
+  private decodeCustom = function (bytes: Buffer, columnInfo: OtherCustomColumnInfo | VectorColumnInfo) {
 
     // Make sure we actually have something to process in typeName before we go any further
     if (!columnInfo) {
@@ -231,55 +259,51 @@ function defineInstanceMembers() {
       return this.decodeVector(bytes, vectorColumnInfo);
     }
 
-    const handler = customDecoders[columnInfo.info];
+    const handler = this.customDecoders[columnInfo.info as string];
     if (handler) {
       return handler.call(this, bytes);
     }
     return this.handleBuffer(bytes);
   };
 
-  this.decodeUtf8String = function (bytes) {
+  private decodeUtf8String = function (bytes) {
     return bytes.toString('utf8');
   };
-  this.decodeAsciiString = function (bytes) {
+  private decodeAsciiString = function (bytes) {
     return bytes.toString('ascii');
   };
-  this.decodeBoolean = function (bytes) {
+  private decodeBoolean = function (bytes) {
     return !!bytes.readUInt8(0);
   };
-  this.decodeDouble = function (bytes) {
+  private decodeDouble = function (bytes) {
     return bytes.readDoubleBE(0);
   };
-  this.decodeFloat = function (bytes) {
+  private decodeFloat = function (bytes) {
     return bytes.readFloatBE(0);
   };
-  this.decodeInt = function (bytes) {
+  private decodeInt = function (bytes) {
     return bytes.readInt32BE(0);
   };
-  this.decodeSmallint = function (bytes) {
+  private decodeSmallint = function (bytes) {
     return bytes.readInt16BE(0);
   };
-  this.decodeTinyint = function (bytes) {
+  private decodeTinyint = function (bytes) {
     return bytes.readInt8(0);
   };
 
-  this._decodeCqlLongAsLong = function (bytes) {
+  private _decodeCqlLongAsLong = function (bytes: Buffer): Long {
     return Long.fromBuffer(bytes);
   };
 
-  this._decodeCqlLongAsBigInt = function (bytes) {
+  private _decodeCqlLongAsBigInt = function (bytes: Buffer): bigint {
     return BigInt.asIntN(64, (BigInt(bytes.readUInt32BE(0)) << bigInt32) | BigInt(bytes.readUInt32BE(4)));
   };
 
-  this.decodeLong = this.encodingOptions.useBigIntAsLong
-    ? this._decodeCqlLongAsBigInt
-    : this._decodeCqlLongAsLong;
-
-  this._decodeVarintAsInteger = function (bytes) {
+  private _decodeVarintAsInteger = function (bytes: Buffer): Integer {
     return Integer.fromBuffer(bytes);
   };
 
-  this._decodeVarintAsBigInt = function decodeVarintAsBigInt(bytes) {
+  private _decodeVarintAsBigInt = function decodeVarintAsBigInt(bytes) {
     let result = bigInt0;
     if (bytes[0] <= 0x7f) {
       for (let i = 0; i < bytes.length; i++) {
@@ -297,26 +321,22 @@ function defineInstanceMembers() {
     return result;
   };
 
-  this.decodeVarint = this.encodingOptions.useBigIntAsVarint
-    ? this._decodeVarintAsBigInt
-    : this._decodeVarintAsInteger;
-
-  this.decodeDecimal = function(bytes) {
+  private decodeDecimal = function(bytes) {
     return BigDecimal.fromBuffer(bytes);
   };
-  this.decodeTimestamp = function(bytes) {
+  private decodeTimestamp = function(bytes) {
     return new Date(this._decodeCqlLongAsLong(bytes).toNumber());
   };
-  this.decodeDate = function (bytes) {
+  private decodeDate = function (bytes) {
     return types.LocalDate.fromBuffer(bytes);
   };
-  this.decodeTime = function (bytes) {
+  private decodeTime = function (bytes) {
     return types.LocalTime.fromBuffer(bytes);
   };
   /*
    * Reads a list from bytes
    */
-  this.decodeList = function (bytes, columnInfo) {
+  private decodeList = function (bytes, columnInfo) {
     const subtype = columnInfo.info;
     const totalItems = this.decodeCollectionLength(bytes, 0);
     let offset = this.collectionLengthSize;
@@ -334,7 +354,7 @@ function defineInstanceMembers() {
   /*
    * Reads a Set from bytes
    */
-  this.decodeSet = function (bytes, columnInfo) {
+  private decodeSet = function (bytes, columnInfo) {
     const arr = this.decodeList(bytes, columnInfo);
     if (this.encodingOptions.set) {
       const setConstructor = this.encodingOptions.set;
@@ -345,7 +365,7 @@ function defineInstanceMembers() {
   /*
    * Reads a map (key / value) from bytes
    */
-  this.decodeMap = function (bytes, columnInfo) {
+  private decodeMap = function (bytes, columnInfo) {
     const subtypes = columnInfo.info;
     let map;
     const totalItems = this.decodeCollectionLength(bytes, 0);
@@ -381,13 +401,13 @@ function defineInstanceMembers() {
     }
     return map;
   };
-  this.decodeUuid = function (bytes) {
+  private decodeUuid = function (bytes) {
     return new types.Uuid(this.handleBuffer(bytes));
   };
-  this.decodeTimeUuid = function (bytes) {
+  private decodeTimeUuid = function (bytes) {
     return new types.TimeUuid(this.handleBuffer(bytes));
   };
-  this.decodeInet = function (bytes) {
+  private decodeInet = function (bytes) {
     return new types.InetAddress(this.handleBuffer(bytes));
   };
   /**
@@ -396,7 +416,7 @@ function defineInstanceMembers() {
    * @param {UdtColumnInfo} columnInfo
    * @private
    */
-  this.decodeUdt = function (bytes, columnInfo) {
+  private decodeUdt = function (bytes: Buffer, columnInfo: UdtColumnInfo) {
     const udtInfo = columnInfo.info;
     const result = {};
     let offset = 0;
@@ -416,7 +436,7 @@ function defineInstanceMembers() {
     return result;
   };
 
-  this.decodeTuple = function (bytes, columnInfo) {
+  private decodeTuple = function (bytes, columnInfo) {
     const tupleInfo = columnInfo.info;
     const elements = new Array(tupleInfo.length);
     let offset = 0;
@@ -438,7 +458,7 @@ function defineInstanceMembers() {
   };
 
   //Encoding methods
-  this.encodeFloat = function (value) {
+  private encodeFloat = function (value) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = parseFloat(value);
@@ -457,7 +477,7 @@ function defineInstanceMembers() {
     return buf;
   };
 
-  this.encodeDouble = function (value) {
+  private encodeDouble = function (value) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = parseFloat(value);
@@ -480,7 +500,7 @@ function defineInstanceMembers() {
    * @param {Date|String|Long|Number} value
    * @private
    */
-  this.encodeTimestamp = function (value) {
+  private encodeTimestamp = function (value: Date | string | Long | number) {
     const originalValue = value;
     if (typeof value === 'string') {
       value = new Date(value);
@@ -503,7 +523,7 @@ function defineInstanceMembers() {
    * @throws {TypeError}
    * @private
    */
-  this.encodeDate = function (value) {
+  private encodeDate = function (value: Date | string | LocalDate): Buffer {
     const originalValue = value;
     try {
       if (typeof value === 'string') {
@@ -528,7 +548,7 @@ function defineInstanceMembers() {
    * @throws {TypeError}
    * @private
    */
-  this.encodeTime = function (value) {
+  private encodeTime = function (value: string | LocalDate): Buffer {
     const originalValue = value;
     try {
       if (typeof value === 'string') {
@@ -548,7 +568,7 @@ function defineInstanceMembers() {
    * @param {Uuid|String|Buffer} value
    * @private
    */
-  this.encodeUuid = function (value) {
+  private encodeUuid = function (value: Uuid | string | Buffer) {
     if (typeof value === 'string') {
       try {
         value = types.Uuid.fromString(value).getBuffer();
@@ -569,7 +589,7 @@ function defineInstanceMembers() {
    * @returns {Buffer}
    * @private
    */
-  this.encodeInet = function (value) {
+  private encodeInet = function (value: string | InetAddress | Buffer): Buffer {
     if (typeof value === 'string') {
       value = types.InetAddress.fromString(value);
     }
@@ -586,7 +606,7 @@ function defineInstanceMembers() {
    * @param {Long|Buffer|String|Number} value
    * @private
    */
-  this._encodeBigIntFromLong = function (value) {
+  private _encodeBigIntFromLong = function (value: Long | Buffer | string | number) {
     if (typeof value === 'number') {
       value = Long.fromNumber(value);
     } else if (typeof value === 'string') {
@@ -608,7 +628,7 @@ function defineInstanceMembers() {
     return buf;
   };
 
-  this._encodeBigIntFromBigInt = function (value) {
+  private _encodeBigIntFromBigInt = function (value) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = BigInt(value);
@@ -626,16 +646,12 @@ function defineInstanceMembers() {
     return buffer;
   };
 
-  this.encodeLong = this.encodingOptions.useBigIntAsLong
-    ? this._encodeBigIntFromBigInt
-    : this._encodeBigIntFromLong;
-
   /**
    * @param {Integer|Buffer|String|Number} value
    * @returns {Buffer}
    * @private
    */
-  this._encodeVarintFromInteger = function (value) {
+  private _encodeVarintFromInteger = function (value: Integer | Buffer | string | number): Buffer {
     if (typeof value === 'number') {
       value = Integer.fromNumber(value);
     }
@@ -655,7 +671,7 @@ function defineInstanceMembers() {
     return buf;
   };
 
-  this._encodeVarintFromBigInt = function (value) {
+  private _encodeVarintFromBigInt = function (value) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = BigInt(value);
@@ -701,16 +717,12 @@ function defineInstanceMembers() {
     return utils.allocBufferFromArray(parts);
   };
 
-  this.encodeVarint = this.encodingOptions.useBigIntAsVarint
-    ? this._encodeVarintFromBigInt
-    : this._encodeVarintFromInteger;
-
   /**
    * @param {BigDecimal|Buffer|String|Number} value
    * @returns {Buffer}
    * @private
    */
-  this.encodeDecimal = function (value) {
+  private encodeDecimal = function (value: BigDecimal | Buffer | string | number): Buffer {
     if (typeof value === 'number') {
       value = BigDecimal.fromNumber(value);
     } else if (typeof value === 'string') {
@@ -727,19 +739,19 @@ function defineInstanceMembers() {
 
     return buf;
   };
-  this.encodeString = function (value, encoding) {
+  private encodeString = function (value, encoding) {
     if (typeof value !== 'string') {
       throw new TypeError('Not a valid text value, expected String obtained ' + util.inspect(value));
     }
     return utils.allocBufferFromString(value, encoding);
   };
-  this.encodeUtf8String = function (value) {
+  private encodeUtf8String = function (value) {
     return this.encodeString(value, 'utf8');
   };
-  this.encodeAsciiString = function (value) {
+  private encodeAsciiString = function (value) {
     return this.encodeString(value, 'ascii');
   };
-  this.encodeBlob = function (value) {
+  private encodeBlob = function (value) {
     if (!(value instanceof Buffer)) {
       throw new TypeError('Not a valid blob, expected Buffer obtained ' + util.inspect(value));
     }
@@ -752,7 +764,7 @@ function defineInstanceMembers() {
    * @param {OtherCustomColumnInfo | VectorColumnInfo} columnInfo
    * @returns 
    */
-  this.encodeCustom = function (value, columnInfo) {
+  private encodeCustom = function (value: any, columnInfo: OtherCustomColumnInfo | VectorColumnInfo) {
 
     if ('customTypeName' in columnInfo && columnInfo.customTypeName === 'vector') {
       return this.encodeVector(value, columnInfo);
@@ -774,14 +786,14 @@ function defineInstanceMembers() {
    * @returns {Buffer}
    * @private
    */
-  this.encodeBoolean = function (value) {
+  private encodeBoolean = function (value: boolean): Buffer {
     return value ? buffers.int8One : buffers.int8Zero;
   };
   /**
    * @param {Number|String} value
    * @private
    */
-  this.encodeInt = function (value) {
+  private encodeInt = function (value: number | string) {
     if (isNaN(value)) {
       throw new TypeError('Expected Number, obtained ' + util.inspect(value));
     }
@@ -793,7 +805,7 @@ function defineInstanceMembers() {
    * @param {Number|String} value
    * @private
    */
-  this.encodeSmallint = function (value) {
+  private encodeSmallint = function (value: number | string) {
     if (isNaN(value)) {
       throw new TypeError('Expected Number, obtained ' + util.inspect(value));
     }
@@ -805,7 +817,7 @@ function defineInstanceMembers() {
    * @param {Number} value
    * @private
    */
-  this.encodeTinyint = function (value) {
+  private encodeTinyint = function (value: number) {
     if (isNaN(value)) {
       throw new TypeError('Expected Number, obtained ' + util.inspect(value));
     }
@@ -813,7 +825,7 @@ function defineInstanceMembers() {
     buf.writeInt8(value, 0);
     return buf;
   };
-  this.encodeList = function (value, columnInfo) {
+  private encodeList = function (value, columnInfo) {
     const subtype = columnInfo.info;
     if (!Array.isArray(value)) {
       throw new TypeError('Not a valid list value, expected Array obtained ' + util.inspect(value));
@@ -836,7 +848,7 @@ function defineInstanceMembers() {
     }
     return Buffer.concat(parts);
   };
-  this.encodeSet = function (value, columnInfo) {
+  private encodeSet = function (value, columnInfo) {
     if (this.encodingOptions.set && value instanceof this.encodingOptions.set) {
       const arr = [];
       value.forEach(function (x) {
@@ -853,7 +865,7 @@ function defineInstanceMembers() {
    * @returns {Buffer}
    * @private
    */
-  this.encodeMap = function (value, columnInfo) {
+  private encodeMap = function (value, columnInfo: MapColumnInfo): Buffer {
     const subtypes = columnInfo.info;
     const parts = [];
     let propCounter = 0;
@@ -904,13 +916,15 @@ function defineInstanceMembers() {
     parts.unshift(this.getLengthBuffer(propCounter));
     return Buffer.concat(parts);
   };
+
+
   /**
    * 
    * @param {any} value 
    * @param {UdtColumnInfo} columnInfo 
    * @returns 
    */
-  this.encodeUdt = function (value, columnInfo) {
+  private encodeUdt = function (value: any, columnInfo: UdtColumnInfo) {
     const udtInfo = columnInfo.info;
     const parts = [];
     let totalLength = 0;
@@ -941,7 +955,7 @@ function defineInstanceMembers() {
    * @param {TupleColumnInfo} columnInfo
    * @returns 
    */
-  this.encodeTuple = function (value, columnInfo) {
+  private encodeTuple = function (value: any, columnInfo: TupleColumnInfo) {
     const tupleInfo = columnInfo.info;
     const parts = [];
     let totalLength = 0;
@@ -979,7 +993,7 @@ function defineInstanceMembers() {
    * @param {VectorColumnInfo} params 
    * @returns {Vector}
    */
-  this.decodeVector = function(buffer, params) {
+  private decodeVector = function(buffer: Buffer, params: VectorColumnInfo): Vector {
     const subtype = params.info[0];
     const dimension = params.info[1];
     const elemLength = this.serializationSizeIfFixed(subtype);
@@ -1015,7 +1029,7 @@ function defineInstanceMembers() {
    * @param {ColumnInfo} cqlType
    * @returns {Number}
    */
-  this.serializationSizeIfFixed = function (cqlType) {
+  private serializationSizeIfFixed = function (cqlType: ColumnInfo): number {
     switch (cqlType.code) {
       case dataTypes.bigint:
         return 8;
@@ -1052,7 +1066,7 @@ function defineInstanceMembers() {
    * @param {VectorColumnInfo} params
    * @returns {Buffer}
    */
-  this.encodeVector = function(value, params) {
+  private encodeVector = function(value: Vector, params: VectorColumnInfo): Buffer {
 
     if (!(value instanceof Vector)) {
       throw new TypeError("Driver only supports Vector type when encoding a vector");
@@ -1088,14 +1102,14 @@ function defineInstanceMembers() {
    * @returns {VectorColumnInfo}
    * @internal
    */
-  this.parseVectorTypeArgs = function(typeName, stringToExclude, subtypeResolveFn) {
+  private parseVectorTypeArgs = function(typeName: string, stringToExclude: string, subtypeResolveFn: Function): VectorColumnInfo {
 
     const argsStartIndex = stringToExclude.length + 1;
     const argsLength = typeName.length - (stringToExclude.length + 2);
     const params = parseParams(typeName, argsStartIndex, argsLength);
     if (params.length === 2) {
       /** @type {VectorColumnInfo} */
-      const columnInfo = { code: dataTypes.custom, info: [subtypeResolveFn.bind(this)(params[0].trim()), parseInt(params[1].trim(), 10 )], customTypeName : 'vector'};
+      const columnInfo: VectorColumnInfo = { code: dataTypes.custom, info: [subtypeResolveFn.bind(this)(params[0].trim()), parseInt(params[1].trim(), 10 )], customTypeName : 'vector'};
       return columnInfo;
     }
 
@@ -1111,7 +1125,7 @@ function defineInstanceMembers() {
    * @internal
    * @ignore
    */
-  this.setRoutingKeyFromUser = function (params, execOptions, keys) {
+  private setRoutingKeyFromUser = function (params: Array<any>, execOptions: import('..').ExecutionOptions, keys) {
     let totalLength = 0;
     const userRoutingKey = execOptions.getRoutingKey();
     if (Array.isArray(userRoutingKey)) {
@@ -1189,7 +1203,7 @@ function defineInstanceMembers() {
    * @internal
    * @ignore
    */
-  this.setRoutingKeyFromMeta = function (meta, params, execOptions) {
+  private setRoutingKeyFromMeta = function (meta: object, params: Array<any>, execOptions: ExecutionOptions) {
     const routingIndexes = execOptions.getRoutingIndexes();
     if (!routingIndexes) {
       return;
@@ -1223,7 +1237,7 @@ function defineInstanceMembers() {
    * @returns {Number} The total length
    * @private
    */
-  this._encodeRoutingKeyParts = function (parts, routingIndexes, encodeParam) {
+  private _encodeRoutingKeyParts = function (parts: Array<any>, routingIndexes: Array<any>, encodeParam: Function): number {
     let totalLength = 0;
     for (let i = 0; i < routingIndexes.length; i++) {
       const paramIndex = routingIndexes[i];
@@ -1259,7 +1273,7 @@ function defineInstanceMembers() {
    * @throws {Error}
    * @ignore
    */
-  this.parseTypeName = async function (keyspace, typeName, startIndex, length, udtResolver) {
+  private parseTypeName = async function (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function): Promise<ColumnInfo> {
     startIndex = startIndex || 0;
     if (!length) {
       length = typeName.length;
@@ -1430,11 +1444,11 @@ function defineInstanceMembers() {
    * @returns {Promise}
    * @private
    */
-  this._parseChildTypes = function (keyspace, typeNames, udtResolver) {
+  private _parseChildTypes = function (keyspace: string, typeNames: Array<any>, udtResolver: Function): Promise<any> {
     return Promise.all(typeNames.map(name => this.parseTypeName(keyspace, name.trim(), 0, null, udtResolver)));
   };
 
-  /**
+    /**
    * Parses a Cassandra fully-qualified class name string into data type information
    * @param {String} typeName
    * @param {Number} [startIndex]
@@ -1444,253 +1458,249 @@ function defineInstanceMembers() {
    * @internal
    * @ignore
    */
-  this.parseFqTypeName = function (typeName, startIndex, length) {
-    let frozen = false;
-    let reversed = false;
-    startIndex = startIndex || 0;
-    let params;
-    if (!length) {
-      length = typeName.length;
-    }
-    if (length > complexTypeNames.reversed.length && typeName.indexOf(complexTypeNames.reversed) === startIndex) {
-      //Remove the reversed token
-      startIndex += complexTypeNames.reversed.length + 1;
-      length -= complexTypeNames.reversed.length + 2;
-      reversed = true;
-    }
-    if (length > complexTypeNames.frozen.length &&
-        typeName.indexOf(complexTypeNames.frozen, startIndex) === startIndex) {
-      //Remove the frozen token
-      startIndex += complexTypeNames.frozen.length + 1;
-      length -= complexTypeNames.frozen.length + 2;
-      frozen = true;
-    }
-    const options = {
-      frozen: frozen,
-      reversed: reversed
-    };
-    if (typeName === complexTypeNames.empty) {
-      //set as custom
+    private parseFqTypeName = function (typeName: string, startIndex: number, length: number): ColumnInfo {
+      let frozen = false;
+      let reversed = false;
+      startIndex = startIndex || 0;
+      let params;
+      if (!length) {
+        length = typeName.length;
+      }
+      if (length > complexTypeNames.reversed.length && typeName.indexOf(complexTypeNames.reversed) === startIndex) {
+        //Remove the reversed token
+        startIndex += complexTypeNames.reversed.length + 1;
+        length -= complexTypeNames.reversed.length + 2;
+        reversed = true;
+      }
+      if (length > complexTypeNames.frozen.length &&
+          typeName.indexOf(complexTypeNames.frozen, startIndex) === startIndex) {
+        //Remove the frozen token
+        startIndex += complexTypeNames.frozen.length + 1;
+        length -= complexTypeNames.frozen.length + 2;
+        frozen = true;
+      }
+      const options = {
+        frozen: frozen,
+        reversed: reversed
+      };
+      if (typeName === complexTypeNames.empty) {
+        //set as custom
+        return {
+          code: dataTypes.custom,
+          info: 'empty',
+          options: options
+        };
+      }
+      //Quick check if its a single type
+      if (length <= singleFqTypeNamesLength) {
+        if (startIndex > 0) {
+          typeName = typeName.substr(startIndex, length);
+        }
+        const typeCode = singleTypeNames[typeName];
+        if (typeof typeCode === 'number') {
+          return {code : typeCode, info: null, options : options};
+        }
+        // special handling for duration
+        if (typeName === customTypeNames.duration) {
+          return {code: dataTypes.duration, options: options};
+        }
+        throw new TypeError('Not a valid type "' + typeName + '"');
+      }
+      if (typeName.indexOf(complexTypeNames.list, startIndex) === startIndex) {
+        //Its a list
+        //org.apache.cassandra.db.marshal.ListType(innerType)
+        //move cursor across the name and bypass the parenthesis
+        startIndex += complexTypeNames.list.length + 1;
+        length -= complexTypeNames.list.length + 2;
+        params = parseParams(typeName, startIndex, length);
+        if (params.length !== 1) {
+          throw new TypeError('Not a valid type ' + typeName);
+        }
+        const info = this.parseFqTypeName(params[0]);
+        return {
+          code: dataTypes.list,
+          info: info,
+          options: options
+        };
+      }
+      if (typeName.indexOf(complexTypeNames.set, startIndex) === startIndex) {
+        //Its a set
+        //org.apache.cassandra.db.marshal.SetType(innerType)
+        //move cursor across the name and bypass the parenthesis
+        startIndex += complexTypeNames.set.length + 1;
+        length -= complexTypeNames.set.length + 2;
+        params = parseParams(typeName, startIndex, length);
+        if (params.length !== 1)
+        {
+          throw new TypeError('Not a valid type ' + typeName);
+        }
+        const info = this.parseFqTypeName(params[0]);
+        return {
+          code : dataTypes.set,
+          info : info,
+          options: options
+        };
+      }
+      if (typeName.indexOf(complexTypeNames.map, startIndex) === startIndex) {
+        //org.apache.cassandra.db.marshal.MapType(keyType,valueType)
+        //move cursor across the name and bypass the parenthesis
+        startIndex += complexTypeNames.map.length + 1;
+        length -= complexTypeNames.map.length + 2;
+        params = parseParams(typeName, startIndex, length);
+        //It should contain the key and value types
+        if (params.length !== 2) {
+          throw new TypeError('Not a valid type ' + typeName);
+        }
+        const info1 = this.parseFqTypeName(params[0]);
+        const info2 = this.parseFqTypeName(params[1]);
+        return {
+          code : dataTypes.map,
+          info : [info1, info2],
+          options: options
+        };
+      }
+      if (typeName.indexOf(complexTypeNames.udt, startIndex) === startIndex) {
+        //move cursor across the name and bypass the parenthesis
+        startIndex += complexTypeNames.udt.length + 1;
+        length -= complexTypeNames.udt.length + 2;
+        const udtType = this._parseUdtName(typeName, startIndex, length);
+        udtType.options = options;
+        return udtType;
+      }
+      if (typeName.indexOf(complexTypeNames.tuple, startIndex) === startIndex) {
+        //move cursor across the name and bypass the parenthesis
+        startIndex += complexTypeNames.tuple.length + 1;
+        length -= complexTypeNames.tuple.length + 2;
+        params = parseParams(typeName, startIndex, length);
+        if (params.length < 1) {
+          throw new TypeError('Not a valid type ' + typeName);
+        }
+        const info = params.map(x => this.parseFqTypeName(x));
+        return {
+          code : dataTypes.tuple,
+          info : info,
+          options: options
+        };
+      }
+  
+      if (typeName.indexOf(customTypeNames.vector, startIndex) === startIndex) {
+        // It's a vector, so record the subtype and dimension.
+        const params = this.parseVectorTypeArgs.bind(this)(typeName, customTypeNames.vector, this.parseFqTypeName);
+        params.options = options;
+        return params;
+      }
+  
+      // Assume custom type if cannot be parsed up to this point.
+      const info = typeName.substr(startIndex, length);
       return {
         code: dataTypes.custom,
-        info: 'empty',
-        options: options
-      };
-    }
-    //Quick check if its a single type
-    if (length <= singleFqTypeNamesLength) {
-      if (startIndex > 0) {
-        typeName = typeName.substr(startIndex, length);
-      }
-      const typeCode = singleTypeNames[typeName];
-      if (typeof typeCode === 'number') {
-        return {code : typeCode, info: null, options : options};
-      }
-      // special handling for duration
-      if (typeName === customTypeNames.duration) {
-        return {code: dataTypes.duration, options: options};
-      }
-      throw new TypeError('Not a valid type "' + typeName + '"');
-    }
-    if (typeName.indexOf(complexTypeNames.list, startIndex) === startIndex) {
-      //Its a list
-      //org.apache.cassandra.db.marshal.ListType(innerType)
-      //move cursor across the name and bypass the parenthesis
-      startIndex += complexTypeNames.list.length + 1;
-      length -= complexTypeNames.list.length + 2;
-      params = parseParams(typeName, startIndex, length);
-      if (params.length !== 1) {
-        throw new TypeError('Not a valid type ' + typeName);
-      }
-      const info = this.parseFqTypeName(params[0]);
-      return {
-        code: dataTypes.list,
         info: info,
         options: options
       };
-    }
-    if (typeName.indexOf(complexTypeNames.set, startIndex) === startIndex) {
-      //Its a set
-      //org.apache.cassandra.db.marshal.SetType(innerType)
-      //move cursor across the name and bypass the parenthesis
-      startIndex += complexTypeNames.set.length + 1;
-      length -= complexTypeNames.set.length + 2;
-      params = parseParams(typeName, startIndex, length);
-      if (params.length !== 1)
-      {
-        throw new TypeError('Not a valid type ' + typeName);
-      }
-      const info = this.parseFqTypeName(params[0]);
-      return {
-        code : dataTypes.set,
-        info : info,
-        options: options
-      };
-    }
-    if (typeName.indexOf(complexTypeNames.map, startIndex) === startIndex) {
-      //org.apache.cassandra.db.marshal.MapType(keyType,valueType)
-      //move cursor across the name and bypass the parenthesis
-      startIndex += complexTypeNames.map.length + 1;
-      length -= complexTypeNames.map.length + 2;
-      params = parseParams(typeName, startIndex, length);
-      //It should contain the key and value types
-      if (params.length !== 2) {
-        throw new TypeError('Not a valid type ' + typeName);
-      }
-      const info1 = this.parseFqTypeName(params[0]);
-      const info2 = this.parseFqTypeName(params[1]);
-      return {
-        code : dataTypes.map,
-        info : [info1, info2],
-        options: options
-      };
-    }
-    if (typeName.indexOf(complexTypeNames.udt, startIndex) === startIndex) {
-      //move cursor across the name and bypass the parenthesis
-      startIndex += complexTypeNames.udt.length + 1;
-      length -= complexTypeNames.udt.length + 2;
-      const udtType = this._parseUdtName(typeName, startIndex, length);
-      udtType.options = options;
-      return udtType;
-    }
-    if (typeName.indexOf(complexTypeNames.tuple, startIndex) === startIndex) {
-      //move cursor across the name and bypass the parenthesis
-      startIndex += complexTypeNames.tuple.length + 1;
-      length -= complexTypeNames.tuple.length + 2;
-      params = parseParams(typeName, startIndex, length);
-      if (params.length < 1) {
-        throw new TypeError('Not a valid type ' + typeName);
-      }
-      const info = params.map(x => this.parseFqTypeName(x));
-      return {
-        code : dataTypes.tuple,
-        info : info,
-        options: options
-      };
-    }
-
-    if (typeName.indexOf(customTypeNames.vector, startIndex) === startIndex) {
-      // It's a vector, so record the subtype and dimension.
-      const params = this.parseVectorTypeArgs.bind(this)(typeName, customTypeNames.vector, this.parseFqTypeName);
-      params.options = options;
-      return params;
-    }
-
-    // Assume custom type if cannot be parsed up to this point.
-    const info = typeName.substr(startIndex, length);
-    return {
-      code: dataTypes.custom,
-      info: info,
-      options: options
     };
-  };
-  /**
-   * Parses type names with composites
-   * @param {String} typesString
-   * @returns {{types: Array, isComposite: Boolean, hasCollections: Boolean}}
-   * @internal
-   * @ignore
-   */
-  this.parseKeyTypes = function (typesString) {
-    let i = 0;
-    let length = typesString.length;
-    const isComposite = typesString.indexOf(complexTypeNames.composite) === 0;
-    if (isComposite) {
-      i = complexTypeNames.composite.length + 1;
-      length--;
-    }
-    const types = [];
-    let startIndex = i;
-    let nested = 0;
-    let inCollectionType = false;
-    let hasCollections = false;
-    //as collection types are not allowed, it is safe to split by ,
-    while (++i < length) {
-      switch (typesString[i]) {
-        case ',':
-          if (nested > 0) {
-            break;
-          }
-          if (inCollectionType) {
-            //remove type id
-            startIndex = typesString.indexOf(':', startIndex) + 1;
-          }
-          types.push(typesString.substring(startIndex, i));
-          startIndex = i + 1;
-          break;
-        case '(':
-          if (nested === 0 && typesString.indexOf(complexTypeNames.collection, startIndex) === startIndex) {
-            inCollectionType = true;
-            hasCollections = true;
-            //skip collection type
-            i++;
-            startIndex = i;
-            break;
-          }
-          nested++;
-          break;
-        case ')':
-          if (inCollectionType && nested === 0){
-            types.push(typesString.substring(typesString.indexOf(':', startIndex) + 1, i));
+    /**
+     * Parses type names with composites
+     * @param {String} typesString
+     * @returns {{types: Array, isComposite: Boolean, hasCollections: Boolean}}
+     * @internal
+     * @ignore
+     */
+    private parseKeyTypes = function (typesString: string): { types: Array<any>; isComposite: boolean; hasCollections: boolean; } {
+      let i = 0;
+      let length = typesString.length;
+      const isComposite = typesString.indexOf(complexTypeNames.composite) === 0;
+      if (isComposite) {
+        i = complexTypeNames.composite.length + 1;
+        length--;
+      }
+      const types = [];
+      let startIndex = i;
+      let nested = 0;
+      let inCollectionType = false;
+      let hasCollections = false;
+      //as collection types are not allowed, it is safe to split by ,
+      while (++i < length) {
+        switch (typesString[i]) {
+          case ',':
+            if (nested > 0) {
+              break;
+            }
+            if (inCollectionType) {
+              //remove type id
+              startIndex = typesString.indexOf(':', startIndex) + 1;
+            }
+            types.push(typesString.substring(startIndex, i));
             startIndex = i + 1;
             break;
-          }
-          nested--;
-          break;
+          case '(':
+            if (nested === 0 && typesString.indexOf(complexTypeNames.collection, startIndex) === startIndex) {
+              inCollectionType = true;
+              hasCollections = true;
+              //skip collection type
+              i++;
+              startIndex = i;
+              break;
+            }
+            nested++;
+            break;
+          case ')':
+            if (inCollectionType && nested === 0){
+              types.push(typesString.substring(typesString.indexOf(':', startIndex) + 1, i));
+              startIndex = i + 1;
+              break;
+            }
+            nested--;
+            break;
+        }
       }
-    }
-    if (startIndex < length) {
-      types.push(typesString.substring(startIndex, length));
-    }
-    return {
-      types: types.map(name => this.parseFqTypeName(name)),
-      hasCollections: hasCollections,
-      isComposite: isComposite
+      if (startIndex < length) {
+        types.push(typesString.substring(startIndex, length));
+      }
+      return {
+        types: types.map(name => this.parseFqTypeName(name)),
+        hasCollections: hasCollections,
+        isComposite: isComposite
+      };
     };
-  };
-  /**
-   * 
-   * @param {string} typeName 
-   * @param {number} startIndex 
-   * @param {number} length 
-   * @returns {UdtColumnInfo} 
-   */
-  this._parseUdtName = function (typeName, startIndex, length) {
-    const udtParams = parseParams(typeName, startIndex, length);
-    if (udtParams.length < 2) {
-      //It should contain at least the keyspace, name of the udt and a type
-      throw new TypeError('Not a valid type ' + typeName);
-    }
     /**
-     * @type {{keyspace: String, name: String, fields: Array}}
+     * 
+     * @param {string} typeName 
+     * @param {number} startIndex 
+     * @param {number} length 
+     * @returns {UdtColumnInfo} 
      */
-    const udtInfo = {
-      keyspace: udtParams[0],
-      name: utils.allocBufferFromString(udtParams[1], 'hex').toString(),
-      fields: []
+    private _parseUdtName = function (typeName: string, startIndex: number, length: number): UdtColumnInfo {
+      const udtParams = parseParams(typeName, startIndex, length);
+      if (udtParams.length < 2) {
+        //It should contain at least the keyspace, name of the udt and a type
+        throw new TypeError('Not a valid type ' + typeName);
+      }
+      /**
+       * @type {{keyspace: String, name: String, fields: Array}}
+       */
+      const udtInfo: { keyspace: string; name: string; fields: Array<any>; } = {
+        keyspace: udtParams[0],
+        name: utils.allocBufferFromString(udtParams[1], 'hex').toString(),
+        fields: []
+      };
+      for (let i = 2; i < udtParams.length; i++) {
+        const p = udtParams[i];
+        const separatorIndex = p.indexOf(':');
+        const fieldType = this.parseFqTypeName(p, separatorIndex + 1, p.length - (separatorIndex + 1));
+        udtInfo.fields.push({
+          name: utils.allocBufferFromString(p.substr(0, separatorIndex), 'hex').toString(),
+          type: fieldType
+        });
+      }
+      return {
+        code : dataTypes.udt,
+        info : udtInfo
+      };
     };
-    for (let i = 2; i < udtParams.length; i++) {
-      const p = udtParams[i];
-      const separatorIndex = p.indexOf(':');
-      const fieldType = this.parseFqTypeName(p, separatorIndex + 1, p.length - (separatorIndex + 1));
-      udtInfo.fields.push({
-        name: utils.allocBufferFromString(p.substr(0, separatorIndex), 'hex').toString(),
-        type: fieldType
-      });
-    }
-    return {
-      code : dataTypes.udt,
-      info : udtInfo
-    };
-  };
-}
 
-/**
- * Sets the encoder and decoder methods for this instance
- * @private
- */
-function setEncoders() {
-  this.decoders = {
+
+
+  private decoders = {
     [dataTypes.custom]: this.decodeCustom,
     [dataTypes.ascii]: this.decodeAsciiString,
     [dataTypes.bigint]: this.decodeLong,
@@ -1720,7 +1730,7 @@ function setEncoders() {
     [dataTypes.tuple]: this.decodeTuple
   };
 
-  this.encoders = {
+  private encoders = {
     [dataTypes.custom]: this.encodeCustom,
     [dataTypes.ascii]: this.encodeAsciiString,
     [dataTypes.bigint]: this.encodeLong,
@@ -1749,17 +1759,16 @@ function setEncoders() {
     [dataTypes.udt]: this.encodeUdt,
     [dataTypes.tuple]: this.encodeTuple
   };
-}
 
-/**
- * Decodes Cassandra bytes into Javascript values.
- * <p>
- * This is part of an <b>experimental</b> API, this can be changed future releases.
- * </p>
- * @param {Buffer} buffer Raw buffer to be decoded.
- * @param {ColumnInfo} type 
- */
-Encoder.prototype.decode = function (buffer, type) {
+  /**
+   * Decodes Cassandra bytes into Javascript values.
+   * <p>
+   * This is part of an <b>experimental</b> API, this can be changed future releases.
+   * </p>
+   * @param {Buffer} buffer Raw buffer to be decoded.
+   * @param {ColumnInfo} type 
+   */
+  public decode = function (buffer: Buffer, type: ColumnInfo) {
   if (buffer === null || (buffer.length === 0 && !zeroLengthTypesSupported.has(type.code))) {
     return null;
   }
@@ -1771,27 +1780,28 @@ Encoder.prototype.decode = function (buffer, type) {
   }
 
   return decoder.call(this, buffer, type);
-};
+  };
 
-/**
- * Encodes Javascript types into Buffer according to the Cassandra protocol.
- * <p>
- * This is part of an <b>experimental</b> API, this can be changed future releases.
- * </p>
- * @param {*} value The value to be converted.
- * @param {ColumnInfo | Number | String} typeInfo The type information.
- * <p>It can be either a:</p>
- * <ul>
- *   <li>A <code>String</code> representing the data type.</li>
- *   <li>A <code>Number</code> with one of the values of {@link module:types~dataTypes dataTypes}.</li>
- *   <li>An <code>Object</code> containing the <code>type.code</code> as one of the values of
- *   {@link module:types~dataTypes dataTypes} and <code>type.info</code>.
- *   </li>
- * </ul>
- * @returns {Buffer}
- * @throws {TypeError} When there is an encoding error
- */
-Encoder.prototype.encode = function (value, typeInfo) {
+
+  /**
+   * Encodes Javascript types into Buffer according to the Cassandra protocol.
+   * <p>
+   * This is part of an <b>experimental</b> API, this can be changed future releases.
+   * </p>
+   * @param {*} value The value to be converted.
+   * @param {ColumnInfo | Number | String} typeInfo The type information.
+   * <p>It can be either a:</p>
+   * <ul>
+   *   <li>A <code>String</code> representing the data type.</li>
+   *   <li>A <code>Number</code> with one of the values of {@link module:types~dataTypes dataTypes}.</li>
+   *   <li>An <code>Object</code> containing the <code>type.code</code> as one of the values of
+   *   {@link module:types~dataTypes dataTypes} and <code>type.info</code>.
+   *   </li>
+   * </ul>
+   * @returns {Buffer}
+   * @throws {TypeError} When there is an encoding error
+   */
+  public encode = function (value: any, typeInfo: ColumnInfo | number | string): Buffer {
   if (value === undefined) {
     value = this.encodingOptions.useUndefinedAsUnset && this.protocolVersion >= 4 ? types.unset : null;
   }
@@ -1810,7 +1820,7 @@ Encoder.prototype.encode = function (value, typeInfo) {
   }
 
   /** @type {ColumnInfo | null} */
-  let type = null;
+  let type: ColumnInfo | null = null;
 
   if (typeInfo) {
     if (typeof typeInfo === 'number') {
@@ -1843,122 +1853,130 @@ Encoder.prototype.encode = function (value, typeInfo) {
   }
 
   return encoder.call(this, value, type);
-};
+  };
 
-/**
- * Try to guess the Cassandra type to be stored, based on the javascript value type
- * @param value
- * @returns {ColumnInfo | null}
- * @ignore
- * @internal
- */
-Encoder.guessDataType = function (value) {
-  const esTypeName = (typeof value);
-  if (esTypeName === 'number') {
-    return {code : dataTypes.double};
-  }
-  else if (esTypeName === 'string') {
-    if (value.length === 36 && uuidRegex.test(value)){
+  /**
+   * Try to guess the Cassandra type to be stored, based on the javascript value type
+   * @param value
+   * @returns {ColumnInfo | null}
+   * @ignore
+   * @internal
+   */
+  public static guessDataType = function (value): ColumnInfo | null {
+    const esTypeName = (typeof value);
+    if (esTypeName === 'number') {
+      return {code : dataTypes.double};
+    }
+    else if (esTypeName === 'string') {
+      if (value.length === 36 && uuidRegex.test(value)){
+        return {code : dataTypes.uuid};
+      }
+      return {code : dataTypes.text};
+      
+    }
+    else if (esTypeName === 'boolean') {
+      return {code : dataTypes.boolean};
+    }
+    else if (value instanceof Buffer) {
+      return {code : dataTypes.blob};
+    }
+    else if (value instanceof Date) {
+      return {code : dataTypes.timestamp};
+    }
+    else if (value instanceof Long) {
+      return {code : dataTypes.bigint};
+    }
+    else if (value instanceof Integer) {
+      return {code : dataTypes.varint};
+    }
+    else if (value instanceof BigDecimal) {
+      return {code : dataTypes.decimal};
+    }
+    else if (value instanceof types.Uuid) {
       return {code : dataTypes.uuid};
     }
-    return {code : dataTypes.text};
-    
-  }
-  else if (esTypeName === 'boolean') {
-    return {code : dataTypes.boolean};
-  }
-  else if (value instanceof Buffer) {
-    return {code : dataTypes.blob};
-  }
-  else if (value instanceof Date) {
-    return {code : dataTypes.timestamp};
-  }
-  else if (value instanceof Long) {
-    return {code : dataTypes.bigint};
-  }
-  else if (value instanceof Integer) {
-    return {code : dataTypes.varint};
-  }
-  else if (value instanceof BigDecimal) {
-    return {code : dataTypes.decimal};
-  }
-  else if (value instanceof types.Uuid) {
-    return {code : dataTypes.uuid};
-  }
-  else if (value instanceof types.InetAddress) {
-    return {code : dataTypes.inet};
-  }
-  else if (value instanceof types.Tuple) {
-    return {code : dataTypes.tuple};
-  }
-  else if (value instanceof types.LocalDate) {
-    return {code : dataTypes.date};
-  }
-  else if (value instanceof types.LocalTime) {
-    return {code : dataTypes.time};
-  }
-  else if (value instanceof types.Duration) {
-    return {code : dataTypes.custom,
-      info : customTypeNames.duration};
-  }
-  // Map JS TypedArrays onto vectors
-  else if (value instanceof types.Vector) {
-    if (value && value.length > 0) {
-      if (value instanceof Float32Array) {
-        return {
-          code: dataTypes.custom,
-          customTypeName: 'vector',
-          info: [ {code: dataTypes.float}, value.length]
-        };
-      }
-     
-      /** @type {ColumnInfo?} */
-      let subtypeColumnInfo = null;
-      // try to fetch the subtype from the Vector, or else guess
-      if (value.subtype) {
-        try {
-          subtypeColumnInfo = dataTypes.getByName(value.subtype);
-        } catch (TypeError) {
-          // ignore
+    else if (value instanceof types.InetAddress) {
+      return {code : dataTypes.inet};
+    }
+    else if (value instanceof types.Tuple) {
+      return {code : dataTypes.tuple};
+    }
+    else if (value instanceof types.LocalDate) {
+      return {code : dataTypes.date};
+    }
+    else if (value instanceof types.LocalTime) {
+      return {code : dataTypes.time};
+    }
+    else if (value instanceof types.Duration) {
+      return {code : dataTypes.custom,
+        info : customTypeNames.duration};
+    }
+    // Map JS TypedArrays onto vectors
+    else if (value instanceof types.Vector) {
+      if (value && value.length > 0) {
+        if (value instanceof Float32Array) {
+          return {
+            code: dataTypes.custom,
+            customTypeName: 'vector',
+            info: [ {code: dataTypes.float}, value.length]
+          };
         }
-      } 
-      if (subtypeColumnInfo == null){
-        subtypeColumnInfo = this.guessDataType(value[0]);
+       
+        /** @type {ColumnInfo?} */
+        let subtypeColumnInfo: ColumnInfo | null = null;
+        // try to fetch the subtype from the Vector, or else guess
+        if (value.subtype) {
+          try {
+            subtypeColumnInfo = dataTypes.getByName(value.subtype);
+          } catch (TypeError) {
+            // ignore
+          }
+        } 
+        if (subtypeColumnInfo == null){
+          subtypeColumnInfo = this.guessDataType(value[0]);
+        }
+        if (subtypeColumnInfo != null) {
+          return {
+            code: dataTypes.custom,
+            customTypeName: 'vector',
+            info: [subtypeColumnInfo, value.length]
+          };
+        }
+        throw new TypeError("Cannot guess subtype from element " + value[0]);
+      } else {
+        throw new TypeError("Cannot guess subtype of empty vector");
       }
-      if (subtypeColumnInfo != null) {
-        return {
-          code: dataTypes.custom,
-          customTypeName: 'vector',
-          info: [subtypeColumnInfo, value.length]
-        };
+    }
+    else if (Array.isArray(value)) {
+      return {code : dataTypes.list};
+    }
+    else if (value instanceof Geometry) {
+      if (value instanceof LineString) {
+        return {code : dataTypes.custom,
+          info : customTypeNames.lineString};
+      } else if (value instanceof Point) {
+        return {code : dataTypes.custom,
+          info : customTypeNames.point};
+      } else if (value instanceof Polygon) {
+        return {code : dataTypes.custom,
+          info : customTypeNames.polygon};
       }
-      throw new TypeError("Cannot guess subtype from element " + value[0]);
-    } else {
-      throw new TypeError("Cannot guess subtype of empty vector");
     }
-  }
-  else if (Array.isArray(value)) {
-    return {code : dataTypes.list};
-  }
-  else if (value instanceof Geometry) {
-    if (value instanceof LineString) {
+    else if (value instanceof DateRange) {
       return {code : dataTypes.custom,
-        info : customTypeNames.lineString};
-    } else if (value instanceof Point) {
-      return {code : dataTypes.custom,
-        info : customTypeNames.point};
-    } else if (value instanceof Polygon) {
-      return {code : dataTypes.custom,
-        info : customTypeNames.polygon};
+        info : customTypeNames.dateRange};
     }
-  }
-  else if (value instanceof DateRange) {
-    return {code : dataTypes.custom,
-      info : customTypeNames.dateRange};
-  }
+  
+    return null;
+  };
 
-  return null;
-};
+  private static isTypedArray = function(arg) {
+    // The TypedArray superclass isn't available directly so to detect an instance of a TypedArray
+    // subclass we have to access the prototype of a concrete instance.  There's nothing magical about
+    // Uint8Array here; we could just as easily use any of the other TypedArray subclasses.
+    return (arg instanceof Object.getPrototypeOf(Uint8Array));
+  };
+}
 
 /**
  * Gets a buffer containing with the bytes (BE) representing the collection length for protocol v2 and below
@@ -1966,7 +1984,7 @@ Encoder.guessDataType = function (value) {
  * @returns {Buffer}
  * @private
  */
-function getLengthBufferV2(value) {
+function getLengthBufferV2(value: Buffer | number): Buffer {
   if (!value) {
     return buffers.int16Zero;
   }
@@ -1986,7 +2004,7 @@ function getLengthBufferV2(value) {
  * @returns {Buffer}
  * @private
  */
-function getLengthBufferV3(value) {
+function getLengthBufferV3(value: Buffer | number): Buffer {
   if (!value) {
     return buffers.int32Zero;
   }
@@ -2004,7 +2022,7 @@ function getLengthBufferV3(value) {
  * @param {Buffer} buffer
  * @private
  */
-function handleBufferCopy(buffer) {
+function handleBufferCopy(buffer: Buffer) {
   if (buffer === null) {
     return null;
   }
@@ -2015,7 +2033,7 @@ function handleBufferCopy(buffer) {
  * @param {Buffer} buffer
  * @private
  */
-function handleBufferRef(buffer) {
+function handleBufferRef(buffer: Buffer) {
   return buffer;
 }
 /**
@@ -2025,7 +2043,7 @@ function handleBufferRef(buffer) {
  * @returns {Number}
  * @private
  */
-function decodeCollectionLengthV3(bytes, offset) {
+function decodeCollectionLengthV3(bytes, offset): number {
   return bytes.readInt32BE(offset);
 }
 /**
@@ -2035,7 +2053,7 @@ function decodeCollectionLengthV3(bytes, offset) {
  * @returns {Number}
  * @private
  */
-function decodeCollectionLengthV2(bytes, offset) {
+function decodeCollectionLengthV2(bytes, offset): number {
   return bytes.readUInt16BE(offset);
 }
 
@@ -2054,7 +2072,7 @@ function encodeDuration(value) {
  * @private
  * @param {Buffer} buffer
  */
-function decodeLineString(buffer) {
+function decodeLineString(buffer: Buffer) {
   return LineString.fromBuffer(buffer);
 }
 
@@ -2062,7 +2080,7 @@ function decodeLineString(buffer) {
  * @private
  * @param {LineString} value
  */
-function encodeLineString(value) {
+function encodeLineString(value: LineString) {
   return value.toBuffer();
 }
 
@@ -2070,7 +2088,7 @@ function encodeLineString(value) {
  * @private
  * @param {Buffer} buffer
  */
-function decodePoint(buffer) {
+function decodePoint(buffer: Buffer) {
   return Point.fromBuffer(buffer);
 }
 
@@ -2078,7 +2096,7 @@ function decodePoint(buffer) {
  * @private
  * @param {LineString} value
  */
-function encodePoint(value) {
+function encodePoint(value: LineString) {
   return value.toBuffer();
 }
 
@@ -2086,7 +2104,7 @@ function encodePoint(value) {
  * @private
  * @param {Buffer} buffer
  */
-function decodePolygon(buffer) {
+function decodePolygon(buffer: Buffer) {
   return Polygon.fromBuffer(buffer);
 }
 
@@ -2094,7 +2112,7 @@ function decodePolygon(buffer) {
  * @private
  * @param {Polygon} value
  */
-function encodePolygon(value) {
+function encodePolygon(value: Polygon) {
   return value.toBuffer();
 }
 
@@ -2106,7 +2124,7 @@ function decodeDateRange(buffer) {
  * @private
  * @param {DateRange} value
  */
-function encodeDateRange(value) {
+function encodeDateRange(value: DateRange) {
   return value.toBuffer();
 }
 
@@ -2119,7 +2137,7 @@ function encodeDateRange(value) {
  * @returns {Array<String>}
  * @private
  */
-function parseParams(value, startIndex, length, open, close) {
+function parseParams(value: string, startIndex: number, length: number, open: string, close: string): Array<string> {
   open = open || '(';
   close = close || ')';
   const types = [];
@@ -2149,7 +2167,7 @@ function parseParams(value, startIndex, length, open, close) {
  * @returns {Buffer}
  * @private
  */
-function concatRoutingKey(parts, totalLength) {
+function concatRoutingKey(parts: Array<Buffer>, totalLength: number): Buffer {
   if (totalLength === 0) {
     return null;
   }
@@ -2179,11 +2197,5 @@ function invertObject(obj) {
   }
   return rv;
 }
-Encoder.isTypedArray = function(arg) {
-  // The TypedArray superclass isn't available directly so to detect an instance of a TypedArray
-  // subclass we have to access the prototype of a concrete instance.  There's nothing magical about
-  // Uint8Array here; we could just as easily use any of the other TypedArray subclasses.
-  return (arg instanceof Object.getPrototypeOf(Uint8Array));
-};
 
 export default Encoder;

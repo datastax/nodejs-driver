@@ -21,6 +21,8 @@
  */
 import util from 'util';
 class Vector {
+  length: number;
+  subtype: any;
   /**
      *
      * @param {Float32Array | Array<any>} elements

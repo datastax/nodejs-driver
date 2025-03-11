@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 "use strict";
-const assert = require('chai').assert;
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import packageInfo from "../../../package.json";
+import { assert } from "chai";
 
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-const packageInfo = require('../../../package.json');
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 

@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import proxyquire from "proxyquire";
+import cloudHelper from "./cloud-helper";
+import helper from "../../../test-helper";
+import policies from "../../../../lib/policies/index";
+import errors from "../../../../lib/errors";
+import auth from "../../../../lib/auth/index";
+import utils from "../../../../lib/utils";
+import types from "../../../../lib/types/index";
+import promiseUtils from "../../../../lib/promise-utils";
+
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-const proxyquire = require('proxyquire');
-
-const cloudHelper = require('./cloud-helper');
-const helper = require('../../../test-helper');
-const policies = require('../../../../lib/policies');
-const errors = require('../../../../lib/errors');
-const auth = require('../../../../lib/auth');
-const utils = require('../../../../lib/utils');
-const types = require('../../../../lib/types');
-const promiseUtils = require('../../../../lib/promise-utils');
 const vdescribe = helper.vdescribe;
 
 const port = 9042;

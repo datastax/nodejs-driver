@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import cassandra from "../../../index";
+import utils from "../../../lib/utils";
+
 'use strict';
 /* eslint-disable no-console, no-undef */
-const assert = require('assert');
-const util = require('util');
 let heapdump;
 const heapdumpPath = '/var/log/nodejs-driver';
 try {
@@ -26,13 +30,8 @@ try {
 catch (e) {
   console.log(e);
 }
-
-const helper = require('../../test-helper');
-const cassandra = require('../../../index');
 const Client = cassandra.Client;
 const types = cassandra.types;
-const utils = require('../../../lib/utils');
-
 let client = new Client(utils.extend({ encoding: { copyBuffer: true}}, helper.baseOptions));
 const keyspace = helper.getRandomName('ks');
 const table = keyspace + '.' + helper.getRandomName('tbl');

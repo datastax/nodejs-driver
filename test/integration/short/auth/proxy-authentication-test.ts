@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const helper = require('../../../test-helper');
 import DsePlainTextAuthProvider from '../../../../lib/auth/dse-plain-text-auth-provider';
 import DseGssapiAuthProvider from '../../../../lib/auth/dse-gssapi-auth-provider';
-const Client = require('../../../../lib/client');
-const utils = require('../../../../lib/utils');
-const errors = require('../../../../lib/errors');
-const types = require('../../../../lib/types');
+import assert from "assert";
+import helper from "../../../test-helper";
+import Client from "../../../../lib/client";
+import utils from "../../../../lib/utils";
+import errors from "../../../../lib/errors";
+import types from "../../../../lib/types/index";
 const vdescribe = helper.vdescribe;
 const ads = helper.ads;
 const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');

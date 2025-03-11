@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const Cache = require('../../../lib/mapping/cache');
-const q = require('../../../lib/mapping/q').q;
+import assert from "assert";
+import Cache from "../../../lib/mapping/cache";
+import {q} from "../../../lib/mapping/q";
 
 describe('Cache', function() {
   this.timeout(5000);

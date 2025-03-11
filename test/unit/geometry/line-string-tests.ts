@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Point from "../../../lib/geometry/point";
+import { LineString } from "../../../lib/geometry";
 'use strict';
-const assert = require('assert');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-const Point = require('../../../lib/geometry/point');
-const moduleName = '../../../lib/geometry/line-string';
-const LineString = require(moduleName);
 
 describe('LineString', function () {
   describe('constructor', function () {

@@ -14,10 +14,12 @@
 	  "forceConsistentCasingInFileNames": true,
 	  "declarationMap": true,
 	  "moduleDetection": "force",
-	  "resolveJsonModule": true
+	  "resolveJsonModule": true,
+	  "moduleResolution": "nodenext"
 	},
 	"include": [
 		"lib/**/*.ts",
+		"test/**/*.ts",
 		"index.ts"
 	],
 	"exclude": [

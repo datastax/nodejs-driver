@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import helper from "../test-helper";
+import http from "http";
+import util from "util";
+import fs from "fs";
+import utils from "../../lib/utils";
+import Client from "../../lib/client";
+import { spawn } from "child_process";
 'use strict';
-const helper = require('../test-helper');
-const http = require('http');
-const spawn = require('child_process').spawn;
-const util = require('util');
-const fs = require('fs');
-const utils = require('../../lib/utils');
-const Client = require('../../lib/client');
 
 const simulacronHelper = {
   _execute: function(processName, params, cb) {
@@ -573,4 +573,4 @@ SimulacronNode.prototype._filterLogs = function(data) {
   return data.data_centers[0].nodes[0].queries;
 };
 
-module.exports = simulacronHelper;
+export default simulacronHelper;

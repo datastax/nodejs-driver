@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import helper from "../../test-helper";
+import reconnection from "../../../lib/policies/reconnection";
+import simulacron from "../simulacron";
+
 'use strict';
-
-const { assert } = require('chai');
-
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types/index');
-const utils = require('../../../lib/utils');
-const helper = require('../../test-helper');
-const reconnection = require('../../../lib/policies/reconnection');
-const simulacron = require('../simulacron');
-
 describe('Client', function () {
   this.timeout(20000);
 

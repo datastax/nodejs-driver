@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import assert from "assert";
+import fs from "fs";
+import types from "../../../../lib/types/index";
+import errors from "../../../../lib/errors";
+import helper from "../../../test-helper";
+import { Transform } from "stream";
+import {executeConcurrent} from "../../../../lib/concurrent";
 
-const assert = require('assert');
-const fs = require('fs');
-const types = require('../../../../lib/types');
-const errors = require('../../../../lib/errors');
-const helper = require('../../../test-helper');
-const Transform = require('stream').Transform;
 const Uuid = types.Uuid;
-const executeConcurrent = require('../../../../lib/concurrent').executeConcurrent;
 
 const insertQuery1 = 'INSERT INTO table1 (key1, key2, value) VALUES (?, ?, ?)';
 const insertQuery2 = 'INSERT INTO table2 (id, value) VALUES (?, ?)';

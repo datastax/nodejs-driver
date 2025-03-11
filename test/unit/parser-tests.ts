@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import events from "events";
+import Encoder from "../../lib/encoder";
+import streams from "../../lib/streams";
+import errors from "../../lib/errors";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import helper from "../test-helper";
+
 'use strict';
-const assert = require('assert');
-const events = require('events');
-
-const Encoder = require('../../lib/encoder');
-const streams = require('../../lib/streams');
-const errors = require('../../lib/errors');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const helper = require('../test-helper');
-
 /**
  * Tests for the transform streams that are involved in the reading of a response
  */

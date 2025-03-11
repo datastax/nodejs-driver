@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 'use strict';
+import assert from "assert";
+import requests from "../../lib/requests";
+import Encoder from "../../lib/encoder";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import packageInfo from "../../package.json";
+import { ExecutionOptions } from "../../lib/execution-options";
 
-const assert = require('assert');
-const requests = require('../../lib/requests');
-const Encoder = require('../../lib/encoder');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
-const packageInfo = require('../../package.json');
 const QueryRequest = requests.QueryRequest;
 const ExecuteRequest = requests.ExecuteRequest;
 const BatchRequest = requests.BatchRequest;

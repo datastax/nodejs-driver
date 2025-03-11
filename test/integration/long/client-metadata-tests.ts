@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import Encoder from "../../../lib/encoder";
+import Client from "../../../lib/client";
+import utils from "../../../lib/utils";
+import tokenizer from "../../../lib/tokenizer";
+
 'use strict';
-const assert = require('assert');
-const util = require('util');
-
-const helper = require('../../test-helper');
-const Encoder = require('../../../lib/encoder');
-const Client = require('../../../lib/client');
-const utils = require('../../../lib/utils');
-const tokenizer = require('../../../lib/tokenizer');
-
 describe('Client', function () {
   this.timeout(240000);
   describe('#getReplicas() with MurmurPartitioner', function () {

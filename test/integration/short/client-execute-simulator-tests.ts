@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import { assert } from "chai";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import errors from "../../../lib/errors";
+import { responseErrorCodes } from "../../../lib/types/index";
+import Client from "../../../lib/client";
+import {AllowListPolicy, DCAwareRoundRobinPolicy} from "../../../lib/policies/load-balancing";
 'use strict';
-
-const { assert } = require('chai');
-
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-const errors = require('../../../lib/errors');
-
-const { responseErrorCodes } = require('../../../lib/types');
-const Client = require('../../../lib/client');
-const { AllowListPolicy, DCAwareRoundRobinPolicy } = require('../../../lib/policies').loadBalancing;
 
 const query = "select * from data";
 const clusterSize = 3;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
 import DseGssapiAuthProvider from '../../lib/auth/dse-gssapi-auth-provider';
-const helper = require('../test-helper');
-const utils = require('../../lib/utils');
+import assert from "assert";
+import helper from "../test-helper";
+import utils from "../../lib/utils";
 const cDescribe = helper.conditionalDescribe(helper.requireOptional('kerberos'), 'kerberos required to run');
 
 const dseAuthenticatorName = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';

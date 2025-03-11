@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import util from "util";
+import path from "path";
+import policies from "../lib/policies/index";
+import types from "../lib/types/index";
+import utils from "../lib/utils";
+import http from "http";
+import Client from "../lib/client";
+import { Host, HostMap } from "../lib/host";
+import OperationState from "../lib/operation-state";
+import promiseUtils from "../lib/promise-utils";
+import { spawn, exec } from "child_process";
+import { defaultOptions } from "../lib/client-options";
+import Temp from "temp";
 
 'use strict';
 
-const { assert } = require('chai');
-const sinon = require('sinon');
-const util = require('util');
-const path = require('path');
-const policies = require('../lib/policies');
-const types = require('../lib/types');
-// const { types } = require('../lib/types');
-const utils = require('../lib/utils');
-const spawn = require('child_process').spawn;
-const childProcessExec = require('child_process').exec;
-const http = require('http');
-const temp = require('temp').track(true);
-const Client = require('../lib/client');
-const defaultOptions = require('../lib/client-options').defaultOptions;
-const { Host, HostMap } = require('../lib/host');
-const OperationState = require('../lib/operation-state');
-const promiseUtils = require('../lib/promise-utils');
+const temp = Temp.track(true);
 const Vector = types.Vector;
+
 
 util.inherits(RetryMultipleTimes, policies.retry.RetryPolicy);
 
@@ -2040,8 +2040,7 @@ class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy
   }
 }
 
+export default helper;
 
-
-module.exports = helper;
-module.exports.RetryMultipleTimes = RetryMultipleTimes;
-module.exports.OrderedLoadBalancingPolicy = OrderedLoadBalancingPolicy;
+export { RetryMultipleTimes };
+export { OrderedLoadBalancingPolicy };

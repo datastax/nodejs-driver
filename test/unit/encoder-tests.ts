@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 'use strict';
-const { assert } = require('chai');
-const sinon = require('sinon');
-const util = require('util');
-const utils = require('../../lib/utils');
-const tokenizer = require('../../lib/tokenizer');
-const token = require('../../lib/token');
-const Vector = require('../../lib/types/vector');
-import Encoder from '../../lib/encoder';
-const types = require('../../index').types;
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
-const dataTypes = types.dataTypes;
-const helper = require('../test-helper');
+import { assert } from "chai";
+import sinon from "sinon";
+import util from "util";
+import utils from "../../lib/utils";
+import tokenizer from "../../lib/tokenizer";
+import token from "../../lib/token";
+import Vector from "../../lib/types/vector";
+import Encoder from "../../lib/encoder";
+import { types } from "../../index";
+import helper from "../test-helper";
+import { ExecutionOptions } from "../../lib/execution-options";
 
+const dataTypes = types.dataTypes;
 const zeroLengthTypesSupported = new Set([
   dataTypes.text,
   dataTypes.ascii,

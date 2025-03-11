@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import net from "net";
+import simulacron from "../simulacron";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import Client from "../../../lib/client";
+
 'use strict';
-
-const assert = require('assert');
-const net = require('net');
-const simulacron = require('../simulacron');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-
-const Client = require('../../../lib/client');
-
 describe('ControlConnection', function() {
   this.timeout(5000);
 

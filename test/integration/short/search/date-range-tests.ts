@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import util from "util";
+import helper from "../../../test-helper";
+import utils from "../../../../lib/utils";
+import types from "../../../../lib/types/index";
+import * as dateRangeModule from "../../../../lib/datastax/search/date-range";
+import Client from "../../../../lib/client";
+
 'use strict';
-const assert = require('assert');
-const util = require('util');
-const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
-const utils = require('../../../../lib/utils');
-const types = require('../../../../lib/types');
-const dateRangeModule = require('../../../../lib/datastax/search/date-range');
-const Client = require('../../../../lib/client');
 const DateRange = dateRangeModule.DateRange;
 
 vdescribe('dse-5.1', 'DateRange', function () {

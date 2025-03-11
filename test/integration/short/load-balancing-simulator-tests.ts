@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import assert from "assert";
+import util from "util";
+import simulacron from "../simulacron";
+import utils from "../../../lib/utils";
+import helper from "../../test-helper";
+import policies from "../../../lib/policies/index";
+import errors from "../../../lib/errors";
+import promiseUtils from "../../../lib/promise-utils";
+import { ExecutionProfile } from "../../../lib/execution-profile";
+import Client from "../../../lib/client";
 
-const assert = require('assert');
-const util = require('util');
-const simulacron = require('../simulacron');
-const utils = require('../../../lib/utils');
-const helper = require('../../test-helper');
-const policies = require('../../../lib/policies');
-const errors = require('../../../lib/errors');
-const promiseUtils = require('../../../lib/promise-utils');
-const { ExecutionProfile } = require('../../../lib/execution-profile');
-const Client = require('../../../lib/client');
+'use strict';
 const { loadBalancing } = policies;
 
 const queryOptions = { prepare: true, routingKey: utils.allocBuffer(16), keyspace: 16 };

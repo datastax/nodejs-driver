@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-const helper = require('../../test-helper');
+import assert from "assert";
+import helper from "../../test-helper";
+import { types } from "../../../index";
+import Vector from "../../../lib/types/vector";
+import util from "node:util";
 
-const { types } = require('../../../index');
-const Vector = require('../../../lib/types/vector');
-const util = require('node:util');
+'use strict';
 const vdescribe = helper.vdescribe;
 vdescribe('5.0.0', 'Vector tests', function () {
   this.timeout(120000);

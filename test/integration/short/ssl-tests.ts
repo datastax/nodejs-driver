@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import errors from "../../../lib/errors";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+
 'use strict';
-const assert = require('assert');
-const util = require('util');
-
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const errors = require('../../../lib/errors');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-
 describe('Client @SERVER_API', function () {
   this.timeout(60000);
   context('with ssl enabled', function () {

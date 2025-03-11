@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import helper from "../test-helper";
+import EventDebouncer from "../../lib/metadata/event-debouncer";
+
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-
-const helper = require('../test-helper');
-const EventDebouncer = require('../../lib/metadata/event-debouncer');
-
 describe('EventDebouncer', function () {
   describe('timeoutElapsed()', function () {
     it('should set the queue to null', function (done) {

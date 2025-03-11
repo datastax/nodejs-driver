@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import utils from "../../../lib/utils";
+import ResultSet from "../../../lib/types/result-set";
+import GraphResultSet from "../../../lib/datastax/graph/result-set";
+
 'use strict';
-
-const assert = require('assert');
-const utils = require('../../../lib/utils');
-const ResultSet = require('../../../lib/types/result-set');
-const GraphResultSet = require('../../../lib/datastax/graph/result-set');
-
 const resultVertex = getResultSet([ {
   "gremlin": JSON.stringify({
     "result": {

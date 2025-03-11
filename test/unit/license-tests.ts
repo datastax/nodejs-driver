@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require("assert");
-const path = require("path");
-const fs = require("fs");
+import assert from "assert";
+import path from "path";
+import fs from "fs";
 
+'use strict';
 const licenseHeaderRegex = new RegExp(
   `/\\*
  \\* Copyright DataStax, Inc\\.

@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
-const policies = require('../../../lib/policies');
-const ExecutionProfile = require('../../../lib/execution-profile').ExecutionProfile;
-const GraphExecutor = require('../../../lib/datastax/graph/graph-executor');
-const { GraphExecutionOptions, graphProtocol } = require('../../../lib/datastax/graph/options');
-const helper = require('../../test-helper');
+import assert from "assert";
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import policies from "../../../lib/policies/index";
+import GraphExecutor from "../../../lib/datastax/graph/graph-executor";
+import { GraphExecutionOptions, graphProtocol } from "../../../lib/datastax/graph/options";
+import helper from "../../test-helper";
+import { ExecutionProfile } from "../../../lib/execution-profile";
 
 const proxyExecuteKey = 'ProxyExecute';
 

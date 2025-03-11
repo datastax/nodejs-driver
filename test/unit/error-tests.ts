@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import assert from "assert";
+import path from "path";
+import errors from "../../lib/errors";
+import helper from "../test-helper";
 
-const assert = require('assert');
-const path = require('path');
-const errors = require('../../lib/errors');
-const helper = require('../test-helper');
+'use strict';
 const fileName = path.basename(__filename);
 
 describe('DriverError', function () {

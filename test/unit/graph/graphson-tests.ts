@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import { assert } from "chai";
+import helper from "../../test-helper";
+import { GraphSON2Reader, GraphSON3Reader, GraphSON3Writer } from "../../../lib/datastax/graph/graph-serializer";
+import getCustomTypeSerializers from "../../../lib/datastax/graph/custom-type-serializers";
+import graphModule from "../../../lib/datastax/graph/index";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import geometry from "../../../lib/geometry/index";
 
-const { assert } = require('chai');
-const helper = require('../../test-helper');
-const { GraphSON2Reader, GraphSON3Reader, GraphSON3Writer } = require('../../../lib/datastax/graph/graph-serializer');
-const getCustomTypeSerializers = require('../../../lib/datastax/graph/custom-type-serializers');
-const graphModule = require('../../../lib/datastax/graph');
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
-const geometry = require('../../../lib/geometry');
+'use strict';
 const { Tuple } = types;
 const { asInt, asDouble, asTimestamp } = graphModule;
 

@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const helper = require('../test-helper');
-const types = require('../../lib/types');
-const RequestLogger = require('../../lib/tracker').RequestLogger;
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
+import assert from "assert";
+import helper from "../test-helper";
+import types from "../../lib/types/index";
+import { RequestLogger } from "../../lib/tracker";
+import { ExecutionOptions } from "../../lib/execution-options";
 
 describe('RequestLogger', () => {
   describe('#onSuccess()', () => {

@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import util from "util";
+import events from "events";
+import hostModule from "../../lib/host";
+import HostConnectionPool from "../../lib/host-connection-pool";
+import Metadata from "../../lib/metadata/index";
+import types from "../../lib/types/index";
+import clientOptions from "../../lib/client-options";
+import utils from "../../lib/utils";
+import policies from "../../lib/policies/index";
+import helper from "../test-helper";
+
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-const util = require('util');
-const events = require('events');
-
-const hostModule = require('../../lib/host');
 const Host = hostModule.Host;
-const HostConnectionPool = require('../../lib/host-connection-pool');
-const Metadata = require('../../lib/metadata');
 const HostMap = hostModule.HostMap;
-const types = require('../../lib/types');
-const clientOptions = require('../../lib/client-options');
 const defaultOptions = clientOptions.defaultOptions();
 defaultOptions.pooling.coreConnectionsPerHost = clientOptions.coreConnectionsPerHostV3;
-const utils = require('../../lib/utils');
-const policies = require('../../lib/policies');
-const helper = require('../test-helper');
 const reconnection = policies.reconnection;
 
 describe('HostConnectionPool', function () {

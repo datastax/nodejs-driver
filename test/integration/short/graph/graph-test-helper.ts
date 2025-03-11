@@ -13,43 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import utils from "../../../../lib/utils";
 
 'use strict';
-
-const utils = require('../../../../lib/utils');
-
-module.exports = {
-
-  /**
-   * Creates the modern schema and graph
-   * @param {Client} client
-   * @param {Function} callback
-   */
-  createModernGraph: function (client, callback) {
-    utils.series([
-      next => client.executeGraph(modernSchema, null, {graphName: "name1"}, next),
-      next => client.executeGraph(modernGraph, null, {graphName: "name1"}, next)
-    ], callback);
-  },
-
-  /**
-   * Sets the schema mode to "production".
-   * @param {Client} client
-   */
-  makeStrict: function (client) {
-    return client.executeGraph(makeStrictQuery, null, { graphName: 'name1'});
-  },
-
-  /**
-   * Sets the allow_scan flag.
-   * @param {Client} client
-   */
-  allowScans: function (client) {
-    return client.executeGraph(allowScansQuery, null, { graphName: 'name1'});
-  }
-};
-
-
 const makeStrictQuery = 'schema.config().option("graph.schema_mode").set("production")';
 
 const allowScansQuery = 'schema.config().option("graph.allow_scan").set("true")';
@@ -79,3 +45,38 @@ const modernGraph =
   'josh.addEdge("created", ripple, "weight", 1.0f);\n' +
   'josh.addEdge("created", lop, "weight", 0.4f);\n' +
   'peter.addEdge("created", lop, "weight", 0.2f);';
+
+
+/**
+ * Creates the modern schema and graph
+ * @param {Client} client
+ * @param {Function} callback
+ */
+const createModernGraph = function (client, callback) {
+  utils.series([
+    next => client.executeGraph(modernSchema, null, { graphName: "name1" }, next),
+    next => client.executeGraph(modernGraph, null, { graphName: "name1" }, next)
+  ], callback);
+};
+
+/**
+ * Sets the schema mode to "production".
+ * @param {Client} client
+ */
+const makeStrict = function (client) {
+  return client.executeGraph(makeStrictQuery, null, { graphName: 'name1' });
+};
+
+/**
+ * Sets the allow_scan flag.
+ * @param {Client} client
+ */
+const allowScans = function (client) {
+  return client.executeGraph(allowScansQuery, null, { graphName: 'name1' });
+};
+
+export default {
+  createModernGraph,
+  makeStrict,
+  allowScans
+}

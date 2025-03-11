@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import simulacron from "../simulacron";
+import { AllowListPolicy, DCAwareRoundRobinPolicy } from "../../../lib/policies/load-balancing";
+import { ExecutionProfile } from "../../../lib/execution-profile";
 
 'use strict';
-
-const assert = require('assert');
-
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
-const simulacron = require('../simulacron');
-const { AllowListPolicy, DCAwareRoundRobinPolicy } = require('../../../lib/policies/load-balancing');
-const { ExecutionProfile } = require('../../../lib/execution-profile');
-
 describe('ProfileManager', function() {
   this.timeout(40000);
   before(done => simulacron.start(done));

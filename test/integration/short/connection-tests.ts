@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import sinon from "sinon";
+import Connection from "../../../lib/connection";
+import utils from "../../../lib/utils";
+import requests from "../../../lib/requests";
+import helper from "../../test-helper";
+import errors from "../../../lib/errors";
+import types from "../../../lib/types/index";
+import { assert } from "chai";
+import { defaultOptions } from "../../../lib/client-options";
+import { protocolVersion } from "../../../lib/types";
 
 "use strict";
-const assert = require('chai').assert;
-const sinon = require('sinon');
-
-const Connection = require('../../../lib/connection');
-const defaultOptions = require('../../../lib/client-options').defaultOptions();
-const utils = require('../../../lib/utils');
-const requests = require('../../../lib/requests');
-const protocolVersion = require('../../../lib/types').protocolVersion;
-const helper = require('../../test-helper');
-const errors = require('../../../lib/errors');
-const types = require('../../../lib/types');
 const vit = helper.vit;
 
 describe('Connection', function () {

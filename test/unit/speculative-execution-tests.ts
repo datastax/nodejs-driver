@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import helper from "../test-helper";
+import specExecModule from "../../lib/policies/speculative-execution";
 
 'use strict';
-
-const helper = require('../test-helper');
-const specExecModule = require('../../lib/policies/speculative-execution');
-
 describe('NoSpeculativeExecutionPolicy', () => {
   describe('#getOptions()', () => {
     it('should return an empty Map', () => {

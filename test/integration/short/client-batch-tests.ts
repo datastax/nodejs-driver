@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-const util = require('util');
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import errors from "../../../lib/errors";
 
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
-const errors = require('../../../lib/errors');
+'use strict';
 const vit = helper.vit;
 
 describe('Client @SERVER_API', function () {

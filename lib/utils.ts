@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Long from "long";
 import util from "util";
 import net from "net";
 import { EventEmitter } from "events";

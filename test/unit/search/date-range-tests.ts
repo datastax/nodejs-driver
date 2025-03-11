@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import * as dateRangeModule from "../../../lib/datastax/search/date-range";
 
-const assert = require('assert');
-const util = require('util');
-const helper = require('../../test-helper');
-const dateRangeModule = require('../../../lib/datastax/search/date-range');
+'use strict';
 const DateRange = dateRangeModule.DateRange;
 const DateRangeBound = dateRangeModule.DateRangeBound;
 const unbounded = dateRangeModule.unbounded;

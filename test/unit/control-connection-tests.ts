@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 'use strict';
-const { assert } = require('chai');
-const events = require('events');
-const proxyquire = require('proxyquire');
-const util = require('util');
-
-const helper = require('../test-helper');
-const ControlConnection = require('../../lib/control-connection');
-const Host = require('../../lib/host').Host;
-const utils = require('../../lib/utils');
-const Metadata = require('../../lib/metadata');
-const types = require('../../lib/types');
-const errors = require('../../lib/errors');
-const policies = require('../../lib/policies');
-const clientOptions = require('../../lib/client-options');
-const ProfileManager = require('../../lib/execution-profile').ProfileManager;
+import { assert } from "chai";
+import events from "events";
+import proxyquire from "proxyquire";
+import util from "util";
+import helper from "../test-helper";
+import ControlConnection from "../../lib/control-connection";
+import utils from "../../lib/utils";
+import Metadata from "../../lib/metadata/index";
+import types from "../../lib/types/index";
+import errors from "../../lib/errors";
+import policies from "../../lib/policies/index";
+import clientOptions from "../../lib/client-options";
+import { Host } from "../../lib/host";
+import { ProfileManager } from "../../lib/execution-profile";
 
 describe('ControlConnection', function () {
   describe('constructor', function () {

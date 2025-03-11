@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import VersionNumber from "../../lib/types/version-number";
+
 'use strict';
-
-const assert = require('assert');
-const VersionNumber = require('../../lib/types/version-number');
-
 describe('VersionNumber', () => {
   describe('#parse()', () => {
     it('should parse release version', validateVersion('3.0.13', 3, 0, 13));

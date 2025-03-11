@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const format = require('util').format;
-const path = require('path');
-const exec = require('child_process').exec;
-
-const Client = require('../../../../lib/client');
-const helper = require('../../../test-helper');
+import path from "path";
+import Client from "../../../../lib/client";
+import helper from "../../../test-helper";
+import { format } from "util";
+import { exec } from "child_process";
 
 const ccmCmdString = 'docker exec $(docker ps -a -q --filter ancestor=single_endpoint) ccm %s';
 

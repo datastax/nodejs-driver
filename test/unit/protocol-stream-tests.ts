@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-
-const Protocol = require('../../lib/streams').Protocol;
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
+import assert from "assert";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import {Protocol} from "../../lib/streams";
 
 describe('Protocol', function () {
   it('should emit a single frame with 0-length body', function (done) {

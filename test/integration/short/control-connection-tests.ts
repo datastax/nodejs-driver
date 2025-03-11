@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const util = require('util');
-
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const ControlConnection = require('../../../lib/control-connection');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-const clientOptions = require('../../../lib/client-options');
-const policies = require('../../../lib/policies');
-const ProfileManager = require('../../../lib/execution-profile').ProfileManager;
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import ControlConnection from "../../../lib/control-connection";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import clientOptions from "../../../lib/client-options";
+import policies from "../../../lib/policies/index";
+import {ProfileManager} from "../../../lib/execution-profile";
 
 describe('ControlConnection', function () {
   this.timeout(240000);

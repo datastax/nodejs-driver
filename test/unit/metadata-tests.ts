@@ -13,29 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import events from "events";
+import helper from "../test-helper";
+import clientOptions from "../../lib/client-options";
+import Metadata from "../../lib/metadata/index";
+import TableMetadata from "../../lib/metadata/table-metadata";
+import tokenizer from "../../lib/tokenizer";
+import types from "../../lib/types/index";
+import MutableLong from "../../lib/types/mutable-long";
+import utils from "../../lib/utils";
+import errors from "../../lib/errors";
+import Encoder from "../../lib/encoder";
 
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-const events = require('events');
-
-const helper = require('../test-helper');
-const clientOptions = require('../../lib/client-options');
-const Host = require('../../lib/host').Host;
-const HostMap = require('../../lib/host').HostMap;
-const Metadata = require('../../lib/metadata');
-const TableMetadata = require('../../lib/metadata/table-metadata');
-const Murmur3Token = require('../../lib/token').Murmur3Token;
-const TokenRange = require('../../lib/token').TokenRange;
-const tokenizer = require('../../lib/tokenizer');
-const types = require('../../lib/types');
-const MutableLong = require('../../lib/types/mutable-long');
+import { Host, HostMap } from "../../lib/host";
+import { Murmur3Token, TokenRange } from "../../lib/token";
+import SchemaParser from "../../lib/metadata/schema-parser";
 const dataTypes = types.dataTypes;
-const utils = require('../../lib/utils');
-const errors = require('../../lib/errors');
-const Encoder = require('../../lib/encoder');
-const isDoneForToken = require('../../lib/metadata/schema-parser').isDoneForToken;
+const isDoneForToken = SchemaParser.isDoneForToken;
 
 describe('Metadata', function () {
   this.timeout(5000);

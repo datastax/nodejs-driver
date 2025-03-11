@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-const moduleName = '../../../lib/geometry/point';
-const Point = require(moduleName);
+import assert from "assert";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Point from "../../../lib/geometry/point";
 
 describe('Point', function () {
   describe('constructor', function () {

@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import Mapper from "../../../lib/mapping/mapper";
+import ModelMapper from "../../../lib/mapping/model-mapper";
+import helper from "../../test-helper";
+import mapperTestHelper from "./mapper-unit-test-helper";
 
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-const Mapper = require('../../../lib/mapping/mapper');
-const ModelMapper = require('../../../lib/mapping/model-mapper');
-const helper = require('../../test-helper');
-const mapperTestHelper = require('./mapper-unit-test-helper');
-
 describe('Mapper', () => {
   describe('constructor', () => {
     it('should validate that client is provided', () => {

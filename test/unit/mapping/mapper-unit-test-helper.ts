@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import assert from "assert";
+import types from "../../../lib/types/index";
+import ModelMapper from "../../../lib/mapping/model-mapper";
+import Mapper from "../../../lib/mapping/mapper";
 
-const assert = require('assert');
-const types = require('../../../lib/types');
-const ModelMapper = require('../../../lib/mapping/model-mapper');
 const ResultSet = types.ResultSet;
 const dataTypes = types.dataTypes;
-const Mapper = require('../../../lib/mapping/mapper');
-
-const mapperHelper = module.exports = {
+const mapperHelper = {
   /**
    * Gets a fake client instance that returns metadata for a single table
    * @param {Array|Function} columns
@@ -172,3 +170,4 @@ const mapperHelper = module.exports = {
   }
 };
 
+export default mapperHelper;

@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import utils from "../../../lib/utils";
+import InsightsClient from "../../../lib/insights-client";
 
 'use strict';
-
-const assert = require('assert');
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const utils = require('../../../lib/utils');
 const vdescribe = helper.vdescribe;
-const InsightsClient = require('../../../lib/insights-client');
-
 const insightsRpcQuery = 'CALL InsightsRpc.reportInsight(?)';
 
 vdescribe('dse-6.7', 'InsightsClient', function () {

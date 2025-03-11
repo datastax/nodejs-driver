@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-const dns = require('dns');
+import assert from "assert";
+import dns from "dns";
+import * as addressResolution from "../../lib/policies/address-resolution";
 
-const addressResolution = require('../../lib/policies/address-resolution');
+'use strict';
 const EC2MultiRegionTranslator = addressResolution.EC2MultiRegionTranslator;
 
 describe('EC2MultiRegionTranslator', function () {

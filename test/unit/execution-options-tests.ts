@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const utils = require('../../lib/utils');
-const types = require('../../lib/types');
-const helper = require('../test-helper');
-const DefaultExecutionOptions = require('../../lib/execution-options').DefaultExecutionOptions;
-const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-const defaultOptions = require('../../lib/client-options').defaultOptions;
+import assert from "assert";
+import utils from "../../lib/utils";
+import types from "../../lib/types/index";
+import helper from "../test-helper";
+import { DefaultExecutionOptions } from "../../lib/execution-options";
+import { ExecutionProfile } from "../../lib/execution-profile";
+import { defaultOptions } from "../../lib/client-options";
 
 describe('DefaultExecutionOptions', () => {
   describe('create()', () => {

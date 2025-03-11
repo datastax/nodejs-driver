@@ -15,26 +15,25 @@
  */
 
 "use strict";
-const { assert } = require('chai');
-const sinon = require('sinon');
-const util = require('util');
-const events = require('events');
+import * as auth from '../../lib/auth/index';
+import { assert } from "chai";
+import sinon from "sinon";
+import util from "util";
+import events from "events";
+import Client from "../../lib/client";
+import clientOptions from "../../lib/client-options";
+import types from "../../lib/types/index";
+import loadBalancing from "../../lib/policies/load-balancing";
+import retry from "../../lib/policies/retry";
+import speculativeExecution from "../../lib/policies/speculative-execution";
+import timestampGeneration from "../../lib/policies/timestamp-generation";
+import Encoder from "../../lib/encoder";
+import utils from "../../lib/utils";
+import * as writers from "../../lib/writers";
+import OperationState from "../../lib/operation-state";
+import helper from "../test-helper";
 
-const Client = require('../../lib/client');
-const clientOptions = require('../../lib/client-options');
-import * as auth from '../../lib/auth';
-const types = require('../../lib/types');
 const { dataTypes } = types;
-const loadBalancing = require('../../lib/policies/load-balancing');
-const retry = require('../../lib/policies/retry');
-const speculativeExecution = require('../../lib/policies/speculative-execution');
-const timestampGeneration = require('../../lib/policies/timestamp-generation');
-const Encoder = require('../../lib/encoder');
-const utils = require('../../lib/utils');
-const writers = require('../../lib/writers');
-const OperationState = require('../../lib/operation-state');
-const helper = require('../test-helper');
-
 const contactPoints = ['a'];
 
 describe('types', function () {

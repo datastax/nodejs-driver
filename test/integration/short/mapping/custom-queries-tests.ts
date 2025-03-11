@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import types from "../../../../lib/types/index";
+import Result from "../../../../lib/mapping/result";
+import mapperTestHelper from "./mapper-test-helper";
+import helper from "../../../test-helper";
 
 'use strict';
-
-const assert = require('assert');
-const types = require('../../../../lib/types');
-const Result = require('../../../../lib/mapping/result');
 const Uuid = types.Uuid;
-const mapperTestHelper = require('./mapper-test-helper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
-const helper = require('../../../test-helper');
-
 describe('ModelMapper', function () {
   mapperTestHelper.setupOnce(this);
 

@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
+import assert from "assert";
+import tokenizer from "../../lib/tokenizer";
+import token from "../../lib/token";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import MutableLong from "../../lib/types/mutable-long";
+import helper from "../test-helper";
 
-const tokenizer = require('../../lib/tokenizer');
-const token = require('../../lib/token');
+'use strict';
 const Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 const RandomTokenizer = tokenizer.RandomTokenizer;
 const ByteOrderedTokenizer = tokenizer.ByteOrderedTokenizer;
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const MutableLong = require('../../lib/types/mutable-long');
-const helper = require('../test-helper');
-
 describe('Murmur3Tokenizer', function () {
   describe('#rotl64()', function () {
     it('should return expected results', function () {

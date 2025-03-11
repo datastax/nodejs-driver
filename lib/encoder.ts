@@ -292,7 +292,7 @@ class Encoder{
   };
 
   private _decodeCqlLongAsLong = function (bytes: Buffer): Long {
-    return Long.fromBuffer(bytes);
+    return Long["fromBuffer"](bytes);
   };
 
   private _decodeCqlLongAsBigInt = function (bytes: Buffer): bigint {
@@ -608,17 +608,17 @@ class Encoder{
    */
   private _encodeBigIntFromLong = function (value: Long | Buffer | string | number) {
     if (typeof value === 'number') {
-      value = Long.fromNumber(value);
+      value = Long["fromNumber"](value);
     } else if (typeof value === 'string') {
-      value = Long.fromString(value);
+      value = Long["fromString"](value);
     }
 
     let buf = null;
 
     if (value instanceof Long) {
-      buf = Long.toBuffer(value);
+      buf = Long["toBuffer"](value);
     } else if (value instanceof MutableLong) {
-      buf = Long.toBuffer(value.toImmutable());
+      buf = Long["toBuffer"](value.toImmutable());
     }
 
     if (buf === null) {

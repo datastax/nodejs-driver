@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import helper from "../../test-helper";
+import promiseUtils from "../../../lib/promise-utils";
 
 'use strict';
-
-const { assert } = require('chai');
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types');
-const helper = require('../../test-helper');
-const promiseUtils = require('../../../lib/promise-utils');
+// Exported to be called on other fixtures to take advantage from existing setups
 
 // Exported to be called on other fixtures to take advantage from existing setups
-module.exports = function (keyspace, prepare) {
+export default function (keyspace, prepare) {
 
   context('with paging', function () {
     const client = new Client({

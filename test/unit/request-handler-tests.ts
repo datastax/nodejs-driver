@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const util = require('util');
+import assert from "assert";
+import util from "util";
+import RequestHandler from "../../lib/request-handler";
+import requests from "../../lib/requests";
+import helper from "../test-helper";
+import errors from "../../lib/errors";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import retry from "../../lib/policies/retry";
+import speculativeExecution from "../../lib/policies/speculative-execution";
+import execProfileModule from "../../lib/execution-profile";
+import OperationState from "../../lib/operation-state";
+import * as execOptionsModule from "../../lib/execution-options";
+import ClientMetrics from "../../lib/metrics/client-metrics";
+import { defaultOptions } from "../../lib/client-options";
 
-const RequestHandler = require('../../lib/request-handler');
-const requests = require('../../lib/requests');
-const helper = require('../test-helper');
-const errors = require('../../lib/errors');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const retry = require('../../lib/policies/retry');
-const speculativeExecution = require('../../lib/policies/speculative-execution');
-const execProfileModule = require('../../lib/execution-profile');
 const ProfileManager = execProfileModule.ProfileManager;
 const ExecutionProfile = execProfileModule.ExecutionProfile;
-const OperationState = require('../../lib/operation-state');
-const defaultOptions = require('../../lib/client-options').defaultOptions;
-const execOptionsModule = require('../../lib/execution-options');
 const DefaultExecutionOptions = execOptionsModule.DefaultExecutionOptions;
 const ExecutionOptions = execOptionsModule.ExecutionOptions;
-const ClientMetrics = require('../../lib/metrics/client-metrics');
-
 describe('RequestHandler', function () {
   const queryRequest = new requests.QueryRequest('QUERY1');
   describe('#send()', function () {

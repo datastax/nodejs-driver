@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const responseErrorCodes = require('../../../lib/types').responseErrorCodes;
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-
-const Client = require('../../../lib/client');
-const ConstantSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').ConstantSpeculativeExecutionPolicy;
-const NoSpeculativeExecutionPolicy = require('../../../lib/policies/speculative-execution').NoSpeculativeExecutionPolicy;
-const OrderedLoadBalancingPolicy = require('../../test-helper').OrderedLoadBalancingPolicy;
+import assert from "assert";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Client from "../../../lib/client";
+import { responseErrorCodes } from "../../../lib/types";
+import { ConstantSpeculativeExecutionPolicy, NoSpeculativeExecutionPolicy } from "../../../lib/policies/speculative-execution";
+import { OrderedLoadBalancingPolicy } from "../../test-helper";
 
 const query = "select * from data";
 const delay = 100;

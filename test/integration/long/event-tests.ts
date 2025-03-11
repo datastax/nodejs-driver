@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
 
-const helper = require('../../test-helper');
-const Host = require('../../../lib/host').Host;
-const utils = require('../../../lib/utils');
-
-const Client = require('../../../lib/client');
+import assert from "assert";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Client from "../../../lib/client";
+import { Host } from "../../../lib/host";
 
 describe('Client', function () {
   describe('events', function () {

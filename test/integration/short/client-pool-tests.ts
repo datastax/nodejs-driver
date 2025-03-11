@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 'use strict';
+import { RoundRobinPolicy } from '../../../lib/policies/load-balancing';
+import { Murmur3Tokenizer } from '../../../lib/tokenizer';
+import { PlainTextAuthProvider } from '../../../lib/auth/index';
+import { assert } from "chai";
+import dns from "dns";
+import util from "util";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import clientOptions from "../../../lib/client-options";
+import utils from "../../../lib/utils";
+import errors from "../../../lib/errors";
+import types from "../../../lib/types/index";
+import policies from "../../../lib/policies/index";
 
-const { assert } = require('chai');
-const dns = require('dns');
-const util = require('util');
-
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const clientOptions = require('../../../lib/client-options');
-const utils = require('../../../lib/utils');
-const errors = require('../../../lib/errors');
-const types = require('../../../lib/types');
-const policies = require('../../../lib/policies');
-const RoundRobinPolicy = require('../../../lib/policies/load-balancing').RoundRobinPolicy;
-const Murmur3Tokenizer = require('../../../lib/tokenizer').Murmur3Tokenizer;
-import { PlainTextAuthProvider } from '../../../lib/auth';
 const ConstantSpeculativeExecutionPolicy = policies.speculativeExecution.ConstantSpeculativeExecutionPolicy;
 const OrderedLoadBalancingPolicy = helper.OrderedLoadBalancingPolicy;
 const vit = helper.vit;

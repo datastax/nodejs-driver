@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import { assert } from "chai";
+import sinon from "sinon";
+import utils from "../../lib/utils";
+import types from "../../lib/types/index";
+import helper from "../test-helper";
 
-const { assert } = require('chai');
-const sinon = require('sinon');
-const utils = require('../../lib/utils');
-const types = require('../../lib/types');
-const helper = require('../test-helper');
+'use strict';
 const { ResultSet } = types;
 
 describe('ResultSet', function () {

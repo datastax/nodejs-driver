@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 "use strict";
-
-const assert = require('assert');
-const format = require('util').format;
-const Long = require('long');
-const MutableLong = require('../../lib/types/mutable-long');
+import assert from "assert";
+import Long from "long";
+import MutableLong from "../../lib/types/mutable-long";
+import { format } from "util";
 
 describe('MutableLong', function () {
   describe('fromNumber() and #toNumber()', function () {

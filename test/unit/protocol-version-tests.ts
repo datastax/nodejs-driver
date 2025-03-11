@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 'use strict';
+import assert from "assert";
+import {protocolVersion} from "../../lib/types";
+import {Host} from "../../lib/host";
+import clientOptions from "../../lib/client-options";
 
-const assert = require('assert');
-const protocolVersion = require('../../lib/types/').protocolVersion;
-const Host = require('../../lib/host').Host;
-const options = require('../../lib/client-options').defaultOptions();
+const options = clientOptions.defaultOptions();
 
 describe('protocolVersion', function () {
   describe('#getHighestCommon()', function () {

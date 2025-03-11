@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-const util = require('util');
-const helper = require('../../test-helper');
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
 
+'use strict';
 const vdescribe = helper.vdescribe;
 const Duration = types.Duration;
 

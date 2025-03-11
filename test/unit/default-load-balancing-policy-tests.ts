@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import util from "util";
+import helper from "../test-helper";
+import policies from "../../lib/policies/index";
+import clientOptions from "../../lib/client-options";
+import { Host, HostMap } from "../../lib/host";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import { ExecutionOptions } from "../../lib/execution-options";
+import errors from "../../lib/errors";
+import Client from "../../lib/client";
+
 'use strict';
-
-const { assert } = require('chai');
-const util = require('util');
-const helper = require('../test-helper');
-const policies = require('../../lib/policies');
-const clientOptions = require('../../lib/client-options');
-const { Host, HostMap } = require('../../lib/host');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const { ExecutionOptions } = require('../../lib/execution-options');
-const errors = require('../../lib/errors');
-const Client = require('../../lib/client');
-
 const { loadBalancing } = policies;
 const { DefaultLoadBalancingPolicy } = loadBalancing;
 const { lastOctetOf } = helper;

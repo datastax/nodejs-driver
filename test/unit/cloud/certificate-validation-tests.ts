@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import { checkServerIdentity } from "../../../lib/datastax/cloud/index";
 
 'use strict';
-
-const { assert } = require('chai');
-const { checkServerIdentity } = require('../../../lib/datastax/cloud');
-
 describe('checkServerIdentity()', () => {
   const port = 32598;
   const sampleHostName = 'host1.datastax.com';

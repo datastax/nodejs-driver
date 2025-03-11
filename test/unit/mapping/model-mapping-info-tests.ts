@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import ModelMappingInfo from "../../../lib/mapping/model-mapping-info";
 
 'use strict';
-
-const { assert } = require('chai');
-
-const ModelMappingInfo = require('../../../lib/mapping/model-mapping-info');
-
 describe('ModelMappingInfo', function () {
   describe('parse()', function () {
     it('should throw when the model keyspace is not set', () => {

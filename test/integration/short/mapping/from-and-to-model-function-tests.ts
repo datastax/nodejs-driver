@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import { Uuid } from "../../../../lib/types/index";
+import mapperTestHelper from "./mapper-test-helper";
+import helper from "../../../test-helper";
+import { UnderscoreCqlToCamelCaseMappings } from "../../../../lib/mapping/table-mappings";
 
 'use strict';
-
-const { assert } = require('chai');
-
-const { Uuid } = require('../../../../lib/types');
-const mapperTestHelper = require('./mapper-test-helper');
-const helper = require('../../../test-helper');
-const { UnderscoreCqlToCamelCaseMappings } = require('../../../../lib/mapping/table-mappings');
-
 describe('Mapper', function () {
   mapperTestHelper.setupOnce(this);
 

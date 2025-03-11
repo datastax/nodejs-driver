@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import Tree from "../../../lib/mapping/tree";
 
 'use strict';
-
-const assert = require('assert');
-const Tree = require('../../../lib/mapping/tree');
-
 describe('Tree', function () {
   this.timeout(20000);
 

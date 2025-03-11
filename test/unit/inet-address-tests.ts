@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const helper = require('../test-helper');
-const utils = require('../../lib/utils');
-const InetAddress = require('../../lib/types').InetAddress;
+import assert from "assert";
+import helper from "../test-helper";
+import utils from "../../lib/utils";
+import { InetAddress } from "../../lib/types";
 
 describe('InetAddress', function () {
   describe('constructor', function () {

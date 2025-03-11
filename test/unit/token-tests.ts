@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+import tokenizer from "../../lib/tokenizer";
+import token from "../../lib/token";
+import assert from "assert";
 
-const tokenizer = require('../../lib/tokenizer');
-const token = require('../../lib/token');
-const assert = require('assert');
+'use strict';
 
 class TokenTester {
   constructor(tokenizer) {

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-
-const assert = require('assert');
-const MonotonicTimestampGenerator = require('../../lib/policies/timestamp-generation').MonotonicTimestampGenerator;
-const Long = require('../../lib/types').Long;
-const helper = require('../test-helper');
+import assert from "assert";
+import helper from "../test-helper";
+import { MonotonicTimestampGenerator } from "../../lib/policies/timestamp-generation";
+import {Long} from "../../lib/types";
 
 describe('MonotonicTimestampGenerator', function () {
   describe('#next()', function () {

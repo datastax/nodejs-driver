@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import errors from "../../../lib/errors";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import policies from "../../../lib/policies/index";
+import promiseUtils from "../../../lib/promise-utils";
+import { version } from "../../../index";
+import Client from "../../../lib/client";
 
 'use strict';
-
-const { assert } = require('chai');
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const errors = require('../../../lib/errors');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-const policies = require('../../../lib/policies');
-const promiseUtils = require('../../../lib/promise-utils');
-const { version } = require('../../../index');
 const { distance } = types;
-
-const Client = require('../../../lib/client');
-
 const healthResponseCountInterval = 200;
 
 describe('pool', function () {

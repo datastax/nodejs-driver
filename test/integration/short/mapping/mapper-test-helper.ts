@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import types from "../../../../lib/types/index";
+import helper from "../../../test-helper";
+import tableMappingsModule from "../../../../lib/mapping/table-mappings";
+import Mapper from "../../../../lib/mapping/mapper";
+import Client from "../../../../lib/client";
+import utils from "../../../../lib/utils";
 
 'use strict';
-
-const assert = require('assert');
-const types = require('../../../../lib/types');
 const Uuid = types.Uuid;
-const helper = require('../../../test-helper');
-const tableMappingsModule = require('../../../../lib/mapping/table-mappings');
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
-const Mapper = require('../../../../lib/mapping/mapper');
-const Client = require('../../../../lib/client');
-const utils = require('../../../../lib/utils');
-
 const videoColumnsToProperties = new Map([ ['videoid', 'id'], ['userid', 'userId'], ['added_date', 'addedDate'],
   ['location_type', 'locationType'], ['preview_image_location', 'preview'], ['preview_thumbnails', 'thumbnails']]);
 
 let hasBeenSetup = false;
 
-const mapperHelper = module.exports = {
+const mapperHelper = {
   setupOnce: function (testInstance) {
 
     testInstance.timeout(60000);
@@ -191,3 +189,6 @@ const mapperHelper = module.exports = {
     });
   }
 };
+
+
+export default mapperHelper;

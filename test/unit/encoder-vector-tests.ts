@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const { assert, util } = require('chai');
-const Encoder = require('../../lib/encoder');
-const { types } = require('../../index');
-const Vector = require('../../lib/types/vector');
-const helper = require('../test-helper');
+import { assert, util } from "chai";
+import Encoder from "../../lib/encoder";
+import { types } from "../../index";
+import Vector from "../../lib/types/vector";
+import helper from "../test-helper";
 
+'use strict';
 describe('Vector tests', function () {
   const encoder = new Encoder(4, {});
 

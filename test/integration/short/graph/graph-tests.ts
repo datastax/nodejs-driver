@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 'use strict';
-const sinon = require('sinon');
-const { assert } = require('chai');
-
-const util = require('util');
-const Client = require('../../../../lib/client');
-const helper = require('../../../test-helper');
+import sinon from "sinon";
+import { assert } from "chai";
+import util from "util";
+import Client from "../../../../lib/client";
+import helper from "../../../test-helper";
+import { Point, LineString, Polygon } from "../../../../lib/geometry/index";
+import types from "../../../../lib/types/index";
+import utils from "../../../../lib/utils";
+import graphModule from "../../../../lib/datastax/graph/index";
+import { graphProtocol } from "../../../../lib/datastax/graph/options";
+import graphTestHelper from "./graph-test-helper";
+import { ExecutionProfile } from "../../../../lib/execution-profile";
 const vdescribe = helper.vdescribe;
 const vit = helper.vit;
-const { Point, LineString, Polygon } = require('../../../../lib/geometry');
-const types = require('../../../../lib/types');
 const { InetAddress, Uuid, Tuple } = types;
-const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
-const utils = require('../../../../lib/utils');
-const graphModule = require('../../../../lib/datastax/graph');
 const { asInt, asFloat, asUdt, t, Edge, direction } = graphModule;
-const { graphProtocol } = require('../../../../lib/datastax/graph/options');
-const graphTestHelper = require('./graph-test-helper');
-
 const graphLanguageBytecode = 'bytecode-json';
 let schemaCounter = 1000;
 

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const EventEmitter = require('events');
-const proxyquire = require('proxyquire');
-const sinon = require('sinon');
+import assert from "assert";
+import EventEmitter from "events";
+import proxyquire from "proxyquire";
+import sinon from "sinon";
+import Connection from "../../lib/connection";
+import requests from "../../lib/requests";
+import utils from "../../lib/utils";
+import errors from "../../lib/errors";
+import helper from "../test-helper";
+import ClientOptions from "../../lib/client-options";
+import { ExecutionOptions } from "../../lib/execution-options";
 
-const Connection = require('../../lib/connection');
-const requests = require('../../lib/requests');
-const defaultOptions = require('../../lib/client-options').defaultOptions();
-const utils = require('../../lib/utils');
-const errors = require('../../lib/errors');
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
-const helper = require('../test-helper');
-
+const defaultOptions = ClientOptions.defaultOptions();
 describe('Connection', function () {
   describe('constructor', function () {
     it('should parse host endpoint into address and port', function () {

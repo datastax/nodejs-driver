@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-const util = require('util');
+import assert from "assert";
+import util from "util";
+import helper from "../../test-helper";
+import Client from "../../../lib/client";
+import utils from "../../../lib/utils";
+import loadBalancing from "../../../lib/policies/load-balancing";
 
-const helper = require('../../test-helper');
-const Client = require('../../../lib/client');
-const utils = require('../../../lib/utils');
-const loadBalancing = require('../../../lib/policies/load-balancing');
+'use strict';
 const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 

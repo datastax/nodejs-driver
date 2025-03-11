@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-const Point = require('../../../lib/geometry/point');
-const moduleName = '../../../lib/geometry/polygon';
-const Polygon = require(moduleName);
+import assert from "assert";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Point from "../../../lib/geometry/point";
+import { Polygon } from "../../../lib/geometry";
 
 describe('Polygon', function () {
   describe('constructor', function () {

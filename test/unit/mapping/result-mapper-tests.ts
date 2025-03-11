@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import ResultMapper from "../../../lib/mapping/result-mapper";
 
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-
-const ResultMapper = require('../../../lib/mapping/result-mapper');
-
 describe('ResultMapper', function () {
   describe('getSelectAdapter()', function () {
     it('should return a function that maps row values into object values', () => {

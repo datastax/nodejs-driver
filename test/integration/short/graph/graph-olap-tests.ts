@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import { assert } from "chai";
+import util from "util";
+import Client from "../../../../lib/client";
+import promiseUtils from "../../../../lib/promise-utils";
+import helper from "../../../test-helper";
+import loadBalancing from "../../../../lib/policies/load-balancing";
+import utils from "../../../../lib/utils";
+import graphModule from "../../../../lib/datastax/graph/index";
+import graphTestHelper from "./graph-test-helper";
+import { ExecutionProfile } from "../../../../lib/execution-profile";
 
-const { assert } = require('chai');
-const util = require('util');
-const Client = require('../../../../lib/client');
-const promiseUtils = require('../../../../lib/promise-utils');
-const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
-const loadBalancing = require('../../../../lib/policies/load-balancing');
 const DefaultLoadBalancingPolicy = loadBalancing.DefaultLoadBalancingPolicy;
-const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
-const utils = require('../../../../lib/utils');
-const graphModule = require('../../../../lib/datastax/graph');
-const graphTestHelper = require('./graph-test-helper');
-
 vdescribe('dse-5.0', 'Client with spark workload', function () {
   this.timeout(360000);
 

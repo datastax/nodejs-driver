@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import errors from "../../../lib/errors";
+import types from "../../../lib/types/index";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import utils from "../../../lib/utils";
+import Client from "../../../lib/client";
+import { OrderedLoadBalancingPolicy } from "../../test-helper";
+
 'use strict';
-const assert = require('assert');
-const errors = require('../../../lib/errors');
-const types = require('../../../lib/types');
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const utils = require('../../../lib/utils');
-
-const Client = require('../../../lib/client');
-const { OrderedLoadBalancingPolicy } = require('../../test-helper');
-
 const query = "select * from data";
 
 describe('Client', function() {

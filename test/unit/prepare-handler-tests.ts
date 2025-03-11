@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 'use strict';
-
-const { assert } = require('chai');
-const events = require('events');
-const helper = require('../test-helper');
-const PrepareHandler = require('../../lib/prepare-handler');
-const defaultOptions = require('../../lib/client-options').defaultOptions;
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
+import { assert } from "chai";
+import events from "events";
+import helper from "../test-helper";
+import PrepareHandler from "../../lib/prepare-handler";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import { defaultOptions } from "../../lib/client-options";
 
 describe('PrepareHandler', function () {
 

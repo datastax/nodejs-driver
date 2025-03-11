@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import Client from "../../../lib/client";
+import metrics from "../../../lib/metrics/index";
+import errors from "../../../lib/errors";
+import simulacron from "../simulacron";
+import helper from "../../test-helper";
+import policies from "../../../lib/policies/index";
 
 'use strict';
-
-const assert = require('assert');
-const Client = require('../../../lib/client');
-const metrics = require('../../../lib/metrics');
-const errors = require('../../../lib/errors');
-const simulacron = require('../simulacron');
-const helper = require('../../test-helper');
-const policies = require('../../../lib/policies');
 const RetryPolicy = policies.retry.RetryPolicy;
 
 const queries = {

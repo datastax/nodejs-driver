@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
 import { Authenticator } from '../../lib/auth/provider';
 import DsePlainTextAuthProvider from '../../lib/auth/dse-plain-text-auth-provider';
+import assert from "assert";
 
 describe('DsePlainTextAuthProvider', function () {
   describe('#newAuthenticator()', function () {

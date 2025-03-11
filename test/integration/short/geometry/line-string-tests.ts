@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import util from "util";
+import helper from "../../../test-helper";
+import Client from "../../../../lib/client";
+import geometry from "../../../../lib/geometry/index";
+import types from "../../../../lib/types/index";
+import utils from "../../../../lib/utils";
+
 'use strict';
-const assert = require('assert');
-const util = require('util');
-const helper = require('../../../test-helper');
-const Client = require('../../../../lib/client');
 const vdescribe = helper.vdescribe;
-const geometry = require('../../../../lib/geometry');
-const types = require('../../../../lib/types');
-const utils = require('../../../../lib/utils');
 const Point = geometry.Point;
 const LineString = geometry.LineString;
 const Uuid = types.Uuid;

@@ -67,3 +67,27 @@ export {
   defaultOptions,
   version
 };
+
+export default {
+  Client,
+  ExecutionProfile,
+  ExecutionOptions,
+  types,
+  errors,
+  policies,
+  auth,
+  mapping,
+  tracker,
+  metrics,
+  concurrent,
+  token,
+  metadata,
+  Encoder,
+  geometry,
+  datastax,
+  /**
+   * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+   */
+  defaultOptions,
+  version
+};

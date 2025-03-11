@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const helper = require('../../../test-helper');
 import DseGssapiAuthProvider from '../../../../lib/auth/dse-gssapi-auth-provider';
-const Client = require('../../../../lib/client');
-const errors = require('../../../../lib/errors');
+import assert from "assert";
+import helper from "../../../test-helper";
+import Client from "../../../../lib/client";
+import errors from "../../../../lib/errors";
 const ads = helper.ads;
 const cDescribe = helper.conditionalDescribe(
   helper.requireOptional('kerberos') && helper.isDseGreaterThan('5.0'), 'kerberos and DSE required to run');

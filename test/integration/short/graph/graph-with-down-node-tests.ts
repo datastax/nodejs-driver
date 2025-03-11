@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import assert from "assert";
+import Client from "../../../../lib/client";
+import helper from "../../../test-helper";
+import types from "../../../../lib/types/index";
+import utils from "../../../../lib/utils";
+import graphTestHelper from "./graph-test-helper";
+import {ExecutionProfile} from "../../../../lib/execution-profile";
 
-const assert = require('assert');
-const Client = require('../../../../lib/client');
-const helper = require('../../../test-helper');
 const vdescribe = helper.vdescribe;
-const types = require('../../../../lib/types');
 const cl = types.consistencies;
-const ExecutionProfile = require('../../../../lib/execution-profile').ExecutionProfile;
-const utils = require('../../../../lib/utils');
-const graphTestHelper = require('./graph-test-helper');
-
 // DSP-15333 prevents this suite to be tested against DSE 5.0
 vdescribe('dse-5.1', 'Client with down node', function () {
   this.timeout(270000);

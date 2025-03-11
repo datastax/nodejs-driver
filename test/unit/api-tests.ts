@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const { assert } = require('chai');
-const api = require('../../index');
-const auth = require('../../lib/auth');
-const helper = require('../test-helper');
+import { assert } from "chai";
+import api from "../../index";
+import auth from "../../lib/auth/index";
+import helper from "../test-helper";
 
+'use strict';
 describe('API', function () {
   it('should expose auth module', function () {
     assert.ok(api.auth);

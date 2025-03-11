@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const os = require('os');
-const Client = require('../../lib/client');
-const ClientState = require('../../lib/metadata/client-state');
-const InsightsClient = require('../../lib/insights-client');
-const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-const utils = require('../../lib/utils');
-const types = require('../../lib/types');
-const policies = require('../../lib/policies');
-const coreConnectionsPerHostV3 = require('../../lib/client-options').coreConnectionsPerHostV3;
-const packageInfo = require('../../package.json');
-const helper = require('../test-helper');
+import assert from "assert";
+import os from "os";
+import Client from "../../lib/client";
+import ClientState from "../../lib/metadata/client-state";
+import InsightsClient from "../../lib/insights-client";
+import utils from "../../lib/utils";
+import types from "../../lib/types/index";
+import policies from "../../lib/policies/index";
+import packageInfo from "../../package.json";
+import helper from "../test-helper";
+import { ExecutionProfile } from "../../lib/execution-profile";
+import { coreConnectionsPerHostV3 } from "../../lib/client-options";
 
 const kerberosModule = helper.requireOptional('kerberos');
 const kerberosDescribe = kerberosModule ? describe : xdescribe;

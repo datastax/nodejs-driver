@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 'use strict';
-
-const assert = require('assert');
-
-const clientOptions = require('../../lib/client-options');
-const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-const ProfileManager = require('../../lib/execution-profile').ProfileManager;
-const types = require('../../lib/types');
+import assert from "assert";
+import clientOptions from "../../lib/client-options";
+import types from "../../lib/types/index";
+import {ExecutionProfile} from "../../lib/execution-profile";
+import {ProfileManager} from "../../lib/execution-profile";
 
 describe('ProfileManager', function () {
   describe('constructor', function () {

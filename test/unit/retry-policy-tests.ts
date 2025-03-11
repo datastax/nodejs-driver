@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('assert');
-const types = require('../../lib/types');
-const policies = require('../../lib/policies');
-const helper = require('../test-helper');
-const ExecutionOptions = require('../../lib/execution-options').ExecutionOptions;
+import assert from "assert";
+import types from "../../lib/types/index";
+import policies from "../../lib/policies/index";
+import helper from "../test-helper";
+import {ExecutionOptions} from "../../lib/execution-options";
+
 const RetryPolicy = policies.retry.RetryPolicy;
 const IdempotenceAwareRetryPolicy = policies.retry.IdempotenceAwareRetryPolicy;
 const FallthroughRetryPolicy = policies.retry.FallthroughRetryPolicy;

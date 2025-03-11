@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 'use strict';
-const { assert } = require('chai');
-const helper = require('../../../test-helper');
 import DsePlainTextAuthProvider from '../../../../lib/auth/dse-plain-text-auth-provider';
-const Client = require('../../../../lib/client');
+import { assert } from "chai";
+import helper from "../../../test-helper";
+import Client from "../../../../lib/client";
 const vdescribe = helper.vdescribe;
 
 vdescribe('dse-5.0', 'DsePlainTextAuthProvider @SERVER_API', function () {

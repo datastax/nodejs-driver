@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-const assert = require('assert');
-//project modules
-const utils = require('../../lib/utils');
-const helper = require('../test-helper');
-const reconnection = require('../../lib/policies/reconnection');
+import assert from "assert";
+import utils from "../../lib/utils";
+import helper from "../test-helper";
+import reconnection from "../../lib/policies/reconnection";
 
+'use strict';
+//project modules
 describe('ConstantReconnectionPolicy', function () {
   it('should yield the same wait time', function (done) {
     const delay = 2000;

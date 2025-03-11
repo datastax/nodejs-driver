@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import sinon from "sinon";
+import utils from "../../lib/utils";
+import helper from "../test-helper";
+
 'use strict';
-const { assert } = require('chai');
-const sinon = require('sinon');
-const utils = require('../../lib/utils');
-const helper = require('../test-helper');
 const AddressResolver = utils.AddressResolver;
 
 describe('utils', function () {

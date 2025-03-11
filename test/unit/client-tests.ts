@@ -13,27 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assert } from "chai";
+import util from "util";
+import proxyquire from "proxyquire";
+import sinon from "sinon";
+import Client from "../../lib/client";
+import policies from "../../lib/policies/index";
+import helper from "../test-helper";
+import errors from "../../lib/errors";
+import utils from "../../lib/utils";
+import types from "../../lib/types/index";
+import Metadata from "../../lib/metadata/index";
+import Encoder from "../../lib/encoder";
+import clientOptions from "../../lib/client-options";
+import PrepareHandler from "../../lib/prepare-handler";
+import {Host, HostMap} from "../../lib/host";
+import { ProfileManager, ExecutionProfile } from "../../lib/execution-profile";
 'use strict';
-const { assert } = require('chai');
-const util = require('util');
-const proxyquire = require('proxyquire');
-const sinon = require('sinon');
-
-const Client = require('../../lib/client');
-const policies = require('../../lib/policies');
-const helper = require('../test-helper');
-const errors = require('../../lib/errors');
-const utils = require('../../lib/utils');
-const types = require('../../lib/types');
-const HostMap = require('../../lib/host').HostMap;
-const Host = require('../../lib/host').Host;
-const Metadata = require('../../lib/metadata');
-const Encoder = require('../../lib/encoder');
-const ProfileManager = require('../../lib/execution-profile').ProfileManager;
-const ExecutionProfile = require('../../lib/execution-profile').ExecutionProfile;
-const clientOptions = require('../../lib/client-options');
-const PrepareHandler = require('../../lib/prepare-handler');
-
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {

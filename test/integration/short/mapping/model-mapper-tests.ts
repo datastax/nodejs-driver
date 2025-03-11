@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import assert from "assert";
+import util from "util";
+import helper from "../../../test-helper";
+import mapperTestHelper from "./mapper-test-helper";
+import types from "../../../../lib/types/index";
+import utils from "../../../../lib/utils";
+import Mapper from "../../../../lib/mapping/mapper";
+import Result from "../../../../lib/mapping/result";
+import {q} from "../../../../lib/mapping/q";
 
-const assert = require('assert');
-const util = require('util');
-const helper = require('../../../test-helper');
-const mapperTestHelper = require('./mapper-test-helper');
-const types = require('../../../../lib/types');
-const utils = require('../../../../lib/utils');
 const Uuid = types.Uuid;
-const q = require('../../../../lib/mapping/q').q;
-const Mapper = require('../../../../lib/mapping/mapper');
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
-const Result = require('../../../../lib/mapping/result');
 const vit = helper.vit;
 
 describe('ModelMapper', function () {

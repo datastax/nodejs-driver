@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import Client from "../../../lib/client";
+import types from "../../../lib/types/index";
+import helper from "../../test-helper";
+import { expect } from 'chai';
 
-const expect = require('chai').expect;
-const Client = require('../../../lib/client');
-const types = require('../../../lib/types');
-const helper = require('../../test-helper');
 const Uuid = types.Uuid;
 
 const createTableNumericValuesCql =
@@ -44,7 +43,10 @@ const createTableNumericCollectionsCql =
    set_int set<int>)`;
 
 // Exported to be called on other fixtures to take advantage from existing setups
-module.exports = function (keyspace, prepare) {
+
+
+// Exported to be called on other fixtures to take advantage from existing setups
+export default function (keyspace, prepare) {
 
   context('with numeric values', () => {
 

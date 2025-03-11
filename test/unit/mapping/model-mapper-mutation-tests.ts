@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
+import assert from "assert";
+import types from "../../../lib/types/index";
+import helper from "../../test-helper";
+import mapperTestHelper from "./mapper-unit-test-helper";
+import { q } from "../../../lib/mapping/q";
 
-const assert = require('assert');
-const q = require('../../../lib/mapping/q').q;
-const types = require('../../../lib/types');
-const helper = require('../../test-helper');
-const mapperTestHelper = require('./mapper-unit-test-helper');
 const dataTypes = types.dataTypes;
 
 describe('ModelMapper', () => {

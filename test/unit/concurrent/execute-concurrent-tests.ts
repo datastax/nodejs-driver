@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const Readable = require('stream').Readable;
-const types = require('../../../lib/types');
-const utils = require('../../../lib/utils');
-const helper = require('../../test-helper');
-const executeConcurrent = require('../../../lib/concurrent').executeConcurrent;
+import assert from "assert";
+import types from "../../../lib/types/index";
+import utils from "../../../lib/utils";
+import helper from "../../test-helper";
+import { Readable } from "stream";
+import { executeConcurrent } from "../../../lib/concurrent";
 
 describe('executeConcurrent(client, query, parameters)', function () {
   this.timeout(10000);

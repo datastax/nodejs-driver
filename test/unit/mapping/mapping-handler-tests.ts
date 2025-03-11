@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const assert = require('assert');
-const mapperTestHelper = require('./mapper-unit-test-helper');
-const MappingHandler = require('../../../lib/mapping/mapping-handler');
-const ModelMappingInfo = require('../../../lib/mapping/model-mapping-info');
-const DefaultTableMappings = require('../../../lib/mapping/table-mappings').DefaultTableMappings;
-const q = require('../../../lib/mapping/q').q;
+import assert from "assert";
+import mapperTestHelper from "./mapper-unit-test-helper";
+import MappingHandler from "../../../lib/mapping/mapping-handler";
+import ModelMappingInfo from "../../../lib/mapping/model-mapping-info";
+import { DefaultTableMappings } from "../../../lib/mapping/table-mappings";
+import { q } from "../../../lib/mapping/q";
 
 describe('MappingHandler', () => {
   describe('#getSelectExecutor()', () => {

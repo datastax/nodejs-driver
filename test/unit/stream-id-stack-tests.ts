@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import sinon from "sinon";
+import assert from "assert";
+import StreamIdStack from "../../lib/stream-id-stack";
 
 "use strict";
-const sinon = require('sinon');
-const assert = require('assert');
-
-const StreamIdStack = require('../../lib/stream-id-stack');
-
 describe('StreamIdStack', function () {
   let clock;
 

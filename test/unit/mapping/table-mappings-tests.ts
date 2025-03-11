@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import tableMappingsModule from "../../../lib/mapping/table-mappings";
 
 'use strict';
-
-const assert = require('assert');
-const tableMappingsModule = require('../../../lib/mapping/table-mappings');
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
 
 describe('UnderscoreCqlToCamelCaseMappings', () => {

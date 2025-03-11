@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from "assert";
+import helper from "../test-helper";
+import errors from "../../lib/errors";
+import Client from "../../lib/client";
+import clientOptions from "../../lib/client-options";
+import { Host, HostMap } from "../../lib/host";
+import types from "../../lib/types/index";
+import utils from "../../lib/utils";
+import { ExecutionOptions } from "../../lib/execution-options";
+import { AllowListPolicy, LoadBalancingPolicy, TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy } from "../../lib/policies/load-balancing";
+
 'use strict';
-const assert = require('assert');
-
-const helper = require('../test-helper');
-const errors = require('../../lib/errors');
-const Client = require('../../lib/client');
-const clientOptions = require('../../lib/client-options');
-const { Host, HostMap } = require('../../lib/host');
-const types = require('../../lib/types');
-const utils = require('../../lib/utils');
-const { ExecutionOptions } = require('../../lib/execution-options');
-const { AllowListPolicy, LoadBalancingPolicy, TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy } =
-  require('../../lib/policies/load-balancing');
-
 describe('RoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
     const policy = new RoundRobinPolicy();

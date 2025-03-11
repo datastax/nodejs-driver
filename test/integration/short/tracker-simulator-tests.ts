@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
-
-const { assert } = require('chai');
-const sinon = require('sinon');
-
-const tracker = require('../../../lib/tracker');
-const errors = require('../../../lib/errors');
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types');
-const Client = require('../../../lib/client');
-const Host = require('../../../lib/host').Host;
-const simulacron = require('../simulacron');
+import { assert } from "chai";
+import sinon from "sinon";
+import tracker from "../../../lib/tracker/index";
+import errors from "../../../lib/errors";
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import Client from "../../../lib/client";
+import simulacron from "../simulacron";
+import { Host } from "../../../lib/host";
 
 const queryDelayed = 'INSERT INTO delayed (id) VALUES (?)';
 

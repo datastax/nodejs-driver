@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 'use strict';
-const assert = require('chai').assert;
-const utils = require('../../../lib/utils');
-const types = require('../../../lib/types/index');
-const simulacron = require('../simulacron');
-const util = require('util');
+import utils from "../../../lib/utils";
+import types from "../../../lib/types/index";
+import simulacron from "../simulacron";
+import util from "util";
+import {assert} from "chai";
 
 describe('Metadata', function () {
   this.timeout(20000);

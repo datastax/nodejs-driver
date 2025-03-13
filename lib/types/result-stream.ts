@@ -25,6 +25,13 @@ import clientOptions from "../client-options";
  * Readable stream using to yield data from a result or a field
  */
 class ResultStream extends Readable {
+  buffer: any[];
+  paused: boolean;
+  _cancelAllowed: boolean;
+  _handlersObject: { resumeReadingHandler?: Function, cancelHandler?: Function };
+  _highWaterMarkRows: number;
+  _readableState: any;
+  _readNext: Function;
   constructor(opt) {
     super(opt);
     this.buffer = [];
@@ -51,10 +58,10 @@ class ResultStream extends Readable {
 
   /**
    * Allows for throttling, helping nodejs keep the internal buffers reasonably sized.
-   * @param {function} readNext function that triggers reading the next result chunk
+   * @param {Function} readNext function that triggers reading the next result chunk
    * @ignore
    */
-  _valve(readNext) {
+  _valve(readNext: Function) {
     this._readNext = null;
     if (!readNext) {
       return;
@@ -106,7 +113,7 @@ class ResultStream extends Readable {
    * stream.cancel();
    * @ignore
    */
-  cancel(callback) {
+  cancel(callback: Function) {
     if (!this._cancelAllowed) {
       const err = new Error('You can only cancel streaming executions when continuous paging is enabled');
       if (!callback) {

@@ -90,7 +90,7 @@ class Integer {
    * @return {!Integer} The corresponding Integer value.
    */
   static fromInt(value: number): Integer {
-    if (-128 <= value && value < 128) {
+    if (value >= -128 && value < 128) {
       const cachedObj = Integer.IntCache_[value];
       if (cachedObj) {
         return cachedObj;
@@ -98,7 +98,7 @@ class Integer {
     }
 
     const obj = new Integer([value | 0], value < 0 ? -1 : 0);
-    if (-128 <= value && value < 128) {
+    if (value >= -128 && value < 128) {
       Integer.IntCache_[value] = obj;
     }
     return obj;
@@ -115,15 +115,15 @@ class Integer {
       return Integer.ZERO;
     } else if (value < 0) {
       return Integer.fromNumber(-value).negate();
-    } else {
-      const bits = [];
-      let pow = 1;
-      for (let i = 0; value >= pow; i++) {
-        bits[i] = (value / pow) | 0;
-        pow *= Integer.TWO_PWR_32_DBL_;
-      }
-      return new Integer(bits, 0);
+    } 
+    const bits = [];
+    let pow = 1;
+    for (let i = 0; value >= pow; i++) {
+      bits[i] = (value / pow) | 0;
+      pow *= Integer.TWO_PWR_32_DBL_;
     }
+    return new Integer(bits, 0);
+    
   }
 
   /**
@@ -154,7 +154,7 @@ class Integer {
     }
 
     const radix = opt_radix || 10;
-    if (radix < 2 || 36 < radix) {
+    if (radix < 2 || radix > 36) {
       throw Error('radix out of range: ' + radix);
     }
 
@@ -311,15 +311,15 @@ class Integer {
   toNumber(): number {
     if (this.isNegative()) {
       return -this.negate().toNumber();
-    } else {
-      let val = 0;
-      let pow = 1;
-      for (let i = 0; i < this.bits_.length; i++) {
-        val += this.getBitsUnsigned(i) * pow;
-        pow *= Integer.TWO_PWR_32_DBL_;
-      }
-      return val;
+    } 
+    let val = 0;
+    let pow = 1;
+    for (let i = 0; i < this.bits_.length; i++) {
+      val += this.getBitsUnsigned(i) * pow;
+      pow *= Integer.TWO_PWR_32_DBL_;
     }
+    return val;
+    
   }
 
   /**
@@ -329,7 +329,7 @@ class Integer {
    */
   toString(opt_radix?: number): string {
     const radix = opt_radix || 10;
-    if (radix < 2 || 36 < radix) {
+    if (radix < 2 || radix > 36) {
       throw Error('radix out of range: ' + radix);
     }
 
@@ -353,12 +353,12 @@ class Integer {
       rem = remDiv;
       if (rem.isZero()) {
         return digits + result;
-      } else {
-        while (digits.length < 6) {
-          digits = '0' + digits;
-        }
-        result = '' + digits + result;
+      } 
+      while (digits.length < 6) {
+        digits = '0' + digits;
       }
+      result = '' + digits + result;
+      
     }
   }
 
@@ -373,9 +373,9 @@ class Integer {
       return 0;
     } else if (index < this.bits_.length) {
       return this.bits_[index];
-    } else {
-      return this.sign_;
-    }
+    } 
+    return this.sign_;
+    
   }
 
   /**
@@ -486,9 +486,9 @@ class Integer {
       return -1;
     } else if (diff.isZero()) {
       return 0;
-    } else {
-      return +1;
-    }
+    } 
+    return +1;
+    
   }
 
   /**
@@ -511,10 +511,10 @@ class Integer {
       val |= 0xFFFFFFFF - sigBits;
       bits[arr_index] = val;
       return new Integer(bits, -1);
-    } else {
-      bits[arr_index] = val;
-      return new Integer(bits, 0);
-    }
+    } 
+    bits[arr_index] = val;
+    return new Integer(bits, 0);
+    
   }
 
   /** @return {!Integer} The negation of this value. */
@@ -573,9 +573,9 @@ class Integer {
     if (this.isNegative()) {
       if (other.isNegative()) {
         return this.negate().multiply(other.negate());
-      } else {
-        return this.negate().multiply(other).negate();
-      }
+      } 
+      return this.negate().multiply(other).negate();
+      
     } else if (other.isNegative()) {
       return this.multiply(other.negate()).negate();
     }
@@ -588,7 +588,7 @@ class Integer {
     // Fill in an array of 16-bit products.
     const len = this.bits_.length + other.bits_.length;
     const arr = [];
-    for (var i = 0; i < 2 * len; i++) {
+    for (let i = 0; i < 2 * len; i++) {
       arr[i] = 0;
     }
     for (let i = 0; i < this.bits_.length; i++) {
@@ -647,9 +647,9 @@ class Integer {
     if (this.isNegative()) {
       if (other.isNegative()) {
         return this.negate().divide(other.negate());
-      } else {
-        return this.negate().divide(other).negate();
-      }
+      } 
+      return this.negate().divide(other).negate();
+      
     } else if (other.isNegative()) {
       return this.divide(other.negate()).negate();
     }

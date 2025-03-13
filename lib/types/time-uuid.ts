@@ -19,7 +19,6 @@ import Long from "long";
 import Uuid from "./uuid";
 import utils from "../utils";
 
-
 /** @module types */
 /**
  * Oct 15, 1582 in milliseconds since unix epoch
@@ -44,22 +43,21 @@ const maxClockId = utils.allocBufferFromString('7f7f', 'hex');
  * @private
  * @type {number}
  */
-let _ticks = 0;
+let _ticks: number = 0;
 /**
  * Counter used to generate ticks for the current time
  * @private
  * @type {number}
  */
-let _ticksForCurrentTime = 0;
+let _ticksForCurrentTime: number = 0;
 /**
  * Remember the last time when a ticks for the current time so that it can be reset
  * @private
  * @type {number}
  */
-let _lastTimestamp = 0;
+let _lastTimestamp: number = 0;
 
 /**
- * Creates a new instance of Uuid based on the parameters provided according to rfc4122.
  * If any of the arguments is not provided, it will be randomly generated, except for the date that will use the current
  * date.
  * <p>
@@ -72,200 +70,209 @@ let _lastTimestamp = 0;
  * @classdesc Represents an immutable version 1 universally unique identifier (UUID). A UUID represents a 128-bit value.
  * <p>Usage: <code>TimeUuid.now()</code></p>
  * @extends module:types~Uuid
- * @param {Date} [value] The datetime for the instance, if not provided, it will use the current Date.
- * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
- * as Ecmascript Dates have only milliseconds precision.
- * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
- * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
- * @constructor
  */
-function TimeUuid(value, ticks, nodeId, clockId) {
-  let buffer;
-  if (value instanceof Buffer) {
-    if (value.length !== 16) {
-      throw new Error('Buffer for v1 uuid not valid');
+class TimeUuid extends Uuid {
+  /**
+   * Creates a new instance of Uuid based on the parameters provided according to rfc4122.
+   * If any of the arguments is not provided, it will be randomly generated, except for the date that will use the current
+   * date.
+   * <p>
+   *   Note that when nodeId and/or clockId portions are not provided, the constructor will generate them using
+   *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+   *   recommended that you use the callback-based version of the static methods <code>fromDate()</code> or
+   *   <code>now()</code> in that case.
+   * </p>
+   * This class represents an immutable version 1 universally unique identifier (UUID). A UUID represents a 128-bit value.
+   * <p>Usage: <code>TimeUuid.now()</code></p>
+   * @param {Date} [value] The datetime for the instance, if not provided, it will use the current Date.
+   * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
+   * as Ecmascript Dates have only milliseconds precision.
+   * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+   * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+   * @constructor
+   */
+  constructor(value: Date | Buffer, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer) {
+    let buffer;
+    if (value instanceof Buffer) {
+      if (value.length !== 16) {
+        throw new Error('Buffer for v1 uuid not valid');
+      }
+      buffer = value;
+    } else {
+      buffer = generateBuffer(value, ticks, nodeId, clockId);
     }
-    buffer = value;
+    super(buffer);
   }
-  else {
-    buffer = generateBuffer(value, ticks, nodeId, clockId);
+
+  /**
+   * Generates a TimeUuid instance based on the Date provided using random node and clock values.
+   * @param {Date} date Date to generate the v1 uuid.
+   * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
+   * as Ecmascript Dates have only milliseconds precision.
+   * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+   * If not provided, a random nodeId will be generated.
+   * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+   * If not provided a random clockId will be generated.
+   * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
+   * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
+   * <code>TimeUuid</code> instance are created asynchronously.
+   * <p>
+   *   When nodeId and/or clockId portions are not provided, this method will generate them using
+   *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+   *   recommended that you use the callback-based version of this method in that case.
+   * </p>
+   * @example <caption>Generate a TimeUuid from a ECMAScript Date</caption>
+   * const timeuuid = TimeUuid.fromDate(new Date());
+   * @example <caption>Generate a TimeUuid from a Date with ticks portion</caption>
+   * const timeuuid = TimeUuid.fromDate(new Date(), 1203);
+   * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
+   * const timeuuid = TimeUuid.fromDate(new Date(), 1203, 'host01', '02');
+   * @example <caption>Generate a TimeUuid from a Date with random node and clock identifiers</caption>
+   * TimeUuid.fromDate(new Date(), 1203, function (err, timeuuid) {
+   *   // do something with the generated timeuuid
+   * });
+   */
+  static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void {
+    if (typeof ticks === 'function') {
+      callback = ticks;
+      ticks = nodeId = clockId = null;
+    } else if (typeof nodeId === 'function') {
+      callback = nodeId;
+      nodeId = clockId = null;
+    } else if (typeof clockId === 'function') {
+      callback = clockId;
+      clockId = null;
+    }
+
+    if (!callback) {
+      return new TimeUuid(date, ticks, nodeId, clockId);
+    }
+
+    utils.parallel([
+      next => getOrGenerateRandom(nodeId, 6, (err, buffer) => next(err, nodeId = buffer)),
+      next => getOrGenerateRandom(clockId, 2, (err, buffer) => next(err, clockId = buffer)),
+    ], (err) => {
+      if (err) {
+        return callback(err);
+      }
+
+      let timeUuid;
+      try {
+        timeUuid = new TimeUuid(date, ticks, nodeId, clockId);
+      } catch (e) {
+        return callback(e);
+      }
+
+      callback(null, timeUuid);
+    });
   }
-  Uuid.call(this, buffer);
+
+  /**
+   * Parses a string representation of a TimeUuid
+   * @param {String} value
+   * @returns {TimeUuid}
+   */
+  static fromString(value: string): TimeUuid {
+    return new TimeUuid(Uuid.fromString(value).getBuffer());
+  }
+
+  /**
+   * Returns the smaller possible type 1 uuid with the provided Date.
+   */
+  static min(date: Date, ticks?: number): TimeUuid {
+    return new TimeUuid(date, ticks, minNodeId, minClockId);
+  }
+
+  /**
+   * Returns the biggest possible type 1 uuid with the provided Date.
+   */
+  static max(date: Date, ticks?: number): TimeUuid {
+    return new TimeUuid(date, ticks, maxNodeId, maxClockId);
+  }
+
+  /**
+   * Generates a TimeUuid instance based on the current date using random node and clock values.
+   * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+   * If not provided, a random nodeId will be generated.
+   * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+   * If not provided a random clockId will be generated.
+   * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
+   * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
+   * <code>TimeUuid</code> instance are created asynchronously.
+   * <p>
+   *   When nodeId and/or clockId portions are not provided, this method will generate them using
+   *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+   *   recommended that you use the callback-based version of this method in that case.
+   * </p>
+   * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
+   * const timeuuid = TimeUuid.now('host01', '02');
+   * @example <caption>Generate a TimeUuid with random node and clock identifiers</caption>
+   * TimeUuid.now(function (err, timeuuid) {
+   *   // do something with the generated timeuuid
+   * });
+   * @example <caption>Generate a TimeUuid based on the current date (might block)</caption>
+   * const timeuuid = TimeUuid.now();
+   */
+  static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void {
+    return TimeUuid.fromDate(null, null, nodeId, clockId, callback);
+  }
+
+  /**
+   * Gets the Date and 100-nanoseconds units representation of this instance.
+   * @returns {{date: Date, ticks: Number}}
+   */
+  getDatePrecision(): { date: Date; ticks: number; } {
+    const timeLow = this.buffer.readUInt32BE(0);
+
+    let timeHigh = 0;
+    timeHigh |= (this.buffer[4] & 0xff) << 8;
+    timeHigh |= this.buffer[5] & 0xff;
+    timeHigh |= (this.buffer[6] & 0x0f) << 24;
+    timeHigh |= (this.buffer[7] & 0xff) << 16;
+
+    const val = Long.fromBits(timeLow, timeHigh);
+    const ticksInMsLong = Long.fromNumber(_ticksInMs);
+    const ticks = val.modulo(ticksInMsLong);
+    const time = val
+      .div(ticksInMsLong)
+      .subtract(Long.fromNumber(_unixToGregorian));
+    return { date: new Date(time.toNumber()), ticks: ticks.toNumber() };
+  }
+
+  /**
+   * Gets the Date representation of this instance.
+   * @returns {Date}
+   */
+  getDate(): Date {
+    return this.getDatePrecision().date;
+  }
+
+  /**
+   * Returns the node id this instance
+   * @returns {Buffer}
+   */
+  getNodeId(): Buffer {
+    return this.buffer.slice(10);
+  }
+
+  /**
+   * Returns the clock id this instance, with the variant applied (first 2 msb being 1 and 0).
+   * @returns {Buffer}
+   */
+  getClockId(): Buffer {
+    return this.buffer.slice(8, 10);
+  }
+
+  /**
+   * Returns the node id this instance as an ascii string
+   * @returns {String}
+   */
+  getNodeIdString(): string {
+    return this.buffer.slice(10).toString('ascii');
+  }
 }
 
-util.inherits(TimeUuid, Uuid);
-
-/**
- * Generates a TimeUuid instance based on the Date provided using random node and clock values.
- * @param {Date} date Date to generate the v1 uuid.
- * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
- * as Ecmascript Dates have only milliseconds precision.
- * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
- * If not provided, a random nodeId will be generated.
- * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
- * If not provided a random clockId will be generated.
- * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
- * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
- * <code>TimeUuid</code> instance are created asynchronously.
- * <p>
- *   When nodeId and/or clockId portions are not provided, this method will generate them using
- *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
- *   recommended that you use the callback-based version of this method in that case.
- * </p>
- * @example <caption>Generate a TimeUuid from a ECMAScript Date</caption>
- * const timeuuid = TimeUuid.fromDate(new Date());
- * @example <caption>Generate a TimeUuid from a Date with ticks portion</caption>
- * const timeuuid = TimeUuid.fromDate(new Date(), 1203);
- * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
- * const timeuuid = TimeUuid.fromDate(new Date(), 1203, 'host01', '02');
- * @example <caption>Generate a TimeUuid from a Date with random node and clock identifiers</caption>
- * TimeUuid.fromDate(new Date(), 1203, function (err, timeuuid) {
- *   // do something with the generated timeuuid
- * });
- */
-TimeUuid.fromDate = function (date, ticks, nodeId, clockId, callback) {
-  if (typeof ticks === 'function') {
-    callback = ticks;
-    ticks = nodeId = clockId = null;
-  } else if (typeof nodeId === 'function') {
-    callback = nodeId;
-    nodeId = clockId = null;
-  } else if (typeof clockId === 'function') {
-    callback = clockId;
-    clockId = null;
-  }
-
-  if (!callback) {
-    return new TimeUuid(date, ticks, nodeId, clockId);
-  }
-
-  utils.parallel([
-    next => getOrGenerateRandom(nodeId, 6, (err, buffer) => next(err, nodeId = buffer)),
-    next => getOrGenerateRandom(clockId, 2, (err, buffer) => next(err, clockId = buffer)),
-  ], (err) => {
-    if (err) {
-      return callback(err);
-    }
-
-    let timeUuid;
-    try {
-      timeUuid = new TimeUuid(date, ticks, nodeId, clockId);
-    }
-    catch (e) {
-      return callback(e);
-    }
-
-    callback(null, timeUuid);
-  });
-};
-
-/**
- * Parses a string representation of a TimeUuid
- * @param {String} value
- * @returns {TimeUuid}
- */
-TimeUuid.fromString = function (value) {
-  return new TimeUuid(Uuid.fromString(value).getBuffer());
-};
-
-/**
- * Returns the smaller possible type 1 uuid with the provided Date.
- */
-TimeUuid.min = function (date, ticks) {
-  return new TimeUuid(date, ticks, minNodeId, minClockId);
-};
-
-/**
- * Returns the biggest possible type 1 uuid with the provided Date.
- */
-TimeUuid.max = function (date, ticks) {
-  return new TimeUuid(date, ticks, maxNodeId, maxClockId);
-};
-
-/**
- * Generates a TimeUuid instance based on the current date using random node and clock values.
- * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
- * If not provided, a random nodeId will be generated.
- * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
- * If not provided a random clockId will be generated.
- * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
- * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
- * <code>TimeUuid</code> instance are created asynchronously.
- * <p>
- *   When nodeId and/or clockId portions are not provided, this method will generate them using
- *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
- *   recommended that you use the callback-based version of this method in that case.
- * </p>
- * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
- * const timeuuid = TimeUuid.now('host01', '02');
- * @example <caption>Generate a TimeUuid with random node and clock identifiers</caption>
- * TimeUuid.now(function (err, timeuuid) {
- *   // do something with the generated timeuuid
- * });
- * @example <caption>Generate a TimeUuid based on the current date (might block)</caption>
- * const timeuuid = TimeUuid.now();
- */
-TimeUuid.now = function (nodeId, clockId, callback) {
-  return TimeUuid.fromDate(null, null, nodeId, clockId, callback);
-};
-
-
-/**
- * Gets the Date and 100-nanoseconds units representation of this instance.
- * @returns {{date: Date, ticks: Number}}
- */
-TimeUuid.prototype.getDatePrecision = function () {
-  const timeLow = this.buffer.readUInt32BE(0);
-
-  let timeHigh = 0;
-  timeHigh |= ( this.buffer[4] & 0xff ) << 8;
-  timeHigh |= this.buffer[5] & 0xff;
-  timeHigh |= ( this.buffer[6] & 0x0f ) << 24;
-  timeHigh |= ( this.buffer[7] & 0xff ) << 16;
-
-  const val = Long.fromBits(timeLow, timeHigh);
-  const ticksInMsLong = Long.fromNumber(_ticksInMs);
-  const ticks = val.modulo(ticksInMsLong);
-  const time = val
-    .div(ticksInMsLong)
-    .subtract(Long.fromNumber(_unixToGregorian));
-  return { date: new Date(time.toNumber()), ticks: ticks.toNumber()};
-};
-
-/**
- * Gets the Date representation of this instance.
- * @returns {Date}
- */
-TimeUuid.prototype.getDate = function () {
-  return this.getDatePrecision().date;
-};
-
-/**
- * Returns the node id this instance
- * @returns {Buffer}
- */
-TimeUuid.prototype.getNodeId = function () {
-  return this.buffer.slice(10);
-};
-
-/**
- * Returns the clock id this instance, with the variant applied (first 2 msb being 1 and 0).
- * @returns {Buffer}
- */
-TimeUuid.prototype.getClockId = function () {
-  return this.buffer.slice(8, 10);
-};
-
-/**
- * Returns the node id this instance as an ascii string
- * @returns {String}
- */
-TimeUuid.prototype.getNodeIdString = function () {
-  return this.buffer.slice(10).toString('ascii');
-};
-
-function writeTime(buffer, time, ticks) {
-  //value time expressed in ticks precision
+function writeTime(buffer: Buffer, time: number, ticks: number) {
   const val = Long
     .fromNumber(time + _unixToGregorian)
     .multiply(Long.fromNumber(10000))
@@ -282,7 +289,7 @@ function writeTime(buffer, time, ticks) {
  * @returns {Buffer}
  * @private
  */
-function getClockId(clockId) {
+function getClockId(clockId: string | Buffer): Buffer {
   let buffer = clockId;
   if (typeof clockId === 'string') {
     buffer = utils.allocBufferFromString(clockId, 'ascii');
@@ -303,7 +310,7 @@ function getClockId(clockId) {
  * @returns {Buffer}
  * @private
  */
-function getNodeId(nodeId) {
+function getNodeId(nodeId: string | Buffer): Buffer {
   let buffer = nodeId;
   if (typeof nodeId === 'string') {
     buffer = utils.allocBufferFromString(nodeId, 'ascii');
@@ -324,8 +331,8 @@ function getNodeId(nodeId) {
  * @param {Number} [ticks] 
  * @returns {Number} 
  */
-function getTicks(ticks) {
-  if (typeof ticks !== 'number'|| ticks >= _ticksInMs) {
+function getTicks(ticks?: number): number {
+  if (typeof ticks !== 'number' || ticks >= _ticksInMs) {
     _ticks++;
     if (_ticks >= _ticksInMs) {
       _ticks = 0;
@@ -341,7 +348,7 @@ function getTicks(ticks) {
  * @private
  * @returns {{time: Number, ticks: Number}} 
  */
-function getTimeWithTicks(date, ticks) {
+function getTimeWithTicks(date: Date, ticks: number): { time: number; ticks: number; } {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
     // time with ticks for the current time
     date = new Date();
@@ -359,7 +366,7 @@ function getTimeWithTicks(date, ticks) {
   };
 }
 
-function getRandomBytes(length) {
+function getRandomBytes(length: number): Buffer {
   return crypto.randomBytes(length);
 }
 
@@ -379,7 +386,7 @@ function getOrGenerateRandom(id, length, callback) {
  * @param {String|Buffer} clockId
  * @returns {Buffer}
  */
-function generateBuffer(date, ticks, nodeId, clockId) {
+function generateBuffer(date: Date, ticks: number, nodeId: string | Buffer, clockId: string | Buffer): Buffer {
   const timeWithTicks = getTimeWithTicks(date, ticks);
   nodeId = getNodeId(nodeId);
   clockId = getClockId(clockId);

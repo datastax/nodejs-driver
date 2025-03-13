@@ -38,7 +38,34 @@ const _versionPattern = /(\d+)\.(\d+)(?:\.(\d+))?(?:\.(\d+)?)?(?:[-~]([\w+]*(?:-
  * @ignore
  */
 class VersionNumber {
-  constructor(major, minor, patch, dsePatch, preReleases, build) {
+  major: number;
+  minor: number;
+  patch: number;
+  dsePatch: number;
+  preReleases: string[];
+  build: string;
+
+  /**
+   * Represents a version number in the form of X.Y.Z with optional pre-release and build metadata.
+   *
+   * Version numbers compare the usual way, the major version number (X) is compared first, then
+   * the minor one (Y) and then the patch level one (Z).  If pre-release or other build metadata
+   * is present for a version, that version is considered less than an otherwise equivalent version
+   * that doesn't have these labels, otherwise they are considered equal.
+   *
+   * As of initial implementation versions are only compared against those with at most patch versions
+   * more refined comparisons are not needed.
+   *
+   * @property {Number} major The major version, X of X.Y.Z.
+   * @property {Number} minor The minor version, Y of X.Y.Z.
+   * @property {Number} patch The patch version, Z of X.Y.Z.
+   * @property {Number} dsePatch The dsePatch version, A of X.Y.Z.A or undefined if not present.
+   * @property {String[]} preReleases Prerelease indicators if present, i.e. SNAPSHOT of X.Y.Z-SNAPSHOT.
+   * @property {String} build Build string if present, i.e. build1 of X.Y.Z+build1.
+   *
+   * @ignore
+   */
+  constructor(major: number, minor: number, patch?: number, dsePatch?: number, preReleases?: string[], build?: string) {
     this.major = major;
     this.minor = minor;
     this.patch = patch;
@@ -50,7 +77,7 @@ class VersionNumber {
   /**
    * @return {String} String representation of this version.
    */
-  toString() {
+  toString(): string {
     let str = this.major + '.' + this.minor;
     if (this.patch !== undefined) {
       str += '.' + this.patch;
@@ -74,7 +101,7 @@ class VersionNumber {
    * @param {VersionNumber} other 
    * @return {Number} -1 if less than other, 0 if equal, 1 if greater than.
    */
-  compare(other) {
+  compare(other: VersionNumber): number {
     if (this.major < other.major) {
       return -1;
     } else if (this.major > other.major) {
@@ -122,7 +149,7 @@ class VersionNumber {
     return 0;
   }
 
-  static parse(version) {
+  static parse(version: string) {
     if (!version) {
       return null;
     }

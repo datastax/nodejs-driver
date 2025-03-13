@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-
-
 /** @module types */
 
 /**
- * Creates a new sequence of immutable objects with the parameters provided.
  * @class
  * @classdesc A tuple is a sequence of immutable objects.
  * Tuples are sequences, just like [Arrays]{@link Array}. The only difference is that tuples can't be changed.
@@ -27,76 +24,89 @@
  *   As tuples can be used as a Map keys, the {@link Tuple#toString toString()} method calls toString of each element,
  *   to try to get a unique string key.
  * </p>
- * @param args The sequence elements as arguments.
- * @constructor
  */
-function Tuple(...args) {
+class Tuple {
+  elements: any[];
+  length: number;
 
   /**
-   * Immutable elements of Tuple object.
-   * @type Array
+   * Creates a new sequence of immutable objects with the parameters provided.
+   * A tuple is a sequence of immutable objects.
+   * Tuples are sequences, just like [Arrays]{@link Array}. The only difference is that tuples can't be changed.
+   * <p>
+   *   As tuples can be used as a Map keys, the {@link Tuple#toString toString()} method calls toString of each element,
+   *   to try to get a unique string key.
+   * </p>
+   * @param {any[]} args The sequence elements as arguments.
+   * @constructor
    */
-  this.elements = args;
+  constructor(...args: any[]) {
+    /**
+     * Immutable elements of Tuple object.
+     * @type Array
+     */
+    this.elements = args;
 
-  if (this.elements.length === 0) {
-    throw new TypeError('Tuple must contain at least one value');
+    if (this.elements.length === 0) {
+      throw new TypeError('Tuple must contain at least one value');
+    }
+
+    /**
+     * Returns the number of the elements.
+     * @type Number
+     */
+    this.length = this.elements.length;
   }
 
   /**
-   * Returns the number of the elements.
-   * @type Number
+   * Creates a new instance of a tuple based on the Array
+   * @param {Array} elements
+   * @returns {Tuple}
    */
-  this.length = this.elements.length;
+  static fromArray(elements: any[]): Tuple {
+    // Apply the elements Array as parameters
+    return new Tuple(...elements);
+  }
+
+  /**
+   * Returns the value located at the index.
+   * @param {Number} index Element index
+   */
+  get(index: number): any {
+    return this.elements[index || 0];
+  }
+
+  /**
+   * Returns the string representation of the sequence surrounded by parenthesis, ie: (1, 2).
+   * <p>
+   *   The returned value attempts to be a unique string representation of its values.
+   * </p>
+   * @returns {string}
+   */
+  toString(): string {
+    return (
+      '(' +
+      this.elements.reduce((prev, x, i) => prev + (i > 0 ? ',' : '') + x.toString(), '') +
+      ')'
+    );
+  }
+
+  /**
+   * Returns the Array representation of the sequence.
+   * @returns {Array}
+   */
+  toJSON(): any[] {
+    return this.elements;
+  }
+
+  /**
+   * Gets the elements as an array
+   * @returns {Array}
+   */
+  values(): any[] {
+    // Clone the elements
+    return this.elements.slice(0);
+  }
 }
-
-/**
- * Creates a new instance of a tuple based on the Array
- * @param {Array} elements
- * @returns {Tuple}
- */
-Tuple.fromArray = function (elements) {
-  // Apply the elements Array as parameters
-  return new Tuple(...elements);
-};
-
-/**
- * Returns the value located at the index.
- * @param {Number} index Element index
- */
-Tuple.prototype.get = function (index) {
-  return this.elements[index || 0];
-};
-
-/**
- * Returns the string representation of the sequence surrounded by parenthesis, ie: (1, 2).
- * <p>
- *   The returned value attempts to be a unique string representation of its values.
- * </p>
- * @returns {string}
- */
-Tuple.prototype.toString = function () {
-  return ('(' +
-    this.elements.reduce(function (prev, x, i) {
-      return prev + (i > 0 ? ',' : '') + x.toString();
-    }, '') +
-    ')');
-};
-
-/**
- * Returns the Array representation of the sequence.
- * @returns {Array}
- */
-Tuple.prototype.toJSON = function () {
-  return this.elements;
-};
-
-/**
- * Gets the elements as an array
- * @returns {Array}
- */
-Tuple.prototype.values = function () {
-  // Clone the elements
-  return this.elements.slice(0);
-};
 
 export default Tuple;

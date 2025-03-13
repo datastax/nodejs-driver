@@ -43,7 +43,7 @@ const v600 = VersionNumber.parse('6.0.0');
  * is supported.
  * @alias module:types~protocolVersion
  */
-const protocolVersion: object = {
+const protocolVersion = {
   // Strict equality operators to compare versions are allowed, other comparison operators are discouraged. Instead,
   // use a function that checks if a functionality is present on a certain version, for maintainability purposes.
   v1: 0x01,

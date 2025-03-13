@@ -22,13 +22,14 @@
 import util from 'util';
 class Vector {
   length: number;
-  subtype: any;
+  subtype: string;
+  elements: number[];
   /**
      *
      * @param {Float32Array | Array<any>} elements
      * @param {string} [subtype]
      */
-  constructor (elements, subtype) {
+  constructor (elements: Float32Array | Array<any>, subtype?: string) {
     if (elements instanceof Float32Array) {
       this.elements = Array.from(elements);
     }
@@ -77,14 +78,14 @@ class Vector {
      * Returns the string representation of the vector.
      * @returns {string}
      */
-  toString() {
+  toString(): string {
     return "[".concat(this.elements.toString(), "]");
   }
   /**
      *
      * @param {number} index
      */
-  at(index) {
+  at(index: number) {
     return this.elements[index];
   }
 
@@ -92,7 +93,7 @@ class Vector {
    * 
    * @returns {IterableIterator<any>} an iterator over the elements of the vector
    */
-  [Symbol.iterator]() {
+  [Symbol.iterator]() : IterableIterator<any> {
     return this.elements[Symbol.iterator]();
   }
 
@@ -104,14 +105,14 @@ class Vector {
      * 
      * @param {(value: any, index: number, array: any[]) => void} callback
      */
-  forEach(callback) {
+  forEach(callback: (value: any, index: number, array: any[]) => void) {
     return this.elements.forEach(callback);
   }
 
   /**
-   * @returns {string | undefined} get the subtype string, e.g., "float", but it's optional so it can return null
+   * @returns {string | null} get the subtype string, e.g., "float", but it's optional so it can return null
    */
-  getSubtype(){
+  getSubtype(): string | null{
     return this.subtype;
   }
 }

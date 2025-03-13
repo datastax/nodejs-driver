@@ -1,4 +1,9 @@
 module.exports = {
+  plugins: [
+    "@stylistic",
+    '@typescript-eslint'
+  ],
+  parser: '@typescript-eslint/parser',
   "env": {
     "commonjs": true,
     "es6": true
@@ -6,7 +11,7 @@ module.exports = {
   "parserOptions": {
     "ecmaVersion": 2017
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", 'plugin:@typescript-eslint/recommended'],
   "rules": {
     "indent": [
       "error",
@@ -33,6 +38,7 @@ module.exports = {
     "array-callback-return": "error",
     "curly": "error",
     "no-unused-vars": ["error", { "args": "none" }],
+    "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
     "global-require": "error",
     "eqeqeq": ["error", "allow-null"],
 
@@ -88,6 +94,8 @@ module.exports = {
       allowShortCircuit: false,
       allowTernary: false,
     }],
+    "@typescript-eslint/no-this-alias": "off",
+    "@typescript-eslint/no-explicit-any": "off",
     "no-useless-call": "off",
     "no-useless-concat": "error",
     "no-useless-escape": "error",

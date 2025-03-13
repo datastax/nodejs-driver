@@ -47,7 +47,7 @@ export function generate(): void {
  * limitations under the License.
  */
   
-'use strict';
+
   
 import { auth, concurrent, errors, datastax, mapping, geometry, metadata, metrics, policies, tracker, types } from "../../../index";
 import * as root from "../../../index";

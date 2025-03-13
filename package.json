@@ -18,14 +18,20 @@
     "graphdb"
   ],
   "license": "Apache-2.0",
-  "types": "./index.d.ts",
+  "types": "out/index.d.ts",
+  "main": "out/index.js",
   "dependencies": {
     "@types/node": "^18.11.18",
     "adm-zip": "~0.5.10",
     "long": "~5.2.3"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^3.1.0",
+    "@types/mocha": "^10.0.10",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
     "chai": "~4.3.8",
+    "eslint": "^8.57.1",
     "kerberos": "~2.0.3",
     "mocha": "~10.2.0",
     "mocha-jenkins-reporter": "~0.4.8",
@@ -49,7 +55,8 @@
     "ci_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
     "ci_unit_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit --recursive -R mocha-appveyor-reporter --exit",
     "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",
-    "eslint": "eslint lib test"
+    "eslint": "eslint lib test",
+    "test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
   },
   "engines": {
     "node": ">=18"

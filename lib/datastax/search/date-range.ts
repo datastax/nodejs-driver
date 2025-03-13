@@ -535,4 +535,4 @@ export {
   dateRangePrecision,
   DateRange,
   DateRangeBound
-}
+};

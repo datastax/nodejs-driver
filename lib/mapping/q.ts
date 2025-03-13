@@ -152,10 +152,10 @@ export default {
   q,
   QueryAssignment,
   QueryOperator,
-}
+};
 
 export {
   q,
   QueryAssignment,
   QueryOperator,
-}
+};

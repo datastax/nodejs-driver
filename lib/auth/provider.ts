@@ -78,4 +78,4 @@ Authenticator.prototype.onAuthenticationSuccess = function (token) {
 export {
   Authenticator,
   AuthProvider
-}
+};

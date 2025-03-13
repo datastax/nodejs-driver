@@ -140,4 +140,4 @@ EC2MultiRegionTranslator.prototype.logError = function (address, err) {
 export {
   AddressTranslator,
   EC2MultiRegionTranslator
-}
+};

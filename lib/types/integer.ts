@@ -50,9 +50,9 @@ function Integer (bits, sign) {
 
   // Copy the 32-bit signed integer values passed in.  We prune out those at the
   // top that equal the sign since they are redundant.
-  var top = true;
-  for (var i = bits.length - 1; i >= 0; i--) {
-    var val = bits[i] | 0;
+  let top = true;
+  for (let i = bits.length - 1; i >= 0; i--) {
+    const val = bits[i] | 0;
     if (!top || val != sign) {
       this.bits_[i] = val;
       top = false;
@@ -79,15 +79,15 @@ Integer.IntCache_ = {};
  * @return {!Integer} The corresponding Integer value.
  */
 Integer.fromInt = function(value) {
-  if (-128 <= value && value < 128) {
-    var cachedObj = Integer.IntCache_[value];
+  if (value >= -128 && value < 128) {
+    const cachedObj = Integer.IntCache_[value];
     if (cachedObj) {
       return cachedObj;
     }
   }
 
-  var obj = new Integer([value | 0], value < 0 ? -1 : 0);
-  if (-128 <= value && value < 128) {
+  const obj = new Integer([value | 0], value < 0 ? -1 : 0);
+  if (value >= -128 && value < 128) {
     Integer.IntCache_[value] = obj;
   }
   return obj;
@@ -105,15 +105,15 @@ Integer.fromNumber = function(value) {
     return Integer.ZERO;
   } else if (value < 0) {
     return Integer.fromNumber(-value).negate();
-  } else {
-    var bits = [];
-    var pow = 1;
-    for (var i = 0; value >= pow; i++) {
-      bits[i] = (value / pow) | 0;
-      pow *= Integer.TWO_PWR_32_DBL_;
-    }
-    return new Integer(bits, 0);
+  } 
+  const bits = [];
+  let pow = 1;
+  for (let i = 0; value >= pow; i++) {
+    bits[i] = (value / pow) | 0;
+    pow *= Integer.TWO_PWR_32_DBL_;
   }
+  return new Integer(bits, 0);
+  
 };
 
 
@@ -127,7 +127,7 @@ Integer.fromNumber = function(value) {
  * @return {!Integer} The corresponding Integer value.
  */
 Integer.fromBits = function(bits) {
-  var high = bits[bits.length - 1];
+  const high = bits[bits.length - 1];
   //noinspection JSBitwiseOperatorUsage
   return new Integer(bits, high & (1 << 31) ? -1 : 0);
 };
@@ -145,8 +145,8 @@ Integer.fromString = function(str, opt_radix) {
     throw TypeError('number format error: empty string');
   }
 
-  var radix = opt_radix || 10;
-  if (radix < 2 || 36 < radix) {
+  const radix = opt_radix || 10;
+  if (radix < 2 || radix > 36) {
     throw Error('radix out of range: ' + radix);
   }
 
@@ -158,14 +158,14 @@ Integer.fromString = function(str, opt_radix) {
 
   // Do several (8) digits each time through the loop, so as to
   // minimize the calls to the very expensive emulated div.
-  var radixToPower = Integer.fromNumber(Math.pow(radix, 8));
+  const radixToPower = Integer.fromNumber(Math.pow(radix, 8));
 
-  var result = Integer.ZERO;
-  for (var i = 0; i < str.length; i += 8) {
-    var size = Math.min(8, str.length - i);
-    var value = parseInt(str.substring(i, i + size), radix);
+  let result = Integer.ZERO;
+  for (let i = 0; i < str.length; i += 8) {
+    const size = Math.min(8, str.length - i);
+    const value = parseInt(str.substring(i, i + size), radix);
     if (size < 8) {
-      var power = Integer.fromNumber(Math.pow(radix, size));
+      const power = Integer.fromNumber(Math.pow(radix, size));
       result = result.multiply(power).add(Integer.fromNumber(value));
     } else {
       result = result.multiply(radixToPower);
@@ -182,18 +182,18 @@ Integer.fromString = function(str, opt_radix) {
  * @returns {Integer}
  */
 Integer.fromBuffer = function (buf) {
-  var bits = new Array(Math.ceil(buf.length / 4));
+  const bits = new Array(Math.ceil(buf.length / 4));
   //noinspection JSBitwiseOperatorUsage
-  var sign = buf[0] & (1 << 7) ? -1 : 0;
-  for (var i = 0; i < bits.length; i++) {
-    var offset = buf.length - ((i + 1) * 4);
+  const sign = buf[0] & (1 << 7) ? -1 : 0;
+  for (let i = 0; i < bits.length; i++) {
+    let offset = buf.length - ((i + 1) * 4);
     var value;
     if (offset < 0) {
       //The buffer length is not multiple of 4
       offset = offset + 4;
       value = 0;
-      for (var j = 0; j < offset; j++) {
-        var byte = buf[j];
+      for (let j = 0; j < offset; j++) {
+        let byte = buf[j];
         if (sign === -1) {
           //invert the bits
           byte = ~byte & 0xff;
@@ -222,18 +222,18 @@ Integer.fromBuffer = function (buf) {
  * @returns {Buffer}
 */
 Integer.toBuffer = function (value) {
-  var sign = value.sign_;
-  var bits = value.bits_;
+  const sign = value.sign_;
+  const bits = value.bits_;
   if (bits.length === 0) {
     //[0] or [0xffffffff]
     return utils.allocBufferFromArray([value.sign_]);
   }
   //the high bits might need to be represented in less than 4 bytes
-  var highBits = bits[bits.length-1];
+  let highBits = bits[bits.length-1];
   if (sign === -1) {
     highBits = ~highBits;
   }
-  var high = [];
+  const high = [];
   if (highBits >>> 24 > 0) {
     high.push((highBits >> 24) & 0xff);
   }
@@ -255,9 +255,9 @@ Integer.toBuffer = function (value) {
     //its positive but it lost the byte containing the sign bit
     high.unshift(0);
   }
-  var buf = utils.allocBufferUnsafe(high.length + ((bits.length-1) * 4));
-  for (var j = 0; j < high.length; j++) {
-    var b = high[j];
+  const buf = utils.allocBufferUnsafe(high.length + ((bits.length-1) * 4));
+  for (let j = 0; j < high.length; j++) {
+    const b = high[j];
     if (sign === -1) {
       buf[j] = ~b;
     }
@@ -265,9 +265,9 @@ Integer.toBuffer = function (value) {
       buf[j] = b;
     }
   }
-  for (var i = 0; i < bits.length - 1; i++) {
-    var group = bits[bits.length - 2 - i];
-    var offset = high.length + i * 4;
+  for (let i = 0; i < bits.length - 1; i++) {
+    const group = bits[bits.length - 2 - i];
+    const offset = high.length + i * 4;
     buf.writeInt32BE(group, offset);
   }
   return buf;
@@ -311,15 +311,15 @@ Integer.prototype.toInt = function() {
 Integer.prototype.toNumber = function() {
   if (this.isNegative()) {
     return -this.negate().toNumber();
-  } else {
-    var val = 0;
-    var pow = 1;
-    for (var i = 0; i < this.bits_.length; i++) {
-      val += this.getBitsUnsigned(i) * pow;
-      pow *= Integer.TWO_PWR_32_DBL_;
-    }
-    return val;
+  } 
+  let val = 0;
+  let pow = 1;
+  for (let i = 0; i < this.bits_.length; i++) {
+    val += this.getBitsUnsigned(i) * pow;
+    pow *= Integer.TWO_PWR_32_DBL_;
   }
+  return val;
+  
 };
 
 
@@ -329,8 +329,8 @@ Integer.prototype.toNumber = function() {
  * @override
  */
 Integer.prototype.toString = function(opt_radix) {
-  var radix = opt_radix || 10;
-  if (radix < 2 || 36 < radix) {
+  const radix = opt_radix || 10;
+  if (radix < 2 || radix > 36) {
     throw Error('radix out of range: ' + radix);
   }
 
@@ -342,24 +342,24 @@ Integer.prototype.toString = function(opt_radix) {
 
   // Do several (6) digits each time through the loop, so as to
   // minimize the calls to the very expensive emulated div.
-  var radixToPower = Integer.fromNumber(Math.pow(radix, 6));
+  const radixToPower = Integer.fromNumber(Math.pow(radix, 6));
 
-  var rem = this;
-  var result = '';
+  let rem = this;
+  let result = '';
   while (true) {
-    var remDiv = rem.divide(radixToPower);
-    var intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
-    var digits = intval.toString(radix);
+    const remDiv = rem.divide(radixToPower);
+    const intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
+    let digits = intval.toString(radix);
 
     rem = remDiv;
     if (rem.isZero()) {
       return digits + result;
-    } else {
-      while (digits.length < 6) {
-        digits = '0' + digits;
-      }
-      result = '' + digits + result;
+    } 
+    while (digits.length < 6) {
+      digits = '0' + digits;
     }
+    result = '' + digits + result;
+    
   }
 };
 
@@ -372,12 +372,12 @@ Integer.prototype.toString = function(opt_radix) {
  */
 Integer.prototype.getBits = function(index) {
   if (index < 0) {
-    return 0;  // Allowing this simplifies bit shifting operations below...
+    return 0; // Allowing this simplifies bit shifting operations below...
   } else if (index < this.bits_.length) {
     return this.bits_[index];
-  } else {
-    return this.sign_;
-  }
+  } 
+  return this.sign_;
+  
 };
 
 
@@ -387,7 +387,7 @@ Integer.prototype.getBits = function(index) {
  * @return {number} The requested 32-bits as an unsigned number.
  */
 Integer.prototype.getBitsUnsigned = function(index) {
-  var val = this.getBits(index);
+  const val = this.getBits(index);
   return val >= 0 ? val : Integer.TWO_PWR_32_DBL_ + val;
 };
 
@@ -403,7 +403,7 @@ Integer.prototype.isZero = function() {
   if (this.sign_ != 0) {
     return false;
   }
-  for (var i = 0; i < this.bits_.length; i++) {
+  for (let i = 0; i < this.bits_.length; i++) {
     if (this.bits_[i] != 0) {
       return false;
     }
@@ -433,8 +433,8 @@ Integer.prototype.equals = function(other) {
   if (this.sign_ != other.sign_) {
     return false;
   }
-  var len = Math.max(this.bits_.length, other.bits_.length);
-  for (var i = 0; i < len; i++) {
+  const len = Math.max(this.bits_.length, other.bits_.length);
+  for (let i = 0; i < len; i++) {
     if (this.getBits(i) != other.getBits(i)) {
       return false;
     }
@@ -495,14 +495,14 @@ Integer.prototype.lessThanOrEqual = function(other) {
  *     if the given one is greater.
  */
 Integer.prototype.compare = function(other) {
-  var diff = this.subtract(other);
+  const diff = this.subtract(other);
   if (diff.isNegative()) {
     return -1;
   } else if (diff.isZero()) {
     return 0;
-  } else {
-    return +1;
-  }
+  } 
+  return +1;
+  
 };
 
 
@@ -513,23 +513,23 @@ Integer.prototype.compare = function(other) {
  * @return {!Integer} The shorted integer value.
  */
 Integer.prototype.shorten = function(numBits) {
-  var arr_index = (numBits - 1) >> 5;
-  var bit_index = (numBits - 1) % 32;
-  var bits = [];
-  for (var i = 0; i < arr_index; i++) {
+  const arr_index = (numBits - 1) >> 5;
+  const bit_index = (numBits - 1) % 32;
+  const bits = [];
+  for (let i = 0; i < arr_index; i++) {
     bits[i] = this.getBits(i);
   }
-  var sigBits = bit_index == 31 ? 0xFFFFFFFF : (1 << (bit_index + 1)) - 1;
-  var val = this.getBits(arr_index) & sigBits;
+  const sigBits = bit_index == 31 ? 0xFFFFFFFF : (1 << (bit_index + 1)) - 1;
+  let val = this.getBits(arr_index) & sigBits;
   //noinspection JSBitwiseOperatorUsage
   if (val & (1 << bit_index)) {
     val |= 0xFFFFFFFF - sigBits;
     bits[arr_index] = val;
     return new Integer(bits, -1);
-  } else {
-    bits[arr_index] = val;
-    return new Integer(bits, 0);
-  }
+  } 
+  bits[arr_index] = val;
+  return new Integer(bits, 0);
+  
 };
 
 
@@ -545,19 +545,19 @@ Integer.prototype.negate = function() {
  * @return {!Integer} The Integer result.
  */
 Integer.prototype.add = function(other) {
-  var len = Math.max(this.bits_.length, other.bits_.length);
-  var arr = [];
-  var carry = 0;
+  const len = Math.max(this.bits_.length, other.bits_.length);
+  const arr = [];
+  let carry = 0;
 
-  for (var i = 0; i <= len; i++) {
-    var a1 = this.getBits(i) >>> 16;
-    var a0 = this.getBits(i) & 0xFFFF;
+  for (let i = 0; i <= len; i++) {
+    const a1 = this.getBits(i) >>> 16;
+    const a0 = this.getBits(i) & 0xFFFF;
 
-    var b1 = other.getBits(i) >>> 16;
-    var b0 = other.getBits(i) & 0xFFFF;
+    const b1 = other.getBits(i) >>> 16;
+    const b0 = other.getBits(i) & 0xFFFF;
 
-    var c0 = carry + a0 + b0;
-    var c1 = (c0 >>> 16) + a1 + b1;
+    let c0 = carry + a0 + b0;
+    let c1 = (c0 >>> 16) + a1 + b1;
     carry = c1 >>> 16;
     c0 &= 0xFFFF;
     c1 &= 0xFFFF;
@@ -592,9 +592,9 @@ Integer.prototype.multiply = function(other) {
   if (this.isNegative()) {
     if (other.isNegative()) {
       return this.negate().multiply(other.negate());
-    } else {
-      return this.negate().multiply(other).negate();
-    }
+    } 
+    return this.negate().multiply(other).negate();
+    
   } else if (other.isNegative()) {
     return this.multiply(other.negate()).negate();
   }
@@ -606,18 +606,18 @@ Integer.prototype.multiply = function(other) {
   }
 
   // Fill in an array of 16-bit products.
-  var len = this.bits_.length + other.bits_.length;
-  var arr = [];
+  const len = this.bits_.length + other.bits_.length;
+  const arr = [];
   for (var i = 0; i < 2 * len; i++) {
     arr[i] = 0;
   }
   for (var i = 0; i < this.bits_.length; i++) {
-    for (var j = 0; j < other.bits_.length; j++) {
-      var a1 = this.getBits(i) >>> 16;
-      var a0 = this.getBits(i) & 0xFFFF;
+    for (let j = 0; j < other.bits_.length; j++) {
+      const a1 = this.getBits(i) >>> 16;
+      const a0 = this.getBits(i) & 0xFFFF;
 
-      var b1 = other.getBits(j) >>> 16;
-      var b0 = other.getBits(j) & 0xFFFF;
+      const b1 = other.getBits(j) >>> 16;
+      const b0 = other.getBits(j) & 0xFFFF;
 
       arr[2 * i + 2 * j] += a0 * b0;
       Integer.carry16_(arr, 2 * i + 2 * j);
@@ -670,9 +670,9 @@ Integer.prototype.divide = function(other) {
   if (this.isNegative()) {
     if (other.isNegative()) {
       return this.negate().divide(other.negate());
-    } else {
-      return this.negate().divide(other).negate();
-    }
+    } 
+    return this.negate().divide(other).negate();
+    
   } else if (other.isNegative()) {
     return this.divide(other.negate()).negate();
   }
@@ -682,22 +682,22 @@ Integer.prototype.divide = function(other) {
   // into the result, and subtract it from the remainder.  It is critical that
   // the approximate value is less than or equal to the real value so that the
   // remainder never becomes negative.
-  var res = Integer.ZERO;
-  var rem = this;
+  let res = Integer.ZERO;
+  let rem = this;
   while (rem.greaterThanOrEqual(other)) {
     // Approximate the result of division. This may be a little greater or
     // smaller than the actual value.
-    var approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
+    let approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
 
     // We will tweak the approximate result by changing it in the 48-th digit or
     // the smallest non-fractional digit, whichever is larger.
-    var log2 = Math.ceil(Math.log(approx) / Math.LN2);
-    var delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
+    const log2 = Math.ceil(Math.log(approx) / Math.LN2);
+    const delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
 
     // Decrease the approximation until it is smaller than the remainder.  Note
     // that if it is too large, the product overflows and is negative.
-    var approxRes = Integer.fromNumber(approx);
-    var approxRem = approxRes.multiply(other);
+    let approxRes = Integer.fromNumber(approx);
+    let approxRem = approxRes.multiply(other);
     while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
       approx -= delta;
       approxRes = Integer.fromNumber(approx);
@@ -729,9 +729,9 @@ Integer.prototype.modulo = function(other) {
 
 /** @return {!Integer} The bitwise-NOT of this value. */
 Integer.prototype.not = function() {
-  var len = this.bits_.length;
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const len = this.bits_.length;
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     arr[i] = ~this.bits_[i];
   }
   return new Integer(arr, ~this.sign_);
@@ -744,9 +744,9 @@ Integer.prototype.not = function() {
  * @return {!Integer} The bitwise-AND of this and the other.
  */
 Integer.prototype.and = function(other) {
-  var len = Math.max(this.bits_.length, other.bits_.length);
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const len = Math.max(this.bits_.length, other.bits_.length);
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     arr[i] = this.getBits(i) & other.getBits(i);
   }
   return new Integer(arr, this.sign_ & other.sign_);
@@ -759,9 +759,9 @@ Integer.prototype.and = function(other) {
  * @return {!Integer} The bitwise-OR of this and the other.
  */
 Integer.prototype.or = function(other) {
-  var len = Math.max(this.bits_.length, other.bits_.length);
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const len = Math.max(this.bits_.length, other.bits_.length);
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     arr[i] = this.getBits(i) | other.getBits(i);
   }
   return new Integer(arr, this.sign_ | other.sign_);
@@ -774,9 +774,9 @@ Integer.prototype.or = function(other) {
  * @return {!Integer} The bitwise-XOR of this and the other.
  */
 Integer.prototype.xor = function(other) {
-  var len = Math.max(this.bits_.length, other.bits_.length);
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const len = Math.max(this.bits_.length, other.bits_.length);
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     arr[i] = this.getBits(i) ^ other.getBits(i);
   }
   return new Integer(arr, this.sign_ ^ other.sign_);
@@ -789,11 +789,11 @@ Integer.prototype.xor = function(other) {
  * @return {!Integer} This shifted to the left by the given amount.
  */
 Integer.prototype.shiftLeft = function(numBits) {
-  var arr_delta = numBits >> 5;
-  var bit_delta = numBits % 32;
-  var len = this.bits_.length + arr_delta + (bit_delta > 0 ? 1 : 0);
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const arr_delta = numBits >> 5;
+  const bit_delta = numBits % 32;
+  const len = this.bits_.length + arr_delta + (bit_delta > 0 ? 1 : 0);
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     if (bit_delta > 0) {
       arr[i] = (this.getBits(i - arr_delta) << bit_delta) |
       (this.getBits(i - arr_delta - 1) >>> (32 - bit_delta));
@@ -811,11 +811,11 @@ Integer.prototype.shiftLeft = function(numBits) {
  * @return {!Integer} This shifted to the right by the given amount.
  */
 Integer.prototype.shiftRight = function(numBits) {
-  var arr_delta = numBits >> 5;
-  var bit_delta = numBits % 32;
-  var len = this.bits_.length - arr_delta;
-  var arr = [];
-  for (var i = 0; i < len; i++) {
+  const arr_delta = numBits >> 5;
+  const bit_delta = numBits % 32;
+  const len = this.bits_.length - arr_delta;
+  const arr = [];
+  for (let i = 0; i < len; i++) {
     if (bit_delta > 0) {
       arr[i] = (this.getBits(i + arr_delta) >>> bit_delta) |
       (this.getBits(i + arr_delta + 1) << (32 - bit_delta));

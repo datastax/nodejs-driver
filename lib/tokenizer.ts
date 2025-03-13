@@ -583,10 +583,10 @@ export {
   Murmur3Tokenizer,
   RandomTokenizer,
   ByteOrderedTokenizer
-}
+};
 
 export default {
   Murmur3Tokenizer,
   RandomTokenizer,
   ByteOrderedTokenizer
-}
+};

@@ -579,9 +579,9 @@ export {
   Protocol,
   Parser,
   ResultEmitter
-}
+};
 export default {
   Protocol,
   Parser,
   ResultEmitter
-}
+};

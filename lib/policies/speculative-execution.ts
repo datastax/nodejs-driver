@@ -142,10 +142,10 @@ export {
   NoSpeculativeExecutionPolicy,
   SpeculativeExecutionPolicy,
   ConstantSpeculativeExecutionPolicy
-}
+};
 
 export default{
   NoSpeculativeExecutionPolicy,
   SpeculativeExecutionPolicy,
   ConstantSpeculativeExecutionPolicy
-}
+};

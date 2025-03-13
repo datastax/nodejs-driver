@@ -284,7 +284,7 @@ export {
   ByteOrderedToken,
   Murmur3Token,
   RandomToken
-}
+};
 
 export default {
   Token,
@@ -292,4 +292,4 @@ export default {
   ByteOrderedToken,
   Murmur3Token,
   RandomToken
-}
+};

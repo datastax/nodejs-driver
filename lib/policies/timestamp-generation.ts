@@ -168,9 +168,9 @@ MonotonicTimestampGenerator.prototype._generateMicroseconds = function () {
 export {
   TimestampGenerator,
   MonotonicTimestampGenerator
-}
+};
 
 export default{
   TimestampGenerator,
   MonotonicTimestampGenerator
-}
+};

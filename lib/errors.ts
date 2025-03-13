@@ -189,4 +189,4 @@ export default {
   NotSupportedError,
   ResponseError,
   VIntOutOfRangeException
-}
+};

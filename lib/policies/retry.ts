@@ -275,10 +275,10 @@ export {
   IdempotenceAwareRetryPolicy,
   FallthroughRetryPolicy,
   RetryPolicy
-}
+};
 
 export default {
   IdempotenceAwareRetryPolicy,
   FallthroughRetryPolicy,
   RetryPolicy
-}
+};

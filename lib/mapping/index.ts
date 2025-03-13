@@ -29,25 +29,25 @@ import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} f
  */
 
 export {
-    Mapper,
-    ModelMapper,
-    ModelBatchMapper,
-    ModelBatchItem,
-    Result,
-    TableMappings,
-    DefaultTableMappings,
-    UnderscoreCqlToCamelCaseMappings,
-    q
-}
+  Mapper,
+  ModelMapper,
+  ModelBatchMapper,
+  ModelBatchItem,
+  Result,
+  TableMappings,
+  DefaultTableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  q
+};
 
 export default {
-    Mapper,
-    ModelMapper,
-    ModelBatchMapper,
-    ModelBatchItem,
-    Result,
-    TableMappings,
-    DefaultTableMappings,
-    UnderscoreCqlToCamelCaseMappings,
-    q
-}
+  Mapper,
+  ModelMapper,
+  ModelBatchMapper,
+  ModelBatchItem,
+  Result,
+  TableMappings,
+  DefaultTableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  q
+};

@@ -1176,4 +1176,4 @@ function getByVersion(options, cc, udtResolver, version, currentInstance) {
 export default {
   getByVersion,
   isDoneForToken
-}
+};

@@ -653,7 +653,7 @@ export {
   unset,
   generateTimestamp,
   Vector
-}
+};
 
 export default {
   opcodes,
@@ -688,4 +688,4 @@ export default {
   unset,
   generateTimestamp,
   Vector
-}
+};

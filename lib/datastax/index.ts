@@ -32,3 +32,7 @@ export default {
     DateRange
 };
 
+export {
+    graph,
+    DateRange
+};

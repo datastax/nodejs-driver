@@ -62,7 +62,26 @@ export default {
   Property,
   Vertex,
   VertexProperty,
+  asInt,
+  asDouble,
+  asFloat,
+  asTimestamp,
+  asUdt,
+  direction,
+  getCustomTypeSerializers,
+  GraphResultSet,
+  GraphTypeWrapper,
+  t,
+  UdtGraphWrapper
+};
 
+export {
+  Edge,
+  Element,
+  Path,
+  Property,
+  Vertex,
+  VertexProperty,
   asInt,
   asDouble,
   asFloat,

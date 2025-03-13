@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 'use strict';
-import Integer from "./integer.js";
-import utils from "../utils.js";
+import Integer from "./integer";
+import utils from "../utils";
 
 /** @module types */
 /**

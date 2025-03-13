@@ -157,10 +157,6 @@ class Encoder{
   private getLengthBuffer: (value: Buffer | number) => Buffer;
   private collectionLengthSize : number;
   private protocolVersion: number;
-  private decodeLong: ((bytes: Buffer) => bigint | Long);
-  private decodeVarint: ((bytes: Buffer) => bigint | Integer);
-  private encodeLong: (value: string | number | Buffer | Long) => any;
-  private encodeVarint: (value: Integer | Buffer | string | number) => Buffer;
     
   private readonly customDecoders = {
     [customTypeNames.duration]: decodeDuration,
@@ -193,22 +189,6 @@ class Encoder{
     else {
       this.handleBuffer = handleBufferRef;
     }
-
-    this.decodeLong = this.encodingOptions.useBigIntAsLong
-      ? this._decodeCqlLongAsBigInt
-      : this._decodeCqlLongAsLong;
-
-    this.decodeVarint = this.encodingOptions.useBigIntAsVarint
-    ? this._decodeVarintAsBigInt
-    : this._decodeVarintAsInteger;
-
-    this.encodeLong = this.encodingOptions.useBigIntAsLong
-    ? this._encodeBigIntFromBigInt
-    : this._encodeBigIntFromLong;
-
-    this.encodeVarint = this.encodingOptions.useBigIntAsVarint
-      ? this._encodeVarintFromBigInt
-      : this._encodeVarintFromInteger;
   }
 
     /**
@@ -291,12 +271,24 @@ class Encoder{
     return bytes.readInt8(0);
   };
 
+  private decodeLong = function (bytes: Buffer): Long | bigint {
+    return this.encodingOptions.useBigIntAsLong
+    ? this._decodeCqlLongAsBigInt(bytes)
+    : this._decodeCqlLongAsLong(bytes);
+  }
+
   private _decodeCqlLongAsLong = function (bytes: Buffer): Long {
     return Long["fromBuffer"](bytes);
   };
 
   private _decodeCqlLongAsBigInt = function (bytes: Buffer): bigint {
     return BigInt.asIntN(64, (BigInt(bytes.readUInt32BE(0)) << bigInt32) | BigInt(bytes.readUInt32BE(4)));
+  };
+
+  private decodeVarint = function (bytes: Buffer): Integer | bigint {
+    return this.encodingOptions.useBigIntAsVarint
+      ? this._decodeVarintAsBigInt(bytes)
+      : this._decodeVarintAsInteger(bytes);
   };
 
   private _decodeVarintAsInteger = function (bytes: Buffer): Integer {
@@ -628,7 +620,13 @@ class Encoder{
     return buf;
   };
 
-  private _encodeBigIntFromBigInt = function (value) {
+  private encodeLong = function (value: Long | bigint | Buffer | string | number) {
+    return this.encodingOptions.useBigIntAsLong
+      ? this._encodeBigIntFromBigInt(value)
+      : this._encodeBigIntFromLong(value);
+  };
+
+  private _encodeBigIntFromBigInt = function (value: string | bigint) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = BigInt(value);
@@ -671,7 +669,13 @@ class Encoder{
     return buf;
   };
 
-  private _encodeVarintFromBigInt = function (value) {
+  private encodeVarint = function (value: Integer | bigint | Buffer | string | number) {
+    return this.encodingOptions.useBigIntAsVarint
+      ? this._encodeVarintFromBigInt(value)
+      : this._encodeVarintFromInteger(value);
+  };
+
+  private _encodeVarintFromBigInt = function (value: string | bigint) {
     if (typeof value === 'string') {
       // All numeric types are supported as strings for historical reasons
       value = BigInt(value);
@@ -751,6 +755,7 @@ class Encoder{
   private encodeAsciiString = function (value) {
     return this.encodeString(value, 'ascii');
   };
+  
   private encodeBlob = function (value) {
     if (!(value instanceof Buffer)) {
       throw new TypeError('Not a valid blob, expected Buffer obtained ' + util.inspect(value));
@@ -775,7 +780,7 @@ class Encoder{
       return this.encodeVector(value, vectorColumnInfo);
     }
 
-    const handler = customEncoders[columnInfo.info];
+    const handler = this.customEncoders[columnInfo.info];
     if (handler) {
       return handler.call(this, value);
     }

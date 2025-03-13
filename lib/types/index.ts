@@ -60,7 +60,7 @@ const consistencies = {
   serial:       0x08,
   localSerial:  0x09,
   localOne:     0x0a
-};
+} as const;
 
 /**
  * Mapping of consistency level codes to their string representation.

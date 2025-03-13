@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Connection from "../connection";
+import { Host } from "../host";
 import utils from "../utils";
 import VersionNumber from "./version-number";
 
@@ -41,7 +43,7 @@ const v600 = VersionNumber.parse('6.0.0');
  * is supported.
  * @alias module:types~protocolVersion
  */
-const protocolVersion = {
+const protocolVersion: object = {
   // Strict equality operators to compare versions are allowed, other comparison operators are discouraged. Instead,
   // use a function that checks if a functionality is present on a certain version, for maintainability purposes.
   v1: 0x01,
@@ -61,7 +63,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  isDse: function(version) {
+  isDse: function(version: number): boolean {
     return ((version >= this.dseV1 && version <= this.dseV2));
   },
   /**
@@ -71,7 +73,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  isSupportedCassandra: function(version) {
+  isSupportedCassandra: function(version: number): boolean {
     return (version <= 0x04 && version >= 0x01);
   },
   /**
@@ -80,7 +82,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  isSupported: function (version) {
+  isSupported: function (version: number): boolean {
     return (this.isDse(version) || this.isSupportedCassandra(version));
   },
 
@@ -90,7 +92,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  supportsPrepareFlags: function (version) {
+  supportsPrepareFlags: function (version: number): boolean {
     return (version === this.dseV2);
   },
   /**
@@ -99,7 +101,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  supportsKeyspaceInRequest: function (version) {
+  supportsKeyspaceInRequest: function (version: number): boolean {
     return (version === this.dseV2);
   },
   /**
@@ -109,7 +111,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  supportsResultMetadataId: function (version) {
+  supportsResultMetadataId: function (version: number): boolean {
     return (version === this.dseV2);
   },
   /**
@@ -118,7 +120,7 @@ const protocolVersion = {
    * @returns {Boolean}
    * @ignore
    */
-  supportsPreparedPartitionKey: function (version) {
+  supportsPreparedPartitionKey: function (version: number): boolean {
     return (version >= this.v4);
   },
   /**
@@ -128,7 +130,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsSchemaChangeFullMetadata: function (version) {
+  supportsSchemaChangeFullMetadata: function (version): boolean {
     return (version >= this.v3);
   },
   /**
@@ -137,7 +139,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsContinuousPaging: function (version) {
+  supportsContinuousPaging: function (version): boolean {
     return (this.isDse(version));
   },
   /**
@@ -147,7 +149,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsPaging: function (version) {
+  supportsPaging: function (version): boolean {
     return (version >= this.v2);
   },
   /**
@@ -156,7 +158,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsTimestamp: function (version) {
+  supportsTimestamp: function (version: number): boolean {
     return (version >= this.v3);
   },
   /**
@@ -165,7 +167,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsNamedParameters: function (version) {
+  supportsNamedParameters: function (version: number): boolean {
     return (version >= this.v3);
   },
   /**
@@ -174,7 +176,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsUnset: function (version) {
+  supportsUnset: function (version: number): boolean {
     return (version >= this.v4);
   },
   /**
@@ -183,7 +185,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  supportsFailureReasonMap: function (version) {
+  supportsFailureReasonMap: function (version): boolean {
     return (version >= this.v5);
   },
   /**
@@ -192,7 +194,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  uses2BytesStreamIds: function (version) {
+  uses2BytesStreamIds: function (version: number): boolean {
     return (version >= this.v3);
   },
   /**
@@ -201,7 +203,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  uses4BytesCollectionLength: function (version) {
+  uses4BytesCollectionLength: function (version: number): boolean {
     return (version >= this.v3);
   },
   /**
@@ -210,7 +212,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  uses4BytesQueryFlags: function (version) {
+  uses4BytesQueryFlags: function (version: number): boolean {
     return (this.isDse(version));
   },
   /**
@@ -220,7 +222,7 @@ const protocolVersion = {
    * @return {boolean}
    * @ignore
    */
-  canStartupResponseErrorBeWrapped: function (version) {
+  canStartupResponseErrorBeWrapped: function (version: number): boolean {
     return (version >= this.v4);
   },
   /**
@@ -230,7 +232,7 @@ const protocolVersion = {
    * @return {Number}
    * @ignore
    */
-  getLowerSupported: function (version) {
+  getLowerSupported: function (version: number): number {
     if (version >= this.v5) {
       return this.v4;
     }
@@ -254,7 +256,7 @@ const protocolVersion = {
    * @param {Array.<Host>} hosts The hosts to determine highest protocol version from.
    * @return {Number} Highest supported protocol version among hosts.
    */
-  getHighestCommon: function(connection, hosts) {
+  getHighestCommon: function(connection: Connection, hosts: Array<Host>): number {
     const log = connection.log ? connection.log.bind(connection) : utils.noop;
     let maxVersion = connection.protocolVersion;
     // whether or not protocol v3 is required (nodes detected that don't support < 3).
@@ -339,9 +341,9 @@ const protocolVersion = {
   /**
    * Determines if the protocol is a BETA version of the protocol.
    * @param {Number} version
-   * @return {Number}
+   * @return {boolean}
    */
-  isBeta: function (version) {
+  isBeta: function (version: number): boolean {
     return version === this.v5;
   }
 };

@@ -31,8 +31,7 @@ import InsightsClient from "./insights-client";
 import cloud from "./datastax/cloud/index";
 import GraphExecutor from "./datastax/graph/graph-executor";
 import promiseUtils from "./promise-utils";
-import packageInfo from '../package.json' assert {type: 'json'};
-import { AuthProvider } from "./auth";
+import packageInfo from '../package.json';
 
 'use strict';
 

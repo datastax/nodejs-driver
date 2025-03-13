@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+"use strict";
 import Long from "long";
 
-"use strict";
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
 
@@ -24,10 +24,13 @@ const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
  * @ignore
  */
 class MutableLong {
-  constructor(b00, b16, b32, b48) {
+  _arr: number[];
+  constructor(b00?, b16?, b32?, b48?) {
     // Use an array of uint16
     this._arr = [b00 & 0xffff, b16 & 0xffff, b32 & 0xffff, b48 & 0xffff];
   }
+
+  static one: MutableLong = new MutableLong(1, 0, 0, 0);
 
   toString() {
     return this.toImmutable().toString();
@@ -38,7 +41,7 @@ class MutableLong {
    * @param {MutableLong} other
    * @return {number}
    */
-  compare(other) {
+  compare(other: MutableLong): number {
     const thisNeg = this.isNegative();
     const otherNeg = other.isNegative();
     if (thisNeg && !otherNeg) {
@@ -51,7 +54,7 @@ class MutableLong {
     return this._compareBits(other);
   }
 
-  _compareBits(other) {
+  _compareBits(other: MutableLong) {
     for (let i = 3; i >= 0; i--) {
       if (this._arr[i] > other._arr[i]) {
         return 1;
@@ -83,7 +86,7 @@ class MutableLong {
    * Performs the bitwise NOT of this value.
    * @return {MutableLong}
    */
-  not() {
+  not(): MutableLong {
     this._arr[0] = ~this._arr[0] & 0xffff;
     this._arr[1] = ~this._arr[1] & 0xffff;
     this._arr[2] = ~this._arr[2] & 0xffff;
@@ -169,7 +172,7 @@ class MutableLong {
    * @param {MutableLong} other
    * @returns {MutableLong} this instance.
    */
-  xor(other) {
+  xor(other: MutableLong): MutableLong {
     this._arr[0] ^= other._arr[0];
     this._arr[1] ^= other._arr[1];
     this._arr[2] ^= other._arr[2];
@@ -186,7 +189,7 @@ class MutableLong {
    * @param {MutableLong} multiplier
    * @returns {MutableLong} this instance.
    */
-  multiply(multiplier) {
+  multiply(multiplier: MutableLong): MutableLong {
     let negate = false;
     if (this.isZero() || multiplier.isZero()) {
       return this.toZero();
@@ -246,7 +249,7 @@ class MutableLong {
    * Negates this value.
    * @return {MutableLong}
    */
-  negate() {
+  negate(): MutableLong {
     return this.not().add(MutableLong.one);
   }
 
@@ -284,7 +287,7 @@ class MutableLong {
    * @param {Number} [radix]
    * @return {MutableLong}
    */
-  static fromString(str, radix) {
+  static fromString(str: string, radix: number): MutableLong {
     if (typeof str !== 'string') {
       throw new Error('String format is not valid: ' + str);
     }
@@ -322,7 +325,5 @@ class MutableLong {
     return result;
   }
 }
-
-MutableLong.one = new MutableLong(1, 0, 0, 0);
 
 export default MutableLong;

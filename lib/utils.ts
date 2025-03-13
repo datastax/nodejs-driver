@@ -1252,6 +1252,7 @@ const VIntCoding = (function () {
    * @throws VIntOutOfRangeException If the vint doesn't fit into a 32-bit integer
    */
   // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function getUnsignedVInt32(input, readerIndex) {
     return checkedCast(getUnsignedVInt(input, readerIndex, input.length));
   }

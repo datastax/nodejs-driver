@@ -20,7 +20,7 @@ import promiseUtils from "../../../lib/promise-utils";
 import helper from "../../test-helper";
 import simulacron from "../simulacron";
 
-'use strict';
+
 const { OrderedLoadBalancingPolicy } = helper;
 
 const queryDelayedOnNode0 = 'INSERT INTO paused_on_first_node';

@@ -19,7 +19,7 @@ import Geometry from "./geometry";
 import Point from "./point";
 import LineString from "./line-string";
 
-'use strict';
+
 
 /**
  * Creates a new {@link Polygon} instance.

@@ -38,6 +38,7 @@ module.exports = {
     "array-callback-return": "error",
     "curly": "error",
     "no-unused-vars": ["error", { "args": "none" }],
+    "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
     "global-require": "error",
     "eqeqeq": ["error", "allow-null"],
 
@@ -93,6 +94,8 @@ module.exports = {
       allowShortCircuit: false,
       allowTernary: false,
     }],
+    "@typescript-eslint/no-this-alias": "off",
+    "@typescript-eslint/no-explicit-any": "off",
     "no-useless-call": "off",
     "no-useless-concat": "error",
     "no-useless-escape": "error",

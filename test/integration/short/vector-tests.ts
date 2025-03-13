@@ -19,7 +19,7 @@ import { types } from "../../../index";
 import Vector from "../../../lib/types/vector";
 import util from "node:util";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 vdescribe('5.0.0', 'Vector tests', function () {
   this.timeout(120000);

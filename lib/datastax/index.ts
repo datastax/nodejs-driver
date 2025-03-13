@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * DataStax module.
@@ -28,8 +28,8 @@ import graph from "./graph/index";
 import { DateRange } from "./search/index";
 
 export default {
-    graph,
-    DateRange
+  graph,
+  DateRange
 };
 
 export {

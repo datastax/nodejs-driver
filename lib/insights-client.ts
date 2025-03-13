@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 import { NoAuthProvider } from './auth/index';
 import os from "os";
 import path from "path";

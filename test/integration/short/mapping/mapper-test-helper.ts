@@ -21,7 +21,7 @@ import Mapper from "../../../../lib/mapping/mapper";
 import Client from "../../../../lib/client";
 import utils from "../../../../lib/utils";
 
-'use strict';
+
 const Uuid = types.Uuid;
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
 const videoColumnsToProperties = new Map([ ['videoid', 'id'], ['userid', 'userId'], ['added_date', 'addedDate'],

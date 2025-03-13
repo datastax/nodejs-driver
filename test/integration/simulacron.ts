@@ -20,7 +20,7 @@ import fs from "fs";
 import utils from "../../lib/utils";
 import Client from "../../lib/client";
 import { spawn } from "child_process";
-'use strict';
+
 
 const simulacronHelper = {
   _execute: function(processName, params, cb) {

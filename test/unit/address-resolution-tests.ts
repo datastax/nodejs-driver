@@ -17,7 +17,7 @@ import assert from "assert";
 import dns from "dns";
 import * as addressResolution from "../../lib/policies/address-resolution";
 
-'use strict';
+
 const EC2MultiRegionTranslator = addressResolution.EC2MultiRegionTranslator;
 
 describe('EC2MultiRegionTranslator', function () {

@@ -18,7 +18,7 @@ import types from "../types/index";
 import utils from "../utils";
 import errors from "../errors";
 
-'use strict';
+
 const doneIteratorObject = Object.freeze({ done: true });
 const newlyUpInterval = 60000;
 

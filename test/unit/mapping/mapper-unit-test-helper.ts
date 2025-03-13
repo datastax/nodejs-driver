@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import assert from "assert";
 import types from "../../../lib/types/index";
 import ModelMapper from "../../../lib/mapping/model-mapper";

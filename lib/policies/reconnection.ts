@@ -15,7 +15,7 @@
  */
 import util from "util";
 
-'use strict';
+
 
 /** @module policies/reconnection */
 /**
@@ -154,13 +154,13 @@ ExponentialReconnectionPolicy.prototype.getOptions = function () {
 };
 
 export {
-    ReconnectionPolicy,
-    ConstantReconnectionPolicy,
-    ExponentialReconnectionPolicy
-}
+  ReconnectionPolicy,
+  ConstantReconnectionPolicy,
+  ExponentialReconnectionPolicy
+};
 
 export default {
   ReconnectionPolicy,
   ConstantReconnectionPolicy,
   ExponentialReconnectionPolicy
-}
+};

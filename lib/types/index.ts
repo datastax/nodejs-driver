@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import util from "util";
 import errors from "../errors";
 import TimeUuid from "./time-uuid";
@@ -655,7 +655,7 @@ export {
   unset,
   generateTimestamp,
   Vector
-}
+};
 
 export default {
   opcodes,
@@ -690,4 +690,4 @@ export default {
   unset,
   generateTimestamp,
   Vector
-}
+};

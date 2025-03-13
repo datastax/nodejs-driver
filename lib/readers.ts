@@ -18,7 +18,7 @@ import utils from "./utils";
 import types from "./types/index";
 import errors from "./errors";
 
-'use strict';
+
 /**
  * Information on the formatting of the returned rows
  */

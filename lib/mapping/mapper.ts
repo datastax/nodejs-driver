@@ -22,7 +22,7 @@ import ResultMapper from "./result-mapper";
 import ModelMappingInfo from "./model-mapping-info";
 import { ModelBatchItem } from "./model-batch-item";
 
-'use strict';
+
 
 /**
  * Represents an object mapper for Apache Cassandra and DataStax Enterprise.

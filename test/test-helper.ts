@@ -29,7 +29,7 @@ import { spawn, exec } from "child_process";
 import { defaultOptions } from "../lib/client-options";
 import Temp from "temp";
 
-'use strict';
+
 
 const temp = Temp.track(true);
 const Vector = types.Vector;

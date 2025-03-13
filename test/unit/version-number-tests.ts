@@ -16,7 +16,7 @@
 import assert from "assert";
 import VersionNumber from "../../lib/types/version-number";
 
-'use strict';
+
 describe('VersionNumber', () => {
   describe('#parse()', () => {
     it('should parse release version', validateVersion('3.0.13', 3, 0, 13));

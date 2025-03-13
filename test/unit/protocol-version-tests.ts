@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import assert from "assert";
 import {protocolVersion} from "../../lib/types";
 import {Host} from "../../lib/host";

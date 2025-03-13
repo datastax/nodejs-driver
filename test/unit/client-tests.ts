@@ -29,7 +29,7 @@ import clientOptions from "../../lib/client-options";
 import PrepareHandler from "../../lib/prepare-handler";
 import {Host, HostMap} from "../../lib/host";
 import { ProfileManager, ExecutionProfile } from "../../lib/execution-profile";
-'use strict';
+
 describe('Client', function () {
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {

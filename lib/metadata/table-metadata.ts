@@ -16,7 +16,7 @@
 import util from "util";
 import DataCollection from "./data-collection";
 
-'use strict';
+
 
 /**
  * Creates a new instance of TableMetadata

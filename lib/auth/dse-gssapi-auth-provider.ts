@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import BaseDseAuthenticator from './base-dse-authenticator';
 import GssapiClient from './gssapi-client';
 import { Authenticator, AuthProvider } from "./provider";

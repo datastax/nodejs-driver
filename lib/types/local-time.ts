@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import Long from "long";
 import util from "util";
 import utils from "../utils";

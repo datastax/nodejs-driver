@@ -17,7 +17,7 @@ import assert from "assert";
 import types from "../../lib/types/index";
 import utils from "../../lib/utils";
 
-'use strict';
+
 describe('BigDecimal', function () {
   const BigDecimal = types.BigDecimal;
   const Integer = types.Integer;

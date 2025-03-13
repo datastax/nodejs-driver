@@ -24,7 +24,7 @@ import utils from "../../lib/utils";
 import { ExecutionOptions } from "../../lib/execution-options";
 import { AllowListPolicy, LoadBalancingPolicy, TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy } from "../../lib/policies/load-balancing";
 
-'use strict';
+
 describe('RoundRobinPolicy', function () {
   it('should yield an error when the hosts are not set', function(done) {
     const policy = new RoundRobinPolicy();

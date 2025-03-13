@@ -25,7 +25,6 @@ import { ClientOptions } from "./client";
 import {dataTypes, Long, Integer, BigDecimal} from "./types/index";
 import {Geometry, LineString, Point, Polygon} from "./geometry/index";
 
-'use strict';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+
 import helper from "../../test-helper";
 import Client from "../../../lib/client";
 import utils from "../../../lib/utils";

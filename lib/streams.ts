@@ -20,7 +20,7 @@ import utils from "./utils";
 import errors from "./errors";
 import { FrameReader } from "./readers";
 
-'use strict';
+
 const { FrameHeader } = types;
 
 /**
@@ -579,9 +579,9 @@ export {
   Protocol,
   Parser,
   ResultEmitter
-}
+};
 export default {
   Protocol,
   Parser,
   ResultEmitter
-}
+};

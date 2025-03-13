@@ -16,7 +16,7 @@
 import ClientMetrics from "./client-metrics";
 import EventEmitter from "events";
 
-'use strict';
+
 
 /**
  * A default implementation of [ClientMetrics]{@link module:metrics~ClientMetrics} that exposes the driver events as

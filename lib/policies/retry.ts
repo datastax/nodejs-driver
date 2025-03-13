@@ -15,7 +15,7 @@
  */
 import util from "util";
 
-'use strict';
+
 
 /** @module policies/retry */
 /**
@@ -275,10 +275,10 @@ export {
   IdempotenceAwareRetryPolicy,
   FallthroughRetryPolicy,
   RetryPolicy
-}
+};
 
 export default {
   IdempotenceAwareRetryPolicy,
   FallthroughRetryPolicy,
   RetryPolicy
-}
+};

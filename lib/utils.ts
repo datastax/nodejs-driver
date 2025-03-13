@@ -20,7 +20,7 @@ import { EventEmitter } from "events";
 import errors from "./errors";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 /**
  * Max int that can be accurately represented with 64-bit Number (2^53)
  * @type {number}
@@ -1252,6 +1252,7 @@ const VIntCoding = (function () {
    * @throws VIntOutOfRangeException If the vint doesn't fit into a 32-bit integer
    */
   // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function getUnsignedVInt32(input, readerIndex) {
     return checkedCast(getUnsignedVInt(input, readerIndex, input.length));
   }

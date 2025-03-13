@@ -22,7 +22,7 @@ import utils from "../../../lib/utils";
 import errors from "../../../lib/errors";
 import { assert } from "chai";
 
-"use strict";
+
 const vit = helper.vit;
 
 describe('Client', function () {

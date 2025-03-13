@@ -17,7 +17,7 @@ import sinon from "sinon";
 import assert from "assert";
 import StreamIdStack from "../../lib/stream-id-stack";
 
-"use strict";
+
 describe('StreamIdStack', function () {
   let clock;
 

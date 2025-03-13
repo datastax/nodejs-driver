@@ -15,7 +15,7 @@
  */
 import utils from "../../utils";
 
-'use strict';
+
 
 /**
  * Creates a new instance of <code>GraphResultSet</code>.

@@ -16,7 +16,7 @@
 import util from "util";
 import events from "events";
 
-'use strict';
+
 
 /**
  * Creates a new instance of DataCollection

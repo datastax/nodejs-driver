@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * Tracks request execution for a {@link Client}.

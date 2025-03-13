@@ -17,7 +17,7 @@ import util from "util";
 import utils from "../utils";
 import promiseUtils from "../promise-utils";
 
-'use strict';
+
 const _queueOverflowThreshold = 1000;
 
 /**

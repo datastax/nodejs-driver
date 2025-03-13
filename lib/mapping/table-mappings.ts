@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * Contains a set of methods to represent a row into a document and a document into a row.
@@ -121,10 +121,10 @@ export default {
   TableMappings,
   UnderscoreCqlToCamelCaseMappings,
   DefaultTableMappings
-}
+};
 
 export {
   TableMappings,
   UnderscoreCqlToCamelCaseMappings,
   DefaultTableMappings
-}
+};

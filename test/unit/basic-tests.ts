@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-"use strict";
+
 import * as auth from '../../lib/auth/index';
 import { assert } from "chai";
 import sinon from "sinon";

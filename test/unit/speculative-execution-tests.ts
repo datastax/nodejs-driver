@@ -16,7 +16,7 @@
 import helper from "../test-helper";
 import specExecModule from "../../lib/policies/speculative-execution";
 
-'use strict';
+
 describe('NoSpeculativeExecutionPolicy', () => {
   describe('#getOptions()', () => {
     it('should return an empty Map', () => {

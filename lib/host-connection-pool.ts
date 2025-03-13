@@ -21,7 +21,7 @@ import promiseUtils from "./promise-utils";
 import errors from "./errors";
 import clientOptions from "./client-options";
 
-'use strict';
+
 // Used to get the index of the connection with less in-flight requests
 let connectionIndex = 0;
 const connectionIndexOverflow = Math.pow(2, 15);

@@ -22,7 +22,7 @@ import types from "../../../lib/types/index";
 import utils from "../../../lib/utils";
 import geometry from "../../../lib/geometry/index";
 
-'use strict';
+
 const { Tuple } = types;
 const { asInt, asDouble, asTimestamp } = graphModule;
 

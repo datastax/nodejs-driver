@@ -16,7 +16,7 @@
 import assert from "assert";
 import Tree from "../../../lib/mapping/tree";
 
-'use strict';
+
 describe('Tree', function () {
   this.timeout(20000);
 

@@ -25,7 +25,7 @@ import { ExecutionOptions } from "../../lib/execution-options";
 import errors from "../../lib/errors";
 import Client from "../../lib/client";
 
-'use strict';
+
 const { loadBalancing } = policies;
 const { DefaultLoadBalancingPolicy } = loadBalancing;
 const { lastOctetOf } = helper;

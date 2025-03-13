@@ -17,7 +17,7 @@ import util from "util";
 import utils from "../utils";
 import Geometry from "./geometry";
 
-'use strict';
+
 
 /**
  * Creates a new {@link Point} instance.

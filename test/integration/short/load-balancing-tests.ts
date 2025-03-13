@@ -21,7 +21,7 @@ import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
 import { RoundRobinPolicy, AllowListPolicy, TokenAwarePolicy} from "../../../lib/policies/load-balancing";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 
 const maxInFlightRequests = 16;

@@ -16,7 +16,7 @@
 import crypto from "crypto";
 import utils from "../utils";
 
-'use strict';
+
 
 /** @module types */
 

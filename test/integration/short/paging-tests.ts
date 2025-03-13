@@ -19,7 +19,7 @@ import types from "../../../lib/types/index";
 import helper from "../../test-helper";
 import promiseUtils from "../../../lib/promise-utils";
 
-'use strict';
+
 // Exported to be called on other fixtures to take advantage from existing setups
 
 // Exported to be called on other fixtures to take advantage from existing setups

@@ -22,7 +22,7 @@ import simulacron from "../simulacron";
 import { AllowListPolicy, DCAwareRoundRobinPolicy } from "../../../lib/policies/load-balancing";
 import { ExecutionProfile } from "../../../lib/execution-profile";
 
-'use strict';
+
 describe('ProfileManager', function() {
   this.timeout(40000);
   before(done => simulacron.start(done));

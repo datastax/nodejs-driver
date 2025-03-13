@@ -15,7 +15,7 @@
  */
 import EventEmitter from "events";
 
-'use strict';
+
 
 /**
  * Represents a tree node where the key is composed by 1 or more strings.

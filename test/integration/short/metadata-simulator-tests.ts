@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
 import simulacron from "../simulacron";

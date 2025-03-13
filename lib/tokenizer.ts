@@ -18,7 +18,7 @@ import token from "./token";
 import utils from "./utils";
 import MutableLong from "./types/mutable-long";
 
-'use strict';
+
 const { Integer } = types;
 
 // Murmur3 constants
@@ -583,10 +583,10 @@ export {
   Murmur3Tokenizer,
   RandomTokenizer,
   ByteOrderedTokenizer
-}
+};
 
 export default {
   Murmur3Tokenizer,
   RandomTokenizer,
   ByteOrderedTokenizer
-}
+};

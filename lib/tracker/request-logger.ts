@@ -18,7 +18,7 @@ import RequestTracker from "./request-tracker";
 import errors from "../errors";
 import { format } from "util";
 
-'use strict';
+
 const nanosToMillis = 1000000;
 const defaultMessageMaxQueryLength = 500;
 const defaultMaxParameterValueLength = 50;

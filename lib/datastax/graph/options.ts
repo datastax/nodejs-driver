@@ -18,7 +18,7 @@ import types from "../../types/index";
 import utils from "../../utils";
 import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
 
-'use strict';
+
 const Long = types.Long;
 
 let consistencyNames;

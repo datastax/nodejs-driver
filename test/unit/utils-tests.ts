@@ -18,7 +18,7 @@ import sinon from "sinon";
 import utils from "../../lib/utils";
 import helper from "../test-helper";
 
-'use strict';
+
 const AddressResolver = utils.AddressResolver;
 
 describe('utils', function () {

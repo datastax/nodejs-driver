@@ -17,7 +17,7 @@ import dns from "dns";
 import util from "util";
 import utils from "../utils";
 
-'use strict';
+
 
 /** @module policies/addressResolution */
 /**
@@ -140,4 +140,4 @@ EC2MultiRegionTranslator.prototype.logError = function (address, err) {
 export {
   AddressTranslator,
   EC2MultiRegionTranslator
-}
+};

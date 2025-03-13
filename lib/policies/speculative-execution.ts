@@ -16,7 +16,7 @@
 import util from "util";
 import errors from "../errors";
 
-'use strict';
+
 
 /** @module policies/speculativeExecution */
 
@@ -142,10 +142,10 @@ export {
   NoSpeculativeExecutionPolicy,
   SpeculativeExecutionPolicy,
   ConstantSpeculativeExecutionPolicy
-}
+};
 
 export default{
   NoSpeculativeExecutionPolicy,
   SpeculativeExecutionPolicy,
   ConstantSpeculativeExecutionPolicy
-}
+};

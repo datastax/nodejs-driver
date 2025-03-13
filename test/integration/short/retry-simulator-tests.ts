@@ -21,7 +21,7 @@ import simulacron from "../simulacron";
 import helper from "../../test-helper";
 import policies from "../../../lib/policies/index";
 
-'use strict';
+
 const RetryPolicy = policies.retry.RetryPolicy;
 
 const queries = {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * Tracker module.
@@ -24,10 +24,10 @@
 import RequestTracker from "./request-tracker";
 import RequestLogger from "./request-logger";
 export {
-    RequestTracker,
-    RequestLogger
-}
+  RequestTracker,
+  RequestLogger
+};
 export default {
-    RequestTracker,
-    RequestLogger
-}
+  RequestTracker,
+  RequestLogger
+};

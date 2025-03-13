@@ -16,7 +16,7 @@
 import utils from "../../utils";
 import Long from "long";
 
-'use strict';
+
 /**
  * Regex to parse dates in the following format YYYY-MM-DDThh:mm:ss.mssZ
  * Looks cumbersome but it's straightforward:
@@ -535,4 +535,4 @@ export {
   dateRangePrecision,
   DateRange,
   DateRangeBound
-}
+};

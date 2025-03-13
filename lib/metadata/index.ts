@@ -25,7 +25,7 @@ import promiseUtils from "../promise-utils";
 import { TokenRange } from "../token";
 import { ExecutionOptions } from "../execution-options";
 
-'use strict';
+
 /**
  * @const
  * @private

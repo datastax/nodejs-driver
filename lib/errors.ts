@@ -15,7 +15,7 @@
  */
 import util from "util";
 
-'use strict';
+
 
 /**
  * Contains the error classes exposed by the driver.
@@ -189,4 +189,4 @@ export default {
   NotSupportedError,
   ResponseError,
   VIntOutOfRangeException
-}
+};

@@ -25,7 +25,7 @@ import utils from "../../../../lib/utils";
 import types from "../../../../lib/types/index";
 import promiseUtils from "../../../../lib/promise-utils";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 
 const port = 9042;

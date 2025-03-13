@@ -15,7 +15,7 @@
  */
 import errors from "../errors";
 
-'use strict';
+
 
 /**
  * Represents a CQL query operator, like >=, IN, <, ...
@@ -152,10 +152,10 @@ export default {
   q,
   QueryAssignment,
   QueryOperator,
-}
+};
 
 export {
   q,
   QueryAssignment,
   QueryOperator,
-}
+};

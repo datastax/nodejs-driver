@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index';
 import https from "https";
 import fs from "fs";

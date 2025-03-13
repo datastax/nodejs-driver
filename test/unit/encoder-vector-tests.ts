@@ -19,7 +19,7 @@ import { types } from "../../index";
 import Vector from "../../lib/types/vector";
 import helper from "../test-helper";
 
-'use strict';
+
 describe('Vector tests', function () {
   const encoder = new Encoder(4, {});
 

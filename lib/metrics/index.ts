@@ -16,7 +16,7 @@
 import ClientMetrics from "./client-metrics";
 import DefaultMetrics from "./default-metrics";
 
-'use strict';
+
 
 export { ClientMetrics, DefaultMetrics };
 export default { ClientMetrics, DefaultMetrics };

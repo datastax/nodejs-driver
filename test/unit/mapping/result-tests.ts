@@ -17,7 +17,7 @@ import assert from "assert";
 import Result from "../../../lib/mapping/result";
 import util from "util";
 
-'use strict';
+
 const expected = [ { id: 1, name: 'name1', adapted: true }, { id: 2, name: 'name2', adapted: true }];
 
 describe('Result', () => {

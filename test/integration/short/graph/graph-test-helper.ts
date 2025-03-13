@@ -15,7 +15,7 @@
  */
 import utils from "../../../../lib/utils";
 
-'use strict';
+
 const makeStrictQuery = 'schema.config().option("graph.schema_mode").set("production")';
 
 const allowScansQuery = 'schema.config().option("graph.allow_scan").set("true")';

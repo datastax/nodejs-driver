@@ -17,7 +17,7 @@ import util from "util";
 import utils from "../utils";
 import types from "../types/index";
 
-'use strict';
+
 /** @private */
 const kind = {
   custom: 0,

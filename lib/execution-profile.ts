@@ -17,7 +17,7 @@ import utils from "./utils";
 import types from "./types/index";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 
 /**
  * Creates a new instance of {@link ExecutionProfile}.

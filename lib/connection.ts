@@ -29,7 +29,7 @@ import OperationState from "./operation-state";
 import promiseUtils from "./promise-utils";
 import { ExecutionOptions } from "./execution-options";
 
-'use strict';
+
 
 /**
  * Represents a connection to a Cassandra node

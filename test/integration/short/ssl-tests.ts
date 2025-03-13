@@ -21,7 +21,7 @@ import errors from "../../../lib/errors";
 import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
 
-'use strict';
+
 describe('Client @SERVER_API', function () {
   this.timeout(60000);
   context('with ssl enabled', function () {

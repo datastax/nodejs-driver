@@ -17,7 +17,7 @@ import util from "util";
 import { Long } from "../types/index";
 import errors from "../errors";
 
-'use strict';
+
 /** @module policies/timestampGeneration */
 
 /**
@@ -168,9 +168,9 @@ MonotonicTimestampGenerator.prototype._generateMicroseconds = function () {
 export {
   TimestampGenerator,
   MonotonicTimestampGenerator
-}
+};
 
 export default{
   TimestampGenerator,
   MonotonicTimestampGenerator
-}
+};

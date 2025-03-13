@@ -17,7 +17,7 @@ import events from "events";
 import types from "./types/index";
 import utils from "./utils";
 
-'use strict';
+
 const FrameHeader = types.FrameHeader;
 
 /**

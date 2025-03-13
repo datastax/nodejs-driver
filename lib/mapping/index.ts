@@ -21,7 +21,7 @@ import Result from "./result";
 import { q } from "./q";
 import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
 
-'use strict';
+
 
 /**
  * Module containing classes and fields related to the Mapper.
@@ -29,25 +29,25 @@ import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} f
  */
 
 export {
-    Mapper,
-    ModelMapper,
-    ModelBatchMapper,
-    ModelBatchItem,
-    Result,
-    TableMappings,
-    DefaultTableMappings,
-    UnderscoreCqlToCamelCaseMappings,
-    q
-}
+  Mapper,
+  ModelMapper,
+  ModelBatchMapper,
+  ModelBatchItem,
+  Result,
+  TableMappings,
+  DefaultTableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  q
+};
 
 export default {
-    Mapper,
-    ModelMapper,
-    ModelBatchMapper,
-    ModelBatchItem,
-    Result,
-    TableMappings,
-    DefaultTableMappings,
-    UnderscoreCqlToCamelCaseMappings,
-    q
-}
+  Mapper,
+  ModelMapper,
+  ModelBatchMapper,
+  ModelBatchItem,
+  Result,
+  TableMappings,
+  DefaultTableMappings,
+  UnderscoreCqlToCamelCaseMappings,
+  q
+};

@@ -33,7 +33,7 @@ import GraphExecutor from "./datastax/graph/graph-executor";
 import promiseUtils from "./promise-utils";
 import packageInfo from '../package.json';
 
-'use strict';
+
 
 const version = packageInfo.version;
 

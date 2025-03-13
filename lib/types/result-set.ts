@@ -18,7 +18,7 @@ import errors from "../errors";
 import Row from "./row";
 import {consistencies, dataTypes} from "../types";
 
-'use strict';
+
 const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';
 
 /** @module types */

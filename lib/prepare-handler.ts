@@ -18,7 +18,7 @@ import utils from "./utils";
 import types from "./types/index";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 
 /**
  * Encapsulates the logic for dealing with the different prepare request and response flows, including failover when

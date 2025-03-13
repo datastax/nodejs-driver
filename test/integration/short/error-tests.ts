@@ -20,7 +20,7 @@ import types from "../../../lib/types/index";
 import utils from "../../../lib/utils";
 import errors from "../../../lib/errors";
 
-'use strict';
+
 const protocolVersion = types.protocolVersion;
 const vdescribe = helper.vdescribe;
 const vit = helper.vit;

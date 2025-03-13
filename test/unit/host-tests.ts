@@ -26,7 +26,7 @@ import utils from "../../lib/utils";
 import policies from "../../lib/policies/index";
 import helper from "../test-helper";
 
-'use strict';
+
 const Host = hostModule.Host;
 const HostMap = hostModule.HostMap;
 const defaultOptions = clientOptions.defaultOptions();

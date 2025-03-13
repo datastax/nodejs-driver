@@ -20,7 +20,7 @@ import { Point, Polygon, LineString } from "../../geometry/index";
 import { Edge } from "./structure";
 import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 
-'use strict';
+
 const { Tuple, dataTypes } = types;
 
 const typeKey = '@type';

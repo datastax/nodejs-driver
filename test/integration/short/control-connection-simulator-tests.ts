@@ -20,7 +20,7 @@ import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
 import Client from "../../../lib/client";
 
-'use strict';
+
 describe('ControlConnection', function() {
   this.timeout(5000);
 

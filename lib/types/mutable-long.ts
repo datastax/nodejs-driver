@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+
 import Long from "long";
 
 const TWO_PWR_16_DBL = 1 << 16;

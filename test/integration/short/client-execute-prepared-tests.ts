@@ -24,7 +24,7 @@ import loadBalancing from "../../../lib/policies/load-balancing";
 import numericTests from "./numeric-tests";
 import pagingTests from "./paging-tests";
 
-'use strict';
+
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 const Uuid = types.Uuid;

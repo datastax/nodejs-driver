@@ -18,7 +18,7 @@ import utils from "../../../lib/utils";
 import ResultSet from "../../../lib/types/result-set";
 import GraphResultSet from "../../../lib/datastax/graph/result-set";
 
-'use strict';
+
 const resultVertex = getResultSet([ {
   "gremlin": JSON.stringify({
     "result": {

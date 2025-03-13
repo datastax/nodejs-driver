@@ -20,7 +20,7 @@ import types from "./types/index";
 import utils from "./utils";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 const retryOnCurrentHost = Object.freeze({
   decision: retry.RetryPolicy.retryDecision.retry,
   useCurrentHost: true,

@@ -26,7 +26,7 @@ import g from "./index";
 /**
  * @author Jorge Bay Gondra
  */
-'use strict';
+
 
 // Replace dependencies to minimize code changes from Apache TinkerPop
 const t = {
@@ -78,22 +78,22 @@ class NumberSerializer extends TypeSerializer {
         [typeKey]: 'g:Double',
         [valueKey]: '-Infinity'
       };
-    } else {
-      return item;
-    }
+    } 
+    return item;
+    
   }
 
   deserialize(obj) {
-    var val = obj[valueKey];
+    const val = obj[valueKey];
     if (val === 'NaN') {
       return NaN;
     } else if (val === 'Infinity') {
       return Number.POSITIVE_INFINITY;
     } else if (val === '-Infinity') {
       return Number.NEGATIVE_INFINITY;
-    } else {
-      return parseFloat(val);
-    }
+    } 
+    return parseFloat(val);
+    
   }
 
   canBeUsedFor(value) {
@@ -377,9 +377,9 @@ class TSerializer extends TypeSerializer {
 }
 
 class DirectionSerializer extends TypeSerializer {
-    deserialize(obj) {
-        return t.direction[obj[valueKey].toLowerCase()];
-    }
+  deserialize(obj) {
+    return t.direction[obj[valueKey].toLowerCase()];
+  }
 }
 
 class ArraySerializer extends TypeSerializer {
@@ -411,22 +411,22 @@ class ArraySerializer extends TypeSerializer {
 
 class BulkSetSerializer extends TypeSerializer {
   deserialize(obj) {
-      const value = obj[valueKey];
-      if (!Array.isArray(value)) {
-          throw new Error('Expected Array, obtained: ' + value);
-      }
+    const value = obj[valueKey];
+    if (!Array.isArray(value)) {
+      throw new Error('Expected Array, obtained: ' + value);
+    }
 
-      // coerce the BulkSet to List. if the bulk exceeds the int space then we can't coerce to List anyway,
-      // so this query will be trouble. we'd need a legit BulkSet implementation here in js. this current
-      // implementation is here to replicate the previous functionality that existed on the server side in
-      // previous versions.
-      let result = [];
-      for (let ix = 0, iy = value.length; ix < iy; ix += 2) {
-        const pair = value.slice(ix, ix + 2);
-        result = result.concat(Array(this.reader.read(pair[1])).fill(this.reader.read(pair[0])));
-      }
+    // coerce the BulkSet to List. if the bulk exceeds the int space then we can't coerce to List anyway,
+    // so this query will be trouble. we'd need a legit BulkSet implementation here in js. this current
+    // implementation is here to replicate the previous functionality that existed on the server side in
+    // previous versions.
+    let result = [];
+    for (let ix = 0, iy = value.length; ix < iy; ix += 2) {
+      const pair = value.slice(ix, ix + 2);
+      result = result.concat(Array(this.reader.read(pair[1])).fill(this.reader.read(pair[0])));
+    }
 
-      return result;
+    return result;
   }
 }
 

@@ -21,7 +21,7 @@ import errors from "../../../lib/errors";
 import { responseErrorCodes } from "../../../lib/types/index";
 import Client from "../../../lib/client";
 import {AllowListPolicy, DCAwareRoundRobinPolicy} from "../../../lib/policies/load-balancing";
-'use strict';
+
 
 const query = "select * from data";
 const clusterSize = 3;

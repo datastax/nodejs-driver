@@ -18,7 +18,7 @@ import utils from "./utils";
 import errors from "./errors";
 import requests from "./requests";
 
-'use strict';
+
 const ExecuteRequest = requests.ExecuteRequest;
 const QueryRequest = requests.QueryRequest;
 

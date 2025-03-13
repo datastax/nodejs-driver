@@ -15,7 +15,7 @@
  */
 import qModule from "./q";
 
-'use strict';
+
 const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
 

@@ -17,7 +17,7 @@ import tokenizer from "../../lib/tokenizer";
 import token from "../../lib/token";
 import assert from "assert";
 
-'use strict';
+
 
 class TokenTester {
   constructor(tokenizer) {

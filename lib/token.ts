@@ -16,7 +16,7 @@
 import types from "./types/index";
 import util from "util";
 
-'use strict';
+
 const _Murmur3TokenType = types.dataTypes.getByName('bigint');
 const _RandomTokenType = types.dataTypes.getByName('varint');
 const _OrderedTokenType = types.dataTypes.getByName('blob');
@@ -284,7 +284,7 @@ export {
   ByteOrderedToken,
   Murmur3Token,
   RandomToken
-}
+};
 
 export default {
   Token,
@@ -292,4 +292,4 @@ export default {
   ByteOrderedToken,
   Murmur3Token,
   RandomToken
-}
+};

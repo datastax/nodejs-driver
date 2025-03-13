@@ -16,7 +16,7 @@
 import assert from "assert";
 import tableMappingsModule from "../../../lib/mapping/table-mappings";
 
-'use strict';
+
 const UnderscoreCqlToCamelCaseMappings = tableMappingsModule.UnderscoreCqlToCamelCaseMappings;
 
 describe('UnderscoreCqlToCamelCaseMappings', () => {

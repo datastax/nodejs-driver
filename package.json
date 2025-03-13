@@ -1,6 +1,6 @@
 {
-  "name": "@SiyaoIsHiding/cassandra-driver",
-  "version": "0.0.8",
+  "name": "cassandra-driver",
+  "version": "4.8.0",
   "description": "DataStax Node.js Driver for Apache Cassandra",
   "author": "DataStax",
   "keywords": [

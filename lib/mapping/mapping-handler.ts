@@ -22,7 +22,7 @@ import Tree from "./tree";
 import ObjectSelector from "./object-selector";
 import DocInfoAdapter from "./doc-info-adapter";
 
-'use strict';
+
 const cacheHighWaterMark = 100;
 
 /**

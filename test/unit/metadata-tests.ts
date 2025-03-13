@@ -27,7 +27,7 @@ import utils from "../../lib/utils";
 import errors from "../../lib/errors";
 import Encoder from "../../lib/encoder";
 
-'use strict';
+
 import { Host, HostMap } from "../../lib/host";
 import { Murmur3Token, TokenRange } from "../../lib/token";
 import SchemaParser from "../../lib/metadata/schema-parser";

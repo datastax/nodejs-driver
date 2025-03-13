@@ -19,7 +19,7 @@ import helper from "../../test-helper";
 import types from "../../../lib/types/index";
 import utils from "../../../lib/utils";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 const Duration = types.Duration;
 

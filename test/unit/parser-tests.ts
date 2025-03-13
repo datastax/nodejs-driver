@@ -22,7 +22,7 @@ import types from "../../lib/types/index";
 import utils from "../../lib/utils";
 import helper from "../test-helper";
 
-'use strict';
+
 /**
  * Tests for the transform streams that are involved in the reading of a response
  */

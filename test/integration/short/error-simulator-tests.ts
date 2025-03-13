@@ -22,7 +22,7 @@ import utils from "../../../lib/utils";
 import Client from "../../../lib/client";
 import { OrderedLoadBalancingPolicy } from "../../test-helper";
 
-'use strict';
+
 const query = "select * from data";
 
 describe('Client', function() {

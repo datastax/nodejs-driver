@@ -20,7 +20,7 @@ import utils from "./utils";
 import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json" assert {type: 'json'};
 
-'use strict';
+
 /**
  * Options for the execution of the query / prepared statement
  * @private

@@ -16,7 +16,7 @@
 import { Stream } from "stream";
 import utils from "../utils";
 
-'use strict';
+
 
 /**
  * Utilities for concurrent query execution with the DataStax Node.js Driver.

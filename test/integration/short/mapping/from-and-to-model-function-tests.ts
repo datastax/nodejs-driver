@@ -19,7 +19,7 @@ import mapperTestHelper from "./mapper-test-helper";
 import helper from "../../../test-helper";
 import { UnderscoreCqlToCamelCaseMappings } from "../../../../lib/mapping/table-mappings";
 
-'use strict';
+
 describe('Mapper', function () {
   mapperTestHelper.setupOnce(this);
 

@@ -246,26 +246,26 @@ const warmupLimit = 32;
  */
 interface ClientOptions {
   contactPoints: Array<string>;
-  localDataCenter?: String;
-  keyspace?: String;
+  localDataCenter?: string;
+  keyspace?: string;
   credentials?: {
-    username?: String;
-    password?: String;
+    username?: string;
+    password?: string;
   };
   // id?: Uuid;
-  applicationName?: String;
-  applicationVersion?: String;
+  applicationName?: string;
+  applicationVersion?: string;
   monitorReporting?: {
-    enabled?: Boolean;
+    enabled?: boolean;
   };
   cloud?: {
-    secureConnectBundle: String | URL;
+    secureConnectBundle: string | URL;
   };
-  refreshSchemaDelay?: Number;
-  isMetadataSyncEnabled?: Boolean;
-  prepareOnAllHosts?: Boolean;
-  rePrepareOnUp?: Boolean;
-  maxPrepared?: Number;
+  refreshSchemaDelay?: number;
+  isMetadataSyncEnabled?: boolean;
+  prepareOnAllHosts?: boolean;
+  rePrepareOnUp?: boolean;
+  maxPrepared?: number;
   policies?: {
     // loadBalancing?: LoadBalancingPolicy;
     // retry?: RetryPolicy;
@@ -276,36 +276,36 @@ interface ClientOptions {
   };
   queryOptions?: QueryOptions;
   pooling?: {
-    heartBeatInterval?: Number;
-    coreConnectionsPerHost?: Object;
-    maxRequestsPerConnection?: Number;
-    warmup?: Boolean;
+    heartBeatInterval?: number;
+    coreConnectionsPerHost?: object;
+    maxRequestsPerConnection?: number;
+    warmup?: boolean;
   };
   protocolOptions?: {
-    port?: Number;
-    maxSchemaAgreementWaitSeconds?: Number;
-    maxVersion?: Number;
-    noCompact?: Boolean;
+    port?: number;
+    maxSchemaAgreementWaitSeconds?: number;
+    maxVersion?: number;
+    noCompact?: boolean;
   };
   socketOptions?: {
-    connectTimeout?: Number;
-    defunctReadTimeoutThreshold?: Number;
-    keepAlive?: Boolean;
-    keepAliveDelay?: Number;
-    readTimeout?: Number;
-    tcpNoDelay?: Boolean;
-    coalescingThreshold?: Number;
+    connectTimeout?: number;
+    defunctReadTimeoutThreshold?: number;
+    keepAlive?: boolean;
+    keepAliveDelay?: number;
+    readTimeout?: number;
+    tcpNoDelay?: boolean;
+    coalescingThreshold?: number;
   };
   authProvider?: AuthProvider;
   // requestTracker?: RequestTracker;
-  sslOptions?: Object;
+  sslOptions?: object;
   encoding?: {
     map?: Function;
     set?: Function;
-    copyBuffer?: Boolean;
-    useUndefinedAsUnset?: Boolean;
-    useBigIntAsLong?: Boolean;
-    useBigIntAsVarint?: Boolean;
+    copyBuffer?: boolean;
+    useUndefinedAsUnset?: boolean;
+    useBigIntAsLong?: boolean;
+    useBigIntAsVarint?: boolean;
   };
   // profiles?: Array<ExecutionProfile>;
   promiseFactory?: Function;
@@ -439,36 +439,36 @@ interface ClientOptions {
  * level]{@link module:types~consistencies} defined in the query options for graph write queries.
  */
 interface QueryOptions {
-  autoPage?: Boolean;
-  captureStackTrace?: Boolean;
-  consistency?: Number;
-  customPayload?: Object;
-  executeAs?: String;
+  autoPage?: boolean;
+  captureStackTrace?: boolean;
+  consistency?: number;
+  customPayload?: object;
+  executeAs?: string;
   // executionProfile?: String | ExecutionProfile;
-  fetchSize?: Number;
+  fetchSize?: number;
   hints?: Array<string> | Array<Array<string>>;
   // host?: Host;
-  isIdempotent?: Boolean;
-  keyspace?: String;
-  logged?: Boolean;
-  counter?: Boolean;
-  pageState?: Buffer | String;
-  prepare?: Boolean;
-  readTimeout?: Number;
+  isIdempotent?: boolean;
+  keyspace?: string;
+  logged?: boolean;
+  counter?: boolean;
+  pageState?: Buffer | string;
+  prepare?: boolean;
+  readTimeout?: number;
   // retry?: RetryPolicy;
   // routingIndexes?: Array;
   // routingKey?: Buffer | Array;
   // routingNames?: Array;
-  serialConsistency?: Number;
-  timestamp?: Number | Long;
-  traceQuery?: Boolean;
+  serialConsistency?: number;
+  timestamp?: number | Long;
+  traceQuery?: boolean;
   graphOptions?: {
-    language?: String;
-    name?: String;
-    readConsistency?: Number;
-    readTimeout?: Number;
-    source?: String;
-    writeConsistency?: Number;
+    language?: string;
+    name?: string;
+    readConsistency?: number;
+    readTimeout?: number;
+    source?: string;
+    writeConsistency?: number;
   };
 }
 
@@ -1277,4 +1277,4 @@ export {
   Client,
   ClientOptions,
   QueryOptions
-}
+};

@@ -33,6 +33,6 @@ export default {
 };
 
 export {
-    graph,
-    DateRange
+  graph,
+  DateRange
 };

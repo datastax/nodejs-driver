@@ -132,15 +132,15 @@ type SingleColumnInfo = { code: SingleTypeCodes; info?: null; options?: { frozen
 
 type CustomSimpleColumnInfo = { code: (typeof dataTypes.custom); info: CustomSimpleTypeNames; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type MapColumnInfo = { code: (typeof dataTypes.map); info: [ColumnInfo, ColumnInfo]; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+type MapColumnInfo = { code: (typeof dataTypes.map); info: [ColumnInfo, ColumnInfo]; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type TupleColumnInfo = { code: (typeof dataTypes.tuple); info: Array<ColumnInfo>; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+type TupleColumnInfo = { code: (typeof dataTypes.tuple); info: Array<ColumnInfo>; options?: { frozen?: boolean; reversed?: boolean; }; };
 
 type TupleListColumnInfoWithoutSubtype = { code: (typeof dataTypes.tuple | typeof dataTypes.list); };
 
-type ListSetColumnInfo = { code: (typeof dataTypes.list | typeof dataTypes.set); info: ColumnInfo; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+type ListSetColumnInfo = { code: (typeof dataTypes.list | typeof dataTypes.set); info: ColumnInfo; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type UdtColumnInfo = { code: (typeof dataTypes.udt); info: { name: string; fields: Array<{ name: string; type: ColumnInfo; }>; }; options?: { frozen?: Boolean; reversed?: Boolean; }; };
+type UdtColumnInfo = { code: (typeof dataTypes.udt); info: { name: string; fields: Array<{ name: string; type: ColumnInfo; }>; }; options?: { frozen?: boolean; reversed?: boolean; }; };
 
 type VectorColumnInfo = { code: (typeof dataTypes.custom); customTypeName: ('vector'); info: [ColumnInfo, number]; options?: { frozen?: boolean; reversed?: boolean; }; };
 
@@ -190,7 +190,7 @@ class Encoder{
     }
   }
 
-    /**
+  /**
    * Sets the protocol version and the encoding/decoding methods depending on the protocol version
    * @param {Number} value
    * @ignore
@@ -272,9 +272,9 @@ class Encoder{
 
   private decodeLong = function (bytes: Buffer): Long | bigint {
     return this.encodingOptions.useBigIntAsLong
-    ? this._decodeCqlLongAsBigInt(bytes)
-    : this._decodeCqlLongAsLong(bytes);
-  }
+      ? this._decodeCqlLongAsBigInt(bytes)
+      : this._decodeCqlLongAsLong(bytes);
+  };
 
   private _decodeCqlLongAsLong = function (bytes: Buffer): Long {
     return Long["fromBuffer"](bytes);
@@ -1452,7 +1452,7 @@ class Encoder{
     return Promise.all(typeNames.map(name => this.parseTypeName(keyspace, name.trim(), 0, null, udtResolver)));
   };
 
-    /**
+  /**
    * Parses a Cassandra fully-qualified class name string into data type information
    * @param {String} typeName
    * @param {Number} [startIndex]
@@ -1462,146 +1462,146 @@ class Encoder{
    * @internal
    * @ignore
    */
-    private parseFqTypeName = function (typeName: string, startIndex: number, length: number): ColumnInfo {
-      let frozen = false;
-      let reversed = false;
-      startIndex = startIndex || 0;
-      let params;
-      if (!length) {
-        length = typeName.length;
-      }
-      if (length > complexTypeNames.reversed.length && typeName.indexOf(complexTypeNames.reversed) === startIndex) {
-        //Remove the reversed token
-        startIndex += complexTypeNames.reversed.length + 1;
-        length -= complexTypeNames.reversed.length + 2;
-        reversed = true;
-      }
-      if (length > complexTypeNames.frozen.length &&
+  private parseFqTypeName = function (typeName: string, startIndex: number, length: number): ColumnInfo {
+    let frozen = false;
+    let reversed = false;
+    startIndex = startIndex || 0;
+    let params;
+    if (!length) {
+      length = typeName.length;
+    }
+    if (length > complexTypeNames.reversed.length && typeName.indexOf(complexTypeNames.reversed) === startIndex) {
+      //Remove the reversed token
+      startIndex += complexTypeNames.reversed.length + 1;
+      length -= complexTypeNames.reversed.length + 2;
+      reversed = true;
+    }
+    if (length > complexTypeNames.frozen.length &&
           typeName.indexOf(complexTypeNames.frozen, startIndex) === startIndex) {
-        //Remove the frozen token
-        startIndex += complexTypeNames.frozen.length + 1;
-        length -= complexTypeNames.frozen.length + 2;
-        frozen = true;
-      }
-      const options = {
-        frozen: frozen,
-        reversed: reversed
-      };
-      if (typeName === complexTypeNames.empty) {
-        //set as custom
-        return {
-          code: dataTypes.custom,
-          info: 'empty',
-          options: options
-        };
-      }
-      //Quick check if its a single type
-      if (length <= singleFqTypeNamesLength) {
-        if (startIndex > 0) {
-          typeName = typeName.substr(startIndex, length);
-        }
-        const typeCode = singleTypeNames[typeName];
-        if (typeof typeCode === 'number') {
-          return {code : typeCode, info: null, options : options};
-        }
-        // special handling for duration
-        if (typeName === customTypeNames.duration) {
-          return {code: dataTypes.duration, options: options};
-        }
-        throw new TypeError('Not a valid type "' + typeName + '"');
-      }
-      if (typeName.indexOf(complexTypeNames.list, startIndex) === startIndex) {
-        //Its a list
-        //org.apache.cassandra.db.marshal.ListType(innerType)
-        //move cursor across the name and bypass the parenthesis
-        startIndex += complexTypeNames.list.length + 1;
-        length -= complexTypeNames.list.length + 2;
-        params = parseParams(typeName, startIndex, length);
-        if (params.length !== 1) {
-          throw new TypeError('Not a valid type ' + typeName);
-        }
-        const info = this.parseFqTypeName(params[0]);
-        return {
-          code: dataTypes.list,
-          info: info,
-          options: options
-        };
-      }
-      if (typeName.indexOf(complexTypeNames.set, startIndex) === startIndex) {
-        //Its a set
-        //org.apache.cassandra.db.marshal.SetType(innerType)
-        //move cursor across the name and bypass the parenthesis
-        startIndex += complexTypeNames.set.length + 1;
-        length -= complexTypeNames.set.length + 2;
-        params = parseParams(typeName, startIndex, length);
-        if (params.length !== 1)
-        {
-          throw new TypeError('Not a valid type ' + typeName);
-        }
-        const info = this.parseFqTypeName(params[0]);
-        return {
-          code : dataTypes.set,
-          info : info,
-          options: options
-        };
-      }
-      if (typeName.indexOf(complexTypeNames.map, startIndex) === startIndex) {
-        //org.apache.cassandra.db.marshal.MapType(keyType,valueType)
-        //move cursor across the name and bypass the parenthesis
-        startIndex += complexTypeNames.map.length + 1;
-        length -= complexTypeNames.map.length + 2;
-        params = parseParams(typeName, startIndex, length);
-        //It should contain the key and value types
-        if (params.length !== 2) {
-          throw new TypeError('Not a valid type ' + typeName);
-        }
-        const info1 = this.parseFqTypeName(params[0]);
-        const info2 = this.parseFqTypeName(params[1]);
-        return {
-          code : dataTypes.map,
-          info : [info1, info2],
-          options: options
-        };
-      }
-      if (typeName.indexOf(complexTypeNames.udt, startIndex) === startIndex) {
-        //move cursor across the name and bypass the parenthesis
-        startIndex += complexTypeNames.udt.length + 1;
-        length -= complexTypeNames.udt.length + 2;
-        const udtType = this._parseUdtName(typeName, startIndex, length);
-        udtType.options = options;
-        return udtType;
-      }
-      if (typeName.indexOf(complexTypeNames.tuple, startIndex) === startIndex) {
-        //move cursor across the name and bypass the parenthesis
-        startIndex += complexTypeNames.tuple.length + 1;
-        length -= complexTypeNames.tuple.length + 2;
-        params = parseParams(typeName, startIndex, length);
-        if (params.length < 1) {
-          throw new TypeError('Not a valid type ' + typeName);
-        }
-        const info = params.map(x => this.parseFqTypeName(x));
-        return {
-          code : dataTypes.tuple,
-          info : info,
-          options: options
-        };
-      }
-  
-      if (typeName.indexOf(customTypeNames.vector, startIndex) === startIndex) {
-        // It's a vector, so record the subtype and dimension.
-        const params = this.parseVectorTypeArgs.bind(this)(typeName, customTypeNames.vector, this.parseFqTypeName);
-        params.options = options;
-        return params;
-      }
-  
-      // Assume custom type if cannot be parsed up to this point.
-      const info = typeName.substr(startIndex, length);
+      //Remove the frozen token
+      startIndex += complexTypeNames.frozen.length + 1;
+      length -= complexTypeNames.frozen.length + 2;
+      frozen = true;
+    }
+    const options = {
+      frozen: frozen,
+      reversed: reversed
+    };
+    if (typeName === complexTypeNames.empty) {
+      //set as custom
       return {
         code: dataTypes.custom,
+        info: 'empty',
+        options: options
+      };
+    }
+    //Quick check if its a single type
+    if (length <= singleFqTypeNamesLength) {
+      if (startIndex > 0) {
+        typeName = typeName.substr(startIndex, length);
+      }
+      const typeCode = singleTypeNames[typeName];
+      if (typeof typeCode === 'number') {
+        return {code : typeCode, info: null, options : options};
+      }
+      // special handling for duration
+      if (typeName === customTypeNames.duration) {
+        return {code: dataTypes.duration, options: options};
+      }
+      throw new TypeError('Not a valid type "' + typeName + '"');
+    }
+    if (typeName.indexOf(complexTypeNames.list, startIndex) === startIndex) {
+      //Its a list
+      //org.apache.cassandra.db.marshal.ListType(innerType)
+      //move cursor across the name and bypass the parenthesis
+      startIndex += complexTypeNames.list.length + 1;
+      length -= complexTypeNames.list.length + 2;
+      params = parseParams(typeName, startIndex, length);
+      if (params.length !== 1) {
+        throw new TypeError('Not a valid type ' + typeName);
+      }
+      const info = this.parseFqTypeName(params[0]);
+      return {
+        code: dataTypes.list,
         info: info,
         options: options
       };
+    }
+    if (typeName.indexOf(complexTypeNames.set, startIndex) === startIndex) {
+      //Its a set
+      //org.apache.cassandra.db.marshal.SetType(innerType)
+      //move cursor across the name and bypass the parenthesis
+      startIndex += complexTypeNames.set.length + 1;
+      length -= complexTypeNames.set.length + 2;
+      params = parseParams(typeName, startIndex, length);
+      if (params.length !== 1)
+      {
+        throw new TypeError('Not a valid type ' + typeName);
+      }
+      const info = this.parseFqTypeName(params[0]);
+      return {
+        code : dataTypes.set,
+        info : info,
+        options: options
+      };
+    }
+    if (typeName.indexOf(complexTypeNames.map, startIndex) === startIndex) {
+      //org.apache.cassandra.db.marshal.MapType(keyType,valueType)
+      //move cursor across the name and bypass the parenthesis
+      startIndex += complexTypeNames.map.length + 1;
+      length -= complexTypeNames.map.length + 2;
+      params = parseParams(typeName, startIndex, length);
+      //It should contain the key and value types
+      if (params.length !== 2) {
+        throw new TypeError('Not a valid type ' + typeName);
+      }
+      const info1 = this.parseFqTypeName(params[0]);
+      const info2 = this.parseFqTypeName(params[1]);
+      return {
+        code : dataTypes.map,
+        info : [info1, info2],
+        options: options
+      };
+    }
+    if (typeName.indexOf(complexTypeNames.udt, startIndex) === startIndex) {
+      //move cursor across the name and bypass the parenthesis
+      startIndex += complexTypeNames.udt.length + 1;
+      length -= complexTypeNames.udt.length + 2;
+      const udtType = this._parseUdtName(typeName, startIndex, length);
+      udtType.options = options;
+      return udtType;
+    }
+    if (typeName.indexOf(complexTypeNames.tuple, startIndex) === startIndex) {
+      //move cursor across the name and bypass the parenthesis
+      startIndex += complexTypeNames.tuple.length + 1;
+      length -= complexTypeNames.tuple.length + 2;
+      params = parseParams(typeName, startIndex, length);
+      if (params.length < 1) {
+        throw new TypeError('Not a valid type ' + typeName);
+      }
+      const info = params.map(x => this.parseFqTypeName(x));
+      return {
+        code : dataTypes.tuple,
+        info : info,
+        options: options
+      };
+    }
+  
+    if (typeName.indexOf(customTypeNames.vector, startIndex) === startIndex) {
+      // It's a vector, so record the subtype and dimension.
+      const params = this.parseVectorTypeArgs.bind(this)(typeName, customTypeNames.vector, this.parseFqTypeName);
+      params.options = options;
+      return params;
+    }
+  
+    // Assume custom type if cannot be parsed up to this point.
+    const info = typeName.substr(startIndex, length);
+    return {
+      code: dataTypes.custom,
+      info: info,
+      options: options
     };
+  };
     /**
      * Parses type names with composites
      * @param {String} typesString
@@ -1609,63 +1609,63 @@ class Encoder{
      * @internal
      * @ignore
      */
-    private parseKeyTypes = function (typesString: string): { types: Array<any>; isComposite: boolean; hasCollections: boolean; } {
-      let i = 0;
-      let length = typesString.length;
-      const isComposite = typesString.indexOf(complexTypeNames.composite) === 0;
-      if (isComposite) {
-        i = complexTypeNames.composite.length + 1;
-        length--;
-      }
-      const types = [];
-      let startIndex = i;
-      let nested = 0;
-      let inCollectionType = false;
-      let hasCollections = false;
-      //as collection types are not allowed, it is safe to split by ,
-      while (++i < length) {
-        switch (typesString[i]) {
-          case ',':
-            if (nested > 0) {
-              break;
-            }
-            if (inCollectionType) {
-              //remove type id
-              startIndex = typesString.indexOf(':', startIndex) + 1;
-            }
-            types.push(typesString.substring(startIndex, i));
+  private parseKeyTypes = function (typesString: string): { types: Array<any>; isComposite: boolean; hasCollections: boolean; } {
+    let i = 0;
+    let length = typesString.length;
+    const isComposite = typesString.indexOf(complexTypeNames.composite) === 0;
+    if (isComposite) {
+      i = complexTypeNames.composite.length + 1;
+      length--;
+    }
+    const types = [];
+    let startIndex = i;
+    let nested = 0;
+    let inCollectionType = false;
+    let hasCollections = false;
+    //as collection types are not allowed, it is safe to split by ,
+    while (++i < length) {
+      switch (typesString[i]) {
+        case ',':
+          if (nested > 0) {
+            break;
+          }
+          if (inCollectionType) {
+            //remove type id
+            startIndex = typesString.indexOf(':', startIndex) + 1;
+          }
+          types.push(typesString.substring(startIndex, i));
+          startIndex = i + 1;
+          break;
+        case '(':
+          if (nested === 0 && typesString.indexOf(complexTypeNames.collection, startIndex) === startIndex) {
+            inCollectionType = true;
+            hasCollections = true;
+            //skip collection type
+            i++;
+            startIndex = i;
+            break;
+          }
+          nested++;
+          break;
+        case ')':
+          if (inCollectionType && nested === 0){
+            types.push(typesString.substring(typesString.indexOf(':', startIndex) + 1, i));
             startIndex = i + 1;
             break;
-          case '(':
-            if (nested === 0 && typesString.indexOf(complexTypeNames.collection, startIndex) === startIndex) {
-              inCollectionType = true;
-              hasCollections = true;
-              //skip collection type
-              i++;
-              startIndex = i;
-              break;
-            }
-            nested++;
-            break;
-          case ')':
-            if (inCollectionType && nested === 0){
-              types.push(typesString.substring(typesString.indexOf(':', startIndex) + 1, i));
-              startIndex = i + 1;
-              break;
-            }
-            nested--;
-            break;
-        }
+          }
+          nested--;
+          break;
       }
-      if (startIndex < length) {
-        types.push(typesString.substring(startIndex, length));
-      }
-      return {
-        types: types.map(name => this.parseFqTypeName(name)),
-        hasCollections: hasCollections,
-        isComposite: isComposite
-      };
+    }
+    if (startIndex < length) {
+      types.push(typesString.substring(startIndex, length));
+    }
+    return {
+      types: types.map(name => this.parseFqTypeName(name)),
+      hasCollections: hasCollections,
+      isComposite: isComposite
     };
+  };
     /**
      * 
      * @param {string} typeName 
@@ -1673,34 +1673,34 @@ class Encoder{
      * @param {number} length 
      * @returns {UdtColumnInfo} 
      */
-    private _parseUdtName = function (typeName: string, startIndex: number, length: number): UdtColumnInfo {
-      const udtParams = parseParams(typeName, startIndex, length);
-      if (udtParams.length < 2) {
-        //It should contain at least the keyspace, name of the udt and a type
-        throw new TypeError('Not a valid type ' + typeName);
-      }
-      /**
+  private _parseUdtName = function (typeName: string, startIndex: number, length: number): UdtColumnInfo {
+    const udtParams = parseParams(typeName, startIndex, length);
+    if (udtParams.length < 2) {
+      //It should contain at least the keyspace, name of the udt and a type
+      throw new TypeError('Not a valid type ' + typeName);
+    }
+    /**
        * @type {{keyspace: String, name: String, fields: Array}}
        */
-      const udtInfo: { keyspace: string; name: string; fields: Array<any>; } = {
-        keyspace: udtParams[0],
-        name: utils.allocBufferFromString(udtParams[1], 'hex').toString(),
-        fields: []
-      };
-      for (let i = 2; i < udtParams.length; i++) {
-        const p = udtParams[i];
-        const separatorIndex = p.indexOf(':');
-        const fieldType = this.parseFqTypeName(p, separatorIndex + 1, p.length - (separatorIndex + 1));
-        udtInfo.fields.push({
-          name: utils.allocBufferFromString(p.substr(0, separatorIndex), 'hex').toString(),
-          type: fieldType
-        });
-      }
-      return {
-        code : dataTypes.udt,
-        info : udtInfo
-      };
+    const udtInfo: { keyspace: string; name: string; fields: Array<any>; } = {
+      keyspace: udtParams[0],
+      name: utils.allocBufferFromString(udtParams[1], 'hex').toString(),
+      fields: []
     };
+    for (let i = 2; i < udtParams.length; i++) {
+      const p = udtParams[i];
+      const separatorIndex = p.indexOf(':');
+      const fieldType = this.parseFqTypeName(p, separatorIndex + 1, p.length - (separatorIndex + 1));
+      udtInfo.fields.push({
+        name: utils.allocBufferFromString(p.substr(0, separatorIndex), 'hex').toString(),
+        type: fieldType
+      });
+    }
+    return {
+      code : dataTypes.udt,
+      info : udtInfo
+    };
+  };
 
 
 
@@ -1773,17 +1773,17 @@ class Encoder{
    * @param {ColumnInfo} type 
    */
   public decode = function (buffer: Buffer, type: ColumnInfo) {
-  if (buffer === null || (buffer.length === 0 && !zeroLengthTypesSupported.has(type.code))) {
-    return null;
-  }
+    if (buffer === null || (buffer.length === 0 && !zeroLengthTypesSupported.has(type.code))) {
+      return null;
+    }
 
-  const decoder = this.decoders[type.code];
+    const decoder = this.decoders[type.code];
 
-  if (!decoder) {
-    throw new Error('Unknown data type: ' + type.code);
-  }
+    if (!decoder) {
+      throw new Error('Unknown data type: ' + type.code);
+    }
 
-  return decoder.call(this, buffer, type);
+    return decoder.call(this, buffer, type);
   };
 
 
@@ -1806,57 +1806,57 @@ class Encoder{
    * @throws {TypeError} When there is an encoding error
    */
   public encode = function (value: any, typeInfo: ColumnInfo | number | string): Buffer {
-  if (value === undefined) {
-    value = this.encodingOptions.useUndefinedAsUnset && this.protocolVersion >= 4 ? types.unset : null;
-  }
+    if (value === undefined) {
+      value = this.encodingOptions.useUndefinedAsUnset && this.protocolVersion >= 4 ? types.unset : null;
+    }
 
-  if (value === types.unset) {
-    if (!types.protocolVersion.supportsUnset(this.protocolVersion)) {
-      throw new TypeError('Unset value can not be used for this version of Cassandra, protocol version: ' +
+    if (value === types.unset) {
+      if (!types.protocolVersion.supportsUnset(this.protocolVersion)) {
+        throw new TypeError('Unset value can not be used for this version of Cassandra, protocol version: ' +
         this.protocolVersion);
+      }
+
+      return value;
     }
 
-    return value;
-  }
+    if (value === null || value instanceof Buffer) {
+      return value;
+    }
 
-  if (value === null || value instanceof Buffer) {
-    return value;
-  }
+    /** @type {ColumnInfo | null} */
+    let type: ColumnInfo | null = null;
 
-  /** @type {ColumnInfo | null} */
-  let type: ColumnInfo | null = null;
-
-  if (typeInfo) {
-    if (typeof typeInfo === 'number') {
-      type = {
-        code: typeInfo
-      };
+    if (typeInfo) {
+      if (typeof typeInfo === 'number') {
+        type = {
+          code: typeInfo
+        };
+      }
+      else if (typeof typeInfo === 'string') {
+        type = dataTypes.getByName(typeInfo);
+      }
+      else if (typeof typeInfo.code === 'number') {
+        type = typeInfo;
+      }
+      if (type == null || typeof type.code !== 'number') {
+        throw new TypeError('Type information not valid, only String and Number values are valid hints');
+      }
     }
-    else if (typeof typeInfo === 'string') {
-      type = dataTypes.getByName(typeInfo);
-    }
-    else if (typeof typeInfo.code === 'number') {
-      type = typeInfo;
-    }
-    if (type == null || typeof type.code !== 'number') {
-      throw new TypeError('Type information not valid, only String and Number values are valid hints');
-    }
-  }
-  else {
+    else {
     //Lets guess
-    type = Encoder.guessDataType(value);
-    if (!type) {
-      throw new TypeError('Target data type could not be guessed, you should use prepared statements for accurate type mapping. Value: ' + util.inspect(value));
+      type = Encoder.guessDataType(value);
+      if (!type) {
+        throw new TypeError('Target data type could not be guessed, you should use prepared statements for accurate type mapping. Value: ' + util.inspect(value));
+      }
     }
-  }
 
-  const encoder = this.encoders[type.code];
+    const encoder = this.encoders[type.code];
 
-  if (!encoder) {
-    throw new Error('Type not supported ' + type.code);
-  }
+    if (!encoder) {
+      throw new Error('Type not supported ' + type.code);
+    }
 
-  return encoder.call(this, value, type);
+    return encoder.call(this, value, type);
   };
 
   /**

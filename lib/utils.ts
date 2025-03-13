@@ -20,7 +20,7 @@ import { EventEmitter } from "events";
 import errors from "./errors";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 /**
  * Max int that can be accurately represented with 64-bit Number (2^53)
  * @type {number}

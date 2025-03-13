@@ -17,7 +17,7 @@ import utils from "./utils";
 import types from "./types/index";
 import errors from "./errors";
 
-'use strict';
+
 const proxyExecuteKey = 'ProxyExecute';
 
 /**

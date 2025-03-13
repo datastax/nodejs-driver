@@ -19,7 +19,7 @@ import utils from "../../lib/utils";
 import types from "../../lib/types/index";
 import helper from "../test-helper";
 
-'use strict';
+
 const { ResultSet } = types;
 
 describe('ResultSet', function () {

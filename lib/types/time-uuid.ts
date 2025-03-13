@@ -19,7 +19,7 @@ import Long from "long";
 import Uuid from "./uuid";
 import utils from "../utils";
 
-'use strict';
+
 /** @module types */
 /**
  * Oct 15, 1582 in milliseconds since unix epoch

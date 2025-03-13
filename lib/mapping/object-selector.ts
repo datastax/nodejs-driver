@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 const keyMatches = {
   all: 1,

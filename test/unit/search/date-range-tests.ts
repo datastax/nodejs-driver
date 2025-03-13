@@ -18,7 +18,7 @@ import util from "util";
 import helper from "../../test-helper";
 import * as dateRangeModule from "../../../lib/datastax/search/date-range";
 
-'use strict';
+
 const DateRange = dateRangeModule.DateRange;
 const DateRangeBound = dateRangeModule.DateRangeBound;
 const unbounded = dateRangeModule.unbounded;

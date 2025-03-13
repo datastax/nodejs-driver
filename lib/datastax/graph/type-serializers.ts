@@ -26,7 +26,7 @@ import g from "./index";
 /**
  * @author Jorge Bay Gondra
  */
-'use strict';
+
 
 // Replace dependencies to minimize code changes from Apache TinkerPop
 const t = {

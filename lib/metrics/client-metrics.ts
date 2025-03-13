@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * Represents a base class that is used to measure events from the server and the client as seen by the driver.

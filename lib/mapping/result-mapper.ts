@@ -17,7 +17,7 @@ import vm from "vm";
 import utils from "../utils";
 import types from "../types/index";
 
-'use strict';
+
 
 /**
  * @ignore

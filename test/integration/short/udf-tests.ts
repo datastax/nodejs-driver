@@ -19,7 +19,7 @@ import Client from "../../../lib/client";
 import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
 
-'use strict';
+
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 

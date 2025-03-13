@@ -20,7 +20,7 @@ import utils from "./utils";
 import RequestExecution from "./request-execution";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 
 /**
  * Handles a BATCH, QUERY and EXECUTE request to the server, dealing with host fail-over and retries on error

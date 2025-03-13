@@ -15,7 +15,7 @@
  */
 import types from "./types/index";
 
-'use strict';
+
 /**
  * Group size
  * @type {number}

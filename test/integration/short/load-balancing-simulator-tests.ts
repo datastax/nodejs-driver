@@ -24,7 +24,7 @@ import promiseUtils from "../../../lib/promise-utils";
 import { ExecutionProfile } from "../../../lib/execution-profile";
 import Client from "../../../lib/client";
 
-'use strict';
+
 const { loadBalancing } = policies;
 
 const queryOptions = { prepare: true, routingKey: utils.allocBuffer(16), keyspace: 16 };

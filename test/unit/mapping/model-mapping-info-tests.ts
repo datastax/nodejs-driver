@@ -16,7 +16,7 @@
 import { assert } from "chai";
 import ModelMappingInfo from "../../../lib/mapping/model-mapping-info";
 
-'use strict';
+
 describe('ModelMappingInfo', function () {
   describe('parse()', function () {
     it('should throw when the model keyspace is not set', () => {

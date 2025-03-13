@@ -18,7 +18,7 @@ import utils from "../utils";
 import errors from "../errors";
 import clientOptions from "../client-options";
 
-'use strict';
+
 
 /** @module types */
 /**

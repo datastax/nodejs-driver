@@ -25,7 +25,7 @@ import SchemaFunction from "./schema-function";
 import Index from "./schema-index";
 import MaterializedView from "./materialized-view";
 
-'use strict';
+
 const { format } = util;
 
 /**

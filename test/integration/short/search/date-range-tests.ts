@@ -21,7 +21,7 @@ import types from "../../../../lib/types/index";
 import * as dateRangeModule from "../../../../lib/datastax/search/date-range";
 import Client from "../../../../lib/client";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 const DateRange = dateRangeModule.DateRange;
 

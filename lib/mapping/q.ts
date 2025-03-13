@@ -15,7 +15,7 @@
  */
 import errors from "../errors";
 
-'use strict';
+
 
 /**
  * Represents a CQL query operator, like >=, IN, <, ...

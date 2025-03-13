@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
+
 import DseGssapiAuthProvider from '../../../../lib/auth/dse-gssapi-auth-provider';
 import assert from "assert";
 import helper from "../../../test-helper";

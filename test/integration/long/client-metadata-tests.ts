@@ -21,7 +21,7 @@ import Client from "../../../lib/client";
 import utils from "../../../lib/utils";
 import tokenizer from "../../../lib/tokenizer";
 
-'use strict';
+
 describe('Client', function () {
   this.timeout(240000);
   describe('#getReplicas() with MurmurPartitioner', function () {

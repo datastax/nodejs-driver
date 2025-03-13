@@ -19,7 +19,7 @@ import Result from "../../../../lib/mapping/result";
 import mapperTestHelper from "./mapper-test-helper";
 import helper from "../../../test-helper";
 
-'use strict';
+
 const Uuid = types.Uuid;
 const assertRowMatchesDoc = mapperTestHelper.assertRowMatchesDoc;
 describe('ModelMapper', function () {

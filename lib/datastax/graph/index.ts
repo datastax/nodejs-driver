@@ -18,7 +18,7 @@ import getCustomTypeSerializers from "./custom-type-serializers";
 import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers";
 import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
 
-'use strict';
+
 
 class EnumValue {
   constructor(typeName, elementName) {

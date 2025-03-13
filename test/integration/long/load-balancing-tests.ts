@@ -20,7 +20,7 @@ import Client from "../../../lib/client";
 import utils from "../../../lib/utils";
 import loadBalancing from "../../../lib/policies/load-balancing";
 
-'use strict';
+
 const DCAwareRoundRobinPolicy = loadBalancing.DCAwareRoundRobinPolicy;
 const TokenAwarePolicy = loadBalancing.TokenAwarePolicy;
 

@@ -19,7 +19,7 @@ import helper from "../../test-helper";
 import cassandra from "../../../index";
 import utils from "../../../lib/utils";
 
-'use strict';
+
 /* eslint-disable no-console, no-undef */
 let heapdump;
 const heapdumpPath = '/var/log/nodejs-driver';

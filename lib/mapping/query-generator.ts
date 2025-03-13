@@ -17,7 +17,7 @@ import vm from "vm";
 import qModule from "./q";
 import types from "../types/index";
 
-'use strict';
+
 const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
 const dataTypes = types.dataTypes;

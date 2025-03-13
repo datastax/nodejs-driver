@@ -18,7 +18,7 @@ import api from "../../index";
 import auth from "../../lib/auth/index";
 import helper from "../test-helper";
 
-'use strict';
+
 describe('API', function () {
   it('should expose auth module', function () {
     assert.ok(api.auth);

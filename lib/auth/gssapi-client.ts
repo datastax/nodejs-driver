@@ -16,7 +16,7 @@
 import util from "util";
 import utils from "../utils";
 
-'use strict';
+
 
 /**
  * GSSAPI Client interface.

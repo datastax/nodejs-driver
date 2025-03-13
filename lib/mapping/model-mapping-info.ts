@@ -15,7 +15,7 @@
  */
 import tableMappingsModule from "./table-mappings";
 
-'use strict';
+
 const TableMappings = tableMappingsModule.TableMappings;
 const DefaultTableMappings = tableMappingsModule.DefaultTableMappings;
 

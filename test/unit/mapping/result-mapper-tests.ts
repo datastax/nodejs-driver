@@ -17,7 +17,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import ResultMapper from "../../../lib/mapping/result-mapper";
 
-'use strict';
+
 describe('ResultMapper', function () {
   describe('getSelectAdapter()', function () {
     it('should return a function that maps row values into object values', () => {

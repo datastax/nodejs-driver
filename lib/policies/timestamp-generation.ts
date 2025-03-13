@@ -17,7 +17,7 @@ import util from "util";
 import { Long } from "../types/index";
 import errors from "../errors";
 
-'use strict';
+
 /** @module policies/timestampGeneration */
 
 /**

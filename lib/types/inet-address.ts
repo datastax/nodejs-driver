@@ -15,7 +15,7 @@
  */
 import utils from "../utils";
 
-'use strict';
+
 
 /** @module types */
 /**

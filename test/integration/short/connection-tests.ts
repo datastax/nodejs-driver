@@ -24,7 +24,7 @@ import { assert } from "chai";
 import { defaultOptions } from "../../../lib/client-options";
 import { protocolVersion } from "../../../lib/types";
 
-"use strict";
+
 const vit = helper.vit;
 
 describe('Connection', function () {

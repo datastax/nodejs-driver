@@ -20,7 +20,7 @@ import ModelMapper from "../../../lib/mapping/model-mapper";
 import helper from "../../test-helper";
 import mapperTestHelper from "./mapper-unit-test-helper";
 
-'use strict';
+
 describe('Mapper', () => {
   describe('constructor', () => {
     it('should validate that client is provided', () => {

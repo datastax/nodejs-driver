@@ -21,7 +21,7 @@ import Result from "./result";
 import { q } from "./q";
 import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
 
-'use strict';
+
 
 /**
  * Module containing classes and fields related to the Mapper.

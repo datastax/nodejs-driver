@@ -15,7 +15,7 @@
  */
 import Long from "long";
 
-"use strict";
+
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
 

@@ -21,7 +21,7 @@ import tracker from "./tracker/index";
 import metrics from "./metrics/index";
 import auth from "./auth/index";
 
-'use strict';
+
 /** Core connections per host for protocol versions 1 and 2 */
 const coreConnectionsPerHostV2 = {
   [types.distance.local]: 2,

@@ -17,7 +17,7 @@ import Long from "long";
 import util from "util";
 import utils from "../utils";
 
-'use strict';
+
 /** @module types */
 
 /**

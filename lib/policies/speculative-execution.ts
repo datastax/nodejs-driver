@@ -16,7 +16,7 @@
 import util from "util";
 import errors from "../errors";
 
-'use strict';
+
 
 /** @module policies/speculativeExecution */
 

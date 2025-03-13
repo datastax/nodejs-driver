@@ -18,7 +18,7 @@ import sinon from "sinon";
 import helper from "../test-helper";
 import EventDebouncer from "../../lib/metadata/event-debouncer";
 
-'use strict';
+
 describe('EventDebouncer', function () {
   describe('timeoutElapsed()', function () {
     it('should set the queue to null', function (done) {

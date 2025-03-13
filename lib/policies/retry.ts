@@ -15,7 +15,7 @@
  */
 import util from "util";
 
-'use strict';
+
 
 /** @module policies/retry */
 /**

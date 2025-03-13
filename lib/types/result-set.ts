@@ -16,7 +16,7 @@
 import utils from "../utils";
 import errors from "../errors";
 
-'use strict';
+
 const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';
 
 /** @module types */

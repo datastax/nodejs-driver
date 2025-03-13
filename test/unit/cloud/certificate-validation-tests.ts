@@ -16,7 +16,7 @@
 import { assert } from "chai";
 import { checkServerIdentity } from "../../../lib/datastax/cloud/index";
 
-'use strict';
+
 describe('checkServerIdentity()', () => {
   const port = 32598;
   const sampleHostName = 'host1.datastax.com';

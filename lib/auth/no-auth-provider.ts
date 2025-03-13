@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 import { AuthProvider, Authenticator } from './provider';
 import { PlainTextAuthenticator } from './plain-text-auth-provider';

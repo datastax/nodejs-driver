@@ -20,7 +20,7 @@ import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } fr
 import getCustomTypeSerializers from "./custom-type-serializers";
 import { GraphExecutionOptions, graphProtocol } from "./options";
 
-'use strict';
+
 const graphLanguageGroovyString = 'gremlin-groovy';
 const graphEngineCore = 'Core';
 

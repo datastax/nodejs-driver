@@ -24,7 +24,7 @@ import promiseUtils from "../../../lib/promise-utils";
 import { version } from "../../../index";
 import Client from "../../../lib/client";
 
-'use strict';
+
 const { distance } = types;
 const healthResponseCountInterval = 200;
 

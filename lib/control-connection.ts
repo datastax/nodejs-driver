@@ -27,7 +27,7 @@ import utils from "./utils";
 import types from "./types/index";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 const f = util.format;
 
 const selectPeers = "SELECT * FROM system.peers";

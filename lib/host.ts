@@ -20,7 +20,7 @@ import HostConnectionPool from "./host-connection-pool";
 import PrepareHandler from "./prepare-handler";
 import promiseUtils from "./promise-utils";
 
-'use strict';
+
 const healthResponseCountInterval = 200;
 
 /**

@@ -16,7 +16,7 @@
 import utils from "../utils";
 import VersionNumber from "./version-number";
 
-'use strict';
+
 const v200 = VersionNumber.parse('2.0.0');
 const v210 = VersionNumber.parse('2.1.0');
 const v220 = VersionNumber.parse('2.2.0');

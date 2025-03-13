@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+
 
 /**
  * Creates a non-clearable timer that resolves the promise once elapses.

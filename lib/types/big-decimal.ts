@@ -16,7 +16,7 @@
 import Integer from "./integer";
 import utils from "../utils";
 
-'use strict';
+
 
 /** @module types */
 /**

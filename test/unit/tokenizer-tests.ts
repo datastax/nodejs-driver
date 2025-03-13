@@ -21,7 +21,7 @@ import utils from "../../lib/utils";
 import MutableLong from "../../lib/types/mutable-long";
 import helper from "../test-helper";
 
-'use strict';
+
 const Murmur3Tokenizer = tokenizer.Murmur3Tokenizer;
 const RandomTokenizer = tokenizer.RandomTokenizer;
 const ByteOrderedTokenizer = tokenizer.ByteOrderedTokenizer;

@@ -18,7 +18,7 @@ import path from "path";
 import errors from "../../lib/errors";
 import helper from "../test-helper";
 
-'use strict';
+
 const fileName = path.basename(__filename);
 
 describe('DriverError', function () {

@@ -24,7 +24,7 @@ import numericTests from "./numeric-tests";
 import pagingTests from "./paging-tests";
 import {ExecutionProfile} from "../../../lib/execution-profile";
 
-'use strict';
+
 const vit = helper.vit;
 const vdescribe = helper.vdescribe;
 describe('Client @SERVER_API', function () {

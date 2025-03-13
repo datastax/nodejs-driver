@@ -19,7 +19,7 @@ import utils from "../utils";
 
 const VIntCoding = utils.VIntCoding;
 
-'use strict';
+
 /** @module types */
 
 // Reuse the same buffers that should perform slightly better than built-in buffer pool

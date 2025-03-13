@@ -22,7 +22,7 @@ import { DateRange } from "./datastax/search/index";
 import geo from "./geometry/index";
 import Vector from "./types/vector";
 
-'use strict';
+
 const dataTypes = types.dataTypes;
 const Long = types.Long;
 const Integer = types.Integer;

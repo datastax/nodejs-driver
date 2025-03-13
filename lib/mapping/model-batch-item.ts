@@ -15,7 +15,7 @@
  */
 import Cache from "./cache";
 
-'use strict';
+
 
 /**
  * Represents a query or a set of queries used to perform a mutation in a batch.

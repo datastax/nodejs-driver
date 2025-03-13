@@ -21,7 +21,7 @@ import helper from "../../test-helper";
 import reconnection from "../../../lib/policies/reconnection";
 import simulacron from "../simulacron";
 
-'use strict';
+
 describe('Client', function () {
   this.timeout(20000);
 

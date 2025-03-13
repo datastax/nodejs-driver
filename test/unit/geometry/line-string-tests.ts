@@ -18,7 +18,7 @@ import helper from "../../test-helper";
 import utils from "../../../lib/utils";
 import Point from "../../../lib/geometry/point";
 import { LineString } from "../../../lib/geometry";
-'use strict';
+
 
 describe('LineString', function () {
   describe('constructor', function () {

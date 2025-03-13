@@ -17,7 +17,7 @@ import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 import types from "../../types/index";
 import Encoder from "../../encoder";
 
-'use strict';
+
 const { dataTypes } = types;
 
 function getTypeDefinitionByValue(value) {

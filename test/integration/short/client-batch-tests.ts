@@ -21,7 +21,7 @@ import types from "../../../lib/types/index";
 import utils from "../../../lib/utils";
 import errors from "../../../lib/errors";
 
-'use strict';
+
 const vit = helper.vit;
 
 describe('Client @SERVER_API', function () {

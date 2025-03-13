@@ -21,7 +21,7 @@ import geometry from "../../../../lib/geometry/index";
 import types from "../../../../lib/types/index";
 import utils from "../../../../lib/utils";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 const Point = geometry.Point;
 const Uuid = types.Uuid;

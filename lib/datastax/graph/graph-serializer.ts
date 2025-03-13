@@ -27,7 +27,7 @@ import typeSerializers from "./type-serializers";
 /**
  * @author Jorge Bay Gondra
  */
-'use strict';
+
 
 /**
  * GraphSON2 writer.

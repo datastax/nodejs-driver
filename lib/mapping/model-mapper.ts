@@ -15,7 +15,7 @@
  */
 import ModelBatchMapper from "./model-batch-mapper";
 
-'use strict';
+
 
 /**
  * Represents an object mapper for a specific model.

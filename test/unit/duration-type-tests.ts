@@ -18,7 +18,7 @@ import util from "util";
 import types from "../../lib/types/index";
 import utils from "../../lib/utils";
 
-'use strict';
+
 const Duration = types.Duration;
 const Long = types.Long;
 

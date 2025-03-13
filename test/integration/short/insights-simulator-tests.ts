@@ -20,7 +20,7 @@ import Client from "../../../lib/client";
 import utils from "../../../lib/utils";
 import InsightsClient from "../../../lib/insights-client";
 
-'use strict';
+
 const vdescribe = helper.vdescribe;
 const insightsRpcQuery = 'CALL InsightsRpc.reportInsight(?)';
 

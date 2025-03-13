@@ -17,7 +17,7 @@ import dns from "dns";
 import util from "util";
 import utils from "../utils";
 
-'use strict';
+
 
 /** @module policies/addressResolution */
 /**

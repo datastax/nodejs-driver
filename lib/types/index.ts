@@ -33,7 +33,7 @@ import Tuple from './tuple';
 import Vector from "./vector";
 
 
-'use strict';
+
 /**
  * Consistency levels
  * @type {Object}

@@ -18,7 +18,7 @@ import utils from "../utils";
 import Geometry from "./geometry";
 import Point from "./point";
 
-'use strict';
+
 
 /**
  * Creates a new {@link LineString} instance.

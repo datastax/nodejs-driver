@@ -1,4 +1,9 @@
 module.exports = {
+  plugins: [
+    "@stylistic",
+    '@typescript-eslint'
+  ],
+  parser: '@typescript-eslint/parser',
   "env": {
     "commonjs": true,
     "es6": true
@@ -6,7 +11,7 @@ module.exports = {
   "parserOptions": {
     "ecmaVersion": 2017
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", 'plugin:@typescript-eslint/recommended'],
   "rules": {
     "indent": [
       "error",

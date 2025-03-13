@@ -1,8 +1,10 @@
 # TypeScript: js files are generated using tsc transpiler
-/test/unit/typescript/*.js
+/test/unit/typescript/*
 
 # Integer is part of the Closure Library
 /lib/types/integer.js
 
 # TinkerPop-based files
 /lib/datastax/graph/type-serializers.js
+
+/out/**/*.js

@@ -33,6 +33,7 @@ const state = {
  * Maintains the state information of a request inside a Connection.
  */
 class OperationState {
+  streamId: number;
   /**
    * Creates a new instance of OperationState.
    * @param {Request} request

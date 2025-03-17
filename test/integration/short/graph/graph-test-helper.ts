@@ -79,4 +79,4 @@ export default {
   createModernGraph,
   makeStrict,
   allowScans
-}
+};

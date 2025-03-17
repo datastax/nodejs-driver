@@ -607,18 +607,15 @@ function generateTimestamp(date, microseconds) {
 //error classes
 
 /** @private */
-function QueryParserError(e) {
-  QueryParserError.super_.call(this, e.message, this.constructor);
-  this.internalError = e;
+class TimeoutError extends errors.DriverError {
+  /**
+   * @param {string} message
+   */
+  constructor(message: string) {
+    super(message);
+    this.info = 'Represents an error that happens when the maximum amount of time for an operation passed.';
+  }
 }
-util.inherits(QueryParserError, errors.DriverError);
-
-/** @private */
-function TimeoutError (message) {
-  TimeoutError.super_.call(this, message, this.constructor);
-  this.info = 'Represents an error that happens when the maximum amount of time for an operation passed.';
-}
-util.inherits(TimeoutError, errors.DriverError);
 
 const DriverError = errors.DriverError;
 

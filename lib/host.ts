@@ -15,10 +15,11 @@
  */
 import events from "events";
 import utils from "./utils";
-import types from "./types/index";
+import types, { Uuid } from "./types/index";
 import HostConnectionPool from "./host-connection-pool";
 import PrepareHandler from "./prepare-handler";
 import promiseUtils from "./promise-utils";
+import Connection from "./connection";
 
 
 const healthResponseCountInterval = 200;
@@ -28,6 +29,25 @@ const healthResponseCountInterval = 200;
  * @extends EventEmitter
  */
 class Host extends events.EventEmitter {
+  address: string;
+  setDownAt: number;
+  log: (type: any, info: any, furtherInfo?: any, options?: any) => void;
+  isUpSince: number;
+  pool: any;
+  cassandraVersion: string;
+  datacenter: string;
+  rack: string;
+  tokens: string[];
+  hostId: Uuid;
+  dseVersion: string;
+  workloads: readonly any[];
+  _distance: number;
+  _healthResponseCounter: number;
+  reconnectionSchedule: any;
+  options: any;
+  reconnectionDelay: number;
+  _healthResponseCountTimer: any;
+  _metadata: any;
 
   /**
    * Creates a new Host instance.
@@ -161,7 +181,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  setUp(clearReconnection) {
+  setUp(clearReconnection?: boolean) {
     if (!this.setDownAt) {
       //The host is already marked as UP
       return;
@@ -198,7 +218,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  shutdown(waitForPending) {
+  shutdown(waitForPending: boolean): Promise<void> {
     if (this._healthResponseCountTimer) {
       clearInterval(this._healthResponseCountTimer);
     }
@@ -214,7 +234,7 @@ class Host extends events.EventEmitter {
    * Determines if the node is UP now (seen as UP by the driver).
    * @returns {boolean}
    */
-  isUp() {
+  isUp(): boolean {
     return !this.setDownAt;
   }
 
@@ -223,7 +243,7 @@ class Host extends events.EventEmitter {
    * Deprecated: Use {@link Host#isUp()} instead.
    * @returns {boolean}
    */
-  canBeConsideredAsUp() {
+  canBeConsideredAsUp(): boolean {
     const self = this;
     function hasTimePassed() {
       return new Date().getTime() - self.setDownAt >= self.reconnectionDelay;
@@ -237,7 +257,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  setDistance(distance) {
+  setDistance(distance: number) {
     const previousDistance = this._distance;
     this._distance = distance || types.distance.local;
     if (this.options.pooling.coreConnectionsPerHost) {
@@ -275,7 +295,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  setProtocolVersion(value) {
+  setProtocolVersion(value: number) {
     this.pool.protocolVersion = value;
   }
 
@@ -288,7 +308,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  borrowConnection(previousConnection) {
+  borrowConnection(previousConnection: Connection): Connection {
     return this.pool.borrowConnection(previousConnection);
   }
 
@@ -298,7 +318,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  warmupPool(keyspace) {
+  warmupPool(keyspace: string) {
     return this.pool.warmup(keyspace);
   }
 
@@ -316,7 +336,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  getActiveConnection() {
+  getActiveConnection(): Connection {
     if (!this.isUp() || !this.pool.connections.length) {
       return null;
     }
@@ -330,7 +350,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  getResponseCount() {
+  getResponseCount(): number {
     // Last interval plus the current count
     return this._healthResponseCounter + this.pool.responseCounter;
   }
@@ -341,7 +361,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  checkHealth(connection) {
+  checkHealth(connection: Connection) {
     if (connection.timedOutOperations <= this.options.socketOptions.defunctReadTimeoutThreshold) {
       return;
     }
@@ -353,7 +373,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  removeFromPool(connection) {
+  removeFromPool(connection: Connection) {
     this.pool.remove(connection);
     this._checkPoolState();
   }
@@ -419,9 +439,9 @@ class Host extends events.EventEmitter {
    * position.
    * @returns {Array.<Number>}
    */
-  getCassandraVersion() {
+  getCassandraVersion(): Array<number> {
     if (!this.cassandraVersion) {
-      return utils.emptyArray;
+      return utils.emptyArray as number[];
     }
     return this.cassandraVersion.split('-')[0].split('.').map(x => parseInt(x, 10));
   }
@@ -431,9 +451,9 @@ class Host extends events.EventEmitter {
    * In case the cluster is not a DSE cluster, it returns an empty Array.
    * @returns {Array}
    */
-  getDseVersion() {
+  getDseVersion(): Array<any> {
     if (!this.dseVersion) {
-      return utils.emptyArray;
+      return utils.emptyArray as number[];
     }
     return this.dseVersion.split('-')[0].split('.').map(x => parseInt(x, 10));
   }
@@ -447,6 +467,8 @@ class Host extends events.EventEmitter {
  * @constructor
  */
 class HostMap extends events.EventEmitter{
+  _items: Map<any, any>;
+  _values: any;
   constructor() {
     super();
 
@@ -481,7 +503,7 @@ class HostMap extends events.EventEmitter{
    * @param {String} key
    * @returns {Host}
    */
-  get(key) {
+  get(key: string): Host {
     return this._items.get(key);
   }
 
@@ -489,7 +511,7 @@ class HostMap extends events.EventEmitter{
    * Returns an array of host addresses.
    * @returns {Array.<String>}
    */
-  keys() {
+  keys(): Array<string> {
     return Array.from(this._items.keys());
   }
 
@@ -498,7 +520,7 @@ class HostMap extends events.EventEmitter{
    * @param {String} key The key of the host
    * @fires HostMap#remove
    */
-  remove(key) {
+  remove(key: string) {
     const value = this._items.get(key);
     if (value === undefined) {
       return;
@@ -520,7 +542,7 @@ class HostMap extends events.EventEmitter{
    * @param {Array.<String>} keys
    * @fires HostMap#remove
    */
-  removeMultiple(keys) {
+  removeMultiple(keys: Array<string>) {
     // Clear value cache
     this._values = null;
 
@@ -550,7 +572,7 @@ class HostMap extends events.EventEmitter{
    * @fires HostMap#remove
    * @fires HostMap#add
    */
-  set(key, value) {
+  set(key: string, value: Host) {
     // Clear values cache
     this._values = null;
 
@@ -580,7 +602,7 @@ class HostMap extends events.EventEmitter{
    * @returns {Array}
    * @ignore
    */
-  slice(begin, end) {
+  slice(begin: number, end: number): Array<any> {
     if (!begin && !end) {
       // Avoid making a copy of the copy
       return this.values();
@@ -602,7 +624,7 @@ class HostMap extends events.EventEmitter{
    * Returns a shallow copy of the values of the map.
    * @returns {Array.<Host>}
    */
-  values() {
+  values(): Array<Host> {
     if (!this._values) {
       // Cache the values
       this._values = Object.freeze(Array.from(this._items.values()));
@@ -615,7 +637,7 @@ class HostMap extends events.EventEmitter{
    * Removes all items from the map.
    * @returns {Array.<Host>} The previous items
    */
-  clear() {
+  clear(): Array<Host> {
     const previousItems = this.values();
 
     // Clear cache

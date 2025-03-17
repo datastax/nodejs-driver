@@ -26,7 +26,7 @@ import promiseUtils from "./promise-utils";
  * @type {number}
  * @const
  */
-const maxInt = 9007199254740992;
+const maxInt: number = 9007199254740992;
 
 const maxInt32 = 0x7fffffff;
 
@@ -40,25 +40,25 @@ function noop() {}
  * Forward-compatible allocation of buffer, filled with zeros.
  * @type {Function}
  */
-const allocBuffer = Buffer.alloc || allocBufferFillDeprecated;
+const allocBuffer: Function = Buffer.alloc || allocBufferFillDeprecated;
 
 /**
  * Forward-compatible unsafe allocation of buffer.
  * @type {Function}
  */
-const allocBufferUnsafe = Buffer.allocUnsafe || allocBufferDeprecated;
+const allocBufferUnsafe: Function = Buffer.allocUnsafe || allocBufferDeprecated;
 
 /**
  * Forward-compatible allocation of buffer to contain a string.
  * @type {Function}
  */
-const allocBufferFromString = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromStringDeprecated;
+const allocBufferFromString: Function = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromStringDeprecated;
 
 /**
  * Forward-compatible allocation of buffer from an array of bytes
  * @type {Function}
  */
-const allocBufferFromArray = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromArrayDeprecated;
+const allocBufferFromArray: Function = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromArrayDeprecated;
 
 function allocBufferDeprecated(size) {
   // eslint-disable-next-line
@@ -91,7 +91,7 @@ function allocBufferFromArrayDeprecated(arr) {
  * @returns {Function} Returns a wrapper function that invokes the underlying callback only once.
  * @param {Function} callback
  */
-function callbackOnce(callback) {
+function callbackOnce(callback: Function): Function {
   let cb = callback;
 
   return (function wrapperCallback(err, result) {
@@ -125,7 +125,7 @@ function fixStack(stackTrace, error) {
  * @param {String} info
  * @param [furtherInfo]
  */
-function log(type, info, furtherInfo, options) {
+function log(type: string, info: string, furtherInfo?, options?) {
   if (!this.logEmitter) {
     const effectiveOptions = options || this.options;
     if (!effectiveOptions || !effectiveOptions.logEmitter) {
@@ -194,7 +194,7 @@ function toLowerCaseProperties(obj) {
  * @param {Object} target
  * @returns {Object}
  */
-function deepExtend(target) {
+function deepExtend(target: object): object {
   const sources = Array.prototype.slice.call(arguments, 1);
   sources.forEach(function (source) {
     for (const prop in source) {
@@ -258,7 +258,7 @@ function funcCompare(name, argArray) {
  * @param {Array} arr
  * @returns {Iterator}
  */
-function arrayIterator (arr) {
+function arrayIterator (arr: Array<any>): Iterator {
   return arr[Symbol.iterator]();
 }
 
@@ -267,7 +267,7 @@ function arrayIterator (arr) {
  * @param iterator
  * @returns {Array}
  */
-function iteratorToArray(iterator) {
+function iteratorToArray(iterator): Array<any> {
   const values = [];
   let item = iterator.next();
   while (!item.done) {
@@ -286,7 +286,7 @@ function iteratorToArray(iterator) {
  * @returns {number} The position of the key in the Array, if it is found.
  * If it is not found, it returns a negative number which is the bitwise complement of the index of the first element that is larger than key.
  */
-function binarySearch(arr, key, compareFunc) {
+function binarySearch(arr: Array<any>, key, compareFunc: function): number {
   let low = 0;
   let high = arr.length-1;
 
@@ -316,7 +316,7 @@ function binarySearch(arr, key, compareFunc) {
  * @param item
  * @param {function} compareFunc
  */
-function insertSorted(arr, item, compareFunc) {
+function insertSorted(arr: Array<any>, item, compareFunc: function) {
   if (arr.length === 0) {
     return arr.push(item);
   }
@@ -333,7 +333,7 @@ function insertSorted(arr, item, compareFunc) {
  * @param {String} [name] Name of the function to use in the error message. Defaults to 'callback'.
  * @returns {Function}
  */
-function validateFn(fn, name) {
+function validateFn(fn: Function, name: string): Function {
   if (typeof fn !== 'function') {
     throw new errors.ArgumentError(util.format('%s is not a function', name || 'callback'));
   }
@@ -349,7 +349,7 @@ function validateFn(fn, name) {
  * @returns {Array} Returns an array of parameters.
  * @throws {Error} In case a parameter with a specific name is not defined
  */
-function adaptNamedParamsPrepared(params, columns) {
+function adaptNamedParamsPrepared(params: Array<any> | object, columns: Array<any>): Array<any> {
   if (!params || Array.isArray(params) || !columns || columns.length === 0) {
     // params is an array or there aren't parameters
     return params;
@@ -377,7 +377,7 @@ function adaptNamedParamsPrepared(params, columns) {
  * @returns {{ params: Array<{name, value}>, namedParameters: boolean, keyIndexes: object }} Returns an array of
  * parameters and the keys as an associative array.
  */
-function adaptNamedParamsWithHints(params, execOptions) {
+function adaptNamedParamsWithHints(params: Array<any> | object, execOptions: ExecutionOptions): { params: Array<{ name; value; }>; namedParameters: boolean; keyIndexes: object; } {
   if (!params || Array.isArray(params)) {
     //The parameters is an Array or there isn't parameter
     return { params: params, namedParameters: false, keyIndexes: null };
@@ -408,7 +408,7 @@ function adaptNamedParamsWithHints(params, execOptions) {
  * @param {Number} times
  * @returns {String}
  */
-function stringRepeat(val, times) {
+function stringRepeat(val: string, times: number): string {
   if (!times || times < 0) {
     return null;
   }
@@ -424,7 +424,7 @@ function stringRepeat(val, times) {
  * @param {Object} obj
  * @returns {Array}
  */
-function objectValues(obj) {
+function objectValues(obj: object): Array<any> {
   if (!obj) {
     return emptyArray;
   }
@@ -443,7 +443,7 @@ function objectValues(obj) {
  * @param {Function} handler
  * @returns {Promise|undefined}
  */
-function promiseWrapper(options, originalCallback, handler) {
+function promiseWrapper(options: ClientOptions, originalCallback: Function, handler: Function): Promise<any> | undefined {
   if (typeof originalCallback === 'function') {
     // Callback-based invocation
     handler.call(this, originalCallback);
@@ -460,7 +460,7 @@ function promiseWrapper(options, originalCallback, handler) {
  * @param {Function} handler
  * @returns {Promise}
  */
-function defaultPromiseFactory(handler) {
+function defaultPromiseFactory(handler: Function): Promise<any> {
   return new Promise(function executor(resolve, reject) {
     handler(function handlerCallback(err, result) {
       if (err) {
@@ -494,7 +494,7 @@ function ifUndefined3(v1, v2, v3) {
  * @returns {Array}
  * @private
  */
-function shuffleArray(arr) {
+function shuffleArray(arr: Array<any>): Array<any> {
   // Fisher–Yates algorithm
   for (let i = arr.length - 1; i > 0; i--) {
     // Math.random() has an extremely short permutation cycle length but we don't care about collisions
@@ -523,7 +523,7 @@ function HashSet() {
  * @param {Object} key
  * @returns {boolean} Returns true if it was added to the set; false if the key is already present.
  */
-HashSet.prototype.add = function (key) {
+HashSet.prototype.add = function (key: object): boolean {
   if (this.contains(key)) {
     return false;
   }
@@ -535,7 +535,7 @@ HashSet.prototype.add = function (key) {
 /**
  * @returns {boolean} Returns true if the key is present in the set.
  */
-HashSet.prototype.contains = function (key) {
+HashSet.prototype.contains = function (key): boolean {
   return this.length > 0 && this.items[key] === true;
 };
 
@@ -544,7 +544,7 @@ HashSet.prototype.contains = function (key) {
  * @param key
  * @return {boolean} Returns true if the key existed and was removed, otherwise it returns false.
  */
-HashSet.prototype.remove = function (key) {
+HashSet.prototype.remove = function (key): boolean {
   if (!this.contains(key)) {
     return false;
   }
@@ -556,7 +556,7 @@ HashSet.prototype.remove = function (key) {
  * Returns an array containing the set items.
  * @returns {Array}
  */
-HashSet.prototype.toArray = function () {
+HashSet.prototype.toArray = function (): Array<any> {
   return Object.keys(this.items);
 };
 
@@ -571,7 +571,7 @@ class AddressResolver {
    * @param {String} options.nameOrIp
    * @param {Object} [options.dns]
    */
-  constructor(options) {
+  constructor(options: { nameOrIp: string; dns?: object; }) {
     if (!options || !options.nameOrIp || !options.dns) {
       throw new Error('nameOrIp and dns lib must be provided as part of the options');
     }
@@ -649,7 +649,7 @@ class AddressResolver {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function each(arr, fn, callback) {
+function each(arr: Array<any>, fn: Function, callback: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter is not an Array');
   }
@@ -681,7 +681,7 @@ function each(arr, fn, callback) {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function eachSeries(arr, fn, callback) {
+function eachSeries(arr: Array<any>, fn: Function, callback: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter is not an Array');
   }
@@ -721,7 +721,7 @@ function eachSeries(arr, fn, callback) {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function forEachOf(arr, fn, callback) {
+function forEachOf(arr: Array<any>, fn: Function, callback: Function) {
   return mapEach(arr, fn, true, callback);
 }
 
@@ -730,7 +730,7 @@ function forEachOf(arr, fn, callback) {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function map(arr, fn, callback) {
+function map(arr: Array<any>, fn: Function, callback: Function) {
   return mapEach(arr, fn, false, callback);
 }
 
@@ -783,7 +783,7 @@ function mapEach(arr, fn, useIndex, callback) {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function mapSeries(arr, fn, callback) {
+function mapSeries(arr: Array<any>, fn: Function, callback: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter must be an Array');
   }
@@ -831,7 +831,7 @@ function mapSeries(arr, fn, callback) {
  * @param {Array.<Function>} arr
  * @param {Function} [callback]
  */
-function parallel(arr, callback) {
+function parallel(arr: Array<Function>, callback: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter must be an Array');
   }
@@ -860,7 +860,7 @@ function parallel(arr, callback) {
  * @param {Array.<Function>} arr
  * @param {Function} [callback]
  */
-function series(arr, callback) {
+function series(arr: Array<Function>, callback: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter must be an Array');
   }
@@ -893,7 +893,7 @@ function series(arr, callback) {
  * @param {Function} iteratorFunc
  * @param {Function} [callback]
  */
-function times(count, iteratorFunc, callback) {
+function times(count: number, iteratorFunc: Function, callback: Function) {
   callback = callback || noop;
   count = +count;
   if (isNaN(count) || count === 0) {
@@ -922,7 +922,7 @@ function times(count, iteratorFunc, callback) {
  * @param {Function} iteratorFunc
  * @param {Function} [callback]
  */
-function timesLimit(count, limit, iteratorFunc, callback) {
+function timesLimit(count: number, limit: number, iteratorFunc: Function, callback: Function) {
   let sync = undefined;
   callback = callback || noop;
   limit = Math.min(limit, count);
@@ -965,7 +965,7 @@ function timesLimit(count, limit, iteratorFunc, callback) {
  * @param {Function} iteratorFunction
  * @param {Function} callback
  */
-function timesSeries(count, iteratorFunction, callback) {
+function timesSeries(count: number, iteratorFunction: Function, callback: Function) {
   count = +count;
   if (isNaN(count) || count < 1) {
     return callback();
@@ -1003,7 +1003,7 @@ function timesSeries(count, iteratorFunction, callback) {
  * @param {Function} fn
  * @param {Function} callback
  */
-function whilst(condition, fn, callback) {
+function whilst(condition: Function, fn: Function, callback: Function) {
   let sync = 0;
   next();
   function next(err) {
@@ -1045,13 +1045,13 @@ function whilst(condition, fn, callback) {
  */
 const VIntCoding = (function () {
   /** @param {Long} n */
-  function encodeZigZag64(n) {
+  function encodeZigZag64(n: Long) {
     //     (n << 1) ^ (n >> 63);
     return n.toUnsigned().shiftLeft(1).xor(n.shiftRight(63));
   }
 
   /** @param {Long} n */
-  function decodeZigZag64(n) {
+  function decodeZigZag64(n: Long) {
     //     (n >>> 1) ^ -(n & 1);
     return n.shiftRightUnsigned(1).xor(n.and(Long.ONE).negate());
   }
@@ -1061,7 +1061,7 @@ const VIntCoding = (function () {
    * @param {Buffer} buffer
    * @returns {Number}
    */
-  function writeVInt(value, buffer) {
+  function writeVInt(value: Long, buffer: Buffer): number {
     return writeUnsignedVInt(encodeZigZag64(value), buffer);
   }
 
@@ -1070,7 +1070,7 @@ const VIntCoding = (function () {
    * @param {Buffer} buffer
    * @returns {number}
    */
-  function writeUnsignedVInt(value, buffer) {
+  function writeUnsignedVInt(value: Long, buffer: Buffer): number {
     const size = computeUnsignedVIntSize(value);
     if (size === 1) {
       buffer[0] = value.getLowBits();
@@ -1084,7 +1084,7 @@ const VIntCoding = (function () {
    * @param {Long} value
    * @returns {number}
    */
-  function computeUnsignedVIntSize(value) {
+  function computeUnsignedVIntSize(value: Long): number {
     const magnitude = numberOfLeadingZeros(value.or(Long.ONE));
     return (639 - magnitude * 9) >> 6;
   }
@@ -1094,7 +1094,7 @@ const VIntCoding = (function () {
    * @param {Number} size
    * @param {Buffer} buffer
    */
-  function encodeVInt(value, size, buffer) {
+  function encodeVInt(value: Long, size: number, buffer: Buffer) {
     const extraBytes = size - 1;
     let intValue = value.getLowBits();
     let i;
@@ -1115,7 +1115,7 @@ const VIntCoding = (function () {
    * @param {Long} value
    * @returns {Number}
    */
-  function numberOfLeadingZeros(value) {
+  function numberOfLeadingZeros(value: Long): number {
     if (value.equals(Long.ZERO)) {
       return 64;
     }
@@ -1155,7 +1155,7 @@ const VIntCoding = (function () {
    * @param {{value: number}} offset
    * @returns {Long}
    */
-  function readVInt(buffer, offset) {
+  function readVInt(buffer: Buffer, offset: { value: number; }): Long {
     return decodeZigZag64(readUnsignedVInt(buffer, offset));
   }
 
@@ -1165,7 +1165,7 @@ const VIntCoding = (function () {
    * @param {{ value: number}} offset
    * @returns {Long}
    */
-  function readUnsignedVInt(input, offset) {
+  function readUnsignedVInt(input: Buffer, offset: { value: number; }): Long {
     const firstByte = input[offset.value++];
     if ((firstByte & 0x80) === 0) {
       return Long.fromInt(firstByte);
@@ -1217,7 +1217,7 @@ const VIntCoding = (function () {
    * @param {Number} firstByte
    * @returns {Number}
    */
-  function numberOfExtraBytesToRead(firstByte) {
+  function numberOfExtraBytesToRead(firstByte: number): number {
     // Instead of counting 1s of the byte, we negate and count 0 of the byte
     return numberOfLeadingZerosInt32(~firstByte) - 24;
   }
@@ -1226,7 +1226,7 @@ const VIntCoding = (function () {
    * @param {Number} extraBytesToRead
    * @returns {Number}
    */
-  function firstByteValueMask(extraBytesToRead) {
+  function firstByteValueMask(extraBytesToRead: number): number {
     return 0xff >> extraBytesToRead;
   }
 
@@ -1236,7 +1236,7 @@ const VIntCoding = (function () {
    * @returns {void}
    */
   // eslint-disable-next-line no-unused-vars
-  function writeUnsignedVInt32(value, output) {
+  function writeUnsignedVInt32(value: number, output: Buffer): void {
     writeUnsignedVInt(Long.fromNumber(value), output);
   }
 
@@ -1253,7 +1253,7 @@ const VIntCoding = (function () {
    */
   // eslint-disable-next-line no-unused-vars
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function getUnsignedVInt32(input, readerIndex) {
+  function getUnsignedVInt32(input: Buffer, readerIndex: number): number {
     return checkedCast(getUnsignedVInt(input, readerIndex, input.length));
   }
 
@@ -1264,7 +1264,7 @@ const VIntCoding = (function () {
    * @param {Number} readerLimit 
    * @returns {Long}
    */
-  function getUnsignedVInt(input, readerIndex, readerLimit) {
+  function getUnsignedVInt(input: Buffer, readerIndex: number, readerLimit: number): Long {
     if (readerIndex < 0)
     {throw new errors.ArgumentError(
       "Reader index should be non-negative, but was " + readerIndex);}
@@ -1294,7 +1294,7 @@ const VIntCoding = (function () {
    * @param {Long} value 
    * @returns {Number} 
    */
-  function checkedCast(value) {
+  function checkedCast(value: Long): number {
     const result = value.toInt();
     if (value.notEquals(result)) {throw new errors.VIntOutOfRangeException(value);}
     return result;
@@ -1305,7 +1305,7 @@ const VIntCoding = (function () {
    * @param {Buffer} bytes 
    * @returns {[number, number]} [size, bytes read]
    */
-  function uvintUnpack(bytes) {
+  function uvintUnpack(bytes: Buffer): [number, number] {
     const firstByte = bytes[0];
 
     if ((firstByte & 128) === 0) {
@@ -1329,7 +1329,7 @@ const VIntCoding = (function () {
  * @param {Number} val 
  * @returns {Buffer}
  */
-  function uvintPack(val) {
+  function uvintPack(val: number): Buffer {
     const rv = [];
     if (val < 128) {
       rv.push(val);

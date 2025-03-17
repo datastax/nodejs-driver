@@ -36,11 +36,11 @@ import { ExecutionOptions } from './lib/execution-options';
 const token = {
   Token: Token.Token,
   TokenRange: Token.TokenRange
-}
+};
 const metadata = {Metadata: Metadata};
 const defaultOptions = function () {
   return clientOptions.defaultOptions();
-}
+};
 const version = packageJson.version;
 
 

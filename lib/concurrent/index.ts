@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stream } from "stream";
+import { Readable, Stream } from "stream";
 import utils from "../utils";
+import Client from "../client";
 
 
 
@@ -63,7 +64,7 @@ import utils from "../utils";
  *
  * const result = await executeConcurrent(client, queryAndParameters);
  */
-function executeConcurrent(client, query, parameters, options) {
+function executeConcurrent(client: Client, query: string | Array<{ query; params; }>, parameters: Array<Array<any>> | Stream | object, options: { executionProfile?: string; concurrencyLevel?: number; raiseOnFirstError?: boolean; collectResults?: boolean; maxErrors?: number; }): Promise<ResultSetGroup> {
   if (!client) {
     throw new TypeError('Client instance is not defined');
   }
@@ -81,11 +82,19 @@ function executeConcurrent(client, query, parameters, options) {
   }
 
   if (Array.isArray(query)) {
-    options = parameters;
+    options = parameters as object;
     return new ArrayBasedExecutor(client, null, query, options).execute();
   }
 
   throw new TypeError('A string query or query and parameters array should be provided');
+}
+
+type Options = {
+  collectResults?: boolean;
+  concurrencyLevel?: number;
+  executionProfile?: string;
+  maxErrors?: number;
+  raiseOnFirstError?: boolean;
 }
 
 /**
@@ -93,6 +102,14 @@ function executeConcurrent(client, query, parameters, options) {
  * @ignore
  */
 class ArrayBasedExecutor {
+  private _client: Client;
+  private _query: string;
+  private _parameters: any[][] | { query: any; params: any; }[];
+  private _raiseOnFirstError: boolean;
+  private _concurrencyLevel: number;
+  private _queryOptions: { prepare: boolean; executionProfile: any; };
+  private _result: ResultSetGroup;
+  private _stop: boolean;
 
   /**
    * @param {Client} client
@@ -101,7 +118,7 @@ class ArrayBasedExecutor {
    * @param {Object} [options] The execution options.
    * @private
    */
-  constructor(client, query, parameters, options) {
+  constructor(client: Client, query: string, parameters: Array<Array<any>> | Array<{ query; params; }>, options: Options) {
     this._client = client;
     this._query = query;
     this._parameters = parameters;
@@ -130,7 +147,7 @@ class ArrayBasedExecutor {
       return Promise.resolve();
     }
 
-    const item = this._parameters[index];
+    const item = this._parameters[index] as { query; params; };
     let query;
     let params;
 
@@ -163,6 +180,18 @@ class ArrayBasedExecutor {
  * @ignore
  */
 class StreamBasedExecutor {
+  private _client: Client;
+  private _query: string;
+  private _stream: Stream;
+  private _raiseOnFirstError: boolean;
+  private _concurrencyLevel: any;
+  private _queryOptions: { prepare: boolean; executionProfile: any; };
+  private _inFlight: number;
+  private _index: number;
+  private _result: ResultSetGroup;
+  private _resolveCallback: Function;
+  private _rejectCallback: Function;
+  private _readEnded: boolean;
 
   /**
    * @param {Client} client
@@ -171,7 +200,7 @@ class StreamBasedExecutor {
    * @param {Object} [options] The execution options.
    * @private
    */
-  constructor(client, query, stream, options) {
+  constructor(client: Client, query: string, stream: Stream, options: Options) {
     this._client = client;
     this._query = query;
     this._stream = stream;
@@ -188,7 +217,7 @@ class StreamBasedExecutor {
   }
 
   execute() {
-    return new Promise((resolve, reject) => {
+    return new Promise<ResultSetGroup>((resolve, reject) => {
       this._resolveCallback = resolve;
       this._rejectCallback = reject;
 
@@ -223,8 +252,8 @@ class StreamBasedExecutor {
         this._setError(index, err);
       })
       .then(() => {
-        if (this._stream.isPaused()) {
-          this._stream.resume();
+        if ((this._stream as Readable).isPaused()) {
+          (this._stream as Readable).resume();
         }
 
         if (this._readEnded && this._inFlight === 0) {
@@ -238,7 +267,7 @@ class StreamBasedExecutor {
       });
 
     if (this._inFlight >= this._concurrencyLevel) {
-      this._stream.pause();
+      (this._stream as Readable).pause();
     }
   }
 
@@ -247,7 +276,7 @@ class StreamBasedExecutor {
    * @param {Error} [err] The stream read error.
    * @private
    */
-  _setReadEnded(err) {
+  _setReadEnded(err?: Error) {
     if (!this._readEnded) {
       this._readEnded = true;
 
@@ -276,6 +305,11 @@ class StreamBasedExecutor {
  * Represents results from different related executions.
  */
 class ResultSetGroup {
+  private _collectResults: any;
+  private _maxErrors: any;
+  totalExecuted: number;
+  errors: Error[];
+  resultItems: any[];
 
   /**
    * Creates a new instance of {@link ResultSetGroup}.

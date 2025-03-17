@@ -19,7 +19,7 @@
 	},
 	"include": [
 		"lib/**/*.ts",
-		"test/**/*.ts",
+		// "test/**/*.ts",
 		"index.ts"
 	],
 	"exclude": [

@@ -36,7 +36,9 @@ const t = {
 const ts = { TraversalStrategy: UnsupportedType };
 const Bytecode = UnsupportedType;
 const utils = { Long: UnsupportedType };
+// @ts-ignore
 t.t = g.t;
+// @ts-ignore
 t.direction = g.direction;
 
 function UnsupportedType() { }
@@ -48,15 +50,17 @@ const typeKey = '@type';
  * @abstract
  */
 class TypeSerializer {
-  serialize() {
+  reader: any;
+  writer: any;
+  serialize(item) {
     throw new Error('serialize() method not implemented for ' + this.constructor.name);
   }
 
-  deserialize() {
+  deserialize(obj) {
     throw new Error('deserialize() method not implemented for ' + this.constructor.name);
   }
 
-  canBeUsedFor() {
+  canBeUsedFor(value) {
     throw new Error('canBeUsedFor() method not implemented for ' + this.constructor.name);
   }
 }
@@ -135,6 +139,7 @@ class BytecodeSerializer extends TypeSerializer {
   serialize(item) {
     let bytecode = item;
     if (item instanceof t.Traversal) {
+      // @ts-ignore
       bytecode = item.getBytecode();
     }
     const result = {};
@@ -258,6 +263,7 @@ class TraverserSerializer extends TypeSerializer {
 
   deserialize(obj) {
     const value = obj[valueKey];
+    // @ts-ignore
     return new t.Traverser(this.reader.read(value['value']), this.reader.read(value['bulk']));
   }
 
@@ -372,17 +378,19 @@ class Path3Serializer extends TypeSerializer {
 
 class TSerializer extends TypeSerializer {
   deserialize(obj) {
+    // @ts-ignore
     return t.t[obj[valueKey]];
   }
 }
 
 class DirectionSerializer extends TypeSerializer {
   deserialize(obj) {
-    return t.direction[obj[valueKey].toLowerCase()];
+    return t["direction"][obj[valueKey].toLowerCase()];
   }
 }
 
 class ArraySerializer extends TypeSerializer {
+  typeKey: any;
   constructor(typeKey) {
     super();
     this.typeKey = typeKey;

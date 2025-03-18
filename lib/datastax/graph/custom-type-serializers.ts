@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import types from "../../types/index";
+import types, { Duration, Tuple, dataTypes } from "../../types/index";
 import utils from "../../utils";
 import { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } from "./complex-type-helper";
 import { Point, Polygon, LineString } from "../../geometry/index";
@@ -21,12 +21,13 @@ import { Edge } from "./structure";
 import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 
 
-const { Tuple, dataTypes } = types;
 
 const typeKey = '@type';
 const valueKey = '@value';
 
 class EdgeDeserializer {
+  key: string;
+  reader: any;
   constructor() {
     this.key = 'g:Edge';
   }
@@ -43,13 +44,15 @@ class EdgeDeserializer {
  * @private
  */
 class StringBasedTypeSerializer {
+  key: any;
+  targetType: any;
 
   /**
    * Creates a new instance of the deserializer.
    * @param {String} key
    * @param {Function} targetType
    */
-  constructor(key, targetType) {
+  constructor(key: string, targetType: Function) {
     if (!key) {
       throw new Error('Deserializer must provide a type key');
     }
@@ -175,6 +178,9 @@ class PolygonSerializer extends StringBasedTypeSerializer {
 }
 
 class TupleSerializer {
+  key: string;
+  reader: any;
+  writer: any;
   constructor() {
     this.key = 'dse:Tuple';
   }
@@ -197,7 +203,7 @@ class TupleSerializer {
   }
 
   /** @param {Tuple} tuple */
-  serialize(tuple) {
+  serialize(tuple: Tuple) {
     const result = {
       'cqlType': 'tuple',
       'definition': tuple.elements.map(getTypeDefinitionByValue),
@@ -216,6 +222,8 @@ class TupleSerializer {
 }
 
 class DurationSerializer {
+  key: string;
+  reader: any;
   constructor() {
     this.key = 'dse:Duration';
   }
@@ -229,7 +237,7 @@ class DurationSerializer {
   }
 
   /** @param {Duration} value */
-  serialize(value) {
+  serialize(value: Duration) {
     return {
       [typeKey]: this.key,
       [valueKey]: {
@@ -246,6 +254,9 @@ class DurationSerializer {
 }
 
 class UdtSerializer {
+  key: string;
+  reader: any;
+  writer: any;
   constructor() {
     this.key = 'dse:UDT';
   }
@@ -281,7 +292,9 @@ class UdtSerializer {
 }
 
 class InternalSerializer {
-  constructor(name, transformFn) {
+  _name: any;
+  _transformFn: any;
+  constructor(name, transformFn?) {
     this._name = name;
     this._transformFn = transformFn || (x => x);
   }
@@ -304,6 +317,7 @@ const graphSONSerializerByCqlType = {
 };
 
 class GraphTypeWrapperSerializer {
+  key: string;
   constructor() {
     // Use a fixed name that doesn't conflict with TinkerPop and DS Graph
     this.key = 'client:wrapper';

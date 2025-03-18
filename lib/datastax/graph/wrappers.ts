@@ -24,6 +24,8 @@ const { dataTypes } = types;
  * @ignore
  */
 class GraphTypeWrapper {
+  value: any;
+  typeInfo: any;
   constructor(value, typeInfo) {
     this.value = value;
     this.typeInfo = typeof typeInfo === 'number' ? { code: typeInfo } : typeInfo;
@@ -37,6 +39,8 @@ class GraphTypeWrapper {
  * @ignore
  */
 class UdtGraphWrapper {
+  value: any;
+  udtInfo: any;
   constructor(value, udtInfo) {
     this.value = value;
 
@@ -78,6 +82,6 @@ function asTimestamp(value) { return new GraphTypeWrapper(value, dataTypes.times
  * @param {object} value The object representing the UDT.
  * @param {{name: string, keyspace: string, fields: Array}} udtInfo The UDT metadata as defined by the driver.
  */
-function asUdt(value, udtInfo) { return new UdtGraphWrapper(value, udtInfo); }
+function asUdt(value: object, udtInfo: { name: string; keyspace: string; fields: Array<any>; }) { return new UdtGraphWrapper(value, udtInfo); }
 
 export { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper };

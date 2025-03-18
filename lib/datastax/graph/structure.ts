@@ -13,147 +13,180 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
-
-
 
 /**
- * @classdesc
  * Represents a graph Element.
- * @param id
- * @param label
  * @abstract
  * @memberOf module:datastax/graph
- * @constructor
  */
-function Element(id, label) {
+class Element {
+  id: any;
+  label: string;
+
   /**
-   * Gets the element id.
+   * @param id
+   * @param label
    */
-  this.id = id;
-  /**
-   * Gets the element label.
-   * @type {String}
-   */
-  this.label = label;
+  constructor(id: any, label: string) {
+    /**
+     * Gets the element id.
+     */
+    this.id = id;
+    /**
+     * Gets the element label.
+     * @type {String}
+     */
+    this.label = label;
+  }
 }
 
 /**
- * @classdesc
  * Represents a graph Vertex.
- * @param id
- * @param {String} label
- * @param {Object<string, Array>} properties
- * @extends {Element}
+ * @extends Element
  * @memberOf module:datastax/graph
- * @constructor
  */
-function Vertex(id, label, properties) {
-  Element.call(this, id, label);
+class Vertex extends Element {
+  properties: { [s: string]: Array<any> };
+
   /**
-   * Gets the vertex properties.
-   * @type {Object<string, Array>}
+   * @param id
+   * @param {String} label
+   * @param {Object<string, Array>} properties
    */
-  this.properties = properties;
+  constructor(id: any, label: string, properties: { [s: string]: Array<any> }) {
+    super(id, label);
+    /**
+     * Gets the vertex properties.
+     * @type {Object<string, Array>}
+     */
+    this.properties = properties;
+  }
 }
 
-util.inherits(Vertex, Element);
-
 /**
- * @classdesc
  * Represents a graph Edge.
- * @param id
- * @param outV
- * @param {outVLabel} outVLabel
- * @param {String} label
- * @param inV
- * @param {String} inVLabel
- * @param {Object<string, Property>} properties
- * @extends {Element}
+ * @extends Element
  * @memberOf module:datastax/graph
- * @constructor
  */
-function Edge(id, outV, outVLabel, label, inV, inVLabel, properties) {
-  Element.call(this, id, label);
-  /**
-   * Gets the id of outgoing vertex of the edge.
-   */
-  this.outV = outV;
-  /**
-   * Gets the label of the outgoing vertex.
-   */
-  this.outVLabel = outVLabel;
-  /**
-   * Gets the id of the incoming vertex of the edge.
-   */
-  this.inV = inV;
+class Edge extends Element {
+  outV: any;
+  outVLabel: string;
+  inV: any;
+  inVLabel: string;
+  properties: { [s: string]: any };
 
   /**
-   * Gets the label of the incoming vertex.
+   * @param id
+   * @param outV
+   * @param {String} outVLabel
+   * @param {String} label
+   * @param inV
+   * @param {String} inVLabel
+   * @param {Object<string, Property>} properties
    */
-  this.inVLabel = inVLabel;
-  /**
-   * Gets the properties of the edge as an associative array.
-   * @type {Object}
-   */
-  this.properties = {};
-  (function adaptProperties(self) {
+  constructor(
+    id: any,
+    outV: any,
+    outVLabel: string,
+    label: string,
+    inV: any,
+    inVLabel: string,
+    properties: { [s: string]: Property }
+  ) {
+    super(id, label);
+    /**
+     * Gets the id of outgoing vertex of the edge.
+     */
+    this.outV = outV;
+    /**
+     * Gets the label of the outgoing vertex.
+     */
+    this.outVLabel = outVLabel;
+    /**
+     * Gets the id of the incoming vertex of the edge.
+     */
+    this.inV = inV;
+
+    /**
+     * Gets the label of the incoming vertex.
+     */
+    this.inVLabel = inVLabel;
+    /**
+     * Gets the properties of the edge as an associative array.
+     * @type {Object}
+     */
+    this.properties = {};
+    this.adaptProperties(properties);
+  }
+
+  private adaptProperties(properties: { [s: string]: Property }): void {
     if (properties) {
       const keys = Object.keys(properties);
-      for (let i = 0; i < keys.length; i++) {
-        const k = keys[i];
-        self.properties[k] = properties[k].value;
+      for (const key of keys) {
+        this.properties[key] = properties[key].value;
       }
     }
-  })(this);
+  }
 }
 
-util.inherits(Edge, Element);
-
 /**
- * @classdesc
  * Represents a graph vertex property.
- * @param id
- * @param {String} label
- * @param value
- * @param {Object} properties
- * @extends {Element}
+ * @extends Element
  * @memberOf module:datastax/graph
- * @constructor
  */
-function VertexProperty(id, label, value, properties) {
-  Element.call(this, id, label);
-  this.value = value;
-  this.key = this.label;
-  this.properties = properties;
+class VertexProperty extends Element {
+  value: any;
+  key: string;
+  properties: object;
+
+  /**
+   * @param id
+   * @param {String} label
+   * @param value
+   * @param {Object} properties
+   */
+  constructor(id: any, label: string, value: any, properties: object) {
+    super(id, label);
+    this.value = value;
+    this.key = this.label;
+    this.properties = properties;
+  }
 }
 
-util.inherits(VertexProperty, Element);
-
 /**
- * @classdesc
  * Represents a property.
- * @param key
- * @param value
  * @memberOf module:datastax/graph
- * @constructor
  */
-function Property(key, value) {
-  this.key = key;
-  this.value = value;
+class Property {
+  key: string;
+  value: any;
+
+  /**
+   * @param key
+   * @param value
+   */
+  constructor(key: string, value: any) {
+    this.key = key;
+    this.value = value;
+  }
 }
 
 /**
- * @classdesc
  * Represents a walk through a graph as defined by a traversal.
- * @param {Array} labels
- * @param {Array} objects
  * @memberOf module:datastax/graph
- * @constructor
  */
-function Path(labels, objects) {
-  this.labels = labels;
-  this.objects = objects;
+class Path {
+  labels: Array<any>;
+  objects: Array<any>;
+
+  /**
+   * @param {Array} labels
+   * @param {Array} objects
+   */
+  constructor(labels: Array<any>, objects: Array<any>) {
+    this.labels = labels;
+    this.objects = objects;
+  }
 }
 
 export {

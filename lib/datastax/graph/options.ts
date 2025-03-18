@@ -17,6 +17,9 @@ import util from "util";
 import types from "../../types/index";
 import utils from "../../utils";
 import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
+import { ProfileManager } from "../../execution-profile";
+import { GraphQueryOptions } from ".";
+import Client from "../../client";
 
 
 const Long = types.Long;
@@ -82,7 +85,7 @@ const payloadKeys = Object.freeze({
  * @returns {DseClientOptions}
  * @private
  */
-function getDefaultGraphOptions(profileManager, baseOptions, defaultRetryPolicy, profile) {
+function getDefaultGraphOptions(profileManager: ProfileManager, baseOptions, defaultRetryPolicy: RetryPolicy | null, profile: ExecutionProfile): DseClientOptions {
   return profileManager.getOrCreateGraphOptions(profile, function createDefaultOptions() {
     const profileOptions = profile.graphOptions || utils.emptyObject;
     const defaultProfile = profileManager.getDefault();
@@ -150,7 +153,7 @@ function getDefaultGraphOptions(profileManager, baseOptions, defaultRetryPolicy,
  * @param {Function} [converter]
  * @private
  */
-function setPayloadKey(payload, profileOptions, key, value, converter) {
+function setPayloadKey(payload: object, profileOptions: QueryOptions, key: string, value: string | number | null, converter: Function) {
   converter = converter || utils.allocBufferFromString;
   if (value === null) {
     // Use null to avoid set payload for a key
@@ -177,7 +180,7 @@ function longBuffer(value) {
  * @param {Number} consistency
  * @private
  */
-function getConsistencyName(consistency) {
+function getConsistencyName(consistency: number) {
   // eslint-disable-next-line
   if (consistency == undefined) {
     //null or undefined => undefined
@@ -216,6 +219,10 @@ function loadConsistencyNames() {
  * @ignore
  */
 class GraphExecutionOptions extends DefaultExecutionOptions {
+  _defaultGraphOptions: DseClientOptions;
+  _preferredHost: null;
+  _graphSubProtocol: any;
+  _graphLanguage: any;
 
   /**
    * Creates a new instance of GraphExecutionOptions.
@@ -224,7 +231,7 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
    * @param graphBaseOptions The default graph base options.
    * @param {RetryPolicy} defaultProfileRetryPolicy
    */
-  constructor(queryOptions, client, graphBaseOptions, defaultProfileRetryPolicy) {
+  constructor(queryOptions: GraphQueryOptions, client: Client, graphBaseOptions, defaultProfileRetryPolicy: RetryPolicy) {
 
     queryOptions = queryOptions || utils.emptyObject;
     super(queryOptions, client, null);

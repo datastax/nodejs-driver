@@ -19,6 +19,9 @@ import GraphResultSet from "./result-set";
 import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer";
 import getCustomTypeSerializers from "./custom-type-serializers";
 import { GraphExecutionOptions, graphProtocol } from "./options";
+import Client, { ClientOptions } from "../../client";
+import { Host } from "../../host";
+import { GraphQueryOptions } from ".";
 
 
 const graphLanguageGroovyString = 'gremlin-groovy';
@@ -40,11 +43,16 @@ const defaultWriters = new Map([
   [ graphProtocol.graphson3, getDefaultWriter(graphSON3Writer) ]
 ]);
 
+type QueryObject = {graphLanguage: any, value: any, queryWriterFactory: any};
 /**
  * Internal class that contains the logic for executing a graph traversal.
  * @ignore
  */
 class GraphExecutor {
+  _client: Client;
+  _handler: Function;
+  _defaultProfileRetryPolicy: any;
+  _graphBaseOptions: any;
 
   /**
    * Creates a new instance of GraphExecutor.
@@ -52,7 +60,7 @@ class GraphExecutor {
    * @param {ClientOptions} rawOptions
    * @param {Function} handler
    */
-  constructor(client, rawOptions, handler) {
+  constructor(client: Client, rawOptions: ClientOptions, handler: Function) {
     this._client = client;
     this._handler = handler;
 
@@ -68,6 +76,8 @@ class GraphExecutor {
       // As the default retry policy might retry non-idempotent queries
       // we should use default retry policy for all graph queries that does not retry
       retry: new policies.retry.FallthroughRetryPolicy()
+      //TODO: what are we trying to do here?? The last argument is alwasy ignored
+      // @ts-ignore
     }, rawOptions.graphOptions, client.profileManager.getDefault().graphOptions);
 
     if (this._graphBaseOptions.readTimeout === null) {
@@ -77,11 +87,11 @@ class GraphExecutor {
 
   /**
    * Executes the graph traversal.
-   * @param {String|Object} query
+   * @param {String|QueryObject} query
    * @param {Object} parameters
    * @param {GraphQueryOptions} options
    */
-  async send(query, parameters, options) {
+  async send(query: string | QueryObject, parameters: object, options: GraphQueryOptions) {
     if (Array.isArray(parameters)) {
       throw new TypeError('Parameters must be a Object instance as an associative array');
     }
@@ -103,11 +113,12 @@ class GraphExecutor {
 
     if (isQueryObject) {
       // Use the provided graph language to override the current
-      execOptions.setGraphLanguage(query.graphLanguage);
+      execOptions.setGraphLanguage((query as QueryObject).graphLanguage);
     }
 
     this._setGraphProtocol(execOptions);
     execOptions.setGraphPayload();
+    // @ts-ignore
     parameters = GraphExecutor._buildGraphParameters(parameters, execOptions.getGraphSubProtocol());
 
     if (typeof query !== 'string') {
@@ -125,7 +136,7 @@ class GraphExecutor {
       query = queryWriter(!isQueryObject ? query : query.value);
     }
 
-    return await this._executeGraphQuery(query, parameters, execOptions);
+    return await this._executeGraphQuery(query as string, parameters, execOptions);
   }
 
   /**
@@ -136,7 +147,7 @@ class GraphExecutor {
    * @returns {Promise<GraphResultSet>}
    * @private
    */
-  async _executeGraphQuery(query, parameters, execOptions) {
+  async _executeGraphQuery(query: string, parameters: object, execOptions: GraphExecutionOptions): Promise<GraphResultSet> {
     const result = await this._handler.call(this._client, query, parameters, execOptions);
 
     // Instances of rowParser transform Row instances into Traverser instances.
@@ -151,7 +162,7 @@ class GraphExecutor {
    * @returns {Promise<Host|null>}
    * @private
    */
-  async _getAnalyticsMaster() {
+  async _getAnalyticsMaster(): Promise<Host | null> {
     try {
       const result = await this._client.execute('CALL DseClientTool.getAnalyticsGraphServer()', utils.emptyArray);
 
@@ -195,7 +206,7 @@ class GraphExecutor {
    * </ul>
    * @param {GraphExecutionOptions} execOptions
    */
-  _setGraphProtocol(execOptions) {
+  _setGraphProtocol(execOptions: GraphExecutionOptions) {
     let protocol = execOptions.getGraphSubProtocol();
 
     if (protocol) {
@@ -228,7 +239,7 @@ class GraphExecutor {
    * @returns {string[]|null}
    * @private
    */
-  static _buildGraphParameters(parameters, protocol) {
+  static _buildGraphParameters(parameters: Array<any> | Function | null, protocol: string): string[] | null {
     if (!parameters || typeof parameters !== 'object') {
       return null;
     }

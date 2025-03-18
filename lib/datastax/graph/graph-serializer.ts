@@ -33,6 +33,8 @@ import typeSerializers from "./type-serializers";
  * GraphSON2 writer.
  */
 class GraphSON2Writer {
+  _options: { serializers?: object; };
+  _serializers: any[];
 
   /**
    * @param {Object} [options]
@@ -40,7 +42,7 @@ class GraphSON2Writer {
    * serializer instances as values, ie: { 'g:Int64': longSerializer }.
    * @constructor
    */
-  constructor(options) {
+  constructor(options: { serializers?: object; }) {
     this._options = options || {};
     // Create instance of the default serializers
     this._serializers = this.getDefaultSerializers().map(serializerConstructor => {
@@ -66,7 +68,7 @@ class GraphSON2Writer {
    * Gets the default serializers to be used.
    * @returns {Array}
    */
-  getDefaultSerializers() {
+  getDefaultSerializers(): Array<any> {
     return graphSON2Serializers;
   }
 
@@ -100,7 +102,7 @@ class GraphSON2Writer {
    * @param {Object} obj
    * @returns {String}
    */
-  write(obj) {
+  write(obj: object): string {
     return JSON.stringify(this.adaptObject(obj));
   }
 }
@@ -118,6 +120,8 @@ class GraphSON3Writer extends GraphSON2Writer {
  * GraphSON2 reader.
  */
 class GraphSON2Reader {
+  _options: { serializers?: object; };
+  _deserializers: {};
   /**
    * GraphSON Reader
    * @param {Object} [options]
@@ -125,7 +129,7 @@ class GraphSON2Reader {
    * deserializer instances as values, ie: { 'g:Int64': longSerializer }.
    * @constructor
    */
-  constructor(options) {
+  constructor(options: { serializers?: object; }) {
     this._options = options || {};
     this._deserializers = {};
 
@@ -154,7 +158,7 @@ class GraphSON2Reader {
    * Gets the default deserializers as an associative array.
    * @returns {Object}
    */
-  getDefaultDeserializers() {
+  getDefaultDeserializers(): object {
     return graphSON2Deserializers;
   }
 

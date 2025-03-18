@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-
+//TODO: we need to rethink how we expose and document the types of the cloud features.
+// Do our users know they can configure in the following ways?
 import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index';
 import https from "https";
 import fs from "fs";
@@ -23,6 +24,7 @@ import AdmZip from "adm-zip";
 import { URL } from "url";
 import errors from "../../errors";
 import utils from "../../utils";
+import { ClientOptions } from '../../client';
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);
@@ -33,7 +35,7 @@ const readFile = util.promisify(fs.readFile);
  * @param {ClientOptions} options
  * @returns {Promise<void>}
  */
-async function init(options) {
+async function init(options: ClientOptions): Promise<void> {
   if (!options.cloud) {
     return;
   }
@@ -42,27 +44,35 @@ async function init(options) {
   await parseZipFile(cloudOptions);
   await getMetadataServiceInfoAsync(cloudOptions);
 
-  if (!cloudOptions.clientOptions.sslOptions.checkServerIdentity) {
+  if (!cloudOptions.clientOptions.sslOptions["checkServerIdentity"]) {
     // With SNI enabled, hostname (uuid) and CN will not match
     // Use a custom validation function to validate against the proxy address.
     // Note: this function is only called if the certificate passed all other checks, like CA validation.
-    cloudOptions.clientOptions.sslOptions.checkServerIdentity = (_, cert) =>
-      checkServerIdentity(cert, cloudOptions.clientOptions.sni.address);
+    cloudOptions.clientOptions.sslOptions["checkServerIdentity"] = (_, cert) =>
+      checkServerIdentity(cert, cloudOptions.clientOptions["sni"].address);
   }
 }
 
 class CloudOptions {
-  constructor(clientOptions) {
+  clientOptions: ClientOptions;
+  secureConnectBundle: any;
+  serviceUrl: string;
+  logEmitter: any;
+  contactPoints: string[];
+  localDataCenter: string;
+  constructor(clientOptions: ClientOptions) {
     this.clientOptions = clientOptions;
 
     if (clientOptions.cloud.secureConnectBundle) {
       this.secureConnectBundle = clientOptions.cloud.secureConnectBundle;
       this.serviceUrl = null;
     } else {
+      //TODO: where was this clientOptions.cloud.endpoint exposed or documented?
+      // @ts-ignore
       this.serviceUrl = clientOptions.cloud.endpoint;
     }
     // Include a log emitter to enable logging within the cloud connection logic
-    this.logEmitter = clientOptions.logEmitter;
+    this.logEmitter = (clientOptions as any).logEmitter;
 
     this.contactPoints = null;
     this.localDataCenter = null;
@@ -72,7 +82,7 @@ class CloudOptions {
    * The sslOptions in the client options from a given map.
    * @param {Map<String, Buffer>} zipEntries
    */
-  setSslOptions(zipEntries) {
+  setSslOptions(zipEntries: Map<string, Buffer>) {
     this.clientOptions.sslOptions = Object.assign({
       ca: [zipEntries.get('ca.crt') ],
       cert: zipEntries.get('cert'),
@@ -104,7 +114,7 @@ class CloudOptions {
  * @param {CloudOptions} cloudOptions
  * @returns {Promise<void>}
  */
-async function parseZipFile(cloudOptions) {
+async function parseZipFile(cloudOptions: CloudOptions): Promise<void> {
   if (cloudOptions.serviceUrl) {
     // Service url already was provided
     return;
@@ -116,7 +126,7 @@ async function parseZipFile(cloudOptions) {
 
   const data = await readFile(cloudOptions.secureConnectBundle);
   const zip = new AdmZip(data);
-  const zipEntries = new Map(zip.getEntries().map(e => [e.entryName, e.getData()]));
+  const zipEntries : Map<string, Buffer> = new Map(zip.getEntries().map(e => [e.entryName, e.getData()]));
 
   if (!zipEntries.get('config.json')) {
     throw new TypeError('Config file must be contained in secure bundle');
@@ -138,7 +148,7 @@ async function parseZipFile(cloudOptions) {
  * @param {CloudOptions} cloudOptions
  * @param {Function} callback
  */
-function getMetadataServiceInfo(cloudOptions, callback) {
+function getMetadataServiceInfo(cloudOptions: CloudOptions, callback: Function) {
   const regex = /^(.+?):(\d+)(.*)$/;
   const matches = regex.exec(cloudOptions.serviceUrl);
   callback = utils.callbackOnce(callback);
@@ -157,6 +167,7 @@ function getMetadataServiceInfo(cloudOptions, callback) {
   const req = https.get(requestOptions, res => {
     let data = '';
 
+    // @ts-ignore
     utils.log('verbose', `Connected to metadata service with SSL/TLS protocol ${res.socket.getProtocol()}`, {}, cloudOptions);
 
     res
@@ -184,7 +195,7 @@ function getMetadataServiceInfo(cloudOptions, callback) {
         // Set the connect options
         cloudOptions.clientOptions.contactPoints = contactInfo['contact_points'];
         cloudOptions.clientOptions.localDataCenter = contactInfo['local_dc'];
-        cloudOptions.clientOptions.sni = { address: contactInfo['sni_proxy_address'] };
+        cloudOptions.clientOptions["sni"] = { address: contactInfo['sni_proxy_address'] };
 
         callback();
       });
@@ -204,7 +215,7 @@ const getMetadataServiceInfoAsync = util.promisify(getMetadataServiceInfo);
  * Returns an Error that wraps the inner error obtained while fetching metadata information.
  * @private
  */
-function getServiceRequestError(err, requestOptions, isParsingError) {
+function getServiceRequestError(err, requestOptions, isParsingError?) {
   const message = isParsingError
     ? 'There was an error while parsing the metadata service information'
     : 'There was an error fetching the metadata information';
@@ -222,7 +233,7 @@ function getServiceRequestError(err, requestOptions, isParsingError) {
  * @internal
  * @ignore
  */
-function checkServerIdentity(cert, sniAddress) {
+function checkServerIdentity(cert: { subject: { CN: string; }; subjectaltname: string | null; }, sniAddress: string): Error | undefined {
   // Based on logic defined by the Node.js Core module
   // https://github.com/nodejs/node/blob/ff48009fefcecedfee2c6ff1719e5be3f6969049/lib/tls.js#L212-L290
 
@@ -260,9 +271,9 @@ function checkServerIdentity(cert, sniAddress) {
 
   if (!valid) {
     const error = new Error(`Host: ${hostName} is not cert's CN/altnames: ${cn} / ${altNames}`);
-    error.reason = error.message;
-    error.host = hostName;
-    error.cert = cert;
+    error["reason"] = error.message;
+    error["host"] = hostName;
+    error["cert"] = cert;
     return error;
   }
 }
@@ -273,7 +284,7 @@ function checkServerIdentity(cert, sniAddress) {
  * @private
  * @returns {boolean}
  */
-function checkParts(hostParts, pattern) {
+function checkParts(hostParts, pattern): boolean {
   // Empty strings, null, undefined, etc. never match.
   if (!pattern) {
     return false;

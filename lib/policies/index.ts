@@ -26,7 +26,7 @@ import * as timestampGeneration from './timestamp-generation';
  * Returns a new instance of the default address translator policy used by the driver.
  * @returns {AddressTranslator}
  */
-const defaultAddressTranslator = function () {
+const defaultAddressTranslator = function (): addressResolution.AddressTranslator {
   return new addressResolution.AddressTranslator();
 };
 
@@ -38,7 +38,7 @@ const defaultAddressTranslator = function () {
  * provided in the {@link ClientOptions}.</p>
  * @returns {LoadBalancingPolicy}
  */
-const defaultLoadBalancingPolicy = function (localDc) {
+const defaultLoadBalancingPolicy = function (localDc: string): loadBalancing.LoadBalancingPolicy {
   return new loadBalancing.DefaultLoadBalancingPolicy(localDc);
 };
 
@@ -46,7 +46,7 @@ const defaultLoadBalancingPolicy = function (localDc) {
  * Returns a new instance of the default retry policy used by the driver.
  * @returns {RetryPolicy}
  */
-const defaultRetryPolicy = function () {
+const defaultRetryPolicy = function (): retry.RetryPolicy {
   return new retry.RetryPolicy();
 };
 
@@ -54,7 +54,7 @@ const defaultRetryPolicy = function () {
  * Returns a new instance of the default reconnection policy used by the driver.
  * @returns {ReconnectionPolicy}
  */
-const defaultReconnectionPolicy = function () {
+const defaultReconnectionPolicy = function (): reconnection.ReconnectionPolicy {
   return new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false);
 };
 
@@ -63,7 +63,7 @@ const defaultReconnectionPolicy = function () {
  * Returns a new instance of the default speculative execution policy used by the driver.
  * @returns {SpeculativeExecutionPolicy}
  */
-const defaultSpeculativeExecutionPolicy = function () {
+const defaultSpeculativeExecutionPolicy = function (): speculativeExecution.SpeculativeExecutionPolicy {
   return new speculativeExecution.NoSpeculativeExecutionPolicy();
 };
 
@@ -71,7 +71,7 @@ const defaultSpeculativeExecutionPolicy = function () {
  * Returns a new instance of the default timestamp generator used by the driver.
  * @returns {TimestampGenerator}
  */
-const defaultTimestampGenerator = function () {
+const defaultTimestampGenerator = function (): timestampGeneration.TimestampGenerator {
   return new timestampGeneration.MonotonicTimestampGenerator();
 };
 

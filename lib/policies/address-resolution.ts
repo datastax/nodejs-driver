@@ -17,9 +17,6 @@ import dns from "dns";
 import util from "util";
 import utils from "../utils";
 
-
-
-/** @module policies/addressResolution */
 /**
  * @class
  * @classdesc
@@ -42,27 +39,24 @@ import utils from "../utils";
  * Please note that the contact points addresses provided while creating the
  * {@link Client} instance are not "translated", only IP address retrieve from or sent
  * by Cassandra nodes to the driver are.
- * @constructor
  */
-function AddressTranslator() {
-
+class AddressTranslator {
+  /**
+   * Translates a Cassandra <code>rpc_address</code> to another address if necessary.
+   * @param {String} address the address of a node as returned by Cassandra.
+   * <p>
+   * Note that if the <code>rpc_address</code> of a node has been configured to <code>0.0.0.0</code>
+   * server side, then the provided address will be the node <code>listen_address</code>,
+   * *not* <code>0.0.0.0</code>.
+   * </p>
+   * @param {Number} port The port number, as specified in the [protocolOptions]{@link ClientOptions} at Client instance creation (9042 by default).
+   * @param {Function} callback Callback to invoke with endpoint as first parameter.
+   * The endpoint is an string composed of the IP address and the port number in the format <code>ipAddress:port</code>.
+   */
+  translate(address: string, port: number, callback: Function): void {
+    callback(`${address}:${port}`);
+  }
 }
-
-/**
- * Translates a Cassandra <code>rpc_address</code> to another address if necessary.
- * @param {String} address the address of a node as returned by Cassandra.
- * <p>
- * Note that if the <code>rpc_address</code> of a node has been configured to <code>0.0.0.0</code>
- * server side, then the provided address will be the node <code>listen_address</code>,
- * *not* <code>0.0.0.0</code>.
- * </p>
- * @param {Number} port The port number, as specified in the [protocolOptions]{@link ClientOptions} at Client instance creation (9042 by default).
- * @param {Function} callback Callback to invoke with endpoint as first parameter.
- * The endpoint is an string composed of the IP address and the port number in the format <code>ipAddress:port</code>.
- */
-AddressTranslator.prototype.translate = function (address, port, callback) {
-  callback(address + ':' + port);
-};
 
 /**
  * @class
@@ -78,66 +72,61 @@ AddressTranslator.prototype.translate = function (address, port, callback) {
  * <p>
  * This optimizes network costs, because Amazon charges more for communication over public IPs.
  * </p>
- * @constructor
  */
-function EC2MultiRegionTranslator() {
-
-}
-
-util.inherits(EC2MultiRegionTranslator, AddressTranslator);
-
-/**
- * Addresses in the same EC2 region are translated to private IPs and addresses in
- * different EC2 regions (than the client) are unchanged
- */
-EC2MultiRegionTranslator.prototype.translate = function (address, port, callback) {
-  let newAddress = address;
-  const self = this;
-  let name;
-  utils.series([
-    function resolve(next) {
-      dns.reverse(address, function (err, hostNames) {
-        if (err) {
-          return next(err);
-        }
-        if (!hostNames) {
+class EC2MultiRegionTranslator extends AddressTranslator {
+  /**
+   * Addresses in the same EC2 region are translated to private IPs and addresses in
+   * different EC2 regions (than the client) are unchanged
+   * @param {string} address The address of a node as returned by Cassandra.
+   * @param {number} port The port number, as specified in the protocol options.
+   * @param {Function} callback Callback to invoke with the translated endpoint.
+   */
+  translate(address: string, port: number, callback: Function): void {
+    let newAddress = address;
+    const self = this;
+    let name;
+    utils.series([
+      function resolve(next) {
+        dns.reverse(address, function (err, hostNames) {
+          if (err) {
+            return next(err);
+          }
+          if (!hostNames) {
+            return next();
+          }
+          name = hostNames[0];
+          next();
+        });
+      },
+      function lookup(next) {
+        if (!name) {
           return next();
         }
-        name = hostNames[0];
-        next();
-      });
-    },
-    function lookup(next) {
-      if (!name) {
-        return next();
+        dns.lookup(name, function (err, lookupAddress) {
+          if (err) {
+            return next(err);
+          }
+          newAddress = lookupAddress;
+          next();
+        });
+      }], function (err) {
+      if (err) {
+        //there was an issue while doing dns resolution
+        self.logError(address, err);
       }
-      dns.lookup(name, function (err, lookupAddress) {
-        if (err) {
-          return next(err);
-        }
-        newAddress = lookupAddress;
-        next();
-      });
-    }], function (err) {
-    if (err) {
-      //there was an issue while doing dns resolution
-      self.logError(address, err);
-    }
-    callback(newAddress + ':' + port);
-  });
-};
+      callback(newAddress + ':' + port);
+    });
+  }
 
-/**
- * Log method called to log errors that occurred while performing dns resolution.
- * You can assign your own method to the class instance to do proper logging.
- * @param {String} address
- * @param {Error} err
- */
-EC2MultiRegionTranslator.prototype.logError = function (address, err) {
-  //Do nothing by default
-};
+  /**
+   * Log method called to log errors that occurred while performing dns resolution.
+   * You can assign your own method to the class instance to do proper logging.
+   * @param {String} address
+   * @param {Error} err
+   */
+  logError(address: string, err: Error): void {
+    //Do nothing by default
+  }
+}
 
-export {
-  AddressTranslator,
-  EC2MultiRegionTranslator
-};
+export { AddressTranslator, EC2MultiRegionTranslator };

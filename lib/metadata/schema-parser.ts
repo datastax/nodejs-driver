@@ -15,7 +15,7 @@
  */
 import util from "util";
 import events from "events";
-import types from "../types/index";
+import types, { Row } from "../types/index";
 import utils from "../utils";
 import errors from "../errors";
 import promiseUtils from "../promise-utils";
@@ -24,6 +24,8 @@ import Aggregate from "./aggregate";
 import SchemaFunction from "./schema-function";
 import Index from "./schema-index";
 import MaterializedView from "./materialized-view";
+import { ClientOptions } from "../client";
+import ControlConnection from "../control-connection";
 
 
 const { format } = util;
@@ -58,13 +60,25 @@ const _selectVirtualColumns = "SELECT * FROM system_virtual_schema.columns where
 
 /**
  * @abstract
- * @param {ClientOptions} options The client options
- * @param {ControlConnection} cc
- * @constructor
  * @ignore
  */
-class SchemaParser {
-  constructor(options, cc) {
+abstract class SchemaParser {
+  cc: ControlConnection;
+  encodingOptions: { map?: Function; set?: Function; copyBuffer?: boolean; useUndefinedAsUnset?: boolean; useBigIntAsLong?: boolean; useBigIntAsVarint?: boolean; };
+  selectTable: string;
+  selectColumns: string;
+  selectIndexes: string;
+  selectUdt: string;
+  selectAggregates: string;
+  selectFunctions: string;
+  supportsVirtual: boolean;
+  /**
+   * @param {ClientOptions} options The client options
+   * @param {ControlConnection} cc
+   * @constructor
+   * @ignore
+   */
+  constructor(options: ClientOptions, cc: ControlConnection) {
     this.cc = cc;
     this.encodingOptions = options.encoding;
     this.selectTable = null;
@@ -85,7 +99,8 @@ class SchemaParser {
    * @returns {{name, durableWrites, strategy, strategyOptions, tokenToReplica, udts, tables, functions, aggregates}}
    * @protected
    */
-  _createKeyspace(name, durableWrites, strategy, strategyOptions, virtual) {
+  protected _createKeyspace(name, durableWrites, strategy, strategyOptions, virtual?): 
+  {name, durableWrites, strategy, strategyOptions, tokenToReplica, udts, tables, functions, aggregates, virtual, views, graphEngine} {
     return {
       name,
       durableWrites,
@@ -107,16 +122,14 @@ class SchemaParser {
    * @param {String} name
    * @returns {Promise<Object>}
    */
-  getKeyspace(name) {
-  }
+  abstract getKeyspace(name: string): Promise<Keyspace>;
 
   /**
    * @abstract
    * @param {Boolean} waitReconnect
    * @returns {Promise<Object<string, Object>>}
    */
-  getKeyspaces(waitReconnect) {
-  }
+  abstract getKeyspaces(waitReconnect: boolean): Promise<{ [s: string]: object; }>;
 
   /**
    * @param {String} keyspaceName
@@ -125,7 +138,7 @@ class SchemaParser {
    * @param {Boolean} virtual
    * @returns {Promise<TableMetadata|null>}
    */
-  async getTable(keyspaceName, name, cache, virtual) {
+  async getTable(keyspaceName: string, name: string, cache: object, virtual: boolean): Promise<TableMetadata | null> {
     let tableInfo = cache && cache[name];
     if (!tableInfo) {
       tableInfo = new TableMetadata(name);
@@ -188,12 +201,12 @@ class SchemaParser {
     }
   }
 
-  async _getFirstRow(query) {
+  protected async _getFirstRow(query) {
     const rows = await this._getRows(query);
     return rows[0];
   }
 
-  async _getRows(query) {
+  protected async _getRows(query) {
     const response = await this.cc.query(query);
     return response.rows;
   }
@@ -204,7 +217,7 @@ class SchemaParser {
    * @param {Object} cache
    * @returns {Promise<Object|null>}
    */
-  async getUdt(keyspaceName, name, cache) {
+  async getUdt(keyspaceName: string, name: string, cache: object): Promise<object | null> {
     let udtInfo = cache && cache[name];
     if (!udtInfo) {
       udtInfo = new events.EventEmitter();
@@ -221,7 +234,7 @@ class SchemaParser {
       return udtInfo;
     }
     if (udtInfo.loading) {
-      return promiseUtils.fromEvent(udtInfo, 'load');
+      return promiseUtils.fromEvent(udtInfo, 'load') as Promise<any>;
     }
     udtInfo.loading = true;
     const query = format(this.selectUdt, keyspaceName, name);
@@ -252,8 +265,7 @@ class SchemaParser {
    * @returns {Promise<void>}
    * @abstract
    */
-  _parseUdt(udtInfo, row) {
-  }
+  protected abstract _parseUdt(udtInfo, row: Row): Promise<void>;
 
   /**
    * Builds the metadata based on the table and column rows
@@ -266,7 +278,7 @@ class SchemaParser {
    * @returns {Promise<void>}
    * @throws {Error}
    */
-  async _parseTableOrView(tableInfo, tableRow, columnRows, indexRows, virtual) {
+  protected async _parseTableOrView(tableInfo: TableMetadata, tableRow: Row, columnRows: Array<Row>, indexRows: Array<Row>, virtual: boolean): Promise<void> {
   }
 
   /**
@@ -276,8 +288,7 @@ class SchemaParser {
    * @param {Object} cache
    * @returns {Promise<MaterializedView|null>}
    */
-  getMaterializedView(keyspaceName, name, cache) {
-  }
+  abstract getMaterializedView(keyspaceName: string, name: string, cache: object): Promise<MaterializedView | null>;
 
   /**
    * @param {String} keyspaceName
@@ -286,9 +297,9 @@ class SchemaParser {
    * @param {Object} cache
    * @returns {Promise<Map>}
    */
-  async getFunctions(keyspaceName, name, aggregate, cache) {
+  async getFunctions(keyspaceName: string, name: string, aggregate: boolean, cache: object): Promise<Map<any, any>> {
     /** @type {String} */
-    let query = this.selectFunctions;
+    let query: string = this.selectFunctions;
     let parser = row => this._parseFunction(row);
     if (aggregate) {
       query = this.selectAggregates;
@@ -338,36 +349,34 @@ class SchemaParser {
    * @param {Row} row
    * @returns {Promise}
    */
-  _parseAggregate(row) {
-  }
+  protected abstract _parseAggregate(row: Row): Promise<any>;
 
   /**
    * @abstract
    * @param {Row} row
    * @returns {Promise}
    */
-  _parseFunction(row) {
-  }
+  protected abstract _parseFunction(row: Row): Promise<any>;
 
   /** @returns {Map} */
-  _asMap(obj) {
+  protected _asMap(obj): Map<any, any> {
     if (!obj) {
       return new Map();
     }
     if (this.encodingOptions.map && obj instanceof this.encodingOptions.map) {
       // Its already a Map or a polyfill of a Map
-      return obj;
+      return obj as Map<any, any>;
     }
     return new Map(Object.keys(obj).map(k => [k, obj[k]]));
   }
 
-  _mapAsObject(map) {
+  protected _mapAsObject(map) {
     if (!map) {
       return map;
     }
     if (this.encodingOptions.map && map instanceof this.encodingOptions.map) {
       const result = {};
-      map.forEach((value, key) => result[key] = value);
+      (map as Map<any, any>).forEach((value, key) => result[key] = value);
       return result;
     }
     return map;
@@ -384,7 +393,7 @@ class SchemaParserV1 extends SchemaParser {
    * @param {ClientOptions} options
    * @param {ControlConnection} cc
    */
-  constructor(options, cc) {
+  constructor(options: ClientOptions, cc: ControlConnection) {
     super(options, cc);
     this.selectTable = _selectTableV1;
     this.selectColumns = _selectColumnsV1;
@@ -611,13 +620,14 @@ class SchemaParserV1 extends SchemaParser {
  * @ignore
  */
 class SchemaParserV2 extends SchemaParser {
+  udtResolver: Function;
 
   /**
    * @param {ClientOptions} options The client options
    * @param {ControlConnection} cc The control connection to be used
    * @param {Function} udtResolver The function to be used to retrieve the udts.
    */
-  constructor(options, cc, udtResolver) {
+  constructor(options: ClientOptions, cc: ControlConnection, udtResolver: Function) {
     super(options, cc);
     this.udtResolver = udtResolver;
     this.selectTable = _selectTableV2;
@@ -683,7 +693,7 @@ class SchemaParserV2 extends SchemaParser {
     }
   }
 
-  _parseKeyspace(row, virtual) {
+  _parseKeyspace(row, virtual?) {
     const replication = row['replication'];
     let strategy;
     let strategyOptions;
@@ -874,7 +884,7 @@ class SchemaParserV3 extends SchemaParserV2 {
    * @param {ControlConnection} cc The control connection to be used
    * @param {Function} udtResolver The function to be used to retrieve the udts.
    */
-  constructor(options, cc, udtResolver) {
+  constructor(options: ClientOptions, cc: ControlConnection, udtResolver: Function) {
     super(options, cc, udtResolver);
     this.supportsVirtual = true;
   }
@@ -945,7 +955,7 @@ class SchemaParserV3 extends SchemaParserV2 {
  * We also need to remove the static keyword for all other columns in the table.
  * @param {module:metadata~TableMetadata} tableInfo
 */
-function pruneStaticCompactTableColumns(tableInfo) {
+function pruneStaticCompactTableColumns(tableInfo: TableMetadata) {
   let i;
   let c;
   //remove "column1 text" clustering column
@@ -976,7 +986,7 @@ function pruneStaticCompactTableColumns(tableInfo) {
  * This column shouldn't be exposed to the user but is currently returned by C*.
  * @param {module:metadata~TableMetadata} tableInfo
  */
-function pruneDenseTableColumns(tableInfo) {
+function pruneDenseTableColumns(tableInfo: TableMetadata) {
   let i = tableInfo.columns.length;
   while (i--) {
     const c = tableInfo.columns[i];
@@ -1017,7 +1027,7 @@ function getTokenToReplicaMapper(strategy, strategyOptions) {
  * @param {Number} replicationFactor
  * @returns {function}
  */
-function getTokenToReplicaSimpleMapper(replicationFactor) {
+function getTokenToReplicaSimpleMapper(replicationFactor: number): Function {
   return (function tokenSimpleStrategy(tokenizer, ringTokensAsStrings, primaryReplicas) {
     const ringLength = ringTokensAsStrings.length;
     const rf = Math.min(replicationFactor, ringLength);
@@ -1048,7 +1058,7 @@ function getTokenToReplicaSimpleMapper(replicationFactor) {
  * @returns {Function}
  * @private
  */
-function getTokenToReplicaNetworkMapper(replicationFactors) {
+function getTokenToReplicaNetworkMapper(replicationFactors: object): Function {
   //                A(DC1)
   //
   //           H         B(DC2)
@@ -1125,7 +1135,7 @@ function getTokenToReplicaNetworkMapper(replicationFactors) {
 /**
  * @returns {Number} The number of skipped hosts added.
  */
-function addSkippedHosts(dcRf, dcReplicas, tokenReplicas, skippedHosts) {
+function addSkippedHosts(dcRf, dcReplicas, tokenReplicas, skippedHosts): number {
   let i;
   for (i = 0; i < dcRf - dcReplicas && i < skippedHosts.length; i++) {
     tokenReplicas.push(skippedHosts[i]);
@@ -1160,8 +1170,8 @@ function isDoneForToken(replicationFactors, datacenters, replicasByDc) {
  * @param {SchemaParser} [currentInstance] The current instance
  * @returns {SchemaParser}
  */
-function getByVersion(options, cc, udtResolver, version, currentInstance) {
-  let parserConstructor = SchemaParserV1;
+function getByVersion(options: ClientOptions, cc: ControlConnection, udtResolver: Function, version?: Array<number>, currentInstance?: SchemaParser): SchemaParser {
+  let parserConstructor : any = SchemaParserV1;
   if (version && version[0] === 3) {
     parserConstructor = SchemaParserV2;
   } else if (version && version[0] >= 4) {
@@ -1173,7 +1183,17 @@ function getByVersion(options, cc, udtResolver, version, currentInstance) {
   return currentInstance;
 }
 
+interface Keyspace {name, durableWrites, strategy, strategyOptions, tokenToReplica, udts, tables, functions, aggregates, virtual, views, graphEngine}
+
 export default {
   getByVersion,
-  isDoneForToken
+  isDoneForToken,
+  SchemaParser
+};
+
+export {
+  getByVersion,
+  isDoneForToken,
+  SchemaParser,
+  Keyspace
 };

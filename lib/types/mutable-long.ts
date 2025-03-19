@@ -287,7 +287,7 @@ class MutableLong {
    * @param {Number} [radix]
    * @return {MutableLong}
    */
-  static fromString(str: string, radix: number): MutableLong {
+  static fromString(str: string, radix?: number): MutableLong {
     if (typeof str !== 'string') {
       throw new Error('String format is not valid: ' + str);
     }

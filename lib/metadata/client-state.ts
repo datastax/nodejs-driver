@@ -15,6 +15,8 @@
  */
 import util from "util";
 import errors from "../errors";
+import { Host } from "../host";
+import Client from "../client";
 
 
 
@@ -27,6 +29,9 @@ import errors from "../errors";
  * @constructor
  */
 class ClientState {
+  _hosts: Host[];
+  _openConnections: { [key: string]: number; };
+  _inFlightQueries: { [key: string]: number; };
 
   /**
    * Creates a new instance of <code>ClientState</code>.
@@ -34,7 +39,7 @@ class ClientState {
    * @param {Object.<String, Number>} openConnections
    * @param {Object.<String, Number>} inFlightQueries
    */
-  constructor(hosts, openConnections, inFlightQueries) {
+  constructor(hosts: Array<Host>, openConnections: {[key: string]: number}, inFlightQueries: {[key: string]: number}) {
     this._hosts = hosts;
     this._openConnections = openConnections;
     this._inFlightQueries = inFlightQueries;
@@ -44,7 +49,7 @@ class ClientState {
    * Get an array of hosts to which the client is connected to.
    * @return {Array<Host>}
    */
-  getConnectedHosts() {
+  getConnectedHosts(): Array<Host> {
     return this._hosts;
   }
 
@@ -53,7 +58,7 @@ class ClientState {
    * @param {Host} host
    * @return {Number}
    */
-  getOpenConnections(host) {
+  getOpenConnections(host: Host): number {
     if (!host) {
       throw new errors.ArgumentError('Host is not defined');
     }
@@ -70,7 +75,7 @@ class ClientState {
    * @param {Host} host
    * @return {Number}
    */
-  getInFlightQueries(host) {
+  getInFlightQueries(host: Host): number {
     if (!host) {
       throw new errors.ArgumentError('Host is not defined');
     }
@@ -92,7 +97,7 @@ class ClientState {
    * @internal
    * @ignore
    */
-  static from(client) {
+  static from(client: Client) {
     const openConnections = {};
     const inFlightQueries = {};
     const hostArray = [];

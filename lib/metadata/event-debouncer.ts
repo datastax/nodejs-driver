@@ -26,13 +26,17 @@ const _queueOverflowThreshold = 1000;
  * @constructor
  */
 class EventDebouncer {
+  private _delay: number;
+  private _logger: Function;
+  private _queue: { callbacks: undefined[]; keyspaces: {}; mainEvent?: {handler: Function} };
+  private _timeout: NodeJS.Timeout;
 
   /**
    * Creates a new instance of the event debouncer.
    * @param {Number} delay
    * @param {Function} logger
    */
-  constructor(delay, logger) {
+  constructor(delay: number, logger: Function) {
     this._delay = delay;
     this._logger = logger;
     this._queue = null;
@@ -46,9 +50,12 @@ class EventDebouncer {
    * @param {Boolean} processNow
    * @returns {Promise}
    */
-  eventReceived(event, processNow) {
+  eventReceived(event: {
+      handler: Function; all: boolean | undefined; keyspace: string | undefined;
+      cqlObject: string | null | undefined;
+    }, processNow: boolean): Promise<any> {
     return new Promise((resolve, reject) => {
-      event.callback = promiseUtils.getCallback(resolve, reject);
+      event["callback"] = promiseUtils.getCallback(resolve, reject);
       this._queue = this._queue || { callbacks: [], keyspaces: {} };
       const delay = !processNow ? this._delay : 0;
       if (event.all) {
@@ -60,7 +67,7 @@ class EventDebouncer {
         // warn once
         this._logger('warn', util.format('Event debouncer queue exceeded %d events', _queueOverflowThreshold));
       }
-      this._queue.callbacks.push(event.callback);
+      this._queue.callbacks.push(event["callback"]);
       if (this._queue.mainEvent) {
         // a full refresh is scheduled and the callback was added, nothing else to do.
         return this._slideDelay(delay);
@@ -83,7 +90,7 @@ class EventDebouncer {
    * @param {Number} delay
    * @private
    * */
-  _slideDelay(delay) {
+  _slideDelay(delay: number) {
     const self = this;
     function process() {
       const q = self._queue;
@@ -113,7 +120,7 @@ class EventDebouncer {
     if (!this._queue) {
       return;
     }
-    this._queue.callbacks.forEach(function (cb) {
+    this._queue.callbacks.forEach(function (cb: Function) {
       cb();
     });
     this._queue = null;
@@ -126,7 +133,7 @@ class EventDebouncer {
  * @param {{callbacks: Array, keyspaces: Object, mainEvent: Object}} q
  * @private
  */
-function processQueue (q) {
+function processQueue (q: { callbacks: Array<any>; keyspaces: object; mainEvent?: {handler: Function}; }) {
   if (q.mainEvent) {
     // refresh all by invoking 1 handler and invoke all pending callbacks
     return promiseUtils.toCallback(q.mainEvent.handler(), (err) => {

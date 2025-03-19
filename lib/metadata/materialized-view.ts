@@ -19,32 +19,40 @@ import DataCollection from "./data-collection";
 
 
 /**
- * Creates a new MaterializedView.
- * @param {String} name Name of the View.
  * @classdesc Describes a CQL materialized view.
  * @alias module:metadata~MaterializedView
  * @augments {module:metadata~DataCollection}
  * @constructor
  */
-function MaterializedView(name) {
-  DataCollection.call(this, name);
+class MaterializedView extends DataCollection {
   /**
    * Name of the table.
    * @type {String}
    */
-  this.tableName = null;
+  tableName: string;
   /**
    * View where clause.
    * @type {String}
    */
-  this.whereClause = null;
+  whereClause: string;
   /**
    * Determines if all the table columns where are included in the view.
    * @type {boolean}
    */
-  this.includeAllColumns = false;
-}
+  includeAllColumns: boolean;
+  /**
+   * Creates a new MaterializedView.
+   * @param {String} name Name of the View.
+   * @augments {module:metadata~DataCollection}
+   * @constructor
+   */
+  constructor(name: string) {
+    super(name);
 
-util.inherits(MaterializedView, DataCollection);
+    this.tableName = null;
+    this.whereClause = null;
+    this.includeAllColumns = false;
+  }
+}
 
 export default MaterializedView;

@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import types from "./types/index";
-import token from "./token";
+import types, { Integer } from "./types/index";
+import token, { ByteOrderedToken, Murmur3Token, RandomToken, Token } from "./token";
 import utils from "./utils";
 import MutableLong from "./types/mutable-long";
 
-
-const { Integer } = types;
 
 // Murmur3 constants
 //-0x783C846EEEBDAC2B
@@ -49,7 +47,7 @@ class Tokenizer {
    * @param {Buffer|Array} value
    * @returns {Token} Computed token
    */
-  hash(value) {
+  hash(value: Buffer | Array<any>): Token {
     throw new Error('You must implement a hash function for the tokenizer');
   }
 
@@ -58,7 +56,7 @@ class Tokenizer {
    * @abstract
    * @param {String} value
    */
-  parse(value) {
+  parse(value: string): Token {
     throw new Error('You must implement a parse function for the tokenizer');
   }
 
@@ -72,7 +70,7 @@ class Tokenizer {
    * @param {Token} end  End token
    * @param {Number} numberOfSplits Number of splits to make.
    */
-  split(start, end, numberOfSplits) {
+  split(start: Token, end: Token, numberOfSplits: number) {
     throw new Error('You must implement a split function for the tokenizer');
   }
 
@@ -87,7 +85,7 @@ class Tokenizer {
    * @param {Number} numberOfSplits The number of splits to make
    * @returns {Array<Integer>} The evenly-split points on the range
    */
-  splitBase(start, range, ringEnd, ringLength, numberOfSplits) {
+  splitBase(start: Integer, range: Integer, ringEnd: Integer, ringLength: Integer, numberOfSplits: number): Array<Integer> {
     const numberOfSplitsInt = Integer.fromInt(numberOfSplits);
     const divider = range.divide(numberOfSplitsInt);
     let remainder = range.modulo(numberOfSplitsInt);
@@ -115,7 +113,7 @@ class Tokenizer {
    * Return internal string based representation of a Token.
    * @param {Token} token 
    */
-  stringify(token) {
+  stringify(token: Token) {
     return token.getValue().toString();
   }
 }
@@ -124,6 +122,11 @@ class Tokenizer {
  * Uniformly distributes data across the cluster based on Cassandra flavored Murmur3 hashed values.
  */
 class Murmur3Tokenizer extends Tokenizer {
+  _minToken: Murmur3Token;
+  _maxToken: Murmur3Token;
+  _maxValue: Integer;
+  _minValue: Integer;
+  _ringLength: Integer;
 
   constructor() {
     super();
@@ -133,7 +136,7 @@ class Murmur3Tokenizer extends Tokenizer {
    * @param {Buffer} value
    * @return {Murmur3Token}
    */
-  hash(value) {
+  hash(value: Buffer): Murmur3Token {
     // This is an adapted version of the MurmurHash.hash3_x64_128 from Cassandra used
     // for M3P. Compared to that methods, there's a few inlining of arguments and we
     // only return the first 64-bits of the result since that's all M3 partitioner uses.
@@ -239,12 +242,12 @@ class Murmur3Tokenizer extends Tokenizer {
 
   /**
    *
-   * @param {Array<Number>} key
+   * @param {Buffer} key
    * @param {Number} offset
    * @param {Number} index
    * @return {MutableLong}
    */
-  getBlock(key, offset, index) {
+  getBlock(key: Buffer, offset: number, index: number): MutableLong {
     const i8 = index << 3;
     const blockOffset = offset + i8;
     return new MutableLong(
@@ -259,13 +262,13 @@ class Murmur3Tokenizer extends Tokenizer {
    * @param {MutableLong} v
    * @param {Number} n
    */
-  rotl64(v, n) {
+  rotl64(v: MutableLong, n: number) {
     const left = v.clone().shiftLeft(n);
     v.shiftRightUnsigned(64 - n).or(left);
   }
 
   /** @param {MutableLong} k */
-  fmix(k) {
+  fmix(k: MutableLong) {
     k.xor(new MutableLong(k.getUint16(2) >>> 1 | ((k.getUint16(3) << 15) & 0xffff), k.getUint16(3) >>> 1, 0, 0));
     k.multiply(mconst3);
     const other = new MutableLong(
@@ -284,7 +287,7 @@ class Murmur3Tokenizer extends Tokenizer {
    * @param {String} value
    * @returns {Murmur3Token}
    */
-  parse(value) {
+  parse(value: string): Murmur3Token {
     return new token.Murmur3Token(MutableLong.fromString(value));
   }
 
@@ -355,6 +358,11 @@ class Murmur3Tokenizer extends Tokenizer {
  * Uniformly distributes data across the cluster based on MD5 hash values.
  */
 class RandomTokenizer extends Tokenizer {
+  _crypto: any;
+  _minToken: any;
+  _maxValue: any;
+  _maxToken: any;
+  _ringLength: any;
   constructor() {
     super();
     // eslint-disable-next-line
@@ -365,7 +373,7 @@ class RandomTokenizer extends Tokenizer {
    * @param {Buffer|Array} value
    * @returns {RandomToken}
    */
-  hash(value) {
+  hash(value: Buffer | Array<any>): RandomToken {
     if (Array.isArray(value)) {
       value = utils.allocBufferFromArray(value);
     }
@@ -376,7 +384,7 @@ class RandomTokenizer extends Tokenizer {
   /**
    * @returns {Token}
    */
-  parse(value) {
+  parse(value): Token {
     return new token.RandomToken(Integer.fromString(value));
   }
 
@@ -428,15 +436,16 @@ class RandomTokenizer extends Tokenizer {
 }
 
 class ByteOrderedTokenizer extends Tokenizer {
+  _minToken: any;
   constructor() {
     super();
   }
 
   /**
-   * @param {Buffer} value
+   * @param {Buffer | Array<any>} value
    * @returns {ByteOrderedToken}
    */
-  hash(value) {
+  hash(value: Buffer | Array<any>): ByteOrderedToken {
     // strip any trailing zeros as tokens with trailing zeros are equivalent
     // to those who don't have them.
     if (Array.isArray(value)) {
@@ -572,7 +581,7 @@ class ByteOrderedTokenizer extends Tokenizer {
  * @param {Number} value
  * @return {MutableLong}
  */
-function fromSignedByte(value) {
+function fromSignedByte(value: number): MutableLong {
   if (value < 128) {
     return new MutableLong(value, 0, 0, 0);
   }
@@ -582,11 +591,13 @@ function fromSignedByte(value) {
 export {
   Murmur3Tokenizer,
   RandomTokenizer,
-  ByteOrderedTokenizer
+  ByteOrderedTokenizer,
+  Tokenizer
 };
 
 export default {
   Murmur3Tokenizer,
   RandomTokenizer,
-  ByteOrderedTokenizer
+  ByteOrderedTokenizer,
+  Tokenizer
 };

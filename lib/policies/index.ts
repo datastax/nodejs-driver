@@ -38,7 +38,7 @@ const defaultAddressTranslator = function (): addressResolution.AddressTranslato
  * provided in the {@link ClientOptions}.</p>
  * @returns {LoadBalancingPolicy}
  */
-const defaultLoadBalancingPolicy = function (localDc: string): loadBalancing.LoadBalancingPolicy {
+const defaultLoadBalancingPolicy = function (localDc?: string): loadBalancing.LoadBalancingPolicy {
   return new loadBalancing.DefaultLoadBalancingPolicy(localDc);
 };
 

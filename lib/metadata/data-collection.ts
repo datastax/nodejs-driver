@@ -17,7 +17,6 @@ import util from "util";
 import events from "events";
 
 
-
 /**
  * Creates a new instance of DataCollection
  * @param {String} name Name of the data object.
@@ -26,63 +25,58 @@ import events from "events";
  * @constructor
  * @abstract
  */
-function DataCollection(name) {
-  events.EventEmitter.call(this);
-  this.setMaxListeners(0);
-  //private
-  Object.defineProperty(this, 'loading', { value: false, enumerable: false, writable: true });
-  Object.defineProperty(this, 'loaded', { value: false, enumerable: false, writable: true });
+class DataCollection extends events.EventEmitter {
   /**
    * Name of the object
    * @type {String}
    */
-  this.name = name;
+  name: string;
   /**
    * False-positive probability for SSTable Bloom filters.
    * @type {number}
    */
-  this.bloomFilterFalsePositiveChance = 0;
+  bloomFilterFalsePositiveChance: number;
   /**
    * Level of caching: all, keys_only, rows_only, none
    * @type {String}
    */
-  this.caching = null;
+  caching: string;
   /**
    * A human readable comment describing the table.
    * @type {String}
    */
-  this.comment = null;
+  comment: string;
   /**
    * Specifies the time to wait before garbage collecting tombstones (deletion markers)
    * @type {number}
    */
-  this.gcGraceSeconds = 0;
+  gcGraceSeconds: number;
   /**
    * Compaction strategy class used for the table.
    * @type {String}
    */
-  this.compactionClass = null;
+  compactionClass: string;
   /**
    * Associative-array containing the compaction options keys and values.
    * @type {Object}
    */
-  this.compactionOptions = null;
+  compactionOptions: object;
   /**
-   * Associative-array containing the compression options.
+   * Associative-array containing the compaction options keys and values.
    * @type {Object}
    */
-  this.compression = null;
+  compression: object;
   /**
    * Specifies the probability of read repairs being invoked over all replicas in the current data center.
    * @type {number}
    */
-  this.localReadRepairChance = 0;
+  localReadRepairChance: number;
   /**
    * Specifies the probability with which read repairs should be invoked on non-quorum reads. The value must be
    * between 0 and 1.
    * @type {number}
    */
-  this.readRepairChance = 0;
+  readRepairChance: number;
   /**
    * An associative Array containing extra metadata for the table.
    * <p>
@@ -90,7 +84,7 @@ function DataCollection(name) {
    * </p>
    * @type {Object}
    */
-  this.extensions = null;
+  extensions: object;
   /**
    * When compression is enabled, this option defines the probability
    * with which checksums for compressed blocks are checked during reads.
@@ -100,22 +94,22 @@ function DataCollection(name) {
    * </p>
    * @type {Number|null}
    */
-  this.crcCheckChance = null;
+  crcCheckChance: number | null;
   /**
    * Whether the populate I/O cache on flush is set on this table.
    * @type {Boolean}
    */
-  this.populateCacheOnFlush = false;
+  populateCacheOnFlush: boolean;
   /**
    * Returns the default TTL for this table.
    * @type {Number}
    */
-  this.defaultTtl = 0;
+  defaultTtl: number;
   /**
    * * Returns the speculative retry option for this table.
    * @type {String}
    */
-  this.speculativeRetry = 'NONE';
+  speculativeRetry: string;
   /**
    * Returns the minimum index interval option for this table.
    * <p>
@@ -124,7 +118,7 @@ function DataCollection(name) {
    * </p>
    * @type {Number|null}
    */
-  this.minIndexInterval = 128;
+  minIndexInterval: number | null;
   /**
    * Returns the maximum index interval option for this table.
    * <p>
@@ -133,32 +127,32 @@ function DataCollection(name) {
    * </p>
    * @type {Number|null}
    */
-  this.maxIndexInterval = 2048;
+  maxIndexInterval: number | null;
   /**
    * Array describing the table columns.
    * @type {Array}
    */
-  this.columns = null;
+  columns: any[];
   /**
    * An associative Array of columns by name.
    * @type {Object}
    */
-  this.columnsByName = null;
+  columnsByName: object;
   /**
    * Array describing the columns that are part of the partition key.
    * @type {Array}
    */
-  this.partitionKeys = [];
+  partitionKeys: any[];
   /**
    * Array describing the columns that form the clustering key.
    * @type {Array}
    */
-  this.clusteringKeys = [];
+  clusteringKeys: any[];
   /**
    * Array describing the clustering order of the columns in the same order as the clusteringKeys.
    * @type {Array}
    */
-  this.clusteringOrder = [];
+  clusteringOrder: any[];
   /**
    * An associative Array containing nodesync options for this table.
    * <p>
@@ -167,9 +161,147 @@ function DataCollection(name) {
    * </p>
    * @type {Object}
    */
-  this.nodesync = null;
+  nodesync: object;
+  /**
+   * Creates a new instance of DataCollection
+   * @param {String} name Name of the data object.
+   * @constructor
+   */
+  constructor(name: string) {
+    super();
+    this.setMaxListeners(0);
+    //private
+    Object.defineProperty(this, 'loading', { value: false, enumerable: false, writable: true });
+    Object.defineProperty(this, 'loaded', { value: false, enumerable: false, writable: true });
+    /**
+     * Name of the object
+     * @type {String}
+     */
+    this.name = name;
+    /**
+     * False-positive probability for SSTable Bloom filters.
+     * @type {number}
+     */
+    this.bloomFilterFalsePositiveChance = 0;
+    /**
+     * Level of caching: all, keys_only, rows_only, none
+     * @type {String}
+     */
+    this.caching = null;
+    /**
+     * A human readable comment describing the table.
+     * @type {String}
+     */
+    this.comment = null;
+    /**
+     * Specifies the time to wait before garbage collecting tombstones (deletion markers)
+     * @type {number}
+     */
+    this.gcGraceSeconds = 0;
+    /**
+     * Compaction strategy class used for the table.
+     * @type {String}
+     */
+    this.compactionClass = null;
+    /**
+     * Associative-array containing the compaction options keys and values.
+     * @type {Object}
+     */
+    this.compactionOptions = null;
+    /**
+     * Associative-array containing the compression options.
+     * @type {Object}
+     */
+    this.compression = null;
+    /**
+     * Specifies the probability of read repairs being invoked over all replicas in the current data center.
+     * @type {number}
+     */
+    this.localReadRepairChance = 0;
+    /**
+     * Specifies the probability with which read repairs should be invoked on non-quorum reads. The value must be
+     * between 0 and 1.
+     * @type {number}
+     */
+    this.readRepairChance = 0;
+    /**
+     * An associative Array containing extra metadata for the table.
+     * <p>
+     * For Apache Cassandra versions prior to 3.0.0, this method always returns <code>null</code>.
+     * </p>
+     * @type {Object}
+     */
+    this.extensions = null;
+    /**
+     * When compression is enabled, this option defines the probability
+     * with which checksums for compressed blocks are checked during reads.
+     * The default value for this options is 1.0 (always check).
+     * <p>
+     *   For Apache Cassandra versions prior to 3.0.0, this method always returns <code>null</code>.
+     * </p>
+     * @type {Number|null}
+     */
+    this.crcCheckChance = null;
+    /**
+     * Whether the populate I/O cache on flush is set on this table.
+     * @type {Boolean}
+     */
+    this.populateCacheOnFlush = false;
+    /**
+     * Returns the default TTL for this table.
+     * @type {Number}
+     */
+    this.defaultTtl = 0;
+    /**
+     * * Returns the speculative retry option for this table.
+     * @type {String}
+     */
+    this.speculativeRetry = 'NONE';
+    /**
+     * Returns the minimum index interval option for this table.
+     * <p>
+     *   Note: this option is available in Apache Cassandra 2.1 and above, and will return <code>null</code> for
+     *   earlier versions.
+     * </p>
+     * @type {Number|null}
+     */
+    this.minIndexInterval = 128;
+    /**
+     * Returns the maximum index interval option for this table.
+     * <p>
+     * Note: this option is available in Apache Cassandra 2.1 and above, and will return <code>null</code> for
+     * earlier versions.
+     * </p>
+     * @type {Number|null}
+     */
+    this.maxIndexInterval = 2048;
+    /**
+     * Array describing the table columns.
+     * @type {Array}
+     */
+    this.columns = null;
+    /**
+     * An associative Array of columns by name.
+     * @type {Object}
+     */
+    this.columnsByName = null;
+    /**
+     * Array describing the columns that are part of the partition key.
+     * @type {Array}
+     */
+    this.partitionKeys = [];
+    /**
+     * Array describing the columns that form the clustering key.
+     * @type {Array}
+     */
+    this.clusteringKeys = [];
+    /**
+     * Array describing the clustering order of the columns in the same order as the clusteringKeys.
+     * @type {Array}
+     */
+    this.clusteringOrder = [];
+    this.nodesync = null;
+  }
 }
-
-util.inherits(DataCollection, events.EventEmitter);
 
 export default DataCollection;

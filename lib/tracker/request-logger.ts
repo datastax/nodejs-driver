@@ -17,6 +17,8 @@ import events from "events";
 import RequestTracker from "./request-tracker";
 import errors from "../errors";
 import { format } from "util";
+import { Host } from "../host";
+import { ExecutionOptions } from "../execution-options";
 
 
 const nanosToMillis = 1000000;
@@ -35,7 +37,11 @@ const defaultMaxErrorStackTraceLength = 200;
  * // Add the requestLogger to the client options
  * const client = new Client({ contactPoints, requestTracker: requestLogger });
  */
-class RequestLogger extends RequestTracker {
+class RequestLogger implements RequestTracker {
+  _options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; };
+  logNormalRequests: any;
+  logErroredRequests: any;
+  emitter: events<[never]>;
 
   /**
    * Creates a new instance of {@link RequestLogger}.
@@ -57,8 +63,7 @@ class RequestLogger extends RequestTracker {
    * @param {Number} [options.messageMaxErrorStackTraceLength] The maximum amount of characters of the stack trace
    * that will be included in the message. Defaults to 200.
    */
-  constructor(options) {
-    super();
+  constructor(options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; }) {
     if (!options) {
       throw new errors.ArgumentError('RequestLogger options parameter is required');
     }
@@ -91,15 +96,15 @@ class RequestLogger extends RequestTracker {
    * Logs message if request execution was deemed too slow, large or if normal requests are logged.
    * @override
    */
-  onSuccess(host, query, parameters, execOptions, requestLength, responseLength, latency) {
+  onSuccess(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, responseLength: number, latency: number[]) {
     if (this._options.slowThreshold > 0 && toMillis(latency) > this._options.slowThreshold) {
-      this._logSlow(host, query, parameters, execOptions, requestLength, responseLength, latency);
+      this._logSlow(host, query, parameters, executionOptions, requestLength, responseLength, latency);
     }
     else if (this._options.requestSizeThreshold > 0 && requestLength > this._options.requestSizeThreshold) {
-      this._logLargeRequest(host, query, parameters, execOptions, requestLength, responseLength, latency);
+      this._logLargeRequest(host, query, parameters, executionOptions, requestLength, responseLength, latency);
     }
     else if (this.logNormalRequests) {
-      this._logNormalRequest(host, query, parameters, execOptions, requestLength, responseLength, latency);
+      this._logNormalRequest(host, query, parameters, executionOptions, requestLength, responseLength, latency);
     }
   }
 
@@ -107,35 +112,35 @@ class RequestLogger extends RequestTracker {
    * Logs message if request execution was too large and/or encountered an error.
    * @override
    */
-  onError(host, query, parameters, execOptions, requestLength, err, latency) {
+  onError(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, err: Error, latency: number[]) {
     if (this._options.requestSizeThreshold > 0 && requestLength > this._options.requestSizeThreshold) {
-      this._logLargeErrorRequest(host, query, parameters, execOptions, requestLength, err, latency);
+      this._logLargeErrorRequest(host, query, parameters, executionOptions, requestLength, err, latency);
     }
     else if (this.logErroredRequests) {
-      this._logErrorRequest(host, query, parameters, execOptions, requestLength, err, latency);
+      this._logErrorRequest(host, query, parameters, executionOptions, requestLength, err, latency);
     }
   }
 
-  _logSlow(host, query, parameters, execOptions, requestLength, responseLength, latency) {
+  private _logSlow(host, query, parameters, execOptions, requestLength, responseLength, latency) {
     const message = format('[%s] Slow request, took %d ms (%s): %s', host.address, Math.floor(toMillis(latency)),
       getPayloadSizes(requestLength, responseLength), getStatementInfo(query, parameters, execOptions, this._options));
     this.emitter.emit('slow', message);
   }
 
-  _logLargeRequest(host, query, parameters, execOptions, requestLength, responseLength, latency) {
+  private _logLargeRequest(host, query, parameters, execOptions, requestLength, responseLength, latency) {
     const message = format('[%s] Request exceeded length, %s (took %d ms): %s', host.address,
       getPayloadSizes(requestLength, responseLength), ~~toMillis(latency),
       getStatementInfo(query, parameters, execOptions, this._options));
     this.emitter.emit('large', message);
   }
 
-  _logNormalRequest(host, query, parameters, execOptions, requestLength, responseLength, latency) {
+  private _logNormalRequest(host, query, parameters, execOptions, requestLength, responseLength, latency) {
     const message = format('[%s] Request completed normally, took %d ms (%s): %s', host.address, ~~toMillis(latency),
       getPayloadSizes(requestLength, responseLength), getStatementInfo(query, parameters, execOptions, this._options));
     this.emitter.emit('normal', message);
   }
 
-  _logLargeErrorRequest(host, query, parameters, execOptions, requestLength, err, latency) {
+  private _logLargeErrorRequest(host, query, parameters, execOptions, requestLength, err, latency) {
     const maxStackTraceLength = this._options.messageMaxErrorStackTraceLength || defaultMaxErrorStackTraceLength;
     const message = format('[%s] Request exceeded length and execution failed, %s (took %d ms): %s; error: %s',
       host.address, getPayloadSizes(requestLength), ~~toMillis(latency),
@@ -145,7 +150,7 @@ class RequestLogger extends RequestTracker {
     this.emitter.emit('large', message);
   }
 
-  _logErrorRequest(host, query, parameters, execOptions, requestLength, err, latency) {
+  private _logErrorRequest(host, query, parameters, execOptions, requestLength, err, latency) {
     const maxStackTraceLength = this._options.messageMaxErrorStackTraceLength || defaultMaxErrorStackTraceLength;
     const message = format('[%s] Request execution failed, took %d ms (%s): %s; error: %s', host.address,
       ~~toMillis(latency), getPayloadSizes(requestLength),
@@ -277,7 +282,7 @@ function formatParam(value, maxLength) {
   return value.toString().substr(0, maxLength);
 }
 
-function getPayloadSizes(requestLength, responseLength) {
+function getPayloadSizes(requestLength, responseLength?) {
   let message = 'request size ' + formatSize(requestLength);
   if (responseLength !== undefined) {
     message += ' / response size ' + formatSize(responseLength);

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import { ExecutionOptions } from "../execution-options";
+import { Host } from "../host";
+
 
 
 /**
@@ -26,7 +29,7 @@
  * @interface
  * @alias module:tracker~RequestTracker
  */
-class RequestTracker {
+abstract class RequestTracker {
 
   /**
    * Invoked each time a query or batch request succeeds.
@@ -41,9 +44,14 @@ class RequestTracker {
    * @param {Array<Number>} latency An array containing [seconds, nanoseconds] tuple, where nanoseconds is the
    * remaining part of the real time that can't be represented in second precision (see <code>process.hrtime()</code>).
    */
-  onSuccess(host, query, parameters, executionOptions, requestLength, responseLength, latency) {
-
-  }
+  onSuccess?(
+    host: Host,
+    query: string | Array<{ query: string, params?: any }>,
+    parameters: any[] | { [key: string]: any } | null,
+    executionOptions: ExecutionOptions,
+    requestLength: number,
+    responseLength: number,
+    latency: number[]): void;
 
   /**
    * Invoked each time a query or batch request fails.
@@ -59,16 +67,19 @@ class RequestTracker {
    * @param {Array<Number>} latency An array containing [seconds, nanoseconds] tuple, where nanoseconds is the
    * remaining part of the real time that can't be represented in second precision (see <code>process.hrtime()</code>).
    */
-  onError(host, query, parameters, executionOptions, requestLength, err, latency) {
-
-  }
+  onError?(
+    host: Host,
+    query: string | Array<{ query: string, params?: any }>,
+    parameters: any[] | { [key: string]: any } | null,
+    executionOptions: ExecutionOptions,
+    requestLength: number,
+    err: Error,
+    latency: number[]): void;
 
   /**
    * Invoked when the Client is being shutdown.
    */
-  shutdown() {
-
-  }
+  shutdown?(): void;
 }
 
 export default RequestTracker;

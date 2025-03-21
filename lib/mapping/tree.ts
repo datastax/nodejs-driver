@@ -22,13 +22,16 @@ import EventEmitter from "events";
  * @ignore
  */
 class Node extends EventEmitter {
+  key: string[];
+  value: object;
+  edges: any[];
   /**
    * Creates a new instance of {@link Node}.
    * @param {Array<String>} key
    * @param {Object} value
    * @param {Array} [edges]
    */
-  constructor(key, value, edges) {
+  constructor(key: Array<string>, value: object, edges?: Array<any>) {
     super();
     this.key = key;
     this.value = value;
@@ -41,6 +44,7 @@ class Node extends EventEmitter {
  * @ignore
  */
 class Tree extends Node {
+  length: number;
   constructor() {
     super([], null);
     this.length = 0;
@@ -52,7 +56,7 @@ class Tree extends Node {
    * @param {Function} valueHandler
    * @return {Object}
    */
-  getOrCreate(keyIterator, valueHandler) {
+  getOrCreate(keyIterator: Iterator<string>, valueHandler: Function): object {
     if (typeof keyIterator.next !== 'function') {
       keyIterator = keyIterator[Symbol.iterator]();
     }

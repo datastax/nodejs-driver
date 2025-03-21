@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 import Tree from "./tree";
-import * as moduleBatchItemModule from "./model-batch-item";
-
-
-const InsertModelBatchItem = moduleBatchItemModule.InsertModelBatchItem;
-const UpdateModelBatchItem = moduleBatchItemModule.UpdateModelBatchItem;
-const RemoveModelBatchItem = moduleBatchItemModule.RemoveModelBatchItem;
+import {ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem} from "./model-batch-item";
+import MappingHandler from "./mapping-handler";
+import { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 /**
  * Provides utility methods to group multiple mutations on a single batch.
  * @alias module:mapping~ModelBatchMapper
  */
 class ModelBatchMapper {
+  private _handler: MappingHandler;
+  private _cache: { insert: Tree; update: Tree; remove: Tree; };
   /**
    * Creates a new instance of model batch mapper.
    * <p>
@@ -36,7 +35,7 @@ class ModelBatchMapper {
    * @param {MappingHandler} handler
    * @ignore
    */
-  constructor(handler) {
+  constructor(handler: MappingHandler) {
     this._handler = handler;
     this._cache = {
       insert: new Tree(),
@@ -59,7 +58,7 @@ class ModelBatchMapper {
    * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
    * or a set of queries to be included in a batch.
    */
-  insert(doc, docInfo) {
+  insert(doc: object, docInfo: InsertDocInfo): ModelBatchItem {
     return new InsertModelBatchItem(doc, docInfo, this._handler, this._cache.insert);
   }
 
@@ -85,7 +84,7 @@ class ModelBatchMapper {
    * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
    * or a set of queries to be included in a batch.
    */
-  update(doc, docInfo) {
+  update(doc: object, docInfo: UpdateDocInfo): ModelBatchItem {
     return new UpdateModelBatchItem(doc, docInfo, this._handler, this._cache.update);
   }
 
@@ -116,7 +115,7 @@ class ModelBatchMapper {
    * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
    * or a set of queries to be included in a batch.
    */
-  remove(doc, docInfo) {
+  remove(doc: object, docInfo: RemoveDocInfo): ModelBatchItem {
     return new RemoveModelBatchItem(doc, docInfo, this._handler, this._cache.update);
   }
 }

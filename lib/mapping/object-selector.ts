@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import Client from "../client";
+import TableMetadata from "../metadata/table-metadata";
+import ModelMappingInfo from "./model-mapping-info";
+
 
 
 const keyMatches = {
@@ -37,7 +41,7 @@ class ObjectSelector {
    * @param {Array<Array<String>>} orderByColumns
    * @return {Promise<String>} A promise that resolves to a table names.
    */
-  static getForSelect(client, info, allPKsDefined, propertiesInfo, fieldsInfo, orderByColumns) {
+  static getForSelect(client: Client, info: ModelMappingInfo, allPKsDefined: boolean, propertiesInfo: Array<any>, fieldsInfo: Array<any>, orderByColumns: Array<Array<string>>): Promise<string> {
     return Promise.all(
       info.tables.map(t => {
         if (t.isView) {
@@ -138,7 +142,7 @@ class ObjectSelector {
    * @param {Array} propertiesInfo
    * @return {Promise<Array<TableMetadata>>} A promise that resolves to an Array of tables.
    */
-  static getForInsert(client, info, propertiesInfo) {
+  static getForInsert(client: Client, info: ModelMappingInfo, propertiesInfo: Array<any>): Promise<Array<TableMetadata>> {
     return Promise.all(info.tables.filter(t => !t.isView).map(t => client.metadata.getTable(info.keyspace, t.name)))
       .then(tables => {
         const filteredTables = tables
@@ -184,7 +188,7 @@ class ObjectSelector {
    * @param {Array} when
    * @return {Promise<Array<TableMetadata>>} A promise that resolves to an Array of tables.
    */
-  static getForUpdate(client, info, propertiesInfo, when) {
+  static getForUpdate(client: Client, info: ModelMappingInfo, propertiesInfo: Array<any>, when: Array<any>): Promise<Array<TableMetadata>> {
     return Promise.all(info.tables.filter(t => !t.isView).map(t => client.metadata.getTable(info.keyspace, t.name)))
       .then(tables => {
         const filteredTables = tables
@@ -246,7 +250,7 @@ class ObjectSelector {
    * @param {Array} when
    * @return {Promise<Array<TableMetadata>>} A promise that resolves to an Array of tables.
    */
-  static getForDelete(client, info, propertiesInfo, when) {
+  static getForDelete(client: Client, info: ModelMappingInfo, propertiesInfo: Array<any>, when: Array<any>): Promise<Array<TableMetadata>> {
     return Promise.all(info.tables.filter(t => !t.isView).map(t => client.metadata.getTable(info.keyspace, t.name)))
       .then(tables => {
         const filteredTables = tables
@@ -295,7 +299,7 @@ function contains(arr, fn) {
  * @param {Array} keys
  * @param {Array} propertiesInfo
  */
-function keysAreIncluded(keys, propertiesInfo) {
+function keysAreIncluded(keys: Array<any>, propertiesInfo: Array<any>) {
   if (keys.length === 0) {
     return keyMatches.all;
   }

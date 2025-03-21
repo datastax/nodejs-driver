@@ -15,6 +15,8 @@
  */
 import util from "util";
 import utils from "../utils";
+import { ResultSet } from "../types";
+import ModelMappingInfo from "./model-mapping-info";
 
 
 const inspectMethod = util.inspect.custom || 'inspect';
@@ -30,7 +32,7 @@ class Result {
    * @param {ModelMappingInfo} info
    * @param {Function} rowAdapter
    */
-  constructor(rs, info, rowAdapter) {
+  constructor(rs: ResultSet, info: ModelMappingInfo, rowAdapter: Function) {
     this._rs = rs;
     this._info = info;
     this._rowAdapter = rowAdapter;
@@ -106,9 +108,9 @@ class Result {
    * Converts the current instance to an Array of documents.
    * @return {Array<Object>}
    */
-  toArray() {
+  toArray(): Array<object> {
     if (this._isEmptyLwt || !this._rs.rows) {
-      return utils.emptyArray;
+      return utils.emptyArray as any[];
     }
 
     return this._rs.rows.map(row => this._rowAdapter(row, this._info));
@@ -119,7 +121,7 @@ class Result {
    * @param {Function} callback Function to execute for each element, taking two arguments: currentValue and index.
    * @param {Object} [thisArg] Value to use as <code>this</code> when executing callback.
    */
-  forEach(callback, thisArg) {
+  forEach(callback: Function, thisArg: object) {
     let index = 0;
     thisArg = thisArg || this;
     for (const doc of this) {

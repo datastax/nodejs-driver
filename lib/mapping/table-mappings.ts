@@ -26,7 +26,7 @@ class TableMappings {
    * Method that is called by the mapper to create the instance of the document.
    * @return {Object}
    */
-  newObjectInstance() {
+  newObjectInstance(): object {
     return {};
   }
 
@@ -35,7 +35,7 @@ class TableMappings {
    * @param {String} propName The name of the property.
    * @returns {String}
    */
-  getColumnName(propName) {
+  getColumnName(propName: string): string {
     return propName;
   }
 
@@ -44,7 +44,7 @@ class TableMappings {
    * @param {String} columnName The name of the column.
    * @returns {String}
    */
-  getPropertyName(columnName) {
+  getPropertyName(columnName: string): string {
     return columnName;
   }
 }
@@ -72,7 +72,7 @@ class UnderscoreCqlToCamelCaseMappings extends TableMappings {
    * @param {String} propName Name of the property to convert to snake case.
    * @return {String}
    */
-  getColumnName(propName) {
+  getColumnName(propName: string): string {
     return propName.replace(/[a-z][A-Z]/g, (match, offset) => match.charAt(0) + '_' + match.charAt(1)).toLowerCase();
   }
 
@@ -81,7 +81,7 @@ class UnderscoreCqlToCamelCaseMappings extends TableMappings {
    * @param {String} columnName The column name to convert to camel case.
    * @return {String}
    */
-  getPropertyName(columnName) {
+  getPropertyName(columnName: string): string {
     return columnName.replace(/_[a-z]/g, (match, offset) => ((offset === 0) ? match : match.substr(1).toUpperCase()));
   }
 }

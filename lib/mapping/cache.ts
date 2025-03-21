@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import qModule from "./q";
-
-
-const QueryOperator = qModule.QueryOperator;
-const QueryAssignment = qModule.QueryAssignment;
+import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import { QueryOperator, QueryAssignment } from "./q";
 
 /**
  * Provides utility methods for obtaining a caching keys based on the specifics of the Mapper methods.
@@ -31,7 +28,7 @@ class Cache {
    * @param {{fields, limit, orderBy}} docInfo
    * @returns {Iterator}
    */
-  static *getSelectKey(docKeys, doc, docInfo) {
+  static *getSelectKey(docKeys: Array<string>, doc: object, docInfo: FindDocInfo): Iterator<string> {
     yield* Cache._yieldKeyAndOperators(docKeys, doc);
 
     yield* Cache._getSelectDocInfo(docInfo);
@@ -41,7 +38,7 @@ class Cache {
    * @param {{fields, limit, orderBy}} docInfo
    * @returns {Iterator}
    */
-  static *getSelectAllKey(docInfo) {
+  static *getSelectAllKey(docInfo: FindDocInfo): Iterator<string> {
     yield 'root';
 
     yield* Cache._getSelectDocInfo(docInfo);
@@ -52,7 +49,7 @@ class Cache {
    * @param {{fields, limit, orderBy}} docInfo
    * @private
    */
-  static *_getSelectDocInfo(docInfo) {
+  private static *_getSelectDocInfo(docInfo: FindDocInfo): IterableIterator<string> {
     if (docInfo) {
       if (docInfo.fields && docInfo.fields.length > 0) {
         // Use a separator from properties
@@ -84,7 +81,7 @@ class Cache {
    * @param {{ifNotExists, ttl, fields}} docInfo
    * @returns {Iterator}
    */
-  static *getInsertKey(docKeys, docInfo) {
+  static *getInsertKey(docKeys: Array<string>, docInfo: InsertDocInfo): Iterator<string> {
     // No operator supported on INSERT values
     yield* docKeys;
 
@@ -111,7 +108,7 @@ class Cache {
    * @param {Object} doc
    * @param {{ifExists, when, ttl, fields}} docInfo
    */
-  static *getUpdateKey(docKeys, doc, docInfo) {
+  static *getUpdateKey(docKeys: Array<string>, doc: object, docInfo: UpdateDocInfo): Iterator<string> {
     yield* Cache._yieldKeyAndAllQs(docKeys, doc);
 
     if (docInfo) {
@@ -142,8 +139,7 @@ class Cache {
    * @param {{ifExists, when, fields, deleteOnlyColumns}} docInfo
    * @returns {Iterator}
    */
-  static *getRemoveKey(docKeys, doc, docInfo) {
-    yield* Cache._yieldKeyAndOperators(docKeys, doc);
+  static *getRemoveKey(docKeys: Array<string>, doc: object, docInfo: RemoveDocInfo): Iterator<string>{
 
     if (docInfo) {
       if (docInfo.fields && docInfo.fields.length > 0) {

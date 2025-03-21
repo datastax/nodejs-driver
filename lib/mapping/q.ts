@@ -22,6 +22,10 @@ import errors from "../errors";
  * @ignore
  */
 class QueryOperator {
+  key: string;
+  value: any;
+  hasChildValues: any;
+  isInOperator: any;
   /**
    * Creates a new instance of <code>QueryOperator</code>.
    * @param {String} key
@@ -29,7 +33,7 @@ class QueryOperator {
    * @param [hasChildValues]
    * @param [isInOperator]
    */
-  constructor(key, value, hasChildValues, isInOperator) {
+  constructor(key: string, value, hasChildValues?, isInOperator?) {
     /**
      * The CQL key representing the operator
      * @type {string}
@@ -58,7 +62,10 @@ class QueryOperator {
  * @ignore
  */
 class QueryAssignment {
-  constructor(sign, value, inverted) {
+  sign: any;
+  value: any;
+  inverted: boolean;
+  constructor(sign, value, inverted?) {
     /**
      * Gets the sign of the assignment operation.
      */
@@ -95,7 +102,7 @@ class QueryAssignment {
  * @property {function} prepend Represents the CQL prepend assignment used for lists, e.g: "col = x + col"
  * @property {function} remove Represents the CQL remove assignment used for collections, e.g: "col = col - x"
  */
-const q = {
+const q: object = {
   in_: function in_(arr) {
     if (!Array.isArray(arr)) {
       throw new errors.ArgumentError('IN operator supports only Array values');

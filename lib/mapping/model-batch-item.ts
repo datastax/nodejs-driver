@@ -13,22 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 import Cache from "./cache";
+import MappingHandler from "./mapping-handler";
+import Tree from "./tree";
 
-
+type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo
 
 /**
  * Represents a query or a set of queries used to perform a mutation in a batch.
  * @alias module:mapping~ModelBatchItem
  */
 class ModelBatchItem {
+  doc: object;
+  docInfo: DocInfo;
+  handler: MappingHandler;
+  cache: Tree;
   /**
    * @param {Object} doc
    * @param {Object} docInfo
    * @param {MappingHandler} handler
    * @param {Tree} cache
    */
-  constructor(doc, docInfo, handler, cache) {
+  constructor(doc: object, docInfo: DocInfo, handler: MappingHandler, cache: Tree) {
     this.doc = doc;
     this.docInfo = docInfo;
     this.handler = handler;
@@ -56,7 +63,7 @@ class ModelBatchItem {
    * @param {Array} docKeys
    * @returns {Iterator}
    */
-  getCacheKey(docKeys) {
+  getCacheKey(docKeys: Array<any>): Iterator<string> {
     throw new Error('getCacheKey must be implemented');
   }
 
@@ -66,7 +73,7 @@ class ModelBatchItem {
    * @param {Array} docKeys
    * @returns {Promise<Array>}
    */
-  createQueries(docKeys) {
+  createQueries(docKeys: Array<any>): Promise<Array<any>> {
     throw new Error('getCacheKey must be implemented');
   }
 
@@ -77,7 +84,7 @@ class ModelBatchItem {
    * @param {Array} arr
    * @return {Promise<{isIdempotent, isCounter}>}
    */
-  pushQueries(arr) {
+  pushQueries(arr: Array<any>): Promise<{ isIdempotent; isCounter; }> {
     let isIdempotent = true;
     let isCounter;
 
@@ -118,7 +125,7 @@ class InsertModelBatchItem extends ModelBatchItem {
    * @param {MappingHandler} handler
    * @param {Tree} cache
    */
-  constructor(doc, docInfo, handler, cache) {
+  constructor(doc: object, docInfo: InsertDocInfo, handler: MappingHandler, cache: Tree) {
     super(doc, docInfo, handler, cache);
   }
 
@@ -145,7 +152,7 @@ class UpdateModelBatchItem extends ModelBatchItem {
    * @param {MappingHandler} handler
    * @param {Tree} cache
    */
-  constructor(doc, docInfo, handler, cache) {
+  constructor(doc: object, docInfo: UpdateDocInfo, handler: MappingHandler, cache: Tree) {
     super(doc, docInfo, handler, cache);
   }
 
@@ -172,7 +179,7 @@ class RemoveModelBatchItem extends ModelBatchItem {
    * @param {MappingHandler} handler
    * @param {Tree} cache
    */
-  constructor(doc, docInfo, handler, cache) {
+  constructor(doc: object, docInfo: RemoveDocInfo, handler: MappingHandler, cache: Tree) {
     super(doc, docInfo, handler, cache);
   }
 

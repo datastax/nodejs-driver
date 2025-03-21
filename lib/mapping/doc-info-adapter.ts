@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { MappingExecutionOptions, ModelOptions } from ".";
 import errors from "../errors";
+import { ExecutionProfile } from "../execution-profile";
 import utils from "../utils";
-
+import ModelMappingInfo from "./model-mapping-info";
 
 
 /**
@@ -33,7 +35,7 @@ class DocInfoAdapter {
    * @param {ModelMappingInfo} mappingInfo
    * @returns {Array}
    */
-  static getPropertiesInfo(docKeys, docInfo, doc, mappingInfo) {
+  static getPropertiesInfo(docKeys: Array<string>, docInfo: { fields?; }, doc: object, mappingInfo: ModelMappingInfo): Array<any> {
     let propertyKeys = docKeys;
     if (docInfo && docInfo.fields && docInfo.fields.length > 0) {
       propertyKeys = docInfo.fields;
@@ -52,9 +54,9 @@ class DocInfoAdapter {
    * @param {ModelMappingInfo} mappingInfo
    * @returns {Array<String>}
    */
-  static adaptOrderBy(docInfo, mappingInfo){
+  static adaptOrderBy(docInfo: { orderBy?; }, mappingInfo: ModelMappingInfo): Array<Array<string>>{
     if (!docInfo || !docInfo.orderBy) {
-      return utils.emptyArray;
+      return utils.emptyArray as any[];
     }
     return Object.keys(docInfo.orderBy).map(key => {
       const value = docInfo.orderBy[key];
@@ -71,7 +73,7 @@ class DocInfoAdapter {
    * @param {Object|String|undefined} executionOptions
    * @param {Boolean} isIdempotent
    */
-  static adaptOptions(executionOptions, isIdempotent) {
+  static adaptOptions(executionOptions: MappingExecutionOptions, isIdempotent: boolean) {
     const options = {
       prepare: true,
       executionProfile: undefined,
@@ -98,7 +100,7 @@ class DocInfoAdapter {
    * @param {Object|String|undefined} executionOptions
    * @param {Boolean} [overrideIdempotency]
    */
-  static adaptAllOptions(executionOptions, overrideIdempotency) {
+  static adaptAllOptions(executionOptions: MappingExecutionOptions, overrideIdempotency?: boolean) {
     const options = {
       prepare: true,
       executionProfile: undefined,
@@ -132,7 +134,7 @@ class DocInfoAdapter {
    * @param {Boolean} isIdempotent
    * @param {Boolean} isCounter
    */
-  static adaptBatchOptions(executionOptions, isIdempotent, isCounter) {
+  static adaptBatchOptions(executionOptions: MappingExecutionOptions, isIdempotent: boolean, isCounter: boolean) {
     const options = {
       prepare: true,
       executionProfile: undefined,

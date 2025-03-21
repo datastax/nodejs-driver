@@ -16,6 +16,8 @@
 import vm from "vm";
 import qModule from "./q";
 import types from "../types/index";
+import TableMetadata from "../metadata/table-metadata";
+import { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 
 const QueryOperator = qModule.QueryOperator;
@@ -39,7 +41,7 @@ class QueryGenerator {
    * @param {Number|undefined} limit
    * @return {string}
    */
-  static getSelect(tableName, keyspace, propertiesInfo, fieldsInfo, orderByColumns, limit) {
+  static getSelect(tableName: string, keyspace: string, propertiesInfo: Array<any>, fieldsInfo: Array<any>, orderByColumns: Array<any>, limit: number | undefined): string {
     let query = 'SELECT ';
     query += fieldsInfo.length > 0 ? fieldsInfo.map(p => `"${p.columnName}"`).join(', ') : '*';
     query += ` FROM ${keyspace}.${tableName}`;
@@ -90,7 +92,7 @@ class QueryGenerator {
    * @param {Boolean|undefined} ifNotExists
    * @return {{query: String, paramsGetter: Function, isIdempotent: Boolean}}
    */
-  static getInsert(table, keyspace, propertiesInfo, docInfo, ifNotExists) {
+  static getInsert(table: TableMetadata, keyspace: string, propertiesInfo: Array<any>, docInfo: InsertDocInfo, ifNotExists: boolean | undefined): { query: string; paramsGetter: Function; isIdempotent: boolean; } {
     const ttl = docInfo && docInfo.ttl;
 
     // Not all columns are contained in the table
@@ -113,7 +115,7 @@ class QueryGenerator {
    * @param {Number|undefined} ttl
    * @return {String}
    */
-  static _getInsertQuery(tableName, keyspace, propertiesInfo, ifNotExists, ttl) {
+  static _getInsertQuery(tableName: string, keyspace: string, propertiesInfo: Array<any>, ifNotExists: boolean, ttl: number | undefined): string {
     let query = `INSERT INTO ${keyspace}.${tableName} (`;
     query += propertiesInfo.map(pInfo => `"${pInfo.columnName}"`).join(', ');
     query += ') VALUES (';
@@ -157,7 +159,7 @@ class QueryGenerator {
    * @param {Boolean|undefined} ifExists
    * @return {{query: String, paramsGetter: Function, isIdempotent: Boolean, isCounter}}
    */
-  static getUpdate(table, keyspace, propertiesInfo, docInfo, when, ifExists) {
+  static getUpdate(table: TableMetadata, keyspace: string, propertiesInfo: Array<any>, docInfo: UpdateDocInfo, when: Array<any>, ifExists: boolean | undefined): { query: string; paramsGetter: Function; isIdempotent: boolean; isCounter; } {
     const ttl = docInfo && docInfo.ttl;
     const primaryKeys = new Set(table.partitionKeys.concat(table.clusteringKeys).map(c => c.name));
     let isIdempotent = true;
@@ -201,7 +203,7 @@ class QueryGenerator {
    * @param {Boolean} ifExists
    * @param {Number|undefined} ttl
    */
-  static _getUpdateQuery(tableName, keyspace, primaryKeys, propertiesInfo, when, ifExists, ttl) {
+  static _getUpdateQuery(tableName: string, keyspace: string, primaryKeys: Set<string>, propertiesInfo: Array<any>, when: { [key: string]: any }, ifExists: boolean, ttl: number | undefined) {
     let query = `UPDATE ${keyspace}.${tableName} `;
 
     if (typeof ttl === 'number') {
@@ -247,7 +249,7 @@ class QueryGenerator {
    * @param {Number|undefined} ttl
    * @returns {Function}
    */
-  static _updateParamsGetter(primaryKeys, propertiesInfo, when, ttl) {
+  static _updateParamsGetter(primaryKeys: Set<string>, propertiesInfo: Array<any>, when: Array<any>, ttl: number | undefined): Function {
     let scriptText = '(function getParametersUpdate(doc, docInfo, mappingInfo) {\n';
     scriptText += '  return [';
 
@@ -284,7 +286,7 @@ class QueryGenerator {
    * @param {Boolean|undefined} ifExists
    * @return {{query: String, paramsGetter: Function, isIdempotent}}
    */
-  static getDelete(table, keyspace, propertiesInfo, docInfo, when, ifExists) {
+  static getDelete(table: TableMetadata, keyspace: string, propertiesInfo: Array<any>, docInfo: RemoveDocInfo, when: Array<any>, ifExists: boolean | undefined): { query: string; paramsGetter: Function; isIdempotent; } {
     const deleteOnlyColumns = docInfo && docInfo.deleteOnlyColumns;
     const primaryKeys = new Set(table.partitionKeys.concat(table.clusteringKeys).map(c => c.name));
 
@@ -312,7 +314,7 @@ class QueryGenerator {
    * @private
    * @return {String}
    */
-  static _getDeleteQuery(tableName, keyspace, primaryKeys, propertiesInfo, when, ifExists, deleteOnlyColumns) {
+  static _getDeleteQuery(tableName: string, keyspace: string, primaryKeys: Set<string>, propertiesInfo: Array<any>, when: Array<any>, ifExists: boolean, deleteOnlyColumns: boolean): string {
     let query = 'DELETE';
 
     if (deleteOnlyColumns) {
@@ -344,7 +346,7 @@ class QueryGenerator {
    * @param {Array} when
    * @returns {Function}
    */
-  static _deleteParamsGetter(primaryKeys, propertiesInfo, when) {
+  static _deleteParamsGetter(primaryKeys: Set<string>, propertiesInfo: Array<any>, when: Array<any>): Function {
     let scriptText = '(function getParametersDelete(doc, docInfo, mappingInfo) {\n';
     scriptText += '  return [';
 
@@ -370,7 +372,7 @@ class QueryGenerator {
    * @return {string}
    * @private
    */
-  static _valueGetterExpression(propertiesInfo, objectName) {
+  static _valueGetterExpression(propertiesInfo: Array<any>, objectName?: string): string {
     objectName = objectName || 'doc';
 
     return propertiesInfo
@@ -406,7 +408,7 @@ class QueryGenerator {
    * @return {string}
    * @private
    */
-  static _assignmentGetterExpression(propertiesInfo, prefix) {
+  static _assignmentGetterExpression(propertiesInfo: Array<any>, prefix?: string): string {
     prefix = prefix || 'doc';
 
     return propertiesInfo

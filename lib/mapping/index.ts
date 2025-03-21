@@ -20,7 +20,68 @@ import { ModelBatchItem } from './model-batch-item';
 import Result from "./result";
 import { q } from "./q";
 import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
+import Long from 'long';
 
+type MappingOptions = {
+  models: { [key: string]: ModelOptions };
+}
+
+type ModelOptions = {
+  tables?: string[] | ModelTables[];
+  mappings?: TableMappings;
+  columns?: { [key: string]: string|ModelColumnOptions };
+  keyspace?: string;
+}
+
+type ModelColumnOptions = {
+  name: string;
+  toModel?: (columnValue: any) => any;
+  fromModel?: (modelValue: any) => any;
+};
+
+interface ModelTables {
+  name: string;
+  isView: boolean;
+}
+
+type MappingExecutionOptions = {
+  executionProfile?: string;
+  isIdempotent?: boolean;
+  logged?: boolean;
+  timestamp?: number | Long;
+  fetchSize?: number;
+  pageState?: number;
+}
+
+type FindDocInfo = {
+  fields?: string[];
+  orderBy?: { [key: string]: string };
+  limit?: number;
+}
+
+type InsertDocInfo = {
+  fields?: string[];
+  ttl?: number;
+  ifNotExists?: boolean;
+}
+
+type UpdateDocInfo = {
+  fields?: string[];
+  ttl?: number;
+  ifExists?: boolean;
+  when?: { [key: string]: any };
+  orderBy?: { [key: string]: string };
+  limit?: number;
+  deleteOnlyColumns?: boolean;
+}
+
+type RemoveDocInfo = {
+  fields?: string[];
+  ttl?: number;
+  ifExists?: boolean;
+  when?: { [key: string]: any };
+  deleteOnlyColumns?: boolean;
+}
 
 
 /**
@@ -37,7 +98,16 @@ export {
   TableMappings,
   DefaultTableMappings,
   UnderscoreCqlToCamelCaseMappings,
-  q
+  q,
+  MappingOptions,
+  ModelOptions,
+  ModelColumnOptions,
+  ModelTables,
+  MappingExecutionOptions,
+  FindDocInfo,
+  InsertDocInfo,
+  UpdateDocInfo,
+  RemoveDocInfo
 };
 
 export default {

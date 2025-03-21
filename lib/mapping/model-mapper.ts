@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { FindDocInfo, InsertDocInfo, RemoveDocInfo, Result, UpdateDocInfo } from ".";
 import ModelBatchMapper from "./model-batch-mapper";
 
 
@@ -22,18 +23,21 @@ import ModelBatchMapper from "./model-batch-mapper";
  * @alias module:mapping~ModelMapper
  */
 class ModelMapper {
+  /**
+   * Gets the name identifier of the model.
+   * @type {String}
+   */
+  name: string;
+  private _handler: any;
+  /**
+   * Gets a [ModelBatchMapper]{@link module:mapping~ModelBatchMapper} instance containing utility methods to group
+   * multiple doc mutations in a single batch.
+   * @type {ModelBatchMapper}
+   */
+  batching: ModelBatchMapper;
   constructor(name, handler) {
-    /**
-     * Gets the name identifier of the model.
-     * @type {String}
-     */
     this.name = name;
     this._handler = handler;
-    /**
-     * Gets a [ModelBatchMapper]{@link module:mapping~ModelBatchMapper} instance containing utility methods to group
-     * multiple doc mutations in a single batch.
-     * @type {ModelBatchMapper}
-     */
     this.batching = new ModelBatchMapper(this._handler);
   }
 
@@ -55,7 +59,7 @@ class ModelMapper {
    * @example <caption>Get a video by id, selecting specific columns</caption>
    * videoMapper.get({ id }, fields: ['name', 'description'])
    */
-  get(doc, docInfo, executionOptions) {
+  get(doc: object, docInfo: { fields?: Array<string>; }, executionOptions: object | string): Promise<object> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -93,7 +97,7 @@ class ModelMapper {
    * @example <caption>Get user's videos in reverse order</caption>
    * videoMapper.find({ userId }, { orderBy: { addedDate: 'desc' }});
    */
-  find(doc, docInfo, executionOptions) {
+  find(doc: object, docInfo: FindDocInfo, executionOptions: object | string): Promise<Result> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -124,7 +128,7 @@ class ModelMapper {
    * <p>When provided, the query will be executed starting from a given paging state.</p>
    * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
    */
-  findAll(docInfo, executionOptions) {
+  findAll(docInfo: FindDocInfo, executionOptions: object | string): Promise<Result> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -165,7 +169,7 @@ class ModelMapper {
    * @example <caption>Insert a video</caption>
    * videoMapper.insert({ id, name });
    */
-  insert(doc, docInfo, executionOptions) {
+  insert(doc: object, docInfo: InsertDocInfo, executionOptions: object | string): Promise<Result> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -218,7 +222,7 @@ class ModelMapper {
    * @example <caption>Update the name of a video</caption>
    * videoMapper.update({ id, name });
    */
-  update(doc, docInfo, executionOptions) {
+  update(doc: object, docInfo: UpdateDocInfo, executionOptions: object | string): Promise<Result> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -268,7 +272,7 @@ class ModelMapper {
    * @example <caption>Delete a video</caption>
    * videoMapper.remove({ id });
    */
-  remove(doc, docInfo, executionOptions) {
+  remove(doc: object, docInfo: RemoveDocInfo, executionOptions: object | string): Promise<Result> {
     if (executionOptions === undefined && typeof docInfo === 'string') {
       executionOptions = docInfo;
       docInfo = null;
@@ -297,7 +301,7 @@ class ModelMapper {
    * @return {Function} Returns a function that takes the document and execution options as parameters and returns a
    * Promise the resolves to a [Result]{@link module:mapping~Result} instance.
    */
-  mapWithQuery(query, paramsHandler, executionOptions) {
+  mapWithQuery(query: string, paramsHandler: Function, executionOptions: object | string): Function {
     return this._handler.getExecutorFromQuery(query, paramsHandler, executionOptions);
   }
 }

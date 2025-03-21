@@ -15,7 +15,8 @@
  */
 import vm from "vm";
 import utils from "../utils";
-import types from "../types/index";
+import types, { ResultSet } from "../types/index";
+import ModelMappingInfo from "./model-mapping-info";
 
 
 
@@ -29,7 +30,7 @@ class ResultMapper {
    * @param {ResultSet} rs
    * @returns {Function}
    */
-  static getSelectAdapter(info, rs) {
+  static getSelectAdapter(info: ModelMappingInfo, rs: ResultSet): Function {
     const columns = rs.columns;
     if (!columns) {
       throw new Error('Expected ROWS result obtained VOID');
@@ -59,7 +60,7 @@ class ResultMapper {
    * @param {ResultSet} rs
    * @returns {Function}
    */
-  static getMutationAdapter(rs) {
+  static getMutationAdapter(rs: ResultSet): Function {
     if (rs.columns === null) {
       // VOID result
       return utils.noop;
@@ -93,7 +94,7 @@ class ResultMapper {
    * @param {ResultSet} rs
    * @returns {{canCache: Boolean, fn: Function}}
    */
-  static getCustomQueryAdapter(info, rs) {
+  static getCustomQueryAdapter(info: ModelMappingInfo, rs: ResultSet): { canCache: boolean; fn: Function; } {
     if (rs.columns === null || rs.columns.length === 0) {
       // VOID result
       return { canCache: true, fn: utils.noop };

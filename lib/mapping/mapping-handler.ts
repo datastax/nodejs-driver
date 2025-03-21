@@ -21,6 +21,9 @@ import Cache from "./cache";
 import Tree from "./tree";
 import ObjectSelector from "./object-selector";
 import DocInfoAdapter from "./doc-info-adapter";
+import Client from "../client";
+import ModelMappingInfo from "./model-mapping-info";
+import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 
 const cacheHighWaterMark = 100;
@@ -29,11 +32,14 @@ const cacheHighWaterMark = 100;
  * @ignore
  */
 class MappingHandler {
+  private _client: Client;
+  private _cache: { select: Tree; selectAll: Tree; insert: Tree; update: Tree; remove: Tree; customQueries: Map<any, any>; };
+  info: ModelMappingInfo;
   /**
    * @param {Client} client
    * @param {ModelMappingInfo} mappingInfo
    */
-  constructor(client, mappingInfo) {
+  constructor(client: Client, mappingInfo: ModelMappingInfo) {
     this._client = client;
     this._cache = {
       select: new Tree().on('add', length => this._validateCacheLength(length)),
@@ -59,7 +65,7 @@ class MappingHandler {
    * be valid.
    * @return {Promise<Function>}
    */
-  getSelectExecutor(doc, docInfo, allPKsDefined) {
+  getSelectExecutor(doc: object, docInfo: FindDocInfo, allPKsDefined: boolean): Promise<Function> {
     const docKeys = Object.keys(doc);
     if (docKeys.length === 0) {
       return Promise.reject(new Error('Expected object with keys'));
@@ -75,7 +81,7 @@ class MappingHandler {
     }
 
     const propertiesInfo = DocInfoAdapter.getPropertiesInfo(docKeys, null, doc, this.info);
-    const fieldsInfo = DocInfoAdapter.getPropertiesInfo(utils.emptyArray, docInfo, doc, this.info);
+    const fieldsInfo = DocInfoAdapter.getPropertiesInfo(utils.emptyArray as any[], docInfo, doc, this.info);
     const orderByColumns = DocInfoAdapter.adaptOrderBy(docInfo, this.info);
     const limit = docInfo && docInfo.limit;
 
@@ -105,7 +111,7 @@ class MappingHandler {
       return cacheItem.executor;
     }
 
-    const fieldsInfo = DocInfoAdapter.getPropertiesInfo(utils.emptyArray, docInfo, utils.emptyObject, this.info);
+    const fieldsInfo = DocInfoAdapter.getPropertiesInfo(utils.emptyArray as any[], docInfo, utils.emptyObject, this.info);
     const orderByColumns = DocInfoAdapter.adaptOrderBy(docInfo, this.info);
     const limit = docInfo && docInfo.limit;
 
@@ -129,7 +135,7 @@ class MappingHandler {
    * When a result adapter is not yet created, it gets a new one and caches it.
    * @private
    */
-  _executeSelect(query, paramsGetter, doc, docInfo, executionOptions, cacheItem) {
+  private _executeSelect(query, paramsGetter, doc, docInfo, executionOptions, cacheItem) {
     const options = DocInfoAdapter.adaptAllOptions(executionOptions, true);
 
     return this._client.execute(query, paramsGetter(doc, docInfo, this.info), options)
@@ -147,7 +153,7 @@ class MappingHandler {
    * @param {{ifNotExists, ttl, fields}} docInfo
    * @return {Promise<Function>}
    */
-  getInsertExecutor(doc, docInfo) {
+  getInsertExecutor(doc: object, docInfo: InsertDocInfo): Promise<Function> {
     const docKeys = Object.keys(doc);
     if (docKeys.length === 0) {
       return Promise.reject(new Error('Expected object with keys'));
@@ -177,7 +183,7 @@ class MappingHandler {
    * @param {{ifNotExists, ttl, fields}} docInfo
    * @returns {Promise<Array<{query, paramsGetter}>>}
    */
-  createInsertQueries(docKeys, doc, docInfo) {
+  createInsertQueries(docKeys: Array<string>, doc: object, docInfo: InsertDocInfo): Promise<Array<{ query; paramsGetter; }>> {
     const propertiesInfo = DocInfoAdapter.getPropertiesInfo(docKeys, docInfo, doc, this.info);
     const ifNotExists = docInfo && docInfo.ifNotExists;
 
@@ -202,7 +208,7 @@ class MappingHandler {
    * @param {{ifExists, when, ttl, fields}} docInfo
    * @return {Promise<Function>}
    */
-  getUpdateExecutor(doc, docInfo) {
+  getUpdateExecutor(doc: object, docInfo: UpdateDocInfo): Promise<Function> {
     const docKeys = Object.keys(doc);
     if (docKeys.length === 0) {
       return Promise.reject(new Error('Expected object with keys'));
@@ -232,7 +238,7 @@ class MappingHandler {
    * @param {Object} docInfo
    * @returns {Promise<Array<{query, paramsGetter, isIdempotent}>>}
    */
-  createUpdateQueries(docKeys, doc, docInfo) {
+  createUpdateQueries(docKeys: Array<string>, doc: object, docInfo: UpdateDocInfo): Promise<Array<{ query; paramsGetter; isIdempotent; }>> {
     const propertiesInfo = DocInfoAdapter.getPropertiesInfo(docKeys, docInfo, doc, this.info);
     const ifExists = docInfo && docInfo.ifExists;
     const when = docInfo && docInfo.when
@@ -264,7 +270,7 @@ class MappingHandler {
    * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
    * @return {Promise<Function>}
    */
-  getDeleteExecutor(doc, docInfo) {
+  getDeleteExecutor(doc: object, docInfo: RemoveDocInfo): Promise<Function> {
     const docKeys = Object.keys(doc);
     if (docKeys.length === 0) {
       return Promise.reject(new Error('Expected object with keys'));
@@ -294,7 +300,7 @@ class MappingHandler {
    * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
    * @returns {Promise<Array<{query, paramsGetter}>>}
    */
-  createDeleteQueries(docKeys, doc, docInfo) {
+  createDeleteQueries(docKeys: Array<string>, doc: object, docInfo: RemoveDocInfo): Promise<Array<{ query; paramsGetter; }>> {
     const propertiesInfo = DocInfoAdapter.getPropertiesInfo(docKeys, docInfo, doc, this.info);
     const ifExists = docInfo && docInfo.ifExists;
     const when = docInfo && docInfo.when
@@ -358,7 +364,7 @@ class MappingHandler {
     });
   }
 
-  _setSingleExecutor(cacheItem, queryInfo) {
+  private _setSingleExecutor(cacheItem, queryInfo) {
     // Parameters and this instance are part of the closure
     const self = this;
 
@@ -373,7 +379,7 @@ class MappingHandler {
     return cacheItem.executor;
   }
 
-  _setBatchExecutor(cacheItem, queries) {
+  private _setBatchExecutor(cacheItem, queries) {
     // Parameters and the following fields are part of the closure
     const self = this;
     const isIdempotent = queries.reduce((acc, q) => acc && q.isIdempotent, true);
@@ -396,7 +402,7 @@ class MappingHandler {
     return cacheItem.executor;
   }
 
-  _validateCacheLength(length) {
+  private _validateCacheLength(length) {
     if (length !== cacheHighWaterMark) {
       return;
     }

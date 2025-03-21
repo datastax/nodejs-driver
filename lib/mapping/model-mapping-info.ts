@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import tableMappingsModule from "./table-mappings";
-
-
-const TableMappings = tableMappingsModule.TableMappings;
-const DefaultTableMappings = tableMappingsModule.DefaultTableMappings;
+import { MappingOptions } from ".";
+import { TableMappings, DefaultTableMappings } from "./table-mappings";
 
 /**
  * Represents the parsed user information of the table mappings of a model.
  * @ignore
  */
 class ModelMappingInfo {
+  keyspace: string;
+  tables: { name: any; isView: any; }[];
+  _mappings: TableMappings;
+  _columns: Map<string, ModelColumnInfo>;
+  _documentProperties: Map<any, any>;
   /**
    * @param {String} keyspace
    * @param {Array<{name, isView}>} tables
    * @param {TableMappings} mappings
    * @param {Map<String,ModelColumnInfo>} columns
    */
-  constructor(keyspace, tables, mappings, columns) {
+  constructor(keyspace: string, tables: Array<{ name; isView; }>, mappings: TableMappings, columns: Map<string, ModelColumnInfo>) {
     this.keyspace = keyspace;
     this.tables = tables;
     this._mappings = mappings;
@@ -84,7 +86,7 @@ class ModelMappingInfo {
    * @param {String} currentKeyspace
    * @returns {Map<String, ModelMappingInfo>}
    */
-  static parse(options, currentKeyspace) {
+  static parse(options: MappingOptions, currentKeyspace: string): Map<string, ModelMappingInfo> {
     const result = new Map();
     if (!options || !options.models) {
       return result;
@@ -159,7 +161,11 @@ class ModelMappingInfo {
 }
 
 class ModelColumnInfo {
-  constructor(columnName, propertyName, toModel, fromModel) {
+  columnName: any;
+  toModel: any;
+  fromModel: any;
+  propertyName: any;
+  constructor(columnName, propertyName, toModel?, fromModel?) {
     this.columnName = columnName;
     this.propertyName = propertyName;
 

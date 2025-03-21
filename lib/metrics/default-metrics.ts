@@ -34,6 +34,29 @@ import EventEmitter from "events";
  * defaultMetrics.responses.on('increment', latency => myHistogram.record(latency));
  */
 class DefaultMetrics extends ClientMetrics {
+  errors: EventEmitter & {
+    authentication: EventEmitter;
+    clientTimeout: EventEmitter;
+    connection: EventEmitter;
+    other: EventEmitter;
+    readTimeout: EventEmitter;
+    unavailable: EventEmitter;
+    writeTimeout: EventEmitter;
+  };
+  retries: EventEmitter & {
+    clientTimeout: EventEmitter;
+    other: EventEmitter;
+    readTimeout: EventEmitter;
+    unavailable: EventEmitter;
+    writeTimeout: EventEmitter;
+  };
+  speculativeExecutions: EventEmitter & {
+    increment: EventEmitter;
+  };
+  ignoredErrors: EventEmitter;
+  responses: EventEmitter & {
+    success: EventEmitter;
+  };
   /**
    * Creates a new instance of [DefaultMetrics]{@link module:metrics~DefaultMetrics}.
    */
@@ -52,6 +75,7 @@ class DefaultMetrics extends ClientMetrics {
      * @property {EventEmitter} unavailable Emits the unavailable error events obtained from the server.
      * @property {EventEmitter} writeTimeout Emits the write timeout error events obtained from the server
      */
+    // @ts-ignore
     this.errors = new EventEmitter();
     this.errors.authentication = new EventEmitter();
     this.errors.clientTimeout = new EventEmitter();
@@ -74,6 +98,7 @@ class DefaultMetrics extends ClientMetrics {
      * @property {EventEmitter} writeTimeout Emits an execution is retried as a result of a write timeout error from the
      * server (coordinator to replica).
      */
+    // @ts-ignore
     this.retries = new EventEmitter();
     this.retries.clientTimeout = new EventEmitter();
     this.retries.other = new EventEmitter();
@@ -85,12 +110,14 @@ class DefaultMetrics extends ClientMetrics {
      * Emits events when a speculative execution is started.
      * @type {EventEmitter}
      */
+    // @ts-ignore
     this.speculativeExecutions = new EventEmitter();
 
     /**
      * Emits events when an error is ignored by the retry policy.
      * @type {EventEmitter}
      */
+    // @ts-ignore
     this.ignoredErrors = new EventEmitter();
 
     /**
@@ -98,6 +125,7 @@ class DefaultMetrics extends ClientMetrics {
      * @type {EventEmitter}
      * @property {EventEmitter} success Emits when a response was obtained as the result of a successful execution.
      */
+    // @ts-ignore
     this.responses = new EventEmitter();
     this.responses.success = new EventEmitter();
   }

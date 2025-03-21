@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { AuthenticationError, OperationTimedOutError, ResponseError } from "../errors";
+
 
 
 /**
@@ -26,82 +28,82 @@ class ClientMetrics {
    * Method invoked when an authentication error is obtained from the server.
    * @param {AuthenticationError|Error} e The error encountered.
    */
-  onAuthenticationError(e) {}
+  onAuthenticationError(e: AuthenticationError | Error) {}
 
   /**
    * Method invoked when an error (different than a server or client timeout, authentication or connection error) is
    * encountered when executing a request.
    * @param {OperationTimedOutError} e The timeout error.
    */
-  onClientTimeoutError(e) {}
+  onClientTimeoutError(e: OperationTimedOutError) {}
 
   /**
    * Method invoked when there is a connection error.
    * @param {Error} e The error encountered.
    */
-  onConnectionError(e) {}
+  onConnectionError(e: Error) {}
 
   /**
    * Method invoked when an error (different than a server or client timeout, authentication or connection error) is
    * encountered when executing a request.
    * @param {Error} e The error encountered.
    */
-  onOtherError(e) {}
+  onOtherError(e: Error) {}
 
   /**
    * Method invoked when a read timeout error is obtained from the server.
    * @param {ResponseError} e The error encountered.
    */
-  onReadTimeoutError(e) {}
+  onReadTimeoutError(e: ResponseError) {}
 
   /**
    * Method invoked when a write timeout error is obtained from the server.
    * @param {ResponseError} e The error encountered.
    */
-  onWriteTimeoutError(e) {}
+  onWriteTimeoutError(e: ResponseError) {}
 
   /**
    * Method invoked when an unavailable error is obtained from the server.
    * @param {ResponseError} e The error encountered.
    */
-  onUnavailableError(e) {}
+  onUnavailableError(e: ResponseError) {}
 
   /**
    * Method invoked when an execution is retried as a result of a client-level timeout.
    * @param {Error} e The error that caused the retry.
    */
-  onClientTimeoutRetry(e) {}
+  onClientTimeoutRetry(e: Error) {}
 
   /**
    * Method invoked when an error (other than a server or client timeout) is retried.
    * @param {Error} e The error that caused the retry.
    */
-  onOtherErrorRetry(e) {}
+  onOtherErrorRetry(e: Error) {}
 
   /**
    * Method invoked when an execution is retried as a result of a read timeout from the server (coordinator to replica).
    * @param {Error} e The error that caused the retry.
    */
-  onReadTimeoutRetry(e) {}
+  onReadTimeoutRetry(e: Error) {}
 
   /**
    * Method invoked when an execution is retried as a result of an unavailable error from the server.
    * @param {Error} e The error that caused the retry.
    */
-  onUnavailableRetry(e) {}
+  onUnavailableRetry(e: Error) {}
 
   /**
    * Method invoked when an execution is retried as a result of a write timeout from the server (coordinator to
    * replica).
    * @param {Error} e The error that caused the retry.
    */
-  onWriteTimeoutRetry(e) {}
+  onWriteTimeoutRetry(e: Error) {}
 
   /**
    * Method invoked when an error is marked as ignored by the retry policy.
    * @param {Error} e The error that was ignored by the retry policy.
    */
-  onIgnoreError(e) {}
+  onIgnoreError(e: Error) {}
 
   /**
    * Method invoked when a speculative execution is started.
@@ -113,7 +115,7 @@ class ClientMetrics {
    * @param {Array<Number>} latency The latency represented in a <code>[seconds, nanoseconds]</code> tuple
    * Array, where nanoseconds is the remaining part of the real time that can't be represented in second precision.
    */
-  onSuccessfulResponse(latency) {}
+  onSuccessfulResponse(latency: Array<number>) {}
 
   /**
    * Method invoked when any response is obtained, the response can be the result of a successful execution or a
@@ -121,7 +123,7 @@ class ClientMetrics {
    * @param {Array<Number>} latency The latency represented in a <code>[seconds, nanoseconds]</code> tuple
    * Array, where nanoseconds is the remaining part of the real time that can't be represented in second precision.
    */
-  onResponse(latency) {
+  onResponse(latency: Array<number>) {
 
   }
 }

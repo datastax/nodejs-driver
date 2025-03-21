@@ -51,8 +51,8 @@ class EventDebouncer {
    * @returns {Promise}
    */
   eventReceived(event: {
-      handler: Function; all: boolean | undefined; keyspace: string | undefined;
-      cqlObject: string | null | undefined;
+      handler: Function; all?: boolean; keyspace?: string;
+      cqlObject?: string;
     }, processNow: boolean): Promise<any> {
     return new Promise((resolve, reject) => {
       event["callback"] = promiseUtils.getCallback(resolve, reject);

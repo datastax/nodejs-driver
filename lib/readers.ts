@@ -15,9 +15,9 @@
  */
 import util from "util";
 import utils from "./utils";
-import types from "./types/index";
-import errors from "./errors";
-
+import types, { InetAddress, Uuid } from "./types/index";
+import errors, { ResponseError } from "./errors";
+import { FrameHeader } from "./types/index";
 
 /**
  * Information on the formatting of the returned rows
@@ -39,6 +39,26 @@ const _unavailableMessage = 'Not enough replicas available for query at consiste
 const _readTimeoutMessage = 'Server timeout during read query at consistency %s (%s)';
 const _readFailureMessage = 'Server failure during read query at consistency %s (%d responses were required but only %d replicas responded, %d failed)';
 
+type Meta = {
+  resultId?: Buffer;
+  flags?: number;
+  partitionKeys?: number[];
+  pageState?: Buffer;
+  newResultId?: Buffer;
+  continuousPageIndex?: number;
+  lastContinuousPage?: boolean;
+  global_tables_spec?: boolean;
+  keyspace?: string;
+  table?: string;
+  columns?: Array<{
+    ksname?: string;
+    tablename?: string;
+    name?: string;
+    type?: { code: number; info: any | null }; 
+  }>;
+  columnsByName?: { [key: string]: number };
+};
+
 /**
  * Buffer forward reader of CQL binary frames
  * @param {FrameHeader} header
@@ -46,6 +66,10 @@ const _readFailureMessage = 'Server failure during read query at consistency %s 
  * @param {Number} [offset]
  */
 class FrameReader {
+  header: FrameHeader;
+  opcode: any;
+  offset: number;
+  buf: Buffer;
 
   /**
    * Creates a new instance of the reader
@@ -53,7 +77,7 @@ class FrameReader {
    * @param {Buffer} body
    * @param {Number} [offset]
    */
-  constructor(header, body, offset) {
+  constructor(header: FrameHeader, body: Buffer, offset: number) {
     this.header = header;
     this.opcode = header.opcode;
     this.offset = offset || 0;
@@ -74,7 +98,7 @@ class FrameReader {
    * @param {Number} [end]
    * @returns {Buffer}
    */
-  slice(begin, end) {
+  slice(begin: number, end?: number): Buffer {
     if (typeof end === 'undefined') {
       end = this.buf.length;
     }
@@ -97,7 +121,7 @@ class FrameReader {
    * @param length
    * @returns {Buffer}
    */
-  read(length) {
+  read(length): Buffer {
     let end = this.buf.length;
     if (typeof length !== 'undefined' && this.offset + length < this.buf.length) {
       end = this.offset + length;
@@ -118,14 +142,14 @@ class FrameReader {
    * Reads a BE Int and moves the offset
    * @returns {Number}
    */
-  readInt() {
+  readInt(): number {
     const result = this.buf.readInt32BE(this.offset);
     this.offset += 4;
     return result;
   }
 
   /** @returns {Number} */
-  readShort() {
+  readShort(): number {
     const result = this.buf.readUInt16BE(this.offset);
     this.offset += 2;
     return result;
@@ -149,9 +173,10 @@ class FrameReader {
    * Checks that the new length to read is within the range of the buffer length. Throws a RangeError if not.
    * @param {Number} newLength
    */
-  checkOffset(newLength) {
+  checkOffset(newLength: number) {
     if (this.offset + newLength > this.buf.length) {
       const err = new RangeError('Trying to access beyond buffer length');
+      // @ts-ignore
       err.expectedLength = newLength;
       throw err;
     }
@@ -161,7 +186,7 @@ class FrameReader {
    * Reads a protocol string list
    * @returns {Array}
    */
-  readStringList() {
+  readStringList(): Array<any> {
     const length = this.readShort();
     const list = new Array(length);
     for (let i = 0; i < length; i++) {
@@ -174,7 +199,7 @@ class FrameReader {
    * Reads the amount of bytes that the field has and returns them (slicing them).
    * @returns {Buffer}
    */
-  readBytes() {
+  readBytes(): Buffer {
     const length = this.readInt();
     if (length < 0) {
       return null;
@@ -199,7 +224,7 @@ class FrameReader {
    * @param {Function} valueFn
    * @returns {Object}
    */
-  readMap(length, keyFn, valueFn) {
+  readMap(length: number, keyFn: Function, valueFn: Function): object {
     if (length < 0) {
       return null;
     }
@@ -214,7 +239,7 @@ class FrameReader {
    * Reads an associative array of strings as keys and string lists as values
    * @returns {Object}
    */
-  readStringMultiMap() {
+  readStringMultiMap(): object {
     //A [short] n, followed by n pair <k><v> where <k> is a
     //[string] and <v> is a [string[]].
     const length = this.readShort();
@@ -232,10 +257,11 @@ class FrameReader {
    * Reads a data type definition
    * @returns {{code: Number, info: Object|null}} An array of 2 elements
    */
-  readType() {
+  readType(): {code: number, info: any|null} {
     let i;
-    const type = {
+    const type : {code: number, info: any|null} = {
       code: this.readShort(),
+      // @ts-ignore
       type: null
     };
     switch (type.code) {
@@ -276,7 +302,7 @@ class FrameReader {
    * Reads an Ip address and port
    * @returns {{address: exports.InetAddress, port: Number}}
    */
-  readInet() {
+  readInet(): { address: InetAddress; port: number; } {
     const length = this.readByte();
     const address = this.read(length);
     return { address: new types.InetAddress(address), port: this.readInt() };
@@ -286,7 +312,7 @@ class FrameReader {
    * Reads an Ip address
    * @returns {InetAddress}
    */
-  readInetAddress() {
+  readInetAddress(): InetAddress {
     const length = this.readByte();
     return new types.InetAddress(this.read(length));
   }
@@ -296,11 +322,11 @@ class FrameReader {
    * @returns {{traceId: Uuid, warnings: Array, customPayload}}
    * @throws {RangeError}
    */
-  readFlagsInfo() {
+  readFlagsInfo(): { traceId?: Uuid; warnings?: Array<any>; customPayload?; } {
     if (this.header.flags === 0) {
       return utils.emptyObject;
     }
-    const result = {};
+    const result : { traceId?: Uuid; warnings?: Array<any>; customPayload?; } = {};
     if (this.header.flags & types.frameFlags.tracing) {
       this.checkOffset(16);
       result.traceId = new types.Uuid(utils.copyBuffer(this.read(16)));
@@ -321,11 +347,11 @@ class FrameReader {
    * @returns {Object}
    * @throws {RangeError}
    */
-  readMetadata(kind) {
+  readMetadata(kind: number): Meta {
     let i;
     //Determines if its a prepared metadata
     const isPrepared = (kind === types.resultKind.prepared);
-    const meta = {};
+    const meta : Meta = {};
     if (types.protocolVersion.supportsResultMetadataId(this.header.version) && isPrepared) {
       meta.resultId = utils.copyBuffer(this.readShortBytes());
     }
@@ -361,7 +387,9 @@ class FrameReader {
       meta.columnsByName = {};
     }
     for (i = 0; i < columnLength; i++) {
-      const col = {};
+      const col: {
+        ksname?: string; tablename?: string;
+        name?: string; type?: { code: number; info: any | null };} = {};
       if (!meta.global_tables_spec) {
         col.ksname = this.readString();
         col.tablename = this.readString();
@@ -381,7 +409,7 @@ class FrameReader {
    * @throws {RangeError}
    * @returns {ResponseError}
    */
-  readError() {
+  readError(): ResponseError {
     const code = this.readInt();
     const message = this.readString();
     const err = new errors.ResponseError(code, message);
@@ -470,9 +498,9 @@ class FrameReader {
 
   /**
    * Reads an event from Cassandra and returns the detail
-   * @returns {{eventType: String, inet: {address: Buffer, port: Number}}, *}
+   * @returns {{eventType: String, inet: {address: InetAddress, port: Number}}, *}
    */
-  readEvent() {
+  readEvent(): { eventType: string; inet?: { address: InetAddress; port: number; }; added?: boolean; up?: boolean } {
     const eventType = this.readString();
     switch (eventType) {
       case types.protocolEvents.topologyChange:

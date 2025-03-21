@@ -57,6 +57,8 @@ class Uuid {
    * second parameter.
    * @returns {Uuid}
    */
+  static random(): Uuid;
+  static random(callback: (err: Error | null, uuid?: Uuid) => void): void;
   static random(callback?: (err: Error | null, uuid?: Uuid) => void): Uuid | void {
     if (callback) {
       getRandomBytes(function(err, buffer) {

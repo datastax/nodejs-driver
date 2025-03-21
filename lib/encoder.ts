@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import util from "util";
-import types from "./types/index";
+import types, { InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
 import MutableLong from "./types/mutable-long";
 import utils from "./utils";
 import token from "./token";
@@ -155,7 +155,7 @@ class Encoder{
   private decodeCollectionLength : (bytes: any, offset: any) => number;
   private getLengthBuffer: (value: Buffer | number) => Buffer;
   private collectionLengthSize : number;
-  private protocolVersion: number;
+  protocolVersion: number;
     
   private readonly customDecoders = {
     [customTypeNames.duration]: decodeDuration,
@@ -196,7 +196,7 @@ class Encoder{
    * @ignore
    * @internal
    */
-  private setProtocolVersion = function (value: number) {
+  setProtocolVersion = function (value: number) {
     this.protocolVersion = value;
     //Set the collection serialization based on the protocol version
     this.decodeCollectionLength = decodeCollectionLengthV3;
@@ -534,12 +534,12 @@ class Encoder{
     return value.toBuffer();
   };
   /**
-   * @param {String|LocalDate} value
+   * @param {String|LocalTime} value
    * @returns {Buffer}
    * @throws {TypeError}
    * @private
    */
-  private encodeTime = function (value: string | LocalDate): Buffer {
+  private encodeTime = function (value: string | LocalTime): Buffer {
     const originalValue = value;
     try {
       if (typeof value === 'string') {

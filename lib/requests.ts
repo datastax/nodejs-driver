@@ -18,7 +18,8 @@ import { FrameWriter } from "./writers";
 import types from "./types/index";
 import utils from "./utils";
 import { ExecutionOptions } from "./execution-options";
-import packageInfo from "../package.json" assert {type: 'json'};
+import packageInfo from "../package.json";
+import Encoder from "./encoder";
 
 
 /**
@@ -67,6 +68,7 @@ const batchType = {
  * Abstract class Request
  */
 class Request {
+  length: number;
   constructor() {
     this.length = 0;
   }
@@ -78,7 +80,7 @@ class Request {
    * @throws {TypeError}
    * @returns {Buffer}
    */
-  write(encoder, streamId) {
+  write(encoder: Encoder, streamId: number): Buffer {
     throw new Error('Method must be implemented');
   }
 
@@ -86,8 +88,8 @@ class Request {
    * Creates a new instance using the same constructor as the current instance, copying the properties.
    * @return {Request}
    */
-  clone() {
-    const newRequest = new (this.constructor)();
+  clone(): Request {
+    const newRequest = new (this.constructor as {new() : Request})();
     const keysArray = Object.keys(this);
     for (let i = 0; i < keysArray.length; i++) {
       const key = keysArray[i];
@@ -105,6 +107,13 @@ class Request {
  * @param options
  */
 class ExecuteRequest extends Request {
+  query: string;
+  queryId: any;
+  params: any;
+  meta: any;
+  options: ExecutionOptions;
+  consistency: any;
+  namedParameters: boolean;
   /**
    * @param {String} query
    * @param queryId
@@ -112,7 +121,7 @@ class ExecuteRequest extends Request {
    * @param {ExecutionOptions} execOptions
    * @param meta
    */
-  constructor(query, queryId, params, execOptions, meta) {
+  constructor(query: string, queryId, params, execOptions: ExecutionOptions, meta) {
     super();
 
     this.query = query;
@@ -163,7 +172,7 @@ class ExecuteRequest extends Request {
    * @param {Encoder} encoder
    * @param {Boolean} [isQuery] True if query, otherwise assumed to be execute request.
    */
-  writeQueryParameters(frameWriter, encoder, isQuery) {
+  writeQueryParameters(frameWriter: FrameWriter, encoder: Encoder, isQuery?: boolean) {
     //v1: <n><value_1>....<value_n><consistency>
     //v2: <consistency><flags>[<n><value_1>...<value_n>][<result_page_size>][<paging_state>][<serial_consistency>]
     //v3: <consistency><flags>[<n>[name_1]<value_1>...[name_n]<value_n>][<result_page_size>][<paging_state>][<serial_consistency>][<timestamp>]
@@ -236,13 +245,14 @@ class ExecuteRequest extends Request {
 }
 
 class QueryRequest extends ExecuteRequest {
+  hints: any;
   /**
    * @param {String} query
    * @param params
    * @param {ExecutionOptions} [execOptions]
    * @param {Boolean} [namedParameters]
    */
-  constructor(query, params, execOptions, namedParameters) {
+  constructor(query: string, params?, execOptions?: ExecutionOptions, namedParameters?: boolean) {
     super(query, null, params, execOptions, null);
     this.hints = this.options.getHints() || utils.emptyArray;
     this.namedParameters = namedParameters;
@@ -283,6 +293,8 @@ class QueryRequest extends ExecuteRequest {
 }
 
 class PrepareRequest extends Request {
+  query: any;
+  keyspace: any;
   constructor(query, keyspace) {
     super();
     this.query = query;
@@ -304,6 +316,7 @@ class PrepareRequest extends Request {
 }
 
 class StartupRequest extends Request {
+  options: { cqlVersion?: any; noCompact?: any; clientId?: any; applicationName?: any; applicationVersion?: any; };
 
   /**
    * Creates a new instance of {@link StartupRequest}.
@@ -314,7 +327,7 @@ class StartupRequest extends Request {
    * @param [options.applicationName]
    * @param [options.applicationVersion]
    */
-  constructor(options) {
+  constructor(options: { cqlVersion?: any; noCompact?: any; clientId?: any; applicationName?: any; applicationVersion?: any; }) {
     super();
     this.options = options || {};
   }
@@ -350,6 +363,7 @@ class StartupRequest extends Request {
 }
 
 class RegisterRequest extends Request {
+  events: any;
   constructor(events) {
     super();
     this.events = events;
@@ -367,6 +381,7 @@ class RegisterRequest extends Request {
  * @param {Buffer} token
  */
 class AuthResponseRequest extends Request {
+  token: any;
   constructor(token) {
     super();
     this.token = token;
@@ -383,6 +398,8 @@ class AuthResponseRequest extends Request {
  * Represents a protocol v1 CREDENTIALS request message
  */
 class CredentialsRequest extends Request {
+  username: any;
+  password: any;
   constructor(username, password) {
     super();
     this.username = username;
@@ -397,12 +414,16 @@ class CredentialsRequest extends Request {
 }
 
 class BatchRequest extends Request {
+  queries: Request[];
+  options: ExecutionOptions;
+  hints: readonly any[];
+  type: number;
   /**
    * Creates a new instance of BatchRequest.
    * @param {Array.<{query, params, [info]}>} queries Array of objects with the properties query and params
    * @param {ExecutionOptions} execOptions
    */
-  constructor(queries, execOptions) {
+  constructor(queries: Array<Request>, execOptions: ExecutionOptions) {
     super();
     this.queries = queries;
     this.options = execOptions;
@@ -419,7 +440,7 @@ class BatchRequest extends Request {
   /**
   * Writes a batch request
   */
-  write(encoder, streamId) {
+  write(encoder: Encoder, streamId) {
     //v2: <type><n><query_1>...<query_n><consistency>
     //v3: <type><n><query_1>...<query_n><consistency><flags>[<serial_consistency>][<timestamp>]
     //dseV1+: similar to v3/v4, flags is an int instead of a byte
@@ -438,18 +459,18 @@ class BatchRequest extends Request {
     const self = this;
     this.queries.forEach(function eachQuery(item, i) {
       const hints = self.hints[i];
-      const params = item.params || utils.emptyArray;
+      const params = item["params"] || utils.emptyArray;
       let getParamType;
-      if (item.queryId) {
+      if ("queryId" in item) {
         // Contains prepared queries
         frameWriter.writeByte(1);
-        frameWriter.writeShortBytes(item.queryId);
-        getParamType = i => item.meta.columns[i].type;
+        frameWriter.writeShortBytes((item as ExecuteRequest).queryId);
+        getParamType = i => (item as ExecuteRequest).meta.columns[i].type;
       }
       else {
         // Contains string queries
         frameWriter.writeByte(0);
-        frameWriter.writeLString(item.query);
+        frameWriter.writeLString((item as ExecuteRequest).query);
         getParamType = hints ? (i => hints[i]) : (() => null);
       }
 
@@ -499,19 +520,20 @@ class BatchRequest extends Request {
   }
 }
 
-function CancelRequest(operationId) {
-  this.streamId = null;
-  this.operationId = operationId;
+class CancelRequest {
+  streamId: number;
+  operationId: any;
+  constructor(operationId) {
+    this.streamId = null;
+    this.operationId = operationId;
+  }
+  write(encoder, streamId) {
+    const frameWriter = new FrameWriter(types.opcodes.cancel);
+    frameWriter.writeInt(1);
+    frameWriter.writeInt(this.operationId);
+    return frameWriter.write(encoder.protocolVersion, streamId);
+  }
 }
-
-util.inherits(CancelRequest, Request);
-
-CancelRequest.prototype.write = function (encoder, streamId) {
-  const frameWriter = new FrameWriter(types.opcodes.cancel);
-  frameWriter.writeInt(1);
-  frameWriter.writeInt(this.operationId);
-  return frameWriter.write(encoder.protocolVersion, streamId);
-};
 
 class OptionsRequest extends Request {
 

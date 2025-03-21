@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import errors from "./errors";
+import errors, { DriverError, ResponseError } from "./errors";
 import requests from "./requests";
 import retry from "./policies/retry";
-import types from "./types/index";
+import types, { consistencies } from "./types/index";
 import utils from "./utils";
 import promiseUtils from "./promise-utils";
+import RequestHandler from "./request-handler";
+import { Host } from "./host";
+import Connection from "./connection";
+import OperationState from "./operation-state";
+import { ClientMetrics } from "./metrics";
 
 
 const retryOnCurrentHost = Object.freeze({
@@ -72,14 +77,28 @@ const metricsRetryHandlers = new Map([
   [ errorCodes.serverErrorOther, (metrics, err) => metrics.onOtherErrorRetry(err) ]
 ]);
 
+type DecisionInfo = {
+  decision: number;
+  consistency?: typeof consistencies;
+  useCurrentHost?: boolean;
+}
+
 class RequestExecution {
+  private _parent: RequestHandler;
+  private _operation: OperationState;
+  private _host: Host;
+  private _connection: Connection;
+  private _cancelled: boolean;
+  private _startTime: [number, number];
+  private _retryCount: number;
+  private _request: any;
   /**
    * Encapsulates a single flow of execution against a coordinator, handling individual retries and failover.
    * @param {RequestHandler!} parent
    * @param {Host!} host
    * @param {Connection!} connection
    */
-  constructor(parent, host, connection) {
+  constructor(parent: RequestHandler, host: Host, connection: Connection) {
     this._parent = parent;
     /** @type {OperationState} */
     this._operation = null;
@@ -107,7 +126,7 @@ class RequestExecution {
    * Borrows the next connection available using the query plan and sends the request.
    * @returns {Promise<void>}
    */
-  async restart() {
+  async restart(): Promise<void> {
     try {
       const { host, connection } = this._parent.getNextConnection();
 
@@ -212,7 +231,7 @@ class RequestExecution {
     }
   }
 
-  _getResultSet(response, agreement) {
+  _getResultSet(response, agreement?) {
     const rs = new types.ResultSet(response, this._host.address, this._parent.triedHosts, this._parent.speculativeExecutions,
       this._request.consistency, agreement === undefined || agreement);
 
@@ -231,7 +250,7 @@ class RequestExecution {
    * @param {Array} latency
    * @private
    */
-  static _invokeMetricsHandler(errorCode, metrics, err, latency) {
+  static _invokeMetricsHandler(errorCode: number, metrics: ClientMetrics, err: Error, latency: Array<any>) {
     const handler = metricsHandlers.get(errorCode);
     if (handler !== undefined) {
       handler(metrics, err, latency);
@@ -249,7 +268,7 @@ class RequestExecution {
    * @param {Error} err
    * @private
    */
-  static _invokeMetricsHandlerForRetry(errorCode, metrics, err) {
+  static _invokeMetricsHandlerForRetry(errorCode: number, metrics: ClientMetrics, err: Error) {
     const handler = metricsRetryHandlers.get(errorCode);
 
     if (handler !== undefined) {
@@ -319,10 +338,10 @@ class RequestExecution {
   /**
    * Gets a decision whether or not to retry based on the error information.
    * @param {Number} errorCode
-   * @param {Error} err
+   * @param {ResponseError} err
    * @returns {{decision, useCurrentHost, consistency}}
    */
-  _getDecision(errorCode, err) {
+  _getDecision(errorCode: number, err: ResponseError): DecisionInfo {
     const operationInfo = {
       query: this._request && this._request.query,
       executionOptions: this._parent.executionOptions,
@@ -402,7 +421,7 @@ class RequestExecution {
    * @param {Object} [meta]
    * @private
    */
-  _retry(consistency, useCurrentHost, meta) {
+  _retry(consistency: typeof consistencies, useCurrentHost: boolean, meta?: object) {
     if (this._cancelled) {
       // No point in retrying
       return;
@@ -451,7 +470,7 @@ class RequestExecution {
    * @param {Buffer} queryId
    * @private
    */
-  _prepareAndRetry(queryId) {
+  _prepareAndRetry(queryId: Buffer) {
     const connection = this._connection;
 
     this._parent.log('info',

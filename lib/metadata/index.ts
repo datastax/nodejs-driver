@@ -31,6 +31,8 @@ import Connection from "../connection";
 import MaterializedView from "./materialized-view";
 import SchemaFunction from "./schema-function";
 import Aggregate from "./aggregate";
+import { EventEmitter } from "stream";
+import DataCollection from "./data-collection";
 
 /**
  * @const
@@ -219,7 +221,7 @@ class Metadata {
    * @param {String} name Name of the keyspace.
    * @param {Function} [callback] Optional callback.
    */
-  refreshKeyspace(name: string, callback: Function) {
+  refreshKeyspace(name: string, callback?: Function) {
     return promiseUtils.optionalCallback(this._refreshKeyspace(name), callback);
   }
 
@@ -429,7 +431,7 @@ class Metadata {
    * @internal
    * @ignore
    */
-  getPreparedInfo(keyspaceName: string, query: string) {
+  getPreparedInfo(keyspaceName: string, query: string): PreparedQueryInfo {
     return this._preparedQueries.getOrAdd(keyspaceName, query);
   }
 
@@ -943,6 +945,14 @@ class Metadata {
   }
 }
 
+type PreparedQueryInfo = {
+  queryId?: Buffer;
+  preparing?: boolean;
+  query: string;
+  keyspace: string;
+  meta?: DataCollection;
+} & EventEmitter;
+
 /**
  * Allows to store prepared queries and retrieval by query or query id.
  * @ignore
@@ -950,7 +960,7 @@ class Metadata {
 class PreparedQueries {
   length: number;
   _maxPrepared: number;
-  _mapByKey: Map<any, any>;
+  _mapByKey: Map<string, PreparedQueryInfo>;
   _mapById: Map<any, any>;
   _logger: Function;
 
@@ -970,7 +980,7 @@ class PreparedQueries {
     return (keyspace || '') + query;
   }
 
-  getOrAdd(keyspace, query) {
+  getOrAdd(keyspace, query): PreparedQueryInfo {
     const key = this._getKey(keyspace, query);
     let info = this._mapByKey.get(key);
     if (info) {
@@ -979,6 +989,7 @@ class PreparedQueries {
 
     this._validateOverflow();
 
+    // @ts-ignore
     info = new events.EventEmitter();
     info.setMaxListeners(0);
     info.query = query;
@@ -1039,3 +1050,5 @@ class PreparedQueries {
 }
 
 export default Metadata;
+
+export { Metadata, PreparedQueryInfo };

@@ -337,7 +337,7 @@ const frameFlags = {
  *   Use this field if you want to set a parameter to <code>unset</code>. Valid for Cassandra 2.2 and above.
  * </p>
  */
-const unset = Object.freeze({'unset': true});
+const unset = Object.freeze({'unset': true} as const);
 
 /**
  * A long representing the value 1000
@@ -456,83 +456,86 @@ function getDataTypeNameByCode(item) {
 
 //classes
 
-/**
- * Represents a frame header that could be used to read from a Buffer or to write to a Buffer
- * @ignore
- * @param {Number} version Protocol version
- * @param {Number} flags
- * @param {Number} streamId
- * @param {Number} opcode
- * @param {Number} bodyLength
- * @constructor
- */
-function FrameHeader(version, flags, streamId, opcode, bodyLength) {
-  this.version = version;
-  this.flags = flags;
-  this.streamId = streamId;
-  this.opcode = opcode;
-  this.bodyLength = bodyLength;
+class FrameHeader {
+  version: number;
+  flags: number;
+  streamId: number;
+  opcode: number;
+  bodyLength: number;
+  /**
+   * Represents a frame header that could be used to read from a Buffer or to write to a Buffer
+   * @ignore
+   * @param {Number} version Protocol version
+   * @param {Number} flags
+   * @param {Number} streamId
+   * @param {Number} opcode
+   * @param {Number} bodyLength
+   * @constructor
+   */
+  constructor(version: number, flags: number, streamId: number, opcode: number, bodyLength: number) {
+    this.version = version;
+    this.flags = flags;
+    this.streamId = streamId;
+    this.opcode = opcode;
+    this.bodyLength = bodyLength;
+  }
+  /**
+   * The length of the header of the frame based on the protocol version
+   * @returns {Number}
+   */
+  static size(version): number {
+    if (protocolVersion.uses2BytesStreamIds(version)) {
+      return 9;
+    }
+    return 8;
+  }
+  /**
+   * Gets the protocol version based on the first byte of the header
+   * @param {Buffer} buffer
+   * @returns {Number}
+   */
+  static getProtocolVersion(buffer: Buffer): number {
+    return buffer[0] & 0x7F;
+  }
+  /**
+   * @param {Buffer} buf
+   * @param {Number} [offset]
+   * @returns {FrameHeader}
+   */
+  static fromBuffer(buf: Buffer, offset?: number): FrameHeader {
+    let streamId = 0;
+    if (!offset) {
+      offset = 0;
+    }
+    const version = buf[offset++] & 0x7F;
+    const flags = buf.readUInt8(offset++);
+    if (!protocolVersion.uses2BytesStreamIds(version)) {
+      streamId = buf.readInt8(offset++);
+    }
+    else {
+      streamId = buf.readInt16BE(offset);
+      offset += 2;
+    }
+    return new FrameHeader(version, flags, streamId, buf.readUInt8(offset++), buf.readUInt32BE(offset));
+  }
+  /** @returns {Buffer} */
+  toBuffer(): Buffer {
+    const buf = utils.allocBufferUnsafe(FrameHeader.size(this.version));
+    buf.writeUInt8(this.version, 0);
+    buf.writeUInt8(this.flags, 1);
+    let offset = 3;
+    if (!protocolVersion.uses2BytesStreamIds(this.version)) {
+      buf.writeInt8(this.streamId, 2);
+    }
+    else {
+      buf.writeInt16BE(this.streamId, 2);
+      offset = 4;
+    }
+    buf.writeUInt8(this.opcode, offset++);
+    buf.writeUInt32BE(this.bodyLength, offset);
+    return buf;
+  }
 }
-
-/**
- * The length of the header of the frame based on the protocol version
- * @returns {Number}
- */
-FrameHeader.size = function (version) {
-  if (protocolVersion.uses2BytesStreamIds(version)) {
-    return 9;
-  }
-  return 8;
-};
-
-/**
- * Gets the protocol version based on the first byte of the header
- * @param {Buffer} buffer
- * @returns {Number}
- */
-FrameHeader.getProtocolVersion = function (buffer) {
-  return buffer[0] & 0x7F;
-};
-
-/**
- * @param {Buffer} buf
- * @param {Number} [offset]
- * @returns {FrameHeader}
- */
-FrameHeader.fromBuffer = function (buf, offset) {
-  let streamId = 0;
-  if (!offset) {
-    offset = 0;
-  }
-  const version = buf[offset++] & 0x7F;
-  const flags = buf.readUInt8(offset++);
-  if (!protocolVersion.uses2BytesStreamIds(version)) {
-    streamId = buf.readInt8(offset++);
-  }
-  else {
-    streamId = buf.readInt16BE(offset);
-    offset += 2;
-  }
-  return new FrameHeader(version, flags, streamId, buf.readUInt8(offset++), buf.readUInt32BE(offset));
-};
-
-/** @returns {Buffer} */
-FrameHeader.prototype.toBuffer = function () {
-  const buf = utils.allocBufferUnsafe(FrameHeader.size(this.version));
-  buf.writeUInt8(this.version, 0);
-  buf.writeUInt8(this.flags, 1);
-  let offset = 3;
-  if (!protocolVersion.uses2BytesStreamIds(this.version)) {
-    buf.writeInt8(this.streamId, 2);
-  }
-  else {
-    buf.writeInt16BE(this.streamId, 2);
-    offset = 4;
-  }
-  buf.writeUInt8(this.opcode, offset++);
-  buf.writeUInt32BE(this.bodyLength, offset);
-  return buf;
-};
 
 // These methods are internal to the driver, 
 // therefore they don't have type supports and TypeScript errors are ignored

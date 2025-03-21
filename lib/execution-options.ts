@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 import utils from "./utils";
-import types from "./types/index";
+import types, { Long } from "./types/index";
 import errors from "./errors";
+import { Host } from "./host";
+import Client, { QueryOptions } from "./client";
+import { ExecutionProfile } from "./execution-profile";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import { RetryPolicy } from "./policies/retry";
 
 
 const proxyExecuteKey = 'ProxyExecute';
@@ -41,8 +46,8 @@ class ExecutionOptions {
    * @ignore
    * @return {ExecutionOptions}
    */
-  static empty() {
-    return new ExecutionOptions();
+  static empty(): ExecutionOptions {
+    return null;
   }
 
   /**
@@ -50,8 +55,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean}
    */
-  getCaptureStackTrace() {
-
+  getCaptureStackTrace(): boolean {
+    return null;
   }
 
   /**
@@ -59,8 +64,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number}
    */
-  getConsistency() {
-
+  getConsistency(): number {
+    return null;
   }
 
   /**
@@ -69,8 +74,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Object}
    */
-  getCustomPayload() {
-
+  getCustomPayload(): object {
+    return null;
   }
 
   /**
@@ -78,8 +83,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number}
    */
-  getFetchSize() {
-
+  getFetchSize(): number {
+    return null;
   }
 
   /**
@@ -87,8 +92,8 @@ class ExecutionOptions {
    * gets the host that should handle the query.
    * @returns {Host}
    */
-  getFixedHost() {
-
+  getFixedHost(): Host {
+    return null;
   }
 
   /**
@@ -96,8 +101,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Array|Array<Array>}
    */
-  getHints() {
-
+  getHints(): Array<any> | Array<Array<any>> {
+    return null;
   }
 
   /**
@@ -108,8 +113,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean}
    */
-  isAutoPage() {
-
+  isAutoPage(): boolean {
+    return null;
   }
 
   /**
@@ -118,8 +123,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
-  isBatchCounter() {
-
+  isBatchCounter(): boolean {
+    return null;
   }
 
   /**
@@ -128,8 +133,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
-  isBatchLogged() {
-
+  isBatchLogged(): boolean {
+    return null;
   }
 
   /**
@@ -138,8 +143,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean}
    */
-  isIdempotent() {
-
+  isIdempotent(): boolean {
+    return null;
   }
 
   /**
@@ -147,8 +152,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
-  isPrepared() {
-
+  isPrepared(): boolean {
+    return null;
   }
 
   /**
@@ -156,8 +161,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Boolean}
    */
-  isQueryTracing() {
-
+  isQueryTracing(): boolean {
+    return null;
   }
 
   /**
@@ -170,16 +175,16 @@ class ExecutionOptions {
    * @abstract
    * @returns {String}
    */
-  getKeyspace() {
-
+  getKeyspace(): string {
+    return null;
   }
 
   /**
    * Gets the load balancing policy used for this execution.
    * @returns {LoadBalancingPolicy} A <code>LoadBalancingPolicy</code> instance, it can't be <code>undefined</code>.
    */
-  getLoadBalancingPolicy() {
-
+  getLoadBalancingPolicy(): LoadBalancingPolicy {
+    return null;
   }
 
   /**
@@ -187,8 +192,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Buffer}
    */
-  getPageState() {
-
+  getPageState(): Buffer {
+    return null;
   }
 
   /**
@@ -197,15 +202,15 @@ class ExecutionOptions {
    * @ignore
    */
   getPreferredHost() {
-
+    return null;
   }
 
   /**
    * Gets the query options as provided to the execution method without setting the default values.
    * @returns {QueryOptions}
    */
-  getRawQueryOptions() {
-
+  getRawQueryOptions(): QueryOptions {
+    return null;
   }
 
   /**
@@ -216,8 +221,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number}
    */
-  getReadTimeout() {
-
+  getReadTimeout(): number {
+    return null;
   }
 
   /**
@@ -225,8 +230,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {RetryPolicy} A <code>RetryPolicy</code> instance, it can't be <code>undefined</code>.
    */
-  getRetryPolicy() {
-
+  getRetryPolicy(): RetryPolicy {
+    return null;
   }
 
   /**
@@ -235,7 +240,7 @@ class ExecutionOptions {
    * @ignore
    */
   getRowCallback() {
-
+    return null;
   }
 
   /**
@@ -243,8 +248,8 @@ class ExecutionOptions {
    * @ignore
    * @returns {Long|null}
    */
-  getOrGenerateTimestamp() {
-
+  getOrGenerateTimestamp(): Long | null {
+    return null;
   }
 
   /**
@@ -253,8 +258,8 @@ class ExecutionOptions {
    * @ignore
    * @returns {Array}
    */
-  getRoutingIndexes() {
-
+  getRoutingIndexes(): Array<any> {
+    return null;
   }
 
   /**
@@ -262,8 +267,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Buffer|Array<Buffer>}
    */
-  getRoutingKey() {
-
+  getRoutingKey(): Buffer | Array<Buffer> {
+    return null;
   }
 
   /**
@@ -273,7 +278,7 @@ class ExecutionOptions {
    * @ignore
    */
   getRoutingNames() {
-
+    return null;
   }
 
   /**
@@ -281,8 +286,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number}
    */
-  getSerialConsistency() {
-
+  getSerialConsistency(): number {
+    return null;
   }
 
   /**
@@ -291,8 +296,8 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number|Long|undefined|null}
    */
-  getTimestamp() {
-
+  getTimestamp(): number | Long | undefined | null {
+    return null;
   }
 
   /**
@@ -300,8 +305,8 @@ class ExecutionOptions {
    * @abstract
    * @ignore
    */
-  setHints(hints) {
-
+  setHints(hints: Array<any>) {
+    return null;
   }
 
   /**
@@ -310,16 +315,16 @@ class ExecutionOptions {
    * @abstract
    * @param {String} keyspace
    */
-  setKeyspace(keyspace) {
-
+  setKeyspace(keyspace: string) {
+    return null;
   }
 
   /**
    * @abstract
    * @ignore
    */
-  setPageState() {
-
+  setPageState(pageState: Buffer) {
+    return null;
   }
 
   /**
@@ -328,7 +333,7 @@ class ExecutionOptions {
    * @ignore
    */
   setPreferredHost() {
-
+    return null;
   }
 
   /**
@@ -337,8 +342,8 @@ class ExecutionOptions {
    * @abstract
    * @ignore
    */
-  setRoutingIndexes(routingIndexes) {
-
+  setRoutingIndexes(routingIndexes: Array<any>) {
+    return null;
   }
 
   /**
@@ -347,7 +352,7 @@ class ExecutionOptions {
    * @ignore
    */
   setRoutingKey(value) {
-
+    return null;
   }
 }
 
@@ -357,13 +362,25 @@ class ExecutionOptions {
  * @ignore
  */
 class DefaultExecutionOptions extends ExecutionOptions {
+  _queryOptions: QueryOptions;
+  _rowCallback: Function;
+  _routingKey: any;
+  _hints: any;
+  _keyspace: any;
+  _routingIndexes: any;
+  _pageState: any;
+  _preferredHost: null;
+  _client: Client;
+  _defaultQueryOptions: QueryOptions;
+  _profile: ExecutionProfile;
+  _customPayload: object;
   /**
    * Creates a new instance of {@link ExecutionOptions}.
    * @param {QueryOptions} queryOptions
    * @param {Client} client
    * @param {Function|null} rowCallback
    */
-  constructor(queryOptions, client, rowCallback) {
+  constructor(queryOptions: QueryOptions, client: Client, rowCallback: Function | null) {
     super();
 
     this._queryOptions = queryOptions;
@@ -394,7 +411,7 @@ class DefaultExecutionOptions extends ExecutionOptions {
    * @param {QueryOptions} defaultQueryOptions
    * @private
    */
-  static createCustomPayload(userOptions, defaultQueryOptions) {
+  static createCustomPayload(userOptions: QueryOptions, defaultQueryOptions: QueryOptions) {
     let customPayload = userOptions.customPayload || defaultQueryOptions.customPayload;
     const executeAs = userOptions.executeAs || defaultQueryOptions.executeAs;
 
@@ -420,7 +437,7 @@ class DefaultExecutionOptions extends ExecutionOptions {
    * @ignore
    * @return {ExecutionOptions}
    */
-  static create(queryOptions, client, rowCallback) {
+  static create(queryOptions: QueryOptions | null, client: Client, rowCallback?: Function | null): ExecutionOptions {
     if (!queryOptions || typeof queryOptions === 'function') {
       // queryOptions can be null/undefined and could be of type function when is an optional parameter
       queryOptions = utils.emptyObject;
@@ -473,7 +490,7 @@ class DefaultExecutionOptions extends ExecutionOptions {
    * Determines if the query execution must be prepared beforehand.
    * @return {Boolean}
    */
-  isPrepared() {
+  isPrepared(): boolean {
     return ifUndefined(this._queryOptions.prepare, this._defaultQueryOptions.prepare);
   }
 
@@ -566,35 +583,35 @@ class DefaultExecutionOptions extends ExecutionOptions {
    * @internal
    * @param {Object} payload
    */
-  setCustomPayload(payload) {
+  setCustomPayload(payload: object) {
     this._customPayload = payload;
   }
 
   /**
    * @param {Array} hints
    */
-  setHints(hints) {
+  setHints(hints: Array<any>) {
     this._hints = hints;
   }
 
   /**
    * @param {String} keyspace
    */
-  setKeyspace(keyspace) {
+  setKeyspace(keyspace: string) {
     this._keyspace = keyspace;
   }
 
   /**
    * @param {Buffer} pageState
    */
-  setPageState(pageState) {
+  setPageState(pageState: Buffer) {
     this._pageState = pageState;
   }
 
   /**
    * @param {Array} routingIndexes
    */
-  setRoutingIndexes(routingIndexes) {
+  setRoutingIndexes(routingIndexes: Array<any>) {
     this._routingIndexes = routingIndexes;
   }
 

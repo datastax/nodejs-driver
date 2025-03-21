@@ -20,6 +20,7 @@ import utils from "./utils";
 import promiseUtils from "./promise-utils";
 import errors from "./errors";
 import clientOptions from "./client-options";
+import { Host } from "./host";
 
 
 // Used to get the index of the connection with less in-flight requests
@@ -54,13 +55,24 @@ const state = {
  * Represents a pool of connections to a host
  */
 class HostConnectionPool extends events.EventEmitter {
+  private _address: any;
+  private _newConnectionTimeout: NodeJS.Timeout;
+  private _state: number;
+  private _opening: boolean;
+  private _host: Host;
+  responseCounter: number;
+  options: any;
+  protocolVersion: number;
+  coreConnectionsLength: number;
+  connections: Connection[];
+  log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
   /**
    * Creates a new instance of HostConnectionPool.
    * @param {Host} host
    * @param {Number} protocolVersion Initial protocol version
    * @extends EventEmitter
    */
-  constructor(host, protocolVersion) {
+  constructor(host: Host, protocolVersion: number) {
     super();
     this._address = host.address;
     this._newConnectionTimeout = null;
@@ -75,7 +87,7 @@ class HostConnectionPool extends events.EventEmitter {
      * An immutable array of connections
      * @type {Array.<Connection>}
      */
-    this.connections = utils.emptyArray;
+    this.connections = utils.emptyArray as Connection[];
     this.setMaxListeners(0);
     this.log = utils.log;
   }
@@ -100,7 +112,7 @@ class HostConnectionPool extends events.EventEmitter {
    * @throws {Error}
    * @throws {BusyConnectionError}
    */
-  borrowConnection(previousConnection) {
+  borrowConnection(previousConnection: Connection): Connection {
     if (this.connections.length === 0) {
       throw new Error('No connection available');
     }
@@ -124,7 +136,7 @@ class HostConnectionPool extends events.EventEmitter {
    * @param {Connection} previousConnection When provided, it will attempt to obtain a different connection.
    * @returns {Connection!}
    */
-  static minInFlight(connections, maxRequests, previousConnection) {
+  static minInFlight(connections: Array<Connection>, maxRequests: number, previousConnection: Connection): Connection {
     const length = connections.length;
     if (length === 1) {
       return connections[0];
@@ -167,7 +179,7 @@ class HostConnectionPool extends events.EventEmitter {
    * Creates all the connections in the pool and switches the keyspace of each connection if needed.
    * @param {string} keyspace
    */
-  async warmup(keyspace) {
+  async warmup(keyspace: string) {
     if (this.connections.length < this.coreConnectionsLength) {
       while (this.connections.length < this.coreConnectionsLength) {
         await this._attemptNewConnection();
@@ -192,7 +204,7 @@ class HostConnectionPool extends events.EventEmitter {
   }
 
   /** @returns {Connection} */
-  _createConnection() {
+  _createConnection(): Connection {
     const endpointOrServerName = !this.options.sni
       ? this._address : this._host.hostId.toString();
 
@@ -202,7 +214,7 @@ class HostConnectionPool extends events.EventEmitter {
   }
 
   /** @param {Connection} c */
-  _addListeners(c) {
+  _addListeners(c: Connection) {
     c.on('responseDequeued', () => this.responseCounter++);
 
     const self = this;
@@ -237,7 +249,7 @@ class HostConnectionPool extends events.EventEmitter {
    * If a connection is being opened, it will resolve when the existing open task completes.
    * @returns {Promise<void>}
    */
-  async _attemptNewConnection() {
+  async _attemptNewConnection(): Promise<void> {
     if (this._opening) {
       // Wait for the event to fire
       return await promiseUtils.fromEvent(this, 'open');
@@ -303,7 +315,7 @@ class HostConnectionPool extends events.EventEmitter {
    * Closes the connection and removes a connection from the pool.
    * @param {Connection} connection
    */
-  remove(connection) {
+  remove(connection: Connection) {
     // locating an object by position in the array is O(n), but normally there should be between 1 to 8 connections.
     const index = this.connections.indexOf(connection);
     if (index < 0) {
@@ -324,7 +336,7 @@ class HostConnectionPool extends events.EventEmitter {
   /**
    * @param {Number} delay
    */
-  scheduleNewConnectionAttempt(delay) {
+  scheduleNewConnectionAttempt(delay: number) {
     if (this.isClosing()) {
       return;
     }
@@ -368,7 +380,7 @@ class HostConnectionPool extends events.EventEmitter {
    * Gets the amount of responses and resets the internal counter.
    * @returns {number}
    */
-  getAndResetResponseCounter() {
+  getAndResetResponseCounter(): number {
     const temp = this.responseCounter;
     this.responseCounter = 0;
     return temp;
@@ -399,7 +411,7 @@ class HostConnectionPool extends events.EventEmitter {
 
     const self = this;
     const connections = this.connections;
-    this.connections = utils.emptyArray;
+    this.connections = utils.emptyArray as Connection[];
     let closedConnections = 0;
     this.log('info', util.format('Draining and closing %d connections to %s', connections.length, this._address));
     let wasClosed = false;
@@ -472,7 +484,7 @@ class HostConnectionPool extends events.EventEmitter {
   /**
    * @returns {Promise<void>}
    */
-  async shutdown() {
+  async shutdown(): Promise<void> {
     this.clearNewConnectionAttempt();
 
     if (!this.connections.length) {
@@ -499,7 +511,7 @@ class HostConnectionPool extends events.EventEmitter {
   async _closeAllConnections() {
     const connections = this.connections;
     // point to an empty array
-    this.connections = utils.emptyArray;
+    this.connections = utils.emptyArray as Connection[];
     if (connections.length === 0) {
       return;
     }

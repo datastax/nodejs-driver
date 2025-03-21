@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import { EventEmitter } from "stream";
+import { ExecutionOptions } from "./execution-options";
+import { Host } from "./host";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+
 
 
 /**
@@ -21,7 +26,7 @@
  * @param {number} ms
  * @returns {Promise<void>}
  */
-function delay(ms) {
+function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms || 0));
 }
 
@@ -31,7 +36,7 @@ function delay(ms) {
  * @param {string} eventName
  * @returns {Promise}
  */
-function fromEvent(emitter, eventName) {
+function fromEvent(emitter: EventEmitter, eventName: string): Promise<any> {
   return new Promise((resolve, reject) =>
     emitter.once(eventName, (err, result) => {
       if (err) {
@@ -47,7 +52,7 @@ function fromEvent(emitter, eventName) {
  * @param {Function} fn
  * @returns {Promise}
  */
-function fromCallback(fn) {
+function fromCallback(fn: Function): Promise<any> {
   return new Promise((resolve, reject) =>
     fn((err, result) => {
       if (err) {
@@ -64,7 +69,7 @@ function fromCallback(fn) {
  * @param {Function} reject
  * @returns {Function}
  */
-function getCallback(resolve, reject) {
+function getCallback(resolve: Function, reject: Function): Function {
   return function (err, result) {
     if (err) {
       reject(err);
@@ -88,7 +93,7 @@ async function invokeSequentially(info, length, fn) {
  * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
  * @returns {Promise<Iterator>}
  */
-function newQueryPlan(lbp, keyspace, executionOptions) {
+function newQueryPlan(lbp: LoadBalancingPolicy, keyspace: string, executionOptions: ExecutionOptions | null): Promise<Iterator<Host>> {
   return new Promise((resolve, reject) => {
     lbp.newQueryPlan(keyspace, executionOptions, (err, iterator) => {
       if (err) {
@@ -108,7 +113,7 @@ function newQueryPlan(lbp, keyspace, executionOptions) {
  * @param {Function?} callback
  * @returns {Promise|undefined}
  */
-function optionalCallback(promise, callback) {
+function optionalCallback(promise: Promise<any>, callback: Function | null): Promise<any> | undefined {
   if (!callback) {
     return promise;
   }
@@ -123,7 +128,7 @@ function optionalCallback(promise, callback) {
  * @param {Function} fn
  * @returns {Promise}
  */
-function times(count, limit, fn) {
+function times(count: number, limit: number, fn: Function): Promise<any> {
   if (limit > count) {
     limit = count;
   }
@@ -146,7 +151,7 @@ function times(count, limit, fn) {
  * @param {Promise} promise
  * @returns {undefined}
  */
-function toBackground(promise) {
+function toBackground(promise: Promise<any>): undefined {
   promise.catch(() => {});
 }
 
@@ -156,7 +161,7 @@ function toBackground(promise) {
  * @param {Function?} callback
  * @returns {undefined}
  */
-function toCallback(promise, callback) {
+function toCallback(promise: Promise<any>, callback: Function | null): undefined {
   promise
     .then(
       result => process.nextTick(() => callback(null, result)),

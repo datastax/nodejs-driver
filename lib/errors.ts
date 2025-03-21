@@ -29,6 +29,7 @@ class DriverError extends Error {
   info: string;
   isSocketError: boolean;
   innerError: any;
+  requestNotWritten?: boolean;
 
   constructor(message: string) {
     super(message);
@@ -70,6 +71,20 @@ class NoHostAvailableError extends DriverError {
  */
 class ResponseError extends DriverError {
   code: number;
+  consistencies: number;
+  required: number;
+  alive: number;
+  received: number;
+  blockFor: number;
+  failures: number;
+  reasons: object;
+  isDataPresent: any;
+  writeType: any;
+  queryId: any;
+  keyspace: any;
+  functionName: any;
+  argTypes: any[];
+  table: any;
 
   /**
    * Represents an error message from the server
@@ -210,6 +225,19 @@ class VIntOutOfRangeException extends DriverError {
 }
 
 export default {
+  ArgumentError,
+  AuthenticationError,
+  BusyConnectionError,
+  DriverError,
+  OperationTimedOutError,
+  DriverInternalError,
+  NoHostAvailableError,
+  NotSupportedError,
+  ResponseError,
+  VIntOutOfRangeException
+};
+
+export {
   ArgumentError,
   AuthenticationError,
   BusyConnectionError,

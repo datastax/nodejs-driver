@@ -14,49 +14,21 @@
  * limitations under the License.
  */
 import utils from "./utils";
-import types from "./types/index";
+import types, { consistencies } from "./types/index";
 import promiseUtils from "./promise-utils";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import { RetryPolicy } from "./policies/retry";
+import Client, { ClientOptions } from "./client";
+import { Host, HostMap } from "./host";
 
 
 
 /**
- * Creates a new instance of {@link ExecutionProfile}.
  * @classdesc
  * Represents a set configurations to be used in a statement execution to be used for a single {@link Client} instance.
  * <p>
  *   An {@link ExecutionProfile} instance should not be shared across different {@link Client} instances.
  * </p>
- * @param {String} name Name of the execution profile.
- * <p>
- *   Use <code>'default'</code> to specify that the new instance should be the default {@link ExecutionProfile} if no
- *   profile is specified in the execution.
- * </p>
- * @param {Object} [options] Profile options, when any of the options is not specified the {@link Client} will the use
- * the ones defined in the default profile.
- * @param {Number} [options.consistency] The consistency level to use for this profile.
- * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
- * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
- * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
- * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
- * @param {Object} [options.graphOptions]
- * @param {String} [options.graphOptions.language] The graph language to use for graph queries.
- * <p>
- *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
- *   to be defined manually by the user.
- * </p>
- * @param {String} [options.graphOptions.results] The protocol to use for serializing and deserializing graph results.
- * <p>
- *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
- *   to be defined manually by the user.
- * </p>
- * @param {String} [options.graphOptions.name] The graph name to use for graph queries.
- * @param {Number} [options.graphOptions.readConsistency] The consistency level to use for graph read queries.
- * @param {String} [options.graphOptions.source] The graph traversal source name to use for graph queries.
- * @param {Number} [options.graphOptions.writeConsistency] The consistency level to use for graph write queries.
- * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
- * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
- * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
- * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
  * @example
  * const { Client, ExecutionProfile } = require('cassandra-driver');
  * const client = new Client({
@@ -70,44 +42,38 @@ import promiseUtils from "./promise-utils";
  * });
  *
  * client.execute(query, params, { executionProfile: 'metrics-oltp' }, callback);
- * @constructor
  */
-function ExecutionProfile(name, options) {
-  if (typeof name !== 'string') {
-    throw new TypeError('Execution profile name must be a string');
-  }
-  options = options || utils.emptyObject;
-  const graphOptions = options.graphOptions || utils.emptyObject;
-  /**
-   * Name of the execution profile.
-   * @type {String}
-   */
-  this.name = name;
+class ExecutionProfile {
   /**
    * Consistency level.
    * @type {Number}
    */
-  this.consistency = options.consistency;
+  consistency?: typeof consistencies;
   /**
    * Load-balancing policy
    * @type {LoadBalancingPolicy}
    */
-  this.loadBalancing = options.loadBalancing;
+  loadBalancing?: LoadBalancingPolicy;
+  /**
+   * Name of the execution profile.
+   * @type {String}
+   */
+  name: string;
   /**
    * Client read timeout.
    * @type {Number}
    */
-  this.readTimeout = options.readTimeout;
+  readTimeout?: number;
   /**
-   * Retry policy.
-   * @type {RetryPolicy}
-   */
-  this.retry = options.retry;
+    * Retry policy.
+    * @type {RetryPolicy}
+    */
+  retry?: RetryPolicy;
   /**
    * Serial consistency level.
    * @type {Number}
    */
-  this.serialConsistency = options.serialConsistency;
+  serialConsistency?: typeof consistencies;
   /**
    * The graph options for this profile.
    * @type {Object}
@@ -117,14 +83,136 @@ function ExecutionProfile(name, options) {
    * @property {String} source The graph traversal source.
    * @property {String} writeConsistency The consistency to use for graph write queries.
    */
-  this.graphOptions = {
-    language: graphOptions.language,
-    results: graphOptions.results,
-    name: graphOptions.name,
-    readConsistency: graphOptions.readConsistency,
-    source: graphOptions.source,
-    writeConsistency: graphOptions.writeConsistency
+  graphOptions?: {
+    name?: string;
+    language?: string;
+    source?: string;
+    readConsistency?: typeof consistencies;
+    writeConsistency?: typeof consistencies;
+    results?: any;
   };
+
+  /**
+   * Creates a new instance of {@link ExecutionProfile}.
+   * Represents a set configurations to be used in a statement execution to be used for a single {@link Client} instance.
+   * <p>
+   *   An {@link ExecutionProfile} instance should not be shared across different {@link Client} instances.
+   * </p>
+   * @param {String} name Name of the execution profile.
+   * <p>
+   *   Use <code>'default'</code> to specify that the new instance should be the default {@link ExecutionProfile} if no
+   *   profile is specified in the execution.
+   * </p>
+   * @param {Object} [options] Profile options, when any of the options is not specified the {@link Client} will the use
+   * the ones defined in the default profile.
+   * @param {Number} [options.consistency] The consistency level to use for this profile.
+   * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+   * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+   * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+   * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+   * @param {Object} [options.graphOptions]
+   * @param {String} [options.graphOptions.language] The graph language to use for graph queries.
+   * <p>
+   *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+   *   to be defined manually by the user.
+   * </p>
+   * @param {String} [options.graphOptions.results] The protocol to use for serializing and deserializing graph results.
+   * <p>
+   *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+   *   to be defined manually by the user.
+   * </p>
+   * @param {String} [options.graphOptions.name] The graph name to use for graph queries.
+   * @param {Number} [options.graphOptions.readConsistency] The consistency level to use for graph read queries.
+   * @param {String} [options.graphOptions.source] The graph traversal source name to use for graph queries.
+   * @param {Number} [options.graphOptions.writeConsistency] The consistency level to use for graph write queries.
+   * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+   * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+   * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+   * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+   * @example
+   * const { Client, ExecutionProfile } = require('cassandra-driver');
+   * const client = new Client({
+   *   contactPoints: ['host1', 'host2'],
+   *   profiles: [
+   *     new ExecutionProfile('metrics-oltp', {
+   *       consistency: consistency.localQuorum,
+   *       retry: myRetryPolicy
+   *     })
+   *   ]
+   * });
+   *
+   * client.execute(query, params, { executionProfile: 'metrics-oltp' }, callback);
+   * @constructor
+   */
+  constructor(name: string, options?: {
+    consistency?: typeof consistencies;
+    loadBalancing?: LoadBalancingPolicy;
+    readTimeout?: number;
+    retry?: RetryPolicy;
+    serialConsistency?: typeof consistencies;
+    graphOptions?: {
+      name?: string;
+      language?: string;
+      source?: string;
+      readConsistency?: typeof consistencies;
+      writeConsistency?: typeof consistencies;
+    };
+  }){
+    if (typeof name !== 'string') {
+      throw new TypeError('Execution profile name must be a string');
+    }
+    options = options || utils.emptyObject;
+    const graphOptions : typeof options.graphOptions = options.graphOptions || utils.emptyObject;
+    /**
+     * Name of the execution profile.
+     * @type {String}
+     */
+    this.name = name;
+    /**
+     * Consistency level.
+     * @type {Number}
+     */
+    this.consistency = options.consistency;
+    /**
+     * Load-balancing policy
+     * @type {LoadBalancingPolicy}
+     */
+    this.loadBalancing = options.loadBalancing;
+    /**
+     * Client read timeout.
+     * @type {Number}
+     */
+    this.readTimeout = options.readTimeout;
+    /**
+     * Retry policy.
+     * @type {RetryPolicy}
+     */
+    this.retry = options.retry;
+    /**
+     * Serial consistency level.
+     * @type {Number}
+     */
+    this.serialConsistency = options.serialConsistency;
+    /**
+     * The graph options for this profile.
+     * @type {Object}
+     * @property {String} language The graph language.
+     * @property {String} name The graph name.
+     * @property {String} readConsistency The consistency to use for graph write queries.
+     * @property {String} source The graph traversal source.
+     * @property {String} writeConsistency The consistency to use for graph write queries.
+     */
+    this.graphOptions = {
+      language: graphOptions.language,
+      // What's the use of this results?
+      // @ts-ignore
+      results: graphOptions.results,
+      name: graphOptions.name,
+      readConsistency: graphOptions.readConsistency,
+      source: graphOptions.source,
+      writeConsistency: graphOptions.writeConsistency
+    };
+  }
 }
 
 /**
@@ -132,11 +220,18 @@ function ExecutionProfile(name, options) {
  * @ignore
  */
 class ProfileManager {
+  private _profiles: any;
+  private _defaultConfiguredRetryPolicy: any;
+  private _loadBalancingPolicies: any[];
+  private _profilesMap: {};
+  private _customPayloadCache: {};
+  private _graphOptionsCache: {};
+  private _defaultProfile: ExecutionProfile;
 
   /**
    * @param {ClientOptions} options
    */
-  constructor(options) {
+  constructor(options: ClientOptions) {
     this._profiles = options.profiles || [];
     this._defaultConfiguredRetryPolicy = undefined;
     this._setDefault(options);
@@ -165,7 +260,7 @@ class ProfileManager {
    * @param {Client} client
    * @param {HostMap} hosts
    */
-  async init(client, hosts) {
+  async init(client: Client, hosts: HostMap) {
     for (const lbp of this._loadBalancingPolicies) {
       await promiseUtils.fromCallback(callback => lbp.init(client, hosts, callback));
     }
@@ -175,7 +270,7 @@ class ProfileManager {
    * Uses the load-balancing policies to get the relative distance to the host and return the closest one.
    * @param {Host} host
    */
-  getDistance(host) {
+  getDistance(host: Host) {
     let distance = types.distance.ignored;
     // this is performance critical: we can't use any other language features than for-loop :(
     for (let i = 0; i < this._loadBalancingPolicies.length; i++) {
@@ -197,7 +292,7 @@ class ProfileManager {
    * @returns {ExecutionProfile|undefined} It returns the execution profile by name or the default profile when name is
    * undefined. It returns undefined when the profile does not exist.
    */
-  getProfile(name) {
+  getProfile(name: string | ExecutionProfile): ExecutionProfile | undefined {
     if (name instanceof ExecutionProfile) {
       return name;
     }
@@ -205,12 +300,12 @@ class ProfileManager {
   }
 
   /** @returns {ExecutionProfile} */
-  getDefault() {
+  getDefault(): ExecutionProfile {
     return this._defaultProfile;
   }
 
   /** @returns {LoadBalancingPolicy} */
-  getDefaultLoadBalancing() {
+  getDefaultLoadBalancing(): LoadBalancingPolicy {
     return this._defaultProfile.loadBalancing;
   }
 
@@ -220,7 +315,7 @@ class ProfileManager {
    * @param {ExecutionProfile} profile
    * @param {Function} createHandler
    */
-  getOrCreateGraphOptions(profile, createHandler) {
+  getOrCreateGraphOptions(profile: ExecutionProfile, createHandler: Function) {
     let graphOptions = this._graphOptionsCache[profile.name];
     if (!graphOptions) {
       graphOptions = (this._graphOptionsCache[profile.name] = createHandler());
@@ -232,7 +327,7 @@ class ProfileManager {
    * @private
    * @param {ClientOptions} options
    */
-  _setDefault(options) {
+  _setDefault(options: ClientOptions) {
     this._defaultProfile = this._profiles.filter(function (p) { return p.name === 'default'; })[0];
     if (!this._defaultProfile) {
       this._profiles.push(this._defaultProfile = new ExecutionProfile('default'));
@@ -250,7 +345,7 @@ class ProfileManager {
    * Gets all the execution profiles currently defined.
    * @returns {Array.<ExecutionProfile>}
    */
-  getAll() {
+  getAll(): Array<ExecutionProfile> {
     return this._profiles;
   }
 

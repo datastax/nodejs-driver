@@ -24,9 +24,10 @@ import promiseUtils from "./promise-utils";
 import types from "./types/index";
 import requests from "./requests";
 import { ExecutionOptions } from "./execution-options";
-import packageInfo from "../package.json" assert {type: 'json'};
+import packageInfo from "../package.json";
 import VersionNumber from "./types/version-number";
 import { assert } from 'console';
+import Client, { ClientOptions } from './client';
 
 let kerberosModule;
 
@@ -48,6 +49,15 @@ const maxStatusErrorLogs = 5;
  * Contains methods and functionality to send events to DSE Insights.
  */
 class InsightsClient {
+  private _client: Client;
+  private _sessionId: any;
+  private _enabled: boolean;
+  private _closed: boolean;
+  private _firstTimeout: NodeJS.Timeout;
+  private _recurrentTimeout: NodeJS.Timeout;
+  private _statusErrorLogs: number;
+  private _statusEventDelay: number;
+  private _errorCallback: Function;
 
   /**
    * Creates a new instance of the {@link InsightsClient} using the driver {@link Client}.
@@ -56,7 +66,7 @@ class InsightsClient {
    * @param {Number} [options.statusEventDelay]
    * @param {Function} [options.errorCallback]
    */
-  constructor(client, options) {
+  constructor(client: Client, options: { statusEventDelay?: number; errorCallback?: Function; }) {
     this._client = client;
     this._sessionId = types.Uuid.random().toString();
     this._enabled = false;
@@ -76,7 +86,7 @@ class InsightsClient {
    * regular intervals.
    * @returns {undefined}
    */
-  init() {
+  init(): undefined {
     this._enabled = this._client.options.monitorReporting.enabled && this._dseSupportsInsights();
     if (!this._enabled) {
       return;
@@ -120,7 +130,7 @@ class InsightsClient {
    * @returns {Promise}
    * @private
    */
-  async _sendStartupEvent() {
+  async _sendStartupEvent(): Promise<any> {
     const message = await this._getStartupMessage();
     const request = new requests.QueryRequest(rpc, [message], ExecutionOptions.empty());
     await this._client.controlConnection.query(request, false);
@@ -131,7 +141,7 @@ class InsightsClient {
    * @returns {Promise} A promise that is never rejected.
    * @private
    */
-  async _sendStatusEvent() {
+  async _sendStatusEvent(): Promise<any> {
     const request = new requests.QueryRequest(rpc, [ this._getStatusEvent() ], ExecutionOptions.empty());
 
     try {
@@ -171,7 +181,7 @@ class InsightsClient {
         return false;
       }
 
-      const version = new VersionNumber(...versionArr);
+      const version = new VersionNumber(...(versionArr as [number, number, number]));
 
       return version.compare(minDse6Version) >= 0 ||
         (version.compare(dse600Version) < 0 && version.compare(minDse51Version) >= 0);
@@ -183,7 +193,7 @@ class InsightsClient {
    * @returns {Promise<String>} Returns a json string with the startup message.
    * @private
    */
-  async _getStartupMessage() {
+  async _getStartupMessage(): Promise<string> {
     const cc = this._client.controlConnection;
     const options = this._client.options;
 
@@ -257,7 +267,7 @@ class InsightsClient {
 
   _getConfigAntiPatterns() {
     const options = this._client.options;
-    const result = {};
+    const result : {sslWithoutCertValidation?: string}= {};
 
     if (options.sslOptions && !options.sslOptions.rejectUnauthorized) {
       result.sslWithoutCertValidation =
@@ -274,7 +284,7 @@ class InsightsClient {
    * @returns {Array}
    * @private
    */
-  _getDataCenters() {
+  _getDataCenters(): Array<any> {
     const remoteConnectionsLength = this._client.options.pooling.coreConnectionsPerHost[types.distance.remote];
     const dataCenters = new Set();
 
@@ -290,11 +300,11 @@ class InsightsClient {
 
   /**
    * Tries to obtain the application name and version from
-   * @param {DseClientOptions} options
+   * @param {ClientOptions} options
    * @returns {Promise}
    * @private
    */
-  async _getAppInfo(options) {
+  async _getAppInfo(options: ClientOptions): Promise<any> {
     if (typeof options.applicationName === 'string') {
       return Promise.resolve({
         applicationName: options.applicationName,
@@ -303,7 +313,7 @@ class InsightsClient {
       });
     }
 
-    let readPromise = Promise.resolve();
+    let readPromise : Promise<void|string>= Promise.resolve();
 
     if (require.main && require.main.filename) {
       const packageInfoPath = path.dirname(require.main.filename);
@@ -339,7 +349,7 @@ class InsightsClient {
    * @private
    * @returns {Promise<string>} A Promise that will never be rejected
    */
-  _readPackageInfoFile(packageInfoPath) {
+  _readPackageInfoFile(packageInfoPath): Promise<string> {
     return new Promise(resolve => {
       fs.readFile(path.join(packageInfoPath, 'package.json'), 'utf8', (err, data) => {
         // Swallow error
@@ -352,7 +362,7 @@ class InsightsClient {
    * @returns {String} Returns a json string with the startup message.
    * @private
    */
-  _getStatusEvent() {
+  _getStatusEvent(): string {
     const cc = this._client.controlConnection;
     const options = this._client.options;
     const state = this._client.getState();
@@ -451,7 +461,7 @@ function getExecutionProfiles(client) {
 }
 
 function setExecutionProfileProperties(client, parent, profile, defaultProfile) {
-  const output = parent[profile.name] = {};
+  const output : ClientOptions = parent[profile.name] = {};
   setExecutionProfileItem(output, profile, defaultProfile, 'readTimeout');
   setExecutionProfileItem(output, profile, defaultProfile, 'loadBalancing', getPolicyInfo);
   setExecutionProfileItem(output, profile, defaultProfile, 'retry', getPolicyInfo);
@@ -482,7 +492,7 @@ function setExecutionProfileProperties(client, parent, profile, defaultProfile) 
   }
 }
 
-function setExecutionProfileItem(output, profile, defaultProfile, prop, valueGetter) {
+function setExecutionProfileItem(output, profile, defaultProfile, prop, valueGetter?) {
   const value = profile[prop];
   valueGetter = valueGetter || (x => x);
 

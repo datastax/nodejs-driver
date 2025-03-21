@@ -218,7 +218,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  shutdown(waitForPending: boolean): Promise<void> {
+  shutdown(waitForPending?: boolean): Promise<void> {
     if (this._healthResponseCountTimer) {
       clearInterval(this._healthResponseCountTimer);
     }
@@ -308,7 +308,7 @@ class Host extends events.EventEmitter {
    * @internal
    * @ignore
    */
-  borrowConnection(previousConnection: Connection): Connection {
+  borrowConnection(previousConnection?: Connection): Connection {
     return this.pool.borrowConnection(previousConnection);
   }
 
@@ -469,6 +469,7 @@ class Host extends events.EventEmitter {
 class HostMap extends events.EventEmitter{
   _items: Map<any, any>;
   _values: any;
+  length: number;
   constructor() {
     super();
 

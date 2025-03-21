@@ -132,6 +132,7 @@ class ByteOrderedToken extends Token {
  * in a range, see {@link unwrap}.
  */
 class TokenRange {
+  end: any;
   constructor(start, end, tokenizer) {
     this.start = start;
     this.end = end;

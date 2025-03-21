@@ -20,14 +20,14 @@ import types from "./types/index";
  * Group size
  * @type {number}
  */
-const groupSize = 128;
+const groupSize: number = 128;
 
 /**
  * Number used to right shift ids to allocate them into groups
  * @const
  * @type {number}
  */
-const shiftToGroup = 7;
+const shiftToGroup: number = 7;
 
 /**
  * Amount of groups that can be released per time
@@ -35,21 +35,21 @@ const shiftToGroup = 7;
  * @const
  * @type {number}
  */
-const releasableSize = 4;
+const releasableSize: number = 4;
 
 /**
  * 32K possible stream ids depending for protocol v3 and above
  * @const
  * @type {number}
  */
-const maxGroupsFor2Bytes = 256;
+const maxGroupsFor2Bytes: number = 256;
 
 /**
  * Delay used to check if groups can be released
  * @const
  * @type {number}
  */
-const defaultReleaseDelay = 5000;
+const defaultReleaseDelay: number = 5000;
 
 /**
  * Represents a queue of ids from 0 to maximum stream id supported by the protocol version.
@@ -57,12 +57,19 @@ const defaultReleaseDelay = 5000;
  * {@link StreamIdStack#push()}
  */
 class StreamIdStack {
+  currentGroup: any[];
+  groupIndex: number;
+  groups: any[];
+  releaseTimeout: NodeJS.Timeout;
+  inUse: number;
+  releaseDelay: number;
+  maxGroups: number;
   /**
    * Creates a new instance of StreamIdStack.
    * @param {number} version Protocol version
    * @constructor
    */
-  constructor(version) {
+  constructor(version: number) {
     //Ecmascript Number is 64-bit double, it can be optimized by the engine into a 32-bit int, but nothing below that.
     //We try to allocate as few as possible in arrays of 128
     this.currentGroup = generateGroup(0);
@@ -82,7 +89,7 @@ class StreamIdStack {
    * Sets the protocol version
    * @param {Number} version
    */
-  setVersion(version) {
+  setVersion(version: number) {
     //128 or 32K stream ids depending on the protocol version
     this.maxGroups = types.protocolVersion.uses2BytesStreamIds(version) ? maxGroupsFor2Bytes : 1;
   }
@@ -92,7 +99,7 @@ class StreamIdStack {
    * Similar to {@link Array#pop()}.
    * @returns {Number} Returns an id or null
    */
-  pop() {
+  pop(): number {
     let id = this.currentGroup.pop();
     if (typeof id !== 'undefined') {
       this.inUse++;
@@ -117,7 +124,7 @@ class StreamIdStack {
    * Similar to {@link Array#push()}.
    * @param {Number} id
    */
-  push(id) {
+  push(id: number) {
     this.inUse--;
     const groupIndex = id >> shiftToGroup;
     const group = this.groups[groupIndex];
@@ -145,7 +152,7 @@ class StreamIdStack {
    * @returns {Number} Returns a new id or null if it's not possible to create a new group
    * @private
    */
-  _tryCreateGroup() {
+  _tryCreateGroup(): number {
     if (this.groups.length === this.maxGroups) {
       //we can have an additional group
       return null;

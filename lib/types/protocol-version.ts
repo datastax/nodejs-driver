@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import Connection from "../connection";
-import { Host } from "../host";
+import { Host, HostMap } from "../host";
 import utils from "../utils";
 import VersionNumber from "./version-number";
 
@@ -256,7 +256,7 @@ const protocolVersion = {
    * @param {Array.<Host>} hosts The hosts to determine highest protocol version from.
    * @return {Number} Highest supported protocol version among hosts.
    */
-  getHighestCommon: function(connection: Connection, hosts: Array<Host>): number {
+  getHighestCommon: function(connection: Connection, hosts: HostMap): number {
     const log = connection.log ? connection.log.bind(connection) : utils.noop;
     let maxVersion = connection.protocolVersion;
     // whether or not protocol v3 is required (nodes detected that don't support < 3).

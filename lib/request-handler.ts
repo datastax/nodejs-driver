@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 import util from "util";
-import errors from "./errors";
-import types from "./types/index";
+import errors, { NoHostAvailableError } from "./errors";
+import types, { ResultSet } from "./types/index";
 import utils from "./utils";
 import RequestExecution from "./request-execution";
 import promiseUtils from "./promise-utils";
+import { ExecutionOptions } from "./execution-options";
+import Client from "./client";
+import { Request } from "./requests";
+import { Host } from "./host";
 
 
 
@@ -26,16 +30,31 @@ import promiseUtils from "./promise-utils";
  * Handles a BATCH, QUERY and EXECUTE request to the server, dealing with host fail-over and retries on error
  */
 class RequestHandler {
+  client: Client;
+  _speculativeExecutionPlan: { nextExecution: () => number; };
+  logEmitter: any;
+  log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+  request: Request;
+  executionOptions: ExecutionOptions;
+  stackContainer: object;
+  triedHosts: {};
+  speculativeExecutions: number;
+  _hostIterator: Iterator<Host>;
+  _resolveCallback: Function;
+  _rejectCallback: Function;
+  _newExecutionTimeout: NodeJS.Timeout;
+  _executions: any[];
+
   /**
    * Creates a new instance of RequestHandler.
    * @param {Request} request
    * @param {ExecutionOptions} execOptions
    * @param {Client} client Client instance used to retrieve and set the keyspace.
    */
-  constructor(request, execOptions, client) {
+  constructor(request: Request, execOptions: ExecutionOptions, client: Client) {
     this.client = client;
     this._speculativeExecutionPlan = client.options.policies.speculativeExecution.newPlan(
-      client.keyspace, request.query || request.queries);
+      client.keyspace, request["query"] || request["queries"]);
     this.logEmitter = client.options.logEmitter;
     this.log = utils.log;
     this.request = request;
@@ -59,7 +78,7 @@ class RequestHandler {
    * @param {Client} client Client instance used to retrieve and set the keyspace.
    * @returns {Promise<ResultSet>}
    */
-  static send(request, execOptions, client) {
+  static send(request: Request, execOptions: ExecutionOptions, client: Client): Promise<ResultSet> {
     const instance = new RequestHandler(request, execOptions, client);
     return instance.send();
   }
@@ -69,7 +88,7 @@ class RequestHandler {
    * @returns {{host, connection}}
    * @throws {NoHostAvailableError}
    */
-  getNextConnection() {
+  getNextConnection(): { host; connection; } {
     let host;
     let connection;
     const iterator = this._hostIterator;
@@ -111,7 +130,7 @@ class RequestHandler {
    * Gets an available connection and sends the request
    * @returns {Promise<ResultSet>}
    */
-  send() {
+  send(): Promise<ResultSet> {
     if (this.executionOptions.getCaptureStackTrace()) {
       Error.captureStackTrace(this.stackContainer = {});
     }
@@ -147,7 +166,7 @@ class RequestHandler {
    * @returns {Promise<void>}
    * @private
    */
-  async _startNewExecution(isSpecExec) {
+  async _startNewExecution(isSpecExec?: boolean): Promise<void> {
     if (isSpecExec) {
       this.client.metrics.onSpeculativeExecution();
     }
@@ -192,7 +211,9 @@ class RequestHandler {
    * @param {Host!} host
    * @private
    */
-  _scheduleSpeculativeExecution(host) {
+  _scheduleSpeculativeExecution(host: Host) {
+    // @ts-ignore 
+    //TODO: none of built-in policies or the interface use the host argument
     const delay = this._speculativeExecutionPlan.nextExecution(host);
     if (typeof delay !== 'number' || delay < 0) {
       return;
@@ -215,7 +236,7 @@ class RequestHandler {
    * @param {Client} client
    * @returns {Promise}
    */
-  static setKeyspace(client) {
+  static setKeyspace(client: Client): Promise<any> {
     let connection;
 
     for (const host of client.hosts.values()) {
@@ -236,7 +257,7 @@ class RequestHandler {
    * @param {Error} err
    * @param {ResultSet} [result]
    */
-  setCompleted(err, result) {
+  setCompleted(err: Error, result?: ResultSet) {
     if (this._newExecutionTimeout !== null) {
       clearTimeout(this._newExecutionTimeout);
     }
@@ -248,7 +269,7 @@ class RequestHandler {
 
     if (err) {
       if (this.executionOptions.getCaptureStackTrace()) {
-        utils.fixStack(this.stackContainer.stack, err);
+        utils.fixStack(this.stackContainer["stack"], err);
       }
 
       // Reject the promise
@@ -278,7 +299,7 @@ class RequestHandler {
    * @param {NoHostAvailableError} err
    * @param {RequestExecution|null} execution
    */
-  handleNoHostAvailable(err, execution) {
+  handleNoHostAvailable(err: NoHostAvailableError, execution: RequestExecution | null) {
     if (execution !== null) {
       // Remove the execution
       const index = this._executions.indexOf(execution);
@@ -296,7 +317,7 @@ class RequestHandler {
    * Gets a long lived closure that can fetch the next page.
    * @returns {Function}
    */
-  getNextPageHandler() {
+  getNextPageHandler(): Function {
     const request = this.request;
     const execOptions = this.executionOptions;
     const client = this.client;

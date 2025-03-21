@@ -16,7 +16,7 @@
 import utils from "../utils";
 import errors from "../errors";
 import Row from "./row";
-import {consistencies, dataTypes} from "../types";
+import {consistencies, dataTypes, Uuid} from "../types";
 
 
 const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';
@@ -44,8 +44,8 @@ class ResultSet {
   pageState: string;
   rowLength: number;
   rows: Row[];
-  private nextPageAsync: Function | undefined;
-  private rawPageState: any;
+  nextPageAsync: Function | undefined;
+  rawPageState: any;
 
   /**
    * Creates a new instance of ResultSet.
@@ -121,6 +121,7 @@ class ResultSet {
      * Gets the row length of the result, regardless if the result has been buffered or not
      * @type {Number|undefined}
      */
+    // @ts-ignore
     this.rowLength = this.rows ? this.rows.length : response.rowLength;
 
     /**

@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 import events from "events";
-import types from "./types/index";
+import types, { Long } from "./types/index";
 import utils from "./utils";
+import { Socket } from "net";
+import Encoder from "./encoder";
+import { ClientOptions } from "./client";
+import OperationState from "./operation-state";
+import errors, { DriverError } from "./errors";
 
 
 const FrameHeader = types.FrameHeader;
@@ -24,11 +29,14 @@ const FrameHeader = types.FrameHeader;
  * Contains the logic to write all the different types to the frame.
  */
 class FrameWriter {
+  bodyLength: any;
+  buffers: any[];
+  opcode: number;
   /**
    * Creates a new instance of FrameWriter.
    * @param {Number} opcode
    */
-  constructor(opcode) {
+  constructor(opcode: number) {
     if (!opcode) {
       throw new Error('Opcode not provided');
     }
@@ -55,15 +63,15 @@ class FrameWriter {
   }
 
   /** @param {Long} num */
-  writeLong(num) {
-    this.add(types.Long.toBuffer(num));
+  writeLong(num: Long) {
+    this.add(Long["toBuffer"](num));
   }
 
   /**
    * Writes bytes according to Cassandra <int byteLength><bytes>
    * @param {Buffer|null|types.unset} bytes
    */
-  writeBytes(bytes) {
+  writeBytes(bytes: Buffer | null | typeof types.unset) {
     if (bytes === null) {
       //Only the length buffer containing -1
       this.writeInt(-1);
@@ -74,7 +82,7 @@ class FrameWriter {
       return;
     }
     //Add the length buffer
-    this.writeInt(bytes.length);
+    this.writeInt((bytes as Buffer).length);
     //Add the actual buffer
     this.add(bytes);
   }
@@ -83,7 +91,7 @@ class FrameWriter {
    * Writes a buffer according to Cassandra protocol: bytes.length (2) + bytes
    * @param {Buffer} bytes
    */
-  writeShortBytes(bytes) {
+  writeShortBytes(bytes: Buffer) {
     if(bytes === null) {
       //Only the length buffer containing -1
       this.writeShort(-1);
@@ -99,7 +107,7 @@ class FrameWriter {
    * Writes a single byte
    * @param {Number} num Value of the byte, a number between 0 and 255.
    */
-  writeByte(num) {
+  writeByte(num: number) {
     this.add(utils.allocBufferFromArray([num]));
   }
 
@@ -160,7 +168,7 @@ class FrameWriter {
    * @returns {Buffer}
    * @throws {TypeError}
    */
-  write(version, streamId, flags) {
+  write(version: number, streamId: number, flags?: number): Buffer {
     const header = new FrameHeader(version, flags || 0, streamId, this.opcode, this.bodyLength);
     const headerBuffer = header.toBuffer();
     this.buffers.unshift(headerBuffer);
@@ -173,13 +181,20 @@ class FrameWriter {
  * @extends {EventEmitter}
  */
 class WriteQueue extends events.EventEmitter {
+  netClient: Socket;
+  encoder: Encoder;
+  isRunning: boolean;
+  queue: any[];
+  coalescingThreshold: any;
+  error: DriverError;
+  canWrite: boolean;
   /**
    * Creates a new WriteQueue instance.
    * @param {Socket} netClient
    * @param {Encoder} encoder
    * @param {ClientOptions} options
    */
-  constructor(netClient, encoder, options) {
+  constructor(netClient: Socket, encoder: Encoder, options: ClientOptions) {
     super();
     this.netClient = netClient;
     this.encoder = encoder;
@@ -203,7 +218,7 @@ class WriteQueue extends events.EventEmitter {
    * @param {OperationState} operation
    * @param {Function} callback The write callback.
    */
-  push(operation, callback) {
+  push(operation: OperationState, callback: Function) {
     const self = this;
 
     if (this.error) {
@@ -298,7 +313,7 @@ class WriteQueue extends events.EventEmitter {
     this.error.innerError = err;
     const q = this.queue;
     // Not more items can be added to the queue.
-    this.queue = utils.emptyArray;
+    this.queue = utils.emptyArray as any[];
     for (let i = 0; i < q.length; i++) {
       const item = q[i];
       // Use the error marking that it was not written

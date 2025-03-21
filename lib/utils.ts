@@ -52,12 +52,14 @@ const allocBufferUnsafe: Function = Buffer.allocUnsafe || allocBufferDeprecated;
  * Forward-compatible allocation of buffer to contain a string.
  * @type {Function}
  */
+// @ts-ignore
 const allocBufferFromString: Function = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromStringDeprecated;
 
 /**
  * Forward-compatible allocation of buffer from an array of bytes
  * @type {Function}
  */
+// @ts-ignore
 const allocBufferFromArray: Function = (Int8Array.from !== Buffer.from && Buffer.from) || allocBufferFromArrayDeprecated;
 
 function allocBufferDeprecated(size) {
@@ -157,8 +159,7 @@ function totalLength (arr) {
  * The main difference between this method is that declared properties with an <code>undefined</code> value are not set
  * to the target.
  */
-function extend(target) {
-  const sources = Array.prototype.slice.call(arguments, 1);
+function extend(target: any, ...sources: any[]): any {
   sources.forEach(function (source) {
     if (!source) {
       return;
@@ -192,10 +193,10 @@ function toLowerCaseProperties(obj) {
 /**
  * Extends the target by the most inner props of sources
  * @param {Object} target
+ * @param {...Object} sources
  * @returns {Object}
  */
-function deepExtend(target: object): object {
-  const sources = Array.prototype.slice.call(arguments, 1);
+function deepExtend<T>(target: any, ...sources: any[]): any {
   sources.forEach(function (source) {
     for (const prop in source) {
       // eslint-disable-next-line no-prototype-builtins
@@ -426,7 +427,7 @@ function stringRepeat(val: string, times: number): string {
  */
 function objectValues(obj: object): Array<any> {
   if (!obj) {
-    return emptyArray;
+    return emptyArray as Array<any>;
   }
   const keys = Object.keys(obj);
   const values = new Array(keys.length);
@@ -649,7 +650,7 @@ class AddressResolver {
  * @param {Function} fn
  * @param {Function} [callback]
  */
-function each(arr: Array<any>, fn: Function, callback: Function) {
+function each(arr: Array<any>, fn: Function, callback?: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter is not an Array');
   }

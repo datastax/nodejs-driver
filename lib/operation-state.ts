@@ -17,6 +17,8 @@ import util from "util";
 import utils from "./utils";
 import errors from "./errors";
 import requests from "./requests";
+import { ExecutionOptions } from "./execution-options";
+import { Request } from "./requests";
 
 
 const ExecuteRequest = requests.ExecuteRequest;
@@ -27,20 +29,26 @@ const state = {
   completed: 1,
   timedOut: 2,
   cancelled: 3
-};
+} as const;
 
 /**
  * Maintains the state information of a request inside a Connection.
  */
 class OperationState {
   streamId: number;
+  request: Request;
+  _rowCallback: Function;
+  _callback: Function;
+  _timeout: NodeJS.Timeout;
+  _state: number;
+  _rowIndex: number;
   /**
    * Creates a new instance of OperationState.
    * @param {Request} request
    * @param {Function} rowCallback
    * @param {Function} callback
    */
-  constructor(request, rowCallback, callback) {
+  constructor(request: Request, rowCallback: Function, callback: Function) {
     this.request = request;
     this._rowCallback = rowCallback;
     this._callback = callback;
@@ -79,7 +87,7 @@ class OperationState {
    * Determines if the response is going to be yielded by row.
    * @return {boolean}
    */
-  isByRow() {
+  isByRow(): boolean {
     return this._rowCallback && (this.request instanceof ExecuteRequest || this.request instanceof QueryRequest);
   }
 
@@ -91,7 +99,7 @@ class OperationState {
    * @param {Function} onTimeout The callback to be invoked when it times out.
    * @param {Function} onResponse The callback to be invoked if a response is obtained after it timed out.
    */
-  setRequestTimeout(execOptions, defaultReadTimeout, address, onTimeout, onResponse) {
+  setRequestTimeout(execOptions: ExecutionOptions, defaultReadTimeout: number, address: string, onTimeout: Function, onResponse: Function) {
     if (this._state !== state.init) {
       // No need to set the timeout
       return;
@@ -126,7 +134,7 @@ class OperationState {
    * @param {Function} onResponse
    * @private
    */
-  _markAsTimedOut(err, onResponse) {
+  _markAsTimedOut(err: Error, onResponse: Function) {
     if (this._state !== state.init) {
       return;
     }
@@ -150,12 +158,12 @@ class OperationState {
    * @param {Object} [result]
    * @param {Number} [length]
    */
-  setResult(err, result, length) {
+  setResult(err: Error, result?: object, length?: number) {
     this._markAsCompleted();
     this._swapCallbackAndInvoke(err, result, length);
   }
 
-  _swapCallbackAndInvoke(err, result, length, newCallback) {
+  _swapCallbackAndInvoke(err, result, length, newCallback?) {
     const callback = this._callback;
     this._callback = newCallback || utils.noop;
     callback(err, result, length);

@@ -17,6 +17,12 @@ import errors from "./errors";
 import utils from "./utils";
 import types from "./types/index";
 import promiseUtils from "./promise-utils";
+import Client from "./client";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import { Host } from "./host";
+import { ProfileManager } from "./execution-profile";
+import Connection from "./connection";
+import { PreparedQueryInfo } from "./metadata";
 
 
 
@@ -25,12 +31,16 @@ import promiseUtils from "./promise-utils";
  * trying to prepare a query.
  */
 class PrepareHandler {
+  _client: Client;
+  _loadBalancing: LoadBalancingPolicy;
+  logEmitter: any;
+  log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
   /**
    * Creates a new instance of PrepareHandler
    * @param {Client} client
    * @param {LoadBalancingPolicy} loadBalancing
    */
-  constructor(client, loadBalancing) {
+  constructor(client: Client, loadBalancing: LoadBalancingPolicy) {
     this._client = client;
     this._loadBalancing = loadBalancing;
     this.logEmitter = client.options.logEmitter;
@@ -47,7 +57,7 @@ class PrepareHandler {
    * @returns {Promise<{queryId, meta}>}
    * @static
    */
-  static async getPrepared(client, loadBalancing, query, keyspace) {
+  static async getPrepared(client: Client, loadBalancing: LoadBalancingPolicy, query: string, keyspace: string): Promise<PreparedQueryInfo> {
     const info = client.metadata.getPreparedInfo(keyspace, query);
     if (info.queryId) {
       return info;
@@ -69,7 +79,7 @@ class PrepareHandler {
    * @param {String} keyspace
    * @static
    */
-  static async getPreparedMultiple(client, loadBalancing, queries, keyspace) {
+  static async getPreparedMultiple(client: Client, loadBalancing: LoadBalancingPolicy, queries: Array<any>, keyspace: string) {
     const result = [];
 
     for (const item of queries) {
@@ -98,7 +108,7 @@ class PrepareHandler {
    * @param {String} keyspace
    * @returns {Promise<{queryId, meta}>}
    */
-  async _prepare(info, query, keyspace) {
+  async _prepare(info: PreparedQueryInfo, query: string, keyspace: string): Promise<PreparedQueryInfo> {
     info.preparing = true;
     let iterator;
 
@@ -123,7 +133,7 @@ class PrepareHandler {
    * @returns {Promise<{queryId, meta}>}
    * @private
    */
-  async _prepareWithQueryPlan(info, iterator, query, keyspace) {
+  async _prepareWithQueryPlan(info: PreparedQueryInfo, iterator: Iterator<Host>, query: string, keyspace: string): Promise<PreparedQueryInfo> {
     const triedHosts = {};
 
     while (true) {
@@ -168,7 +178,7 @@ class PrepareHandler {
    * @param {Object} [triedHosts]
    * @return {Host|null}
    */
-  static getNextHost(iterator, profileManager, triedHosts) {
+  static getNextHost(iterator: Iterator<Host>, profileManager: ProfileManager, triedHosts?: object): Host | null {
     let host;
     // Get a host that is UP in a sync loop
     while (true) {
@@ -203,7 +213,7 @@ class PrepareHandler {
    * @param {Host} host
    * @param {Array} allPrepared
    */
-  static async prepareAllQueries(host, allPrepared) {
+  static async prepareAllQueries(host: Host, allPrepared: Array<any>) {
     const anyKeyspaceQueries = [];
 
     const queriesByKeyspace = new Map();
@@ -238,7 +248,7 @@ class PrepareHandler {
    * @returns {Promise<void>}
    * @private
    */
-  static async _borrowAndPrepare(host, keyspace, queries) {
+  static async _borrowAndPrepare(host: Host, keyspace: string, queries: Array<any>): Promise<void> {
     if (queries.length === 0) {
       return;
     }
@@ -261,7 +271,7 @@ class PrepareHandler {
    * @throws {Error} For socket errors.
    * @private
    */
-  static async _borrowWithKeyspace(host, keyspace) {
+  static async _borrowWithKeyspace(host: Host, keyspace: string): Promise<Connection> {
     const connection = host.borrowConnection();
 
     if (keyspace && connection.keyspace !== keyspace) {
@@ -278,7 +288,7 @@ class PrepareHandler {
    * @param {String} keyspace
    * @private
    */
-  _prepareOnAllHosts(iterator, query, keyspace) {
+  _prepareOnAllHosts(iterator: Iterator<Host>, query: string, keyspace: string) {
     const queries = [ query ];
     let h;
     const hosts = [];

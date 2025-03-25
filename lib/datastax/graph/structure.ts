@@ -53,7 +53,7 @@ class Vertex extends Element {
    * @param {String} label
    * @param {Object<string, Array>} properties
    */
-  constructor(id: any, label: string, properties: { [s: string]: Array<any> }) {
+  constructor(id: any, label: string, properties?: { [s: string]: Array<any> }) {
     super(id, label);
     /**
      * Gets the vertex properties.
@@ -90,8 +90,8 @@ class Edge extends Element {
     outVLabel: string,
     label: string,
     inV: any,
-    inVLabel: string,
-    properties: { [s: string]: Property }
+    inVLabel?: string,
+    properties?: { [s: string]: Property }
   ) {
     super(id, label);
     /**

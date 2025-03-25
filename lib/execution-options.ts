@@ -16,8 +16,9 @@
 import utils from "./utils";
 import types, { Long } from "./types/index";
 import errors from "./errors";
-import { Host } from "./host";
-import Client, { QueryOptions } from "./client";
+import type { Host } from "./host";
+import type { QueryOptions } from "./client";
+import type Client from "./client";
 import { ExecutionProfile } from "./execution-profile";
 import { LoadBalancingPolicy } from "./policies/load-balancing";
 import { RetryPolicy } from "./policies/retry";
@@ -47,7 +48,7 @@ class ExecutionOptions {
    * @return {ExecutionOptions}
    */
   static empty(): ExecutionOptions {
-    return null;
+    return new ExecutionOptions();
   }
 
   /**
@@ -332,7 +333,7 @@ class ExecutionOptions {
    * @abstract
    * @ignore
    */
-  setPreferredHost() {
+  setPreferredHost(host: Host) {
     return null;
   }
 

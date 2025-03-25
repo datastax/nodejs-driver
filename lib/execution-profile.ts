@@ -18,8 +18,9 @@ import types, { consistencies } from "./types/index";
 import promiseUtils from "./promise-utils";
 import { LoadBalancingPolicy } from "./policies/load-balancing";
 import { RetryPolicy } from "./policies/retry";
-import Client, { ClientOptions } from "./client";
-import { Host, HostMap } from "./host";
+import type { ClientOptions } from "./client";
+import type Client from "./client";
+import type { Host, HostMap } from "./host";
 
 
 

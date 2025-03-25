@@ -19,8 +19,7 @@ import types from "../../../lib/types/index";
 import helper from "../../test-helper";
 import mapperTestHelper from "./mapper-unit-test-helper";
 import { q } from "../../../lib/mapping/q";
-
-const dataTypes = types.dataTypes;
+import { dataTypes } from "../../../lib/types/index";
 
 describe('ModelMapper', () => {
   describe('#insert()', () => {

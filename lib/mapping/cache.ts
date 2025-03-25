@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 import { QueryOperator, QueryAssignment } from "./q";
 
 /**

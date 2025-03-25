@@ -24,8 +24,8 @@ import Aggregate from "./aggregate";
 import SchemaFunction from "./schema-function";
 import Index from "./schema-index";
 import MaterializedView from "./materialized-view";
-import { ClientOptions } from "../client";
-import ControlConnection from "../control-connection";
+import type { ClientOptions } from "../client";
+import type ControlConnection from "../control-connection";
 
 
 const { format } = util;
@@ -570,7 +570,7 @@ class SchemaParserV1 extends SchemaParser {
     aggregate.initConditionRaw = row['initcond'];
     aggregate.argumentTypes = (row['argument_types'] || utils.emptyArray).map(name => encoder.parseFqTypeName(name));
     aggregate.stateType = encoder.parseFqTypeName(row['state_type']);
-    const initConditionValue = encoder.decode(aggregate.initConditionRaw, aggregate.stateType);
+    const initConditionValue = encoder.decode(aggregate.initConditionRaw, aggregate.stateType as any);
     if (initConditionValue !== null && typeof initConditionValue !== 'undefined') {
       aggregate.initCondition = initConditionValue.toString();
     }
@@ -965,8 +965,8 @@ function pruneStaticCompactTableColumns(tableInfo: TableMetadata) {
     tableInfo.columns.splice(index, 1);
     delete tableInfo.columnsByName[c.name];
   }
-  tableInfo.clusteringKeys = utils.emptyArray;
-  tableInfo.clusteringOrder = utils.emptyArray;
+  tableInfo.clusteringKeys = utils.emptyArray as any[];
+  tableInfo.clusteringOrder = utils.emptyArray as any[];
   //remove regular columns and set the static columns to non-static
   i = tableInfo.columns.length;
   while (i--) {

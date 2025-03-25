@@ -25,6 +25,7 @@ const _OrderedTokenType = types.dataTypes.getByName('blob');
  * Represents a token on the Cassandra ring.
  */
 class Token {
+  _value: any;
   constructor(value) {
     this._value = value;
   }
@@ -33,14 +34,14 @@ class Token {
    * @returns {{code: number, info: *|Object}} The type info for the
    *                                           type of the value of the token.
    */
-  getType() {
+  getType(): { code: number; info?: any | object; } {
     throw new Error('You must implement a getType function for this Token instance');
   }
 
   /**
    * @returns {*} The raw value of the token.
    */
-  getValue() {
+  getValue(): any {
     return this._value;
   }
 
@@ -55,7 +56,7 @@ class Token {
    * @param {Token} other 
    * @returns {Number}
    */
-  compare(other) {
+  compare(other: Token): number {
     return this._value.compare(other._value);
   }
 
@@ -133,6 +134,8 @@ class ByteOrderedToken extends Token {
  */
 class TokenRange {
   end: any;
+  start: any;
+  _tokenizer: any;
   constructor(start, end, tokenizer) {
     this.start = start;
     this.end = end;
@@ -150,7 +153,7 @@ class TokenRange {
    * @returns {TokenRange[]} Split ranges.
    * @throws {Error} If splitting an empty range.
    */
-  splitEvenly(numberOfSplits) {
+  splitEvenly(numberOfSplits: number): TokenRange[] {
     if (numberOfSplits < 1) {
       throw new Error(util.format("numberOfSplits (%d) must be greater than 0.", numberOfSplits));
     }
@@ -179,7 +182,7 @@ class TokenRange {
    *
    * @returns {boolean} Whether this range is empty.
    */
-  isEmpty() {
+  isEmpty(): boolean {
     return this.start.equals(this.end) && !this.start.equals(this._tokenizer.minToken());
   }
 
@@ -190,7 +193,7 @@ class TokenRange {
    *
    * @returns {boolean} Whether this range wraps around.
    */
-  isWrappedAround() {
+  isWrappedAround(): boolean {
     return this.start.compare(this.end) > 0 && !this.end.equals(this._tokenizer.minToken());
   }
 
@@ -205,7 +208,7 @@ class TokenRange {
    *
    * @returns {TokenRange[]} The list of non-wrapping ranges.
    */
-  unwrap() {
+  unwrap(): TokenRange[] {
     if (this.isWrappedAround()) {
       return [
         new TokenRange(this.start, this._tokenizer.minToken(), this._tokenizer),
@@ -221,7 +224,7 @@ class TokenRange {
    * @param {*} token Token to check for.
    * @returns {boolean} Whether or not the Token is in this range.
    */
-  contains(token) {
+  contains(token: any): boolean {
     if (this.isEmpty()) {
       return false;
     }
@@ -250,7 +253,7 @@ class TokenRange {
    * @param {TokenRange} other Range to compare with.
    * @returns {boolean} Whether or not the ranges are equal.
    */
-  equals(other) {
+  equals(other: TokenRange): boolean {
     if (other === this) {
       return true;
     } else if (other instanceof TokenRange) {
@@ -266,7 +269,7 @@ class TokenRange {
    * @param {TokenRange} other Range to compare with.
    * @returns {Number} 
    */
-  compare(other) {
+  compare(other: TokenRange): number {
     const compareStart = this.start.compare(other.start);
     return compareStart !== 0 ? compareStart : this.end.compare(other.end);
   }

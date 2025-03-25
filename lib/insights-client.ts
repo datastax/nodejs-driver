@@ -27,7 +27,8 @@ import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json";
 import VersionNumber from "./types/version-number";
 import { assert } from 'console';
-import Client, { ClientOptions } from './client';
+import { type ClientOptions, type QueryOptions } from './client';
+import type Client from './client';
 
 let kerberosModule;
 
@@ -66,7 +67,7 @@ class InsightsClient {
    * @param {Number} [options.statusEventDelay]
    * @param {Function} [options.errorCallback]
    */
-  constructor(client: Client, options: { statusEventDelay?: number; errorCallback?: Function; }) {
+  constructor(client: Client, options?: { statusEventDelay?: number; errorCallback?: Function; }) {
     this._client = client;
     this._sessionId = types.Uuid.random().toString();
     this._enabled = false;
@@ -461,7 +462,7 @@ function getExecutionProfiles(client) {
 }
 
 function setExecutionProfileProperties(client, parent, profile, defaultProfile) {
-  const output : ClientOptions = parent[profile.name] = {};
+  const output : QueryOptions = parent[profile.name] = {};
   setExecutionProfileItem(output, profile, defaultProfile, 'readTimeout');
   setExecutionProfileItem(output, profile, defaultProfile, 'loadBalancing', getPolicyInfo);
   setExecutionProfileItem(output, profile, defaultProfile, 'retry', getPolicyInfo);
@@ -471,7 +472,7 @@ function setExecutionProfileProperties(client, parent, profile, defaultProfile) 
   if (profile === defaultProfile) {
     // Speculative execution policy is included in the profiles as some drivers support
     // different spec exec policy per profile, in this case is fixed for all profiles
-    output.speculativeExecution = getPolicyInfo(client.options.policies.speculativeExecution);
+    output["speculativeExecution"] = getPolicyInfo(client.options.policies.speculativeExecution);
   }
 
   if (profile.graphOptions) {

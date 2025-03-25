@@ -17,7 +17,7 @@ import GraphResultSet from "./result-set";
 import getCustomTypeSerializers from "./custom-type-serializers";
 import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers";
 import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
-import { QueryOptions } from "../../client";
+import type { QueryOptions } from "../../client";
 import * as types from "../../types";
 
 
@@ -65,6 +65,7 @@ export interface GraphQueryOptions extends QueryOptions {
   graphReadConsistency?: typeof types.consistencies;
   graphSource?: string;
   graphWriteConsistency?: typeof types.consistencies;
+  graphResults?: string;
 }
 
 export type GraphOptions = {

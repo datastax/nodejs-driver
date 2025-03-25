@@ -414,7 +414,7 @@ class CredentialsRequest extends Request {
 }
 
 class BatchRequest extends Request {
-  queries: Request[];
+  queries: Array<{query, params, info?}>;
   options: ExecutionOptions;
   hints: readonly any[];
   type: number;
@@ -423,7 +423,7 @@ class BatchRequest extends Request {
    * @param {Array.<{query, params, [info]}>} queries Array of objects with the properties query and params
    * @param {ExecutionOptions} execOptions
    */
-  constructor(queries: Array<Request>, execOptions: ExecutionOptions) {
+  constructor(queries: Array<{query, params, info?}>, execOptions: ExecutionOptions) {
     super();
     this.queries = queries;
     this.options = execOptions;

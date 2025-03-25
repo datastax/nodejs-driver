@@ -19,6 +19,8 @@ import net from "net";
 import { EventEmitter } from "events";
 import errors from "./errors";
 import promiseUtils from "./promise-utils";
+import type { ExecutionOptions } from "./execution-options";
+import type { ClientOptions } from "./client";
 
 
 /**
@@ -259,7 +261,7 @@ function funcCompare(name, argArray) {
  * @param {Array} arr
  * @returns {Iterator}
  */
-function arrayIterator (arr: Array<any>): Iterator {
+function arrayIterator<T> (arr: Array<T>): Iterator<T> {
   return arr[Symbol.iterator]();
 }
 
@@ -287,7 +289,7 @@ function iteratorToArray(iterator): Array<any> {
  * @returns {number} The position of the key in the Array, if it is found.
  * If it is not found, it returns a negative number which is the bitwise complement of the index of the first element that is larger than key.
  */
-function binarySearch(arr: Array<any>, key, compareFunc: function): number {
+function binarySearch(arr: Array<any>, key, compareFunc: Function): number {
   let low = 0;
   let high = arr.length-1;
 
@@ -317,7 +319,7 @@ function binarySearch(arr: Array<any>, key, compareFunc: function): number {
  * @param item
  * @param {function} compareFunc
  */
-function insertSorted(arr: Array<any>, item, compareFunc: function) {
+function insertSorted(arr: Array<any>, item, compareFunc: Function) {
   if (arr.length === 0) {
     return arr.push(item);
   }
@@ -334,7 +336,7 @@ function insertSorted(arr: Array<any>, item, compareFunc: function) {
  * @param {String} [name] Name of the function to use in the error message. Defaults to 'callback'.
  * @returns {Function}
  */
-function validateFn(fn: Function, name: string): Function {
+function validateFn<T>(fn: T, name: string): T {
   if (typeof fn !== 'function') {
     throw new errors.ArgumentError(util.format('%s is not a function', name || 'callback'));
   }
@@ -353,7 +355,7 @@ function validateFn(fn: Function, name: string): Function {
 function adaptNamedParamsPrepared(params: Array<any> | object, columns: Array<any>): Array<any> {
   if (!params || Array.isArray(params) || !columns || columns.length === 0) {
     // params is an array or there aren't parameters
-    return params;
+    return params as any[];
   }
   const paramsArray = new Array(columns.length);
   params = toLowerCaseProperties(params);
@@ -378,10 +380,10 @@ function adaptNamedParamsPrepared(params: Array<any> | object, columns: Array<an
  * @returns {{ params: Array<{name, value}>, namedParameters: boolean, keyIndexes: object }} Returns an array of
  * parameters and the keys as an associative array.
  */
-function adaptNamedParamsWithHints(params: Array<any> | object, execOptions: ExecutionOptions): { params: Array<{ name; value; }>; namedParameters: boolean; keyIndexes: object; } {
+function adaptNamedParamsWithHints(params: {name; value}[] | object, execOptions: ExecutionOptions): { params: Array<{ name; value; }>; namedParameters: boolean; keyIndexes: object; } {
   if (!params || Array.isArray(params)) {
     //The parameters is an Array or there isn't parameter
-    return { params: params, namedParameters: false, keyIndexes: null };
+    return { params: params as {name;value}[], namedParameters: false, keyIndexes: null };
   }
 
   const keys = Object.keys(params);
@@ -514,57 +516,63 @@ function shuffleArray(arr: Array<any>): Array<any> {
  * Represents a unique set of values.
  * @constructor
  */
-function HashSet() {
-  this.length = 0;
-  this.items = {};
+class HashSet {
+  length: number;
+  items: object;
+  constructor() {
+    this.length = 0;
+    this.items = {};
+  }
+  /**
+   * Adds a new item to the set.
+   * @param {Object} key
+   * @returns {boolean} Returns true if it was added to the set; false if the key is already present.
+   */
+  add(key: any): boolean {
+    if (this.contains(key)) {
+      return false;
+    }
+    this.items[key] = true;
+    this.length++;
+    return true;
+  }
+  /**
+   * @returns {boolean} Returns true if the key is present in the set.
+   */
+  contains(key): boolean {
+    return this.length > 0 && this.items[key] === true;
+  }
+  /**
+   * Removes the item from set.
+   * @param key
+   * @return {boolean} Returns true if the key existed and was removed, otherwise it returns false.
+   */
+  remove(key): boolean {
+    if (!this.contains(key)) {
+      return false;
+    }
+    delete this.items[key];
+    this.length--;
+  }
+  /**
+   * Returns an array containing the set items.
+   * @returns {Array}
+   */
+  toArray(): Array<any> {
+    return Object.keys(this.items);
+  }
 }
-
-/**
- * Adds a new item to the set.
- * @param {Object} key
- * @returns {boolean} Returns true if it was added to the set; false if the key is already present.
- */
-HashSet.prototype.add = function (key: object): boolean {
-  if (this.contains(key)) {
-    return false;
-  }
-  this.items[key] = true;
-  this.length++;
-  return true;
-};
-
-/**
- * @returns {boolean} Returns true if the key is present in the set.
- */
-HashSet.prototype.contains = function (key): boolean {
-  return this.length > 0 && this.items[key] === true;
-};
-
-/**
- * Removes the item from set.
- * @param key
- * @return {boolean} Returns true if the key existed and was removed, otherwise it returns false.
- */
-HashSet.prototype.remove = function (key): boolean {
-  if (!this.contains(key)) {
-    return false;
-  }
-  delete this.items[key];
-  this.length--;
-};
-
-/**
- * Returns an array containing the set items.
- * @returns {Array}
- */
-HashSet.prototype.toArray = function (): Array<any> {
-  return Object.keys(this.items);
-};
 
 /**
  * Utility class that resolves host names into addresses.
  */
 class AddressResolver {
+  private _resolve4: any;
+  private _nameOrIp: string;
+  private _isIp: number;
+  private _index: number;
+  private _addresses: string[];
+  private _refreshing: EventEmitter;
 
   /**
    * Creates a new instance of the resolver.
@@ -572,7 +580,7 @@ class AddressResolver {
    * @param {String} options.nameOrIp
    * @param {Object} [options.dns]
    */
-  constructor(options: { nameOrIp: string; dns?: object; }) {
+  constructor(options: { nameOrIp: string; dns?: {resolve4?}; }) {
     if (!options || !options.nameOrIp || !options.dns) {
       throw new Error('nameOrIp and dns lib must be provided as part of the options');
     }
@@ -861,7 +869,7 @@ function parallel(arr: Array<Function>, callback: Function) {
  * @param {Array.<Function>} arr
  * @param {Function} [callback]
  */
-function series(arr: Array<Function>, callback: Function) {
+function series(arr: Array<Function>, callback?: Function) {
   if (!Array.isArray(arr)) {
     throw new TypeError('First parameter must be an Array');
   }
@@ -869,7 +877,7 @@ function series(arr: Array<Function>, callback: Function) {
   let index = 0;
   let sync;
   next();
-  function next(err, result) {
+  function next(err?, result?) {
     if (err) {
       return callback(err);
     }
@@ -1007,7 +1015,7 @@ function timesSeries(count: number, iteratorFunction: Function, callback: Functi
 function whilst(condition: Function, fn: Function, callback: Function) {
   let sync = 0;
   next();
-  function next(err) {
+  function next(err?) {
     if (err) {
       return callback(err);
     }

@@ -19,11 +19,11 @@ import retry from "./policies/retry";
 import types, { consistencies } from "./types/index";
 import utils from "./utils";
 import promiseUtils from "./promise-utils";
-import RequestHandler from "./request-handler";
-import { Host } from "./host";
+import type RequestHandler from "./request-handler";
+import type { Host } from "./host";
 import Connection from "./connection";
-import OperationState from "./operation-state";
-import { ClientMetrics } from "./metrics";
+import type OperationState from "./operation-state";
+import type { ClientMetrics } from "./metrics";
 
 
 const retryOnCurrentHost = Object.freeze({

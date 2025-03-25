@@ -15,8 +15,8 @@
  */
 import Tree from "./tree";
 import {ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem} from "./model-batch-item";
-import MappingHandler from "./mapping-handler";
-import { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type MappingHandler from "./mapping-handler";
+import type { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 /**
  * Provides utility methods to group multiple mutations on a single batch.

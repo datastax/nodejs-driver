@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { ExecutionOptions } from "../execution-options";
-import { Host } from "../host";
+import type { ExecutionOptions } from "../execution-options";
+import type { Host } from "../host";
 
 
 

@@ -16,7 +16,7 @@
 import utils from "../utils";
 import errors from "../errors";
 import Row from "./row";
-import {consistencies, dataTypes, Uuid} from "../types";
+import type {consistencies, dataTypes, Uuid} from "../types";
 
 
 const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';

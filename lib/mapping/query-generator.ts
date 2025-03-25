@@ -16,8 +16,8 @@
 import vm from "vm";
 import qModule from "./q";
 import types from "../types/index";
-import TableMetadata from "../metadata/table-metadata";
-import { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type TableMetadata from "../metadata/table-metadata";
+import type { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 
 const QueryOperator = qModule.QueryOperator;

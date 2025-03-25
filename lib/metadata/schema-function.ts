@@ -43,7 +43,7 @@ class SchemaFunction {
    * List of the function argument types.
    * @type {Array.<{code, info}>}
    */
-  argumentTypes: Array<{code: number, info: (object|Array<any>|null)}>;
+  argumentTypes: Array<{code: number, info?: (object|Array<any>|string)}>;
   /**
    * Body of the function.
    * @type {String}
@@ -63,7 +63,7 @@ class SchemaFunction {
    * Type of the return value.
    * @type {{code: number, info: (Object|Array|null)}}
    */
-  returnType: { code: number; info: (object | Array<any> | null); };
+  returnType: { code: number; info?: (object | Array<any> | string); };
   /**
    * Indicates whether or not this function is deterministic.  This means that
    * given a particular input, the function will always produce the same output.

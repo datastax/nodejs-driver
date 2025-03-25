@@ -19,9 +19,10 @@ import GraphResultSet from "./result-set";
 import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer";
 import getCustomTypeSerializers from "./custom-type-serializers";
 import { GraphExecutionOptions, graphProtocol } from "./options";
-import Client, { ClientOptions } from "../../client";
-import { Host } from "../../host";
-import { GraphQueryOptions } from ".";
+import { type ClientOptions } from "../../client";
+import type Client from "../../client";
+import type { Host } from "../../host";
+import type { GraphQueryOptions } from ".";
 
 
 const graphLanguageGroovyString = 'gremlin-groovy';

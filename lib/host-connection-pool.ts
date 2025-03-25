@@ -20,7 +20,7 @@ import utils from "./utils";
 import promiseUtils from "./promise-utils";
 import errors from "./errors";
 import clientOptions from "./client-options";
-import { Host } from "./host";
+import type { Host } from "./host";
 
 
 // Used to get the index of the connection with less in-flight requests

@@ -21,8 +21,8 @@ import Result from "./result";
 import ResultMapper from "./result-mapper";
 import ModelMappingInfo from "./model-mapping-info";
 import { ModelBatchItem } from "./model-batch-item";
-import Client from "../client";
-import { MappingExecutionOptions, MappingOptions, ModelOptions } from ".";
+import type Client from "../client";
+import type { MappingExecutionOptions, MappingOptions} from ".";
 
 
 

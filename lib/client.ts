@@ -16,14 +16,14 @@
 //TODO: fix the types
 import events from "events";
 import util from "util";
-import utils from "./utils";
+import utils, { AddressResolver } from "./utils";
 import errors from "./errors";
-import types, { Long } from "./types/index";
-import { ProfileManager } from "./execution-profile";
+import types, { Long, ResultSet, ResultStream, Row, Uuid } from "./types/index";
+import { ExecutionProfile, ProfileManager } from "./execution-profile";
 import requests from "./requests";
 import clientOptions from "./client-options";
 import ClientState from "./metadata/client-state";
-import { DefaultExecutionOptions } from "./execution-options";
+import { DefaultExecutionOptions, ExecutionOptions } from "./execution-options";
 import ControlConnection from "./control-connection";
 import RequestHandler from "./request-handler";
 import PrepareHandler from "./prepare-handler";
@@ -32,12 +32,26 @@ import cloud from "./datastax/cloud/index";
 import GraphExecutor from "./datastax/graph/graph-executor";
 import promiseUtils from "./promise-utils";
 import packageInfo from '../package.json';
-
-
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import { RetryPolicy } from "./policies/retry";
+import { ReconnectionPolicy } from "./policies/reconnection";
+import { AddressTranslator } from "./policies/address-resolution";
+import { SpeculativeExecutionPolicy } from "./policies/speculative-execution";
+import { TimestampGenerator } from "./policies/timestamp-generation";
+import { AuthProvider } from "./auth";
+import { RequestTracker } from "./tracker";
+import { ClientMetrics } from "./metrics";
+import { ConnectionOptions } from "tls";
+import { Host } from "./host";
+import Metadata from "./metadata";
+import { Request } from "./requests";
+import type { GraphQueryOptions, GraphResultSet } from "./datastax/graph";
+import Connection from "./connection";
+import Encoder from "./encoder";
 
 const version = packageInfo.version;
-
 const description = packageInfo.description;
+
 /**
  * Max amount of pools being warmup in parallel, when warmup is enabled
  * @private
@@ -245,60 +259,22 @@ const warmupLimit = 32;
  * </p>
  */
 interface ClientOptions {
-  contactPoints: Array<string>;
-  localDataCenter?: string;
-  keyspace?: string;
-  credentials?: {
-    username?: string;
-    password?: string;
-  };
-  // id?: Uuid;
   applicationName?: string;
   applicationVersion?: string;
-  monitorReporting?: {
-    enabled?: boolean;
-  };
+  authProvider?: AuthProvider;
+  contactPoints?: string[];
+  localDataCenter?: string;
+  logEmitter?: any;
+  keyspace?: string;
+  credentials?: {
+    username: string;
+    password: string;
+  }
+
   cloud?: {
     secureConnectBundle: string | URL;
   };
-  refreshSchemaDelay?: number;
-  isMetadataSyncEnabled?: boolean;
-  prepareOnAllHosts?: boolean;
-  rePrepareOnUp?: boolean;
-  maxPrepared?: number;
-  policies?: {
-    // loadBalancing?: LoadBalancingPolicy;
-    // retry?: RetryPolicy;
-    // reconnection?: ReconnectionPolicy;
-    // addressResolution?: AddressTranslator;
-    // speculativeExecution?: SpeculativeExecutionPolicy;
-    // timestampGeneration?: TimestampGenerator;
-  };
-  queryOptions?: QueryOptions;
-  pooling?: {
-    heartBeatInterval?: number;
-    coreConnectionsPerHost?: object;
-    maxRequestsPerConnection?: number;
-    warmup?: boolean;
-  };
-  protocolOptions?: {
-    port?: number;
-    maxSchemaAgreementWaitSeconds?: number;
-    maxVersion?: number;
-    noCompact?: boolean;
-  };
-  socketOptions?: {
-    connectTimeout?: number;
-    defunctReadTimeoutThreshold?: number;
-    keepAlive?: boolean;
-    keepAliveDelay?: number;
-    readTimeout?: number;
-    tcpNoDelay?: boolean;
-    coalescingThreshold?: number;
-  };
-  authProvider?: AuthProvider;
-  // requestTracker?: RequestTracker;
-  sslOptions?: object;
+
   encoding?: {
     map?: Function;
     set?: Function;
@@ -307,8 +283,56 @@ interface ClientOptions {
     useBigIntAsLong?: boolean;
     useBigIntAsVarint?: boolean;
   };
-  // profiles?: Array<ExecutionProfile>;
-  promiseFactory?: Function;
+  id?: Uuid;
+  isMetadataSyncEnabled?: boolean;
+  maxPrepared?: number;
+  metrics?: ClientMetrics;
+  monitorReporting?: {
+    enabled?: boolean;
+  };
+  policies?: {
+    addressResolution?: AddressTranslator;
+    loadBalancing?: LoadBalancingPolicy;
+    reconnection?: ReconnectionPolicy;
+    retry?: RetryPolicy;
+    speculativeExecution?: SpeculativeExecutionPolicy;
+    timestampGeneration?: TimestampGenerator;
+  };
+  pooling?: {
+    coreConnectionsPerHost?: { [key: number]: number; };
+    heartBeatInterval?: number;
+    maxRequestsPerConnection?: number;
+    warmup?: boolean;
+  };
+  prepareOnAllHosts?: boolean;
+  profiles?: ExecutionProfile[];
+  protocolOptions?: {
+    maxSchemaAgreementWaitSeconds?: number;
+    maxVersion?: number;
+    noCompact?: boolean;
+    port?: number;
+  };
+  promiseFactory?: (handler: (callback: (err: Error, result?: any) => void) => void) => Promise<any>;
+  queryOptions?: QueryOptions;
+  refreshSchemaDelay?: number;
+  rePrepareOnUp?: boolean;
+  requestTracker?: RequestTracker;
+  //TODO: is this how users are supposed to use SNI? We never documented this
+  sni?: {
+    address?: string;
+    port?: string;
+    addressResolver?: AddressResolver;
+  }
+  socketOptions?: {
+    coalescingThreshold?: number;
+    connectTimeout?: number;
+    defunctReadTimeoutThreshold?: number;
+    keepAlive?: boolean;
+    keepAliveDelay?: number;
+    readTimeout?: number;
+    tcpNoDelay?: boolean;
+  };
+  sslOptions?: ConnectionOptions;
 }
 
 /**
@@ -444,10 +468,10 @@ interface QueryOptions {
   consistency?: number;
   customPayload?: object;
   executeAs?: string;
-  // executionProfile?: String | ExecutionProfile;
+  executionProfile?: string | ExecutionProfile;
   fetchSize?: number;
   hints?: Array<string> | Array<Array<string>>;
-  // host?: Host;
+  host?: Host;
   isIdempotent?: boolean;
   keyspace?: string;
   logged?: boolean;
@@ -455,10 +479,10 @@ interface QueryOptions {
   pageState?: Buffer | string;
   prepare?: boolean;
   readTimeout?: number;
-  // retry?: RetryPolicy;
-  // routingIndexes?: Array;
-  // routingKey?: Buffer | Array;
-  // routingNames?: Array;
+  retry?: RetryPolicy;
+  routingIndexes?: number[];
+  routingKey?: Buffer | Buffer[];
+  routingNames?: string[];
   serialConsistency?: number;
   timestamp?: number | Long;
   traceQuery?: boolean;
@@ -471,6 +495,10 @@ interface QueryOptions {
     writeConsistency?: number;
   };
 }
+
+type ValueCallback<T> = (err: Error, val?: T) => void;
+type EmptyCallback = (err: Error) => void;
+type ArrayOrObject = any[]|{[key: string]: any};
 
 /**
  * Creates a new instance of {@link Client}.
@@ -496,785 +524,869 @@ interface QueryOptions {
  * const result = await client.execute('SELECT key FROM system.local');
  * const row = result.first();
  * console.log(row['key']);
- * @constructor
  */
-function Client(options) {
-  events.EventEmitter.call(this);
-  this.options = clientOptions.extend({ logEmitter: this.emit.bind(this), id: types.Uuid.random() }, options);
-  Object.defineProperty(this, 'profileManager', { value: new ProfileManager(this.options) });
-  Object.defineProperty(this, 'controlConnection', {
-    value: new ControlConnection(this.options, this.profileManager), writable: true }
-  );
-  Object.defineProperty(this, 'insightsClient', { value: new InsightsClient(this)});
-
-  //Unlimited amount of listeners for internal event queues by default
-  this.setMaxListeners(0);
-  this.connected = false;
-  this.isShuttingDown = false;
+class Client extends events.EventEmitter{
+  options: ClientOptions;
+  profileManager: ProfileManager;
+  connected: boolean;
+  isShuttingDown: boolean;
   /**
-   * Gets the name of the active keyspace.
-   * @type {String}
-   */
-  this.keyspace = options.keyspace;
+     * Gets the name of the active keyspace.
+     * @type {String}
+     */
+  keyspace: string;
   /**
-   * Gets the schema and cluster metadata information.
-   * @type {Metadata}
-   */
-  this.metadata = this.controlConnection.metadata;
+     * Gets the schema and cluster metadata information.
+     * @type {Metadata}
+     */
+  metadata: Metadata;
+  controlConnection: ControlConnection;
   /**
-   * Gets an associative array of cluster hosts.
-   * @type {HostMap}
-   */
-  this.hosts = this.controlConnection.hosts;
-
+     * Gets an associative array of cluster hosts.
+     * @type {HostMap}
+     */
+  hosts: any;
   /**
-   * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
-   * behavior and of the server as seen from the driver side.
-   * <p>By default, a [DefaultMetrics]{@link module:metrics~DefaultMetrics} instance is used.</p>
-   * @type {ClientMetrics}
+     * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
+     * behavior and of the server as seen from the driver side.
+     * <p>By default, a [DefaultMetrics]{@link module:metrics~DefaultMetrics} instance is used.</p>
+     * @type {ClientMetrics}
+     */
+  metrics: ClientMetrics;
+  private _graphExecutor: GraphExecutor;
+  connecting: boolean;
+  insightsClient: InsightsClient;
+  /**
+   * Creates a new instance of {@link Client}.
+   * Represents a database client that maintains multiple connections to the cluster nodes, providing methods to
+   * execute CQL statements.
+   * <p>
+   * The <code>Client</code> uses [policies]{@link module:policies} to decide which nodes to connect to, which node
+   * to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down
+   * nodes should be made.
+   * </p>
+   * @param {ClientOptions} options The options for this instance.
+   * @example <caption>Creating a new client instance</caption>
+   * const client = new Client({
+   *   contactPoints: ['10.0.1.101', '10.0.1.102'],
+   *   localDataCenter: 'datacenter1'
+   * });
+   * @example <caption>Executing a query</caption>
+   * const result = await client.connect();
+   * console.log(`Connected to ${client.hosts.length} nodes in the cluster: ${client.hosts.keys().join(', ')}`);
+   * @example <caption>Executing a query</caption>
+   * const result = await client.execute('SELECT key FROM system.local');
+   * const row = result.first();
+   * console.log(row['key']);
+   * @constructor
    */
-  this.metrics = this.options.metrics;
+  constructor(options: ClientOptions) {
+    super();
+    this.options = clientOptions.extend({ logEmitter: this.emit.bind(this), id: types.Uuid.random() }, options);
+    Object.defineProperty(this, 'profileManager', { value: new ProfileManager(this.options) });
+    Object.defineProperty(this, 'controlConnection', {
+      value: new ControlConnection(this.options, this.profileManager), writable: true
+    }
+    );
+    Object.defineProperty(this, 'insightsClient', { value: new InsightsClient(this) });
 
-  this._graphExecutor = new GraphExecutor(this, options, this._execute);
-}
-
-util.inherits(Client, events.EventEmitter);
-
-/**
- * Emitted when a new host is added to the cluster.
- * <ul>
- *   <li>{@link Host} The host being added.</li>
- * </ul>
- * @event Client#hostAdd
- */
-/**
- * Emitted when a host is removed from the cluster
- * <ul>
- *   <li>{@link Host} The host being removed.</li>
- * </ul>
- * @event Client#hostRemove
- */
-/**
- * Emitted when a host in the cluster changed status from down to up.
- * <ul>
- *   <li>{@link Host host} The host that changed the status.</li>
- * </ul>
- * @event Client#hostUp
- */
-/**
- * Emitted when a host in the cluster changed status from up to down.
- * <ul>
- *   <li>{@link Host host} The host that changed the status.</li>
- * </ul>
- * @event Client#hostDown
- */
-
-/**
- * Attempts to connect to one of the [contactPoints]{@link ClientOptions} and discovers the rest the nodes of the
- * cluster.
- * <p>When the {@link Client} is already connected, it resolves immediately.</p>
- * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
- * @param {function} [callback] The optional callback that is invoked when the pool is connected or it failed to
- * connect.
- * @example <caption>Usage example</caption>
- * await client.connect();
- */
-Client.prototype.connect = function (callback) {
-  if (this.connected && callback) {
-    // Avoid creating Promise to immediately resolve them
-    return callback();
-  }
-
-  return promiseUtils.optionalCallback(this._connect(), callback);
-};
-
-/**
- * Async-only version of {@link Client#connect()}.
- * @private
- */
-Client.prototype._connect = async function () {
-  if (this.connected) {
-    return;
-  }
-
-  if (this.isShuttingDown) {
-    //it is being shutdown, don't allow further calls to connect()
-    throw new errors.NoHostAvailableError(null, 'Connecting after shutdown is not supported');
-  }
-
-  if (this.connecting) {
-    return promiseUtils.fromEvent(this, 'connected');
-  }
-
-  this.connecting = true;
-  this.log('info', util.format("Connecting to cluster using '%s' version %s", description, version));
-
-  try {
-    await cloud.init(this.options);
-    await this.controlConnection.init();
+    //Unlimited amount of listeners for internal event queues by default
+    this.setMaxListeners(0);
+    this.connected = false;
+    this.isShuttingDown = false;
+    /**
+     * Gets the name of the active keyspace.
+     * @type {String}
+     */
+    this.keyspace = options.keyspace;
+    /**
+     * Gets the schema and cluster metadata information.
+     * @type {Metadata}
+     */
+    this.metadata = this.controlConnection.metadata;
+    /**
+     * Gets an associative array of cluster hosts.
+     * @type {HostMap}
+     */
     this.hosts = this.controlConnection.hosts;
-    await this.profileManager.init(this, this.hosts);
 
-    if (this.keyspace) {
-      await RequestHandler.setKeyspace(this);
+    /**
+     * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
+     * behavior and of the server as seen from the driver side.
+     * <p>By default, a [DefaultMetrics]{@link module:metrics~DefaultMetrics} instance is used.</p>
+     * @type {ClientMetrics}
+     */
+    this.metrics = this.options.metrics;
+
+    this._graphExecutor = new GraphExecutor(this, options, this._execute);
+  }
+  /**
+   * Emitted when a new host is added to the cluster.
+   * <ul>
+   *   <li>{@link Host} The host being added.</li>
+   * </ul>
+   * @event Client#hostAdd
+   */
+  /**
+   * Emitted when a host is removed from the cluster
+   * <ul>
+   *   <li>{@link Host} The host being removed.</li>
+   * </ul>
+   * @event Client#hostRemove
+   */
+  /**
+   * Emitted when a host in the cluster changed status from down to up.
+   * <ul>
+   *   <li>{@link Host host} The host that changed the status.</li>
+   * </ul>
+   * @event Client#hostUp
+   */
+  /**
+   * Emitted when a host in the cluster changed status from up to down.
+   * <ul>
+   *   <li>{@link Host host} The host that changed the status.</li>
+   * </ul>
+   * @event Client#hostDown
+   */
+  /**
+   * Attempts to connect to one of the [contactPoints]{@link ClientOptions} and discovers the rest the nodes of the
+   * cluster.
+   * <p>When the {@link Client} is already connected, it resolves immediately.</p>
+   * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+   * @param {function} [callback] The optional callback that is invoked when the pool is connected or it failed to
+   * connect.
+   * @example <caption>Usage example</caption>
+   * await client.connect();
+   */
+  connect(callback?: Function) {
+    if (this.connected && callback) {
+      // Avoid creating Promise to immediately resolve them
+      return callback();
     }
 
-    clientOptions.setMetadataDependent(this);
+    return promiseUtils.optionalCallback(this._connect(), callback);
+  }
+  /**
+   * Async-only version of {@link Client#connect()}.
+   * @private
+   */
+  private async _connect() {
+    if (this.connected) {
+      return;
+    }
 
-    await this._warmup();
+    if (this.isShuttingDown) {
+      //it is being shutdown, don't allow further calls to connect()
+      throw new errors.NoHostAvailableError(null, 'Connecting after shutdown is not supported');
+    }
 
-  } catch (err) {
-    // We should close the pools (if any) and reset the state to allow successive calls to connect()
-    await this.controlConnection.reset();
-    this.connected = false;
+    if (this.connecting) {
+      return promiseUtils.fromEvent(this, 'connected');
+    }
+
+    this.connecting = true;
+    this.log('info', util.format("Connecting to cluster using '%s' version %s", description, version));
+
+    try {
+      await cloud.init(this.options);
+      await this.controlConnection.init();
+      this.hosts = this.controlConnection.hosts;
+      await this.profileManager.init(this, this.hosts);
+
+      if (this.keyspace) {
+        await RequestHandler.setKeyspace(this);
+      }
+
+      clientOptions.setMetadataDependent(this);
+
+      await this._warmup();
+
+    } catch (err) {
+      // We should close the pools (if any) and reset the state to allow successive calls to connect()
+      await this.controlConnection.reset();
+      this.connected = false;
+      this.connecting = false;
+      this.emit('connected', err);
+      throw err;
+    }
+
+    this._setHostListeners();
+
+    // Set the distance of the control connection host relatively to this instance
+    this.profileManager.getDistance(this.controlConnection.host);
+    this.insightsClient.init();
+    this.connected = true;
     this.connecting = false;
-    this.emit('connected', err);
-    throw err;
+    this.emit('connected');
   }
 
-  this._setHostListeners();
+  log = utils.log;
 
-  // Set the distance of the control connection host relatively to this instance
-  this.profileManager.getDistance(this.controlConnection.host);
-  this.insightsClient.init();
-  this.connected = true;
-  this.connecting = false;
-  this.emit('connected');
-};
+  /**
+   * Executes a query on an available connection.
+   * <p>The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.</p>
+   * <p>
+   *   Some execution failures can be handled transparently by the driver, according to the
+   *   [RetryPolicy]{@linkcode module:policies/retry~RetryPolicy} or the
+   *   [SpeculativeExecutionPolicy]{@linkcode module:policies/speculativeExecution} used.
+   * </p>
+   * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+   * @param {String} query The query to execute.
+   * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+   * as keys and its value.
+   * @param {QueryOptions} [options] The query options for the execution.
+   * @param {ResultCallback} [callback] Executes callback(err, result) when execution completed. When not defined, the
+   * method will return a promise.
+   * @example <caption>Promise-based API, using async/await</caption>
+   * const query = 'SELECT name, email FROM users WHERE id = ?';
+   * const result = await client.execute(query, [ id ], { prepare: true });
+   * const row = result.first();
+   * console.log('%s: %s', row['name'], row['email']);
+   * @example <caption>Callback-based API</caption>
+   * const query = 'SELECT name, email FROM users WHERE id = ?';
+   * client.execute(query, [ id ], { prepare: true }, function (err, result) {
+   *   assert.ifError(err);
+   *   const row = result.first();
+   *   console.log('%s: %s', row['name'], row['email']);
+   * });
+   * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
+   */
+  execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<ResultSet>;
 
-/**
- * Executes a query on an available connection.
- * <p>The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.</p>
- * <p>
- *   Some execution failures can be handled transparently by the driver, according to the
- *   [RetryPolicy]{@linkcode module:policies/retry~RetryPolicy} or the
- *   [SpeculativeExecutionPolicy]{@linkcode module:policies/speculativeExecution} used.
- * </p>
- * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
- * @param {String} query The query to execute.
- * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
- * as keys and its value.
- * @param {QueryOptions} [options] The query options for the execution.
- * @param {ResultCallback} [callback] Executes callback(err, result) when execution completed. When not defined, the
- * method will return a promise.
- * @example <caption>Promise-based API, using async/await</caption>
- * const query = 'SELECT name, email FROM users WHERE id = ?';
- * const result = await client.execute(query, [ id ], { prepare: true });
- * const row = result.first();
- * console.log('%s: %s', row['name'], row['email']);
- * @example <caption>Callback-based API</caption>
- * const query = 'SELECT name, email FROM users WHERE id = ?';
- * client.execute(query, [ id ], { prepare: true }, function (err, result) {
- *   assert.ifError(err);
- *   const row = result.first();
- *   console.log('%s: %s', row['name'], row['email']);
- * });
- * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
- */
-Client.prototype.execute = function (query, params, options, callback) {
-  // This method acts as a wrapper for the async method _execute()
+  execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
 
-  if (!callback) {
-    // Set default argument values for optional parameters
-    if (typeof options === 'function') {
+  execute(query: string, params: ArrayOrObject, callback: ValueCallback<ResultSet>): void;
+
+  execute(query: string, callback: ValueCallback<ResultSet>): void;
+  execute(query: string, params?: Array<any> | ValueCallback<ResultSet>, options?: QueryOptions | ValueCallback<ResultSet>, callback?: ValueCallback<ResultSet>) {
+    // This method acts as a wrapper for the async method _execute()
+    if (!callback) {
+      // Set default argument values for optional parameters
+      if (typeof options === 'function') {
+        callback = options;
+        options = null;
+      } else if (typeof params === 'function') {
+        callback = params;
+        params = null;
+      }
+    }
+
+    try {
+      const execOptions = DefaultExecutionOptions.create(options as QueryOptions, this);
+      return promiseUtils.optionalCallback(this._execute(query, params as any[], execOptions), callback);
+    }
+    catch (err) {
+      // There was an error when parsing the user options
+      if (callback) {
+        return callback(err);
+      }
+
+      return Promise.reject(err);
+    }
+  }
+  /**
+   * Executes a graph query.
+   * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+   * @param {String} query The gremlin query.
+   * @param {Object|null} [parameters] An associative array containing the key and values of the parameters.
+   * @param {GraphQueryOptions|null} [options] The graph query options.
+   * @param {Function} [callback] Function to execute when the response is retrieved, taking two arguments:
+   * <code>err</code> and <code>result</code>. When not defined, the method will return a promise.
+   * @example <caption>Promise-based API, using async/await</caption>
+   * const result = await client.executeGraph('g.V()');
+   * // Get the first item (vertex, edge, scalar value, ...)
+   * const vertex = result.first();
+   * console.log(vertex.label);
+   * @example <caption>Callback-based API</caption>
+   * client.executeGraph('g.V()', (err, result) => {
+   *   const vertex = result.first();
+   *   console.log(vertex.label);
+   * });
+   * @example <caption>Iterating through the results</caption>
+   * const result = await client.executeGraph('g.E()');
+   * for (let edge of result) {
+   *   console.log(edge.label); // created
+   * });
+   * @example <caption>Using result.forEach()</caption>
+   * const result = await client.executeGraph('g.V().hasLabel("person")');
+   * result.forEach(function(vertex) {
+   *   console.log(vertex.type); // vertex
+   *   console.log(vertex.label); // person
+   * });
+   * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
+   */
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any } | undefined,
+    options: GraphQueryOptions,
+    callback: ValueCallback<GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters: { [name: string]: any } | undefined,
+    callback: ValueCallback<GraphResultSet>): void;
+
+  executeGraph(traversal: string, callback: ValueCallback<GraphResultSet>): void;
+
+  executeGraph(
+    traversal: string,
+    parameters?: { [name: string]: any },
+    options?: GraphQueryOptions): Promise<GraphResultSet>;
+
+  executeGraph(query: string, parameters: { [name: string]: any } | ValueCallback<GraphResultSet>, options?: GraphQueryOptions | ValueCallback<GraphResultSet>, callback?: ValueCallback<GraphResultSet>) {
+    callback = callback || (options ? options : parameters) as ValueCallback<GraphResultSet>;
+
+    if (typeof callback === 'function') {
+      parameters = typeof parameters !== 'function' ? parameters : null;
+      return promiseUtils.toCallback(this._graphExecutor.send(query, parameters, options as GraphQueryOptions), callback);
+    }
+
+    return this._graphExecutor.send(query, parameters, options as GraphQueryOptions);
+  }
+  /**
+   * Executes the query and calls <code>rowCallback</code> for each row as soon as they are received. Calls the final
+   * <code>callback</code> after all rows have been sent, or when there is an error.
+   * <p>
+   *   The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.
+   * </p>
+   * @param {String} query The query to execute
+   * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+   * as keys and its value.
+   * @param {QueryOptions} [options] The query options.
+   * @param {function} rowCallback Executes <code>rowCallback(n, row)</code> per each row received, where n is the row
+   * index and row is the current Row.
+   * @param {function} [callback] Executes <code>callback(err, result)</code> after all rows have been received.
+   * <p>
+   *   When dealing with paged results, [ResultSet#nextPage()]{@link module:types~ResultSet#nextPage} method can be used
+   *   to retrieve the following page. In that case, <code>rowCallback()</code> will be again called for each row and
+   *   the final callback will be invoked when all rows in the following page has been retrieved.
+   * </p>
+   * @example <caption>Using per-row callback and arrow functions</caption>
+   * client.eachRow(query, params, { prepare: true }, (n, row) => console.log(n, row), err => console.error(err));
+   * @example <caption>Overloads</caption>
+   * client.eachRow(query, rowCallback);
+   * client.eachRow(query, params, rowCallback);
+   * client.eachRow(query, params, options, rowCallback);
+   * client.eachRow(query, params, rowCallback, callback);
+   * client.eachRow(query, params, options, rowCallback, callback);
+   */
+  eachRow(query: string,
+    params: ArrayOrObject,
+    options: QueryOptions,
+    rowCallback: (n: number, row: Row) => void,
+    callback?: ValueCallback<ResultSet>): void;
+
+  eachRow(query: string,
+      params: ArrayOrObject,
+      rowCallback: (n: number, row: Row) => void,
+      callback?: ValueCallback<ResultSet>): void;
+
+  eachRow(query: string,
+      rowCallback: (n: number, row: Row) => void): void;
+
+  eachRow(query: string, params: Array<any> | ((n: number, row: Row) => void), options?: QueryOptions | ((n: number, row: Row) => void), rowCallback?: ((n: number, row: Row) => void) | ValueCallback<ResultSet>, callback?: ValueCallback<ResultSet>) {
+    if (!callback && rowCallback && typeof options === 'function') {
+      callback = utils.validateFn(rowCallback as ValueCallback<ResultSet>, 'rowCallback');
+      rowCallback = options;
+    } else {
+      callback = callback || utils.noop;
+      rowCallback = utils.validateFn((rowCallback || options || params) as ((n: number, row: Row) => void), 'rowCallback');
+    }
+
+    params = typeof params !== 'function' ? params : null;
+
+    let execOptions;
+    try {
+      execOptions = DefaultExecutionOptions.create(options as QueryOptions, this, rowCallback);
+    }
+    catch (e) {
+      return callback(e);
+    }
+
+    let rowLength = 0;
+
+    const nextPage = () => promiseUtils.toCallback(this._execute(query, params, execOptions), pageCallback);
+
+    function pageCallback(err, result) {
+      if (err) {
+        return callback(err);
+      }
+      // Next requests in case paging (auto or explicit) is used
+      rowLength += result.rowLength;
+
+      if (result.rawPageState !== undefined) {
+        // Use new page state as next request page state
+        execOptions.setPageState(result.rawPageState);
+        if (execOptions.isAutoPage()) {
+          // Issue next request for the next page
+          return nextPage();
+        }
+        // Allows for explicit (manual) paging, in case the caller needs it
+        result.nextPage = nextPage;
+      }
+
+      // Finished auto-paging
+      result.rowLength = rowLength;
+      callback(null, result);
+    }
+
+    promiseUtils.toCallback(this._execute(query, params, execOptions), pageCallback);
+  }
+  /**
+   * Executes the query and pushes the rows to the result stream as soon as they received.
+   * <p>
+   * The stream is a [ReadableStream]{@linkcode https://nodejs.org/api/stream.html#stream_class_stream_readable} object
+   *  that emits rows.
+   *  It can be piped downstream and provides automatic pause/resume logic (it buffers when not read).
+   * </p>
+   * <p>
+   *   The query can be prepared (recommended) or not depending on {@link QueryOptions}.prepare flag. Retries on multiple
+   *   hosts if needed.
+   * </p>
+   * @param {String} query The query to prepare and execute.
+   * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+   * as keys and its value
+   * @param {QueryOptions} [options] The query options.
+   * @param {function} [callback] executes callback(err) after all rows have been received or if there is an error
+   * @returns {ResultStream}
+   */
+  stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): ResultStream {
+    callback = callback || utils.noop;
+    // NOTE: the nodejs stream maintains yet another internal buffer
+    // we rely on the default stream implementation to keep memory
+    // usage reasonable.
+    const resultStream = new types.ResultStream({ objectMode: 1 });
+    function onFinish(err, result) {
+      if (err) {
+        resultStream.emit('error', err);
+      }
+      if (result && result.nextPage) {
+        // allows for throttling as per the
+        // default nodejs stream implementation
+        resultStream._valve(function pageValve() {
+          try {
+            result.nextPage();
+          }
+          catch (ex) {
+            resultStream.emit('error', ex);
+          }
+        });
+        return;
+      }
+      // Explicitly dropping the valve (closure)
+      resultStream._valve(null);
+      resultStream.add(null);
+      callback(err);
+    }
+    let sync = true;
+    this.eachRow(query, params, options, function rowCallback(n, row) {
+      resultStream.add(row);
+    }, function eachRowFinished(err, result) {
+      if (sync) {
+        // Prevent sync callback
+        return setImmediate(function eachRowFinishedImmediate() {
+          onFinish(err, result);
+        });
+      }
+      onFinish(err, result);
+    });
+    sync = false;
+    return resultStream;
+  }
+  /**
+   * Executes batch of queries on an available connection to a host.
+   * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+   * @param {Array.<string>|Array.<{query, params}>} queries The queries to execute as an Array of strings or as an array
+   * of object containing the query and params
+   * @param {QueryOptions} [options] The query options.
+   * @param {ResultCallback} [callback] Executes callback(err, result) when the batch was executed
+   */
+  batch(
+    queries: Array<string|{query: string, params?: ArrayOrObject}>,
+    options?: QueryOptions): Promise<ResultSet>;
+
+  batch(
+    queries: Array<string|{query: string, params?: ArrayOrObject}>,
+    options: QueryOptions,
+    callback: ValueCallback<ResultSet>): void;
+
+  batch(
+    queries: Array<string|{query: string, params?: ArrayOrObject}>,
+    callback: ValueCallback<ResultSet>): void;
+
+  batch(queries: Array<string|{query: string, params?: ArrayOrObject}>, options?: QueryOptions | ValueCallback<ResultSet>, callback?: ValueCallback<ResultSet>) {
+    if (!callback && typeof options === 'function') {
       callback = options;
       options = null;
-    } else if (typeof params === 'function') {
-      callback = params;
-      params = null;
     }
-  }
 
-  try {
+    return promiseUtils.optionalCallback(this._batch(queries, options as GraphQueryOptions), callback);
+  }
+  /**
+   * Async-only version of {@link Client#batch()} .
+   * @param {Array.<string>|Array.<{query, params}>}queries
+   * @param {QueryOptions} options
+   * @returns {Promise<ResultSet>}
+   * @private
+   */
+  private async _batch(queries: Array<string|{query: string, params?: ArrayOrObject}>, options: QueryOptions): Promise<ResultSet> {
+    if (!Array.isArray(queries)) {
+      throw new errors.ArgumentError('Queries should be an Array');
+    }
+
+    if (queries.length === 0) {
+      throw new errors.ArgumentError('Queries array should not be empty');
+    }
+
+    await this._connect();
+
     const execOptions = DefaultExecutionOptions.create(options, this);
-    return promiseUtils.optionalCallback(this._execute(query, params, execOptions), callback);
-  }
-  catch (err) {
-    // There was an error when parsing the user options
-    if (callback) {
-      return callback(err);
-    }
+    let queryItems;
 
-    return Promise.reject(err);
-  }
-};
+    if (execOptions.isPrepared()) {
+      // use keyspace from query options if protocol supports per-query keyspace, otherwise use connection keyspace.
+      const version = this.controlConnection.protocolVersion;
+      const queryKeyspace = types.protocolVersion.supportsKeyspaceInRequest(version) && options.keyspace || this.keyspace;
+      queryItems = await PrepareHandler.getPreparedMultiple(
+        this, execOptions.getLoadBalancingPolicy(), queries, queryKeyspace);
+    } else {
+      queryItems = new Array(queries.length);
 
-/**
- * Executes a graph query.
- * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
- * @param {String} query The gremlin query.
- * @param {Object|null} [parameters] An associative array containing the key and values of the parameters.
- * @param {GraphQueryOptions|null} [options] The graph query options.
- * @param {Function} [callback] Function to execute when the response is retrieved, taking two arguments:
- * <code>err</code> and <code>result</code>. When not defined, the method will return a promise.
- * @example <caption>Promise-based API, using async/await</caption>
- * const result = await client.executeGraph('g.V()');
- * // Get the first item (vertex, edge, scalar value, ...)
- * const vertex = result.first();
- * console.log(vertex.label);
- * @example <caption>Callback-based API</caption>
- * client.executeGraph('g.V()', (err, result) => {
- *   const vertex = result.first();
- *   console.log(vertex.label);
- * });
- * @example <caption>Iterating through the results</caption>
- * const result = await client.executeGraph('g.E()');
- * for (let edge of result) {
- *   console.log(edge.label); // created
- * });
- * @example <caption>Using result.forEach()</caption>
- * const result = await client.executeGraph('g.V().hasLabel("person")');
- * result.forEach(function(vertex) {
- *   console.log(vertex.type); // vertex
- *   console.log(vertex.label); // person
- * });
- * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
- */
-Client.prototype.executeGraph = function (query, parameters, options, callback) {
-  callback = callback || (options ? options : parameters);
+      for (let i = 0; i < queries.length; i++) {
+        const item = queries[i];
+        if (!item) {
+          throw new errors.ArgumentError(`Invalid query at index ${i}`);
+        }
 
-  if (typeof callback === 'function') {
-    parameters = typeof parameters !== 'function' ? parameters : null;
-    return promiseUtils.toCallback(this._graphExecutor.send(query, parameters, options), callback);
-  }
+        const query = typeof item === 'string' ? item : item.query;
+        if (!query) {
+          throw new errors.ArgumentError(`Invalid query at index ${i}`);
+        }
 
-  return this._graphExecutor.send(query, parameters, options);
-};
-
-/**
- * Executes the query and calls <code>rowCallback</code> for each row as soon as they are received. Calls the final
- * <code>callback</code> after all rows have been sent, or when there is an error.
- * <p>
- *   The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.
- * </p>
- * @param {String} query The query to execute
- * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
- * as keys and its value.
- * @param {QueryOptions} [options] The query options.
- * @param {function} rowCallback Executes <code>rowCallback(n, row)</code> per each row received, where n is the row
- * index and row is the current Row.
- * @param {function} [callback] Executes <code>callback(err, result)</code> after all rows have been received.
- * <p>
- *   When dealing with paged results, [ResultSet#nextPage()]{@link module:types~ResultSet#nextPage} method can be used
- *   to retrieve the following page. In that case, <code>rowCallback()</code> will be again called for each row and
- *   the final callback will be invoked when all rows in the following page has been retrieved.
- * </p>
- * @example <caption>Using per-row callback and arrow functions</caption>
- * client.eachRow(query, params, { prepare: true }, (n, row) => console.log(n, row), err => console.error(err));
- * @example <caption>Overloads</caption>
- * client.eachRow(query, rowCallback);
- * client.eachRow(query, params, rowCallback);
- * client.eachRow(query, params, options, rowCallback);
- * client.eachRow(query, params, rowCallback, callback);
- * client.eachRow(query, params, options, rowCallback, callback);
- */
-Client.prototype.eachRow = function (query, params, options, rowCallback, callback) {
-  if (!callback && rowCallback && typeof options === 'function') {
-    callback = utils.validateFn(rowCallback, 'rowCallback');
-    rowCallback = options;
-  } else {
-    callback = callback || utils.noop;
-    rowCallback = utils.validateFn(rowCallback || options || params, 'rowCallback');
-  }
-
-  params = typeof params !== 'function' ? params : null;
-
-  let execOptions;
-  try {
-    execOptions = DefaultExecutionOptions.create(options, this, rowCallback);
-  }
-  catch (e) {
-    return callback(e);
-  }
-
-  let rowLength = 0;
-
-  const nextPage = () => promiseUtils.toCallback(this._execute(query, params, execOptions), pageCallback);
-
-  function pageCallback (err, result) {
-    if (err) {
-      return callback(err);
-    }
-    // Next requests in case paging (auto or explicit) is used
-    rowLength += result.rowLength;
-
-    if (result.rawPageState !== undefined) {
-      // Use new page state as next request page state
-      execOptions.setPageState(result.rawPageState);
-      if (execOptions.isAutoPage()) {
-        // Issue next request for the next page
-        return nextPage();
+        queryItems[i] = { query, params: item["params"] };
       }
-      // Allows for explicit (manual) paging, in case the caller needs it
-      result.nextPage = nextPage;
     }
 
-    // Finished auto-paging
-    result.rowLength = rowLength;
-    callback(null, result);
+    const request = await this._createBatchRequest(queryItems, execOptions);
+    return await RequestHandler.send(request, execOptions, this);
   }
+  /**
+   * Gets the host that are replicas of a given token.
+   * @param {String} keyspace
+   * @param {Buffer} token
+   * @returns {Array<Host>}
+   */
+  getReplicas(keyspace: string, token: Buffer): Array<Host> {
+    return this.metadata.getReplicas(keyspace, token);
+  }
+  /**
+   * Gets a snapshot containing information on the connections pools held by this Client at the current time.
+   * <p>
+   *   The information provided in the returned object only represents the state at the moment this method was called and
+   *   it's not maintained in sync with the driver metadata.
+   * </p>
+   * @returns {ClientState} A [ClientState]{@linkcode module:metadata~ClientState} instance.
+   */
+  getState(): ClientState {
+    return ClientState.from(this);
+  }
+  /**
+   * Closes all connections to all hosts.
+   * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+   * @param {Function} [callback] Optional callback to be invoked when finished closing all connections.
+   */
+  shutdown(callback?: Function) {
+    return promiseUtils.optionalCallback(this._shutdown(), callback);
+  }
+  /** @private */
+  private async _shutdown() {
+    this.log('info', 'Shutting down');
 
-  promiseUtils.toCallback(this._execute(query, params, execOptions), pageCallback);
-};
-
-/**
- * Executes the query and pushes the rows to the result stream as soon as they received.
- * <p>
- * The stream is a [ReadableStream]{@linkcode https://nodejs.org/api/stream.html#stream_class_stream_readable} object
- *  that emits rows.
- *  It can be piped downstream and provides automatic pause/resume logic (it buffers when not read).
- * </p>
- * <p>
- *   The query can be prepared (recommended) or not depending on {@link QueryOptions}.prepare flag. Retries on multiple
- *   hosts if needed.
- * </p>
- * @param {String} query The query to prepare and execute.
- * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
- * as keys and its value
- * @param {QueryOptions} [options] The query options.
- * @param {function} [callback] executes callback(err) after all rows have been received or if there is an error
- * @returns {ResultStream}
- */
-Client.prototype.stream = function (query, params, options, callback) {
-  callback = callback || utils.noop;
-  // NOTE: the nodejs stream maintains yet another internal buffer
-  // we rely on the default stream implementation to keep memory
-  // usage reasonable.
-  const resultStream = new types.ResultStream({ objectMode: 1 });
-  function onFinish(err, result) {
-    if (err) {
-      resultStream.emit('error', err);
-    }
-    if (result && result.nextPage ) {
-      // allows for throttling as per the
-      // default nodejs stream implementation
-      resultStream._valve(function pageValve() {
-        try {
-          result.nextPage();
-        }
-        catch( ex ) {
-          resultStream.emit('error', ex );
-        }
-      });
+    if (!this.hosts || !this.connected) {
+      // not initialized
+      this.connected = false;
       return;
     }
-    // Explicitly dropping the valve (closure)
-    resultStream._valve(null);
-    resultStream.add(null);
-    callback(err);
-  }
-  let sync = true;
-  this.eachRow(query, params, options, function rowCallback(n, row) {
-    resultStream.add(row);
-  }, function eachRowFinished(err, result) {
-    if (sync) {
-      // Prevent sync callback
-      return setImmediate(function eachRowFinishedImmediate() {
-        onFinish(err, result);
-      });
+
+    if (this.connecting) {
+      this.log('warning', 'Shutting down while connecting');
+      // wait until finish connecting for easier troubleshooting
+      await promiseUtils.fromEvent(this, 'connected');
     }
-    onFinish(err, result);
-  });
-  sync = false;
-  return resultStream;
-};
 
-/**
- * Executes batch of queries on an available connection to a host.
- * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
- * @param {Array.<string>|Array.<{query, params}>} queries The queries to execute as an Array of strings or as an array
- * of object containing the query and params
- * @param {QueryOptions} [options] The query options.
- * @param {ResultCallback} [callback] Executes callback(err, result) when the batch was executed
- */
-Client.prototype.batch = function (queries, options, callback) {
-  if (!callback && typeof options === 'function') {
-    callback = options;
-    options = null;
-  }
-
-  return promiseUtils.optionalCallback(this._batch(queries, options), callback);
-};
-
-/**
- * Async-only version of {@link Client#batch()} .
- * @param {Array.<string>|Array.<{query, params}>}queries
- * @param {QueryOptions} options
- * @returns {Promise<ResultSet>}
- * @private
- */
-Client.prototype._batch = async function (queries, options) {
-  if (!Array.isArray(queries)) {
-    throw new errors.ArgumentError('Queries should be an Array');
-  }
-
-  if (queries.length === 0) {
-    throw new errors.ArgumentError('Queries array should not be empty');
-  }
-
-  await this._connect();
-
-  const execOptions = DefaultExecutionOptions.create(options, this);
-  let queryItems;
-
-  if (execOptions.isPrepared()) {
-    // use keyspace from query options if protocol supports per-query keyspace, otherwise use connection keyspace.
-    const version = this.controlConnection.protocolVersion;
-    const queryKeyspace = types.protocolVersion.supportsKeyspaceInRequest(version) && options.keyspace || this.keyspace;
-    queryItems = await PrepareHandler.getPreparedMultiple(
-      this, execOptions.getLoadBalancingPolicy(), queries, queryKeyspace);
-  } else {
-    queryItems = new Array(queries.length);
-
-    for (let i = 0; i < queries.length; i++) {
-      const item = queries[i];
-      if (!item) {
-        throw new errors.ArgumentError(`Invalid query at index ${i}`);
-      }
-
-      const query = typeof item === 'string' ? item : item.query;
-      if (!query) {
-        throw new errors.ArgumentError(`Invalid query at index ${i}`);
-      }
-
-      queryItems[i] = { query, params: item.params };
-    }
-  }
-
-  const request = await this._createBatchRequest(queryItems, execOptions);
-  return await RequestHandler.send(request, execOptions, this);
-};
-
-/**
- * Gets the host that are replicas of a given token.
- * @param {String} keyspace
- * @param {Buffer} token
- * @returns {Array<Host>}
- */
-Client.prototype.getReplicas = function (keyspace, token) {
-  return this.metadata.getReplicas(keyspace, token);
-};
-
-/**
- * Gets a snapshot containing information on the connections pools held by this Client at the current time.
- * <p>
- *   The information provided in the returned object only represents the state at the moment this method was called and
- *   it's not maintained in sync with the driver metadata.
- * </p>
- * @returns {ClientState} A [ClientState]{@linkcode module:metadata~ClientState} instance.
- */
-Client.prototype.getState = function () {
-  return ClientState.from(this);
-};
-
-Client.prototype.log = utils.log;
-
-/**
- * Closes all connections to all hosts.
- * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
- * @param {Function} [callback] Optional callback to be invoked when finished closing all connections.
- */
-Client.prototype.shutdown = function (callback) {
-  return promiseUtils.optionalCallback(this._shutdown(), callback);
-};
-
-/** @private */
-Client.prototype._shutdown = async function () {
-  this.log('info', 'Shutting down');
-
-  if (!this.hosts || !this.connected) {
-    // not initialized
     this.connected = false;
-    return;
-  }
+    this.isShuttingDown = true;
+    const hosts = this.hosts.values();
 
-  if (this.connecting) {
-    this.log('warning', 'Shutting down while connecting');
-    // wait until finish connecting for easier troubleshooting
-    await promiseUtils.fromEvent(this, 'connected');
-  }
+    this.insightsClient.shutdown();
 
-  this.connected = false;
-  this.isShuttingDown = true;
-  const hosts = this.hosts.values();
+    // Shutdown the ControlConnection before shutting down the pools
+    this.controlConnection.shutdown();
+    this.options.policies.speculativeExecution.shutdown();
 
-  this.insightsClient.shutdown();
-
-  // Shutdown the ControlConnection before shutting down the pools
-  this.controlConnection.shutdown();
-  this.options.policies.speculativeExecution.shutdown();
-
-  if (this.options.requestTracker) {
-    this.options.requestTracker.shutdown();
-  }
-
-  // go through all the host and shut down their pools
-  await Promise.all(hosts.map(h => h.shutdown(false)));
-};
-
-/**
- * Waits until that the schema version in all nodes is the same or the waiting time passed.
- * @param {Connection} connection
- * @returns {Promise<boolean>}
- * @ignore
- */
-Client.prototype._waitForSchemaAgreement = async function (connection) {
-  if (this.hosts.length === 1) {
-    return true;
-  }
-
-  const start = process.hrtime();
-  const maxWaitSeconds = this.options.protocolOptions.maxSchemaAgreementWaitSeconds;
-
-  this.log('info', 'Waiting for schema agreement');
-
-  let versionsMatch;
-
-  while (!versionsMatch && process.hrtime(start)[0] < maxWaitSeconds) {
-    versionsMatch = await this.metadata.compareSchemaVersions(connection);
-
-    if (versionsMatch) {
-      this.log('info', 'Schema versions match');
-      break;
+    if (this.options.requestTracker) {
+      this.options.requestTracker.shutdown();
     }
 
-    // Let some time pass before the next check
-    await promiseUtils.delay(500);
+    // go through all the host and shut down their pools
+    await Promise.all(hosts.map(h => h.shutdown(false)));
   }
+  /**
+   * Waits until that the schema version in all nodes is the same or the waiting time passed.
+   * @param {Connection} connection
+   * @returns {Promise<boolean>}
+   * @ignore
+   */
+  private async _waitForSchemaAgreement(connection: Connection): Promise<boolean> {
+    if (this.hosts.length === 1) {
+      return true;
+    }
 
-  return versionsMatch;
-};
+    const start = process.hrtime();
+    const maxWaitSeconds = this.options.protocolOptions.maxSchemaAgreementWaitSeconds;
 
-/**
- * Waits for schema agreements and schedules schema metadata refresh.
- * @param {Connection} connection
- * @param event
- * @returns {Promise<boolean>}
- * @ignore
- * @internal
- */
-Client.prototype.handleSchemaAgreementAndRefresh = async function (connection, event) {
-  let agreement = false;
+    this.log('info', 'Waiting for schema agreement');
 
-  try {
-    agreement = await this._waitForSchemaAgreement(connection);
-  } catch (err) {
-    //we issue a warning but we continue with the normal flow
-    this.log('warning', 'There was an error while waiting for the schema agreement between nodes', err);
+    let versionsMatch;
+
+    while (!versionsMatch && process.hrtime(start)[0] < maxWaitSeconds) {
+      versionsMatch = await this.metadata.compareSchemaVersions(connection);
+
+      if (versionsMatch) {
+        this.log('info', 'Schema versions match');
+        break;
+      }
+
+      // Let some time pass before the next check
+      await promiseUtils.delay(500);
+    }
+
+    return versionsMatch;
   }
+  /**
+   * Waits for schema agreements and schedules schema metadata refresh.
+   * @param {Connection} connection
+   * @param event
+   * @returns {Promise<boolean>}
+   * @ignore
+   * @internal
+   */
+  async handleSchemaAgreementAndRefresh(connection: Connection, event): Promise<boolean> {
+    let agreement = false;
 
-  if (!this.options.isMetadataSyncEnabled) {
+    try {
+      agreement = await this._waitForSchemaAgreement(connection);
+    } catch (err) {
+      //we issue a warning but we continue with the normal flow
+      this.log('warning', 'There was an error while waiting for the schema agreement between nodes', err);
+    }
+
+    if (!this.options.isMetadataSyncEnabled) {
+      return agreement;
+    }
+
+    // Refresh metadata immediately
+    try {
+      await this.controlConnection.handleSchemaChange(event, true);
+    } catch (err) {
+      this.log('warning', 'There was an error while handling schema change', err);
+    }
+
     return agreement;
   }
+  /**
+   * Connects and handles the execution of prepared and simple statements.
+   * @param {string} query
+   * @param {Array} params
+   * @param {ExecutionOptions} execOptions
+   * @returns {Promise<ResultSet>}
+   * @private
+   */
+  async _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet> {
+    const version = this.controlConnection.protocolVersion;
 
-  // Refresh metadata immediately
-  try {
-    await this.controlConnection.handleSchemaChange(event, true);
-  } catch (err) {
-    this.log('warning', 'There was an error while handling schema change', err);
-  }
-
-  return agreement;
-};
-
-/**
- * Connects and handles the execution of prepared and simple statements.
- * @param {string} query
- * @param {Array} params
- * @param {ExecutionOptions} execOptions
- * @returns {Promise<ResultSet>}
- * @private
- */
-Client.prototype._execute = async function (query, params, execOptions) {
-  const version = this.controlConnection.protocolVersion;
-
-  if (!execOptions.isPrepared() && params && !Array.isArray(params) &&
-    !types.protocolVersion.supportsNamedParameters(version)) {
-    // Only Cassandra 2.1 and above supports named parameters
-    throw new errors.ArgumentError('Named parameters for simple statements are not supported, use prepare flag');
-  }
-
-  let request;
-
-  if (!this.connected) {
-    // Micro optimization to avoid an async execution for a simple check
-    await this._connect();
-  }
-
-  if (!execOptions.isPrepared()) {
-    request = await this._createQueryRequest(query, execOptions, params);
-  } else {
-    const lbp = execOptions.getLoadBalancingPolicy();
-
-    // Use keyspace from query options if protocol supports per-query keyspace, otherwise use connection keyspace.
-    const queryKeyspace = types.protocolVersion.supportsKeyspaceInRequest(version) &&
-      execOptions.getKeyspace() || this.keyspace;
-
-    const { queryId, meta } = await PrepareHandler.getPrepared(this, lbp, query, queryKeyspace);
-    request = await this._createExecuteRequest(query, queryId, execOptions, params, meta);
-  }
-
-  return await RequestHandler.send(request, execOptions, this);
-};
-
-/**
- * Sets the listeners for the nodes.
- * @private
- */
-Client.prototype._setHostListeners = function () {
-  function getHostUpListener(emitter, h) {
-    return () => emitter.emit('hostUp', h);
-  }
-
-  function getHostDownListener(emitter, h) {
-    return () => emitter.emit('hostDown', h);
-  }
-
-  const self = this;
-
-  // Add status listeners when new nodes are added and emit hostAdd
-  this.hosts.on('add', function hostAddedListener(h) {
-    h.on('up', getHostUpListener(self, h));
-    h.on('down', getHostDownListener(self, h));
-    self.emit('hostAdd', h);
-  });
-
-  // Remove all listeners and emit hostRemove
-  this.hosts.on('remove', function hostRemovedListener(h) {
-    h.removeAllListeners();
-    self.emit('hostRemove', h);
-  });
-
-  // Add status listeners for existing hosts
-  this.hosts.forEach(function (h) {
-    h.on('up', getHostUpListener(self, h));
-    h.on('down', getHostDownListener(self, h));
-  });
-};
-
-/**
- * Sets the distance to each host and when warmup is true, creates all connections to local hosts.
- * @returns {Promise}
- * @private
- */
-Client.prototype._warmup = function () {
-  const hosts = this.hosts.values();
-
-  return promiseUtils.times(hosts.length, warmupLimit, async (index) => {
-    const h = hosts[index];
-    const distance = this.profileManager.getDistance(h);
-
-    if (distance === types.distance.ignored) {
-      return;
+    if (!execOptions.isPrepared() && params && !Array.isArray(params) &&
+      !types.protocolVersion.supportsNamedParameters(version)) {
+      // Only Cassandra 2.1 and above supports named parameters
+      throw new errors.ArgumentError('Named parameters for simple statements are not supported, use prepare flag');
     }
 
-    if (this.options.pooling.warmup && distance === types.distance.local) {
-      try {
-        await h.warmupPool(this.keyspace);
-      } catch (err) {
-        // An error while trying to create a connection to one of the hosts.
-        // Warn the user and move on.
-        this.log('warning', `Connection pool to host ${h.address} could not be created: ${err}`, err);
-      }
+    let request;
+
+    if (!this.connected) {
+      // Micro optimization to avoid an async execution for a simple check
+      await this._connect();
+    }
+
+    if (!execOptions.isPrepared()) {
+      request = await this._createQueryRequest(query, execOptions, params);
     } else {
-      h.initializePool();
+      const lbp = execOptions.getLoadBalancingPolicy();
+
+      // Use keyspace from query options if protocol supports per-query keyspace, otherwise use connection keyspace.
+      const queryKeyspace = types.protocolVersion.supportsKeyspaceInRequest(version) &&
+        execOptions.getKeyspace() || this.keyspace;
+
+      const { queryId, meta } = await PrepareHandler.getPrepared(this, lbp, query, queryKeyspace);
+      request = await this._createExecuteRequest(query, queryId, execOptions, params, meta);
     }
-  });
-};
 
-/**
- * @returns {Encoder}
- * @private
- */
-Client.prototype._getEncoder = function () {
-  const encoder = this.controlConnection.getEncoder();
-  if (!encoder) {
-    throw new errors.DriverInternalError('Encoder is not defined');
+    return await RequestHandler.send(request, execOptions, this);
   }
-  return encoder;
-};
+  /**
+   * Sets the listeners for the nodes.
+   * @private
+   */
+  _setHostListeners() {
+    function getHostUpListener(emitter, h) {
+      return () => emitter.emit('hostUp', h);
+    }
 
-/**
- * Returns a BatchRequest instance and fills the routing key information in the provided options.
- * @private
- */
-Client.prototype._createBatchRequest = async function (queryItems, info) {
-  const firstQuery = queryItems[0];
-  if (!firstQuery.meta) {
+    function getHostDownListener(emitter, h) {
+      return () => emitter.emit('hostDown', h);
+    }
+
+    const self = this;
+
+    // Add status listeners when new nodes are added and emit hostAdd
+    this.hosts.on('add', function hostAddedListener(h) {
+      h.on('up', getHostUpListener(self, h));
+      h.on('down', getHostDownListener(self, h));
+      self.emit('hostAdd', h);
+    });
+
+    // Remove all listeners and emit hostRemove
+    this.hosts.on('remove', function hostRemovedListener(h) {
+      h.removeAllListeners();
+      self.emit('hostRemove', h);
+    });
+
+    // Add status listeners for existing hosts
+    this.hosts.forEach(function (h) {
+      h.on('up', getHostUpListener(self, h));
+      h.on('down', getHostDownListener(self, h));
+    });
+  }
+  /**
+   * Sets the distance to each host and when warmup is true, creates all connections to local hosts.
+   * @returns {Promise}
+   * @private
+   */
+  _warmup(): Promise<any> {
+    const hosts = this.hosts.values();
+
+    return promiseUtils.times(hosts.length, warmupLimit, async (index) => {
+      const h = hosts[index];
+      const distance = this.profileManager.getDistance(h);
+
+      if (distance === types.distance.ignored) {
+        return;
+      }
+
+      if (this.options.pooling.warmup && distance === types.distance.local) {
+        try {
+          await h.warmupPool(this.keyspace);
+        } catch (err) {
+          // An error while trying to create a connection to one of the hosts.
+          // Warn the user and move on.
+          this.log('warning', `Connection pool to host ${h.address} could not be created: ${err}`, err);
+        }
+      } else {
+        h.initializePool();
+      }
+    });
+  }
+  /**
+   * @returns {Encoder}
+   * @private
+   */
+  _getEncoder(): Encoder {
+    const encoder = this.controlConnection.getEncoder();
+    if (!encoder) {
+      throw new errors.DriverInternalError('Encoder is not defined');
+    }
+    return encoder;
+  }
+  /**
+   * Returns a BatchRequest instance and fills the routing key information in the provided options.
+   * @private
+   */
+  async _createBatchRequest(queryItems: {query; params; info?}[], info) {
+    const firstQuery = queryItems[0];
+    if (!("meta" in firstQuery)) {
+      return new requests.BatchRequest(queryItems, info);
+    }
+
+    await this._setRoutingInfo(info, firstQuery.params, firstQuery.meta);
     return new requests.BatchRequest(queryItems, info);
   }
-
-  await this._setRoutingInfo(info, firstQuery.params, firstQuery.meta);
-  return new requests.BatchRequest(queryItems, info);
-};
-
-/**
- * Returns an ExecuteRequest instance and fills the routing key information in the provided options.
- * @private
- */
-Client.prototype._createExecuteRequest = async function(query, queryId, info, params, meta) {
-  params = utils.adaptNamedParamsPrepared(params, meta.columns);
-  await this._setRoutingInfo(info, params, meta);
-  return new requests.ExecuteRequest(query, queryId, params, info, meta);
-};
-
-/**
- * Returns a QueryRequest instance and fills the routing key information in the provided options.
- * @private
- */
-Client.prototype._createQueryRequest = async function (query, execOptions, params) {
-  await this.metadata.adaptUserHints(this.keyspace, execOptions.getHints());
-  const paramsInfo = utils.adaptNamedParamsWithHints(params, execOptions);
-  this._getEncoder().setRoutingKeyFromUser(paramsInfo.params, execOptions, paramsInfo.keyIndexes);
-
-  return new requests.QueryRequest(query, paramsInfo.params, execOptions, paramsInfo.namedParameters);
-};
-
-/**
- * Sets the routing key based on the parameter values or the provided routing key components.
- * @param {ExecutionOptions} execOptions
- * @param {Array} params
- * @param meta
- * @private
- */
-Client.prototype._setRoutingInfo = async function (execOptions, params, meta) {
-  const encoder = this._getEncoder();
-
-  if (!execOptions.getKeyspace() && meta.keyspace) {
-    execOptions.setKeyspace(meta.keyspace);
+  /**
+   * Returns an ExecuteRequest instance and fills the routing key information in the provided options.
+   * @private
+   */
+  async _createExecuteRequest(query, queryId, info, params, meta) {
+    params = utils.adaptNamedParamsPrepared(params, meta.columns);
+    await this._setRoutingInfo(info, params, meta);
+    return new requests.ExecuteRequest(query, queryId, params, info, meta);
   }
-  if (execOptions.getRoutingKey()) {
-    // Routing information provided by the user
-    return encoder.setRoutingKeyFromUser(params, execOptions);
-  }
-  if (Array.isArray(meta.partitionKeys)) {
-    // The partition keys are provided as part of the metadata for modern protocol versions
-    execOptions.setRoutingIndexes(meta.partitionKeys);
-    return encoder.setRoutingKeyFromMeta(meta, params, execOptions);
-  }
+  /**
+   * Returns a QueryRequest instance and fills the routing key information in the provided options.
+   * @private
+   */
+  async _createQueryRequest(query, execOptions, params) {
+    await this.metadata.adaptUserHints(this.keyspace, execOptions.getHints());
+    const paramsInfo = utils.adaptNamedParamsWithHints(params, execOptions);
+    this._getEncoder().setRoutingKeyFromUser(paramsInfo.params, execOptions, paramsInfo.keyIndexes);
 
-  // Older versions of the protocol (v3 and below) don't provide routing information
-  try {
-    const tableInfo = await this.metadata.getTable(meta.keyspace, meta.table);
+    return new requests.QueryRequest(query, paramsInfo.params, execOptions, paramsInfo.namedParameters);
+  }
+  /**
+   * Sets the routing key based on the parameter values or the provided routing key components.
+   * @param {ExecutionOptions} execOptions
+   * @param {Array} params
+   * @param meta
+   * @private
+   */
+  async _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta) {
+    const encoder = this._getEncoder();
 
-    if (!tableInfo) {
-      // The schema data is not there, maybe it is being recreated, avoid setting the routing information
-      return;
+    if (!execOptions.getKeyspace() && meta.keyspace) {
+      execOptions.setKeyspace(meta.keyspace);
+    }
+    if (execOptions.getRoutingKey()) {
+      // Routing information provided by the user
+      return encoder.setRoutingKeyFromUser(params, execOptions);
+    }
+    if (Array.isArray(meta.partitionKeys)) {
+      // The partition keys are provided as part of the metadata for modern protocol versions
+      execOptions.setRoutingIndexes(meta.partitionKeys);
+      return encoder.setRoutingKeyFromMeta(meta, params, execOptions);
     }
 
-    execOptions.setRoutingIndexes(tableInfo.partitionKeys.map(c => meta.columnsByName[c.name]));
-    // Skip parsing metadata next time
-    meta.partitionKeys = execOptions.getRoutingIndexes();
-    encoder.setRoutingKeyFromMeta(meta, params, execOptions);
-  } catch (err) {
-    this.log('warning', util.format('Table %s.%s metadata could not be retrieved', meta.keyspace, meta.table));
+    // Older versions of the protocol (v3 and below) don't provide routing information
+    try {
+      const tableInfo = await this.metadata.getTable(meta.keyspace, meta.table);
+
+      if (!tableInfo) {
+        // The schema data is not there, maybe it is being recreated, avoid setting the routing information
+        return;
+      }
+
+      execOptions.setRoutingIndexes(tableInfo.partitionKeys.map(c => meta.columnsByName[c.name]));
+      // Skip parsing metadata next time
+      meta.partitionKeys = execOptions.getRoutingIndexes();
+      encoder.setRoutingKeyFromMeta(meta, params, execOptions);
+    } catch (err) {
+      this.log('warning', util.format('Table %s.%s metadata could not be retrieved', meta.keyspace, meta.table));
+    }
   }
-};
+}
+
 
 export default Client;
 
 export {
   Client,
-  ClientOptions,
-  QueryOptions
+  type ClientOptions,
+  type QueryOptions
 };

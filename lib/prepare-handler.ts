@@ -17,12 +17,12 @@ import errors from "./errors";
 import utils from "./utils";
 import types from "./types/index";
 import promiseUtils from "./promise-utils";
-import Client from "./client";
+import type Client from "./client";
 import { LoadBalancingPolicy } from "./policies/load-balancing";
-import { Host } from "./host";
-import { ProfileManager } from "./execution-profile";
+import type { Host } from "./host";
+import { type ProfileManager } from "./execution-profile";
 import Connection from "./connection";
-import { PreparedQueryInfo } from "./metadata";
+import { type PreparedQueryInfo } from "./metadata";
 
 
 

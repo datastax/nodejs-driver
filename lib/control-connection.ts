@@ -24,8 +24,12 @@ import EventDebouncer from "./metadata/event-debouncer";
 import Connection from "./connection";
 import requests from "./requests";
 import utils from "./utils";
-import types from "./types/index";
+import types, { ResultSet, Row } from "./types/index";
 import promiseUtils from "./promise-utils";
+import type { ClientOptions } from "./client";
+import { ProfileManager } from "./execution-profile";
+import { Request } from "./requests";
+import Encoder from "./encoder";
 
 
 const f = util.format;
@@ -47,6 +51,26 @@ const supportedDbaas = 'DATASTAX_APOLLO';
  * <p>It uses an existing connection from the hosts' connection pool to maintain the driver metadata up-to-date.</p>
  */
 class ControlConnection extends events.EventEmitter {
+  protocolVersion: number;
+  hosts: HostMap;
+  log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+  metadata: Metadata;
+  private options: ClientOptions;
+  initialized: boolean;
+  host: Host;
+  connection: Connection;
+  private _addressTranslator: any;
+  private _reconnectionPolicy: any;
+  private _reconnectionSchedule: any;
+  private _isShuttingDown: boolean;
+  private _encoder: null;
+  private _debouncer: EventDebouncer;
+  private _profileManager: ProfileManager;
+  private _triedHosts: Map<string, Error>;
+  private _resolvedContactPoints: Map<any, any>;
+  private _contactPoints: Set<unknown>;
+  private _topologyChangeTimeout: NodeJS.Timeout;
+  private _nodeStatusChangeTimeout: NodeJS.Timeout;
 
   /**
    * Creates a new instance of <code>ControlConnection</code>.
@@ -55,7 +79,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {{borrowHostConnection: function, createConnection: function}} [context] An object containing methods to
    * allow dependency injection.
    */
-  constructor(options, profileManager, context) {
+  constructor(options: Partial<ClientOptions>, profileManager: ProfileManager, context?: { borrowHostConnection: (host: Host) => Connection; createConnection: (contactPoint: string) => Promise<Connection>; }) {
     super();
 
     this.protocolVersion = null;
@@ -116,7 +140,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {String} name
    * @param {Boolean} isIPv6
    */
-  _addContactPoint(address, port, name, isIPv6) {
+  _addContactPoint(address: string | null, port: string, name: string, isIPv6: boolean) {
     if (address === null) {
       // Contact point could not be resolved, store that the resolution came back empty
       this._resolvedContactPoints.set(name, utils.emptyArray);
@@ -196,7 +220,7 @@ class ControlConnection extends events.EventEmitter {
       const separatorIndex = address.lastIndexOf(':');
 
       if (separatorIndex === -1) {
-        throw new new errors.DriverInternalError('The SNI endpoint address should contain ip/name and port');
+        throw new errors.DriverInternalError('The SNI endpoint address should contain ip/name and port');
       }
 
       const nameOrIp = address.substr(0, separatorIndex);
@@ -264,7 +288,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Iterator<Host>} hostIterator
    * @returns {Connection!}
    */
-  _borrowAConnection(hostIterator) {
+  _borrowAConnection(hostIterator: Iterator<Host>): Connection {
     let connection = null;
 
     while (!connection) {
@@ -296,7 +320,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Iterator<string>} contactPointsIterator
    * @returns {Promise<void>}
    */
-  async _borrowFirstConnection(contactPointsIterator) {
+  async _borrowFirstConnection(contactPointsIterator: Iterator<string>): Promise<void> {
     let connection = null;
 
     while (!connection) {
@@ -326,7 +350,7 @@ class ControlConnection extends events.EventEmitter {
   }
 
   /** Default implementation for borrowing connections, that can be injected at constructor level */
-  _borrowHostConnection(host) {
+  private _borrowHostConnection(host: Host) {
     // Borrow any open connection, regardless of the keyspace
     return host.borrowConnection();
   }
@@ -335,7 +359,7 @@ class ControlConnection extends events.EventEmitter {
    * Default implementation for creating initial connections, that can be injected at constructor level
    * @param {String} contactPoint
    */
-  async _createConnection(contactPoint) {
+  async _createConnection(contactPoint: string) {
     const c = new Connection(contactPoint, null, this.options);
 
     try {
@@ -356,7 +380,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} isReconnecting Determines whether the refresh is being done because the ControlConnection is
    * switching to use this connection to this host.
    */
-  async _refreshHosts(initializing, isReconnecting) {
+  async _refreshHosts(initializing: boolean, isReconnecting: boolean) {
     // Get a reference to the current connection as it might change from external events
     const c = this.connection;
 
@@ -450,7 +474,7 @@ class ControlConnection extends events.EventEmitter {
    * iterator from query plan / host list</p>
    * @param {Iterator<Host>} [hostIterator]
    */
-  async _refresh(hostIterator) {
+  async _refresh(hostIterator?: Iterator<Host>) {
     if (this._isShuttingDown) {
       this.log('info', 'The ControlConnection will not be refreshed as the Client is being shutdown');
       return;
@@ -463,7 +487,7 @@ class ControlConnection extends events.EventEmitter {
     try {
       if (!hostIterator) {
         this.log('info', 'Trying to acquire a connection to a new host');
-        this._triedHosts = {};
+        this._triedHosts = new Map();
         hostIterator = await promiseUtils.newQueryPlan(this._profileManager.getDefaultLoadBalancing(), null, null);
       }
 
@@ -511,13 +535,13 @@ class ControlConnection extends events.EventEmitter {
    * Acquires a connection and refreshes topology and keyspace metadata for the first time.
    * @returns {Promise<void>}
    */
-  async _initializeConnection() {
+  async _initializeConnection(): Promise<void> {
     this.log('info', 'Getting first connection');
 
     // Reset host and connection
     this.host = null;
     this.connection = null;
-    this._triedHosts = {};
+    this._triedHosts = new Map();
 
     // Randomize order of contact points resolved.
     const contactPointsIterator = utils.shuffleArray(Array.from(this._contactPoints))[Symbol.iterator]();
@@ -632,7 +656,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} processNow
    * @returns {Promise<void>}
    */
-  handleSchemaChange(event, processNow) {
+  handleSchemaChange(event: { keyspace: string; isKeyspace: boolean; schemaChangeType; table; udt; functionName; aggregate; }, processNow: boolean): Promise<void> {
     const self = this;
     let handler, cqlObject;
 
@@ -698,7 +722,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} processNow
    * @returns {Promise<void>}
    */
-  _scheduleObjectRefresh(handler, keyspace, cqlObject, processNow) {
+  _scheduleObjectRefresh(handler: Function, keyspace: string, cqlObject: string, processNow: boolean): Promise<void> {
     return this._debouncer.eventReceived({ handler, keyspace, cqlObject }, processNow);
   }
 
@@ -707,7 +731,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} processNow
    * @returns {Promise<void>}
    */
-  _scheduleKeyspaceRefresh(keyspace, processNow) {
+  _scheduleKeyspaceRefresh(keyspace: string, processNow: boolean): Promise<void> {
     return this._debouncer.eventReceived({
       handler: () => this.metadata.refreshKeyspace(keyspace),
       keyspace
@@ -715,7 +739,7 @@ class ControlConnection extends events.EventEmitter {
   }
 
   /** @returns {Promise<void>} */
-  _scheduleRefreshHosts() {
+  _scheduleRefreshHosts(): Promise<void> {
     return this._debouncer.eventReceived({
       handler: () => this._refreshHosts(false, false),
       all: true
@@ -729,7 +753,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} setCurrentHost Determines if the host retrieved must be set as the current host
    * @param result
    */
-  _setLocalInfo(initializing, setCurrentHost, c, result) {
+  _setLocalInfo(initializing: boolean, setCurrentHost: boolean, c: Connection, result) {
     if (!result || !result.rows || !result.rows.length) {
       this.log('warning', 'No local info could be obtained');
       return;
@@ -777,7 +801,7 @@ class ControlConnection extends events.EventEmitter {
    * connection the first time.
    * @param {ResultSet} result
    */
-  async setPeersInfo(initializing, result) {
+  async setPeersInfo(initializing: boolean, result: ResultSet) {
     if (!result || !result.rows) {
       return;
     }
@@ -870,7 +894,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Number} defaultPort
    * @returns {Promise<string>}
    */
-  getAddressForPeerHost(row, defaultPort) {
+  getAddressForPeerHost(row: object | Row, defaultPort: number): Promise<string> {
     return new Promise(resolve => {
       let address = row['rpc_address'];
       const peer = row['peer'];
@@ -933,7 +957,7 @@ class ControlConnection extends events.EventEmitter {
    * Waits for a connection to be available. If timeout expires before getting a connection it callbacks in error.
    * @returns {Promise<void>}
    */
-  _waitForReconnection() {
+  _waitForReconnection(): Promise<void> {
     return new Promise((resolve, reject) => {
       const callback = promiseUtils.getCallback(resolve, reject);
 
@@ -960,7 +984,7 @@ class ControlConnection extends events.EventEmitter {
    * @param {Boolean} [waitReconnect] Determines if it should wait for reconnection in case the control connection is not
    * connected at the moment. Default: true.
    */
-  async query(cqlQuery, waitReconnect = true) {
+  async query(cqlQuery: string | Request, waitReconnect: boolean = true) {
     const queryOnConnection = async () => {
       if (!this.connection || this._isShuttingDown) {
         throw new errors.NoHostAvailableError({}, 'ControlConnection is not connected at the time');
@@ -979,7 +1003,7 @@ class ControlConnection extends events.EventEmitter {
   }
 
   /** @returns {Encoder} The encoder used by the current connection */
-  getEncoder() {
+  getEncoder(): Encoder {
     if (!this._encoder) {
       throw new errors.DriverInternalError('Encoder is not defined');
     }
@@ -1027,7 +1051,7 @@ class ControlConnection extends events.EventEmitter {
    * Gets the local IP address to which the control connection socket is bound to.
    * @returns {String|undefined}
    */
-  getLocalAddress() {
+  getLocalAddress(): string | undefined {
     if (!this.connection) {
       return undefined;
     }
@@ -1039,7 +1063,7 @@ class ControlConnection extends events.EventEmitter {
    * Gets the address and port of host the control connection is connected to.
    * @returns {String|undefined}
    */
-  getEndpoint() {
+  getEndpoint(): string | undefined {
     if (!this.connection) {
       return undefined;
     }
@@ -1054,7 +1078,7 @@ class ControlConnection extends events.EventEmitter {
  * @param {Row} row
  * @private
  */
-function setDseParameters(host, row) {
+function setDseParameters(host: Host, row: Row) {
   if (row['workloads'] !== undefined) {
     host.workloads = row['workloads'];
   }

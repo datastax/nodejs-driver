@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import Client from "../client";
-import TableMetadata from "../metadata/table-metadata";
-import ModelMappingInfo from "./model-mapping-info";
+import type Client from "../client";
+import type TableMetadata from "../metadata/table-metadata";
+import type ModelMappingInfo from "./model-mapping-info";
 
 
 

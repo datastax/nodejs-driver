@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 import Cache from "./cache";
-import MappingHandler from "./mapping-handler";
-import Tree from "./tree";
+import type MappingHandler from "./mapping-handler";
+import type Tree from "./tree";
 
 type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo
 

@@ -99,15 +99,15 @@ export {
   DefaultTableMappings,
   UnderscoreCqlToCamelCaseMappings,
   q,
-  MappingOptions,
-  ModelOptions,
+  type MappingOptions,
+  type ModelOptions,
   ModelColumnOptions,
   ModelTables,
   MappingExecutionOptions,
-  FindDocInfo,
-  InsertDocInfo,
-  UpdateDocInfo,
-  RemoveDocInfo
+  type FindDocInfo,
+  type InsertDocInfo,
+  type UpdateDocInfo,
+  type RemoveDocInfo
 };
 
 export default {

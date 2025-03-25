@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import errors from "../errors";
-import Client from "../client";
+import type Client from "../client";
 
 
 

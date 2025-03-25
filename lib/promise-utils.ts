@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { EventEmitter } from "stream";
-import { ExecutionOptions } from "./execution-options";
-import { Host } from "./host";
-import { LoadBalancingPolicy } from "./policies/load-balancing";
+import type { EventEmitter } from "stream";
+import type { ExecutionOptions } from "./execution-options";
+import type { Host } from "./host";
+import type { LoadBalancingPolicy } from "./policies/load-balancing";
 
 
 

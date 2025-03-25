@@ -15,13 +15,15 @@
  */
 import util from "util";
 import policies from "./policies/index";
-import types from "./types/index";
+import types from "./types";
 import utils from "./utils";
 import tracker from "./tracker/index";
 import metrics from "./metrics/index";
 import auth from "./auth/index";
+import { type ClientOptions } from "./client";
+import type Client from "./client";
 
-
+//TODO: need to revisit those options, potentially merge the ones in JSDoc and .d.ts
 /** Core connections per host for protocol versions 1 and 2 */
 const coreConnectionsPerHostV2 = {
   [types.distance.local]: 2,
@@ -49,7 +51,7 @@ const continuousPageDefaultHighWaterMark = 10000;
 /**
  * @returns {ClientOptions}
  */
-function defaultOptions () {
+function defaultOptions (): ClientOptions {
   return ({
     policies: {
       addressResolution: policies.defaultAddressTranslator(),
@@ -103,16 +105,18 @@ function defaultOptions () {
 
 /**
  * Extends and validates the user options
- * @param {Object} [baseOptions] The source object instance that will be overridden
- * @param {Object} userOptions
+ * @param {ClientOptions} [baseOptions] The source object instance that will be overridden
+ * @param {ClientOptions} userOptions
  * @returns {Object}
  */
-function extend(baseOptions, userOptions) {
+function extend(userOptions: Partial<ClientOptions>): ClientOptions;
+function extend(baseOptions: Partial<ClientOptions>, userOptions: Partial<ClientOptions>): ClientOptions;
+function extend(baseOptions: Partial<ClientOptions>, userOptions?: Partial<ClientOptions>): ClientOptions {
   if (arguments.length === 1) {
     userOptions = arguments[0];
     baseOptions = {};
   }
-  const options = utils.deepExtend(baseOptions, defaultOptions(), userOptions);
+  const options = utils.deepExtend(baseOptions, defaultOptions(), userOptions) as ClientOptions;
 
   if (!options.cloud) {
     if (!Array.isArray(options.contactPoints) || options.contactPoints.length === 0) {
@@ -196,7 +200,7 @@ function validateCloudOptions(options) {
  * @param {ClientOptions.policies} policiesOptions
  * @private
  */
-function validatePoliciesOptions(policiesOptions) {
+function validatePoliciesOptions(policiesOptions: ClientOptions["policies"]) {
   if (!policiesOptions) {
     throw new TypeError('policies not defined in options');
   }
@@ -223,7 +227,7 @@ function validatePoliciesOptions(policiesOptions) {
  * @param {ClientOptions.protocolOptions} protocolOptions
  * @private
  */
-function validateProtocolOptions(protocolOptions) {
+function validateProtocolOptions(protocolOptions: ClientOptions["protocolOptions"]) {
   if (!protocolOptions) {
     throw new TypeError('protocolOptions not defined in options');
   }
@@ -238,7 +242,7 @@ function validateProtocolOptions(protocolOptions) {
  * @param {ClientOptions.socketOptions} socketOptions
  * @private
  */
-function validateSocketOptions(socketOptions) {
+function validateSocketOptions(socketOptions: ClientOptions["socketOptions"]) {
   if (!socketOptions) {
     throw new TypeError('socketOptions not defined in options');
   }
@@ -255,7 +259,7 @@ function validateSocketOptions(socketOptions) {
  * @param {ClientOptions} options
  * @private
  */
-function validateAuthenticationOptions(options) {
+function validateAuthenticationOptions(options: ClientOptions) {
   if (!options.authProvider) {
     const credentials = options.credentials;
     if (credentials) {
@@ -277,7 +281,7 @@ function validateAuthenticationOptions(options) {
  * @param {ClientOptions.encoding} encodingOptions
  * @private
  */
-function validateEncodingOptions(encodingOptions) {
+function validateEncodingOptions(encodingOptions: ClientOptions["encoding"]) {
   if (encodingOptions.map) {
     const mapConstructor = encodingOptions.map;
     if (typeof mapConstructor !== 'function' ||
@@ -329,7 +333,7 @@ function validateMonitorReporting(options) {
  * Sets the default options that depend on the protocol version and other metadata.
  * @param {Client} client
  */
-function setMetadataDependent(client) {
+function setMetadataDependent(client: Client) {
   const version = client.controlConnection.protocolVersion;
   let coreConnectionsPerHost = coreConnectionsPerHostV3;
   let maxRequestsPerConnection = maxRequestsPerConnectionV3;

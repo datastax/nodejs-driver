@@ -22,8 +22,8 @@ import Tree from "./tree";
 import ObjectSelector from "./object-selector";
 import DocInfoAdapter from "./doc-info-adapter";
 import Client from "../client";
-import ModelMappingInfo from "./model-mapping-info";
-import { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type ModelMappingInfo from "./model-mapping-info";
+import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
 
 const cacheHighWaterMark = 100;
@@ -119,7 +119,7 @@ class MappingHandler {
 
     // Part of the closure
     const query = QueryGenerator.getSelect(
-      tableName, this.info.keyspace, utils.emptyArray, fieldsInfo, orderByColumns, limit);
+      tableName, this.info.keyspace, utils.emptyArray as any[], fieldsInfo, orderByColumns, limit);
     const paramsGetter = QueryGenerator.selectParamsGetter(utils.emptyArray, limit);
     const self = this;
 

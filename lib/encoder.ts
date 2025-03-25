@@ -21,9 +21,10 @@ import token from "./token";
 import { DateRange } from "./datastax/search/index";
 import geo from "./geometry/index";
 import Vector from "./types/vector";
-import { ClientOptions } from "./client";
+import { type ClientOptions } from "./client";
 import {dataTypes, Long, Integer, BigDecimal} from "./types/index";
 import {Geometry, LineString, Point, Polygon} from "./geometry/index";
+import type { ExecutionOptions } from "./execution-options";
 
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -362,7 +363,7 @@ class Encoder{
     const totalItems = this.decodeCollectionLength(bytes, 0);
     let offset = this.collectionLengthSize;
     const self = this;
-    function readValues(callback, thisArg) {
+    function readValues(callback, thisArg?) {
       for (let i = 0; i < totalItems; i++) {
         const keyLength = self.decodeCollectionLength(bytes, offset);
         offset += self.collectionLengthSize;
@@ -504,6 +505,7 @@ class Encoder{
       }
     }
     if (this.encodingOptions.useBigIntAsLong) {
+      // @ts-ignore
       value = BigInt(value);
     }
     return this.encodeLong(value);
@@ -779,7 +781,7 @@ class Encoder{
       return this.encodeVector(value, vectorColumnInfo);
     }
 
-    const handler = this.customEncoders[columnInfo.info];
+    const handler = this.customEncoders[columnInfo.info as string];
     if (handler) {
       return handler.call(this, value);
     }
@@ -797,7 +799,7 @@ class Encoder{
    * @param {Number|String} value
    * @private
    */
-  private encodeInt = function (value: number | string) {
+  private encodeInt = function (value: number) {
     if (isNaN(value)) {
       throw new TypeError('Expected Number, obtained ' + util.inspect(value));
     }
@@ -809,7 +811,7 @@ class Encoder{
    * @param {Number|String} value
    * @private
    */
-  private encodeSmallint = function (value: number | string) {
+  private encodeSmallint = function (value: number) {
     if (isNaN(value)) {
       throw new TypeError('Expected Number, obtained ' + util.inspect(value));
     }
@@ -1129,7 +1131,7 @@ class Encoder{
    * @internal
    * @ignore
    */
-  private setRoutingKeyFromUser = function (params: Array<any>, execOptions: import('..').ExecutionOptions, keys) {
+  setRoutingKeyFromUser = function (params: Array<any>, execOptions: ExecutionOptions, keys?) {
     let totalLength = 0;
     const userRoutingKey = execOptions.getRoutingKey();
     if (Array.isArray(userRoutingKey)) {
@@ -1155,7 +1157,9 @@ class Encoder{
     }
     // If routingKey is present, ensure it is a Buffer, Token, or TokenRange.  Otherwise throw an error.
     if (userRoutingKey) {
+      // @ts-ignore
       if (userRoutingKey instanceof Buffer || userRoutingKey instanceof token.Token
+        // @ts-ignore
         || userRoutingKey instanceof token.TokenRange) {
         return;
       }
@@ -1207,7 +1211,7 @@ class Encoder{
    * @internal
    * @ignore
    */
-  private setRoutingKeyFromMeta = function (meta: object, params: Array<any>, execOptions: ExecutionOptions) {
+  setRoutingKeyFromMeta = function (meta: any, params: Array<any>, execOptions: ExecutionOptions) {
     const routingIndexes = execOptions.getRoutingIndexes();
     if (!routingIndexes) {
       return;
@@ -1277,7 +1281,7 @@ class Encoder{
    * @throws {Error}
    * @ignore
    */
-  private parseTypeName = async function (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function): Promise<ColumnInfo> {
+  parseTypeName = async function (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function): Promise<ColumnInfo> {
     startIndex = startIndex || 0;
     if (!length) {
       length = typeName.length;
@@ -1415,7 +1419,7 @@ class Encoder{
 
     const typeCode = dataTypes[typeName];
     if (typeof typeCode === 'number') {
-      return {code : typeCode, info: null};
+      return {code : typeCode as SingleTypeCodes, info: null};
     }
 
     if (typeName === cqlNames.duration) {
@@ -1462,7 +1466,7 @@ class Encoder{
    * @internal
    * @ignore
    */
-  private parseFqTypeName = function (typeName: string, startIndex: number, length: number): ColumnInfo {
+  parseFqTypeName = function (typeName: string, startIndex?: number, length?: number): ColumnInfo {
     let frozen = false;
     let reversed = false;
     startIndex = startIndex || 0;
@@ -1502,7 +1506,7 @@ class Encoder{
       }
       const typeCode = singleTypeNames[typeName];
       if (typeof typeCode === 'number') {
-        return {code : typeCode, info: null, options : options};
+        return {code : typeCode as SingleTypeCodes, info: null, options : options};
       }
       // special handling for duration
       if (typeName === customTypeNames.duration) {
@@ -1609,7 +1613,7 @@ class Encoder{
      * @internal
      * @ignore
      */
-  private parseKeyTypes = function (typesString: string): { types: Array<any>; isComposite: boolean; hasCollections: boolean; } {
+  parseKeyTypes = function (typesString: string): { types: Array<any>; isComposite: boolean; hasCollections: boolean; } {
     let i = 0;
     let length = typesString.length;
     const isComposite = typesString.indexOf(complexTypeNames.composite) === 0;
@@ -1829,7 +1833,7 @@ class Encoder{
     if (typeInfo) {
       if (typeof typeInfo === 'number') {
         type = {
-          code: typeInfo
+          code: typeInfo as SingleTypeCodes
         };
       }
       else if (typeof typeInfo === 'string') {
@@ -2141,7 +2145,7 @@ function encodeDateRange(value: DateRange) {
  * @returns {Array<String>}
  * @private
  */
-function parseParams(value: string, startIndex: number, length: number, open: string, close: string): Array<string> {
+function parseParams(value: string, startIndex: number, length: number, open?: string, close?: string): Array<string> {
   open = open || '(';
   close = close || ')';
   const types = [];

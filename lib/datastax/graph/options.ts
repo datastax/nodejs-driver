@@ -17,9 +17,11 @@ import util from "util";
 import types from "../../types/index";
 import utils from "../../utils";
 import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
-import { ProfileManager } from "../../execution-profile";
-import { GraphQueryOptions } from ".";
-import Client from "../../client";
+import type { ExecutionProfile, ProfileManager } from "../../execution-profile";
+import type { GraphQueryOptions } from ".";
+import type { QueryOptions } from "../../client";
+import type Client from "../../client";
+import type { RetryPolicy } from "../../policies/retry";
 
 
 const Long = types.Long;
@@ -85,11 +87,11 @@ const payloadKeys = Object.freeze({
  * @returns {DseClientOptions}
  * @private
  */
-function getDefaultGraphOptions(profileManager: ProfileManager, baseOptions, defaultRetryPolicy: RetryPolicy | null, profile: ExecutionProfile): DseClientOptions {
+function getDefaultGraphOptions(profileManager: ProfileManager, baseOptions, defaultRetryPolicy: RetryPolicy | null, profile: ExecutionProfile): GraphQueryOptions {
   return profileManager.getOrCreateGraphOptions(profile, function createDefaultOptions() {
-    const profileOptions = profile.graphOptions || utils.emptyObject;
+    const profileOptions : ExecutionProfile["graphOptions"] = profile.graphOptions || utils.emptyObject;
     const defaultProfile = profileManager.getDefault();
-    const options = {
+    const options : GraphQueryOptions = {
       customPayload: {
         [payloadKeys.language]: utils.allocBufferFromString(profileOptions.language || baseOptions.language),
         [payloadKeys.source]: utils.allocBufferFromString(profileOptions.source || baseOptions.source)
@@ -153,7 +155,7 @@ function getDefaultGraphOptions(profileManager: ProfileManager, baseOptions, def
  * @param {Function} [converter]
  * @private
  */
-function setPayloadKey(payload: object, profileOptions: QueryOptions, key: string, value: string | number | null, converter: Function) {
+function setPayloadKey(payload: object, profileOptions: QueryOptions, key: string, value: string | number | null | undefined, converter?: Function) {
   converter = converter || utils.allocBufferFromString;
   if (value === null) {
     // Use null to avoid set payload for a key
@@ -172,7 +174,7 @@ function setPayloadKey(payload: object, profileOptions: QueryOptions, key: strin
 
 function longBuffer(value) {
   value = Long.fromNumber(value);
-  return Long.toBuffer(value);
+  return Long["toBuffer"](value);
 }
 
 /**
@@ -219,7 +221,7 @@ function loadConsistencyNames() {
  * @ignore
  */
 class GraphExecutionOptions extends DefaultExecutionOptions {
-  _defaultGraphOptions: DseClientOptions;
+  _defaultGraphOptions: GraphQueryOptions;
   _preferredHost: null;
   _graphSubProtocol: any;
   _graphLanguage: any;
@@ -253,7 +255,7 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
   }
 
   getGraphSource() {
-    return this.getRawQueryOptions().graphSource || this._defaultGraphOptions.graphSource;
+    return this.getRawQueryOptions()["graphSource"] || this._defaultGraphOptions.graphSource;
   }
 
   getGraphLanguage() {
@@ -265,7 +267,7 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
   }
 
   getGraphName() {
-    return utils.ifUndefined(this.getRawQueryOptions().graphName, this._defaultGraphOptions.graphName);
+    return utils.ifUndefined(this.getRawQueryOptions()["graphName"], this._defaultGraphOptions.graphName);
   }
 
   getGraphSubProtocol() {
@@ -287,7 +289,7 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
   }
 
   getRowParser() {
-    const factory = this.getRawQueryOptions().rowParserFactory;
+    const factory = this.getRawQueryOptions()["rowParserFactory"];
 
     if (!factory) {
       return null;
@@ -297,7 +299,7 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
   }
 
   getQueryWriter() {
-    const factory = this.getRawQueryOptions().queryWriterFactory;
+    const factory = this.getRawQueryOptions()["queryWriterFactory"];
 
     if (!factory) {
       return null;
@@ -316,12 +318,12 @@ class GraphExecutionOptions extends DefaultExecutionOptions {
     // Override the payload for DSE Graph exclusive options
     setPayloadKey(payload, defaultOptions, payloadKeys.language,
       this.getGraphLanguage() !== this._defaultGraphOptions.graphLanguage ? this.getGraphLanguage() : undefined);
-    setPayloadKey(payload, defaultOptions, payloadKeys.source, options.graphSource);
-    setPayloadKey(payload, defaultOptions, payloadKeys.name, options.graphName);
+    setPayloadKey(payload, defaultOptions, payloadKeys.source, options["graphSource"]);
+    setPayloadKey(payload, defaultOptions, payloadKeys.name, options["graphName"]);
     setPayloadKey(payload, defaultOptions, payloadKeys.readConsistency,
-      getConsistencyName(options.graphReadConsistency));
+      getConsistencyName(options["graphReadConsistency"]));
     setPayloadKey(payload, defaultOptions, payloadKeys.writeConsistency,
-      getConsistencyName(options.graphWriteConsistency));
+      getConsistencyName(options["graphWriteConsistency"]));
 
     // Use the read timeout defined by the user or the one default to graph executions
     setPayloadKey(payload, defaultOptions, payloadKeys.timeout,

@@ -16,7 +16,7 @@
 import util from "util";
 import utils from "../utils";
 import { ResultSet } from "../types";
-import ModelMappingInfo from "./model-mapping-info";
+import type ModelMappingInfo from "./model-mapping-info";
 
 
 const inspectMethod = util.inspect.custom || 'inspect';

@@ -56,11 +56,11 @@ class Tree extends Node {
    * @param {Function} valueHandler
    * @return {Object}
    */
-  getOrCreate(keyIterator: Iterator<string>, valueHandler: Function): object {
+  getOrCreate<T extends object>(keyIterator: Iterator<string>, valueHandler: () => T ): T {
     if (typeof keyIterator.next !== 'function') {
       keyIterator = keyIterator[Symbol.iterator]();
     }
-    let node = this;
+    let node : Tree = this;
     let isMatch = false;
     let item = keyIterator.next();
     while (true) {
@@ -115,10 +115,10 @@ class Tree extends Node {
     if (node.value === null && node.edges.length > 0) {
       node.value = valueHandler();
     }
-    return node.value;
+    return node.value as T;
   }
 
-  _createBranch(node, index, useNewValue, valueHandler) {
+  private _createBranch(node, index, useNewValue, valueHandler) {
     const newBranch = new Node(node.key.slice(index), node.value, node.edges);
     node.key = node.key.slice(0, index);
     node.edges = [ newBranch ];

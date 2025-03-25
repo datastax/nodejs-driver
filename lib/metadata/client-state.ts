@@ -15,8 +15,8 @@
  */
 import util from "util";
 import errors from "../errors";
-import { Host } from "../host";
-import Client from "../client";
+import type { Host } from "../host";
+import type Client from "../client";
 
 
 

@@ -77,7 +77,7 @@ class DseGssapiAuthProvider extends AuthProvider {
       if (err.code === 'MODULE_NOT_FOUND') {
         const newErr = new Error('You must install module "kerberos" to use GSSAPI auth provider: ' +
           'https://www.npmjs.com/package/kerberos');
-        newErr.code = err.code;
+        newErr["code"] = err.code;
         throw newErr;
       }
       throw err;

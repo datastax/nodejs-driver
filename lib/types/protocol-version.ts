@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Connection from "../connection";
-import { Host, HostMap } from "../host";
+import type Connection from "../connection";
+import type { Host, HostMap } from "../host";
 import utils from "../utils";
 import VersionNumber from "./version-number";
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MappingOptions } from ".";
+import type { MappingOptions } from ".";
 import { TableMappings, DefaultTableMappings } from "./table-mappings";
 
 /**

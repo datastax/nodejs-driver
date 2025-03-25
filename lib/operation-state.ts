@@ -17,8 +17,8 @@ import util from "util";
 import utils from "./utils";
 import errors from "./errors";
 import requests from "./requests";
-import { ExecutionOptions } from "./execution-options";
-import { Request } from "./requests";
+import type { ExecutionOptions } from "./execution-options";
+import type { Request } from "./requests";
 
 
 const ExecuteRequest = requests.ExecuteRequest;

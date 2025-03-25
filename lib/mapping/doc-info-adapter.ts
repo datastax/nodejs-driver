@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MappingExecutionOptions, ModelOptions } from ".";
+import type { MappingExecutionOptions } from ".";
 import errors from "../errors";
-import { ExecutionProfile } from "../execution-profile";
 import utils from "../utils";
-import ModelMappingInfo from "./model-mapping-info";
+import type ModelMappingInfo from "./model-mapping-info";
 
 
 /**

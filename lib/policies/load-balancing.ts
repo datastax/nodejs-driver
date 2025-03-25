@@ -17,9 +17,9 @@ import util from "util";
 import types from "../types/index";
 import utils from "../utils";
 import errors from "../errors";
-import Client from "../client";
-import { Host, HostMap } from "../host";
-import { ExecutionOptions } from "../execution-options";
+import type Client from "../client";
+import type { Host, HostMap } from "../host";
+import type { ExecutionOptions } from "../execution-options";
 
 const doneIteratorObject = Object.freeze({ done: true });
 const newlyUpInterval = 60000;

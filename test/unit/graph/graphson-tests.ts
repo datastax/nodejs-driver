@@ -41,7 +41,7 @@ describe('GraphSON2Reader', function () {
         [ 'dse:Blob', Buffer, buffer.toString('base64'), buffer ],
         [ 'dse:Point', geometry.Point, new geometry.Point(1, 2.1)],
         [ 'dse:LineString', geometry.LineString, geometry.LineString.fromString('LINESTRING (1 1, 2 2, 3 3)')],
-        [ 'dse:Polygon', geometry.Polygon, new geometry.Polygon.fromString('POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))')]
+        [ 'dse:Polygon', geometry.Polygon, geometry.Polygon.fromString('POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))')]
       ].forEach(function (item) {
         it('should read ' + item[0], function () {
           const obj = {

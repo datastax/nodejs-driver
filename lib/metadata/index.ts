@@ -24,8 +24,8 @@ import schemaParserFactory, {SchemaParser} from "./schema-parser";
 import promiseUtils from "../promise-utils";
 import { Token, TokenRange } from "../token";
 import { ExecutionOptions } from "../execution-options";
-import { ClientOptions } from "../client";
-import ControlConnection from "../control-connection";
+import type { ClientOptions } from "../client";
+import type ControlConnection from "../control-connection";
 import { Host, HostMap } from "../host";
 import Connection from "../connection";
 import MaterializedView from "./materialized-view";
@@ -517,7 +517,7 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link TableMetadata} as
    * second parameter.
    */
-  getTable(keyspaceName: string, name: string, callback: Function) {
+  getTable(keyspaceName: string, name: string, callback?: Function) {
     return promiseUtils.optionalCallback(this._getTable(keyspaceName, name), callback);
   }
 
@@ -662,7 +662,7 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link MaterializedView} as
    * second parameter.
    */
-  getMaterializedView(keyspaceName: string, name: string, callback: Function) {
+  getMaterializedView(keyspaceName: string, name: string, callback?: Function) {
     return promiseUtils.optionalCallback(this._getMaterializedView(keyspaceName, name), callback);
   }
 

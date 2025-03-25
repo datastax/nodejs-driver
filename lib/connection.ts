@@ -28,6 +28,10 @@ import StreamIdStack from "./stream-id-stack";
 import OperationState from "./operation-state";
 import promiseUtils from "./promise-utils";
 import { ExecutionOptions } from "./execution-options";
+import { Request } from "./requests";
+import type { ClientOptions } from "./client";
+import { Authenticator } from "./auth";
+import type { PreparedQueryInfo } from "./metadata";
 
 
 
@@ -35,6 +39,37 @@ import { ExecutionOptions } from "./execution-options";
  * Represents a connection to a Cassandra node
  */
 class Connection extends events.EventEmitter {
+  endpoint: string;
+  endpointFriendlyName: any;
+  _serverName: string;
+  address: any;
+  port: any;
+  _checkingVersion: boolean;
+  log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+  protocolVersion: number;
+  _operations: Map<any, any>;
+  _pendingWrites: any[];
+  _preparing: Map<string, PreparedQueryInfo>;
+  _idleTimeout: NodeJS.Timeout;
+  timedOutOperations: number;
+  _streamIds: StreamIdStack;
+  _metrics: any;
+  encoder: Encoder;
+  keyspace: string;
+  emitDrain: boolean;
+  connected: boolean;
+  isSocketOpen: boolean;
+  send: (arg1: Request, arg2: ExecutionOptions) => Promise<OperationState>;
+  closeAsync: () => Promise<unknown>;
+  openAsync: () => Promise<unknown>;
+  prepareOnceAsync: (arg1: string, arg2: string) => Promise<{id; meta}>;
+  netClient: any;
+  protocol: any;
+  parser: any;
+  writeQueue: WriteQueue;
+  options: ClientOptions;
+  toBeKeyspace: string;
+  sendingIdleQuery: any;
 
   /**
    * Creates a new instance of Connection.
@@ -42,7 +77,7 @@ class Connection extends events.EventEmitter {
    * @param {Number|null} protocolVersion
    * @param {ClientOptions} options
    */
-  constructor(endpoint, protocolVersion, options) {
+  constructor(endpoint: string, protocolVersion: number | null, options: ClientOptions) {
     super();
 
     this.setMaxListeners(0);
@@ -170,6 +205,10 @@ class Connection extends events.EventEmitter {
     this.log('info', `Connecting to ${this.endpointFriendlyName}`);
 
     if (!this.options.sslOptions) {
+      //TODO: this highWaterMark is not doing what it's supposed to do
+      // because Socket does not even accept such option
+      // How should we fix this??
+      // @ts-ignore
       this.netClient = new net.Socket({ highWaterMark: this.options.socketOptions.coalescingThreshold });
       this.netClient.connect(this.port, this.address, function connectCallback() {
         self.log('verbose', `Socket connected to ${self.endpointFriendlyName}`);
@@ -218,7 +257,7 @@ class Connection extends events.EventEmitter {
    * Determines the protocol version to use and sends the STARTUP request
    * @param {Function} callback
    */
-  startup(callback) {
+  startup(callback: Function) {
     if (this._checkingVersion) {
       this.log('info', 'Trying to use protocol version 0x' + this.protocolVersion.toString(16));
     }
@@ -322,7 +361,7 @@ class Connection extends events.EventEmitter {
   }
 
   /** @param {Number} lowerVersion */
-  decreaseVersion(lowerVersion) {
+  decreaseVersion(lowerVersion: number) {
     // The response already has the max protocol version supported by the Cassandra host.
     this.protocolVersion = lowerVersion;
     this.encoder.setProtocolVersion(lowerVersion);
@@ -340,7 +379,7 @@ class Connection extends events.EventEmitter {
   /**
    * Cleans all internal state and invokes all pending callbacks of sent streams
    */
-  clearAndInvokePending(innerError) {
+  clearAndInvokePending(innerError?) {
     if (this._idleTimeout) {
       //Remove the idle request
       clearTimeout(this._idleTimeout);
@@ -384,7 +423,7 @@ class Connection extends events.EventEmitter {
    * @param {String} authenticatorName
    * @param {Function} callback
    */
-  startAuthenticating(authenticatorName, callback) {
+  startAuthenticating(authenticatorName: string, callback: Function) {
     if (!this.options.authProvider) {
       return callback(new errors.AuthenticationError('Authentication provider not set'));
     }
@@ -405,17 +444,17 @@ class Connection extends events.EventEmitter {
    * @param {Buffer} token
    * @param {Function} callback
    */
-  authenticate(authenticator, token, callback) {
+  authenticate(authenticator: Authenticator, token: Buffer, callback: Function) {
     const self = this;
-    let request = new requests.AuthResponseRequest(token);
+    let request : Request = new requests.AuthResponseRequest(token);
     if (this.protocolVersion === 1) {
       //No Sasl support, use CREDENTIALS
-      if (!authenticator.username) {
+      if (!authenticator["username"]) {
         return self.onAuthenticationError(
           callback, new errors.AuthenticationError('Only plain text authenticator providers allowed under protocol v1'));
       }
 
-      request = new requests.CredentialsRequest(authenticator.username, authenticator.password);
+      request = new requests.CredentialsRequest(authenticator["username"], authenticator["password"]);
     }
 
     this.sendStream(request, null, function authResponseCallback(err, result) {
@@ -456,7 +495,7 @@ class Connection extends events.EventEmitter {
    * Executes a 'USE ' query, if keyspace is provided and it is different from the current keyspace
    * @param {?String} keyspace
    */
-  async changeKeyspace(keyspace) {
+  async changeKeyspace(keyspace: string | null) {
     if (!keyspace || this.keyspace === keyspace) {
       return;
     }
@@ -489,15 +528,18 @@ class Connection extends events.EventEmitter {
    * @param {String} keyspace
    * @param {function} callback
    */
-  prepareOnce(query, keyspace, callback) {
+  prepareOnce(query: string, keyspace: string, callback: (...args: any[]) => void): void{
     const name = ( keyspace || '' ) + query;
     let info = this._preparing.get(name);
 
     if (info) {
       // Its being already prepared
+      //TODO: I believe you actually don't need to return this
+      // @ts-ignore
       return info.once('prepared', callback);
     }
 
+    // @ts-ignore
     info = new events.EventEmitter();
     info.setMaxListeners(0);
     info.once('prepared', callback);
@@ -517,7 +559,7 @@ class Connection extends events.EventEmitter {
    * @param {function} callback Function to be called once the response has been received
    * @return {OperationState}
    */
-  sendStream(request, execOptions, callback) {
+  sendStream(request: Request, execOptions: ExecutionOptions | null, callback: Function): OperationState {
     execOptions = execOptions || ExecutionOptions.empty();
 
     // Create a new operation that will contain the request, callback and timeouts
@@ -555,7 +597,7 @@ class Connection extends events.EventEmitter {
    * @param {Number} streamId
    * @private
    */
-  _write(operation, streamId) {
+  _write(operation: OperationState, streamId: number) {
     operation.streamId = streamId;
     const self = this;
     this.writeQueue.push(operation, function writeCallback (err) {
@@ -618,7 +660,7 @@ class Connection extends events.EventEmitter {
    * Returns an available streamId or null if there isn't any available
    * @returns {Number}
    */
-  _getStreamId() {
+  _getStreamId(): number {
     return this._streamIds.pop();
   }
 
@@ -671,7 +713,7 @@ class Connection extends events.EventEmitter {
    * Returns the number of requests waiting for response
    * @returns {Number}
    */
-  getInFlight() {
+  getInFlight(): number {
     return this._streamIds.inUse;
   }
 
@@ -725,7 +767,7 @@ class Connection extends events.EventEmitter {
    * Multiple calls to this method have no additional side-effects.
    * @param {Function} [callback]
    */
-  close(callback) {
+  close(callback?: () => void) {
     callback = callback || utils.noop;
 
     if (!this.connected && !this.isSocketOpen) {
@@ -776,7 +818,7 @@ class Connection extends events.EventEmitter {
    * Gets the local IP address to which this connection socket is bound to.
    * @returns {String|undefined}
    */
-  getLocalAddress() {
+  getLocalAddress(): string | undefined {
     if (!this.netClient) {
       return undefined;
     }

@@ -24,7 +24,7 @@ import AdmZip from "adm-zip";
 import { URL } from "url";
 import errors from "../../errors";
 import utils from "../../utils";
-import { ClientOptions } from '../../client';
+import type { ClientOptions } from '../../client';
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);
@@ -233,7 +233,7 @@ function getServiceRequestError(err, requestOptions, isParsingError?) {
  * @internal
  * @ignore
  */
-function checkServerIdentity(cert: { subject: { CN: string; }; subjectaltname: string | null; }, sniAddress: string): Error | undefined {
+function checkServerIdentity(cert: { subject: { CN: string; }; subjectaltname?: string; }, sniAddress: string): Error | undefined {
   // Based on logic defined by the Node.js Core module
   // https://github.com/nodejs/node/blob/ff48009fefcecedfee2c6ff1719e5be3f6969049/lib/tls.js#L212-L290
 

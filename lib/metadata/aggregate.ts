@@ -25,13 +25,13 @@ class Aggregate {
   name: string;
   keyspaceName: string;
   signature: Array<string>;
-  argumentTypes: Array<{code: number, info: (object|Array<any>|null)}>;
+  argumentTypes: Array<{code: number, info?: (object|Array<any>|string)}>;
   stateFunction: string;
-  stateType: {code: number, info: (object|Array<any>|null)};
+  stateType: {code: number, info?: (object|Array<any>|string)};
   finalFunction: string;
   initConditionRaw: any;
   initCondition: string;
-  returnType: {code: number, info: (object|Array<any>|null)};
+  returnType: {code: number, info?: (object|Array<any>|string)};
   deterministic: boolean;
   constructor() {
     /**

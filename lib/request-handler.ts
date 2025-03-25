@@ -19,8 +19,8 @@ import types, { ResultSet } from "./types/index";
 import utils from "./utils";
 import RequestExecution from "./request-execution";
 import promiseUtils from "./promise-utils";
-import { ExecutionOptions } from "./execution-options";
-import Client from "./client";
+import type { ExecutionOptions } from "./execution-options";
+import type Client from "./client";
 import { Request } from "./requests";
 import { Host } from "./host";
 

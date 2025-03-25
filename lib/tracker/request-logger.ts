@@ -17,8 +17,8 @@ import events from "events";
 import RequestTracker from "./request-tracker";
 import errors from "../errors";
 import { format } from "util";
-import { Host } from "../host";
-import { ExecutionOptions } from "../execution-options";
+import type { Host } from "../host";
+import type { ExecutionOptions } from "../execution-options";
 
 
 const nanosToMillis = 1000000;

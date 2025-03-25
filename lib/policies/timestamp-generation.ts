@@ -16,7 +16,7 @@
 import util from "util";
 import { Long } from "../types/index";
 import errors from "../errors";
-import Client from "../client";
+import type Client from "../client";
 
 
 /** @module policies/timestampGeneration */

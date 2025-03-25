@@ -622,41 +622,6 @@ class TimeoutError extends errors.DriverError {
 
 const DriverError = errors.DriverError;
 
-export {
-  opcodes,
-  consistencies,
-  consistencyToString,
-  dataTypes,
-  getDataTypeNameByCode,
-  distance,
-  frameFlags,
-  protocolEvents,
-  protocolVersion,
-  responseErrorCodes,
-  resultKind,
-  timeuuid,
-  uuid,
-  BigDecimal,
-  Duration,
-  FrameHeader,
-  InetAddress,
-  Integer,
-  LocalDate,
-  LocalTime,
-  Long,
-  ResultSet,
-  ResultStream,
-  Row,
-  DriverError,
-  TimeoutError,
-  TimeUuid,
-  Tuple,
-  Uuid,
-  unset,
-  generateTimestamp,
-  Vector
-};
-
 export default {
   opcodes,
   consistencies,
@@ -691,3 +656,40 @@ export default {
   generateTimestamp,
   Vector
 };
+
+export {
+  opcodes,
+  consistencies,
+  consistencyToString,
+  dataTypes,
+  getDataTypeNameByCode,
+  frameFlags,
+  protocolEvents,
+  protocolVersion,
+  responseErrorCodes,
+  resultKind,
+  timeuuid,
+  uuid,
+  BigDecimal,
+  Duration,
+  FrameHeader,
+  InetAddress,
+  Integer,
+  LocalDate,
+  LocalTime,
+  Long,
+  ResultSet,
+  ResultStream,
+  Row,
+  DriverError,
+  TimeoutError,
+  TimeUuid,
+  Tuple,
+  Uuid,
+  unset,
+  generateTimestamp,
+  Vector
+};
+
+// export distance
+export { distance };

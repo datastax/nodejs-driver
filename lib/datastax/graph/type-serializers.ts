@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-import g from "./index";
+import g, { Edge, Vertex } from "./index";
 
 /**
  * @module datastax/graph/tinkerpop/typeSerializers
@@ -219,7 +219,7 @@ class TextPSerializer extends TypeSerializer {
 
 class LambdaSerializer extends TypeSerializer {
   /** @param {Function} item */
-  serialize(item) {
+  serialize(item: Function) {
     return {
       [typeKey]: 'g:Lambda',
       [valueKey]: {
@@ -293,7 +293,7 @@ class VertexSerializer extends TypeSerializer {
   }
 
   /** @param {Vertex} item */
-  serialize(item) {
+  serialize(item: Vertex) {
     return {
       [typeKey]: 'g:Vertex',
       [valueKey]: {
@@ -332,17 +332,20 @@ class PropertySerializer extends TypeSerializer {
 class EdgeSerializer extends TypeSerializer {
   deserialize(obj) {
     const value = obj[valueKey];
+    //TODO: Edge constructor needs 7 arguments. I couldn't see how it would work in the past.
     return new g.Edge(
       this.reader.read(value['id']),
       new g.Vertex(this.reader.read(value['outV']), this.reader.read(value['outVLabel'])),
+      this.reader.read(value['outVLabel']),
       value['label'],
       new g.Vertex(this.reader.read(value['inV']), this.reader.read(value['inVLabel'])),
+      this.reader.read(value['inVLabel']),
       this.reader.read(value['properties'])
     );
   }
 
   /** @param {Edge} item */
-  serialize(item) {
+  serialize(item: Edge) {
     return {
       [typeKey]: 'g:Edge',
       [valueKey]: {
@@ -405,7 +408,7 @@ class ArraySerializer extends TypeSerializer {
   }
 
   /** @param {Array} item */
-  serialize(item) {
+  serialize(item: Array<any>) {
     return {
       [typeKey]: this.typeKey,
       [valueKey]: item.map(x => this.writer.adaptObject(x))
@@ -452,7 +455,7 @@ class MapSerializer extends TypeSerializer {
   }
 
   /** @param {Map} map */
-  serialize(map) {
+  serialize(map: Map<any, any>) {
     const arr = [];
     map.forEach((v, k) => {
       arr.push(this.writer.adaptObject(k));

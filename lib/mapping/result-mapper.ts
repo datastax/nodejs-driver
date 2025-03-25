@@ -16,7 +16,7 @@
 import vm from "vm";
 import utils from "../utils";
 import types, { ResultSet } from "../types/index";
-import ModelMappingInfo from "./model-mapping-info";
+import type ModelMappingInfo from "./model-mapping-info";
 
 
 

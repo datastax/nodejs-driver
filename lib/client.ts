@@ -259,6 +259,7 @@ const warmupLimit = 32;
  * </p>
  */
 interface ClientOptions {
+  //TODO: remove when bundled. Remove insight-clients relevant doc too. 
   applicationName?: string;
   applicationVersion?: string;
   authProvider?: AuthProvider;
@@ -317,7 +318,7 @@ interface ClientOptions {
   refreshSchemaDelay?: number;
   rePrepareOnUp?: boolean;
   requestTracker?: RequestTracker;
-  //TODO: is this how users are supposed to use SNI? We never documented this
+  //TODO: driver internal. Should be removed when bundled.
   sni?: {
     address?: string;
     port?: string;

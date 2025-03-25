@@ -15,7 +15,7 @@
  */
 import util from "util";
 import utils from "../utils";
-import { ResultSet } from "../types";
+import type { ResultSet } from "../types";
 import type ModelMappingInfo from "./model-mapping-info";
 
 

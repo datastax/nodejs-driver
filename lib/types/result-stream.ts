@@ -16,7 +16,6 @@
 import { Readable } from "stream";
 import utils from "../utils";
 import errors from "../errors";
-import clientOptions from "../client-options";
 
 
 
@@ -147,7 +146,8 @@ class ResultStream extends Readable {
     this._cancelAllowed = true;
     this._handlersObject = options;
     this._highWaterMarkRows =
-      options.continuousPaging.highWaterMarkRows || clientOptions.continuousPageDefaultHighWaterMark;
+    // Substitute clientOptions.continuousPaging.highWaterMarkRows by 10000 to remove circular dependency
+      options.continuousPaging.highWaterMarkRows || 10000;
   }
 }
 

@@ -24,7 +24,7 @@ const QueryOperator = qModule.QueryOperator;
 const QueryAssignment = qModule.QueryAssignment;
 const dataTypes = types.dataTypes;
 
-const vmFileName = 'gen-param-getter';
+const vmFileName = 'gen-param-getter.js';
 
 /**
  * Provides methods to generate a query and parameter handlers.

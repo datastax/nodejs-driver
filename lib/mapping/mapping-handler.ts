@@ -21,7 +21,7 @@ import Cache from "./cache";
 import Tree from "./tree";
 import ObjectSelector from "./object-selector";
 import DocInfoAdapter from "./doc-info-adapter";
-import Client from "../client";
+import type Client from "../client";
 import type ModelMappingInfo from "./model-mapping-info";
 import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 
@@ -251,7 +251,7 @@ class MappingHandler {
 
     // Get all the tables affected
     return this._client.connect()
-      .then(() => ObjectSelector.getForUpdate(this._client, this.info, propertiesInfo, when))
+      .then(() => ObjectSelector.getForUpdate(this._client, this.info, propertiesInfo, when as any[]))
       .then(tables => {
 
         if (tables.length > 1 && (when.length > 0 || ifExists)) {
@@ -260,7 +260,7 @@ class MappingHandler {
 
         // For each table affected, Generate query and parameter getters
         return tables.map(table =>
-          QueryGenerator.getUpdate(table, this.info.keyspace, propertiesInfo, docInfo, when, ifExists));
+          QueryGenerator.getUpdate(table, this.info.keyspace, propertiesInfo, docInfo, when as any[], ifExists));
       });
   }
 
@@ -313,7 +313,7 @@ class MappingHandler {
 
     // Get all the tables affected
     return this._client.connect()
-      .then(() => ObjectSelector.getForDelete(this._client, this.info, propertiesInfo, when))
+      .then(() => ObjectSelector.getForDelete(this._client, this.info, propertiesInfo, when as any[]))
       .then(tables => {
 
         if (tables.length > 1 && (when.length > 0 || ifExists)) {
@@ -322,7 +322,7 @@ class MappingHandler {
 
         // For each tables affected, Generate query and parameter getters
         return tables.map(table =>
-          QueryGenerator.getDelete(table, this.info.keyspace, propertiesInfo, docInfo, when, ifExists));
+          QueryGenerator.getDelete(table, this.info.keyspace, propertiesInfo, docInfo, when as any[], ifExists));
       });
   }
 

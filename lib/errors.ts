@@ -56,11 +56,14 @@ class NoHostAvailableError extends DriverError {
     super(message);
     this.innerErrors = innerErrors;
     this.info = 'Represents an error when a query cannot be performed because no host is available or could be reached by the driver.';
-    if (!message && innerErrors) {
-      const hostList = Object.keys(innerErrors);
-      if (hostList.length > 0) {
-        const host = hostList[0];
-        this.message += util.format(' First host tried, %s: %s. See innerErrors.', host, innerErrors[host]);
+    if (!message) {
+      this.message = 'All host(s) tried for query failed.';
+      if (innerErrors) {
+        const hostList = Object.keys(innerErrors);
+        if (hostList.length > 0) {
+          const host = hostList[0];
+          this.message += util.format(' First host tried, %s: %s. See innerErrors.', host, innerErrors[host]);
+        }
       }
     }
   }

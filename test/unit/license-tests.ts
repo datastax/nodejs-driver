@@ -45,7 +45,7 @@ describe('All source files', function() {
     // Files to capture and validate header on.
     const candidateRE = /.*\.(js|ts)$/;
     // List of directories to ignore, this may not be comprehensive depending on your local workspace.
-    const dirsToIgnoreRE = /(node_modules)|(\.git)|(\.idea)|(coverage)|(out)|(examples)/;
+    const dirsToIgnoreRE = /(node_modules)|(\.git)|(\.idea)|(coverage)|(out)|(examples)|(dist)/;
     const filesToIgnoreRE = /([\\/]test[\\/]unit[\\/]typescript[\\/].*\.js)|(integer\.js)|(generated\.(?:js|ts))|(lib[\\/]datastax[\\/]graph[\\/](?:graph-serializer|type-serializers)\.js)/;
 
     function validateLicenses(dir) {

@@ -15,8 +15,9 @@
  */
 
 import { assert } from "chai";
+import sinon, { SinonStub } from "sinon";
+import dns from "dns";
 import events from "events";
-import proxyquire from "proxyquire";
 import util from "util";
 import helper from "../test-helper";
 import ControlConnection from "../../lib/control-connection";
@@ -29,7 +30,12 @@ import clientOptions from "../../lib/client-options";
 import { Host } from "../../lib/host";
 import { ProfileManager } from "../../lib/execution-profile";
 
+const stubs : SinonStub[] = [];
 describe('ControlConnection', function () {
+  afterEach(function () {
+    stubs.forEach(s => s.restore());
+    stubs.length = 0;
+  });
   describe('constructor', function () {
     it('should create a new metadata instance', function () {
       const cc = new ControlConnection(clientOptions.extend({}, helper.baseOptions));
@@ -41,14 +47,14 @@ describe('ControlConnection', function () {
 
     const localhost = 'localhost';
 
-    async function testResolution(CcMock, expectedHosts, expectedResolved, hostName) {
+    async function testResolution(expectedHosts, expectedResolved?, hostName?) {
       if (!expectedResolved) {
         expectedResolved = expectedHosts;
       }
 
       const contactPointHostName = (hostName || localhost);
       const state = {};
-      const cc = new CcMock(clientOptions.extend({ contactPoints: [contactPointHostName] }), null, getContext({
+      const cc = new ControlConnection(clientOptions.extend({ contactPoints: [contactPointHostName] }), null, getContext({
         failBorrow: 10, state
       }));
 
@@ -77,106 +83,108 @@ describe('ControlConnection', function () {
     }
 
     it('should resolve IPv4 and IPv6 addresses, default host (localhost) and port', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ifLocalhost(name, ['127.0.0.1']));
-        },
-        resolve6: function (name, cb) {
-          cb(null, ifLocalhost(name, ['::1']));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
-        }
-      }});
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['127.0.0.1']));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['::1']));
+      })
+      );
+      stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {
+        throw new Error('dns.lookup() should not be used');
+      })
+      );
 
-      return testResolution(ControlConnectionMock,
+      return testResolution(
         [ '127.0.0.1:9042', '::1:9042' ],
         [ '127.0.0.1:9042', '[::1]:9042' ]);
     });
 
     it('should resolve IPv4 and IPv6 addresses with non default port', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ifLocalhost(name, ['127.0.0.1']));
-        },
-        resolve6: function (name, cb) {
-          cb(null, ifLocalhost(name, ['::1']));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
-        }
-      }});
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['127.0.0.1']));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['::1']));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {
+        throw new Error('dns.lookup() should not be used');
+      })
+      );
 
-      return testResolution(ControlConnectionMock,
+      return testResolution(
         [ '127.0.0.1:9999', '::1:9999' ],
         [ '127.0.0.1:9999', '[::1]:9999' ],
         'localhost:9999');
     });
 
     it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ['1', '2']);
-        },
-        resolve6: function (name, cb) {
-          cb(null, ['10', '20']);
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
-        }
-      }});
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['1', '2']));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(null, ifLocalhost(name, ['10', '20']));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {
+        throw new Error('dns.lookup() should not be used');
+      })
+      );
 
-      return testResolution(ControlConnectionMock,
+      return testResolution(
         [ '1:9042', '2:9042', '10:9042', '20:9042' ],
         [ '1:9042', '2:9042', '[10]:9042', '[20]:9042' ]);
     });
 
     it('should ignore IPv4 or IPv6 resolution errors', function () {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ['1', '2']);
-        },
-        resolve6: function (name, cb) {
-          cb(new Error('Test error'));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
-        }
-      }});
-
-      return testResolution(ControlConnectionMock, [ '1:9042', '2:9042']);
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(null, ['1', '2']);
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(new Error('Test error'));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {
+        throw new Error('dns.lookup() should not be used');
+      })
+      );
+      return testResolution([ '1:9042', '2:9042']);
     });
 
     it('should use dns.lookup() as failover', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(new Error('Test error'));
-        },
-        resolve6: function (name, cb) {
-          cb(new Error('Test error'));
-        },
-        lookup: function (name, options, cb) {
-          cb(null, [{ address: '123', family: 4 }]);
-        }
-      }});
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(new Error('Test error'));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(new Error('Test error'));
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake((name, options, cb) => {
+        cb(null, [{ address: '123', family: 4 }]);
+      })
+      );
 
-      return testResolution(ControlConnectionMock, [ '123:9042' ]);
+      return testResolution([ '123:9042' ]);
     });
 
     it('should use dns.lookup() when no address was resolved', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null);
-        },
-        resolve6: function (name, cb) {
-          cb(null, []);
-        },
-        lookup: function (name, options, cb) {
-          cb(null, [{ address: '1234', family: 4 }]);
-        }
-      }});
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        cb(null);
+      }));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        cb(null, []);
+      }));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake((name, options, cb) => {
+        cb(null, [{ address: '1234', family: 4 }]);
+      }));
 
-      return testResolution(ControlConnectionMock, [ '1234:9042' ]);
+      return testResolution([ '1234:9042' ]);
     });
 
     it('should continue iterating through the hosts when borrowing a connection fails',async () => {
@@ -280,23 +288,23 @@ describe('ControlConnection', function () {
       const hostname = 'my-host-name';
       const resolvedAddresses = ['1','2'];
 
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          if (dnsWorks) {
-            cb(null, resolvedAddresses);
-          }
-          else {
-            cb(null, []);
-          }
-        },
-        resolve6: function (name, cb) {
-          throw new Error('IPv6 resolution errors should be ignored');
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
+      stubs.push(sinon.stub(dns, 'resolve4').callsFake((name, cb) => {
+        if (dnsWorks) {
+          cb(null, resolvedAddresses);
         }
-      }});
-      const cc = new ControlConnectionMock(
+        else {
+          cb(null, []);
+        }
+      }
+      ));
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+        throw new Error('IPv6 resolution errors should be ignored');
+      }));
+      stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {
+        throw new Error('dns.lookup() should not be used');
+      }));
+
+      const cc = new ControlConnection(
         clientOptions.extend({ contactPoints: [hostname] }),
         null,
         getContext());

@@ -124,3 +124,4 @@ const cloudHelper = module.exports = {
   }
 };
 
+export default cloudHelper;

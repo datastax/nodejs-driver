@@ -586,7 +586,7 @@ class Client extends events.EventEmitter{
     this.options = clientOptions.extend({ logEmitter: this.emit.bind(this), id: types.Uuid.random() }, options);
     Object.defineProperty(this, 'profileManager', { value: new ProfileManager(this.options) });
     Object.defineProperty(this, 'controlConnection', {
-      value: new ControlConnection(this.options, this.profileManager), writable: true
+      value: new ControlConnection(this.options, this.profileManager), writable: true, configurable: true
     }
     );
     Object.defineProperty(this, 'insightsClient', { value: new InsightsClient(this) });

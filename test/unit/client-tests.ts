@@ -15,7 +15,6 @@
  */
 import { assert } from "chai";
 import util from "util";
-import proxyquire from "proxyquire";
 import sinon from "sinon";
 import Client from "../../lib/client";
 import policies from "../../lib/policies/index";
@@ -26,11 +25,18 @@ import types from "../../lib/types/index";
 import Metadata from "../../lib/metadata/index";
 import Encoder from "../../lib/encoder";
 import clientOptions from "../../lib/client-options";
-import PrepareHandler from "../../lib/prepare-handler";
+import * as PrepareHandlerAggregate from "../../lib/prepare-handler";
 import {Host, HostMap} from "../../lib/host";
 import { ProfileManager, ExecutionProfile } from "../../lib/execution-profile";
+import * as RequestHandlerAggregate from "../../lib/request-handler";
+import PrepareHandler from "../../lib/prepare-handler";
 
+const stubs : any[] = [];
 describe('Client', function () {
+  afterEach(function () {
+    stubs.forEach(stub => stub.restore());
+    stubs.length = 0;
+  });
   describe('constructor', function () {
     it('should throw an exception when contactPoints are not provided', function () {
       assert.throws(function () {
@@ -159,26 +165,24 @@ describe('Client', function () {
     it('should connect once and queue if multiple calls in parallel', function (done) {
       let initCounter = 0;
       let emitCounter = 0;
+    
       const options = utils.extend({
         contactPoints: helper.baseOptions.contactPoints,
         policies: {
-          loadBalancing: new policies.loadBalancing.RoundRobinPolicy()
+          loadBalancing: new policies.loadBalancing.RoundRobinPolicy(),
         },
         pooling: {
-          warmup: false
-        }
+          warmup: false,
+        },
       });
       const ccMock = getControlConnectionMock(null, options);
-      ccMock.prototype.init = async () => {
+      ccMock.init = async () => {
         initCounter++;
         // Async
         await helper.delayAsync(20);
       };
-
-      const Client = proxyquire('../../lib/client', {
-        './control-connection': ccMock
-      });
       const client = new Client(options);
+      sinon.stub(client, 'controlConnection').value(ccMock);
       client.on('connected', function () {emitCounter++;});
       utils.times(1000, function (n, next) {
         client.connect(function (err) {
@@ -544,11 +548,8 @@ describe('Client', function () {
       send: () => Promise.resolve()
     };
 
-    const Client = proxyquire('../../lib/client', {
-      './request-handler': requestHandlerMock
-    });
-
     it('should internally call to connect', function (done) {
+      const stub = sinon.stub(RequestHandlerAggregate, 'default').value(requestHandlerMock);
       const client = new Client(helper.baseOptions);
       const connect = sinon.fake(() => Promise.resolve());
       sinon.replace(client, '_connect', connect);
@@ -556,6 +557,7 @@ describe('Client', function () {
       client.batch(['q1'], function (err) {
         assert.ifError(err);
         assert.isTrue(connect.calledOnce);
+        stub.restore();
         done();
       });
     });
@@ -589,20 +591,24 @@ describe('Client', function () {
     });
     context('with no callback specified', function () {
       it('should return a promise', function (done) {
+        const stub = sinon.stub(RequestHandlerAggregate, 'default').value(requestHandlerMock);
         const client = new Client(helper.baseOptions);
         const p = client.batch(['Q'], null);
         assert.instanceOf(p, Promise);
         p.catch(function (err) {
           assert.instanceOf(err, errors.NoHostAvailableError);
+          stub.restore();
           done();
         });
       });
       it('should reject the promise when queries is not an Array', function (done) {
+        const stub = sinon.stub(RequestHandlerAggregate, 'default').value(requestHandlerMock);
         const client = new Client(helper.baseOptions);
         const p = client.batch('Q', null);
         assert.instanceOf(p, Promise);
         p.catch(function (err) {
           assert.instanceOf(err, errors.ArgumentError);
+          stub.restore();
           done();
         });
       });
@@ -644,11 +650,8 @@ describe('Client', function () {
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
 
-      const Client = proxyquire('../../lib/client', {
-        './control-connection': getControlConnectionMock(hosts)
-      });
-
       const client = new Client(options);
+      sinon.stub(client, 'controlConnection').value(getControlConnectionMock(hosts));
       client.shutdown(function(){
         assert.equal(client.connected, false);
         done();
@@ -665,10 +668,8 @@ describe('Client', function () {
       h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
-      const Client = proxyquire('../../lib/client', {
-        './control-connection': getControlConnectionMock(hosts)
-      });
       const client = new Client(options);
+      sinon.stub(client, 'controlConnection').value(getControlConnectionMock(hosts));
       utils.series([
         client.connect.bind(client),
         function shutDownMultiple(seriesNext) {
@@ -689,11 +690,8 @@ describe('Client', function () {
       h2.pool.connections = getConnections();
       hosts.push(h1.address, h1);
       hosts.push(h2.address, h2);
-      const Client = proxyquire('../../lib/client', {
-        './control-connection': getControlConnectionMock(hosts)
-      });
-
       const client = new Client(options);
+      sinon.stub(client, 'controlConnection').value(getControlConnectionMock(hosts));
       utils.series([
         client.connect.bind(client),
         function shutDownMultiple(seriesNext) {
@@ -784,18 +782,16 @@ describe('Client', function () {
   });
 });
 
-function getControlConnectionMock(hosts, options) {
-  function ControlConnectionMock() {
-    this.hosts = hosts || new HostMap();
-    this.metadata = new Metadata(options || {});
-    this.profileManager = newProfileManager(options);
-    this.host = { setDistance: utils.noop };
-    this.shutdown = utils.noop;
-  }
-
-  ControlConnectionMock.prototype.init = async () => {};
-
-  return ControlConnectionMock;
+function getControlConnectionMock(hosts, options?) {
+  return {
+    hosts: hosts || new HostMap(),
+    metadata: new Metadata(options || {}),
+    profileManager: newProfileManager(options),
+    host: { setDistance: utils.noop },
+    shutdown: utils.noop,
+    init: async () => {},
+    reset: async () => {}
+  };
 }
 
 function getOptions(options) {
@@ -807,10 +803,8 @@ function newProfileManager(options) {
 }
 
 function newConnectedInstance(requestHandlerMock, options, prepareHandlerMock) {
-  const Client = proxyquire('../../lib/client', {
-    './request-handler': requestHandlerMock || function () {},
-    './prepare-handler': prepareHandlerMock || function () {}
-  });
+  stubs.push(sinon.stub(RequestHandlerAggregate, 'default').value(requestHandlerMock || function () {}));
+  stubs.push(sinon.stub(PrepareHandlerAggregate, 'default').value(prepareHandlerMock || function () {}));
 
   const client = new Client(utils.extend({}, helper.baseOptions, options));
   client._getEncoder = () => new Encoder(2, {});

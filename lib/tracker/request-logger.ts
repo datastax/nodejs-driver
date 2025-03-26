@@ -37,7 +37,7 @@ const defaultMaxErrorStackTraceLength = 200;
  * // Add the requestLogger to the client options
  * const client = new Client({ contactPoints, requestTracker: requestLogger });
  */
-class RequestLogger implements RequestTracker {
+class RequestLogger extends RequestTracker {
   _options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; };
   logNormalRequests: any;
   logErroredRequests: any;
@@ -64,6 +64,7 @@ class RequestLogger implements RequestTracker {
    * that will be included in the message. Defaults to 200.
    */
   constructor(options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; }) {
+    super();
     if (!options) {
       throw new errors.ArgumentError('RequestLogger options parameter is required');
     }

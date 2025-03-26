@@ -1,134 +1,1211 @@
-import * as events from 'events';
-import _Long = require('long');
+import { AddressTranslator as AddressTranslator_2 } from './lib/policies/address-resolution';
+import { ArgumentError as ArgumentError_2 } from './lib/errors';
+import { asDouble } from './lib/datastax/graph';
+import { asDouble as asDouble_2 } from './graph/wrappers';
+import { asFloat } from './lib/datastax/graph';
+import { asFloat as asFloat_2 } from './graph/wrappers';
+import { asInt } from './lib/datastax/graph';
+import { asInt as asInt_2 } from './graph/wrappers';
+import { asTimestamp } from './lib/datastax/graph';
+import { asTimestamp as asTimestamp_2 } from './graph/wrappers';
+import { asUdt } from './lib/datastax/graph';
+import { asUdt as asUdt_2 } from './graph/wrappers';
+import { AuthenticationError as AuthenticationError_2 } from './lib/errors';
+import { Authenticator as Authenticator_2 } from './lib/auth/provider';
+import { AuthProvider as AuthProvider_2 } from './lib/auth/provider';
+import { BatchRequest } from './requests';
+import { BusyConnectionError as BusyConnectionError_2 } from './lib/errors';
+import { ByteOrderedTokenizer } from '../tokenizer';
+import { ClientOptions as ClientOptions_2 } from './lib/client';
+import { ConnectionOptions } from 'tls';
+import { DateRange } from './lib/datastax/index';
+import { default as default_10 } from './lib/types/local-date';
+import { default as default_11 } from './lib/types/local-time';
+import { default as default_12 } from 'long';
+import { default as default_13 } from './lib/types/result-set';
+import { default as default_14 } from './lib/types/result-stream';
+import { default as default_15 } from './lib/types/row';
+import { default as default_16 } from './lib/types/time-uuid';
+import { default as default_17 } from './lib/types/tuple';
+import { default as default_18 } from './lib/types/uuid';
+import { default as default_19 } from './lib/types/vector';
+import { default as default_2 } from './operation-state';
+import { default as default_20 } from './lib/auth/dse-gssapi-auth-provider';
+import { default as default_21 } from './lib/auth/dse-plain-text-auth-provider';
+import { default as default_22 } from './lib/auth/no-auth-provider';
+import { default as default_23 } from './lib/mapping/mapper';
+import { default as default_24 } from './lib/mapping/model-mapper';
+import { default as default_25 } from './lib/mapping/model-batch-mapper';
+import { default as default_26 } from './lib/mapping/result';
+import { default as default_27 } from './lib/tracker/request-tracker';
+import { default as default_28 } from './lib/tracker/request-logger';
+import { default as default_29 } from './lib/metrics/client-metrics';
+import { default as default_3 } from './table-metadata';
+import { default as default_30 } from './lib/metrics/default-metrics';
+import { default as default_31 } from './lib/geometry/point';
+import { default as default_32 } from './lib/geometry/line-string';
+import { default as default_33 } from './lib/geometry/polygon';
+import { default as default_34 } from './lib/geometry/geometry';
+import { default as default_35 } from './model-mapping-info';
+import { default as default_36 } from './graph/custom-type-serializers';
+import { default as default_37 } from './graph/result-set';
+import { default as default_4 } from '../connection';
+import { default as default_5 } from './lib/connection';
+import { default as default_6 } from './lib/types/big-decimal';
+import { default as default_7 } from './lib/types/duration';
+import { default as default_8 } from './lib/types/inet-address';
+import { default as default_9 } from './lib/types/integer';
+import { DefaultTableMappings } from './lib/mapping/table-mappings';
+import { DriverError as DriverError_2 } from '../errors';
+import { DriverError as DriverError_4 } from './lib/errors';
+import { DriverInternalError as DriverInternalError_2 } from './lib/errors';
+import { Edge } from './lib/datastax/graph';
+import { Edge as Edge_2 } from './graph/structure';
+import { Element } from './lib/datastax/graph';
+import { Element as Element_2 } from './graph/structure';
+import { EventEmitter } from 'stream';
+import { default as EventEmitter_2 } from 'events';
+import events from 'events';
+import { executeConcurrent } from './lib/concurrent/index';
+import { ExecuteRequest } from './requests';
+import { FrameHeader as FrameHeader_2 } from './lib/types/index';
+import { generateTimestamp as generateTimestamp_2 } from './lib/types/index';
+import { getCustomTypeSerializers } from './lib/datastax/graph';
+import { getDataTypeNameByCode as getDataTypeNameByCode_2 } from './lib/types/index';
+import { GraphResultSet as GraphResultSet_2 } from './lib/datastax/graph';
+import { GraphTypeWrapper } from './lib/datastax/graph';
+import { GraphTypeWrapper as GraphTypeWrapper_2 } from './graph/wrappers';
+import { HostMap as HostMap_2 } from '../host';
+import { HostMap as HostMap_3 } from './lib/host';
+import { Keyspace } from './schema-parser';
+import { libPoliciesAddressResolution } from './lib/policies/address-resolution';
+import { libPoliciesLoadBalancing } from './lib/policies/load-balancing';
+import { libPoliciesReconnection } from './lib/policies/reconnection';
+import { libPoliciesRetry } from './lib/policies/retry';
+import { libPoliciesSpeculativeExecution } from './lib/policies/speculative-execution';
+import { libPoliciesTimestampGeneration } from './lib/policies/timestamp-generation';
+import { LoadBalancingPolicy as LoadBalancingPolicy_2 } from './lib/policies/load-balancing';
+import { log } from './utils';
+import Long from 'long';
+import { ModelBatchItem } from './lib/mapping/model-batch-item';
+import { Murmur3Tokenizer } from '../tokenizer';
+import { NoHostAvailableError as NoHostAvailableError_2 } from './lib/errors';
+import { NotSupportedError as NotSupportedError_2 } from './lib/errors';
+import { OperationTimedOutError as OperationTimedOutError_2 } from './lib/errors';
+import { Path } from './lib/datastax/graph';
+import { Path as Path_2 } from './graph/structure';
+import { PlainTextAuthProvider } from './lib/auth/plain-text-auth-provider';
+import { Property } from './lib/datastax/graph';
+import { Property as Property_2 } from './graph/structure';
+import { QueryRequest } from './requests';
+import { RandomTokenizer } from '../tokenizer';
 import { Readable } from 'stream';
-import * as stream from 'stream';
-import * as tls from 'tls';
-import { URL as URL_2 } from 'url';
+import { ReconnectionPolicy as ReconnectionPolicy_2 } from './lib/policies/reconnection';
+import { ResponseError as ResponseError_2 } from './lib/errors';
+import { ResultSetGroup } from './lib/concurrent/index';
+import { RetryPolicy as RetryPolicy_2 } from './lib/policies/retry';
+import { Socket } from 'net';
+import { SpeculativeExecutionPolicy as SpeculativeExecutionPolicy_2 } from './lib/policies/speculative-execution';
+import { Stream } from 'stream';
+import { TableMappings } from './lib/mapping/table-mappings';
+import { TimeoutError as TimeoutError_2 } from './lib/types/index';
+import { TimestampGenerator as TimestampGenerator_2 } from './lib/policies/timestamp-generation';
+import { timeuuid as timeuuid_2 } from './lib/types/index';
+import { Token as Token_2 } from './lib/token';
+import { TokenRange as TokenRange_2 } from './lib/token';
+import { UdtGraphWrapper } from './lib/datastax/graph';
+import { UdtGraphWrapper as UdtGraphWrapper_2 } from './graph/wrappers';
+import { UnderscoreCqlToCamelCaseMappings } from './lib/mapping/table-mappings';
+import util from 'util';
+import { uuid as uuid_2 } from './lib/types/index';
+import { Vertex } from './lib/datastax/graph';
+import { Vertex as Vertex_2 } from './graph/structure';
+import { VertexProperty } from './lib/datastax/graph';
+import { VertexProperty as VertexProperty_2 } from './graph/structure';
+import { VIntOutOfRangeException as VIntOutOfRangeException_2 } from './lib/errors';
 
-export declare type ArrayOrObject = any[]|{[key: string]: any};
-
-export declare namespace auth {
-    export interface Authenticator {
-        initialResponse(callback: Function): void;
-
-        evaluateChallenge(challenge: Buffer, callback: Function): void;
-
-        onAuthenticationSuccess(token?: Buffer): void;
-    }
-
-    export interface AuthProvider {
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    export class PlainTextAuthProvider implements AuthProvider {
-        constructor(username: string, password: string);
-
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    export class DsePlainTextAuthProvider implements AuthProvider {
-        constructor(username: string, password: string, authorizationId?: string);
-
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    export class DseGssapiAuthProvider implements AuthProvider {
-        constructor(gssOptions?: { authorizationId?: string, service?: string, hostNameResolver?: Function });
-
-        newAuthenticator(endpoint: string, name: string): Authenticator;
+declare namespace addressResolution {
+    export {
+        AddressTranslator,
+        EC2MultiRegionTranslator
     }
 }
 
+/**
+ * Utility class that resolves host names into addresses.
+ */
+declare class AddressResolver {
+    private _resolve4;
+    private _nameOrIp;
+    private _isIp;
+    private _index;
+    private _addresses;
+    private _refreshing;
+    /**
+     * Creates a new instance of the resolver.
+     * @param {Object} options
+     * @param {String} options.nameOrIp
+     * @param {Object} [options.dns]
+     */
+    constructor(options: {
+        nameOrIp: string;
+        dns?: {
+            resolve4?: any;
+        };
+    });
+    /**
+     * Resolves the addresses for the host name.
+     */
+    init(): Promise<void>;
+    /**
+     * Tries to resolve the addresses for the host name.
+     */
+    refresh(): Promise<any>;
+    _resolve(): Promise<void>;
+    /**
+     * Returns resolved ips in a round-robin fashion.
+     */
+    getIp(): string;
+}
+
+/**
+ * @class
+ * @classdesc
+ * Translates IP addresses received from Cassandra nodes into locally queryable
+ * addresses.
+ * <p>
+ * The driver auto-detects new Cassandra nodes added to the cluster through server
+ * side pushed notifications and through checking the system tables. For each
+ * node, the address received will correspond to the address set as
+ * <code>rpc_address</code> in the node yaml file. In most case, this is the correct
+ * address to use by the driver and that is what is used by default. However,
+ * sometimes the addresses received through this mechanism will either not be
+ * reachable directly by the driver or should not be the preferred address to use
+ * to reach the node (for instance, the <code>rpc_address</code> set on Cassandra nodes
+ * might be a private IP, but some clients  may have to use a public IP, or
+ * pass by a router to reach that node). This interface allows to deal with
+ * such cases, by allowing to translate an address as sent by a Cassandra node
+ * to another address to be used by the driver for connection.
+ * <p>
+ * Please note that the contact points addresses provided while creating the
+ * {@link Client} instance are not "translated", only IP address retrieve from or sent
+ * by Cassandra nodes to the driver are.
+ */
+declare class AddressTranslator {
+    /**
+     * Translates a Cassandra <code>rpc_address</code> to another address if necessary.
+     * @param {String} address the address of a node as returned by Cassandra.
+     * <p>
+     * Note that if the <code>rpc_address</code> of a node has been configured to <code>0.0.0.0</code>
+     * server side, then the provided address will be the node <code>listen_address</code>,
+     * *not* <code>0.0.0.0</code>.
+     * </p>
+     * @param {Number} port The port number, as specified in the [protocolOptions]{@link ClientOptions} at Client instance creation (9042 by default).
+     * @param {Function} callback Callback to invoke with endpoint as first parameter.
+     * The endpoint is an string composed of the IP address and the port number in the format <code>ipAddress:port</code>.
+     */
+    translate(address: string, port: number, callback: Function): void;
+}
+
+/**
+ * Creates a new Aggregate.
+ * @classdesc Describes a CQL aggregate.
+ * @alias module:metadata~Aggregate
+ * @constructor
+ */
+declare class Aggregate {
+    name: string;
+    keyspaceName: string;
+    signature: Array<string>;
+    argumentTypes: Array<{
+        code: number;
+        info?: (object | Array<any> | string);
+    }>;
+    stateFunction: string;
+    stateType: {
+        code: number;
+        info?: (object | Array<any> | string);
+    };
+    finalFunction: string;
+    initConditionRaw: any;
+    initCondition: string;
+    returnType: {
+        code: number;
+        info?: (object | Array<any> | string);
+    };
+    deterministic: boolean;
+    constructor();
+}
+
+/**
+ * @class
+ * @classdesc
+ * A load balancing policy wrapper that ensure that only hosts from a provided
+ * allow list will ever be returned.
+ * <p>
+ * This policy wraps another load balancing policy and will delegate the choice
+ * of hosts to the wrapped policy with the exception that only hosts contained
+ * in the allow list provided when constructing this policy will ever be
+ * returned. Any host not in the while list will be considered ignored
+ * and thus will not be connected to.
+ * <p>
+ * This policy can be useful to ensure that the driver only connects to a
+ * predefined set of hosts. Keep in mind however that this policy defeats
+ * somewhat the host auto-detection of the driver. As such, this policy is only
+ * useful in a few special cases or for testing, but is not optimal in general.
+ * If all you want to do is limiting connections to hosts of the local
+ * data-center then you should use DCAwareRoundRobinPolicy and *not* this policy
+ * in particular.
+ * @extends LoadBalancingPolicy
+ */
+declare class AllowListPolicy extends LoadBalancingPolicy {
+    childPolicy: LoadBalancingPolicy;
+    allowList: Map<string, boolean>;
+    /**
+     * Create a new policy that wraps the provided child policy but only "allow" hosts
+     * from the provided list.
+     * @class
+     * @classdesc
+     * A load balancing policy wrapper that ensure that only hosts from a provided
+     * allow list will ever be returned.
+     * <p>
+     * This policy wraps another load balancing policy and will delegate the choice
+     * of hosts to the wrapped policy with the exception that only hosts contained
+     * in the allow list provided when constructing this policy will ever be
+     * returned. Any host not in the while list will be considered ignored
+     * and thus will not be connected to.
+     * <p>
+     * This policy can be useful to ensure that the driver only connects to a
+     * predefined set of hosts. Keep in mind however that this policy defeats
+     * somewhat the host auto-detection of the driver. As such, this policy is only
+     * useful in a few special cases or for testing, but is not optimal in general.
+     * If all you want to do is limiting connections to hosts of the local
+     * data-center then you should use DCAwareRoundRobinPolicy and *not* this policy
+     * in particular.
+     * @param {LoadBalancingPolicy} childPolicy the wrapped policy.
+     * @param {Array.<string>}  allowList The hosts address in the format ipAddress:port.
+     * Only hosts from this list may get connected
+     * to (whether they will get connected to or not depends on the child policy).
+     * @constructor
+     */
+    constructor(childPolicy: LoadBalancingPolicy, allowList: Array<string>);
+    init(client: Client, hosts: HostMap, callback: Function): void;
+    /**
+     * Uses the child policy to return the distance to the host if included in the allow list.
+     * Any host not in the while list will be considered ignored.
+     * @param host
+     */
+    getDistance(host: Host): number;
+    /**
+     * Checks if the host is in the allow list.
+     * @param {Host} host
+     * @returns {boolean}
+     * @private
+     */
+    private _contains;
+    /**
+     * Returns the hosts to use for a new query filtered by the allow list.
+     */
+    newQueryPlan(keyspace: string, info: ExecutionOptions | null, callback: Function): void;
+    private _filter;
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, any>;
+}
+
+/**
+ * Represents an error that is raised when one of the arguments provided to a method is not valid
+ */
+declare class ArgumentError extends DriverError {
+    /**
+     * Represents an error that is raised when one of the arguments provided to a method is not valid
+     * @param {String} message
+     * @constructor
+     */
+    constructor(message: string);
+}
+
+declare type ArrayOrObject = any[] | {
+    [key: string]: any;
+};
+
+declare const asyncIteratorSymbol: string | typeof Symbol.asyncIterator;
+
+export declare const auth: {
+    Authenticator: typeof Authenticator;
+    AuthProvider: typeof AuthProvider;
+    DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
+    DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
+    NoAuthProvider: typeof NoAuthProvider;
+    PlainTextAuthProvider: typeof PlainTextAuthProvider_2;
+};
+
+/**
+ * Represents an error when trying to authenticate with auth-enabled host
+ */
+declare class AuthenticationError extends DriverError {
+    additionalInfo: ResponseError;
+    /**
+     * Represents an error when trying to authenticate with auth-enabled host
+     * @param {String} message
+     * @constructor
+     */
+    constructor(message: string);
+}
+
+/**
+ * Handles SASL authentication with Cassandra servers.
+ * Each time a new connection is created and the server requires authentication,
+ * a new instance of this class will be created by the corresponding.
+ * @alias module:auth~Authenticator
+ */
+declare class Authenticator {
+    /**
+     * Obtain an initial response token for initializing the SASL handshake.
+     * @param {Function} callback
+     */
+    initialResponse(callback: Function): void;
+    /**
+     * Evaluates a challenge received from the Server. Generally, this method should callback with
+     * no error and no additional params when authentication is complete from the client perspective.
+     * @param {Buffer} challenge
+     * @param {Function} callback
+     */
+    evaluateChallenge(challenge: Buffer, callback: Function): void;
+    /**
+     * Called when authentication is successful with the last information
+     * optionally sent by the server.
+     * @param {Buffer} [token]
+     */
+    onAuthenticationSuccess(token?: Buffer): void;
+}
+
+/**
+ * Provides [Authenticator]{@link module:auth~Authenticator} instances to be used when connecting to a host.
+ * @abstract
+ * @alias module:auth~AuthProvider
+ */
+declare class AuthProvider {
+    /**
+     * Returns an [Authenticator]{@link module:auth~Authenticator} instance to be used when connecting to a host.
+     * @param {String} endpoint The ip address and port number in the format ip:port
+     * @param {String} name Authenticator name
+     * @abstract
+     * @returns {Authenticator}
+     */
+    newAuthenticator(endpoint: string, name: string): Authenticator;
+}
+
+/** @module types */
+/**
+ * A <code>BigDecimal</code> consists of an [arbitrary precision integer]{@link module:types~Integer}
+ * <i>unscaled value</i> and a 32-bit integer <i>scale</i>.  If zero
+ * or positive, the scale is the number of digits to the right of the
+ * decimal point.  If negative, the unscaled value of the number is
+ * multiplied by ten to the power of the negation of the scale.  The
+ * value of the number represented by the <code>BigDecimal</code> is
+ * therefore <tt>(unscaledValue &times; 10<sup>-scale</sup>)</tt>.
+ * @class
+ * @classdesc The <code>BigDecimal</code> class provides operations for
+ * arithmetic, scale manipulation, rounding, comparison and
+ * format conversion.  The {@link #toString} method provides a
+ * canonical representation of a <code>BigDecimal</code>.
+ */
+declare class BigDecimal {
+    private _intVal;
+    private _scale;
+    /**
+     * Constructs an immutable arbitrary-precision signed decimal number.
+     * A <code>BigDecimal</code> consists of an [arbitrary precision integer]{@link module:types~Integer}
+     * <i>unscaled value</i> and a 32-bit integer <i>scale</i>.  If zero
+     * or positive, the scale is the number of digits to the right of the
+     * decimal point.  If negative, the unscaled value of the number is
+     * multiplied by ten to the power of the negation of the scale.  The
+     * value of the number represented by the <code>BigDecimal</code> is
+     * therefore <tt>(unscaledValue &times; 10<sup>-scale</sup>)</tt>.
+     * @param {Integer|Number} unscaledValue The integer part of the decimal.
+     * @param {Number} scale The scale of the decimal.
+     * @constructor
+     */
+    constructor(unscaledValue: Integer | number, scale: number);
+    /**
+     * Returns the BigDecimal representation of a buffer composed of the scale (int32BE) and the unsigned value (varint BE)
+     * @param {Buffer} buf
+     * @returns {BigDecimal}
+     */
+    static fromBuffer(buf: Buffer): BigDecimal;
+    /**
+     * Returns a buffer representation composed of the scale as a BE int 32 and the unsigned value as a BE varint
+     * @param {BigDecimal} value
+     * @returns {Buffer}
+     */
+    static toBuffer(value: BigDecimal): Buffer;
+    /**
+     * Returns a BigDecimal representation of the string
+     * @param {String} value
+     * @returns {BigDecimal}
+     */
+    static fromString(value: string): BigDecimal;
+    /**
+     * Returns a BigDecimal representation of the Number
+     * @param {Number} value
+     * @returns {BigDecimal}
+     */
+    static fromNumber(value: number): BigDecimal;
+    /**
+     * Returns true if the value of the BigDecimal instance and other are the same
+     * @param {BigDecimal} other
+     * @returns {Boolean}
+     */
+    equals(other: BigDecimal): boolean;
+    inspect(): string;
+    /**
+     * @param {BigDecimal} other
+     * @returns {boolean}
+     */
+    notEquals(other: BigDecimal): boolean;
+    /**
+     * Compares this BigDecimal with the given one.
+     * @param {BigDecimal} other Integer to compare against.
+     * @return {number} 0 if they are the same, 1 if the this is greater, and -1
+     *     if the given one is greater.
+     */
+    compare(other: BigDecimal): number;
+    /**
+     * Returns the difference of this and the given BigDecimal.
+     * @param {BigDecimal} other The BigDecimal to subtract from this.
+     * @return {!BigDecimal} The BigDecimal result.
+     */
+    subtract(other: BigDecimal): BigDecimal;
+    /**
+     * Returns the sum of this and the given <code>BigDecimal</code>.
+     * @param {BigDecimal} other The BigDecimal to sum to this.
+     * @return {!BigDecimal} The BigDecimal result.
+     */
+    add(other: BigDecimal): BigDecimal;
+    /**
+     * Returns true if the current instance is greater than the other
+     * @param {BigDecimal} other
+     * @returns {boolean}
+     */
+    greaterThan(other: BigDecimal): boolean;
+    /** @return {boolean} Whether this value is negative. */
+    isNegative(): boolean;
+    /** @return {boolean} Whether this value is zero. */
+    isZero(): boolean;
+    /**
+     * Returns the string representation of this <code>BigDecimal</code>
+     * @returns {string}
+     */
+    toString(): string;
+    /**
+     * Returns a Number representation of this <code>BigDecimal</code>.
+     * @returns {Number}
+     */
+    toNumber(): number;
+    /**
+     * Returns the string representation.
+     * Method used by the native JSON.stringify() to serialize this instance.
+     */
+    toJSON(): string;
+}
+
+/**
+ * Represents a client-side error indicating that all connections to a certain host have reached
+ * the maximum amount of in-flight requests supported.
+ */
+declare class BusyConnectionError extends DriverError {
+    /**
+     * Represents a client-side error indicating that all connections to a certain host have reached
+     * the maximum amount of in-flight requests supported.
+     * @param {String} address
+     * @param {Number} maxRequestsPerConnection
+     * @param {Number} connectionLength
+     * @constructor
+     */
+    constructor(address: string, maxRequestsPerConnection: number, connectionLength: number);
+}
+
+/**
+ * Creates a new instance of {@link Client}.
+ * @classdesc
+ * Represents a database client that maintains multiple connections to the cluster nodes, providing methods to
+ * execute CQL statements.
+ * <p>
+ * The <code>Client</code> uses [policies]{@link module:policies} to decide which nodes to connect to, which node
+ * to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down
+ * nodes should be made.
+ * </p>
+ * @extends EventEmitter
+ * @param {ClientOptions} options The options for this instance.
+ * @example <caption>Creating a new client instance</caption>
+ * const client = new Client({
+ *   contactPoints: ['10.0.1.101', '10.0.1.102'],
+ *   localDataCenter: 'datacenter1'
+ * });
+ * @example <caption>Executing a query</caption>
+ * const result = await client.connect();
+ * console.log(`Connected to ${client.hosts.length} nodes in the cluster: ${client.hosts.keys().join(', ')}`);
+ * @example <caption>Executing a query</caption>
+ * const result = await client.execute('SELECT key FROM system.local');
+ * const row = result.first();
+ * console.log(row['key']);
+ */
 export declare class Client extends events.EventEmitter {
-    hosts: HostMap;
+    options: ClientOptions;
+    profileManager: ProfileManager;
+    connected: boolean;
+    isShuttingDown: boolean;
+    /**
+     * Gets the name of the active keyspace.
+     * @type {String}
+     */
     keyspace: string;
-    metadata: metadata.Metadata;
-    metrics: metrics.ClientMetrics;
-
-    constructor(options: DseClientOptions);
-
-    connect(): Promise<void>;
-
-    connect(callback: EmptyCallback): void;
-
-    execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<types.ResultSet>;
-
-    execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<types.ResultSet>): void;
-
-    execute(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet>): void;
-
-    execute(query: string, callback: ValueCallback<types.ResultSet>): void;
-
-    executeGraph(
-    traversal: string,
-    parameters: { [name: string]: any } | undefined,
-    options: GraphQueryOptions,
-    callback: ValueCallback<graph.GraphResultSet>): void;
-
-    executeGraph(
-    traversal: string,
-    parameters: { [name: string]: any } | undefined,
-    callback: ValueCallback<graph.GraphResultSet>): void;
-
-    executeGraph(traversal: string, callback: ValueCallback<graph.GraphResultSet>): void;
-
-    executeGraph(
-    traversal: string,
-    parameters?: { [name: string]: any },
-    options?: GraphQueryOptions): Promise<graph.GraphResultSet>;
-
-    eachRow(query: string,
-    params: ArrayOrObject,
-    options: QueryOptions,
-    rowCallback: (n: number, row: types.Row) => void,
-    callback?: ValueCallback<types.ResultSet>): void;
-
-    eachRow(query: string,
-    params: ArrayOrObject,
-    rowCallback: (n: number, row: types.Row) => void,
-    callback?: ValueCallback<types.ResultSet>): void;
-
-    eachRow(query: string,
-    rowCallback: (n: number, row: types.Row) => void): void;
-
-    stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): events.EventEmitter;
-
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    options?: QueryOptions): Promise<types.ResultSet>;
-
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    options: QueryOptions,
-    callback: ValueCallback<types.ResultSet>): void;
-
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    callback: ValueCallback<types.ResultSet>): void;
-
-    shutdown(): Promise<void>;
-
-    shutdown(callback: EmptyCallback): void;
-
-    getReplicas(keyspace: string, token: Buffer): Host[];
-
-    getState(): metadata.ClientState;
+    /**
+     * Gets the schema and cluster metadata information.
+     * @type {Metadata}
+     */
+    metadata: Metadata;
+    controlConnection: ControlConnection;
+    /**
+     * Gets an associative array of cluster hosts.
+     * @type {HostMap}
+     */
+    hosts: any;
+    /**
+     * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
+     * behavior and of the server as seen from the driver side.
+     * <p>By default, a [DefaultMetrics]{@link module:metrics~DefaultMetrics} instance is used.</p>
+     * @type {ClientMetrics}
+     */
+    metrics: ClientMetrics;
+    private _graphExecutor;
+    connecting: boolean;
+    insightsClient: InsightsClient;
+    /**
+     * Creates a new instance of {@link Client}.
+     * Represents a database client that maintains multiple connections to the cluster nodes, providing methods to
+     * execute CQL statements.
+     * <p>
+     * The <code>Client</code> uses [policies]{@link module:policies} to decide which nodes to connect to, which node
+     * to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down
+     * nodes should be made.
+     * </p>
+     * @param {ClientOptions} options The options for this instance.
+     * @example <caption>Creating a new client instance</caption>
+     * const client = new Client({
+     *   contactPoints: ['10.0.1.101', '10.0.1.102'],
+     *   localDataCenter: 'datacenter1'
+     * });
+     * @example <caption>Executing a query</caption>
+     * const result = await client.connect();
+     * console.log(`Connected to ${client.hosts.length} nodes in the cluster: ${client.hosts.keys().join(', ')}`);
+     * @example <caption>Executing a query</caption>
+     * const result = await client.execute('SELECT key FROM system.local');
+     * const row = result.first();
+     * console.log(row['key']);
+     * @constructor
+     */
+    constructor(options: ClientOptions);
+    /**
+     * Emitted when a new host is added to the cluster.
+     * <ul>
+     *   <li>{@link Host} The host being added.</li>
+     * </ul>
+     * @event Client#hostAdd
+     */
+    /**
+     * Emitted when a host is removed from the cluster
+     * <ul>
+     *   <li>{@link Host} The host being removed.</li>
+     * </ul>
+     * @event Client#hostRemove
+     */
+    /**
+     * Emitted when a host in the cluster changed status from down to up.
+     * <ul>
+     *   <li>{@link Host host} The host that changed the status.</li>
+     * </ul>
+     * @event Client#hostUp
+     */
+    /**
+     * Emitted when a host in the cluster changed status from up to down.
+     * <ul>
+     *   <li>{@link Host host} The host that changed the status.</li>
+     * </ul>
+     * @event Client#hostDown
+     */
+    /**
+     * Attempts to connect to one of the [contactPoints]{@link ClientOptions} and discovers the rest the nodes of the
+     * cluster.
+     * <p>When the {@link Client} is already connected, it resolves immediately.</p>
+     * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+     * @param {function} [callback] The optional callback that is invoked when the pool is connected or it failed to
+     * connect.
+     * @example <caption>Usage example</caption>
+     * await client.connect();
+     */
+    connect(callback?: Function): any;
+    /**
+     * Async-only version of {@link Client#connect()}.
+     * @private
+     */
+    private _connect;
+    log: log;
+    /**
+     * Executes a query on an available connection.
+     * <p>The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.</p>
+     * <p>
+     *   Some execution failures can be handled transparently by the driver, according to the
+     *   [RetryPolicy]{@linkcode module:policies/retry~RetryPolicy} or the
+     *   [SpeculativeExecutionPolicy]{@linkcode module:policies/speculativeExecution} used.
+     * </p>
+     * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+     * @param {String} query The query to execute.
+     * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+     * as keys and its value.
+     * @param {QueryOptions} [options] The query options for the execution.
+     * @param {ResultCallback} [callback] Executes callback(err, result) when execution completed. When not defined, the
+     * method will return a promise.
+     * @example <caption>Promise-based API, using async/await</caption>
+     * const query = 'SELECT name, email FROM users WHERE id = ?';
+     * const result = await client.execute(query, [ id ], { prepare: true });
+     * const row = result.first();
+     * console.log('%s: %s', row['name'], row['email']);
+     * @example <caption>Callback-based API</caption>
+     * const query = 'SELECT name, email FROM users WHERE id = ?';
+     * client.execute(query, [ id ], { prepare: true }, function (err, result) {
+     *   assert.ifError(err);
+     *   const row = result.first();
+     *   console.log('%s: %s', row['name'], row['email']);
+     * });
+     * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
+     */
+    execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<ResultSet>;
+    execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
+    execute(query: string, params: ArrayOrObject, callback: ValueCallback<ResultSet>): void;
+    execute(query: string, callback: ValueCallback<ResultSet>): void;
+    /**
+     * Executes a graph query.
+     * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+     * @param {String} query The gremlin query.
+     * @param {Object|null} [parameters] An associative array containing the key and values of the parameters.
+     * @param {GraphQueryOptions|null} [options] The graph query options.
+     * @param {Function} [callback] Function to execute when the response is retrieved, taking two arguments:
+     * <code>err</code> and <code>result</code>. When not defined, the method will return a promise.
+     * @example <caption>Promise-based API, using async/await</caption>
+     * const result = await client.executeGraph('g.V()');
+     * // Get the first item (vertex, edge, scalar value, ...)
+     * const vertex = result.first();
+     * console.log(vertex.label);
+     * @example <caption>Callback-based API</caption>
+     * client.executeGraph('g.V()', (err, result) => {
+     *   const vertex = result.first();
+     *   console.log(vertex.label);
+     * });
+     * @example <caption>Iterating through the results</caption>
+     * const result = await client.executeGraph('g.E()');
+     * for (let edge of result) {
+     *   console.log(edge.label); // created
+     * });
+     * @example <caption>Using result.forEach()</caption>
+     * const result = await client.executeGraph('g.V().hasLabel("person")');
+     * result.forEach(function(vertex) {
+     *   console.log(vertex.type); // vertex
+     *   console.log(vertex.label); // person
+     * });
+     * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
+     */
+    executeGraph(traversal: string, parameters: {
+        [name: string]: any;
+    } | undefined, options: GraphQueryOptions, callback: ValueCallback<GraphResultSet>): void;
+    executeGraph(traversal: string, parameters: {
+        [name: string]: any;
+    } | undefined, callback: ValueCallback<GraphResultSet>): void;
+    executeGraph(traversal: string, callback: ValueCallback<GraphResultSet>): void;
+    executeGraph(traversal: string, parameters?: {
+        [name: string]: any;
+    }, options?: GraphQueryOptions): Promise<GraphResultSet>;
+    /**
+     * Executes the query and calls <code>rowCallback</code> for each row as soon as they are received. Calls the final
+     * <code>callback</code> after all rows have been sent, or when there is an error.
+     * <p>
+     *   The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.
+     * </p>
+     * @param {String} query The query to execute
+     * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+     * as keys and its value.
+     * @param {QueryOptions} [options] The query options.
+     * @param {function} rowCallback Executes <code>rowCallback(n, row)</code> per each row received, where n is the row
+     * index and row is the current Row.
+     * @param {function} [callback] Executes <code>callback(err, result)</code> after all rows have been received.
+     * <p>
+     *   When dealing with paged results, [ResultSet#nextPage()]{@link module:types~ResultSet#nextPage} method can be used
+     *   to retrieve the following page. In that case, <code>rowCallback()</code> will be again called for each row and
+     *   the final callback will be invoked when all rows in the following page has been retrieved.
+     * </p>
+     * @example <caption>Using per-row callback and arrow functions</caption>
+     * client.eachRow(query, params, { prepare: true }, (n, row) => console.log(n, row), err => console.error(err));
+     * @example <caption>Overloads</caption>
+     * client.eachRow(query, rowCallback);
+     * client.eachRow(query, params, rowCallback);
+     * client.eachRow(query, params, options, rowCallback);
+     * client.eachRow(query, params, rowCallback, callback);
+     * client.eachRow(query, params, options, rowCallback, callback);
+     */
+    eachRow(query: string, params: ArrayOrObject, options: QueryOptions, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
+    eachRow(query: string, params: ArrayOrObject, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
+    eachRow(query: string, rowCallback: (n: number, row: Row) => void): void;
+    /**
+     * Executes the query and pushes the rows to the result stream as soon as they received.
+     * <p>
+     * The stream is a [ReadableStream]{@linkcode https://nodejs.org/api/stream.html#stream_class_stream_readable} object
+     *  that emits rows.
+     *  It can be piped downstream and provides automatic pause/resume logic (it buffers when not read).
+     * </p>
+     * <p>
+     *   The query can be prepared (recommended) or not depending on {@link QueryOptions}.prepare flag. Retries on multiple
+     *   hosts if needed.
+     * </p>
+     * @param {String} query The query to prepare and execute.
+     * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+     * as keys and its value
+     * @param {QueryOptions} [options] The query options.
+     * @param {function} [callback] executes callback(err) after all rows have been received or if there is an error
+     * @returns {ResultStream}
+     */
+    stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): ResultStream;
+    /**
+     * Executes batch of queries on an available connection to a host.
+     * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+     * @param {Array.<string>|Array.<{query, params}>} queries The queries to execute as an Array of strings or as an array
+     * of object containing the query and params
+     * @param {QueryOptions} [options] The query options.
+     * @param {ResultCallback} [callback] Executes callback(err, result) when the batch was executed
+     */
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, options?: QueryOptions): Promise<ResultSet>;
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, callback: ValueCallback<ResultSet>): void;
+    /**
+     * Async-only version of {@link Client#batch()} .
+     * @param {Array.<string>|Array.<{query, params}>}queries
+     * @param {QueryOptions} options
+     * @returns {Promise<ResultSet>}
+     * @private
+     */
+    private _batch;
+    /**
+     * Gets the host that are replicas of a given token.
+     * @param {String} keyspace
+     * @param {Buffer} token
+     * @returns {Array<Host>}
+     */
+    getReplicas(keyspace: string, token: Buffer): Array<Host>;
+    /**
+     * Gets a snapshot containing information on the connections pools held by this Client at the current time.
+     * <p>
+     *   The information provided in the returned object only represents the state at the moment this method was called and
+     *   it's not maintained in sync with the driver metadata.
+     * </p>
+     * @returns {ClientState} A [ClientState]{@linkcode module:metadata~ClientState} instance.
+     */
+    getState(): ClientState;
+    /**
+     * Closes all connections to all hosts.
+     * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
+     * @param {Function} [callback] Optional callback to be invoked when finished closing all connections.
+     */
+    shutdown(callback?: Function): Promise<any>;
+    /** @private */
+    private _shutdown;
+    /**
+     * Waits until that the schema version in all nodes is the same or the waiting time passed.
+     * @param {Connection} connection
+     * @returns {Promise<boolean>}
+     * @ignore
+     */
+    private _waitForSchemaAgreement;
+    /**
+     * Waits for schema agreements and schedules schema metadata refresh.
+     * @param {Connection} connection
+     * @param event
+     * @returns {Promise<boolean>}
+     * @ignore
+     * @internal
+     */
+    handleSchemaAgreementAndRefresh(connection: Connection, event: any): Promise<boolean>;
+    /**
+     * Connects and handles the execution of prepared and simple statements.
+     * @param {string} query
+     * @param {Array} params
+     * @param {ExecutionOptions} execOptions
+     * @returns {Promise<ResultSet>}
+     * @private
+     */
+    _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet>;
+    /**
+     * Sets the listeners for the nodes.
+     * @private
+     */
+    _setHostListeners(): void;
+    /**
+     * Sets the distance to each host and when warmup is true, creates all connections to local hosts.
+     * @returns {Promise}
+     * @private
+     */
+    _warmup(): Promise<any>;
+    /**
+     * @returns {Encoder}
+     * @private
+     */
+    _getEncoder(): Encoder;
+    /**
+     * Returns a BatchRequest instance and fills the routing key information in the provided options.
+     * @private
+     */
+    _createBatchRequest(queryItems: {
+        query: any;
+        params: any;
+        info?: any;
+    }[], info: any): Promise<BatchRequest>;
+    /**
+     * Returns an ExecuteRequest instance and fills the routing key information in the provided options.
+     * @private
+     */
+    _createExecuteRequest(query: any, queryId: any, info: any, params: any, meta: any): Promise<ExecuteRequest>;
+    /**
+     * Returns a QueryRequest instance and fills the routing key information in the provided options.
+     * @private
+     */
+    _createQueryRequest(query: any, execOptions: any, params: any): Promise<QueryRequest>;
+    /**
+     * Sets the routing key based on the parameter values or the provided routing key components.
+     * @param {ExecutionOptions} execOptions
+     * @param {Array} params
+     * @param meta
+     * @private
+     */
+    _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta: any): Promise<void>;
 }
 
-export declare interface ClientOptions {
+/**
+ * Represents a base class that is used to measure events from the server and the client as seen by the driver.
+ * @alias module:metrics~ClientMetrics
+ * @interface
+ */
+declare class ClientMetrics {
+    /**
+     * Method invoked when an authentication error is obtained from the server.
+     * @param {AuthenticationError|Error} e The error encountered.
+     */
+    onAuthenticationError(e: AuthenticationError | Error): void;
+    /**
+     * Method invoked when an error (different than a server or client timeout, authentication or connection error) is
+     * encountered when executing a request.
+     * @param {OperationTimedOutError} e The timeout error.
+     */
+    onClientTimeoutError(e: OperationTimedOutError): void;
+    /**
+     * Method invoked when there is a connection error.
+     * @param {Error} e The error encountered.
+     */
+    onConnectionError(e: Error): void;
+    /**
+     * Method invoked when an error (different than a server or client timeout, authentication or connection error) is
+     * encountered when executing a request.
+     * @param {Error} e The error encountered.
+     */
+    onOtherError(e: Error): void;
+    /**
+     * Method invoked when a read timeout error is obtained from the server.
+     * @param {ResponseError} e The error encountered.
+     */
+    onReadTimeoutError(e: ResponseError): void;
+    /**
+     * Method invoked when a write timeout error is obtained from the server.
+     * @param {ResponseError} e The error encountered.
+     */
+    onWriteTimeoutError(e: ResponseError): void;
+    /**
+     * Method invoked when an unavailable error is obtained from the server.
+     * @param {ResponseError} e The error encountered.
+     */
+    onUnavailableError(e: ResponseError): void;
+    /**
+     * Method invoked when an execution is retried as a result of a client-level timeout.
+     * @param {Error} e The error that caused the retry.
+     */
+    onClientTimeoutRetry(e: Error): void;
+    /**
+     * Method invoked when an error (other than a server or client timeout) is retried.
+     * @param {Error} e The error that caused the retry.
+     */
+    onOtherErrorRetry(e: Error): void;
+    /**
+     * Method invoked when an execution is retried as a result of a read timeout from the server (coordinator to replica).
+     * @param {Error} e The error that caused the retry.
+     */
+    onReadTimeoutRetry(e: Error): void;
+    /**
+     * Method invoked when an execution is retried as a result of an unavailable error from the server.
+     * @param {Error} e The error that caused the retry.
+     */
+    onUnavailableRetry(e: Error): void;
+    /**
+     * Method invoked when an execution is retried as a result of a write timeout from the server (coordinator to
+     * replica).
+     * @param {Error} e The error that caused the retry.
+     */
+    onWriteTimeoutRetry(e: Error): void;
+    /**
+     * Method invoked when an error is marked as ignored by the retry policy.
+     * @param {Error} e The error that was ignored by the retry policy.
+     */
+    onIgnoreError(e: Error): void;
+    /**
+     * Method invoked when a speculative execution is started.
+     */
+    onSpeculativeExecution(): void;
+    /**
+     * Method invoked when a response is obtained successfully.
+     * @param {Array<Number>} latency The latency represented in a <code>[seconds, nanoseconds]</code> tuple
+     * Array, where nanoseconds is the remaining part of the real time that can't be represented in second precision.
+     */
+    onSuccessfulResponse(latency: Array<number>): void;
+    /**
+     * Method invoked when any response is obtained, the response can be the result of a successful execution or a
+     * server-side error.
+     * @param {Array<Number>} latency The latency represented in a <code>[seconds, nanoseconds]</code> tuple
+     * Array, where nanoseconds is the remaining part of the real time that can't be represented in second precision.
+     */
+    onResponse(latency: Array<number>): void;
+}
+
+/**
+ * Client options.
+ * <p>While the driver provides lots of extensibility points and configurability, few client options are required.</p>
+ * <p>Default values for all settings are designed to be suitable for the majority of use cases, you should avoid
+ * fine tuning it when not needed.</p>
+ * <p>See [Client constructor]{@link Client} documentation for recommended options.</p>
+ * @typedef {Object} ClientOptions@typedef {Object} ClientOptions
+ * @property {Array.<string>} contactPoints
+ * Array of addresses or host names of the nodes to add as contact points.
+ * <p>
+ *  Contact points are addresses of Cassandra nodes that the driver uses to discover the cluster topology.
+ * </p>
+ * <p>
+ *  Only one contact point is required (the driver will retrieve the address of the other nodes automatically),
+ *  but it is usually a good idea to provide more than one contact point, because if that single contact point is
+ *  unavailable, the driver will not be able to initialize correctly.
+ * </p>
+ * @property {String} [localDataCenter] The local data center to use.
+ * <p>
+ *   If using DCAwareRoundRobinPolicy (default), this option is required and only hosts from this data center are
+ *   connected to and used in query plans.
+ * </p>
+ * @property {String} [keyspace] The logged keyspace for all the connections created within the {@link Client} instance.
+ * @property {Object} [credentials] An object containing the username and password for plain-text authentication.
+ * It configures the authentication provider to be used against Apache Cassandra's PasswordAuthenticator or DSE's
+ * DseAuthenticator, when default auth scheme is plain-text.
+ * <p>
+ *   Note that you should configure either <code>credentials</code> or <code>authProvider</code> to connect to an
+ *   auth-enabled cluster, but not both.
+ * </p>
+ * @property {String} [credentials.username] The username to use for plain-text authentication.
+ * @property {String} [credentials.password] The password to use for plain-text authentication.
+ * @property {Uuid} [id] A unique identifier assigned to a {@link Client} object, that will be communicated to the
+ * server (DSE 6.0+) to identify the client instance created with this options. When not defined, the driver will
+ * generate a random identifier.
+ * @property {String} [applicationName] An optional setting identifying the name of the application using
+ * the {@link Client} instance.
+ * <p>This value is passed to DSE and is useful as metadata for describing a client connection on the server side.</p>
+ * @property {String} [applicationVersion] An optional setting identifying the version of the application using
+ * the {@link Client} instance.
+ * <p>This value is passed to DSE and is useful as metadata for describing a client connection on the server side.</p>
+ * @property {Object} [monitorReporting] Options for reporting mechanism from the client to the DSE server, for
+ * versions that support it.
+ * @property {Boolean} [monitorReporting.enabled=true] Determines whether the reporting mechanism is enabled.
+ * Defaults to <code>true</code>.
+ * @property {Object} [cloud] The options to connect to a cloud instance.
+ * @property {String|URL} cloud.secureConnectBundle Determines the file path for the credentials file bundle.
+ * @property {Number} [refreshSchemaDelay] The default window size in milliseconds used to debounce node list and schema
+ * refresh metadata requests. Default: 1000.
+ * @property {Boolean} [isMetadataSyncEnabled] Determines whether client-side schema metadata retrieval and update is
+ * enabled.
+ * <p>Setting this value to <code>false</code> will cause keyspace information not to be automatically loaded, affecting
+ * replica calculation per token in the different keyspaces. When disabling metadata synchronization, use
+ * [Metadata.refreshKeyspaces()]{@link module:metadata~Metadata#refreshKeyspaces} to keep keyspace information up to
+ * date or token-awareness will not work correctly.</p>
+ * Default: <code>true</code>.
+ * @property {Boolean} [prepareOnAllHosts] Determines if the driver should prepare queries on all hosts in the cluster.
+ * Default: <code>true</code>.
+ * @property {Boolean} [rePrepareOnUp] Determines if the driver should re-prepare all cached prepared queries on a
+ * host when it marks it back up.
+ * Default: <code>true</code>.
+ * @property {Number} [maxPrepared] Determines the maximum amount of different prepared queries before evicting items
+ * from the internal cache. Reaching a high threshold hints that the queries are not being reused, like when
+ * hard-coding parameter values inside the queries.
+ * Default: <code>500</code>.
+ * @property {Object} [policies]
+ * @property {LoadBalancingPolicy} [policies.loadBalancing] The load balancing policy instance to be used to determine
+ * the coordinator per query.
+ * @property {RetryPolicy} [policies.retry] The retry policy.
+ * @property {ReconnectionPolicy} [policies.reconnection] The reconnection policy to be used.
+ * @property {AddressTranslator} [policies.addressResolution] The address resolution policy.
+ * @property {SpeculativeExecutionPolicy} [policies.speculativeExecution] The <code>SpeculativeExecutionPolicy</code>
+ * instance to be used to determine if the client should send speculative queries when the selected host takes more
+ * time than expected.
+ * <p>
+ *   Default: <code>[NoSpeculativeExecutionPolicy]{@link
+ *   module:policies/speculativeExecution~NoSpeculativeExecutionPolicy}</code>
+ * </p>
+ * @property {TimestampGenerator} [policies.timestampGeneration] The client-side
+ * [query timestamp generator]{@link module:policies/timestampGeneration~TimestampGenerator}.
+ * <p>
+ *   Default: <code>[MonotonicTimestampGenerator]{@link module:policies/timestampGeneration~MonotonicTimestampGenerator}
+ *   </code>
+ * </p>
+ * <p>Use <code>null</code> to disable client-side timestamp generation.</p>
+ * @property {QueryOptions} [queryOptions] Default options for all queries.
+ * @property {Object} [pooling] Pooling options.
+ * @property {Number} [pooling.heartBeatInterval] The amount of idle time in milliseconds that has to pass before the
+ * driver issues a request on an active connection to avoid idle time disconnections. Default: 30000.
+ * @property {Object} [pooling.coreConnectionsPerHost] Associative array containing amount of connections per host
+ * distance.
+ * @property {Number} [pooling.maxRequestsPerConnection] The maximum number of requests per connection. The default
+ * value is:
+ * <ul>
+ *   <li>For modern protocol versions (v3 and above): 2048</li>
+ *   <li>For older protocol versions (v1 and v2): 128</li>
+ * </ul>
+ * @property {Boolean} [pooling.warmup] Determines if all connections to hosts in the local datacenter must be opened on
+ * connect. Default: true.
+ * @property {Object} [protocolOptions]
+ * @property {Number} [protocolOptions.port] The port to use to connect to the Cassandra host. If not set through this
+ * method, the default port (9042) will be used instead.
+ * @property {Number} [protocolOptions.maxSchemaAgreementWaitSeconds] The maximum time in seconds to wait for schema
+ * agreement between nodes before returning from a DDL query. Default: 10.
+ * @property {Number} [protocolOptions.maxVersion] When set, it limits the maximum protocol version used to connect to
+ * the nodes.
+ * Useful for using the driver against a cluster that contains nodes with different major/minor versions of Cassandra.
+ * @property {Boolean} [protocolOptions.noCompact] When set to true, enables the NO_COMPACT startup option.
+ * <p>
+ * When this option is supplied <code>SELECT</code>, <code>UPDATE</code>, <code>DELETE</code>, and <code>BATCH</code>
+ * statements on <code>COMPACT STORAGE</code> tables function in "compatibility" mode which allows seeing these tables
+ * as if they were "regular" CQL tables.
+ * </p>
+ * <p>
+ * This option only effects interactions with interactions with tables using <code>COMPACT STORAGE</code> and is only
+ * supported by C* 3.0.16+, 3.11.2+, 4.0+ and DSE 6.0+.
+ * </p>
+ * @property {Object} [socketOptions]
+ * @property {Number} [socketOptions.connectTimeout] Connection timeout in milliseconds. Default: 5000.
+ * @property {Number} [socketOptions.defunctReadTimeoutThreshold] Determines the amount of requests that simultaneously
+ * have to timeout before closing the connection. Default: 64.
+ * @property {Boolean} [socketOptions.keepAlive] Whether to enable TCP keep-alive on the socket. Default: true.
+ * @property {Number} [socketOptions.keepAliveDelay] TCP keep-alive delay in milliseconds. Default: 0.
+ * @property {Number} [socketOptions.readTimeout] Per-host read timeout in milliseconds.
+ * <p>
+ *   Please note that this is not the maximum time a call to {@link Client#execute} may have to wait;
+ *   this is the maximum time that call will wait for one particular Cassandra host, but other hosts will be tried if
+ *   one of them timeout. In other words, a {@link Client#execute} call may theoretically wait up to
+ *   <code>readTimeout * number_of_cassandra_hosts</code> (though the total number of hosts tried for a given query also
+ *   depends on the LoadBalancingPolicy in use).
+ * <p>When setting this value, keep in mind the following:</p>
+ * <ul>
+ *   <li>the timeout settings used on the Cassandra side (*_request_timeout_in_ms in cassandra.yaml) should be taken
+ *   into account when picking a value for this read timeout. You should pick a value a couple of seconds greater than
+ *   the Cassandra timeout settings.
+ *   </li>
+ *   <li>
+ *     the read timeout is only approximate and only control the timeout to one Cassandra host, not the full query.
+ *   </li>
+ * </ul>
+ * Setting a value of 0 disables read timeouts. Default: <code>12000</code>.
+ * @property {Boolean} [socketOptions.tcpNoDelay] When set to true, it disables the Nagle algorithm. Default: true.
+ * @property {Number} [socketOptions.coalescingThreshold] Buffer length in bytes use by the write queue before flushing
+ * the frames. Default: 8000.
+ * @property {AuthProvider} [authProvider] Provider to be used to authenticate to an auth-enabled cluster.
+ * @property {RequestTracker} [requestTracker] The instance of RequestTracker used to monitor or log requests executed
+ * with this instance.
+ * @property {Object} [sslOptions] Client-to-node ssl options. When set the driver will use the secure layer.
+ * You can specify cert, ca, ... options named after the Node.js <code>tls.connect()</code> options.
+ * <p>
+ *   It uses the same default values as Node.js <code>tls.connect()</code> except for <code>rejectUnauthorized</code>
+ *   which is set to <code>false</code> by default (for historical reasons). This setting is likely to change
+ *   in upcoming versions to enable validation by default.
+ * </p>
+ * @property {Object} [encoding] Encoding options.
+ * @property {Function} [encoding.map] Map constructor to use for Cassandra map<k,v> type encoding and decoding.
+ * If not set, it will default to Javascript Object with map keys as property names.
+ * @property {Function} [encoding.set] Set constructor to use for Cassandra set<k> type encoding and decoding.
+ * If not set, it will default to Javascript Array.
+ * @property {Boolean} [encoding.copyBuffer] Determines if the network buffer should be copied for buffer based data
+ * types (blob, uuid, timeuuid and inet).
+ * <p>
+ *   Setting it to true will cause that the network buffer is copied for each row value of those types,
+ *   causing additional allocations but freeing the network buffer to be reused.
+ *   Setting it to true is a good choice for cases where the Row and ResultSet returned by the queries are long-lived
+ *   objects.
+ * </p>
+ * <p>
+ *  Setting it to false will cause less overhead and the reference of the network buffer to be maintained until the row
+ *  / result set are de-referenced.
+ *  Default: true.
+ * </p>
+ * @property {Boolean} [encoding.useUndefinedAsUnset] Valid for Cassandra 2.2 and above. Determines that, if a parameter
+ * is set to
+ * <code>undefined</code> it should be encoded as <code>unset</code>.
+ * <p>
+ *  By default, ECMAScript <code>undefined</code> is encoded as <code>null</code> in the driver. Cassandra 2.2
+ *  introduced the concept of unset.
+ *  At driver level, you can set a parameter to unset using the field <code>types.unset</code>. Setting this flag to
+ *  true allows you to use ECMAScript undefined as Cassandra <code>unset</code>.
+ * </p>
+ * <p>
+ *   Default: true.
+ * </p>
+ * @property {Boolean} [encoding.useBigIntAsLong] Use [BigInt ECMAScript type](https://tc39.github.io/proposal-bigint/)
+ * to represent CQL bigint and counter data types.
+ * @property {Boolean} [encoding.useBigIntAsVarint] Use [BigInt ECMAScript
+ * type](https://tc39.github.io/proposal-bigint/) to represent CQL varint data type.
+ * @property {Array.<ExecutionProfile>} [profiles] The array of [execution profiles]{@link ExecutionProfile}.
+ * @property {Function} [promiseFactory] Function to be used to create a <code>Promise</code> from a
+ * callback-style function.
+ * <p>
+ *   Promise libraries often provide different methods to create a promise. For example, you can use Bluebird's
+ *   <code>Promise.fromCallback()</code> method.
+ * </p>
+ * <p>
+ *   By default, the driver will use the
+ *   [Promise constructor]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise}.
+ * </p>
+ */
+declare interface ClientOptions {
+    applicationName?: string;
+    applicationVersion?: string;
+    authProvider?: AuthProvider;
     contactPoints?: string[];
     localDataCenter?: string;
+    logEmitter?: any;
     keyspace?: string;
-    authProvider?: auth.AuthProvider;
     credentials?: {
         username: string;
         password: string;
-    }
-
-    cloud?: {
-        secureConnectBundle: string | URL_2;
     };
-
+    cloud?: {
+        secureConnectBundle: string | URL;
+    };
     encoding?: {
         map?: Function;
         set?: Function;
@@ -137,19 +1214,25 @@ export declare interface ClientOptions {
         useBigIntAsLong?: boolean;
         useBigIntAsVarint?: boolean;
     };
+    id?: Uuid;
     isMetadataSyncEnabled?: boolean;
     maxPrepared?: number;
-    metrics?: metrics.ClientMetrics;
+    metrics?: ClientMetrics;
+    monitorReporting?: {
+        enabled?: boolean;
+    };
     policies?: {
-        addressResolution?: policies.addressResolution.AddressTranslator;
-        loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
-        reconnection?: policies.reconnection.ReconnectionPolicy;
-        retry?: policies.retry.RetryPolicy;
-        speculativeExecution?: policies.speculativeExecution.SpeculativeExecutionPolicy;
-        timestampGeneration?: policies.timestampGeneration.TimestampGenerator;
+        addressResolution?: AddressTranslator;
+        loadBalancing?: LoadBalancingPolicy;
+        reconnection?: ReconnectionPolicy;
+        retry?: RetryPolicy;
+        speculativeExecution?: SpeculativeExecutionPolicy;
+        timestampGeneration?: TimestampGenerator;
     };
     pooling?: {
-        coreConnectionsPerHost?: { [key: number]: number; };
+        coreConnectionsPerHost?: {
+            [key: number]: number;
+        };
         heartBeatInterval?: number;
         maxRequestsPerConnection?: number;
         warmup?: boolean;
@@ -166,7 +1249,12 @@ export declare interface ClientOptions {
     queryOptions?: QueryOptions;
     refreshSchemaDelay?: number;
     rePrepareOnUp?: boolean;
-    requestTracker?: tracker.RequestTracker;
+    requestTracker?: RequestTracker;
+    sni?: {
+        address?: string;
+        port?: string;
+        addressResolver?: AddressResolver;
+    };
     socketOptions?: {
         coalescingThreshold?: number;
         connectTimeout?: number;
@@ -176,1478 +1264,7816 @@ export declare interface ClientOptions {
         readTimeout?: number;
         tcpNoDelay?: boolean;
     };
-    sslOptions?: tls.ConnectionOptions;
+    sslOptions?: ConnectionOptions;
 }
 
-export declare namespace concurrent {
-    export interface ResultSetGroup {
-        errors: Error[];
-        resultItems: any[];
-        totalExecuted: number;
-    }
-
-    export type Options = {
-        collectResults?: boolean;
-        concurrencyLevel?: number;
-        executionProfile?: string;
-        maxErrors?: number;
-        raiseOnFirstError?: boolean;
-    }
-
-    export function executeConcurrent(
-    client: Client,
-    query: string,
-    parameters: any[][]|Readable,
-    options?: Options): Promise<ResultSetGroup>;
-
-    export function executeConcurrent(
-    client: Client,
-    queries: Array<{query: string, params: any[]}>,
-    options?: Options): Promise<ResultSetGroup>;
+/**
+ * Represents the state of a {@link Client}.
+ * <p>
+ * Exposes information on the connections maintained by a Client at a specific time.
+ * </p>
+ * @alias module:metadata~ClientState
+ * @constructor
+ */
+declare class ClientState {
+    _hosts: Host[];
+    _openConnections: {
+        [key: string]: number;
+    };
+    _inFlightQueries: {
+        [key: string]: number;
+    };
+    /**
+     * Creates a new instance of <code>ClientState</code>.
+     * @param {Array<Host>} hosts
+     * @param {Object.<String, Number>} openConnections
+     * @param {Object.<String, Number>} inFlightQueries
+     */
+    constructor(hosts: Array<Host>, openConnections: {
+        [key: string]: number;
+    }, inFlightQueries: {
+        [key: string]: number;
+    });
+    /**
+     * Get an array of hosts to which the client is connected to.
+     * @return {Array<Host>}
+     */
+    getConnectedHosts(): Array<Host>;
+    /**
+     * Gets the amount of open connections to a given host.
+     * @param {Host} host
+     * @return {Number}
+     */
+    getOpenConnections(host: Host): number;
+    /**
+     * Gets the amount of queries that are currently being executed through a given host.
+     * <p>
+     * This corresponds to the number of queries that have been sent by the Client to server Host on one of its connections
+     * but haven't yet obtained a response.
+     * </p>
+     * @param {Host} host
+     * @return {Number}
+     */
+    getInFlightQueries(host: Host): number;
+    /**
+     * Returns the string representation of the instance.
+     */
+    toString(): string;
+    /**
+     * Creates a new instance from the provided client.
+     * @param {Client} client
+     * @internal
+     * @ignore
+     */
+    static from(client: Client): ClientState;
 }
 
-export declare namespace datastax {
-    import graph = graphModule.graph;
+declare type ColumnInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
 
-    import search = searchModule.search;
+export declare const concurrent: {
+    executeConcurrent: typeof executeConcurrent_2;
+    ResultSetGroup: typeof ResultSetGroup_2;
+};
+
+/**
+ * Represents a connection to a Cassandra node
+ */
+declare class Connection extends events.EventEmitter {
+    endpoint: string;
+    endpointFriendlyName: any;
+    _serverName: string;
+    address: any;
+    port: any;
+    _checkingVersion: boolean;
+    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+    protocolVersion: number;
+    _operations: Map<any, any>;
+    _pendingWrites: any[];
+    _preparing: Map<string, PreparedQueryInfo>;
+    _idleTimeout: NodeJS.Timeout;
+    timedOutOperations: number;
+    _streamIds: StreamIdStack;
+    _metrics: any;
+    encoder: Encoder;
+    keyspace: string;
+    emitDrain: boolean;
+    connected: boolean;
+    isSocketOpen: boolean;
+    send: (arg1: Request_2, arg2: ExecutionOptions) => Promise<OperationState>;
+    closeAsync: () => Promise<unknown>;
+    openAsync: () => Promise<unknown>;
+    prepareOnceAsync: (arg1: string, arg2: string) => Promise<{
+        id: any;
+        meta: any;
+    }>;
+    netClient: any;
+    protocol: any;
+    parser: any;
+    writeQueue: WriteQueue;
+    options: ClientOptions;
+    toBeKeyspace: string;
+    sendingIdleQuery: any;
+    /**
+     * Creates a new instance of Connection.
+     * @param {String} endpoint An string containing ip address and port of the host
+     * @param {Number|null} protocolVersion
+     * @param {ClientOptions} options
+     */
+    constructor(endpoint: string, protocolVersion: number | null, options: ClientOptions);
+    /**
+     * Binds the necessary event listeners for the socket
+     */
+    bindSocketListeners(): void;
+    /**
+     * Connects a socket and sends the startup protocol messages.
+     * Note that when open() callbacks in error, the caller should immediately call {@link Connection#close}.
+     */
+    open(callback: any): void;
+    /**
+     * Determines the protocol version to use and sends the STARTUP request
+     * @param {Function} callback
+     */
+    startup(callback: Function): void;
+    errorConnecting(err: any, destroy: any, callback: any): void;
+    /**
+     * Sets the connection to ready/connected status
+     */
+    connectionReady(callback: any): void;
+    /** @param {Number} lowerVersion */
+    decreaseVersion(lowerVersion: number): void;
+    /**
+     * Handle socket errors, if the socket is not readable invoke all pending callbacks
+     */
+    handleSocketError(err: any): void;
+    /**
+     * Cleans all internal state and invokes all pending callbacks of sent streams
+     */
+    clearAndInvokePending(innerError?: any): void;
+    /**
+     * Starts the SASL flow
+     * @param {String} authenticatorName
+     * @param {Function} callback
+     */
+    startAuthenticating(authenticatorName: string, callback: Function): any;
+    /**
+     * Handles authentication requests and responses.
+     * @param {Authenticator} authenticator
+     * @param {Buffer} token
+     * @param {Function} callback
+     */
+    authenticate(authenticator: Authenticator, token: Buffer, callback: Function): void;
+    onAuthenticationError(callback: any, err: any): void;
+    /**
+     * Executes a 'USE ' query, if keyspace is provided and it is different from the current keyspace
+     * @param {?String} keyspace
+     */
+    changeKeyspace(keyspace: string | null): Promise<any>;
+    /**
+     * Prepares a query on a given connection. If its already being prepared, it queues the callback.
+     * @param {String} query
+     * @param {String} keyspace
+     * @param {function} callback
+     */
+    prepareOnce(query: string, keyspace: string, callback: (...args: any[]) => void): void;
+    /**
+     * Queues the operation to be written to the wire and invokes the callback once the response was obtained or with an
+     * error (socket error or OperationTimedOutError or serialization-related error).
+     * @param {Request} request
+     * @param {ExecutionOptions|null} execOptions
+     * @param {function} callback Function to be called once the response has been received
+     * @return {OperationState}
+     */
+    sendStream(request: Request_2, execOptions: ExecutionOptions | null, callback: Function): OperationState;
+    /**
+     * Pushes the item into the queue.
+     * @param {OperationState} operation
+     * @param {Number} streamId
+     * @private
+     */
+    _write(operation: OperationState, streamId: number): void;
+    _setIdleTimeout(): void;
+    /**
+     * Function that gets executed once the idle timeout has passed to issue a request to keep the connection alive
+     */
+    _idleTimeoutHandler(): void;
+    /**
+     * Returns an available streamId or null if there isn't any available
+     * @returns {Number}
+     */
+    _getStreamId(): number;
+    freeStreamId(header: any): void;
+    _writeNext(): void;
+    /**
+     * Returns the number of requests waiting for response
+     * @returns {Number}
+     */
+    getInFlight(): number;
+    /**
+     * Handles a result and error response
+     */
+    handleResult(header: any, err: any, result: any): void;
+    handleNodeEvent(header: any, event: any): void;
+    /**
+     * Handles a row response
+     */
+    handleRow(header: any, row: any, meta: any, rowLength: any, flags: any): void;
+    /**
+     * Closes the socket (if not already closed) and cancels all in-flight requests.
+     * Multiple calls to this method have no additional side-effects.
+     * @param {Function} [callback]
+     */
+    close(callback?: () => void): void;
+    /**
+     * Gets the local IP address to which this connection socket is bound to.
+     * @returns {String|undefined}
+     */
+    getLocalAddress(): string | undefined;
 }
 
-export declare function defaultOptions(): ClientOptions;
+/**
+ * Consistency levels
+ * @type {Object}
+ * @property {Number} any Writing: A write must be written to at least one node. If all replica nodes for the given row key are down, the write can still succeed after a hinted handoff has been written. If all replica nodes are down at write time, an ANY write is not readable until the replica nodes for that row have recovered.
+ * @property {Number} one Returns a response from the closest replica, as determined by the snitch.
+ * @property {Number} two Returns the most recent data from two of the closest replicas.
+ * @property {Number} three Returns the most recent data from three of the closest replicas.
+ * @property {Number} quorum Reading: Returns the record with the most recent timestamp after a quorum of replicas has responded regardless of data center. Writing: A write must be written to the commit log and memory table on a quorum of replica nodes.
+ * @property {Number} all Reading: Returns the record with the most recent timestamp after all replicas have responded. The read operation will fail if a replica does not respond. Writing: A write must be written to the commit log and memory table on all replica nodes in the cluster for that row.
+ * @property {Number} localQuorum Reading: Returns the record with the most recent timestamp once a quorum of replicas in the current data center as the coordinator node has reported. Writing: A write must be written to the commit log and memory table on a quorum of replica nodes in the same data center as the coordinator node. Avoids latency of inter-data center communication.
+ * @property {Number} eachQuorum Reading: Returns the record once a quorum of replicas in each data center of the cluster has responded. Writing: Strong consistency. A write must be written to the commit log and memtable on a quorum of replica nodes in all data centers.
+ * @property {Number} serial Achieves linearizable consistency for lightweight transactions by preventing unconditional updates.
+ * @property {Number} localSerial Same as serial but confined to the data center. A write must be written conditionally to the commit log and memtable on a quorum of replica nodes in the same data center.
+ * @property {Number} localOne Similar to One but only within the DC the coordinator is in.
+ */
+declare const consistencies: {
+    readonly any: 0;
+    readonly one: 1;
+    readonly two: 2;
+    readonly three: 3;
+    readonly quorum: 4;
+    readonly all: 5;
+    readonly localQuorum: 6;
+    readonly eachQuorum: 7;
+    readonly serial: 8;
+    readonly localSerial: 9;
+    readonly localOne: 10;
+};
 
-export declare interface DseClientOptions extends ClientOptions {
-    id?: Uuid;
-    applicationName?: string;
-    applicationVersion?: string;
-    monitorReporting?: { enabled?: boolean };
-    graphOptions?: GraphOptions;
+/**
+ * Mapping of consistency level codes to their string representation.
+ * @type {Object}
+ */
+declare const consistencyToString: {};
+
+/**
+ * A reconnection policy that waits a constant time between each reconnection attempt.
+ */
+declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
+    delay: number;
+    /**
+     * A reconnection policy that waits a constant time between each reconnection attempt.
+     * @param {Number} delay Delay in ms
+     * @constructor
+     */
+    constructor(delay: number);
+    /**
+     * A new reconnection schedule that returns the same next delay value
+     * @returns {{next: Function}} An infinite iterator
+     */
+    newSchedule(): {
+        next: Function;
+    };
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, number>;
 }
 
-export declare type EmptyCallback = (err: Error) => void;
-
-export declare namespace errors {
-    export class ArgumentError extends DriverError {
-        constructor(message: string);
-    }
-
-    export class AuthenticationError extends DriverError {
-        constructor(message: string);
-    }
-
-    export class BusyConnectionError extends DriverError {
-        constructor(address: string, maxRequestsPerConnection: number, connectionLength: number);
-    }
-
-    export abstract class DriverError extends Error {
-        info: string;
-
-        constructor(message: string, constructor?: any);
-    }
-
-    export class DriverInternalError extends DriverError {
-        constructor(message: string);
-    }
-
-    export class NoHostAvailableError extends DriverError {
-        innerErrors: any;
-
-        constructor(innerErrors: any, message?: string);
-    }
-
-    export class NotSupportedError extends DriverError {
-        constructor(message: string);
-    }
-
-    export class OperationTimedOutError extends DriverError {
-        host?: string;
-
-        constructor(message: string, host?: string);
-    }
-
-    export class ResponseError extends DriverError {
-        code: number;
-
-        constructor(code: number, message: string);
-    }
+/**
+ * @classdesc
+ * A {@link SpeculativeExecutionPolicy} that schedules a given number of speculative executions,
+ * separated by a fixed delay.
+ * @extends {SpeculativeExecutionPolicy}
+ */
+declare class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
+    private _delay;
+    private _maxSpeculativeExecutions;
+    /**
+     * Creates a new instance of ConstantSpeculativeExecutionPolicy.
+     * @constructor
+     * @param {Number} delay The delay between each speculative execution.
+     * @param {Number} maxSpeculativeExecutions The amount of speculative executions that should be scheduled after the
+     * initial execution. Must be strictly positive.
+     */
+    constructor(delay: number, maxSpeculativeExecutions: number);
+    newPlan(): {
+        nextExecution: () => number;
+    };
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, number>;
 }
 
-export declare interface ExecutionOptions {
-    getCaptureStackTrace(): boolean;
-
-    getConsistency(): types.consistencies;
-
-    getCustomPayload(): { [key: string]: any };
-
-    getFetchSize(): number;
-
-    getFixedHost(): Host;
-
-    getHints(): string[] | string[][];
-
-    isAutoPage(): boolean;
-
-    isBatchCounter(): boolean;
-
-    isBatchLogged(): boolean;
-
-    isIdempotent(): boolean;
-
-    isPrepared(): boolean;
-
-    isQueryTracing(): boolean;
-
-    getKeyspace(): string;
-
-    getLoadBalancingPolicy(): policies.loadBalancing.LoadBalancingPolicy;
-
-    getPageState(): Buffer;
-
-    getRawQueryOptions(): QueryOptions;
-
-    getReadTimeout(): number;
-
-    getRetryPolicy(): policies.retry.RetryPolicy;
-
-    getRoutingKey(): Buffer | Buffer[];
-
-    getSerialConsistency(): types.consistencies;
-
-    getTimestamp(): number | Long | undefined | null;
-
-    setHints(hints: string[]): void;
+/**
+ * Represents a connection used by the driver to receive events and to check the status of the cluster.
+ * <p>It uses an existing connection from the hosts' connection pool to maintain the driver metadata up-to-date.</p>
+ */
+declare class ControlConnection extends events.EventEmitter {
+    protocolVersion: number;
+    hosts: HostMap;
+    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+    metadata: Metadata;
+    private options;
+    initialized: boolean;
+    host: Host;
+    connection: Connection;
+    private _addressTranslator;
+    private _reconnectionPolicy;
+    private _reconnectionSchedule;
+    private _isShuttingDown;
+    private _encoder;
+    private _debouncer;
+    private _profileManager;
+    private _triedHosts;
+    private _resolvedContactPoints;
+    private _contactPoints;
+    private _topologyChangeTimeout;
+    private _nodeStatusChangeTimeout;
+    /**
+     * Creates a new instance of <code>ControlConnection</code>.
+     * @param {Object} options
+     * @param {ProfileManager} profileManager
+     * @param {{borrowHostConnection: function, createConnection: function}} [context] An object containing methods to
+     * allow dependency injection.
+     */
+    constructor(options: Partial<ClientOptions>, profileManager: ProfileManager, context?: {
+        borrowHostConnection: (host: Host) => Connection;
+        createConnection: (contactPoint: string) => Promise<Connection>;
+    });
+    /**
+     * Stores the contact point information and what it resolved to.
+     * @param {String|null} address
+     * @param {String} port
+     * @param {String} name
+     * @param {Boolean} isIPv6
+     */
+    _addContactPoint(address: string | null, port: string, name: string, isIPv6: boolean): void;
+    _parseContactPoint(name: any): Promise<void>;
+    /**
+     * Initializes the control connection by establishing a Connection using a suitable protocol
+     * version to be used and retrieving cluster metadata.
+     */
+    init(): Promise<void>;
+    _setHealthListeners(host: any, connection: any): void;
+    /**
+     * Iterates through the hostIterator and Gets the following open connection.
+     * @param {Iterator<Host>} hostIterator
+     * @returns {Connection!}
+     */
+    _borrowAConnection(hostIterator: Iterator<Host>): Connection;
+    /**
+     * Iterates through the contact points and tries to open a connection.
+     * @param {Iterator<string>} contactPointsIterator
+     * @returns {Promise<void>}
+     */
+    _borrowFirstConnection(contactPointsIterator: Iterator<string>): Promise<void>;
+    /** Default implementation for borrowing connections, that can be injected at constructor level */
+    private _borrowHostConnection;
+    /**
+     * Default implementation for creating initial connections, that can be injected at constructor level
+     * @param {String} contactPoint
+     */
+    _createConnection(contactPoint: string): Promise<Connection>;
+    /**
+     * Gets the info from local and peer metadata, reloads the keyspaces metadata and rebuilds tokens.
+     * <p>It throws an error when there's a failure or when reconnecting and there's no connection.</p>
+     * @param {Boolean} initializing Determines whether this function was called in order to initialize the control
+     * connection the first time
+     * @param {Boolean} isReconnecting Determines whether the refresh is being done because the ControlConnection is
+     * switching to use this connection to this host.
+     */
+    _refreshHosts(initializing: boolean, isReconnecting: boolean): Promise<void>;
+    _refreshControlConnection(hostIterator: any): Promise<void>;
+    /**
+     * Acquires a new connection and refreshes topology and keyspace metadata.
+     * <p>When it fails obtaining a connection and there aren't any more hosts, it schedules reconnection.</p>
+     * <p>When it fails obtaining the metadata, it marks connection and/or host unusable and retries using the same
+     * iterator from query plan / host list</p>
+     * @param {Iterator<Host>} [hostIterator]
+     */
+    _refresh(hostIterator?: Iterator<Host>): any;
+    /**
+     * Acquires a connection and refreshes topology and keyspace metadata for the first time.
+     * @returns {Promise<void>}
+     */
+    _initializeConnection(): Promise<void>;
+    _getSupportedOptions(): Promise<void>;
+    _registerToConnectionEvents(): Promise<void>;
+    /**
+     * Handles a TOPOLOGY_CHANGE event
+     */
+    _nodeTopologyChangeHandler(event: any): void;
+    /**
+     * Handles a STATUS_CHANGE event
+     */
+    _nodeStatusChangeHandler(event: any): void;
+    /**
+     * Handles a SCHEMA_CHANGE event
+     */
+    _nodeSchemaChangeHandler(event: any): void;
+    /**
+     * Schedules metadata refresh and callbacks when is refreshed.
+     * @param {{keyspace: string, isKeyspace: boolean, schemaChangeType, table, udt, functionName, aggregate}} event
+     * @param {Boolean} processNow
+     * @returns {Promise<void>}
+     */
+    handleSchemaChange(event: {
+        keyspace: string;
+        isKeyspace: boolean;
+        schemaChangeType: any;
+        table: any;
+        udt: any;
+        functionName: any;
+        aggregate: any;
+    }, processNow: boolean): Promise<void>;
+    /**
+     * @param {Function} handler
+     * @param {String} keyspace
+     * @param {String} cqlObject
+     * @param {Boolean} processNow
+     * @returns {Promise<void>}
+     */
+    _scheduleObjectRefresh(handler: Function, keyspace: string, cqlObject: string, processNow: boolean): Promise<void>;
+    /**
+     * @param {String} keyspace
+     * @param {Boolean} processNow
+     * @returns {Promise<void>}
+     */
+    _scheduleKeyspaceRefresh(keyspace: string, processNow: boolean): Promise<void>;
+    /** @returns {Promise<void>} */
+    _scheduleRefreshHosts(): Promise<void>;
+    /**
+     * Sets the information for the host used by the control connection.
+     * @param {Boolean} initializing
+     * @param {Connection} c
+     * @param {Boolean} setCurrentHost Determines if the host retrieved must be set as the current host
+     * @param result
+     */
+    _setLocalInfo(initializing: boolean, setCurrentHost: boolean, c: Connection, result: any): void;
+    /**
+     * @param {Boolean} initializing Determines whether this function was called in order to initialize the control
+     * connection the first time.
+     * @param {ResultSet} result
+     */
+    setPeersInfo(initializing: boolean, result: ResultSet): Promise<void>;
+    /**
+     * Gets the address from a peers row and translates the address.
+     * @param {Object|Row} row
+     * @param {Number} defaultPort
+     * @returns {Promise<string>}
+     */
+    getAddressForPeerHost(row: object | Row, defaultPort: number): Promise<string>;
+    /**
+     * Uses the DNS protocol to resolve a IPv4 and IPv6 addresses (A and AAAA records) for the hostname.
+     * It returns an Array of addresses that can be empty and logs the error.
+     * @private
+     * @param name
+     */
+    _resolveAll(name: any): Promise<any[]>;
+    /**
+     * Waits for a connection to be available. If timeout expires before getting a connection it callbacks in error.
+     * @returns {Promise<void>}
+     */
+    _waitForReconnection(): Promise<void>;
+    /**
+     * Executes a query using the active connection
+     * @param {String|Request} cqlQuery
+     * @param {Boolean} [waitReconnect] Determines if it should wait for reconnection in case the control connection is not
+     * connected at the moment. Default: true.
+     */
+    query(cqlQuery: string | Request_2, waitReconnect?: boolean): Promise<default_2>;
+    /** @returns {Encoder} The encoder used by the current connection */
+    getEncoder(): Encoder;
+    /**
+     * Cancels all timers and shuts down synchronously.
+     */
+    shutdown(): void;
+    /**
+     * Resets the Connection to its initial state.
+     */
+    reset(): Promise<void>;
+    /**
+     * Gets a Map containing the original contact points and the addresses that each one resolved to.
+     */
+    getResolvedContactPoints(): Map<any, any>;
+    /**
+     * Gets the local IP address to which the control connection socket is bound to.
+     * @returns {String|undefined}
+     */
+    getLocalAddress(): string | undefined;
+    /**
+     * Gets the address and port of host the control connection is connected to.
+     * @returns {String|undefined}
+     */
+    getEndpoint(): string | undefined;
 }
 
-export declare class ExecutionProfile {
-    consistency?: types.consistencies;
-    loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
+declare type CustomSimpleColumnInfo = {
+    code: (typeof dataTypes.custom);
+    info: CustomSimpleTypeNames;
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+declare type CustomSimpleTypeCodes = ('point' | 'polygon' | 'duration' | 'lineString' | 'dateRange');
+
+declare type CustomSimpleTypeNames = (typeof customTypeNames[CustomSimpleTypeCodes]) | CustomSimpleTypeCodes | 'empty';
+
+declare const customTypeNames: Readonly<{
+    readonly duration: "org.apache.cassandra.db.marshal.DurationType";
+    readonly lineString: "org.apache.cassandra.db.marshal.LineStringType";
+    readonly point: "org.apache.cassandra.db.marshal.PointType";
+    readonly polygon: "org.apache.cassandra.db.marshal.PolygonType";
+    readonly dateRange: "org.apache.cassandra.db.marshal.DateRangeType";
+    readonly vector: "org.apache.cassandra.db.marshal.VectorType";
+}>;
+
+/**
+ * Creates a new instance of DataCollection
+ * @param {String} name Name of the data object.
+ * @classdesc Describes a table or a view
+ * @alias module:metadata~DataCollection
+ * @constructor
+ * @abstract
+ */
+declare class DataCollection extends events.EventEmitter {
+    /**
+     * Name of the object
+     * @type {String}
+     */
     name: string;
+    /**
+     * False-positive probability for SSTable Bloom filters.
+     * @type {number}
+     */
+    bloomFilterFalsePositiveChance: number;
+    /**
+     * Level of caching: all, keys_only, rows_only, none
+     * @type {String}
+     */
+    caching: string;
+    /**
+     * A human readable comment describing the table.
+     * @type {String}
+     */
+    comment: string;
+    /**
+     * Specifies the time to wait before garbage collecting tombstones (deletion markers)
+     * @type {number}
+     */
+    gcGraceSeconds: number;
+    /**
+     * Compaction strategy class used for the table.
+     * @type {String}
+     */
+    compactionClass: string;
+    /**
+     * Associative-array containing the compaction options keys and values.
+     * @type {Object}
+     */
+    compactionOptions: object;
+    /**
+     * Associative-array containing the compaction options keys and values.
+     * @type {Object}
+     */
+    compression: object;
+    /**
+     * Specifies the probability of read repairs being invoked over all replicas in the current data center.
+     * @type {number}
+     */
+    localReadRepairChance: number;
+    /**
+     * Specifies the probability with which read repairs should be invoked on non-quorum reads. The value must be
+     * between 0 and 1.
+     * @type {number}
+     */
+    readRepairChance: number;
+    /**
+     * An associative Array containing extra metadata for the table.
+     * <p>
+     * For Apache Cassandra versions prior to 3.0.0, this method always returns <code>null</code>.
+     * </p>
+     * @type {Object}
+     */
+    extensions: object;
+    /**
+     * When compression is enabled, this option defines the probability
+     * with which checksums for compressed blocks are checked during reads.
+     * The default value for this options is 1.0 (always check).
+     * <p>
+     *   For Apache Cassandra versions prior to 3.0.0, this method always returns <code>null</code>.
+     * </p>
+     * @type {Number|null}
+     */
+    crcCheckChance: number | null;
+    /**
+     * Whether the populate I/O cache on flush is set on this table.
+     * @type {Boolean}
+     */
+    populateCacheOnFlush: boolean;
+    /**
+     * Returns the default TTL for this table.
+     * @type {Number}
+     */
+    defaultTtl: number;
+    /**
+     * * Returns the speculative retry option for this table.
+     * @type {String}
+     */
+    speculativeRetry: string;
+    /**
+     * Returns the minimum index interval option for this table.
+     * <p>
+     *   Note: this option is available in Apache Cassandra 2.1 and above, and will return <code>null</code> for
+     *   earlier versions.
+     * </p>
+     * @type {Number|null}
+     */
+    minIndexInterval: number | null;
+    /**
+     * Returns the maximum index interval option for this table.
+     * <p>
+     * Note: this option is available in Apache Cassandra 2.1 and above, and will return <code>null</code> for
+     * earlier versions.
+     * </p>
+     * @type {Number|null}
+     */
+    maxIndexInterval: number | null;
+    /**
+     * Array describing the table columns.
+     * @type {Array}
+     */
+    columns: any[];
+    /**
+     * An associative Array of columns by name.
+     * @type {Object}
+     */
+    columnsByName: object;
+    /**
+     * Array describing the columns that are part of the partition key.
+     * @type {Array}
+     */
+    partitionKeys: any[];
+    /**
+     * Array describing the columns that form the clustering key.
+     * @type {Array}
+     */
+    clusteringKeys: any[];
+    /**
+     * Array describing the clustering order of the columns in the same order as the clusteringKeys.
+     * @type {Array}
+     */
+    clusteringOrder: any[];
+    /**
+     * An associative Array containing nodesync options for this table.
+     * <p>
+     * For DSE versions prior to 6.0.0, this method always returns {@code null}.  If nodesync
+     * was not explicitly configured for this table this method will also return {@code null}.
+     * </p>
+     * @type {Object}
+     */
+    nodesync: object;
+    /**
+     * Creates a new instance of DataCollection
+     * @param {String} name Name of the data object.
+     * @constructor
+     */
+    constructor(name: string);
+}
+
+export declare const datastax: {
+    graph: {
+        Edge: Edge_2;
+        Element: Element_2;
+        Path: Path_2;
+        Property: Property_2;
+        Vertex: Vertex_2;
+        VertexProperty: VertexProperty_2;
+        asInt: asInt_2;
+        asDouble: asDouble_2;
+        asFloat: asFloat_2;
+        asTimestamp: asTimestamp_2;
+        asUdt: asUdt_2;
+        direction: {
+            both: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            in: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            out: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            in_: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+        };
+        getCustomTypeSerializers: default_36;
+        GraphResultSet: default_37;
+        GraphTypeWrapper: GraphTypeWrapper_2;
+        t: {
+            id: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            key: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            label: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            value: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+        };
+        UdtGraphWrapper: UdtGraphWrapper_2;
+    };
+    DateRange: typeof DateRange_2;
+};
+
+/**
+ * CQL data types
+ * @type {Object}
+ * @property {Number} custom A custom type.
+ * @property {Number} ascii ASCII character string.
+ * @property {Number} bigint 64-bit signed long.
+ * @property {Number} blob Arbitrary bytes (no validation).
+ * @property {Number} boolean true or false.
+ * @property {Number} counter Counter column (64-bit signed value).
+ * @property {Number} decimal Variable-precision decimal.
+ * @property {Number} double 64-bit IEEE-754 floating point.
+ * @property {Number} float 32-bit IEEE-754 floating point.
+ * @property {Number} int 32-bit signed integer.
+ * @property {Number} text UTF8 encoded string.
+ * @property {Number} timestamp A timestamp.
+ * @property {Number} uuid Type 1 or type 4 UUID.
+ * @property {Number} varchar UTF8 encoded string.
+ * @property {Number} varint Arbitrary-precision integer.
+ * @property {Number} timeuuid  Type 1 UUID.
+ * @property {Number} inet An IP address. It can be either 4 bytes long (IPv4) or 16 bytes long (IPv6).
+ * @property {Number} date A date without a time-zone in the ISO-8601 calendar system.
+ * @property {Number} time A value representing the time portion of the day.
+ * @property {Number} smallint 16-bit two's complement integer.
+ * @property {Number} tinyint 8-bit two's complement integer.
+ * @property {Number} list A collection of elements.
+ * @property {Number} map Key/value pairs.
+ * @property {Number} set A collection that contains no duplicate elements.
+ * @property {Number} udt User-defined type.
+ * @property {Number} tuple A sequence of values.
+ */
+declare const dataTypes: {
+    readonly custom: 0;
+    readonly ascii: 1;
+    readonly bigint: 2;
+    readonly blob: 3;
+    readonly boolean: 4;
+    readonly counter: 5;
+    readonly decimal: 6;
+    readonly double: 7;
+    readonly float: 8;
+    readonly int: 9;
+    readonly text: 10;
+    readonly timestamp: 11;
+    readonly uuid: 12;
+    readonly varchar: 13;
+    readonly varint: 14;
+    readonly timeuuid: 15;
+    readonly inet: 16;
+    readonly date: 17;
+    readonly time: 18;
+    readonly smallint: 19;
+    readonly tinyint: 20;
+    readonly duration: 21;
+    readonly list: 32;
+    readonly map: 33;
+    readonly set: 34;
+    readonly udt: 48;
+    readonly tuple: 49;
+    /**
+     * Returns the typeInfo of a given type name
+     * @param {string} name
+     * @returns {import('../encoder').ColumnInfo}
+     */
+    readonly getByName: (name: any) => {
+        code: any;
+    } | {
+        code: any;
+        info: any;
+        customTypeName?: undefined;
+    } | {
+        code: any;
+        customTypeName: string;
+        info: any[];
+    };
+};
+
+/**
+ * @classdesc
+ * Represents a range of dates, corresponding to the Apache Solr type
+ * <a href="https://cwiki.apache.org/confluence/display/solr/Working+with+Dates"><code>DateRangeField</code></a>.
+ * <p>
+ *   A date range can have one or two bounds, namely lower bound and upper bound, to represent an interval of time.
+ *   Date range bounds are both inclusive. For example:
+ * </p>
+ * <ul>
+ *   <li><code>2015 TO 2016-10</code> represents from the first day of 2015 to the last day of October 2016</li>
+ *   <li><code>2015</code> represents during the course of the year 2015.</li>
+ *   <li><code>2017 TO *</code> represents any date greater or equals to the first day of the year 2017.</li>
+ * </ul>
+ * <p>
+ *   Note that this JavaScript representation of <code>DateRangeField</code> does not support Dates outside of the range
+ *   supported by ECMAScript Date: –100,000,000 days to 100,000,000 days measured relative to midnight at the
+ *   beginning of 01 January, 1970 UTC. Being <code>-271821-04-20T00:00:00.000Z</code> the minimum lower boundary
+ *   and <code>275760-09-13T00:00:00.000Z</code> the maximum higher boundary.
+ * <p>
+ * @memberOf module:datastax/search
+ */
+declare class DateRange_2 {
+    lowerBound: DateRangeBound;
+    upperBound: DateRangeBound;
+    _type: number;
+    constructor(lowerBound: any, upperBound?: any);
+    /**
+     * Returns the <code>DateRange</code> representation of a given string.
+     * <p>String representations of dates are always expressed in Coordinated Universal Time (UTC)</p>
+     * @param {String} dateRangeString
+     */
+    static fromString(dateRangeString: string): DateRange_2;
+    /**
+     * Deserializes the buffer into a <code>DateRange</code>
+     * @param {Buffer} buffer
+     * @return {DateRange}
+     */
+    static fromBuffer(buffer: Buffer): DateRange_2;
+    /**
+     * Returns true if the value of this DateRange instance and other are the same.
+     * @param {DateRange} other
+     * @returns {Boolean}
+     */
+    equals(other: DateRange_2): boolean;
+    /**
+     * Returns the string representation of the instance.
+     * @return {String}
+     */
+    toString(): string;
+    toBuffer(): any;
+}
+
+/**
+ * @classdesc
+ * Represents a date range boundary, composed by a <code>Date</code> and a precision.
+ * @param {Date} date The timestamp portion, representing a single moment in time. Consider using
+ * <code>Date.UTC()</code> method to build the <code>Date</code> instance.
+ * @param {Number} precision The precision portion. Valid values for <code>DateRangeBound</code> precision are
+ * defined in the [dateRangePrecision]{@link module:datastax/search~dateRangePrecision} member.
+ * @constructor
+ * @memberOf module:datastax/search
+ */
+declare class DateRangeBound {
+    date: Date;
+    precision: number;
+    static unbounded: Readonly<DateRangeBound>;
+    /**
+     * @classdesc
+     * Represents a date range boundary, composed by a <code>Date</code> and a precision.
+     * @param {Date} date The timestamp portion, representing a single moment in time. Consider using
+     * <code>Date.UTC()</code> method to build the <code>Date</code> instance.
+     * @param {Number} precision The precision portion. Valid values for <code>DateRangeBound</code> precision are
+     * defined in the [dateRangePrecision]{@link module:datastax/search~dateRangePrecision} member.
+     * @constructor
+     * @memberOf module:datastax/search
+     */
+    constructor(date: Date, precision: number);
+    /**
+     * Parses a date string and returns a DateRangeBound.
+     * @param {String} boundaryString
+     * @return {DateRangeBound}
+     */
+    static fromString(boundaryString: string): DateRangeBound;
+    /**
+     * Converts a {DateRangeBound} into a lower-bounded bound by rounding down its date
+     * based on its precision.
+     *
+     * @param {DateRangeBound} bound The bound to round down.
+     * @returns {DateRangeBound} with the date rounded down to the given precision.
+     */
+    static toLowerBound(bound: DateRangeBound): DateRangeBound;
+    /**
+     * Converts a {DateRangeBound} into a upper-bounded bound by rounding up its date
+     * based on its precision.
+     *
+     * @param {DateRangeBound} bound The bound to round up.
+     * @returns {DateRangeBound} with the date rounded up to the given precision.
+     */
+    static toUpperBound(bound: DateRangeBound): DateRangeBound;
+    /**
+     * Returns the string representation of the instance.
+     * @return {String}
+     */
+    toString(): string;
+    /**
+     * Returns true if the value of this DateRange instance and other are the same.
+     * @param {DateRangeBound} other
+     * @return {boolean}
+     */
+    equals(other: DateRangeBound): boolean;
+    isUnbounded(): boolean;
+}
+
+/**
+ * A data-center aware Round-robin load balancing policy.
+ * This policy provides round-robin queries over the nodes of the local
+ * data center.
+ */
+declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
+    localDc: string | null;
+    index: number;
+    localHostsArray: any;
+    /**
+     * A data-center aware Round-robin load balancing policy.
+     * This policy provides round-robin queries over the nodes of the local
+     * data center.
+     * @param {?String} [localDc] local datacenter name.  This value overrides the 'localDataCenter' Client option \
+     * and is useful for cases where you have multiple execution profiles that you intend on using for routing
+     * requests to different data centers.
+     * @constructor
+     */
+    constructor(localDc?: string | null);
+    init(client: Client, hosts: HostMap, callback: Function): void;
+    /**
+     * Returns the distance depending on the datacenter.
+     * @param {Host} host
+     */
+    getDistance(host: Host): number;
+    private _cleanHostCache;
+    private _resolveLocalHosts;
+    /**
+     * It returns an iterator that yields local nodes.
+     * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
+     * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+     * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
+     * second parameter.
+     */
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    getOptions(): Map<string, any>;
+}
+
+/**
+ * Decision information
+ * @typedef {Object} DecisionInfo@typedef {Object} DecisionInfo
+ * @property {Number} decision The decision as specified in
+ * [retryDecision]{@link module:policies/retry~RetryPolicy.retryDecision}.
+ * @property {Number} [consistency] The [consistency level]{@link module:types~consistencies}.
+ * @property {useCurrentHost} [useCurrentHost] Determines if it should use the same host to retry the request.
+ * <p>
+ *   In the case that the current host is not available anymore, it will be retried on the next host even when
+ *   <code>useCurrentHost</code> is set to <code>true</code>.
+ * </p>
+ */
+declare type DecisionInfo = {
+    decision: number;
+    consistency?: typeof consistencies;
+    useCurrentHost?: boolean;
+};
+
+declare const _default: {
+    Client: typeof Client;
+    ExecutionProfile: typeof ExecutionProfile;
+    ExecutionOptions: typeof ExecutionOptions;
+    types: {
+        opcodes: {
+            error: number;
+            startup: number;
+            ready: number;
+            authenticate: number;
+            credentials: number;
+            options: number;
+            supported: number;
+            query: number;
+            result: number;
+            prepare: number;
+            execute: number;
+            register: number;
+            event: number;
+            batch: number;
+            authChallenge: number;
+            authResponse: number;
+            authSuccess: number;
+            cancel: number;
+            isInRange: (code: any) => boolean;
+        };
+        consistencies: {
+            readonly any: 0;
+            readonly one: 1;
+            readonly two: 2;
+            readonly three: 3;
+            readonly quorum: 4;
+            readonly all: 5;
+            readonly localQuorum: 6;
+            readonly eachQuorum: 7;
+            readonly serial: 8;
+            readonly localSerial: 9;
+            readonly localOne: 10;
+        };
+        consistencyToString: {};
+        dataTypes: {
+            readonly custom: 0;
+            readonly ascii: 1;
+            readonly bigint: 2;
+            readonly blob: 3;
+            readonly boolean: 4;
+            readonly counter: 5;
+            readonly decimal: 6;
+            readonly double: 7;
+            readonly float: 8;
+            readonly int: 9;
+            readonly text: 10;
+            readonly timestamp: 11;
+            readonly uuid: 12;
+            readonly varchar: 13;
+            readonly varint: 14;
+            readonly timeuuid: 15;
+            readonly inet: 16;
+            readonly date: 17;
+            readonly time: 18;
+            readonly smallint: 19;
+            readonly tinyint: 20;
+            readonly duration: 21;
+            readonly list: 32;
+            readonly map: 33;
+            readonly set: 34;
+            readonly udt: 48;
+            readonly tuple: 49;
+            readonly getByName: (name: any) => {
+                code: any;
+            } | {
+                code: any;
+                info: any;
+                customTypeName?: undefined;
+            } | {
+                code: any;
+                customTypeName: string;
+                info: any[];
+            };
+        };
+        getDataTypeNameByCode: getDataTypeNameByCode_2;
+        distance: {
+            local: number;
+            remote: number;
+            ignored: number;
+        };
+        frameFlags: {
+            compression: number;
+            tracing: number;
+            customPayload: number;
+            warning: number;
+        };
+        protocolEvents: {
+            topologyChange: string;
+            statusChange: string;
+            schemaChange: string;
+        };
+        protocolVersion: {
+            v1: number;
+            v2: number;
+            v3: number;
+            v4: number;
+            v5: number;
+            v6: number;
+            dseV1: number;
+            dseV2: number;
+            maxSupported: number;
+            minSupported: number;
+            isDse: (version: number) => boolean;
+            isSupportedCassandra: (version: number) => boolean;
+            isSupported: (version: number) => boolean;
+            supportsPrepareFlags: (version: number) => boolean;
+            supportsKeyspaceInRequest: (version: number) => boolean;
+            supportsResultMetadataId: (version: number) => boolean;
+            supportsPreparedPartitionKey: (version: number) => boolean;
+            supportsSchemaChangeFullMetadata: (version: any) => boolean;
+            supportsContinuousPaging: (version: any) => boolean;
+            supportsPaging: (version: any) => boolean;
+            supportsTimestamp: (version: number) => boolean;
+            supportsNamedParameters: (version: number) => boolean;
+            supportsUnset: (version: number) => boolean;
+            supportsFailureReasonMap: (version: any) => boolean;
+            uses2BytesStreamIds: (version: number) => boolean;
+            uses4BytesCollectionLength: (version: number) => boolean;
+            uses4BytesQueryFlags: (version: number) => boolean;
+            canStartupResponseErrorBeWrapped: (version: number) => boolean;
+            getLowerSupported: (version: number) => number;
+            getHighestCommon: (connection: default_5, hosts: HostMap_3) => number;
+            isBeta: (version: number) => boolean;
+        };
+        responseErrorCodes: {
+            serverError: number;
+            protocolError: number;
+            badCredentials: number;
+            unavailableException: number;
+            overloaded: number;
+            isBootstrapping: number;
+            truncateError: number;
+            writeTimeout: number;
+            readTimeout: number;
+            readFailure: number;
+            functionFailure: number;
+            writeFailure: number;
+            syntaxError: number;
+            unauthorized: number;
+            invalid: number;
+            configError: number;
+            alreadyExists: number;
+            unprepared: number;
+            clientWriteFailure: number;
+        };
+        resultKind: {
+            voidResult: number;
+            rows: number;
+            setKeyspace: number;
+            prepared: number;
+            schemaChange: number;
+        };
+        timeuuid: timeuuid_2;
+        uuid: uuid_2;
+        BigDecimal: default_6;
+        Duration: default_7;
+        FrameHeader: FrameHeader_2;
+        InetAddress: default_8;
+        Integer: default_9;
+        LocalDate: default_10;
+        LocalTime: default_11;
+        Long: default_12;
+        ResultSet: default_13;
+        ResultStream: default_14;
+        Row: default_15;
+        DriverError: DriverError_4;
+        TimeoutError: TimeoutError_2;
+        TimeUuid: default_16;
+        Tuple: default_17;
+        Uuid: default_18;
+        unset: Readonly<{
+            readonly unset: true;
+        }>;
+        generateTimestamp: generateTimestamp_2;
+        Vector: default_19;
+    };
+    errors: {
+        ArgumentError: ArgumentError_2;
+        AuthenticationError: AuthenticationError_2;
+        BusyConnectionError: BusyConnectionError_2;
+        DriverError: DriverError_4;
+        OperationTimedOutError: OperationTimedOutError_2;
+        DriverInternalError: DriverInternalError_2;
+        NoHostAvailableError: NoHostAvailableError_2;
+        NotSupportedError: NotSupportedError_2;
+        ResponseError: ResponseError_2;
+        VIntOutOfRangeException: VIntOutOfRangeException_2;
+    };
+    policies: {
+        addressResolution: libPoliciesAddressResolution;
+        loadBalancing: libPoliciesLoadBalancing;
+        reconnection: libPoliciesReconnection;
+        retry: libPoliciesRetry;
+        speculativeExecution: libPoliciesSpeculativeExecution;
+        timestampGeneration: libPoliciesTimestampGeneration;
+        defaultAddressTranslator: () => AddressTranslator_2;
+        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy_2;
+        defaultRetryPolicy: () => RetryPolicy_2;
+        defaultReconnectionPolicy: () => ReconnectionPolicy_2;
+        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy_2;
+        defaultTimestampGenerator: () => TimestampGenerator_2;
+    };
+    auth: {
+        Authenticator: Authenticator_2;
+        AuthProvider: AuthProvider_2;
+        DseGssapiAuthProvider: default_20;
+        DsePlainTextAuthProvider: default_21;
+        NoAuthProvider: default_22;
+        PlainTextAuthProvider: PlainTextAuthProvider;
+    };
+    mapping: {
+        Mapper: default_23;
+        ModelMapper: default_24;
+        ModelBatchMapper: default_25;
+        ModelBatchItem: ModelBatchItem;
+        Result: default_26;
+        TableMappings: TableMappings;
+        DefaultTableMappings: DefaultTableMappings;
+        UnderscoreCqlToCamelCaseMappings: UnderscoreCqlToCamelCaseMappings;
+        q: object;
+    };
+    tracker: {
+        RequestTracker: default_27;
+        RequestLogger: default_28;
+    };
+    metrics: {
+        ClientMetrics: default_29;
+        DefaultMetrics: default_30;
+    };
+    concurrent: {
+        executeConcurrent: executeConcurrent;
+        ResultSetGroup: ResultSetGroup;
+    };
+    token: {
+        Token: Token_2;
+        TokenRange: TokenRange_2;
+    };
+    metadata: {
+        Metadata: typeof Metadata;
+    };
+    Encoder: typeof Encoder;
+    geometry: {
+        Point: default_31;
+        LineString: default_32;
+        Polygon: default_33;
+        Geometry: default_34;
+    };
+    datastax: {
+        graph: {
+            Edge: Edge;
+            Element: Element;
+            Path: Path;
+            Property: Property;
+            Vertex: Vertex;
+            VertexProperty: VertexProperty;
+            asInt: asInt;
+            asDouble: asDouble;
+            asFloat: asFloat;
+            asTimestamp: asTimestamp;
+            asUdt: asUdt;
+            direction: {
+                both: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                out: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in_: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+            getCustomTypeSerializers: getCustomTypeSerializers;
+            GraphResultSet: GraphResultSet_2;
+            GraphTypeWrapper: GraphTypeWrapper;
+            t: {
+                id: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                key: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                label: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                value: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+            UdtGraphWrapper: UdtGraphWrapper;
+        };
+        DateRange: DateRange;
+    };
+    /**
+     * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+     */
+    defaultOptions: () => ClientOptions_2;
+    version: string;
+};
+export default _default;
+
+declare const _default_2: {
+    AllowListPolicy: typeof AllowListPolicy;
+    DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
+    DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
+    LoadBalancingPolicy: typeof LoadBalancingPolicy;
+    RoundRobinPolicy: typeof RoundRobinPolicy;
+    TokenAwarePolicy: typeof TokenAwarePolicy;
+    WhiteListPolicy: typeof WhiteListPolicy;
+};
+
+declare const _default_3: {
+    ReconnectionPolicy: typeof ReconnectionPolicy;
+    ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
+    ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
+};
+
+declare const _default_4: {
+    IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
+    FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
+    RetryPolicy: typeof RetryPolicy;
+};
+
+declare const _default_5: {
+    NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
+    SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
+    ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
+};
+
+declare const _default_6: {
+    TimestampGenerator: typeof TimestampGenerator;
+    MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
+};
+
+/**
+ * A load-balancing policy implementation that attempts to fairly distribute the load based on the amount of in-flight
+ * request per hosts. The local replicas are initially shuffled and
+ * <a href="https://www.eecs.harvard.edu/~michaelm/postscripts/mythesis.pdf">between the first two nodes in the
+ * shuffled list, the one with fewer in-flight requests is selected as coordinator</a>.
+ *
+ * <p>
+ *   Additionally, it detects unresponsive replicas and reorders them at the back of the query plan.
+ * </p>
+ *
+ * <p>
+ *   For graph analytics queries, it uses the preferred analytics graph server previously obtained by driver as first
+ *   host in the query plan.
+ * </p>
+ */
+declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
+    private _client;
+    private _hosts;
+    private _filteredHosts;
+    private _preferredHost;
+    private _index;
+    private _filter;
+    /**
+     * Creates a new instance of <code>DefaultLoadBalancingPolicy</code>.
+     * @param {String|Object} [options] The local data center name or the optional policy options object.
+     * <p>
+     *   Note that when providing the local data center name, it overrides <code>localDataCenter</code> option at
+     *   <code>Client</code> level.
+     * </p>
+     * @param {String} [options.localDc] local data center name.  This value overrides the 'localDataCenter' Client option
+     * and is useful for cases where you have multiple execution profiles that you intend on using for routing
+     * requests to different data centers.
+     * @param {Function} [options.filter] A function to apply to determine if hosts are included in the query plan.
+     * The function takes a Host parameter and returns a Boolean.
+     */
+    constructor(options?: {
+        localDc?: string;
+        filter?: (host: Host) => boolean;
+    } | string);
+    /**
+     * Initializes the load balancing policy, called after the driver obtained the information of the cluster.
+     * @param {Client} client
+     * @param {HostMap} hosts
+     * @param {Function} callback
+     */
+    init(client: Client, hosts: HostMap, callback: Function): any;
+    /**
+     * Returns the distance assigned by this policy to the provided host, relatively to the client instance.
+     * @param {Host} host
+     */
+    getDistance(host: Host): number;
+    /**
+     * Returns a host iterator to be used for a query execution.
+     * @override
+     * @param {String} keyspace
+     * @param {ExecutionOptions} executionOptions
+     * @param {Function} callback
+     */
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: Function): any;
+    /**
+     * Yields the preferred host first, followed by the host in the provided iterable
+     * @param preferredHost
+     * @param iterable
+     * @private
+     */
+    static _getPreferredHostFirst(preferredHost: any, iterable: any): Generator<any, void, unknown>;
+    /**
+     * Yields the local hosts without the replicas already yielded
+     * @param {Array<Host>} [localReplicas] The local replicas that we should avoid to include again
+     * @private
+     */
+    private _getLocalHosts;
+    private _getReplicasAndLocalHosts;
+    /**
+     * Yields the local replicas followed by the rest of local nodes.
+     * @param {Array<Host>} replicas The local replicas
+     */
+    private yieldReplicasFirst;
+    private _isHostNewlyUp;
+    /**
+     * Returns a boolean determining whether the host health is ok or not.
+     * A Host is considered unhealthy when there are enough items in the queue (10 items in-flight) but the
+     * Host is not responding to those requests.
+     * @param {Host} h
+     * @return {boolean}
+     * @private
+     */
+    private _healthCheck;
+    /**
+     * Compares to host and returns 1 if it needs to favor the first host otherwise, -1.
+     * @return {number}
+     * @private
+     */
+    private _compare;
+    private _getReplicas;
+    /**
+     * Returns an Array of hosts filtered by DC and predicate.
+     * @returns {Array<Host>}
+     * @private
+     */
+    private _getFilteredLocalHosts;
+    private _getIndex;
+    private _sendUnhealthyToTheBack;
+    private _defaultFilter;
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, any>;
+}
+
+/**
+ * A default implementation of [ClientMetrics]{@link module:metrics~ClientMetrics} that exposes the driver events as
+ * Node.js events.
+ * <p>
+ *   An instance of [DefaultMetrics]{@link module:metrics~DefaultMetrics} is configured by default in the client,
+ *   you can access this instance using [Client#metrics]{@link Client#metrics} property.
+ * </p>
+ * @implements {module:metrics~ClientMetrics}
+ * @alias module:metrics~DefaultMetrics
+ * @example <caption>Listening to events emitted</caption>
+ * defaultMetrics.errors.on('increment', err => totalErrors++);
+ * defaultMetrics.errors.clientTimeout.on('increment', () => clientTimeoutErrors++);
+ * defaultMetrics.speculativeRetries.on('increment', () => specExecsCount++);
+ * defaultMetrics.responses.on('increment', latency => myHistogram.record(latency));
+ */
+declare class DefaultMetrics extends ClientMetrics {
+    errors: EventEmitter_2 & {
+        authentication: EventEmitter_2;
+        clientTimeout: EventEmitter_2;
+        connection: EventEmitter_2;
+        other: EventEmitter_2;
+        readTimeout: EventEmitter_2;
+        unavailable: EventEmitter_2;
+        writeTimeout: EventEmitter_2;
+    };
+    retries: EventEmitter_2 & {
+        clientTimeout: EventEmitter_2;
+        other: EventEmitter_2;
+        readTimeout: EventEmitter_2;
+        unavailable: EventEmitter_2;
+        writeTimeout: EventEmitter_2;
+    };
+    speculativeExecutions: EventEmitter_2 & {
+        increment: EventEmitter_2;
+    };
+    ignoredErrors: EventEmitter_2;
+    responses: EventEmitter_2 & {
+        success: EventEmitter_2;
+    };
+    /**
+     * Creates a new instance of [DefaultMetrics]{@link module:metrics~DefaultMetrics}.
+     */
+    constructor();
+    /** @override */
+    onAuthenticationError(e: any): void;
+    /** @override */
+    onConnectionError(e: any): void;
+    /** @override */
+    onReadTimeoutError(e: any): void;
+    /** @override */
+    onWriteTimeoutError(e: any): void;
+    /** @override */
+    onUnavailableError(e: any): void;
+    /** @override */
+    onClientTimeoutError(e: any): void;
+    /** @override */
+    onOtherError(e: any): void;
+    /** @override */
+    onClientTimeoutRetry(e: any): void;
+    /** @override */
+    onOtherErrorRetry(e: any): void;
+    /** @override */
+    onReadTimeoutRetry(e: any): void;
+    /** @override */
+    onUnavailableRetry(e: any): void;
+    /** @override */
+    onWriteTimeoutRetry(e: any): void;
+    /** @override */
+    onIgnoreError(e: any): void;
+    /** @override */
+    onSpeculativeExecution(): void;
+    /** @override */
+    onSuccessfulResponse(latency: any): void;
+    /** @override */
+    onResponse(latency: any): void;
+}
+
+export declare const defaultOptions: () => ClientOptions_2;
+
+/**
+ * Default implementation of [TableMappings]{@link module:mapping~TableMappings} that doesn't perform any conversion.
+ * @alias module:mapping~DefaultTableMappings
+ * @implements {module:mapping~TableMappings}
+ */
+declare class DefaultTableMappings_2 extends TableMappings_2 {
+    /**
+     * Creates a new instance of {@link DefaultTableMappings}.
+     */
+    constructor();
+    /**  @override */
+    getColumnName(propName: any): string;
+    /** @override */
+    getPropertyName(columnName: any): string;
+    /**
+     * Creates a new object instance, using object initializer.
+     */
+    newObjectInstance(): object;
+}
+
+/**
+ * Represents the distance of Cassandra node as assigned by a LoadBalancingPolicy relatively to the driver instance.
+ * @type {Object}
+ * @property {Number} local A local node.
+ * @property {Number} remote A remote node.
+ * @property {Number} ignored A node that is meant to be ignored.
+ */
+declare const distance: {
+    local: number;
+    remote: number;
+    ignored: number;
+};
+
+declare type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo;
+
+/**
+ * Contains the error classes exposed by the driver.
+ * @module errors
+ */
+/**
+ * Base Error
+ * @private
+ */
+declare class DriverError extends Error {
+    info: string;
+    isSocketError: boolean;
+    innerError: any;
+    requestNotWritten?: boolean;
+    constructor(message: string);
+}
+
+declare const DriverError_3: DriverError_2;
+
+/**
+ * Represents a bug inside the driver or in a Cassandra host.
+ */
+declare class DriverInternalError extends DriverError {
+    /**
+     * Represents a bug inside the driver or in a Cassandra host.
+     * @param {String} message
+     * @constructor
+     */
+    constructor(message: string);
+}
+
+/**
+ * @classdesc
+ * AuthProvider that provides GSSAPI authenticator instances for clients to connect
+ * to DSE clusters secured with the DseAuthenticator.
+ * @example
+ * const client = new cassandra.Client({
+ *   contactPoints: ['h1', 'h2'],
+ *   authProvider: new cassandra.auth.DseGssapiAuthProvider()
+ * });
+ * @alias module:auth~DseGssapiAuthProvider
+ */
+declare class DseGssapiAuthProvider extends AuthProvider {
+    private _kerberos;
+    authorizationId: string;
+    service: string;
+    hostNameResolver: Function;
+    /**
+     * Creates a new instance of <code>DseGssapiAuthProvider</code>.
+     * @classdesc
+     * AuthProvider that provides GSSAPI authenticator instances for clients to connect
+     * to DSE clusters secured with the DseAuthenticator.
+     * @param {Object} [gssOptions] GSSAPI authenticator options
+     * @param {String} [gssOptions.authorizationId] The optional authorization ID. Providing an authorization ID allows the
+     * currently authenticated user to act as a different user (a.k.a. proxy authentication).
+     * @param {String} [gssOptions.service] The service to use. Defaults to 'dse'.
+     * @param {Function} [gssOptions.hostNameResolver] A method to be used to resolve the name of the Cassandra node based
+     * on the IP Address.  Defaults to [lookupServiceResolver]{@link module:auth~DseGssapiAuthProvider.lookupServiceResolver}
+     * which resolves the FQDN of the provided IP to generate principals in the format of
+     * <code>dse/example.com@MYREALM.COM</code>.
+     * Alternatively, you can use [reverseDnsResolver]{@link module:auth~DseGssapiAuthProvider.reverseDnsResolver} to do a
+     * reverse DNS lookup or [useIpResolver]{@link module:auth~DseGssapiAuthProvider.useIpResolver} to simply use the IP
+     * address provided.
+     * @param {String} [gssOptions.user] DEPRECATED, it will be removed in future versions. For proxy authentication, use
+     * <code>authorizationId</code> instead.
+     * @example
+     * const client = new cassandra.Client({
+     *   contactPoints: ['h1', 'h2'],
+     *   authProvider: new cassandra.auth.DseGssapiAuthProvider()
+     * });
+     * @alias module:auth~DseGssapiAuthProvider
+     * @constructor
+     */
+    constructor(gssOptions: {
+        authorizationId?: string;
+        service?: string;
+        hostNameResolver?: Function;
+        user?: string;
+    });
+    /**
+     * Returns an Authenticator instance to be used by the driver when connecting to a host.
+     * @param {String} endpoint The IP address and port number in the format ip:port.
+     * @param {String} name Authenticator name.
+     * @override
+     * @returns {Authenticator}
+     */
+    newAuthenticator(endpoint: string, name: string): Authenticator;
+    /**
+     * Performs a lookupService query that resolves an IPv4 or IPv6 address to a hostname.  This ultimately makes a
+     * <code>getnameinfo()</code> system call which depends on the OS to do hostname resolution.
+     * <p/>
+     * <b>Note:</b> Depends on <code>dns.lookupService</code> which was added in 0.12.  For older versions falls back on
+     * [reverseDnsResolver]{@link module:auth~DseGssapiAuthProvider.reverseDnsResolver}.
+     *
+     * @param {String} ip IP address to resolve.
+     * @param {Function} callback The callback function with <code>err</code> and <code>hostname</code> arguments.
+     */
+    static lookupServiceResolver(ip: string, callback: Function): void;
+    /**
+     * Performs a reverse DNS query that resolves an IPv4 or IPv6 address to a hostname.
+     * @param {String} ip IP address to resolve.
+     * @param {Function} callback The callback function with <code>err</code> and <code>hostname</code> arguments.
+     */
+    static reverseDnsResolver(ip: string, callback: Function): void;
+    /**
+     * Effectively a no op operation, returns the IP address provided.
+     * @param {String} ip IP address to use.
+     * @param {Function} callback The callback function with <code>err</code> and <code>hostname</code> arguments.
+     */
+    static useIpResolver(ip: string, callback: Function): void;
+}
+
+/**
+ * @classdesc
+ * AuthProvider that provides plain text authenticator instances for clients to connect
+ * to DSE clusters secured with the DseAuthenticator.
+ * @extends AuthProvider
+ * @alias module:auth~DsePlainTextAuthProvider
+ * @example
+ * const client = new cassandra.Client({
+ *   contactPoints: ['h1', 'h2'],
+ *   authProvider: new cassandra.auth.DsePlainTextAuthProvider('user', 'p@ssword1');
+ * });
+ */
+declare class DsePlainTextAuthProvider extends AuthProvider {
+    username: string;
+    password: string;
+    authorizationId: string;
+    /**
+     * Creates a new instance of <code>DsePlainTextAuthProvider</code>.
+     * @classdesc
+     * AuthProvider that provides plain text authenticator instances for clients to connect
+     * to DSE clusters secured with the DseAuthenticator.
+     * @param {String} username The username; cannot be <code>null</code>.
+     * @param {String} password The password; cannot be <code>null</code>.
+     * @param {String} [authorizationId] The optional authorization ID. Providing an authorization ID allows the currently
+     * authenticated user to act as a different user (a.k.a. proxy authentication).
+     * @extends AuthProvider
+     * @alias module:auth~DsePlainTextAuthProvider
+     * @example
+     * const client = new cassandra.Client({
+     *   contactPoints: ['h1', 'h2'],
+     *   authProvider: new cassandra.auth.DsePlainTextAuthProvider('user', 'p@ssword1');
+     * });
+     * @constructor
+     */
+    constructor(username: string, password: string, authorizationId?: string);
+    /**
+     * Returns an Authenticator instance to be used by the driver when connecting to a host.
+     * @param {String} endpoint The IP address and port number in the format ip:port.
+     * @param {String} name Authenticator name.
+     * @override
+     * @returns {Authenticator}
+     */
+    newAuthenticator(endpoint: string, name: string): Authenticator;
+}
+
+/**
+ * Creates a new instance of {@link Duration}.
+ * @classdesc
+ * Represents a duration. A duration stores separately months, days, and seconds due to the fact that the number of
+ * days in a month varies, and a day can have 23 or 25 hours if a daylight saving is involved.
+ * @param {Number} months The number of months.
+ * @param {Number} days The number of days.
+ * @param {Number|Long} nanoseconds The number of nanoseconds.
+ * @constructor
+ */
+declare class Duration {
+    months: number;
+    days: number;
+    nanoseconds: Long;
+    constructor(months: number, days: number, nanoseconds: number | Long);
+    /**
+     * Returns true if the value of the Duration instance and other are the same
+     * @param {Duration} other
+     * @returns {Boolean}
+     */
+    equals(other: Duration): boolean;
+    /**
+     * Serializes the duration and returns the representation of the value in bytes.
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Returns the string representation of the value.
+     * @return {string}
+     */
+    toString(): string;
+    /**
+     * Creates a new {@link Duration} instance from the binary representation of the value.
+     * @param {Buffer} buffer
+     * @returns {Duration}
+     */
+    static fromBuffer(buffer: Buffer): Duration;
+    /**
+     * Creates a new {@link Duration} instance from the string representation of the value.
+     * <p>
+     *   Accepted formats:
+     * </p>
+     * <ul>
+     * <li>multiple digits followed by a time unit like: 12h30m where the time unit can be:
+     *   <ul>
+     *     <li>{@code y}: years</li>
+     *     <li>{@code m}: months</li>
+     *     <li>{@code w}: weeks</li>
+     *     <li>{@code d}: days</li>
+     *     <li>{@code h}: hours</li>
+     *     <li>{@code m}: minutes</li>
+     *     <li>{@code s}: seconds</li>
+     *     <li>{@code ms}: milliseconds</li>
+     *     <li>{@code us} or {@code µs}: microseconds</li>
+     *     <li>{@code ns}: nanoseconds</li>
+     *   </ul>
+     * </li>
+     * <li>ISO 8601 format:  <code>P[n]Y[n]M[n]DT[n]H[n]M[n]S or P[n]W</code></li>
+     * <li>ISO 8601 alternative format: <code>P[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]</code></li>
+     * </ul>
+     * @param {String} input
+     * @returns {Duration}
+     */
+    static fromString(input: string): Duration;
+    /**
+     * @param {Boolean} isNegative
+     * @param {String} source
+     * @returns {Duration}
+     * @private
+     */
+    private static parseStandardFormat;
+    /**
+     * @param {Boolean} isNegative
+     * @param {String} source
+     * @returns {Duration}
+     * @private
+     */
+    private static parseIso8601Format;
+    /**
+     * @param {Boolean} isNegative
+     * @param {String} source
+     * @returns {Duration}
+     * @private
+     */
+    private static parseIso8601WeekFormat;
+    /**
+     * @param {Boolean} isNegative
+     * @param {String} source
+     * @returns {Duration}
+     * @private
+     */
+    private static parseIso8601AlternativeFormat;
+}
+
+/**
+ * @class
+ * @classdesc
+ * {@link AddressTranslator} implementation for multi-region EC2 deployments <strong>where clients are also deployed in EC2</strong>.
+ * <p>
+ * Its distinctive feature is that it translates addresses according to the location of the Cassandra host:
+ * </p>
+ * <ul>
+ *  <li>addresses in different EC2 regions (than the client) are unchanged</li>
+ *  <li>addresses in the same EC2 region are <strong>translated to private IPs</strong></li>
+ * </ul>
+ * <p>
+ * This optimizes network costs, because Amazon charges more for communication over public IPs.
+ * </p>
+ */
+declare class EC2MultiRegionTranslator extends AddressTranslator {
+    /**
+     * Addresses in the same EC2 region are translated to private IPs and addresses in
+     * different EC2 regions (than the client) are unchanged
+     * @param {string} address The address of a node as returned by Cassandra.
+     * @param {number} port The port number, as specified in the protocol options.
+     * @param {Function} callback Callback to invoke with the translated endpoint.
+     */
+    translate(address: string, port: number, callback: Function): void;
+    /**
+     * Log method called to log errors that occurred while performing dns resolution.
+     * You can assign your own method to the class instance to do proper logging.
+     * @param {String} address
+     * @param {Error} err
+     */
+    logError(address: string, err: Error): void;
+}
+
+declare type EmptyCallback = (err: Error) => void;
+
+export declare class Encoder {
+    private encodingOptions;
+    private handleBuffer;
+    private decodeCollectionLength;
+    private getLengthBuffer;
+    private collectionLengthSize;
+    protocolVersion: number;
+    private readonly customDecoders;
+    private readonly customEncoders;
+    /**
+     * Serializes and deserializes to and from a CQL type and a Javascript Type.
+     * @param {Number} protocolVersion
+     * @param {ClientOptions} options
+     * @constructor
+     */
+    constructor(protocolVersion: number, options: ClientOptions);
+    /**
+     * Sets the protocol version and the encoding/decoding methods depending on the protocol version
+     * @param {Number} value
+     * @ignore
+     * @internal
+     */
+    setProtocolVersion: (value: number) => void;
+    private decodeBlob;
+    /**
+     *
+     * @param {Buffer} bytes
+     * @param {OtherCustomColumnInfo | VectorColumnInfo} columnInfo
+     * @returns
+     */
+    private decodeCustom;
+    private decodeUtf8String;
+    private decodeAsciiString;
+    private decodeBoolean;
+    private decodeDouble;
+    private decodeFloat;
+    private decodeInt;
+    private decodeSmallint;
+    private decodeTinyint;
+    private decodeLong;
+    private _decodeCqlLongAsLong;
+    private _decodeCqlLongAsBigInt;
+    private decodeVarint;
+    private _decodeVarintAsInteger;
+    private _decodeVarintAsBigInt;
+    private decodeDecimal;
+    private decodeTimestamp;
+    private decodeDate;
+    private decodeTime;
+    private decodeList;
+    private decodeSet;
+    private decodeMap;
+    private decodeUuid;
+    private decodeTimeUuid;
+    private decodeInet;
+    /**
+     * Decodes a user defined type into an object
+     * @param {Buffer} bytes
+     * @param {UdtColumnInfo} columnInfo
+     * @private
+     */
+    private decodeUdt;
+    private decodeTuple;
+    private encodeFloat;
+    private encodeDouble;
+    /**
+     * @param {Date|String|Long|Number} value
+     * @private
+     */
+    private encodeTimestamp;
+    /**
+     * @param {Date|String|LocalDate} value
+     * @returns {Buffer}
+     * @throws {TypeError}
+     * @private
+     */
+    private encodeDate;
+    /**
+     * @param {String|LocalTime} value
+     * @returns {Buffer}
+     * @throws {TypeError}
+     * @private
+     */
+    private encodeTime;
+    /**
+     * @param {Uuid|String|Buffer} value
+     * @private
+     */
+    private encodeUuid;
+    /**
+     * @param {String|InetAddress|Buffer} value
+     * @returns {Buffer}
+     * @private
+     */
+    private encodeInet;
+    /**
+     * @param {Long|Buffer|String|Number} value
+     * @private
+     */
+    private _encodeBigIntFromLong;
+    private encodeLong;
+    private _encodeBigIntFromBigInt;
+    /**
+     * @param {Integer|Buffer|String|Number} value
+     * @returns {Buffer}
+     * @private
+     */
+    private _encodeVarintFromInteger;
+    private encodeVarint;
+    private _encodeVarintFromBigInt;
+    /**
+     * @param {BigDecimal|Buffer|String|Number} value
+     * @returns {Buffer}
+     * @private
+     */
+    private encodeDecimal;
+    private encodeString;
+    private encodeUtf8String;
+    private encodeAsciiString;
+    private encodeBlob;
+    /**
+     *
+     * @param {any} value
+     * @param {OtherCustomColumnInfo | VectorColumnInfo} columnInfo
+     * @returns
+     */
+    private encodeCustom;
+    /**
+     * @param {Boolean} value
+     * @returns {Buffer}
+     * @private
+     */
+    private encodeBoolean;
+    /**
+     * @param {Number|String} value
+     * @private
+     */
+    private encodeInt;
+    /**
+     * @param {Number|String} value
+     * @private
+     */
+    private encodeSmallint;
+    /**
+     * @param {Number} value
+     * @private
+     */
+    private encodeTinyint;
+    private encodeList;
+    private encodeSet;
+    /**
+     * Serializes a map into a Buffer
+     * @param value
+     * @param {MapColumnInfo} columnInfo
+     * @returns {Buffer}
+     * @private
+     */
+    private encodeMap;
+    /**
+     *
+     * @param {any} value
+     * @param {UdtColumnInfo} columnInfo
+     * @returns
+     */
+    private encodeUdt;
+    /**
+     *
+     * @param {any} value
+     * @param {TupleColumnInfo} columnInfo
+     * @returns
+     */
+    private encodeTuple;
+    /**
+     *
+     * @param {Buffer} buffer
+     * @param {VectorColumnInfo} params
+     * @returns {Vector}
+     */
+    private decodeVector;
+    /**
+     * @param {ColumnInfo} cqlType
+     * @returns {Number}
+     */
+    private serializationSizeIfFixed;
+    /**
+     * @param {Vector} value
+     * @param {VectorColumnInfo} params
+     * @returns {Buffer}
+     */
+    private encodeVector;
+    /**
+     * Extract the (typed) arguments from a vector type
+     *
+     * @param {String} typeName
+     * @param {String} stringToExclude Leading string indicating this is a vector type (to be excluded when eval'ing args)
+     * @param {Function} subtypeResolveFn Function used to resolve subtype type; varies depending on type naming convention
+     * @returns {VectorColumnInfo}
+     * @internal
+     */
+    private parseVectorTypeArgs;
+    /**
+     * If not provided, it uses the array of buffers or the parameters and hints to build the routingKey
+     * @param {Array} params
+     * @param {import('..').ExecutionOptions} execOptions
+     * @param [keys] parameter keys and positions in the params array
+     * @throws TypeError
+     * @internal
+     * @ignore
+     */
+    setRoutingKeyFromUser: (params: Array<any>, execOptions: ExecutionOptions, keys?: any) => void;
+    /**
+     * Sets the routing key in the options based on the prepared statement metadata.
+     * @param {Object} meta Prepared metadata
+     * @param {Array} params Array of parameters
+     * @param {ExecutionOptions} execOptions
+     * @throws TypeError
+     * @internal
+     * @ignore
+     */
+    setRoutingKeyFromMeta: (meta: any, params: Array<any>, execOptions: ExecutionOptions) => void;
+    /**
+     * @param {Array} parts
+     * @param {Array} routingIndexes
+     * @param {Function} encodeParam
+     * @returns {Number} The total length
+     * @private
+     */
+    private _encodeRoutingKeyParts;
+    /**
+     * Parses a CQL name string into data type information
+     * @param {String} keyspace
+     * @param {String} typeName
+     * @param {Number} startIndex
+     * @param {Number|null} length
+     * @param {Function} udtResolver
+     * @async
+     * @returns {Promise.<ColumnInfo>} callback Callback invoked with err and  {{code: number, info: Object|Array|null, options: {frozen: Boolean}}}
+     * @internal
+     * @throws {Error}
+     * @ignore
+     */
+    parseTypeName: (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function) => Promise<ColumnInfo>;
+    /**
+     * @param {String} keyspace
+     * @param {Array} typeNames
+     * @param {Function} udtResolver
+     * @returns {Promise}
+     * @private
+     */
+    private _parseChildTypes;
+    /**
+     * Parses a Cassandra fully-qualified class name string into data type information
+     * @param {String} typeName
+     * @param {Number} [startIndex]
+     * @param {Number} [length]
+     * @throws {TypeError}
+     * @returns {ColumnInfo}
+     * @internal
+     * @ignore
+     */
+    parseFqTypeName: (typeName: string, startIndex?: number, length?: number) => ColumnInfo;
+    /**
+     * Parses type names with composites
+     * @param {String} typesString
+     * @returns {{types: Array, isComposite: Boolean, hasCollections: Boolean}}
+     * @internal
+     * @ignore
+     */
+    parseKeyTypes: (typesString: string) => {
+        types: Array<any>;
+        isComposite: boolean;
+        hasCollections: boolean;
+    };
+    /**
+     *
+     * @param {string} typeName
+     * @param {number} startIndex
+     * @param {number} length
+     * @returns {UdtColumnInfo}
+     */
+    private _parseUdtName;
+    private decoders;
+    private encoders;
+    /**
+     * Decodes Cassandra bytes into Javascript values.
+     * <p>
+     * This is part of an <b>experimental</b> API, this can be changed future releases.
+     * </p>
+     * @param {Buffer} buffer Raw buffer to be decoded.
+     * @param {ColumnInfo} type
+     */
+    decode: (buffer: Buffer, type: ColumnInfo) => any;
+    /**
+     * Encodes Javascript types into Buffer according to the Cassandra protocol.
+     * <p>
+     * This is part of an <b>experimental</b> API, this can be changed future releases.
+     * </p>
+     * @param {*} value The value to be converted.
+     * @param {ColumnInfo | Number | String} typeInfo The type information.
+     * <p>It can be either a:</p>
+     * <ul>
+     *   <li>A <code>String</code> representing the data type.</li>
+     *   <li>A <code>Number</code> with one of the values of {@link module:types~dataTypes dataTypes}.</li>
+     *   <li>An <code>Object</code> containing the <code>type.code</code> as one of the values of
+     *   {@link module:types~dataTypes dataTypes} and <code>type.info</code>.
+     *   </li>
+     * </ul>
+     * @returns {Buffer}
+     * @throws {TypeError} When there is an encoding error
+     */
+    encode: (value: any, typeInfo: ColumnInfo | number | string) => Buffer;
+    /**
+     * Try to guess the Cassandra type to be stored, based on the javascript value type
+     * @param value
+     * @returns {ColumnInfo | null}
+     * @ignore
+     * @internal
+     */
+    static guessDataType: (value: any) => ColumnInfo | null;
+    private static isTypedArray;
+}
+
+export declare const errors: {
+    ArgumentError: typeof ArgumentError;
+    AuthenticationError: typeof AuthenticationError;
+    BusyConnectionError: typeof BusyConnectionError;
+    DriverError: typeof DriverError;
+    OperationTimedOutError: typeof OperationTimedOutError;
+    DriverInternalError: typeof DriverInternalError;
+    NoHostAvailableError: typeof NoHostAvailableError;
+    NotSupportedError: typeof NotSupportedError;
+    ResponseError: typeof ResponseError;
+    VIntOutOfRangeException: typeof VIntOutOfRangeException;
+};
+
+/**
+ * Utilities for concurrent query execution with the DataStax Node.js Driver.
+ * @module concurrent
+ */
+/**
+ * Executes multiple queries concurrently at the defined concurrency level.
+ * @static
+ * @param {Client} client The {@link Client} instance.
+ * @param {String|Array<{query, params}>} query The query to execute per each parameter item.
+ * @param {Array<Array>|Stream|Object} parameters An {@link Array} or a readable {@link Stream} composed of {@link Array}
+ * items representing each individual set of parameters. Per each item in the {@link Array} or {@link Stream}, an
+ * execution is going to be made.
+ * @param {Object} [options] The execution options.
+ * @param {String} [options.executionProfile] The execution profile to be used.
+ * @param {Number} [options.concurrencyLevel=100] The concurrency level to determine the maximum amount of in-flight
+ * operations at any given time
+ * @param {Boolean} [options.raiseOnFirstError=true] Determines whether execution should stop after the first failed
+ * execution and the corresponding exception will be raised.
+ * @param {Boolean} [options.collectResults=false] Determines whether each individual
+ * [ResultSet]{@link module:types~ResultSet} instance should be collected in the grouped result.
+ * @param {Number} [options.maxErrors=100] The maximum amount of errors to be collected before ignoring the rest of
+ * the error results.
+ * @returns {Promise<ResultSetGroup>} A <code>Promise</code> of {@link ResultSetGroup} that is resolved when all the
+ * executions completed and it's rejected when <code>raiseOnFirstError</code> is <code>true</code> and there is one
+ * or more failures.
+ * @example <caption>Using a fixed query and an Array of Arrays as parameters</caption>
+ * const query = 'INSERT INTO table1 (id, value) VALUES (?, ?)';
+ * const parameters = [[1, 'a'], [2, 'b'], [3, 'c'], ]; // ...
+ * const result = await executeConcurrent(client, query, parameters);
+ * @example <caption>Using a fixed query and a readable stream</caption>
+ * const stream = csvStream.pipe(transformLineToArrayStream);
+ * const result = await executeConcurrent(client, query, stream);
+ * @example <caption>Using a different queries</caption>
+ * const queryAndParameters = [
+ *   { query: 'INSERT INTO videos (id, name, user_id) VALUES (?, ?, ?)',
+ *     params: [ id, name, userId ] },
+ *   { query: 'INSERT INTO user_videos (user_id, id, name) VALUES (?, ?, ?)',
+ *     params: [ userId, id, name ] },
+ *   { query: 'INSERT INTO latest_videos (id, name, user_id) VALUES (?, ?, ?)',
+ *     params: [ id, name, userId ] },
+ * ];
+ *
+ * const result = await executeConcurrent(client, queryAndParameters);
+ */
+declare function executeConcurrent_2(client: Client, query: string | Array<{
+    query: any;
+    params: any;
+}>, parameters: Array<Array<any>> | Stream | object, options: {
+    executionProfile?: string;
+    concurrencyLevel?: number;
+    raiseOnFirstError?: boolean;
+    collectResults?: boolean;
+    maxErrors?: number;
+}): Promise<ResultSetGroup_2>;
+
+/**
+ * A base class that represents a wrapper around the user provided query options with getter methods and proper
+ * default values.
+ * <p>
+ *   Note that getter methods might return <code>undefined</code> when not set on the query options or default
+ *  {@link Client} options.
+ * </p>
+ */
+export declare class ExecutionOptions {
+    /**
+     * Creates a new instance of {@link ExecutionOptions}.
+     */
+    constructor();
+    /**
+     * Creates an empty instance, where all methods return undefined, used internally.
+     * @ignore
+     * @return {ExecutionOptions}
+     */
+    static empty(): ExecutionOptions;
+    /**
+     * Determines if the stack trace before the query execution should be maintained.
+     * @abstract
+     * @returns {Boolean}
+     */
+    getCaptureStackTrace(): boolean;
+    /**
+     * Gets the [Consistency level]{@link module:types~consistencies} to be used for the execution.
+     * @abstract
+     * @returns {Number}
+     */
+    getConsistency(): number;
+    /**
+     * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use
+     * this data.
+     * @abstract
+     * @returns {Object}
+     */
+    getCustomPayload(): object;
+    /**
+     * Gets the amount of rows to retrieve per page.
+     * @abstract
+     * @returns {Number}
+     */
+    getFetchSize(): number;
+    /**
+     * When a fixed host is set on the query options and the query plan for the load-balancing policy is not used, it
+     * gets the host that should handle the query.
+     * @returns {Host}
+     */
+    getFixedHost(): Host;
+    /**
+     * Gets the type hints for parameters given in the query, ordered as for the parameters.
+     * @abstract
+     * @returns {Array|Array<Array>}
+     */
+    getHints(): Array<any> | Array<Array<any>>;
+    /**
+     * Determines whether the driver must retrieve the following result pages automatically.
+     * <p>
+     *   This setting is only considered by the [Client#eachRow()]{@link Client#eachRow} method.
+     * </p>
+     * @abstract
+     * @returns {Boolean}
+     */
+    isAutoPage(): boolean;
+    /**
+     * Determines whether its a counter batch. Only valid for [Client#batch()]{@link Client#batch}, it will be ignored by
+     * other methods.
+     * @abstract
+     * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
+     */
+    isBatchCounter(): boolean;
+    /**
+     * Determines whether the batch should be written to the batchlog. Only valid for
+     * [Client#batch()]{@link Client#batch}, it will be ignored by other methods.
+     * @abstract
+     * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
+     */
+    isBatchLogged(): boolean;
+    /**
+     * Determines whether the query can be applied multiple times without changing the result beyond the initial
+     * application.
+     * @abstract
+     * @returns {Boolean}
+     */
+    isIdempotent(): boolean;
+    /**
+     * Determines whether the query must be prepared beforehand.
+     * @abstract
+     * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
+     */
+    isPrepared(): boolean;
+    /**
+     * Determines whether query tracing is enabled for the execution.
+     * @abstract
+     * @returns {Boolean}
+     */
+    isQueryTracing(): boolean;
+    /**
+     * Gets the keyspace for the query when set at query options level.
+     * <p>
+     *   Note that this method will return <code>undefined</code> when the keyspace is not set at query options level.
+     *   It will only return the keyspace name when the user provided a different keyspace than the current
+     *   {@link Client} keyspace.
+     * </p>
+     * @abstract
+     * @returns {String}
+     */
+    getKeyspace(): string;
+    /**
+     * Gets the load balancing policy used for this execution.
+     * @returns {LoadBalancingPolicy} A <code>LoadBalancingPolicy</code> instance, it can't be <code>undefined</code>.
+     */
+    getLoadBalancingPolicy(): LoadBalancingPolicy;
+    /**
+     * Gets the Buffer representing the paging state.
+     * @abstract
+     * @returns {Buffer}
+     */
+    getPageState(): Buffer;
+    /**
+     * Internal method that gets the preferred host.
+     * @abstract
+     * @ignore
+     */
+    getPreferredHost(): any;
+    /**
+     * Gets the query options as provided to the execution method without setting the default values.
+     * @returns {QueryOptions}
+     */
+    getRawQueryOptions(): QueryOptions;
+    /**
+     * Gets the timeout in milliseconds to be used for the execution per coordinator.
+     * <p>
+     *   A value of <code>0</code> disables client side read timeout for the execution. Default: <code>undefined</code>.
+     * </p>
+     * @abstract
+     * @returns {Number}
+     */
+    getReadTimeout(): number;
+    /**
+     * Gets the [retry policy]{@link module:policies/retry} to be used.
+     * @abstract
+     * @returns {RetryPolicy} A <code>RetryPolicy</code> instance, it can't be <code>undefined</code>.
+     */
+    getRetryPolicy(): RetryPolicy;
+    /**
+     * Internal method to obtain the row callback, for "by row" results.
+     * @abstract
+     * @ignore
+     */
+    getRowCallback(): any;
+    /**
+     * Internal method to get or generate a timestamp for the request execution.
+     * @ignore
+     * @returns {Long|null}
+     */
+    getOrGenerateTimestamp(): Long | null;
+    /**
+     * Gets the index of the parameters that are part of the partition key to determine the routing.
+     * @abstract
+     * @ignore
+     * @returns {Array}
+     */
+    getRoutingIndexes(): Array<any>;
+    /**
+     * Gets the partition key(s) to determine which coordinator should be used for the query.
+     * @abstract
+     * @returns {Buffer|Array<Buffer>}
+     */
+    getRoutingKey(): Buffer | Array<Buffer>;
+    /**
+     * Gets the array of the parameters names that are part of the partition key to determine the
+     * routing. Only valid for non-prepared requests.
+     * @abstract
+     * @ignore
+     */
+    getRoutingNames(): any;
+    /**
+     * Gets the the consistency level to be used for the serial phase of conditional updates.
+     * @abstract
+     * @returns {Number}
+     */
+    getSerialConsistency(): number;
+    /**
+     * Gets the provided timestamp for the execution in microseconds from the unix epoch (00:00:00, January 1st, 1970).
+     * <p>When a timestamp generator is used, this method returns <code>undefined</code>.</p>
+     * @abstract
+     * @returns {Number|Long|undefined|null}
+     */
+    getTimestamp(): number | Long | undefined | null;
+    /**
+     * @param {Array} hints
+     * @abstract
+     * @ignore
+     */
+    setHints(hints: Array<any>): any;
+    /**
+     * Sets the keyspace for the execution.
+     * @ignore
+     * @abstract
+     * @param {String} keyspace
+     */
+    setKeyspace(keyspace: string): any;
+    /**
+     * @abstract
+     * @ignore
+     */
+    setPageState(pageState: Buffer): any;
+    /**
+     * Internal method that sets the preferred host.
+     * @abstract
+     * @ignore
+     */
+    setPreferredHost(host: Host): any;
+    /**
+     * Sets the index of the parameters that are part of the partition key to determine the routing.
+     * @param {Array} routingIndexes
+     * @abstract
+     * @ignore
+     */
+    setRoutingIndexes(routingIndexes: Array<any>): any;
+    /**
+     * Sets the routing key.
+     * @abstract
+     * @ignore
+     */
+    setRoutingKey(value: any): any;
+}
+
+/**
+ * @classdesc
+ * Represents a set configurations to be used in a statement execution to be used for a single {@link Client} instance.
+ * <p>
+ *   An {@link ExecutionProfile} instance should not be shared across different {@link Client} instances.
+ * </p>
+ * @example
+ * const { Client, ExecutionProfile } = require('cassandra-driver');
+ * const client = new Client({
+ *   contactPoints: ['host1', 'host2'],
+ *   profiles: [
+ *     new ExecutionProfile('metrics-oltp', {
+ *       consistency: consistency.localQuorum,
+ *       retry: myRetryPolicy
+ *     })
+ *   ]
+ * });
+ *
+ * client.execute(query, params, { executionProfile: 'metrics-oltp' }, callback);
+ */
+export declare class ExecutionProfile {
+    /**
+     * Consistency level.
+     * @type {Number}
+     */
+    consistency?: typeof consistencies;
+    /**
+     * Load-balancing policy
+     * @type {LoadBalancingPolicy}
+     */
+    loadBalancing?: LoadBalancingPolicy;
+    /**
+     * Name of the execution profile.
+     * @type {String}
+     */
+    name: string;
+    /**
+     * Client read timeout.
+     * @type {Number}
+     */
     readTimeout?: number;
-    retry?: policies.retry.RetryPolicy;
-    serialConsistency?: types.consistencies;
+    /**
+     * Retry policy.
+     * @type {RetryPolicy}
+     */
+    retry?: RetryPolicy;
+    /**
+     * Serial consistency level.
+     * @type {Number}
+     */
+    serialConsistency?: typeof consistencies;
+    /**
+     * The graph options for this profile.
+     * @type {Object}
+     * @property {String} language The graph language.
+     * @property {String} name The graph name.
+     * @property {String} readConsistency The consistency to use for graph write queries.
+     * @property {String} source The graph traversal source.
+     * @property {String} writeConsistency The consistency to use for graph write queries.
+     */
     graphOptions?: {
         name?: string;
         language?: string;
         source?: string;
-        readConsistency?: types.consistencies;
-        writeConsistency?: types.consistencies;
+        readConsistency?: typeof consistencies;
+        writeConsistency?: typeof consistencies;
+        results?: any;
     };
-
-    constructor(name: string, options: {
-        consistency?: types.consistencies;
-        loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
+    /**
+     * Creates a new instance of {@link ExecutionProfile}.
+     * Represents a set configurations to be used in a statement execution to be used for a single {@link Client} instance.
+     * <p>
+     *   An {@link ExecutionProfile} instance should not be shared across different {@link Client} instances.
+     * </p>
+     * @param {String} name Name of the execution profile.
+     * <p>
+     *   Use <code>'default'</code> to specify that the new instance should be the default {@link ExecutionProfile} if no
+     *   profile is specified in the execution.
+     * </p>
+     * @param {Object} [options] Profile options, when any of the options is not specified the {@link Client} will the use
+     * the ones defined in the default profile.
+     * @param {Number} [options.consistency] The consistency level to use for this profile.
+     * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+     * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+     * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+     * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+     * @param {Object} [options.graphOptions]
+     * @param {String} [options.graphOptions.language] The graph language to use for graph queries.
+     * <p>
+     *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+     *   to be defined manually by the user.
+     * </p>
+     * @param {String} [options.graphOptions.results] The protocol to use for serializing and deserializing graph results.
+     * <p>
+     *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+     *   to be defined manually by the user.
+     * </p>
+     * @param {String} [options.graphOptions.name] The graph name to use for graph queries.
+     * @param {Number} [options.graphOptions.readConsistency] The consistency level to use for graph read queries.
+     * @param {String} [options.graphOptions.source] The graph traversal source name to use for graph queries.
+     * @param {Number} [options.graphOptions.writeConsistency] The consistency level to use for graph write queries.
+     * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+     * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+     * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+     * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+     * Profile options, when any of the options is not specified the {@link Client} will the use
+     * the ones defined in the default profile.
+     * @param {Number} [options.consistency] The consistency level to use for this profile.
+     * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+     * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+     * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+     * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+     * @param {Object} [options.graphOptions]
+     * @param {String} [options.graphOptions.language] The graph language to use for graph queries.
+     * <p>
+     *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+     *   to be defined manually by the user.
+     * </p>
+     * @param {String} [options.graphOptions.results] The protocol to use for serializing and deserializing graph results.
+     * <p>
+     *   Note that this setting should normally be <code>undefined</code> or set by a utility method and it's not expected
+     *   to be defined manually by the user.
+     * </p>
+     * @param {String} [options.graphOptions.name] The graph name to use for graph queries.
+     * @param {Number} [options.graphOptions.readConsistency] The consistency level to use for graph read queries.
+     * @param {String} [options.graphOptions.source] The graph traversal source name to use for graph queries.
+     * @param {Number} [options.graphOptions.writeConsistency] The consistency level to use for graph write queries.
+     * @param {LoadBalancingPolicy} [options.loadBalancing] The load-balancing policy to use for this profile.
+     * @param {Number} [options.readTimeout] The client per-host request timeout to use for this profile.
+     * @param {RetryPolicy} [options.retry] The retry policy to use for this profile.
+     * @param {Number} [options.serialConsistency] The serial consistency level to use for this profile.
+     * @example
+     * const { Client, ExecutionProfile } = require('cassandra-driver');
+     * const client = new Client({
+     *   contactPoints: ['host1', 'host2'],
+     *   profiles: [
+     *     new ExecutionProfile('metrics-oltp', {
+     *       consistency: consistency.localQuorum,
+     *       retry: myRetryPolicy
+     *     })
+     *   ]
+     * });
+     *
+     * client.execute(query, params, { executionProfile: 'metrics-oltp' }, callback);
+     * @constructor
+     */
+    constructor(name: string, options?: {
+        consistency?: typeof consistencies;
+        loadBalancing?: LoadBalancingPolicy;
         readTimeout?: number;
-        retry?: policies.retry.RetryPolicy;
-        serialConsistency?: types.consistencies;
+        retry?: RetryPolicy;
+        serialConsistency?: typeof consistencies;
         graphOptions?: {
             name?: string;
             language?: string;
             source?: string;
-            readConsistency?: types.consistencies;
-            writeConsistency?: types.consistencies;
+            readConsistency?: typeof consistencies;
+            writeConsistency?: typeof consistencies;
         };
     });
 }
 
-export declare namespace geometry {
-    export class LineString {
-        constructor(...args: Point[]);
-
-        static fromBuffer(buffer: Buffer): LineString;
-
-        static fromString(textValue: string): LineString;
-
-        equals(other: LineString): boolean;
-
-        toBuffer(): Buffer;
-
-        toJSON(): string;
-
-        toString(): string;
-
-    }
-
-    export class Point {
-        constructor(x: number, y: number);
-
-        static fromBuffer(buffer: Buffer): Point;
-
-        static fromString(textValue: string): Point;
-
-        equals(other: Point): boolean;
-
-        toBuffer(): Buffer;
-
-        toJSON(): string;
-
-        toString(): string;
-
-    }
-
-    export class Polygon {
-        constructor(...args: Point[]);
-
-        static fromBuffer(buffer: Buffer): Polygon;
-
-        static fromString(textValue: string): Polygon;
-
-        equals(other: Polygon): boolean;
-
-        toBuffer(): Buffer;
-
-        toJSON(): string;
-
-        toString(): string;
-    }
+/**
+ * A reconnection policy that waits exponentially longer between each
+ * reconnection attempt (but keeps a constant delay once a maximum delay is reached).
+ * <p>
+ *   A random amount of jitter (+/- 15%) will be added to the pure exponential delay value to avoid situations
+ *   where many clients are in the reconnection process at exactly the same time. The jitter will never cause the
+ *   delay to be less than the base delay, or more than the max delay.
+ * </p>
+ */
+declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
+    baseDelay: number;
+    maxDelay: number;
+    startWithNoDelay: boolean;
+    /**
+     * A reconnection policy that waits exponentially longer between each
+     * reconnection attempt (but keeps a constant delay once a maximum delay is reached).
+     * <p>
+     *   A random amount of jitter (+/- 15%) will be added to the pure exponential delay value to avoid situations
+     *   where many clients are in the reconnection process at exactly the same time. The jitter will never cause the
+     *   delay to be less than the base delay, or more than the max delay.
+     * </p>
+     * @param {Number} baseDelay The base delay in milliseconds to use for the schedules created by this policy.
+     * @param {Number} maxDelay The maximum delay in milliseconds to wait between two reconnection attempt.
+     * @param {Boolean} startWithNoDelay Determines if the first attempt should be zero delay
+     * @constructor
+     */
+    constructor(baseDelay: number, maxDelay: number, startWithNoDelay: boolean);
+    /**
+     * A new schedule that uses an exponentially growing delay between reconnection attempts.
+     * @returns {{next: Function}} An infinite iterator.
+     */
+    newSchedule(): {
+        next: Function;
+    };
+    /**
+     * Adds a random portion of +-15% to the delay provided.
+     * Initially, its adds a random value of 15% to avoid reconnection before reaching the base delay.
+     * When the schedule reaches max delay, only subtracts a random portion of 15%.
+     */
+    _addJitter(value: any): any;
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, any>;
 }
 
-declare namespace graph {
-    interface Edge extends Element {
-        outV?: Vertex;
-        outVLabel?: string;
-        inV?: Vertex;
-        inVLabel?: string;
-        properties?: object;
-    }
-
-    interface Element {
-        id: any;
-        label: string;
-    }
-
-    class GraphResultSet implements Iterator<any> {
-        constructor(rs: types.ResultSet);
-
-        first(): any;
-
-        toArray(): any[];
-
-        values(): Iterator<any>;
-
-        next(value?: any): IteratorResult<any>;
-    }
-
-    interface Path {
-        labels: any[];
-        objects: any[];
-    }
-
-    interface Property {
-        value: any
-        key: any
-    }
-
-    interface Vertex extends Element {
-        properties?: { [key: string]: any[] }
-    }
-
-    interface VertexProperty extends Element {
-        value: any
-        key: string
-        properties?: any
-    }
-
-    function asDouble(value: number): object;
-
-    function asFloat(value: number): object;
-
-    function asInt(value: number): object;
-
-    function asTimestamp(value: Date): object;
-
-    function asUdt(value: object): object;
-
-    interface EnumValue {
-        toString(): string
-    }
-
-    namespace t {
-        const id: EnumValue;
-        const key: EnumValue;
-        const label: EnumValue;
-        const value: EnumValue;
-    }
-
-    namespace direction {
-        // `in` is a reserved word
-        const in_: EnumValue;
-        const out: EnumValue;
-        const both: EnumValue;
-    }
+/**
+ * @classdesc
+ * A retry policy that never retries nor ignores.
+ * <p>
+ * All of the methods of this retry policy unconditionally return
+ * [rethrow]{@link module:policies/retry~Retry#rethrowResult()}. If this policy is used, retry logic will have to be
+ * implemented in business code.
+ * </p>
+ * @alias module:policies/retry~FallthroughRetryPolicy
+ * @extends RetryPolicy
+ */
+declare class FallthroughRetryPolicy extends RetryPolicy {
+    /**
+     * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
+     */
+    onReadTimeout(): DecisionInfo;
+    /**
+     * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
+     */
+    onRequestError(): DecisionInfo;
+    /**
+     * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
+     */
+    onUnavailable(): DecisionInfo;
+    /**
+     * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
+     */
+    onWriteTimeout(): DecisionInfo;
 }
 
-export declare type GraphOptions = {
-    language?: string;
-    name?: string;
-    readConsistency?: types.consistencies;
-    readTimeout?: number;
-    source?: string;
-    writeConsistency?: types.consistencies;
+declare type FindDocInfo = {
+    fields?: string[];
+    orderBy?: {
+        [key: string]: string;
+    };
+    limit?: number;
 };
 
-export declare interface GraphQueryOptions extends QueryOptions {
-    graphLanguage?: string;
-    graphName?: string;
-    graphReadConsistency?: types.consistencies;
-    graphSource?: string;
-    graphWriteConsistency?: types.consistencies;
+/**
+ * Message frame flags
+ * @internal
+ * @ignore
+ */
+declare const frameFlags: {
+    compression: number;
+    tracing: number;
+    customPayload: number;
+    warning: number;
+};
+
+declare class FrameHeader {
+    version: number;
+    flags: number;
+    streamId: number;
+    opcode: number;
+    bodyLength: number;
+    /**
+     * Represents a frame header that could be used to read from a Buffer or to write to a Buffer
+     * @ignore
+     * @param {Number} version Protocol version
+     * @param {Number} flags
+     * @param {Number} streamId
+     * @param {Number} opcode
+     * @param {Number} bodyLength
+     * @constructor
+     */
+    constructor(version: number, flags: number, streamId: number, opcode: number, bodyLength: number);
+    /**
+     * The length of the header of the frame based on the protocol version
+     * @returns {Number}
+     */
+    static size(version: any): number;
+    /**
+     * Gets the protocol version based on the first byte of the header
+     * @param {Buffer} buffer
+     * @returns {Number}
+     */
+    static getProtocolVersion(buffer: Buffer): number;
+    /**
+     * @param {Buffer} buf
+     * @param {Number} [offset]
+     * @returns {FrameHeader}
+     */
+    static fromBuffer(buf: Buffer, offset?: number): FrameHeader;
+    /** @returns {Buffer} */
+    toBuffer(): Buffer;
 }
 
-export declare interface Host extends events.EventEmitter {
+/**
+ * Generates a value representing the timestamp for the query in microseconds based on the date and the microseconds provided
+ * @param {Date} [date] The date to generate the value, if not provided it will use the current date.
+ * @param {Number} [microseconds] A number from 0 to 999 used to build the microseconds part of the date.
+ * @returns {Long}
+ */
+declare function generateTimestamp(date: any, microseconds: any): Long;
+
+declare class Geometry {
+    static types: {
+        readonly Point2D: 1;
+        readonly LineString: 2;
+        readonly Polygon: 3;
+    };
+    /**
+     * @protected
+     * @param {Number} code
+     * @returns {String}
+     * @ignore
+     */
+    static getEndianness(code: number): string;
+    /**
+     * Reads an int32 from binary representation based on endianness.
+     * @protected
+     * @param {Buffer} buffer
+     * @param {String} endianness
+     * @param {Number} offset
+     * @returns Number
+     * @ignore
+     */
+    static readInt32(buffer: Buffer, endianness: string, offset: number): number;
+    /**
+     * Reads a 64-bit double from binary representation based on endianness.
+     * @protected
+     * @param {Buffer} buffer
+     * @param {String} endianness
+     * @param {Number} offset
+     * @returns Number
+     * @ignore
+     */
+    static readDouble(buffer: Buffer, endianness: string, offset: number): number;
+    /**
+     * Writes a 32-bit integer to binary representation based on OS endianness.
+     * @protected
+     * @param {Number} val
+     * @param {Buffer} buffer
+     * @param {Number} offset
+     * @ignore
+     */
+    writeInt32(val: number, buffer: Buffer, offset: number): void;
+    /**
+     * Writes a 64-bit double to binary representation based on OS endianness.
+     * @protected
+     * @param {Number} val
+     * @param {Buffer} buffer
+     * @param {Number} offset
+     * @ignore
+     */
+    writeDouble(val: number, buffer: Buffer, offset: number): void;
+    /**
+     * Writes an 8-bit int that represents the OS endianness.
+     * @protected
+     * @param {Buffer} buffer
+     * @param {Number} offset
+     * @ignore
+     */
+    writeEndianness(buffer: Buffer, offset: number): void;
+    /**
+     * Returns true if the serialization must be done in big-endian format.
+     * Designed to allow injection of OS endianness.
+     * @abstract
+     * @ignore
+     */
+    useBESerialization(): boolean;
+}
+
+export declare const geometry: {
+    Point: typeof Point;
+    LineString: typeof LineString;
+    Polygon: typeof Polygon;
+    Geometry: typeof Geometry;
+};
+
+/**
+ * Gets the data type name for a given type definition, it may not work for udt or custom type
+ * @internal
+ * @ignore
+ * @throws {ArgumentError}
+ * @param {import('../encoder').ColumnInfo} item
+ */
+declare function getDataTypeNameByCode(item: any): any;
+
+declare interface GraphQueryOptions extends QueryOptions {
+    graphLanguage?: string;
+    graphName?: string;
+    graphReadConsistency?: typeof types_2.consistencies;
+    graphSource?: string;
+    graphWriteConsistency?: typeof types_2.consistencies;
+    graphResults?: string;
+}
+
+/**
+ * Represents the result set of a [graph query execution]{@link Client#executeGraph} containing vertices, edges, or
+ * scalar values depending on the query.
+ * <p>
+ * It allows iteration of the items using <code>for..of</code> statements under ES2015 and exposes
+ * <code>forEach()</code>, <code>first()</code>, and <code>toArray()</code> to access the underlying items.
+ * </p>
+ * @example
+ * for (let vertex of result) { ... }
+ * @example
+ * const arr = result.toArray();
+ * @example
+ * const vertex = result.first();
+ * @alias module:datastax/graph~GraphResultSet
+ */
+declare class GraphResultSet {
+    info: typeof ResultSet.prototype.info;
+    length: number;
+    pageState: string;
+    private rows;
+    private rowParser;
+    /**
+     * @param {ResultSet} result The result set from the query execution.
+     * @param {Function} [rowParser] Optional row parser function.
+     * @constructor
+     */
+    constructor(result: ResultSet, rowParser?: Function);
+    /**
+     * Returns the first element of the result or null if the result is empty.
+     * @returns {Object}
+     */
+    first(): object | null;
+    /**
+     * Executes a provided function once per result element.
+     * @param {Function} callback Function to execute for each element, taking two arguments: currentValue and index.
+     * @param {Object} [thisArg] Value to use as <code>this</code> when executing callback.
+     */
+    forEach(callback: Function, thisArg?: object): void;
+    /**
+     * Returns an Array of graph result elements (vertex, edge, scalar).
+     * @returns {Array}
+     */
+    toArray(): Array<any>;
+    /**
+     * Returns a new Iterator object that contains the values for each index in the result.
+     * @returns {Iterator}
+     */
+    values(): Iterator<any>;
+    /**
+     * Gets the traversers contained in the result set.
+     * @returns {IterableIterator}
+     */
+    getTraversers(): IterableIterator<any>;
+    /**
+     * Makes the result set iterable using `for..of`.
+     * @returns {Iterator}
+     */
+    [Symbol.iterator](): Iterator<any, any, any>;
+}
+
+/**
+ * Represents a Cassandra node.
+ * @extends EventEmitter
+ */
+declare class Host extends events.EventEmitter {
     address: string;
+    setDownAt: number;
+    log: (type: any, info: any, furtherInfo?: any, options?: any) => void;
+    isUpSince: number;
+    pool: any;
     cassandraVersion: string;
     datacenter: string;
     rack: string;
     tokens: string[];
-    hostId: types.Uuid;
-
-    canBeConsideredAsUp(): boolean;
-
-    getCassandraVersion(): number[];
-
+    hostId: Uuid;
+    dseVersion: string;
+    workloads: readonly any[];
+    _distance: number;
+    _healthResponseCounter: number;
+    reconnectionSchedule: any;
+    options: any;
+    reconnectionDelay: number;
+    _healthResponseCountTimer: any;
+    _metadata: any;
+    /**
+     * Creates a new Host instance.
+     */
+    constructor(address: any, protocolVersion: any, options: any, metadata: any);
+    /**
+     * Marks this host as not available for query coordination, when the host was previously marked as UP, otherwise its
+     * a no-op.
+     * @internal
+     * @ignore
+     */
+    setDown(): void;
+    /**
+     * Marks this host as available for querying.
+     * @param {Boolean} [clearReconnection]
+     * @internal
+     * @ignore
+     */
+    setUp(clearReconnection?: boolean): void;
+    /**
+     * Resets the reconnectionSchedule and tries to issue a reconnection immediately.
+     * @internal
+     * @ignore
+     */
+    checkIsUp(): void;
+    /**
+     * @param {Boolean} [waitForPending] When true, it waits for in-flight operations to be finish before closing the
+     * connections.
+     * @returns {Promise<void>}
+     * @internal
+     * @ignore
+     */
+    shutdown(waitForPending?: boolean): Promise<void>;
+    /**
+     * Determines if the node is UP now (seen as UP by the driver).
+     * @returns {boolean}
+     */
     isUp(): boolean;
+    /**
+     * Determines if the host can be considered as UP.
+     * Deprecated: Use {@link Host#isUp()} instead.
+     * @returns {boolean}
+     */
+    canBeConsideredAsUp(): boolean;
+    /**
+     * Sets the distance of the host relative to the client using the load balancing policy.
+     * @param {Number} distance
+     * @internal
+     * @ignore
+     */
+    setDistance(distance: number): number;
+    /**
+     * Changes the protocol version of a given host
+     * @param {Number} value
+     * @internal
+     * @ignore
+     */
+    setProtocolVersion(value: number): void;
+    /**
+     * Gets the least busy connection from the pool.
+     * @param {Connection} [previousConnection] When provided, the pool should attempt to obtain a different connection.
+     * @returns {Connection!}
+     * @throws {Error}
+     * @throws {BusyConnectionError}
+     * @internal
+     * @ignore
+     */
+    borrowConnection(previousConnection?: Connection): Connection;
+    /**
+     * Creates all the connection in the pool.
+     * @param {string} keyspace
+     * @internal
+     * @ignore
+     */
+    warmupPool(keyspace: string): any;
+    /**
+     * Starts creating the pool in the background.
+     * @internal
+     * @ignore
+     */
+    initializePool(): void;
+    /**
+     * Gets any connection that is already opened or null if not found.
+     * @returns {Connection}
+     * @internal
+     * @ignore
+     */
+    getActiveConnection(): Connection;
+    /**
+     * Internal method to get the amount of responses dequeued in the last interval (between 200ms and 400ms) on all
+     * connections to the host.
+     * @returns {Number}
+     * @internal
+     * @ignore
+     */
+    getResponseCount(): number;
+    /**
+     * Checks the health of a connection in the pool
+     * @param {Connection} connection
+     * @internal
+     * @ignore
+     */
+    checkHealth(connection: Connection): void;
+    /**
+     * @param {Connection} connection
+     * @internal
+     * @ignore
+     */
+    removeFromPool(connection: Connection): void;
+    /**
+     * Internal method that gets the amount of in-flight requests on all connections to the host.
+     * @internal
+     * @ignore
+     */
+    getInFlight(): any;
+    /**
+     * Validates that the internal state of the connection pool.
+     * If the pool size is smaller than expected, schedule a new connection attempt.
+     * If the amount of connections is 0 for not ignored hosts, the host must be down.
+     * @private
+     */
+    _checkPoolState(): void;
+    /**
+     * Executed after an scheduled new connection attempt finished
+     * @private
+     */
+    _onNewConnectionOpen(err: any): Promise<void>;
+    /**
+     * Returns an array containing the Cassandra Version as an Array of Numbers having the major version in the first
+     * position.
+     * @returns {Array.<Number>}
+     */
+    getCassandraVersion(): Array<number>;
+    /**
+     * Gets the DSE version of the host as an Array, containing the major version in the first position.
+     * In case the cluster is not a DSE cluster, it returns an empty Array.
+     * @returns {Array}
+     */
+    getDseVersion(): Array<any>;
 }
 
-export declare interface HostMap extends events.EventEmitter {
+/**
+ * Represents an associative-array of {@link Host hosts} that can be iterated.
+ * It creates an internal copy when adding or removing, making it safe to iterate using the values()
+ * method within async operations.
+ * @extends events.EventEmitter
+ * @constructor
+ */
+declare class HostMap extends events.EventEmitter {
+    _items: Map<any, any>;
+    _values: any;
     length: number;
-
-    forEach(callback: (value: Host, key: string) => void): void;
-
+    constructor();
+    /**
+     * Executes a provided function once per map element.
+     * @param callback
+     */
+    forEach(callback: any): void;
+    /**
+     * Gets a {@link Host host} by key or undefined if not found.
+     * @param {String} key
+     * @returns {Host}
+     */
     get(key: string): Host;
-
-    keys(): string[];
-
-    values(): Host[];
+    /**
+     * Returns an array of host addresses.
+     * @returns {Array.<String>}
+     */
+    keys(): Array<string>;
+    /**
+     * Removes an item from the map.
+     * @param {String} key The key of the host
+     * @fires HostMap#remove
+     */
+    remove(key: string): void;
+    /**
+     * Removes multiple hosts from the map.
+     * @param {Array.<String>} keys
+     * @fires HostMap#remove
+     */
+    removeMultiple(keys: Array<string>): void;
+    /**
+     * Adds a new item to the map.
+     * @param {String} key The key of the host
+     * @param {Host} value The host to be added
+     * @fires HostMap#remove
+     * @fires HostMap#add
+     */
+    set(key: string, value: Host): Host;
+    /**
+     * Returns a shallow copy of a portion of the items into a new array object.
+     * Backward-compatibility.
+     * @param {Number} [begin]
+     * @param {Number} [end]
+     * @returns {Array}
+     * @ignore
+     */
+    slice(begin: number, end: number): Array<any>;
+    /**
+     * Deprecated: Use set() instead.
+     * @ignore
+     * @deprecated
+     */
+    push(k: any, v: any): void;
+    /**
+     * Returns a shallow copy of the values of the map.
+     * @returns {Array.<Host>}
+     */
+    values(): Array<Host>;
+    /**
+     * Removes all items from the map.
+     * @returns {Array.<Host>} The previous items
+     */
+    clear(): Array<Host>;
+    inspect(): Map<any, any>;
+    toJSON(): any;
 }
 
-export declare namespace mapping {
-    export interface TableMappings {
-        getColumnName(propName: string): string;
+/**
+ * @classdesc
+ * A retry policy that avoids retrying non-idempotent statements.
+ * <p>
+ * In case of write timeouts or unexpected errors, this policy will always return
+ * [rethrowResult()]{@link module:policies/retry~RetryPolicy#rethrowResult} if the statement is deemed non-idempotent
+ * (see [QueryOptions.isIdempotent]{@link QueryOptions}).
+ * <p/>
+ * For all other cases, this policy delegates the decision to the child policy.
+ * @extends module:policies/retry~RetryPolicy
+ * @deprecated Since version 4.0 non-idempotent operations are never tried for write timeout or request error, use the
+ * default retry policy instead.
+ */
+declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
+    _childPolicy: RetryPolicy;
+    /**
+     * Creates a new instance of <code>IdempotenceAwareRetryPolicy</code>.
+     * This is a retry policy that avoids retrying non-idempotent statements.
+     * <p>
+     * In case of write timeouts or unexpected errors, this policy will always return
+     * [rethrowResult()]{@link module:policies/retry~RetryPolicy#rethrowResult} if the statement is deemed non-idempotent
+     * (see [QueryOptions.isIdempotent]{@link QueryOptions}).
+     * <p/>
+     * For all other cases, this policy delegates the decision to the child policy.
+     * @param {RetryPolicy} [childPolicy] The child retry policy to wrap. When not defined, it will use an instance of
+     * [RetryPolicy]{@link module:policies/retry~RetryPolicy} as child policy.
+     * @constructor
+     * @deprecated Since version 4.0 non-idempotent operations are never tried for write timeout or request error, use the
+     * default retry policy instead.
+     */
+    constructor(childPolicy?: RetryPolicy);
+    onReadTimeout(info: any, consistency: any, received: any, blockFor: any, isDataPresent: any): DecisionInfo;
+    onRequestError(info: any, consistency: any, err: any): DecisionInfo;
+    onUnavailable(info: any, consistency: any, required: any, alive: any): DecisionInfo;
+    /**
+     * If the query is not idempotent, it return a rethrow decision. Otherwise, it relies on the child policy to decide.
+     */
+    onWriteTimeout(info: any, consistency: any, received: any, blockFor: any, writeType: any): DecisionInfo;
+}
 
-        getPropertyName(columnName: string): string;
+/** @module types */
+/**
+ * @class
+ * @classdesc Represents an v4 or v6 Internet Protocol (IP) address.
+ */
+declare class InetAddress {
+    buffer: Buffer;
+    length: number;
+    version: number;
+    /**
+     * Creates a new instance of InetAddress
+     * @param {Buffer} buffer
+     * @constructor
+     */
+    constructor(buffer: Buffer);
+    /**
+     * Parses the string representation and returns an Ip address
+     * @param {String} value
+     */
+    static fromString(value: string): InetAddress;
+    /**
+     * Compares 2 addresses and returns true if the underlying bytes are the same
+     * @param {InetAddress} other
+     * @returns {Boolean}
+     */
+    equals(other: InetAddress): boolean;
+    /**
+     * Returns the underlying buffer
+     * @returns {Buffer}
+     */
+    getBuffer(): Buffer;
+    /**
+     * Provide the name of the constructor and the string representation
+     * @returns {string}
+     */
+    inspect(): string;
+    /**
+     * Returns the string representation of the IP address.
+     * <p>For v4 IP addresses, a string in the form of d.d.d.d is returned.</p>
+     * <p>
+     *   For v6 IP addresses, a string in the form of x:x:x:x:x:x:x:x is returned, where the 'x's are the hexadecimal
+     *   values of the eight 16-bit pieces of the address, according to rfc5952.
+     *   In cases where there is more than one field of only zeros, it can be shortened. For example, 2001:0db8:0:0:0:1:0:1
+     *   will be expressed as 2001:0db8::1:0:1.
+     * </p>
+     * @param {String} [encoding]
+     * @returns {String}
+     */
+    toString(encoding?: string): string;
+    /**
+     * Returns the string representation.
+     * Method used by the native JSON.stringify() to serialize this instance.
+     */
+    toJSON(): string;
+    /**
+     * Validates for a IPv4-Mapped IPv6 according to https://tools.ietf.org/html/rfc4291#section-2.5.5
+     * @private
+     * @param {Buffer} buffer
+     */
+    private static isValidIPv4Mapped;
+}
 
-        newObjectInstance(): any;
-    }
+declare type InsertDocInfo = {
+    fields?: string[];
+    ttl?: number;
+    ifNotExists?: boolean;
+};
 
-    export class DefaultTableMappings implements TableMappings {
-        getColumnName(propName: string): string;
-
-        getPropertyName(columnName: string): string;
-
-        newObjectInstance(): any;
-    }
-
-    export class UnderscoreCqlToCamelCaseMappings implements TableMappings {
-        getColumnName(propName: string): string;
-
-        getPropertyName(columnName: string): string;
-
-        newObjectInstance(): any;
-    }
-
-    export interface Result<T = any> extends Iterator<T> {
-        wasApplied(): boolean;
-
-        first(): T | null;
-
-        forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
-
-        toArray(): T[];
-    }
-
-    export type MappingExecutionOptions = {
-        executionProfile?: string;
-        isIdempotent?: boolean;
-        logged?: boolean;
-        timestamp?: number | Long;
-        fetchSize?: number;
-        pageState?: number;
-    }
-
-    export interface ModelTables {
-        name: string;
-        isView: boolean;
-    }
-
-    export class Mapper {
-        constructor(client: Client, options?: MappingOptions);
-
-        batch(items: ModelBatchItem[], executionOptions?: string | MappingExecutionOptions): Promise<Result>;
-
-        forModel<T = any>(name: string): ModelMapper<T>;
-    }
-
-    export type MappingOptions = {
-        models: { [key: string]: ModelOptions };
-    }
-
-    export type FindDocInfo = {
-        fields?: string[];
-        orderBy?: { [key: string]: string };
-        limit?: number;
-    }
-
-    export type InsertDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifNotExists?: boolean;
-    }
-
-    export type UpdateDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifExists?: boolean;
-        when?: { [key: string]: any };
-        orderBy?: { [key: string]: string };
-        limit?: number;
-        deleteOnlyColumns?: boolean;
-    }
-
-    export type RemoveDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifExists?: boolean;
-        when?: { [key: string]: any };
-        deleteOnlyColumns?: boolean;
-    }
-
-    export type ModelOptions = {
-        tables?: string[] | ModelTables[];
-        mappings?: TableMappings;
-        columns?: { [key: string]: string|ModelColumnOptions };
-        keyspace?: string;
-    }
-
-    export type ModelColumnOptions = {
-        name: string;
-        toModel?: (columnValue: any) => any;
-        fromModel?: (modelValue: any) => any;
+/**
+ * Contains methods and functionality to send events to DSE Insights.
+ */
+declare class InsightsClient {
+    private _client;
+    private _sessionId;
+    private _enabled;
+    private _closed;
+    private _firstTimeout;
+    private _recurrentTimeout;
+    private _statusErrorLogs;
+    private _statusEventDelay;
+    private _errorCallback;
+    /**
+     * Creates a new instance of the {@link InsightsClient} using the driver {@link Client}.
+     * @param {Client} client
+     * @param {Object} [options]
+     * @param {Number} [options.statusEventDelay]
+     * @param {Function} [options.errorCallback]
+     */
+    constructor(client: Client, options?: {
+        statusEventDelay?: number;
+        errorCallback?: Function;
+    });
+    /**
+     * Initializes the insights client in the background by sending the startup event and scheduling status events at
+     * regular intervals.
+     * @returns {undefined}
+     */
+    init(): undefined;
+    _init(): Promise<void>;
+    /**
+     * Sends the startup event.
+     * @returns {Promise}
+     * @private
+     */
+    _sendStartupEvent(): Promise<any>;
+    /**
+     * Sends the status event.
+     * @returns {Promise} A promise that is never rejected.
+     * @private
+     */
+    _sendStatusEvent(): Promise<any>;
+    /**
+     * Validates the minimum server version for all nodes in the cluster.
+     * @private
+     */
+    _dseSupportsInsights(): any;
+    /**
+     * @returns {Promise<String>} Returns a json string with the startup message.
+     * @private
+     */
+    _getStartupMessage(): Promise<string>;
+    _getConfigAntiPatterns(): {
+        sslWithoutCertValidation?: string;
     };
+    /**
+     * Gets an array of data centers the driver connects to.
+     * Whether the driver connects to a certain host is determined by the host distance (local and remote hosts)
+     * and the pooling options (whether connection length for remote hosts is greater than 0).
+     * @returns {Array}
+     * @private
+     */
+    _getDataCenters(): Array<any>;
+    /**
+     * Tries to obtain the application name and version from
+     * @param {ClientOptions} options
+     * @returns {Promise}
+     * @private
+     */
+    _getAppInfo(options: ClientOptions): Promise<any>;
+    /**
+     * @private
+     * @returns {Promise<string>} A Promise that will never be rejected
+     */
+    _readPackageInfoFile(packageInfoPath: any): Promise<string>;
+    /**
+     * @returns {String} Returns a json string with the startup message.
+     * @private
+     */
+    _getStatusEvent(): string;
+    /**
+     * Cleans any timer used internally and sets the client as closed.
+     */
+    shutdown(): void;
+}
 
-    export interface ModelBatchItem {
+declare const inspectMethod: string | typeof util.inspect.custom;
 
-    }
+/**
+ * A two's-complement integer an array containing bits of the
+ * integer in 32-bit (signed) pieces, given in little-endian order (i.e.,
+ * lowest-order bits in the first piece), and the sign of -1 or 0.
+ *
+ * See the from* functions below for other convenient ways of constructing
+ * Integers.
+ *
+ * The internal representation of an integer is an array of 32-bit signed
+ * pieces, along with a sign (0 or -1) that indicates the contents of all the
+ * other 32-bit pieces out to infinity.  We use 32-bit pieces because these are
+ * the size of integers on which Javascript performs bit-operations.  For
+ * operations like addition and multiplication, we split each number into 16-bit
+ * pieces, which can easily be multiplied within Javascript's floating-point
+ * representation without overflow or change in sign.
+ * @final
+ */
+declare class Integer {
+    private bits_;
+    private sign_;
+    /**
+     * Constructs a two's-complement integer an array containing bits of the
+     * integer in 32-bit (signed) pieces, given in little-endian order (i.e.,
+     * lowest-order bits in the first piece), and the sign of -1 or 0.
+     *
+     * See the from* functions below for other convenient ways of constructing
+     * Integers.
+     *
+     * The internal representation of an integer is an array of 32-bit signed
+     * pieces, along with a sign (0 or -1) that indicates the contents of all the
+     * other 32-bit pieces out to infinity.  We use 32-bit pieces because these are
+     * the size of integers on which Javascript performs bit-operations.  For
+     * operations like addition and multiplication, we split each number into 16-bit
+     * pieces, which can easily be multiplied within Javascript's floating-point
+     * representation without overflow or change in sign.
+     *
+     * @constructor
+     * @param {Array.<number>} bits Array containing the bits of the number.
+     * @param {number} sign The sign of the number: -1 for negative and 0 positive.
+     * @final
+     */
+    constructor(bits: number[], sign: number);
+    /**
+     * A cache of the Integer representations of small integer values.
+     * @type {!Object}
+     * @private
+     */
+    private static IntCache_;
+    /**
+     * Returns an Integer representing the given (32-bit) integer value.
+     * @param {number} value A 32-bit integer value.
+     * @return {!Integer} The corresponding Integer value.
+     */
+    static fromInt(value: number): Integer;
+    /**
+     * Returns an Integer representing the given value, provided that it is a finite
+     * number.  Otherwise, zero is returned.
+     * @param {number} value The value in question.
+     * @return {!Integer} The corresponding Integer value.
+     */
+    static fromNumber(value: number): Integer;
+    /**
+     * Returns a Integer representing the value that comes by concatenating the
+     * given entries, each is assumed to be 32 signed bits, given in little-endian
+     * order (lowest order bits in the lowest index), and sign-extending the highest
+     * order 32-bit value.
+     * @param {Array.<number>} bits The bits of the number, in 32-bit signed pieces,
+     *     in little-endian order.
+     * @return {!Integer} The corresponding Integer value.
+     */
+    static fromBits(bits: number[]): Integer;
+    /**
+     * Returns an Integer representation of the given string, written using the
+     * given radix.
+     * @param {string} str The textual representation of the Integer.
+     * @param {number=} opt_radix The radix in which the text is written.
+     * @return {!Integer} The corresponding Integer value.
+     */
+    static fromString(str: string, opt_radix?: number): Integer;
+    /**
+     * Returns an Integer representation of a given big endian Buffer.
+     * The internal representation of bits contains bytes in groups of 4
+     * @param {Buffer} buf
+     * @returns {Integer}
+     */
+    static fromBuffer(buf: Buffer): Integer;
+    /**
+     * Returns a big endian buffer representation of an Integer.
+     * Internally the bits are represented using 4 bytes groups (numbers),
+     * in the Buffer representation there might be the case where we need less than the 4 bytes.
+     * For example: 0x00000001 -> '01', 0xFFFFFFFF -> 'FF', 0xFFFFFF01 -> 'FF01'
+     * @param {Integer} value
+     * @returns {Buffer}
+     */
+    static toBuffer(value: Integer): Buffer;
+    /**
+     * A number used repeatedly in calculations.  This must appear before the first
+     * call to the from* functions below.
+     * @type {number}
+     * @private
+     */
+    private static TWO_PWR_32_DBL_;
+    /** @type {!Integer} */
+    static ZERO: Integer;
+    /** @type {!Integer} */
+    static ONE: Integer;
+    /**
+     * @type {!Integer}
+     * @private
+     */
+    private static TWO_PWR_24_;
+    /**
+     * Returns the value, assuming it is a 32-bit integer.
+     * @return {number} The corresponding int value.
+     */
+    toInt(): number;
+    /** @return {number} The closest floating-point representation to this value. */
+    toNumber(): number;
+    /**
+     * @param {number=} opt_radix The radix in which the text should be written.
+     * @return {string} The textual representation of this value.
+     * @override
+     */
+    toString(opt_radix?: number): string;
+    /**
+     * Returns the index-th 32-bit (signed) piece of the Integer according to
+     * little-endian order (i.e., index 0 contains the smallest bits).
+     * @param {number} index The index in question.
+     * @return {number} The requested 32-bits as a signed number.
+     */
+    getBits(index: number): number;
+    /**
+     * Returns the index-th 32-bit piece as an unsigned number.
+     * @param {number} index The index in question.
+     * @return {number} The requested 32-bits as an unsigned number.
+     */
+    getBitsUnsigned(index: number): number;
+    /** @return {number} The sign bit of this number, -1 or 0. */
+    getSign(): number;
+    /** @return {boolean} Whether this value is zero. */
+    isZero(): boolean;
+    /** @return {boolean} Whether this value is negative. */
+    isNegative(): boolean;
+    /** @return {boolean} Whether this value is odd. */
+    isOdd(): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer equals the other.
+     */
+    equals(other: Integer): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer does not equal the other.
+     */
+    notEquals(other: Integer): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer is greater than the other.
+     */
+    greaterThan(other: Integer): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer is greater than or equal to the other.
+     */
+    greaterThanOrEqual(other: Integer): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer is less than the other.
+     */
+    lessThan(other: Integer): boolean;
+    /**
+     * @param {Integer} other Integer to compare against.
+     * @return {boolean} Whether this Integer is less than or equal to the other.
+     */
+    lessThanOrEqual(other: Integer): boolean;
+    /**
+     * Compares this Integer with the given one.
+     * @param {Integer} other Integer to compare against.
+     * @return {number} 0 if they are the same, 1 if the this is greater, and -1
+     *     if the given one is greater.
+     */
+    compare(other: Integer): number;
+    /**
+     * Returns an integer with only the first numBits bits of this value, sign
+     * extended from the final bit.
+     * @param {number} numBits The number of bits by which to shift.
+     * @return {!Integer} The shorted integer value.
+     */
+    shorten(numBits: number): Integer;
+    /** @return {!Integer} The negation of this value. */
+    negate(): Integer;
+    /**
+     * Returns the sum of this and the given Integer.
+     * @param {Integer} other The Integer to add to this.
+     * @return {!Integer} The Integer result.
+     */
+    add(other: Integer): Integer;
+    /**
+     * Returns the difference of this and the given Integer.
+     * @param {Integer} other The Integer to subtract from this.
+     * @return {!Integer} The Integer result.
+     */
+    subtract(other: Integer): Integer;
+    /**
+     * Returns the product of this and the given Integer.
+     * @param {Integer} other The Integer to multiply against this.
+     * @return {!Integer} The product of this and the other.
+     */
+    multiply(other: Integer): Integer;
+    /**
+     * Carries any overflow from the given index into later entries.
+     * @param {Array.<number>} bits Array of 16-bit values in little-endian order.
+     * @param {number} index The index in question.
+     * @private
+     */
+    private static carry16_;
+    /**
+     * Returns this Integer divided by the given one.
+     * @param {Integer} other Th Integer to divide this by.
+     * @return {!Integer} This value divided by the given one.
+     */
+    divide(other: Integer): Integer;
+    /**
+     * Returns this Integer modulo the given one.
+     * @param {Integer} other The Integer by which to mod.
+     * @return {!Integer} This value modulo the given one.
+     */
+    modulo(other: Integer): Integer;
+    /** @return {!Integer} The bitwise-NOT of this value. */
+    not(): Integer;
+    /**
+     * Returns the bitwise-AND of this Integer and the given one.
+     * @param {Integer} other The Integer to AND with this.
+     * @return {!Integer} The bitwise-AND of this and the other.
+     */
+    and(other: Integer): Integer;
+    /**
+     * Returns the bitwise-OR of this Integer and the given one.
+     * @param {Integer} other The Integer to OR with this.
+     * @return {!Integer} The bitwise-OR of this and the other.
+     */
+    or(other: Integer): Integer;
+    /**
+     * Returns the bitwise-XOR of this Integer and the given one.
+     * @param {Integer} other The Integer to XOR with this.
+     * @return {!Integer} The bitwise-XOR of this and the other.
+     */
+    xor(other: Integer): Integer;
+    /**
+     * Returns this value with bits shifted to the left by the given amount.
+     * @param {number} numBits The number of bits by which to shift.
+     * @return {!Integer} This shifted to the left by the given amount.
+     */
+    shiftLeft(numBits: number): Integer;
+    /**
+     * Returns this value with bits shifted to the right by the given amount.
+     * @param {number} numBits The number of bits by which to shift.
+     * @return {!Integer} This shifted to the right by the given amount.
+     */
+    shiftRight(numBits: number): Integer;
+    /**
+     * Provide the name of the constructor and the string representation
+     * @returns {string}
+     */
+    inspect(): string;
+    /**
+     * Returns a Integer whose value is the absolute value of this
+     * @returns {Integer}
+     */
+    abs(): Integer;
+    /**
+     * Returns the string representation.
+     * Method used by the native JSON.stringify() to serialize this instance.
+     */
+    toJSON(): string;
+}
 
-    export interface ModelBatchMapper {
-        insert(doc: any, docInfo?: InsertDocInfo): ModelBatchItem;
+/**
+ * @classdesc
+ * A LineString is a one-dimensional object representing a sequence of points and the line segments connecting them.
+ * @example
+ * new LineString(new Point(10.99, 20.02), new Point(14, 26), new Point(34, 1.2));
+ * @alias module:geometry~LineString
+ * @extends {Geometry}
+ */
+declare class LineString extends Geometry {
+    points: ReadonlyArray<Point>;
+    /**
+     * Creates a new {@link LineString} instance.
+     * @param {...Point} points A sequence of {@link Point} items as arguments.
+     */
+    constructor(...points: Point[] | Point[][]);
+    /**
+     * Creates a {@link LineString} instance from
+     * a <a href="https://en.wikipedia.org/wiki/Well-known_text">Well-known Text (WKT)</a>
+     * representation of a line.
+     * @param {Buffer} buffer
+     * @returns {LineString}
+     */
+    static fromBuffer(buffer: Buffer): LineString;
+    /**
+     * Creates a {@link LineString} instance from
+     * a <a href="https://en.wikipedia.org/wiki/Well-known_text">Well-known Text (WKT)</a>
+     * representation of a line.
+     * @param {String} textValue
+     * @returns {LineString}
+     */
+    static fromString(textValue: string): LineString;
+    /**
+     * Internal method that parses a series of WKT points.
+     * @param {String} textValue
+     * @returns {Array<Point>}
+     * @internal
+     * @ignore
+     */
+    static parseSegments(textValue: string): Point[];
+    /**
+     * Returns a <a href="https://en.wikipedia.org/wiki/Well-known_text#Well-known_binary">Well-known Binary</a> (WKB)
+     * representation of this instance.
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Returns true if the values of the linestrings are the same, otherwise it returns false.
+     * @param {LineString} other
+     * @returns {Boolean}
+     */
+    equals(other: LineString): boolean;
+    /**
+     * Returns Well-known Text (WKT) representation of the geometry object.
+     * @returns {String}
+     */
+    toString(): string;
+    /**
+     * Returns false to indicate little-endian serialization.
+     * @returns {Boolean}
+     */
+    useBESerialization(): boolean;
+    /**
+     * Returns a JSON representation of this geo-spatial type.
+     */
+    toJSON(): object;
+}
 
-        remove(doc: any, docInfo?: RemoveDocInfo): ModelBatchItem;
+declare type ListSetColumnInfo = {
+    code: (typeof dataTypes.list | typeof dataTypes.set);
+    info: ColumnInfo;
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
 
-        update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
-    }
-
-    export interface ModelMapper<T = any> {
-        name: string;
-        batching: ModelBatchMapper;
-
-        get(doc: { [key: string]: any }, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<null | T>;
-
-        find(doc: { [key: string]: any }, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-
-        findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-
-        insert(doc: { [key: string]: any }, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-
-        update(doc: { [key: string]: any }, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-
-        remove(doc: { [key: string]: any }, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-
-        mapWithQuery(
-        query: string,
-        paramsHandler: (doc: any) => any[],
-        executionOptions?: string | MappingExecutionOptions
-        ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result<T>>;
-    }
-
-    export namespace q {
-        export interface QueryOperator {
-
-        }
-
-        export function in_(arr: any): QueryOperator;
-
-        export function gt(value: any): QueryOperator;
-
-        export function gte(value: any): QueryOperator;
-
-        export function lt(value: any): QueryOperator;
-
-        export function lte(value: any): QueryOperator;
-
-        export function notEq(value: any): QueryOperator;
-
-        export function and(condition1: any, condition2: any): QueryOperator;
-
-        export function incr(value: any): QueryOperator;
-
-        export function decr(value: any): QueryOperator;
-
-        export function append(value: any): QueryOperator;
-
-        export function prepend(value: any): QueryOperator;
-
-        export function remove(value: any): QueryOperator;
+declare namespace loadBalancing {
+    export {
+        AllowListPolicy,
+        DCAwareRoundRobinPolicy,
+        DefaultLoadBalancingPolicy,
+        LoadBalancingPolicy,
+        RoundRobinPolicy,
+        TokenAwarePolicy,
+        WhiteListPolicy,
+        _default_2 as default
     }
 }
 
-export declare namespace metadata {
-
-    export interface Aggregate {
-        argumentTypes: Array<{ code: dataTypes, info: any }>;
-        finalFunction: string;
-        initCondition: string;
-        keyspaceName: string;
-        returnType: string;
-        signature: string[];
-        stateFunction: string;
-        stateType: string;
-    }
-
-    export interface ClientState {
-        getConnectedHosts(): Host[];
-
-        getInFlightQueries(host: Host): number;
-
-        getOpenConnections(host: Host): number;
-
-        toString(): string;
-    }
-
-    export interface DataTypeInfo {
-        code: dataTypes;
-        info: string | DataTypeInfo | DataTypeInfo[];
-        options: {
-            frozen: boolean;
-            reversed: boolean;
-        };
-    }
-
-    export interface ColumnInfo {
-        name: string;
-        type: DataTypeInfo;
-    }
-
-    export enum IndexKind {
-        custom = 0,
-        keys,
-        composites
-    }
-
-    export interface Index {
-        kind: IndexKind;
-        name: string;
-        options: object;
-        target: string;
-
-        isCompositesKind(): boolean;
-
-        isCustomKind(): boolean;
-
-        isKeysKind(): boolean;
-    }
-
-    export interface DataCollection {
-        bloomFilterFalsePositiveChance: number;
-        caching: string;
-        clusteringKeys: ColumnInfo[];
-        clusteringOrder: string[];
-        columns: ColumnInfo[];
-        columnsByName: { [key: string]: ColumnInfo };
-        comment: string;
-        compactionClass: string;
-        compactionOptions: { [option: string]: any; };
-        compression: {
-            class?: string;
-            [option: string]: any;
-        };
-        crcCheckChange?: number;
-        defaultTtl: number;
-        extensions: { [option: string]: any; };
-        gcGraceSeconds: number;
-        localReadRepairChance: number;
-        maxIndexInterval?: number;
-        minIndexInterval?: number;
-        name: string;
-        partitionKeys: ColumnInfo[];
-        populateCacheOnFlush: boolean;
-        readRepairChance: number;
-        speculativeRetry: string;
-    }
-
-    export interface MaterializedView extends DataCollection {
-        tableName: string;
-        whereClause: string;
-        includeAllColumns: boolean;
-    }
-
-    export interface TableMetadata extends DataCollection {
-        indexes: Index[];
-        indexInterval?: number;
-        isCompact: boolean;
-        memtableFlushPeriod: number;
-        replicateOnWrite: boolean;
-        cdc?: boolean;
-        virtual: boolean;
-    }
-
-    export interface QueryTrace {
-        requestType: string;
-        coordinator: InetAddress;
-        parameters: { [key: string]: any };
-        startedAt: number | types.Long;
-        duration: number;
-        clientAddress: string;
-        events: Array<{ id: Uuid; activity: any; source: any; elapsed: any; thread: any }>;
-    }
-
-    export interface SchemaFunction {
-        argumentNames: string[];
-        argumentTypes: Array<{ code: dataTypes, info: any }>;
-        body: string;
-        calledOnNullInput: boolean;
-        keyspaceName: string;
-        language: string;
-        name: string;
-        returnType: string;
-        signature: string[];
-    }
-
-    export interface Udt {
-        name: string;
-        fields: ColumnInfo[]
-    }
-
-    export interface Metadata {
-        keyspaces: { [name: string]: { name: string, strategy: string }};
-
-        clearPrepared(): void;
-
-        getAggregate(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>, callback: ValueCallback<Aggregate>): void;
-
-        getAggregate(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>): Promise<Aggregate>;
-
-        getAggregates(keyspaceName: string, name: string, callback: ValueCallback<Aggregate[]>): void;
-
-        getAggregates(keyspaceName: string, name: string): Promise<Aggregate[]>;
-
-        getFunction(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>, callback: ValueCallback<SchemaFunction>): void;
-
-        getFunction(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>): Promise<SchemaFunction>;
-
-        getFunctions(keyspaceName: string, name: string, callback: ValueCallback<SchemaFunction[]>): void;
-
-        getFunctions(keyspaceName: string, name: string): Promise<SchemaFunction[]>;
-
-        getMaterializedView(keyspaceName: string, name: string, callback: ValueCallback<MaterializedView>): void;
-
-        getMaterializedView(keyspaceName: string, name: string, callback: EmptyCallback): Promise<MaterializedView>;
-
-        getReplicas(keyspaceName: string, token: Buffer | token.Token | token.TokenRange): Host[];
-
-        getTable(keyspaceName: string, name: string, callback: ValueCallback<TableMetadata>): void;
-
-        getTable(keyspaceName: string, name: string): Promise<TableMetadata>;
-
-        getTokenRanges(): Set<token.TokenRange>;
-
-        getTokenRangesForHost(keyspaceName: string, host: Host): Set<token.TokenRange> | null;
-
-        getTrace(traceId: Uuid, consistency: types.consistencies, callback: ValueCallback<QueryTrace>): void;
-
-        getTrace(traceId: Uuid, consistency: types.consistencies): Promise<QueryTrace>;
-
-        getTrace(traceId: Uuid, callback: ValueCallback<QueryTrace>): void;
-
-        getTrace(traceId: Uuid): Promise<QueryTrace>;
-
-        getUdt(keyspaceName: string, name: string, callback: ValueCallback<Udt>): void;
-
-        getUdt(keyspaceName: string, name: string): Promise<Udt>;
-
-        newToken(components: Buffer[] | Buffer | string): token.Token;
-
-        newTokenRange(start: token.Token, end: token.Token): token.TokenRange;
-
-        refreshKeyspace(name: string, callback: EmptyCallback): void;
-
-        refreshKeyspace(name: string): Promise<void>;
-
-        refreshKeyspaces(waitReconnect: boolean, callback: EmptyCallback): void;
-
-        refreshKeyspaces(waitReconnect?: boolean): Promise<void>;
-
-        refreshKeyspaces(callback: EmptyCallback): void;
-    }
+/**
+ * Base class for Load Balancing Policies.
+ */
+declare class LoadBalancingPolicy {
+    client: Client;
+    hosts: HostMap;
+    localDc: string;
+    /**
+     * Initializes the load balancing policy, called after the driver obtained the information of the cluster.
+     * @param {Client} client
+     * @param {HostMap} hosts
+     * @param {Function} callback
+     */
+    init(client: Client, hosts: HostMap, callback: Function): void;
+    /**
+     * Returns the distance assigned by this policy to the provided host.
+     * @param {Host} host
+     */
+    getDistance(host: Host): number;
+    /**
+     * Returns an iterator with the hosts for a new query.
+     * Each new query will call this method. The first host in the result will
+     * then be used to perform the query.
+     * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
+     * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+     * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
+     * second parameter.
+     */
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, any>;
 }
 
-export declare namespace metrics {
-    export interface ClientMetrics {
-        onAuthenticationError(e: Error | errors.AuthenticationError): void;
-
-        onClientTimeoutError(e: errors.OperationTimedOutError): void;
-
-        onClientTimeoutRetry(e: Error): void;
-
-        onConnectionError(e: Error): void;
-
-        onIgnoreError(e: Error): void;
-
-        onOtherError(e: Error): void;
-
-        onOtherErrorRetry(e: Error): void;
-
-        onReadTimeoutError(e: errors.ResponseError): void;
-
-        onReadTimeoutRetry(e: Error): void;
-
-        onResponse(latency: number[]): void;
-
-        onSpeculativeExecution(): void;
-
-        onSuccessfulResponse(latency: number[]): void;
-
-        onUnavailableError(e: errors.ResponseError): void;
-
-        onUnavailableRetry(e: Error): void;
-
-        onWriteTimeoutError(e: errors.ResponseError): void;
-
-        onWriteTimeoutRetry(e: Error): void;
-    }
-
-    export class DefaultMetrics implements ClientMetrics {
-        constructor();
-
-        onAuthenticationError(e: Error | errors.AuthenticationError): void;
-
-        onClientTimeoutError(e: errors.OperationTimedOutError): void;
-
-        onClientTimeoutRetry(e: Error): void;
-
-        onConnectionError(e: Error): void;
-
-        onIgnoreError(e: Error): void;
-
-        onOtherError(e: Error): void;
-
-        onOtherErrorRetry(e: Error): void;
-
-        onReadTimeoutError(e: errors.ResponseError): void;
-
-        onReadTimeoutRetry(e: Error): void;
-
-        onResponse(latency: number[]): void;
-
-        onSpeculativeExecution(): void;
-
-        onSuccessfulResponse(latency: number[]): void;
-
-        onUnavailableError(e: errors.ResponseError): void;
-
-        onUnavailableRetry(e: Error): void;
-
-        onWriteTimeoutError(e: errors.ResponseError): void;
-
-        onWriteTimeoutRetry(e: Error): void;
-    }
+/**
+ * @class
+ * @classdesc A date without a time-zone in the ISO-8601 calendar system, such as 2010-08-05.
+ * <p>
+ *   LocalDate is an immutable object that represents a date, often viewed as year-month-day. For example, the value "1st October 2014" can be stored in a LocalDate.
+ * </p>
+ * <p>
+ *   This class does not store or represent a time or time-zone. Instead, it is a description of the date, as used for birthdays. It cannot represent an instant on the time-line without additional information such as an offset or time-zone.
+ * </p>
+ * <p>
+ *   Note that this type can represent dates in the range [-5877641-06-23; 5881580-07-17] while the ES5 date type can only represent values in the range of [-271821-04-20; 275760-09-13].
+ *   In the event that year, month, day parameters do not fall within the ES5 date range an Error will be thrown.  If you wish to represent a date outside of this range, pass a single
+ *   parameter indicating the days since epoch.  For example, -1 represents 1969-12-31.
+ * </p>
+ */
+declare class LocalDate {
+    date: Date;
+    _value: number | null;
+    year: number;
+    month: number;
+    day: number;
+    /**
+     * Creates a new instance of LocalDate.
+     * A date without a time-zone in the ISO-8601 calendar system, such as 2010-08-05.
+     * <p>
+     *   LocalDate is an immutable object that represents a date, often viewed as year-month-day. For example, the value "1st October 2014" can be stored in a LocalDate.
+     * </p>
+     * <p>
+     *   This class does not store or represent a time or time-zone. Instead, it is a description of the date, as used for birthdays. It cannot represent an instant on the time-line without additional information such as an offset or time-zone.
+     * </p>
+     * <p>
+     *   Note that this type can represent dates in the range [-5877641-06-23; 5881580-07-17] while the ES5 date type can only represent values in the range of [-271821-04-20; 275760-09-13].
+     *   In the event that year, month, day parameters do not fall within the ES5 date range an Error will be thrown.  If you wish to represent a date outside of this range, pass a single
+     *   parameter indicating the days since epoch.  For example, -1 represents 1969-12-31.
+     * </p>
+     * @param {Number} year The year or days since epoch.  If days since epoch, month and day should not be provided.
+     * @param {Number} [month] Between 1 and 12 inclusive.
+     * @param {Number} [day] Between 1 and the number of days in the given month of the given year.
+     *
+     * @property {Date} date The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
+     *
+     * @constructor
+     */
+    constructor(year: number, month?: number, day?: number);
+    /**
+     * Creates a new instance of LocalDate using the current year, month and day from the system clock in the default time-zone.
+     */
+    static now(): LocalDate;
+    /**
+     * Creates a new instance of LocalDate using the current date from the system clock at UTC.
+     */
+    static utcNow(): LocalDate;
+    /**
+     * Creates a new instance of LocalDate using the year, month and day from the provided local date time.
+     * @param {Date} date
+     */
+    static fromDate(date: Date): LocalDate;
+    /**
+     * Creates a new instance of LocalDate using the year, month and day provided in the form: yyyy-mm-dd or
+     * days since epoch (i.e. -1 for Dec 31, 1969).
+     * @param {String} value
+     */
+    static fromString(value: string): LocalDate;
+    /**
+     * Creates a new instance of LocalDate using the bytes representation.
+     * @param {Buffer} buffer
+     */
+    static fromBuffer(buffer: Buffer): LocalDate;
+    /**
+     * Compares this LocalDate with the given one.
+     * @param {LocalDate} other date to compare against.
+     * @return {number} 0 if they are the same, 1 if the this is greater, and -1
+     * if the given one is greater.
+     */
+    compare(other: LocalDate): number;
+    /**
+     * Returns true if the value of the LocalDate instance and other are the same
+     * @param {LocalDate} other
+     * @returns {Boolean}
+     */
+    equals(other: LocalDate): boolean;
+    inspect(): string;
+    /**
+     * Gets the bytes representation of the instance.
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Gets the string representation of the instance in the form: yyyy-mm-dd if
+     * the value can be parsed as a Date, otherwise days since epoch.
+     * @returns {String}
+     */
+    toString(): string;
+    /**
+     * Gets the string representation of the instance in the form: yyyy-mm-dd, valid for JSON.
+     * @returns {String}
+     */
+    toJSON(): string;
 }
 
-export declare namespace policies {
-    export function defaultAddressTranslator(): addressResolution.AddressTranslator;
-
-    export function defaultLoadBalancingPolicy(localDc?: string): loadBalancing.LoadBalancingPolicy;
-
-    export function defaultReconnectionPolicy(): reconnection.ReconnectionPolicy;
-
-    export function defaultRetryPolicy(): retry.RetryPolicy;
-
-    export function defaultSpeculativeExecutionPolicy(): speculativeExecution.SpeculativeExecutionPolicy;
-
-    export function defaultTimestampGenerator(): timestampGeneration.TimestampGenerator;
-
-    export namespace addressResolution {
-        export interface AddressTranslator {
-            translate(address: string, port: number, callback: Function): void;
-        }
-
-        export class EC2MultiRegionTranslator implements AddressTranslator {
-            translate(address: string, port: number, callback: Function): void;
-        }
-    }
-
-    export namespace loadBalancing {
-        export abstract class LoadBalancingPolicy {
-            init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
-
-            getDistance(host: Host): types.distance;
-
-            newQueryPlan(
-            keyspace: string,
-            executionOptions: ExecutionOptions,
-            callback: (error: Error, iterator: Iterator<Host>) => void): void;
-
-            getOptions(): Map<string, object>;
-        }
-
-        export class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
-            constructor(localDc: string);
-        }
-
-        export class TokenAwarePolicy extends LoadBalancingPolicy {
-            constructor(childPolicy: LoadBalancingPolicy);
-        }
-
-        export class AllowListPolicy extends LoadBalancingPolicy {
-            constructor(childPolicy: LoadBalancingPolicy, allowList: string[]);
-        }
-
-        export class WhiteListPolicy extends AllowListPolicy {
-        }
-
-        export class RoundRobinPolicy extends LoadBalancingPolicy {
-            constructor();
-        }
-
-        export class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
-            constructor(options?: { localDc?: string, filter?: (host: Host) => boolean });
-        }
-    }
-
-    export namespace reconnection {
-        export class ConstantReconnectionPolicy implements ReconnectionPolicy {
-            constructor(delay: number);
-
-            getOptions(): Map<string, object>;
-
-            newSchedule(): Iterator<number>;
-
-        }
-
-        export class ExponentialReconnectionPolicy implements ReconnectionPolicy {
-            constructor(baseDelay: number, maxDelay: number, startWithNoDelay?: boolean);
-
-            getOptions(): Map<string, object>;
-
-            newSchedule(): Iterator<number>;
-        }
-
-        export interface ReconnectionPolicy {
-            getOptions(): Map<string, object>;
-
-            newSchedule(): Iterator<number>;
-        }
-    }
-
-    export namespace retry {
-        export class DecisionInfo {
-            decision: number;
-            consistency: types.consistencies;
-        }
-
-        export class OperationInfo {
-            query: string;
-            executionOptions: ExecutionOptions;
-            nbRetry: number;
-        }
-
-        export class IdempotenceAwareRetryPolicy extends RetryPolicy {
-            constructor(childPolicy: RetryPolicy);
-        }
-
-        export class FallthroughRetryPolicy extends RetryPolicy {
-            constructor();
-        }
-
-        export class RetryPolicy {
-            onReadTimeout(
-            info: OperationInfo,
-            consistency: types.consistencies,
-            received: number,
-            blockFor: number,
-            isDataPresent: boolean): DecisionInfo;
-
-            onRequestError(info: OperationInfo, consistency: types.consistencies, err: Error): DecisionInfo;
-
-            onUnavailable(
-            info: OperationInfo, consistency: types.consistencies, required: number, alive: boolean): DecisionInfo;
-
-            onWriteTimeout(
-            info: OperationInfo,
-            consistency: types.consistencies,
-            received: number,
-            blockFor: number,
-            writeType: string): DecisionInfo;
-
-            rethrowResult(): DecisionInfo;
-
-            retryResult(consistency: types.consistencies, useCurrentHost?: boolean): DecisionInfo;
-        }
-
-        export namespace RetryDecision {
-            export enum retryDecision {
-                ignore,
-                rethrow,
-                retry
-            }
-        }
-    }
-
-    export namespace speculativeExecution {
-        export class ConstantSpeculativeExecutionPolicy implements SpeculativeExecutionPolicy {
-            constructor(delay: number, maxSpeculativeExecutions: number);
-
-            getOptions(): Map<string, object>;
-
-            init(client: Client): void;
-
-            newPlan(keyspace: string, queryInfo: string | Array<object>): { nextExecution: Function };
-
-            shutdown(): void;
-        }
-
-        export class NoSpeculativeExecutionPolicy implements SpeculativeExecutionPolicy {
-            constructor();
-
-            getOptions(): Map<string, object>;
-
-            init(client: Client): void;
-
-            newPlan(keyspace: string, queryInfo: string | Array<object>): { nextExecution: Function };
-
-            shutdown(): void;
-        }
-
-        export interface SpeculativeExecutionPolicy {
-            getOptions(): Map<string, object>;
-
-            init(client: Client): void;
-
-            newPlan(keyspace: string, queryInfo: string|Array<object>): { nextExecution: Function };
-
-            shutdown(): void;
-        }
-    }
-
-    export namespace timestampGeneration {
-        export class MonotonicTimestampGenerator implements TimestampGenerator {
-            constructor(warningThreshold: number, minLogInterval: number);
-
-            getDate(): number;
-
-            next(client: Client): types.Long | number;
-        }
-
-        export interface TimestampGenerator {
-            next(client: Client): types.Long|number;
-        }
-    }
+/**
+ * @class
+ * @classdesc A time without a time-zone in the ISO-8601 calendar system, such as 10:30:05.
+ * <p>
+ *   LocalTime is an immutable date-time object that represents a time, often viewed as hour-minute-second. Time is represented to nanosecond precision. For example, the value "13:45.30.123456789" can be stored in a LocalTime.
+ * </p>
+ */
+declare class LocalTime {
+    value: Long;
+    hour: number;
+    minute: number;
+    second: number;
+    nanosecond: number;
+    private _partsCache?;
+    /**
+     * Creates a new instance of LocalTime.
+     * A time without a time-zone in the ISO-8601 calendar system, such as 10:30:05.
+     * <p>
+     *   LocalTime is an immutable date-time object that represents a time, often viewed as hour-minute-second. Time is represented to nanosecond precision. For example, the value "13:45.30.123456789" can be stored in a LocalTime.
+     * </p>
+     * @param {Long} totalNanoseconds Total nanoseconds since midnight.
+     * @constructor
+     */
+    constructor(totalNanoseconds: Long);
+    /**
+     * Parses a string representation and returns a new LocalTime.
+     * @param {String} value
+     * @returns {LocalTime}
+     */
+    static fromString(value: string): LocalTime;
+    /**
+     * Uses the current local time (in milliseconds) and the nanoseconds to create a new instance of LocalTime
+     * @param {Number} [nanoseconds] A Number from 0 to 999,999, representing the time nanosecond portion.
+     * @returns {LocalTime}
+     */
+    static now(nanoseconds?: number): LocalTime;
+    /**
+     * Uses the provided local time (in milliseconds) and the nanoseconds to create a new instance of LocalTime
+     * @param {Date} date Local date portion to extract the time passed since midnight.
+     * @param {Number} [nanoseconds] A Number from 0 to 999,999, representing the nanosecond time portion.
+     * @returns {LocalTime}
+     */
+    static fromDate(date: Date, nanoseconds?: number): LocalTime;
+    /**
+     * Uses the provided local time (in milliseconds) and the nanoseconds to create a new instance of LocalTime
+     * @param {Number} milliseconds A Number from 0 to 86,399,999.
+     * @param {Number} [nanoseconds] A Number from 0 to 999,999, representing the time nanosecond portion.
+     * @returns {LocalTime}
+     */
+    static fromMilliseconds(milliseconds: number, nanoseconds?: number): LocalTime;
+    /**
+     * Creates a new instance of LocalTime from the bytes representation.
+     * @param {Buffer} value
+     * @returns {LocalTime}
+     */
+    static fromBuffer(value: Buffer): LocalTime;
+    /**
+     * Compares this LocalTime with the given one.
+     * @param {LocalTime} other time to compare against.
+     * @return {number} 0 if they are the same, 1 if the this is greater, and -1
+     * if the given one is greater.
+     */
+    compare(other: LocalTime): number;
+    /**
+     * Returns true if the value of the LocalTime instance and other are the same
+     * @param {LocalTime} other
+     * @returns {Boolean}
+     */
+    equals(other: LocalTime): boolean;
+    /**
+     * Gets the total amount of nanoseconds since midnight for this instance.
+     * @returns {Long}
+     */
+    getTotalNanoseconds(): Long;
+    inspect(): string;
+    /**
+     * Returns a big-endian bytes representation of the instance
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Returns the string representation of the instance in the form of hh:MM:ss.ns
+     * @returns {String}
+     */
+    toString(): string;
+    /**
+     * Gets the string representation of the instance in the form: hh:MM:ss.ns
+     * @returns {String}
+     */
+    toJSON(): string;
+    /**
+     * @returns {Array.<Number>}
+     * @ignore
+     */
+    private _getParts;
 }
 
-export declare interface QueryOptions {
+declare type MapColumnInfo = {
+    code: (typeof dataTypes.map);
+    info: [ColumnInfo, ColumnInfo];
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+/**
+ * Represents an object mapper for Apache Cassandra and DataStax Enterprise.
+ * @alias module:mapping~Mapper
+ * @example <caption>Creating a Mapper instance with some options for the model 'User'</caption>
+ * const mappingOptions = {
+ *   models: {
+ *     'User': {
+ *       tables: ['users'],
+ *       mappings: new UnderscoreCqlToCamelCaseMappings(),
+ *       columnNames: {
+ *         'userid': 'id'
+ *       }
+ *     }
+ *   }
+ * };
+ * const mapper = new Mapper(client, mappingOptions);
+ * @example <caption>Creating a Mapper instance with other possible options for a model</caption>
+ * const mappingOptions = {
+ *   models: {
+ *     'Video': {
+ *       tables: ['videos', 'user_videos', 'latest_videos', { name: 'my_videos_view', isView: true }],
+ *       mappings: new UnderscoreCqlToCamelCaseMappings(),
+ *       columnNames: {
+ *         'videoid': 'id'
+ *       },
+ *       keyspace: 'ks1'
+ *     }
+ *   }
+ * };
+ * const mapper = new Mapper(client, mappingOptions);
+ */
+declare class Mapper {
+    client: Client;
+    private _modelMappingInfos;
+    private _modelMappers;
+    /**
+     * Creates a new instance of Mapper.
+     * @param {Client} client The Client instance to use to execute the queries and fetch the metadata.
+     * @param {MappingOptions} [options] The [MappingOptions]{@link module:mapping~MappingOptions} containing the
+     * information of the models and table mappings.
+     */
+    constructor(client: Client, options?: MappingOptions);
+    /**
+     * Gets a [ModelMapper]{@link module:mapping~ModelMapper} that is able to map documents of a certain model into
+     * CQL rows.
+     * @param {String} name The name to identify the model. Note that the name is case-sensitive.
+     * @returns {ModelMapper} A [ModelMapper]{@link module:mapping~ModelMapper} instance.
+     */
+    forModel(name: string): ModelMapper;
+    /**
+     * Executes a batch of queries represented in the items.
+     * @param {Array<ModelBatchItem>} items
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Boolean} [executionOptions.isIdempotent] Defines whether the query can be applied multiple times without
+     * changing the result beyond the initial application.
+     * <p>
+     *   The mapper uses the generated queries to determine the default value. When an UPDATE is generated with a
+     *   counter column or appending/prepending to a list column, the execution is marked as not idempotent.
+     * </p>
+     * <p>
+     *   Additionally, the mapper uses the safest approach for queries with lightweight transactions (Compare and
+     *   Set) by considering them as non-idempotent. Lightweight transactions at client level with transparent retries can
+     *   break linearizability. If that is not an issue for your application, you can manually set this field to true.
+     * </p>
+     * @param {Boolean} [executionOptions.logged=true] Determines whether the batch should be written to the batchlog.
+     * @param {Number|Long} [executionOptions.timestamp] The default timestamp for the query in microseconds from the
+     * unix epoch (00:00:00, January 1st, 1970).
+     * @returns {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result}.
+     */
+    batch(items: Array<ModelBatchItem_2>, executionOptions: MappingExecutionOptions): Promise<Result>;
+}
+
+export declare const mapping: {
+    Mapper: typeof Mapper;
+    ModelMapper: typeof ModelMapper;
+    ModelBatchMapper: typeof ModelBatchMapper;
+    ModelBatchItem: typeof ModelBatchItem_2;
+    Result: typeof Result;
+    TableMappings: typeof TableMappings_2;
+    DefaultTableMappings: typeof DefaultTableMappings_2;
+    UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings_2;
+    q: object;
+};
+
+declare type MappingExecutionOptions = {
+    executionProfile?: string;
+    isIdempotent?: boolean;
+    logged?: boolean;
+    timestamp?: number | Long;
+    fetchSize?: number;
+    pageState?: number;
+};
+
+/**
+ * @ignore
+ */
+declare class MappingHandler {
+    private _client;
+    private _cache;
+    info: ModelMappingInfo;
+    /**
+     * @param {Client} client
+     * @param {ModelMappingInfo} mappingInfo
+     */
+    constructor(client: Client, mappingInfo: ModelMappingInfo);
+    /**
+     * Gets a function to be used to execute SELECT the query using the document.
+     * @param {Object} doc
+     * @param {{fields, orderBy, limit}} docInfo
+     * @param {Boolean} allPKsDefined Determines whether all primary keys must be defined in the doc for the query to
+     * be valid.
+     * @return {Promise<Function>}
+     */
+    getSelectExecutor(doc: object, docInfo: FindDocInfo, allPKsDefined: boolean): Promise<Function>;
+    getSelectAllExecutor(docInfo: any): any;
+    /**
+     * Executes a SELECT query and returns the adapted results.
+     * When a result adapter is not yet created, it gets a new one and caches it.
+     * @private
+     */
+    private _executeSelect;
+    /**
+     * Gets a function to be used to execute INSERT the query using the document.
+     * @param {Object} doc
+     * @param {{ifNotExists, ttl, fields}} docInfo
+     * @return {Promise<Function>}
+     */
+    getInsertExecutor(doc: object, docInfo: InsertDocInfo): Promise<Function>;
+    /**
+     * Creates an Array containing the query and the params getter function for each table affected by the INSERT.
+     * @param {Array<String>} docKeys
+     * @param {Object} doc
+     * @param {{ifNotExists, ttl, fields}} docInfo
+     * @returns {Promise<Array<{query, paramsGetter}>>}
+     */
+    createInsertQueries(docKeys: Array<string>, doc: object, docInfo: InsertDocInfo): Promise<Array<{
+        query: any;
+        paramsGetter: any;
+    }>>;
+    /**
+     * Gets a function to be used to execute the UPDATE queries with the provided document.
+     * @param {Object} doc
+     * @param {{ifExists, when, ttl, fields}} docInfo
+     * @return {Promise<Function>}
+     */
+    getUpdateExecutor(doc: object, docInfo: UpdateDocInfo): Promise<Function>;
+    /**
+     * Creates an Array containing the query and the params getter function for each table affected by the UPDATE.
+     * @param {Array<String>} docKeys
+     * @param {Object} doc
+     * @param {Object} docInfo
+     * @returns {Promise<Array<{query, paramsGetter, isIdempotent}>>}
+     */
+    createUpdateQueries(docKeys: Array<string>, doc: object, docInfo: UpdateDocInfo): Promise<Array<{
+        query: any;
+        paramsGetter: any;
+        isIdempotent: any;
+    }>>;
+    /**
+     * Gets a function to be used to execute the DELETE queries with the provided document.
+     * @param {Object} doc
+     * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
+     * @return {Promise<Function>}
+     */
+    getDeleteExecutor(doc: object, docInfo: RemoveDocInfo): Promise<Function>;
+    /**
+     * Creates an Array containing the query and the params getter function for each table affected by the DELETE.
+     * @param {Array<String>} docKeys
+     * @param {Object} doc
+     * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
+     * @returns {Promise<Array<{query, paramsGetter}>>}
+     */
+    createDeleteQueries(docKeys: Array<string>, doc: object, docInfo: RemoveDocInfo): Promise<Array<{
+        query: any;
+        paramsGetter: any;
+    }>>;
+    getExecutorFromQuery(query: any, paramsHandler: any, commonExecutionOptions: any): (doc: any, executionOptions: any) => Promise<Result>;
+    private _setSingleExecutor;
+    private _setBatchExecutor;
+    private _validateCacheLength;
+}
+
+declare type MappingOptions = {
+    models: {
+        [key: string]: ModelOptions;
+    };
+};
+
+/**
+ * @classdesc Describes a CQL materialized view.
+ * @alias module:metadata~MaterializedView
+ * @augments {module:metadata~DataCollection}
+ * @constructor
+ */
+declare class MaterializedView extends DataCollection {
+    /**
+     * Name of the table.
+     * @type {String}
+     */
+    tableName: string;
+    /**
+     * View where clause.
+     * @type {String}
+     */
+    whereClause: string;
+    /**
+     * Determines if all the table columns where are included in the view.
+     * @type {boolean}
+     */
+    includeAllColumns: boolean;
+    /**
+     * Creates a new MaterializedView.
+     * @param {String} name Name of the View.
+     * @augments {module:metadata~DataCollection}
+     * @constructor
+     */
+    constructor(name: string);
+}
+
+/**
+ * Represents cluster and schema information.
+ * The metadata class acts as a internal state of the driver.
+ */
+declare class Metadata {
+    keyspaces: {};
+    initialized: boolean;
+    private _isDbaas;
+    private _schemaParser;
+    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+    private _preparedQueries;
+    tokenizer: Tokenizer;
+    primaryReplicas: {};
+    ring: any[];
+    tokenRanges: Set<TokenRange>;
+    ringTokensAsStrings: any[];
+    datacenters: {};
+    private options;
+    private controlConnection;
+    /**
+     * Creates a new instance of {@link Metadata}.
+     * @param {ClientOptions} options
+     * @param {ControlConnection} controlConnection Control connection used to retrieve information.
+     */
+    constructor(options: ClientOptions, controlConnection: ControlConnection);
+    /**
+     * Sets the cassandra version
+     * @internal
+     * @ignore
+     * @param {Array.<Number>} version
+     */
+    setCassandraVersion(version: Array<number>): void;
+    /**
+     * Determines whether the cluster is provided as a service.
+     * @returns {boolean} true when the cluster is provided as a service (DataStax Astra), <code>false<code> when it's a
+     * different deployment (on-prem).
+     */
+    isDbaas(): boolean;
+    /**
+     * Sets the product type as DBaaS.
+     * @internal
+     * @ignore
+     */
+    setProductTypeAsDbaas(): void;
+    /**
+     * @ignore
+     * @param {String} partitionerName
+     */
+    setPartitioner(partitionerName: string): Murmur3Tokenizer | RandomTokenizer | ByteOrderedTokenizer;
+    /**
+     * Populates the information regarding primary replica per token, datacenters (+ racks) and sorted token ring.
+     * @ignore
+     * @param {HostMap} hosts
+     */
+    buildTokens(hosts: HostMap): void;
+    /**
+     * Gets the keyspace metadata information and updates the internal state of the driver.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the keyspaces metadata refresh completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * @param {String} name Name of the keyspace.
+     * @param {Function} [callback] Optional callback.
+     */
+    refreshKeyspace(name: string, callback?: Function): Promise<any>;
+    /**
+     * @param {String} name
+     * @private
+     */
+    _refreshKeyspace(name: string): Promise<Keyspace>;
+    /**
+     * Gets the metadata information of all the keyspaces and updates the internal state of the driver.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the keyspace metadata refresh completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * @param {Boolean|Function} [waitReconnect] Determines if it should wait for reconnection in case the control connection is not
+     * connected at the moment. Default: true.
+     * @param {Function} [callback] Optional callback.
+     */
+    refreshKeyspaces(waitReconnect: boolean | Function, callback: Function): any;
+    /**
+     * @param {Boolean} waitReconnect
+     * @returns {Promise<Object<string, Object>>}
+     * @ignore
+     * @internal
+     */
+    refreshKeyspacesInternal(waitReconnect: boolean): Promise<{
+        [s: string]: object;
+    }>;
+    _getKeyspaceReplicas(keyspace: any): any;
+    /**
+     * Gets the host list representing the replicas that contain the given partition key, token or token range.
+     * <p>
+     *   It uses the pre-loaded keyspace metadata to retrieve the replicas for a token for a given keyspace.
+     *   When the keyspace metadata has not been loaded, it returns null.
+     * </p>
+     * @param {String} keyspaceName
+     * @param {Buffer|Token|TokenRange} token Can be Buffer (serialized partition key), Token or TokenRange
+     * @returns {Array}
+     */
+    getReplicas(keyspaceName: string, token: Buffer | Token | TokenRange): Array<any>;
+    /**
+     * Gets the token ranges that define data distribution in the ring.
+     *
+     * @returns {Set<TokenRange>} The ranges of the ring or empty set if schema metadata is not enabled.
+     */
+    getTokenRanges(): Set<TokenRange>;
+    /**
+     * Gets the token ranges that are replicated on the given host, for
+     * the given keyspace.
+     *
+     * @param {String} keyspaceName The name of the keyspace to get ranges for.
+     * @param {Host} host The host.
+     * @returns {Set<TokenRange>|null} Ranges for the keyspace on this host or null if keyspace isn't found or hasn't been loaded.
+     */
+    getTokenRangesForHost(keyspaceName: string, host: Host): Set<TokenRange> | null;
+    /**
+     * Constructs a Token from the input buffer(s) or string input.  If a string is passed in
+     * it is assumed this matches the token representation reported by cassandra.
+     * @param {Array<Buffer>|Buffer|String} components
+     * @returns {Token} constructed token from the input buffer.
+     */
+    newToken(components: Array<Buffer> | Buffer | string): Token;
+    /**
+     * Constructs a TokenRange from the given start and end tokens.
+     * @param {Token} start
+     * @param {Token} end
+     * @returns TokenRange build range spanning from start (exclusive) to end (inclusive).
+     */
+    newTokenRange(start: Token, end: Token): TokenRange;
+    /**
+     * Gets the metadata information already stored associated to a prepared statement
+     * @param {String} keyspaceName
+     * @param {String} query
+     * @internal
+     * @ignore
+     */
+    getPreparedInfo(keyspaceName: string, query: string): PreparedQueryInfo;
+    /**
+     * Clears the internal state related to the prepared statements.
+     * Following calls to the Client using the prepare flag will re-prepare the statements.
+     */
+    clearPrepared(): void;
+    /** @ignore */
+    getPreparedById(id: any): any;
+    /** @ignore */
+    setPreparedById(info: any): void;
+    /** @ignore */
+    getAllPrepared(): PreparedQueryInfo[];
+    /** @ignore */
+    _uninitializedError(): Error;
+    /**
+     * Gets the definition of an user-defined type.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same UDT definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace.
+     * @param {String} name Name of the UDT.
+     * @param {Function} [callback] The callback to invoke when retrieval completes.
+     */
+    getUdt(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    /**
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @returns {Promise<Object|null>}
+     * @private
+     */
+    _getUdt(keyspaceName: string, name: string): Promise<object | null>;
+    /**
+     * Gets the definition of a table.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same table definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace.
+     * @param {String} name Name of the Table.
+     * @param {Function} [callback] The callback with the err as a first parameter and the {@link TableMetadata} as
+     * second parameter.
+     */
+    getTable(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    /**
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @private
+     */
+    _getTable(keyspaceName: string, name: string): Promise<default_3>;
+    /**
+     * Gets the definition of CQL functions for a given name.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same function definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace.
+     * @param {String} name Name of the Function.
+     * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link SchemaFunction}
+     * as second parameter.
+     */
+    getFunctions(keyspaceName: string, name: string, callback: Function): Promise<any>;
+    /**
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @private
+     */
+    _getFunctionsWrapper(keyspaceName: string, name: string): Promise<any[]>;
+    /**
+     * Gets a definition of CQL function for a given name and signature.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same function definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace
+     * @param {String} name Name of the Function
+     * @param {Array.<String>|Array.<{code, info}>} signature Array of types of the parameters.
+     * @param {Function} [callback] The callback with the err as a first parameter and the {@link SchemaFunction} as second
+     * parameter.
+     */
+    getFunction(keyspaceName: string, name: string, signature: Array<string> | Array<{
+        code: any;
+        info: any;
+    }>, callback: Function): Promise<any>;
+    /**
+     * Gets the definition of CQL aggregate for a given name.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same aggregates definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace
+     * @param {String} name Name of the Function
+     * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link Aggregate} as
+     * second parameter.
+     */
+    getAggregates(keyspaceName: string, name: string, callback: Function): Promise<any>;
+    /**
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @private
+     */
+    _getAggregates(keyspaceName: string, name: string): Promise<any[]>;
+    /**
+     * Gets a definition of CQL aggregate for a given name and signature.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     * When trying to retrieve the same aggregate definition concurrently, it will query once and invoke all callbacks
+     * with the retrieved information.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace
+     * @param {String} name Name of the aggregate
+     * @param {Array.<String>|Array.<{code, info}>} signature Array of types of the parameters.
+     * @param {Function} [callback] The callback with the err as a first parameter and the {@link Aggregate} as second parameter.
+     */
+    getAggregate(keyspaceName: string, name: string, signature: Array<string> | Array<{
+        code: any;
+        info: any;
+    }>, callback: Function): Promise<any>;
+    /**
+     * Gets the definition of a CQL materialized view for a given name.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * <p>
+     *   Note that, unlike the rest of the {@link Metadata} methods, this method does not cache the result for following
+     *   calls, as the current version of the Cassandra native protocol does not support schema change events for
+     *   materialized views. Each call to this method will produce one or more queries to the cluster.
+     * </p>
+     * @param {String} keyspaceName Name of the keyspace
+     * @param {String} name Name of the materialized view
+     * @param {Function} [callback] The callback with the err as a first parameter and the {@link MaterializedView} as
+     * second parameter.
+     */
+    getMaterializedView(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    /**
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @returns {Promise<MaterializedView|null>}
+     * @private
+     */
+    _getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView | null>;
+    /**
+     * Gets a map of cql function definitions or aggregates based on signature.
+     * @param {String} keyspaceName
+     * @param {String} name Name of the function or aggregate
+     * @param {Boolean} aggregate
+     * @returns {Promise<Map>}
+     * @private
+     */
+    _getFunctions(keyspaceName: string, name: string, aggregate: boolean): Promise<Map<any, any>>;
+    /**
+     * Gets a single cql function or aggregate definition
+     * @param {String} keyspaceName
+     * @param {String} name
+     * @param {Array} signature
+     * @param {Boolean} aggregate
+     * @returns {Promise<SchemaFunction|Aggregate|null>}
+     * @private
+     */
+    _getSingleFunction(keyspaceName: string, name: string, signature: Array<any>, aggregate: boolean): Promise<SchemaFunction | Aggregate | null>;
+    /**
+     * Gets the trace session generated by Cassandra when query tracing is enabled for the
+     * query. The trace itself is stored in Cassandra in the <code>sessions</code> and
+     * <code>events</code> table in the <code>system_traces</code> keyspace and can be
+     * retrieve manually using the trace identifier.
+     * <p>
+     *   If a <code>callback</code> is provided, the callback is invoked when the metadata retrieval completes.
+     *   Otherwise, it returns a <code>Promise</code>.
+     * </p>
+     * @param {Uuid} traceId Identifier of the trace session.
+     * @param {Number} [consistency] The consistency level to obtain the trace.
+     * @param {Function} [callback] The callback with the err as first parameter and the query trace as second parameter.
+     */
+    getTrace(traceId: Uuid, consistency: number, callback: Function): Promise<any>;
+    /**
+     * @param {Uuid} traceId
+     * @param {Number} consistency
+     * @returns {Promise<Object>}
+     * @private
+     */
+    _getTrace(traceId: Uuid, consistency: number): Promise<object>;
+    /**
+     * Checks whether hosts that are currently up agree on the schema definition.
+     * <p>
+     *   This method performs a one-time check only, without any form of retry; therefore
+     *   <code>protocolOptions.maxSchemaAgreementWaitSeconds</code> setting does not apply in this case.
+     * </p>
+     * @param {Function} [callback] A function that is invoked with a value
+     * <code>true</code> when all hosts agree on the schema and <code>false</code> when there is no agreement or when
+     * the check could not be performed (for example, if the control connection is down).
+     * @returns {Promise} Returns a <code>Promise</code> when a callback is not provided. The promise resolves to
+     * <code>true</code> when all hosts agree on the schema and <code>false</code> when there is no agreement or when
+     * the check could not be performed (for example, if the control connection is down).
+     */
+    checkSchemaAgreement(callback: Function): Promise<any>;
+    /**
+     * Async-only version of check schema agreement.
+     * @private
+     */
+    _checkSchemaAgreement(): Promise<boolean>;
+    /**
+     * Uses the metadata to fill the user provided parameter hints
+     * @param {String} keyspace
+     * @param {Array} hints
+     * @internal
+     * @ignore
+     */
+    adaptUserHints(keyspace: string, hints: Array<any>): Promise<void>;
+    /**
+     * @param {Array} udts
+     * @param {{code, info}} type
+     * @param {string} keyspace
+     * @private
+     */
+    _checkUdtTypes(udts: Array<any>, type: {
+        code: any;
+        info: any;
+    }, keyspace: string): any;
+    /**
+     * Uses the provided connection to query the schema versions and compare them.
+     * @param {Connection} connection
+     * @internal
+     * @ignore
+     */
+    compareSchemaVersions(connection: Connection): Promise<boolean>;
+}
+
+export declare const metadata: {
+    Metadata: typeof Metadata;
+};
+
+export declare const metrics: {
+    ClientMetrics: typeof ClientMetrics;
+    DefaultMetrics: typeof DefaultMetrics;
+};
+
+/**
+ * Represents a query or a set of queries used to perform a mutation in a batch.
+ * @alias module:mapping~ModelBatchItem
+ */
+declare class ModelBatchItem_2 {
+    doc: object;
+    docInfo: DocInfo;
+    handler: MappingHandler;
+    cache: Tree;
+    /**
+     * @param {Object} doc
+     * @param {Object} docInfo
+     * @param {MappingHandler} handler
+     * @param {Tree} cache
+     */
+    constructor(doc: object, docInfo: DocInfo, handler: MappingHandler, cache: Tree);
+    /**
+     * @ignore
+     * @returns <Promise<Array>>
+     */
+    getQueries(): any;
+    /**
+     * Gets the cache key for this item.
+     * @abstract
+     * @param {Array} docKeys
+     * @returns {Iterator}
+     */
+    getCacheKey(docKeys: Array<any>): Iterator<string>;
+    /**
+     * Gets the Promise to create the queries.
+     * @abstract
+     * @param {Array} docKeys
+     * @returns {Promise<Array>}
+     */
+    createQueries(docKeys: Array<any>): Promise<Array<any>>;
+    /**
+     * Pushes the queries and parameters represented by this instance to the provided array.
+     * @internal
+     * @ignore
+     * @param {Array} arr
+     * @return {Promise<{isIdempotent, isCounter}>}
+     */
+    pushQueries(arr: Array<any>): Promise<{
+        isIdempotent: any;
+        isCounter: any;
+    }>;
+    /**
+     * Gets the mapping information for this batch item.
+     * @internal
+     * @ignore
+     */
+    getMappingInfo(): default_35;
+}
+
+/**
+ * Provides utility methods to group multiple mutations on a single batch.
+ * @alias module:mapping~ModelBatchMapper
+ */
+declare class ModelBatchMapper {
+    private _handler;
+    private _cache;
+    /**
+     * Creates a new instance of model batch mapper.
+     * <p>
+     *   An instance of this class is exposed as a singleton in the <code>batching</code> field of the
+     *   [ModelMapper]{@link module:mapping~ModelMapper}. Note that new instances should not be create with this
+     *   constructor.
+     * </p>
+     * @param {MappingHandler} handler
+     * @ignore
+     */
+    constructor(handler: MappingHandler);
+    /**
+     * Gets a [ModelBatchItem]{@link module:mapping~ModelBatchItem} containing the queries for the INSERT mutation to be
+     * used in a batch execution.
+     * @param {Object} doc An object containing the properties to insert.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * INSERT cql statements generated. If specified, it must include the columns to insert and the primary keys.
+     * @param {Number} [docInfo.ttl] Specifies an optional Time To Live (in seconds) for the inserted values.
+     * @param {Boolean} [docInfo.ifNotExists] When set, it only inserts if the row does not exist prior to the insertion.
+     * <p>Please note that using IF NOT EXISTS will incur a non negligible performance cost so this should be used
+     * sparingly.</p>
+     * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
+     * or a set of queries to be included in a batch.
+     */
+    insert(doc: object, docInfo: InsertDocInfo): ModelBatchItem_2;
+    /**
+     * Gets a [ModelBatchItem]{@link module:mapping~ModelBatchItem} containing the queries for the UPDATE mutation to be
+     * used in a batch execution.
+     * @param {Object} doc An object containing the properties to update.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * UPDATE cql statements generated. If specified, it must include the columns to update and the primary keys.
+     * @param {Number} [docInfo.ttl] Specifies an optional Time To Live (in seconds) for the inserted values.
+     * @param {Boolean} [docInfo.ifExists] When set, it only updates if the row already exists on the server.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Object} [docInfo.when] A document that act as the condition that has to be met for the UPDATE to occur.
+     * Use this property only in the case you want to specify a conditional clause for lightweight transactions (CAS).
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
+     * or a set of queries to be included in a batch.
+     */
+    update(doc: object, docInfo: UpdateDocInfo): ModelBatchItem_2;
+    /**
+     * Gets a [ModelBatchItem]{@link module:mapping~ModelBatchItem}  containing the queries for the DELETE mutation to be
+     * used in a batch execution.
+     * @param {Object} doc A document containing the primary keys values of the document to delete.
+     * @param {Object} [docInfo] An object containing the additional doc information.
+     * @param {Object} [docInfo.when] A document that act as the condition that has to be met for the DELETE to occur.
+     * Use this property only in the case you want to specify a conditional clause for lightweight transactions (CAS).
+     * When the CQL query is generated, this would be used to generate the `IF` clause.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Boolean} [docInfo.ifExists] When set, it only issues the DELETE command if the row already exists on the
+     * server.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * DELETE cql statement generated. If specified, it must include the columns to delete and the primary keys.
+     * @param {Boolean} [docInfo.deleteOnlyColumns] Determines that, when more document properties are specified
+     * besides the primary keys, the generated DELETE statement should be used to delete some column values but leave
+     * the row. When this is enabled and more properties are specified, a DELETE statement will have the following form:
+     * "DELETE col1, col2 FROM table1 WHERE pk1 = ? AND pk2 = ?"
+     * @returns {ModelBatchItem} A [ModelBatchItem]{@link module:mapping~ModelBatchItem} instance representing a query
+     * or a set of queries to be included in a batch.
+     */
+    remove(doc: object, docInfo: RemoveDocInfo): ModelBatchItem_2;
+}
+
+declare class ModelColumnInfo {
+    columnName: any;
+    toModel: any;
+    fromModel: any;
+    propertyName: any;
+    constructor(columnName: any, propertyName: any, toModel?: any, fromModel?: any);
+    static parse(columnName: any, value: any): ModelColumnInfo;
+}
+
+declare type ModelColumnOptions = {
+    name: string;
+    toModel?: (columnValue: any) => any;
+    fromModel?: (modelValue: any) => any;
+};
+
+/**
+ * Represents an object mapper for a specific model.
+ * @alias module:mapping~ModelMapper
+ */
+declare class ModelMapper {
+    /**
+     * Gets the name identifier of the model.
+     * @type {String}
+     */
+    name: string;
+    private _handler;
+    /**
+     * Gets a [ModelBatchMapper]{@link module:mapping~ModelBatchMapper} instance containing utility methods to group
+     * multiple doc mutations in a single batch.
+     * @type {ModelBatchMapper}
+     */
+    batching: ModelBatchMapper;
+    constructor(name: any, handler: any);
+    /**
+     * Gets the first document matching the provided filter or null when not found.
+     * <p>
+     *   Note that all partition and clustering keys must be defined in order to use this method.
+     * </p>
+     * @param {Object} doc The object containing the properties that map to the primary keys.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * SELECT cql statement generated, in order to restrict the amount of columns retrieved.
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @return {Promise<Object>}
+     * @example <caption>Get a video by id</caption>
+     * videoMapper.get({ id })
+     * @example <caption>Get a video by id, selecting specific columns</caption>
+     * videoMapper.get({ id }, fields: ['name', 'description'])
+     */
+    get(doc: object, docInfo: {
+        fields?: Array<string>;
+    }, executionOptions: object | string): Promise<object>;
+    /**
+     * Executes a SELECT query based on the filter and returns the result as an iterable of documents.
+     * @param {Object} doc An object containing the properties that map to the primary keys to filter.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * SELECT cql statement generated, in order to restrict the amount of columns retrieved.
+     * @param {Object<String, String>} [docInfo.orderBy] An associative array containing the column names as key and
+     * the order string (asc or desc) as value used to set the order of the results server-side.
+     * @param {Number} [docInfo.limit] Restricts the result of the query to a maximum number of rows on the
+     * server.
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Number} [executionOptions.fetchSize] The amount of rows to retrieve per page.
+     * @param {Number} [executionOptions.pageState] A Buffer instance or a string token representing the paging state.
+     * <p>When provided, the query will be executed starting from a given paging state.</p>
+     * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
+     * @example <caption>Get user's videos</caption>
+     * const result = await videoMapper.find({ userId });
+     * for (let video of result) {
+     *   console.log(video.name);
+     * }
+     * @example <caption>Get user's videos from a certain date</caption>
+     * videoMapper.find({ userId, addedDate: q.gte(date)});
+     * @example <caption>Get user's videos in reverse order</caption>
+     * videoMapper.find({ userId }, { orderBy: { addedDate: 'desc' }});
+     */
+    find(doc: object, docInfo: FindDocInfo, executionOptions: object | string): Promise<Result>;
+    /**
+     * Executes a SELECT query without a filter and returns the result as an iterable of documents.
+     * <p>
+     *   This is only recommended to be used for tables with a limited amount of results. Otherwise, breaking up the
+     *   token ranges on the client side should be used.
+     * </p>
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * SELECT cql statement generated, in order to restrict the amount of columns retrieved.
+     * @param {Object<String, String>} [docInfo.orderBy] An associative array containing the column names as key and
+     * the order string (asc or desc) as value used to set the order of the results server-side.
+     * @param {Number} [docInfo.limit] Restricts the result of the query to a maximum number of rows on the
+     * server.
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Number} [executionOptions.fetchSize] The mount of rows to retrieve per page.
+     * @param {Number} [executionOptions.pageState] A Buffer instance or a string token representing the paging state.
+     * <p>When provided, the query will be executed starting from a given paging state.</p>
+     * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
+     */
+    findAll(docInfo: FindDocInfo, executionOptions: object | string): Promise<Result>;
+    /**
+     * Inserts a document.
+     * <p>
+     *   When the model is mapped to multiple tables, it will insert a row in each table when all the primary keys
+     *   are specified.
+     * </p>
+     * @param {Object} doc An object containing the properties to insert.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * INSERT cql statements generated. If specified, it must include the columns to insert and the primary keys.
+     * @param {Number} [docInfo.ttl] Specifies an optional Time To Live (in seconds) for the inserted values.
+     * @param {Boolean} [docInfo.ifNotExists] When set, it only inserts if the row does not exist prior to the insertion.
+     * <p>Please note that using IF NOT EXISTS will incur a non negligible performance cost so this should be used
+     * sparingly.</p>
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Boolean} [executionOptions.isIdempotent] Defines whether the query can be applied multiple times without
+     * changing the result beyond the initial application.
+     * <p>
+     *   By default all generated INSERT statements are considered idempotent, except in the case of lightweight
+     *   transactions. Lightweight transactions at client level with transparent retries can
+     *   break linearizability. If that is not an issue for your application, you can manually set this field to true.
+     * </p>
+     * @param {Number|Long} [executionOptions.timestamp] The default timestamp for the query in microseconds from the
+     * unix epoch (00:00:00, January 1st, 1970).
+     * <p>When provided, this will replace the client generated and the server side assigned timestamp.</p>
+     * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
+     * @example <caption>Insert a video</caption>
+     * videoMapper.insert({ id, name });
+     */
+    insert(doc: object, docInfo: InsertDocInfo, executionOptions: object | string): Promise<Result>;
+    /**
+     * Updates a document.
+     * <p>
+     *   When the model is mapped to multiple tables, it will update a row in each table when all the primary keys
+     *   are specified.
+     * </p>
+     * @param {Object} doc An object containing the properties to update.
+     * @param {Object} [docInfo] An object containing the additional document information.
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * UPDATE cql statements generated. If specified, it must include the columns to update and the primary keys.
+     * @param {Number} [docInfo.ttl] Specifies an optional Time To Live (in seconds) for the inserted values.
+     * @param {Boolean} [docInfo.ifExists] When set, it only updates if the row already exists on the server.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Object} [docInfo.when] A document that act as the condition that has to be met for the UPDATE to occur.
+     * Use this property only in the case you want to specify a conditional clause for lightweight transactions (CAS).
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Boolean} [executionOptions.isIdempotent] Defines whether the query can be applied multiple times without
+     * changing the result beyond the initial application.
+     * <p>
+     *   The mapper uses the generated queries to determine the default value. When an UPDATE is generated with a
+     *   counter column or appending/prepending to a list column, the execution is marked as not idempotent.
+     * </p>
+     * <p>
+     *   Additionally, the mapper uses the safest approach for queries with lightweight transactions (Compare and
+     *   Set) by considering them as non-idempotent. Lightweight transactions at client level with transparent retries can
+     *   break linearizability. If that is not an issue for your application, you can manually set this field to true.
+     * </p>
+     * @param {Number|Long} [executionOptions.timestamp] The default timestamp for the query in microseconds from the
+     * unix epoch (00:00:00, January 1st, 1970).
+     * <p>When provided, this will replace the client generated and the server side assigned timestamp.</p>
+     * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
+     * @example <caption>Update the name of a video</caption>
+     * videoMapper.update({ id, name });
+     */
+    update(doc: object, docInfo: UpdateDocInfo, executionOptions: object | string): Promise<Result>;
+    /**
+     * Deletes a document.
+     * @param {Object} doc A document containing the primary keys values of the document to delete.
+     * @param {Object} [docInfo] An object containing the additional doc information.
+     * @param {Object} [docInfo.when] A document that act as the condition that has to be met for the DELETE to occur.
+     * Use this property only in the case you want to specify a conditional clause for lightweight transactions (CAS).
+     * When the CQL query is generated, this would be used to generate the `IF` clause.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Boolean} [docInfo.ifExists] When set, it only issues the DELETE command if the row already exists on the
+     * server.
+     * <p>
+     *   Please note that using IF conditions will incur a non negligible performance cost on the server-side so this
+     *   should be used sparingly.
+     * </p>
+     * @param {Array<String>} [docInfo.fields] An Array containing the name of the properties that will be used in the
+     * DELETE cql statement generated. If specified, it must include the columns to delete and the primary keys.
+     * @param {Boolean} [docInfo.deleteOnlyColumns] Determines that, when more document properties are specified
+     * besides the primary keys, the generated DELETE statement should be used to delete some column values but leave
+     * the row. When this is enabled and more properties are specified, a DELETE statement will have the following form:
+     * "DELETE col1, col2 FROM table1 WHERE pk1 = ? AND pk2 = ?"
+     * @param {Object|String} [executionOptions] An object containing the options to be used for the requests
+     * execution or a string representing the name of the execution profile.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Boolean} [executionOptions.isIdempotent] Defines whether the query can be applied multiple times without
+     * changing the result beyond the initial application.
+     * <p>
+     *   By default all generated DELETE statements are considered idempotent, except in the case of lightweight
+     *   transactions. Lightweight transactions at client level with transparent retries can
+     *   break linearizability. If that is not an issue for your application, you can manually set this field to true.
+     * </p>
+     * @param {Number|Long} [executionOptions.timestamp] The default timestamp for the query in microseconds from the
+     * unix epoch (00:00:00, January 1st, 1970).
+     * <p>When provided, this will replace the client generated and the server side assigned timestamp.</p>
+     * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
+     * @example <caption>Delete a video</caption>
+     * videoMapper.remove({ id });
+     */
+    remove(doc: object, docInfo: RemoveDocInfo, executionOptions: object | string): Promise<Result>;
+    /**
+     * Uses the provided query and param getter function to execute a query and map the results.
+     * Gets a function that takes the document, executes the query and returns the mapped results.
+     * @param {String} query The query to execute.
+     * @param {Function} paramsHandler The function to execute to extract the parameters of a document.
+     * @param {Object|String} [executionOptions] When provided, the options for all executions generated with this
+     * method will use the provided options and it will not consider the executionOptions per call.
+     * @param {String} [executionOptions.executionProfile] The name of the execution profile.
+     * @param {Number} [executionOptions.fetchSize] Amount of rows to retrieve per page.
+     * @param {Boolean} [executionOptions.isIdempotent] Defines whether the query can be applied multiple times
+     * without changing the result beyond the initial application.
+     * @param {Number} [executionOptions.pageState] Buffer or string token representing the paging state.
+     * <p>When provided, the query will be executed starting from a given paging state.</p>
+     * @param {Number|Long} [executionOptions.timestamp] The default timestamp for the query in microseconds from the
+     * unix epoch (00:00:00, January 1st, 1970).
+     * <p>When provided, this will replace the client generated and the server side assigned timestamp.</p>
+     * @return {Function} Returns a function that takes the document and execution options as parameters and returns a
+     * Promise the resolves to a [Result]{@link module:mapping~Result} instance.
+     */
+    mapWithQuery(query: string, paramsHandler: Function, executionOptions: object | string): Function;
+}
+
+/**
+ * Represents the parsed user information of the table mappings of a model.
+ * @ignore
+ */
+declare class ModelMappingInfo {
+    keyspace: string;
+    tables: {
+        name: any;
+        isView: any;
+    }[];
+    _mappings: TableMappings_2;
+    _columns: Map<string, ModelColumnInfo>;
+    _documentProperties: Map<any, any>;
+    /**
+     * @param {String} keyspace
+     * @param {Array<{name, isView}>} tables
+     * @param {TableMappings} mappings
+     * @param {Map<String,ModelColumnInfo>} columns
+     */
+    constructor(keyspace: string, tables: Array<{
+        name: any;
+        isView: any;
+    }>, mappings: TableMappings_2, columns: Map<string, ModelColumnInfo>);
+    getColumnName(propName: any): any;
+    getPropertyName(columnName: any): any;
+    getFromModelFn(propName: any): any;
+    getToModelFn(columnName: any): any;
+    newInstance(): object;
+    /**
+     * Parses the user options into a map of model names and ModelMappingInfo.
+     * @param {MappingOptions} options
+     * @param {String} currentKeyspace
+     * @returns {Map<String, ModelMappingInfo>}
+     */
+    static parse(options: MappingOptions, currentKeyspace: string): Map<string, ModelMappingInfo>;
+    static _create(modelName: any, currentKeyspace: any, modelOptions: any): ModelMappingInfo;
+    static createDefault(modelName: any, currentKeyspace: any): ModelMappingInfo;
+}
+
+declare type ModelOptions = {
+    tables?: string[] | ModelTables[];
+    mappings?: TableMappings_2;
+    columns?: {
+        [key: string]: string | ModelColumnOptions;
+    };
+    keyspace?: string;
+};
+
+declare interface ModelTables {
+    name: string;
+    isView: boolean;
+}
+
+/**
+ * A timestamp generator that guarantees monotonically increasing timestamps and logs warnings when timestamps
+ * drift in the future.
+ * <p>
+ *   {@link Date} has millisecond precision and client timestamps require microsecond precision. This generator
+ *   keeps track of the last generated timestamp, and if the current time is within the same millisecond as the last,
+ *   it fills the microsecond portion of the new timestamp with the value of an incrementing counter.
+ * </p>
+ * @extends {TimestampGenerator}
+ */
+declare class MonotonicTimestampGenerator extends TimestampGenerator {
+    private _warningThreshold;
+    private _minLogInterval;
+    private _micros;
+    private _lastDate;
+    private _lastLogDate;
+    /**
+     * A timestamp generator that guarantees monotonically increasing timestamps and logs warnings when timestamps
+     * drift in the future.
+     * <p>
+     *   {@link Date} has millisecond precision and client timestamps require microsecond precision. This generator
+     *   keeps track of the last generated timestamp, and if the current time is within the same millisecond as the last,
+     *   it fills the microsecond portion of the new timestamp with the value of an incrementing counter.
+     * </p>
+     * @param {Number} [warningThreshold] Determines how far in the future timestamps are allowed to drift before a
+     * warning is logged, expressed in milliseconds. Default: <code>1000</code>.
+     * @param {Number} [minLogInterval] In case of multiple log events, it determines the time separation between log
+     * events, expressed in milliseconds. Use 0 to disable. Default: <code>1000</code>.
+     * @constructor
+     */
+    constructor(warningThreshold?: number, minLogInterval?: number);
+    /**
+     * Returns the current time in milliseconds since UNIX epoch
+     * @returns {Number}
+     */
+    getDate(): number;
+    next(client: any): number | Long;
+    /**
+     * @private
+     * @returns {Number|Long}
+     */
+    _generateMicroseconds(): number | Long;
+}
+
+/**
+ * An authenticator throws an error when authentication flow is started.
+ * @ignore
+ */
+declare class NoAuthAuthenticator extends Authenticator {
+    endpoint: any;
+    constructor(endpoint: any);
+    initialResponse(callback: any): void;
+}
+
+/**
+ * Internal authentication provider that is used when no provider has been set by the user.
+ * @ignore
+ */
+declare class NoAuthProvider extends AuthProvider {
+    newAuthenticator(endpoint: any, name: any): TransitionalModePlainTextAuthenticator | NoAuthAuthenticator;
+}
+
+/**
+ * Represents a tree node where the key is composed by 1 or more strings.
+ * @ignore
+ */
+declare class Node extends EventEmitter_2 {
+    key: string[];
+    value: object;
+    edges: any[];
+    /**
+     * Creates a new instance of {@link Node}.
+     * @param {Array<String>} key
+     * @param {Object} value
+     * @param {Array} [edges]
+     */
+    constructor(key: Array<string>, value: object, edges?: Array<any>);
+}
+
+/**
+ * Represents an error when a query cannot be performed because no host is available or could be reached by the driver.
+ */
+declare class NoHostAvailableError extends DriverError {
+    innerErrors: object;
+    /**
+     * Represents an error when a query cannot be performed because no host is available or could be reached by the driver.
+     * @param {Object} innerErrors An object map containing the error per host tried
+     * @param {String} [message]
+     * @constructor
+     */
+    constructor(innerErrors: object, message?: string);
+}
+
+/**
+ * Creates a new instance of NoSpeculativeExecutionPolicy.
+ * @classdesc
+ * A {@link SpeculativeExecutionPolicy} that never schedules speculative executions.
+ * @extends {SpeculativeExecutionPolicy}
+ */
+declare class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
+    private _plan;
+    /**
+     * Creates a new instance of NoSpeculativeExecutionPolicy.
+     */
+    constructor();
+    newPlan(): {
+        nextExecution: () => number;
+    };
+}
+
+/**
+ * Represents an error that is raised when a feature is not supported in the driver or in the current Cassandra version.
+ */
+declare class NotSupportedError extends DriverError {
+    /**
+     * Represents an error that is raised when a feature is not supported in the driver or in the current Cassandra version.
+     * @param message
+     * @constructor
+     */
+    constructor(message: string);
+}
+
+/**
+ * An integer byte that distinguish the actual message from and to Cassandra
+ * @internal
+ * @ignore
+ */
+declare const opcodes: {
+    error: number;
+    startup: number;
+    ready: number;
+    authenticate: number;
+    credentials: number;
+    options: number;
+    supported: number;
+    query: number;
+    result: number;
+    prepare: number;
+    execute: number;
+    register: number;
+    event: number;
+    batch: number;
+    authChallenge: number;
+    authResponse: number;
+    authSuccess: number;
+    cancel: number;
+    /**
+     * Determines if the code is a valid opcode
+     */
+    isInRange: (code: any) => boolean;
+};
+
+/**
+ * Information of the execution to be used to determine whether the operation should be retried.
+ * @typedef {Object} OperationInfo@typedef {Object} OperationInfo
+ * @property {String} query The query that was executed.
+ * @param {ExecutionOptions} executionOptions The options related to the execution of the request.
+ * @property {Number} nbRetry The number of retries already performed for this operation.
+ */
+declare type OperationInfo = {
+    query: string;
+    executionOptions: ExecutionOptions;
+    nbRetry: number;
+};
+
+/**
+ * Maintains the state information of a request inside a Connection.
+ */
+declare class OperationState {
+    streamId: number;
+    request: Request_2;
+    _rowCallback: Function;
+    _callback: Function;
+    _timeout: NodeJS.Timeout;
+    _state: number;
+    _rowIndex: number;
+    /**
+     * Creates a new instance of OperationState.
+     * @param {Request} request
+     * @param {Function} rowCallback
+     * @param {Function} callback
+     */
+    constructor(request: Request_2, rowCallback: Function, callback: Function);
+    /**
+     * Marks the operation as cancelled, clearing all callbacks and timeouts.
+     */
+    cancel(): void;
+    /**
+     * Determines if the operation can be written to the wire (when it hasn't been cancelled or it hasn't timed out).
+     */
+    canBeWritten(): boolean;
+    /**
+     * Determines if the response is going to be yielded by row.
+     * @return {boolean}
+     */
+    isByRow(): boolean;
+    /**
+     * Creates the timeout for the request.
+     * @param {ExecutionOptions} execOptions
+     * @param {Number} defaultReadTimeout
+     * @param {String} address
+     * @param {Function} onTimeout The callback to be invoked when it times out.
+     * @param {Function} onResponse The callback to be invoked if a response is obtained after it timed out.
+     */
+    setRequestTimeout(execOptions: ExecutionOptions, defaultReadTimeout: number, address: string, onTimeout: Function, onResponse: Function): void;
+    setResultRow(row: any, meta: any, rowLength: any, flags: any, header: any): void;
+    /**
+     * Marks the current operation as timed out.
+     * @param {Error} err
+     * @param {Function} onResponse
+     * @private
+     */
+    _markAsTimedOut(err: Error, onResponse: Function): void;
+    _markAsCompleted(): void;
+    /**
+     * Sets the result of this operation, declaring that no further input will be processed for this operation.
+     * @param {Error} err
+     * @param {Object} [result]
+     * @param {Number} [length]
+     */
+    setResult(err: Error, result?: object, length?: number): void;
+    _swapCallbackAndInvoke(err: any, result: any, length: any, newCallback?: any): void;
+}
+
+/**
+ * Represents a client-side error that is raised when the client didn't hear back from the server within
+ * {@link ClientOptions.socketOptions.readTimeout}.
+ */
+declare class OperationTimedOutError extends DriverError {
+    host?: string;
+    /**
+     * Represents a client-side error that is raised when the client didn't hear back from the server within
+     * {@link ClientOptions.socketOptions.readTimeout}.
+     * @param {String} message The error message.
+     * @param {String} [host] Address of the server host that caused the operation to time out.
+     * @constructor
+     */
+    constructor(message: string, host?: string);
+}
+
+declare type OtherCustomColumnInfo = {
+    code: (typeof dataTypes.custom);
+    info: string;
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+/**
+ * @ignore
+ */
+declare class PlainTextAuthenticator extends Authenticator {
+    username: any;
+    password: any;
+    constructor(username: any, password: any);
+    initialResponse(callback: any): void;
+    evaluateChallenge(challenge: any, callback: any): void;
+}
+
+/**
+ * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
+ * connecting to a host.
+ * @extends module:auth~AuthProvider
+ * @example
+ * var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+ * //Set the auth provider in the clientOptions when creating the Client instance
+ * const client = new Client({ contactPoints: contactPoints, authProvider: authProvider });
+ * @alias module:auth~PlainTextAuthProvider
+ */
+declare class PlainTextAuthProvider_2 extends AuthProvider {
+    username: string;
+    password: string;
+    /**
+     * Creates a new instance of the Authenticator provider
+     * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
+     * connecting to a host.
+     * @example
+     * var authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+     * //Set the auth provider in the clientOptions when creating the Client instance
+     * const client = new Client({ contactPoints: contactPoints, authProvider: authProvider });
+     * @param {String} username User name in plain text
+     * @param {String} password Password in plain text
+     * @alias module:auth~PlainTextAuthProvider
+     * @constructor
+     */
+    constructor(username: string, password: string);
+    /**
+     * Returns a new [Authenticator]{@link module:auth~Authenticator} instance to be used for plain text authentication.
+     * @override
+     * @returns {Authenticator}
+     */
+    newAuthenticator(): Authenticator;
+}
+
+/**
+ * @classdesc
+ * A Point is a zero-dimensional object that represents a specific (X,Y)
+ * location in a two-dimensional XY-Plane. In case of Geographic Coordinate
+ * Systems, the X coordinate is the longitude and the Y is the latitude.
+ * @extends {Geometry}
+ * @alias module:geometry~Point
+ */
+declare class Point extends Geometry {
+    x: number;
+    y: number;
+    /**
+     * Creates a new {@link Point} instance.
+     * @param {Number} x The X coordinate.
+     * @param {Number} y The Y coordinate.
+     */
+    constructor(x: number, y: number);
+    /**
+     * Creates a {@link Point} instance from
+     * a <a href="https://en.wikipedia.org/wiki/Well-known_text">Well-known Text (WKT)</a>
+     * representation of a 2D point.
+     * @param {Buffer} buffer
+     * @returns {Point}
+     */
+    static fromBuffer(buffer: Buffer): Point;
+    /**
+     * Creates a {@link Point} instance from
+     * a <a href="https://en.wikipedia.org/wiki/Well-known_text">Well-known Text (WKT)</a>
+     * representation of a 2D point.
+     * @param {String} textValue
+     * @returns {Point}
+     */
+    static fromString(textValue: string): Point;
+    /**
+     * Returns a <a href="https://en.wikipedia.org/wiki/Well-known_text#Well-known_binary">Well-known Binary</a> (WKB)
+     * representation of this instance.
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Returns true if the values of the point are the same, otherwise it returns false.
+     * @param {Point} other
+     * @returns {Boolean}
+     */
+    equals(other: Point): boolean;
+    /**
+     * Returns Well-known Text (WKT) representation of the geometry object.
+     * @returns {String}
+     */
+    toString(): string;
+    useBESerialization(): boolean;
+    /**
+     * Returns a JSON representation of this geo-spatial type.
+     * @returns {Object}
+     */
+    toJSON(): object;
+}
+
+export declare const policies: {
+    addressResolution: typeof addressResolution;
+    loadBalancing: typeof loadBalancing;
+    reconnection: typeof reconnection;
+    retry: typeof retry;
+    speculativeExecution: typeof speculativeExecution;
+    timestampGeneration: typeof timestampGeneration;
+    defaultAddressTranslator: () => addressResolution.AddressTranslator;
+    defaultLoadBalancingPolicy: (localDc?: string) => loadBalancing.LoadBalancingPolicy;
+    defaultRetryPolicy: () => retry.RetryPolicy;
+    defaultReconnectionPolicy: () => reconnection.ReconnectionPolicy;
+    defaultSpeculativeExecutionPolicy: () => speculativeExecution.SpeculativeExecutionPolicy;
+    defaultTimestampGenerator: () => timestampGeneration.TimestampGenerator;
+};
+
+/**
+ * @classdesc
+ * Represents is a plane geometry figure that is bounded by a finite chain of straight line segments closing in a loop
+ * to form a closed chain or circuit.
+ * @example
+ * new Polygon([ new Point(30, 10), new Point(40, 40), new Point(10, 20), new Point(30, 10) ]);
+ * @example
+ * //polygon with a hole
+ * new Polygon(
+ *  [ new Point(30, 10), new Point(40, 40), new Point(10, 20), new Point(30, 10) ],
+ *  [ new Point(25, 20), new Point(30, 30), new Point(20, 20), new Point(25, 20) ]
+ * );
+ * @alias module:geometry~Polygon
+ */
+declare class Polygon extends Geometry {
+    rings: ReadonlyArray<ReadonlyArray<Point>>;
+    /**
+     * Creates a new {@link Polygon} instance.
+     * @param {...Array.<Point>}[ringPoints] A sequence of Array of [Point]{@link module:geometry~Point} items as arguments
+     * representing the rings of the polygon.
+     * @example
+     * new Polygon([ new Point(30, 10), new Point(40, 40), new Point(10, 20), new Point(30, 10) ]);
+     * @example
+     * //polygon with a hole
+     * new Polygon(
+     *  [ new Point(30, 10), new Point(40, 40), new Point(10, 20), new Point(30, 10) ],
+     *  [ new Point(25, 20), new Point(30, 30), new Point(20, 20), new Point(25, 20) ]
+     * );
+     * @constructor
+     */
+    constructor(...ringPoints: Point[][]);
+    /**
+     * Creates a {@link Polygon} instance from
+     * a <a href="https://en.wikipedia.org/wiki/Well-known_text">Well-known Text (WKT)</a>
+     * representation of a polygon.
+     * @param {Buffer} buffer
+     * @returns {Polygon}
+     */
+    static fromBuffer(buffer: Buffer): Polygon;
+    /**
+     * Creates a {@link Polygon} instance from a Well-known Text (WKT) representation.
+     * @param {String} textValue
+     * @returns {Polygon}
+     */
+    static fromString(textValue: string): Polygon;
+    /**
+     * Returns a <a href="https://en.wikipedia.org/wiki/Well-known_text#Well-known_binary">Well-known Binary</a> (WKB)
+     * representation of this instance.
+     * @returns {Buffer}
+     */
+    toBuffer(): Buffer;
+    /**
+     * Returns true if the values of the polygons are the same, otherwise it returns false.
+     * @param {Polygon} other
+     * @returns {Boolean}
+     */
+    equals(other: Polygon): boolean;
+    useBESerialization(): boolean;
+    /**
+     * Returns Well-known Text (WKT) representation of the geometry object.
+     * @returns {String}
+     */
+    toString(): string;
+    /**
+     * Returns a JSON representation of this geo-spatial type.
+     */
+    toJSON(): object;
+}
+
+declare type PreparedQueryInfo = {
+    queryId?: Buffer;
+    preparing?: boolean;
+    query: string;
+    keyspace: string;
+    meta?: DataCollection;
+} & EventEmitter;
+
+/**
+ * Contains the logic to handle the different execution profiles of a {@link Client}.
+ * @ignore
+ */
+declare class ProfileManager {
+    private _profiles;
+    private _defaultConfiguredRetryPolicy;
+    private _loadBalancingPolicies;
+    private _profilesMap;
+    private _customPayloadCache;
+    private _graphOptionsCache;
+    private _defaultProfile;
+    /**
+     * @param {ClientOptions} options
+     */
+    constructor(options: ClientOptions);
+    /**
+     * @param {Client} client
+     * @param {HostMap} hosts
+     */
+    init(client: Client, hosts: HostMap): Promise<void>;
+    /**
+     * Uses the load-balancing policies to get the relative distance to the host and return the closest one.
+     * @param {Host} host
+     */
+    getDistance(host: Host): number;
+    /**
+     * @param {String|ExecutionProfile} name
+     * @returns {ExecutionProfile|undefined} It returns the execution profile by name or the default profile when name is
+     * undefined. It returns undefined when the profile does not exist.
+     */
+    getProfile(name: string | ExecutionProfile): ExecutionProfile | undefined;
+    /** @returns {ExecutionProfile} */
+    getDefault(): ExecutionProfile;
+    /** @returns {LoadBalancingPolicy} */
+    getDefaultLoadBalancing(): LoadBalancingPolicy;
+    /**
+     * Gets the cached default graph options for a given profile. If it doesn't exist, it creates new options using the
+     * handler and inserts it into the cache
+     * @param {ExecutionProfile} profile
+     * @param {Function} createHandler
+     */
+    getOrCreateGraphOptions(profile: ExecutionProfile, createHandler: Function): any;
+    /**
+     * @private
+     * @param {ClientOptions} options
+     */
+    _setDefault(options: ClientOptions): void;
+    /**
+     * Gets all the execution profiles currently defined.
+     * @returns {Array.<ExecutionProfile>}
+     */
+    getAll(): Array<ExecutionProfile>;
+    getDefaultConfiguredRetryPolicy(): any;
+}
+
+/**
+ * Event types from Cassandra
+ * @type {{topologyChange: string, statusChange: string, schemaChange: string}}
+ * @internal
+ * @ignore
+ */
+declare const protocolEvents: {
+    topologyChange: string;
+    statusChange: string;
+    schemaChange: string;
+};
+
+/**
+ * Contains information for the different protocol versions supported by the driver.
+ * @type {Object}
+ * @property {Number} v1 Cassandra protocol v1, supported in Apache Cassandra 1.2-->2.2.
+ * @property {Number} v2 Cassandra protocol v2, supported in Apache Cassandra 2.0-->2.2.
+ * @property {Number} v3 Cassandra protocol v3, supported in Apache Cassandra 2.1-->3.x.
+ * @property {Number} v4 Cassandra protocol v4, supported in Apache Cassandra 2.2-->3.x.
+ * @property {Number} v5 Cassandra protocol v5, in beta from Apache Cassandra 3.x+. Currently not supported by the
+ * driver.
+ * @property {Number} dseV1 DataStax Enterprise protocol v1, DSE 5.1+
+ * @property {Number} dseV2 DataStax Enterprise protocol v2, DSE 6.0+
+ * @property {Number} maxSupported Returns the higher protocol version that is supported by this driver.
+ * @property {Number} minSupported Returns the lower protocol version that is supported by this driver.
+ * @property {Function} isSupported A function that returns a boolean determining whether a given protocol version
+ * is supported.
+ * @alias module:types~protocolVersion
+ */
+declare const protocolVersion: {
+    v1: number;
+    v2: number;
+    v3: number;
+    v4: number;
+    v5: number;
+    v6: number;
+    dseV1: number;
+    dseV2: number;
+    maxSupported: number;
+    minSupported: number;
+    /**
+     * Determines whether the protocol version is a DSE-specific protocol version.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    isDse: (version: number) => boolean;
+    /**
+     * Returns true if the protocol version represents a version of Cassandra
+     * supported by this driver, false otherwise
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    isSupportedCassandra: (version: number) => boolean;
+    /**
+     * Determines whether the protocol version is supported by this driver.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    isSupported: (version: number) => boolean;
+    /**
+     * Determines whether the protocol includes flags for PREPARE messages.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    supportsPrepareFlags: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports sending the keyspace as part of PREPARE, QUERY, EXECUTE, and BATCH.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    supportsKeyspaceInRequest: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports result_metadata_id on `prepared` response and
+     * and `execute` request.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    supportsResultMetadataId: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports partition key indexes in the `prepared` RESULT responses.
+     * @param {Number} version
+     * @returns {Boolean}
+     * @ignore
+     */
+    supportsPreparedPartitionKey: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports up to 4 strings (ie: change_type, target, keyspace and table) in the
+     * schema change responses.
+     * @param version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsSchemaChangeFullMetadata: (version: any) => boolean;
+    /**
+     * Determines whether the protocol supports continuous paging.
+     * @param version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsContinuousPaging: (version: any) => boolean;
+    /**
+     * Determines whether the protocol supports paging state and serial consistency parameters in QUERY and EXECUTE
+     * requests.
+     * @param version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsPaging: (version: any) => boolean;
+    /**
+     * Determines whether the protocol supports timestamps parameters in BATCH, QUERY and EXECUTE requests.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsTimestamp: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports named parameters in QUERY and EXECUTE requests.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsNamedParameters: (version: number) => boolean;
+    /**
+     * Determines whether the protocol supports unset parameters.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsUnset: (version: number) => boolean;
+    /**
+     * Determines whether the protocol provides a reason map for read and write failure errors.
+     * @param version
+     * @return {boolean}
+     * @ignore
+     */
+    supportsFailureReasonMap: (version: any) => boolean;
+    /**
+     * Determines whether the protocol supports timestamp and serial consistency parameters in BATCH requests.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    uses2BytesStreamIds: (version: number) => boolean;
+    /**
+     * Determines whether the collection length is encoded using 32 bits.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    uses4BytesCollectionLength: (version: number) => boolean;
+    /**
+     * Determines whether the QUERY, EXECUTE and BATCH flags are encoded using 32 bits.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    uses4BytesQueryFlags: (version: number) => boolean;
+    /**
+     * Startup responses using protocol v4+ can be a SERVER_ERROR wrapping a ProtocolException, this method returns true
+     * when is possible to receive such error.
+     * @param {Number} version
+     * @return {boolean}
+     * @ignore
+     */
+    canStartupResponseErrorBeWrapped: (version: number) => boolean;
+    /**
+     * Gets the first version number that is supported, lower than the one provided.
+     * Returns zero when there isn't a lower supported version.
+     * @param {Number} version
+     * @return {Number}
+     * @ignore
+     */
+    getLowerSupported: (version: number) => number;
+    /**
+     * Computes the highest supported protocol version collectively by the given hosts.
+     *
+     * Considers the cassandra_version of the input hosts to determine what protocol versions
+     * are supported and uses the highest common protocol version among them.
+     *
+     * If hosts >= C* 3.0 are detected, any hosts older than C* 2.1 will not be considered
+     * as those cannot be connected to.  In general this will not be a problem as C* does
+     * not support clusters with nodes that have versions that are more than one major
+     * version away from each other.
+     * @param {Connection} connection Connection hosts were discovered from.
+     * @param {Array.<Host>} hosts The hosts to determine highest protocol version from.
+     * @return {Number} Highest supported protocol version among hosts.
+     */
+    getHighestCommon: (connection: Connection, hosts: HostMap) => number;
+    /**
+     * Determines if the protocol is a BETA version of the protocol.
+     * @param {Number} version
+     * @return {boolean}
+     */
+    isBeta: (version: number) => boolean;
+};
+
+/**
+ * Query options
+ * @typedef {Object} QueryOptions@typedef {Object} QueryOptions
+ * @property {Boolean} [autoPage] Determines if the driver must retrieve the following result pages automatically.
+ * <p>
+ *   This setting is only considered by the [Client#eachRow()]{@link Client#eachRow} method. For more information,
+ *   check the
+ *   [paging results documentation]{@link https://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/}.
+ * </p>
+ * @property {Boolean} [captureStackTrace] Determines if the stack trace before the query execution should be
+ * maintained.
+ * <p>
+ *   Useful for debugging purposes, it should be set to <code>false</code> under production environment as it adds an
+ *   unnecessary overhead to each execution.
+ * </p>
+ * Default: false.
+ * @property {Number} [consistency] [Consistency level]{@link module:types~consistencies}.
+ * <p>
+ *   Defaults to <code>localOne</code> for Apache Cassandra and DSE deployments.
+ *   For DataStax Astra, it defaults to <code>localQuorum</code>.
+ * </p>
+ * @property {Object} [customPayload] Key-value payload to be passed to the server. On the Cassandra side,
+ * implementations of QueryHandler can use this data.
+ * @property {String} [executeAs] The user or role name to act as when executing this statement.
+ * <p>When set, it executes as a different user/role than the one currently authenticated (a.k.a. proxy execution).</p>
+ * <p>This feature is only available in DSE 5.1+.</p>
+ * @property {String|ExecutionProfile} [executionProfile] Name or instance of the [profile]{@link ExecutionProfile} to
+ * be used for this execution. If not set, it will the use "default" execution profile.
+ * @property {Number} [fetchSize] Amount of rows to retrieve per page.
+ * @property {Array|Array<Array>} [hints] Type hints for parameters given in the query, ordered as for the parameters.
+ * <p>For batch queries, an array of such arrays, ordered as with the queries in the batch.</p>
+ * @property {Host} [host] The host that should handle the query.
+ * <p>
+ *   Use of this option is <em>heavily discouraged</em> and should only be used in the following cases:
+ * </p>
+ * <ol>
+ *   <li>
+ *     Querying node-local tables, such as tables in the <code>system</code> and <code>system_views</code>
+ *     keyspaces.
+ *   </li>
+ *   <li>
+ *     Applying a series of schema changes, where it may be advantageous to execute schema changes in sequence on the
+ *     same node.
+ *   </li>
+ * </ol>
+ * <p>
+ *   Configuring a specific host causes the configured
+ *   [LoadBalancingPolicy]{@link module:policies/loadBalancing~LoadBalancingPolicy} to be completely bypassed.
+ *   However, if the load balancing policy dictates that the host is at a
+ *   [distance of ignored]{@link module:types~distance} or there is no active connectivity to the host, the request will
+ *   fail with a [NoHostAvailableError]{@link module:errors~NoHostAvailableError}.
+ * </p>
+ * @property {Boolean} [isIdempotent] Defines whether the query can be applied multiple times without changing the result
+ * beyond the initial application.
+ * <p>
+ *   The query execution idempotence can be used at [RetryPolicy]{@link module:policies/retry~RetryPolicy} level to
+ *   determine if an statement can be retried in case of request error or write timeout.
+ * </p>
+ * <p>Default: <code>false</code>.</p>
+ * @property {String} [keyspace] Specifies the keyspace for the query. It is used for the following:
+ * <ol>
+ * <li>To indicate what keyspace the statement is applicable to (protocol V5+ only).  This is useful when the
+ * query does not provide an explicit keyspace and you want to override the current {@link Client#keyspace}.</li>
+ * <li>For query routing when the query operates on a different keyspace than the current {@link Client#keyspace}.</li>
+ * </ol>
+ * @property {Boolean} [logged] Determines if the batch should be written to the batchlog. Only valid for
+ * [Client#batch()]{@link Client#batch}, it will be ignored by other methods. Default: true.
+ * @property {Boolean} [counter] Determines if its a counter batch. Only valid for
+ * [Client#batch()]{@link Client#batch}, it will be ignored by other methods. Default: false.
+ * @property {Buffer|String} [pageState] Buffer or string token representing the paging state.
+ * <p>Useful for manual paging, if provided, the query will be executed starting from a given paging state.</p>
+ * @property {Boolean} [prepare] Determines if the query must be executed as a prepared statement.
+ * @property {Number} [readTimeout] When defined, it overrides the default read timeout
+ * (<code>socketOptions.readTimeout</code>) in milliseconds for this execution per coordinator.
+ * <p>
+ *   Suitable for statements for which the coordinator may allow a longer server-side timeout, for example aggregation
+ *   queries.
+ * </p>
+ * <p>
+ *   A value of <code>0</code> disables client side read timeout for the execution. Default: <code>undefined</code>.
+ * </p>
+ * @property {RetryPolicy} [retry] Retry policy for the query.
+ * <p>
+ *   This property can be used to specify a different [retry policy]{@link module:policies/retry} to the one specified
+ *   in the {@link ClientOptions}.policies.
+ * </p>
+ * @property {Array} [routingIndexes] Index of the parameters that are part of the partition key to determine
+ * the routing.
+ * @property {Buffer|Array} [routingKey] Partition key(s) to determine which coordinator should be used for the query.
+ * @property {Array} [routingNames] Array of the parameters names that are part of the partition key to determine the
+ * routing. Only valid for non-prepared requests, it's recommended that you use the prepare flag instead.
+ * @property {Number} [serialConsistency] Serial consistency is the consistency level for the serial phase of
+ * conditional updates.
+ * This option will be ignored for anything else that a conditional update/insert.
+ * @property {Number|Long} [timestamp] The default timestamp for the query in microseconds from the unix epoch
+ * (00:00:00, January 1st, 1970).
+ * <p>If provided, this will replace the server side assigned timestamp as default timestamp.</p>
+ * <p>Use [generateTimestamp()]{@link module:types~generateTimestamp} utility method to generate a valid timestamp
+ * based on a Date and microseconds parts.</p>
+ * @property {Boolean} [traceQuery] Enable query tracing for the execution. Use query tracing to diagnose performance
+ * problems related to query executions. Default: false.
+ * <p>To retrieve trace, you can call [Metadata.getTrace()]{@link module:metadata~Metadata#getTrace} method.</p>
+ * @property {Object} [graphOptions] Default options for graph query executions.
+ * <p>
+ *   These options are meant to provide defaults for all graph query executions. Consider using
+ *   [execution profiles]{@link ExecutionProfile} if you plan to reuse different set of options across different
+ *   query executions.
+ * </p>
+ * @property {String} [graphOptions.language] The graph language to use in graph queries. Default:
+ * <code>'gremlin-groovy'</code>.
+ * @property {String} [graphOptions.name] The graph name to be used in all graph queries.
+ * <p>
+ * This property is required but there is no default value for it. This value can be overridden at query level.
+ * </p>
+ * @property {Number} [graphOptions.readConsistency] Overrides the
+ * [consistency level]{@link module:types~consistencies}
+ * defined in the query options for graph read queries.
+ * @property {Number} [graphOptions.readTimeout] Overrides the default per-host read timeout (in milliseconds) for all
+ * graph queries. Default: <code>0</code>.
+ * <p>
+ *   Use <code>null</code> to reset the value and use the default on <code>socketOptions.readTimeout</code> .
+ * </p>
+ * @property {String} [graphOptions.source] The graph traversal source name to use in graph queries. Default:
+ * <code>'g'</code>.
+ * @property {Number} [graphOptions.writeConsistency] Overrides the [consistency
+ * level]{@link module:types~consistencies} defined in the query options for graph write queries.
+ Default options for graph query executions.
+ * <p>
+ *   These options are meant to provide defaults for all graph query executions. Consider using
+ *   [execution profiles]{@link ExecutionProfile} if you plan to reuse different set of options across different
+ *   query executions.
+ * </p>
+ * @property {String} [graphOptions.language] The graph language to use in graph queries. Default:
+ * <code>'gremlin-groovy'</code>.
+ * @property {String} [graphOptions.name] The graph name to be used in all graph queries.
+ * <p>
+ * This property is required but there is no default value for it. This value can be overridden at query level.
+ * </p>
+ * @property {Number} [graphOptions.readConsistency] Overrides the
+ * [consistency level]{@link module:types~consistencies}
+ * defined in the query options for graph read queries.
+ * @property {Number} [graphOptions.readTimeout] Overrides the default per-host read timeout (in milliseconds) for all
+ * graph queries. Default: <code>0</code>.
+ * <p>
+ *   Use <code>null</code> to reset the value and use the default on <code>socketOptions.readTimeout</code> .
+ * </p>
+ * @property {String} [graphOptions.source] The graph traversal source name to use in graph queries. Default:
+ * <code>'g'</code>.
+ * @property {Number} [graphOptions.writeConsistency] Overrides the [consistency
+ * level]{@link module:types~consistencies} defined in the query options for graph write queries.
+ */
+declare interface QueryOptions {
     autoPage?: boolean;
     captureStackTrace?: boolean;
     consistency?: number;
-    counter?: boolean;
-    customPayload?: any;
+    customPayload?: object;
+    executeAs?: string;
     executionProfile?: string | ExecutionProfile;
     fetchSize?: number;
-    hints?: string[] | string[][];
+    hints?: Array<string> | Array<Array<string>>;
     host?: Host;
     isIdempotent?: boolean;
     keyspace?: string;
     logged?: boolean;
+    counter?: boolean;
     pageState?: Buffer | string;
     prepare?: boolean;
     readTimeout?: number;
-    retry?: policies.retry.RetryPolicy;
+    retry?: RetryPolicy;
     routingIndexes?: number[];
     routingKey?: Buffer | Buffer[];
     routingNames?: string[];
     serialConsistency?: number;
     timestamp?: number | Long;
     traceQuery?: boolean;
+    graphOptions?: {
+        language?: string;
+        name?: string;
+        readConsistency?: number;
+        readTimeout?: number;
+        source?: string;
+        writeConsistency?: number;
+    };
 }
 
-export declare namespace token {
-    export interface Token {
-        compare(other: Token): number;
-
-        equals(other: Token): boolean;
-
-        getType(): { code: types.dataTypes, info: any };
-
-        getValue(): any;
-    }
-
-    export interface TokenRange {
-        start: Token;
-        end: Token;
-
-        compare(other: TokenRange): number;
-
-        contains(token: Token): boolean;
-
-        equals(other: TokenRange): boolean;
-
-        isEmpty(): boolean;
-
-        isWrappedAround(): boolean;
-
-        splitEvenly(numberOfSplits: number): TokenRange[];
-
-        unwrap(): TokenRange[];
+declare namespace reconnection {
+    export {
+        ReconnectionPolicy,
+        ConstantReconnectionPolicy,
+        ExponentialReconnectionPolicy,
+        _default_3 as default
     }
 }
 
-export declare namespace tracker {
-    export interface RequestTracker {
-        onError(
-        host: Host,
-        query: string | Array<{ query: string, params?: any }>,
-        parameters: any[] | { [key: string]: any } | null,
-        executionOptions: ExecutionOptions,
-        requestLength: number,
-        err: Error,
-        latency: number[]): void;
-
-        onSuccess(
-        host: Host,
-        query: string | Array<{ query: string, params?: any }>,
-        parameters: any[] | { [key: string]: any } | null,
-        executionOptions: ExecutionOptions,
-        requestLength: number,
-        responseLength: number,
-        latency: number[]): void;
-
-        shutdown(): void;
-    }
-
-    export class RequestLogger implements RequestTracker {
-        constructor(options: {
-            slowThreshold?: number;
-            logNormalRequests?: boolean;
-            logErroredRequests?: boolean;
-            messageMaxQueryLength?: number;
-            messageMaxParameterValueLength?: number;
-            messageMaxErrorStackTraceLength?: number;
-        });
-
-        onError(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, err: Error, latency: number[]): void;
-
-        onSuccess(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, responseLength: number, latency: number[]): void;
-
-        shutdown(): void;
-    }
+/** @module policies/reconnection */
+/**
+ * Base class for Reconnection Policies
+ */
+declare class ReconnectionPolicy {
+    constructor();
+    /**
+     * A new reconnection schedule.
+     * @returns {{next: function}} An infinite iterator
+     */
+    newSchedule(): {
+        next: Function;
+    };
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<any, any>;
 }
 
-export declare namespace types {
-    export class Long extends _Long {
-
-    }
-
-    export enum consistencies {
-        any = 0x00,
-        one = 0x01,
-        two = 0x02,
-        three = 0x03,
-        quorum = 0x04,
-        all = 0x05,
-        localQuorum = 0x06,
-        eachQuorum = 0x07,
-        serial = 0x08,
-        localSerial = 0x09,
-        localOne = 0x0a
-    }
-
-    export enum dataTypes {
-        custom = 0x0000,
-        ascii = 0x0001,
-        bigint = 0x0002,
-        blob = 0x0003,
-        boolean = 0x0004,
-        counter = 0x0005,
-        decimal = 0x0006,
-        double = 0x0007,
-        float = 0x0008,
-        int = 0x0009,
-        text = 0x000a,
-        timestamp = 0x000b,
-        uuid = 0x000c,
-        varchar = 0x000d,
-        varint = 0x000e,
-        timeuuid = 0x000f,
-        inet = 0x0010,
-        date = 0x0011,
-        time = 0x0012,
-        smallint = 0x0013,
-        tinyint = 0x0014,
-        duration = 0x0015,
-        list = 0x0020,
-        map = 0x0021,
-        set = 0x0022,
-        udt = 0x0030,
-        tuple = 0x0031,
-    }
-
-    export enum distance {
-        local = 0,
-        remote,
-        ignored
-    }
-
-    export enum responseErrorCodes {
-        serverError = 0x0000,
-        protocolError = 0x000A,
-        badCredentials = 0x0100,
-        unavailableException = 0x1000,
-        overloaded = 0x1001,
-        isBootstrapping = 0x1002,
-        truncateError = 0x1003,
-        writeTimeout = 0x1100,
-        readTimeout = 0x1200,
-        readFailure = 0x1300,
-        functionFailure = 0x1400,
-        writeFailure = 0x1500,
-        syntaxError = 0x2000,
-        unauthorized = 0x2100,
-        invalid = 0x2200,
-        configError = 0x2300,
-        alreadyExists = 0x2400,
-        unprepared = 0x2500,
-        clientWriteFailure = 0x8000
-    }
-
-    export enum protocolVersion {
-        v1 = 0x01,
-        v2 = 0x02,
-        v3 = 0x03,
-        v4 = 0x04,
-        v5 = 0x05,
-        v6 = 0x06,
-        dseV1 = 0x41,
-        dseV2 = 0x42,
-        maxSupported = dseV2,
-        minSupported = v1
-    }
-
-    export namespace protocolVersion {
-        export function isSupported(version: protocolVersion): boolean;
-    }
-
-    const unset: object;
-
-    export class BigDecimal {
-        constructor(unscaledValue: number, scale: number);
-
-        static fromBuffer(buf: Buffer): BigDecimal;
-
-        static fromString(value: string): BigDecimal;
-
-        static toBuffer(value: BigDecimal): Buffer;
-
-        static fromNumber(value: number): BigDecimal;
-
-        add(other: BigDecimal): BigDecimal;
-
-        compare(other: BigDecimal): number;
-
-        equals(other: BigDecimal): boolean;
-
-        greaterThan(other: BigDecimal): boolean;
-
-        isNegative(): boolean;
-
-        isZero(): boolean;
-
-        notEquals(other: BigDecimal): boolean;
-
-        subtract(other: BigDecimal): BigDecimal;
-
-        toNumber(): number;
-
-        toString(): string;
-
-        toJSON(): string;
-    }
-
-    export class Duration {
-        constructor(month: number, days: number, nanoseconds: number | Long);
-
-        static fromBuffer(buffer: Buffer): Duration;
-
-        static fromString(input: string): Duration;
-
-        equals(other: Duration): boolean;
-
-        toBuffer(): Buffer;
-
-        toString(): string;
-    }
-
-    export class InetAddress {
-        length: number;
-
-        version: number;
-
-        constructor(buffer: Buffer);
-
-        static fromString(value: string): InetAddress;
-
-        equals(other: InetAddress): boolean;
-
-        getBuffer(): Buffer;
-
-        toString(): string;
-
-        toJSON(): string;
-    }
-
-    export class Integer {
-        static ONE: Integer;
-        static ZERO: Integer;
-
-        constructor(bits: Array<number>, sign: number);
-
-        static fromBits(bits: Array<number>): Integer;
-
-        static fromBuffer(bits: Buffer): Integer;
-
-        static fromInt(value: number): Integer;
-
-        static fromNumber(value: number): Integer;
-
-        static fromString(str: string, opt_radix?: number): Integer;
-
-        static toBuffer(value: Integer): Buffer;
-
-        abs(): Integer;
-
-        add(other: Integer): Integer;
-
-        compare(other: Integer): number;
-
-        divide(other: Integer): Integer;
-
-        equals(other: Integer): boolean;
-
-        getBits(index: number): number;
-
-        getBitsUnsigned(index: number): number;
-
-        getSign(): number;
-
-        greaterThan(other: Integer): boolean;
-
-        greaterThanOrEqual(other: Integer): boolean;
-
-        isNegative(): boolean;
-
-        isOdd(): boolean;
-
-        isZero(): boolean;
-
-        lessThan(other: Integer): boolean;
-
-        lessThanOrEqual(other: Integer): boolean;
-
-        modulo(other: Integer): Integer;
-
-        multiply(other: Integer): Integer;
-
-        negate(): Integer;
-
-        not(): Integer;
-
-        notEquals(other: Integer): boolean;
-
-        or(other: Integer): Integer;
-
-        shiftLeft(numBits: number): Integer;
-
-        shiftRight(numBits: number): Integer;
-
-        shorten(numBits: number): Integer;
-
-        subtract(other: Integer): Integer;
-
-        toInt(): number;
-
-        toJSON(): string;
-
-        toNumber(): number;
-
-        toString(opt_radix?: number): string;
-
-        xor(other: Integer): Integer;
-    }
-
-    export class LocalDate {
-        year: number;
-        month: number;
-        day: number;
-
-        constructor(year: number, month: number, day: number);
-
-        static fromDate(date: Date): LocalDate;
-
-        static fromString(value: string): LocalDate;
-
-        static fromBuffer(buffer: Buffer): LocalDate;
-
-        static now(): LocalDate;
-
-        static utcNow(): LocalDate;
-
-        equals(other: LocalDate): boolean;
-
-        inspect(): string;
-
-        toBuffer(): Buffer;
-
-        toJSON(): string;
-
-        toString(): string;
-    }
-
-    export class LocalTime {
-        hour: number;
-        minute: number;
-        nanosecond: number;
-        second: number;
-
-        constructor(totalNanoseconds: Long);
-
-        static fromBuffer(value: Buffer): LocalTime;
-
-        static fromDate(date: Date, nanoseconds: number): LocalTime;
-
-        static fromMilliseconds(milliseconds: number, nanoseconds?: number): LocalTime;
-
-        static fromString(value: string): LocalTime;
-
-        static now(nanoseconds?: number): LocalTime;
-
-        compare(other: LocalTime): boolean;
-
-        equals(other: LocalTime): boolean;
-
-        getTotalNanoseconds(): Long;
-
-        inspect(): string;
-
-        toBuffer(): Buffer;
-
-        toJSON(): string;
-
-        toString(): string;
-    }
-
-    export interface ResultSet extends Iterable<Row>, AsyncIterable<Row> {
-        info: {
-            queriedHost: string,
-            triedHosts: { [key: string]: any; },
-            speculativeExecutions: number,
-            achievedConsistency: consistencies,
-            traceId: Uuid,
-            warnings: string[],
-            customPayload: any
-        };
-
-        columns: Array<{ name: string, type: { code: dataTypes, info: any } }>;
-        nextPage: (() => void) | null;
-        pageState: string;
-        rowLength: number;
-        rows: Row[];
-
-        first(): Row;
-
-        wasApplied(): boolean;
-    }
-
-    export interface ResultStream extends stream.Readable {
-        buffer: Buffer;
-        paused: boolean;
-
-        add(chunk: Buffer): void;
-    }
-
-    export interface Row {
-        get(columnName: string | number): any;
-
-        keys(): string[];
-
-        forEach(callback: (row: Row) => void): void;
-
-        values(): any[];
-
+declare type RemoveDocInfo = {
+    fields?: string[];
+    ttl?: number;
+    ifExists?: boolean;
+    when?: {
         [key: string]: any;
-    }
+    };
+    deleteOnlyColumns?: boolean;
+};
 
-    export class TimeUuid extends Uuid {
-        static now(): TimeUuid;
+/**
+ * Abstract class Request
+ */
+declare class Request_2 {
+    length: number;
+    constructor();
+    /**
+     * @abstract
+     * @param {Encoder} encoder
+     * @param {Number} streamId
+     * @throws {TypeError}
+     * @returns {Buffer}
+     */
+    write(encoder: Encoder, streamId: number): Buffer;
+    /**
+     * Creates a new instance using the same constructor as the current instance, copying the properties.
+     * @return {Request}
+     */
+    clone(): Request_2;
+}
 
-        static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
+/**
+ * A request tracker that logs the requests executed through the session, according to a set of
+ * configurable options.
+ * @implements {module:tracker~RequestTracker}
+ * @alias module:tracker~RequestLogger
+ * @example <caption>Logging slow queries</caption>
+ * const requestLogger = new RequestLogger({ slowThreshold: 1000 });
+ * requestLogger.emitter.on('show', message => console.log(message));
+ * // Add the requestLogger to the client options
+ * const client = new Client({ contactPoints, requestTracker: requestLogger });
+ */
+declare class RequestLogger extends RequestTracker {
+    _options: {
+        slowThreshold?: number;
+        requestSizeThreshold?: number;
+        logNormalRequests?: boolean;
+        logErroredRequests?: boolean;
+        messageMaxQueryLength?: number;
+        messageMaxParameterValueLength?: number;
+        messageMaxErrorStackTraceLength?: number;
+    };
+    logNormalRequests: any;
+    logErroredRequests: any;
+    emitter: events<[never]>;
+    /**
+     * Creates a new instance of {@link RequestLogger}.
+     * @param {Object} options
+     * @param {Number} [options.slowThreshold] The threshold in milliseconds beyond which queries are considered 'slow'
+     * and logged as such by the driver.
+     * @param {Number} [options.requestSizeThreshold] The threshold in bytes beyond which requests are considered 'large'
+     * and logged as such by the driver.
+     * @param {Boolean} [options.logNormalRequests] Determines whether it should emit 'normal' events for every
+     * EXECUTE, QUERY and BATCH request executed successfully, useful only for debugging. This option can be modified
+     * after the client is connected using the property {@link RequestLogger#logNormalRequests}.
+     * @param {Boolean} [options.logErroredRequests] Determines whether it should emit 'failure' events for every
+     * EXECUTE, QUERY and BATCH request execution that resulted in an error. This option can be modified
+     * after the client is connected using the property {@link RequestLogger#logErroredRequests}.
+     * @param {Number} [options.messageMaxQueryLength] The maximum amount of characters that are logged from the query
+     * portion of the message. Defaults to 500.
+     * @param {Number} [options.messageMaxParameterValueLength] The maximum amount of characters of each query parameter
+     * value that will be included in the message. Defaults to 50.
+     * @param {Number} [options.messageMaxErrorStackTraceLength] The maximum amount of characters of the stack trace
+     * that will be included in the message. Defaults to 200.
+     */
+    constructor(options: {
+        slowThreshold?: number;
+        requestSizeThreshold?: number;
+        logNormalRequests?: boolean;
+        logErroredRequests?: boolean;
+        messageMaxQueryLength?: number;
+        messageMaxParameterValueLength?: number;
+        messageMaxErrorStackTraceLength?: number;
+    });
+    /**
+     * Logs message if request execution was deemed too slow, large or if normal requests are logged.
+     * @override
+     */
+    onSuccess(host: Host, query: string | Array<{
+        query: string;
+        params?: any;
+    }>, parameters: any[] | {
+        [p: string]: any;
+    } | null, executionOptions: ExecutionOptions, requestLength: number, responseLength: number, latency: number[]): void;
+    /**
+     * Logs message if request execution was too large and/or encountered an error.
+     * @override
+     */
+    onError(host: Host, query: string | Array<{
+        query: string;
+        params?: any;
+    }>, parameters: any[] | {
+        [p: string]: any;
+    } | null, executionOptions: ExecutionOptions, requestLength: number, err: Error, latency: number[]): void;
+    private _logSlow;
+    private _logLargeRequest;
+    private _logNormalRequest;
+    private _logLargeErrorRequest;
+    private _logErrorRequest;
+}
 
-        static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
+/**
+ * Tracks request execution for a {@link Client}.
+ * <p>
+ *   A {@link RequestTracker} can be configured in the client options. The <code>Client</code> will execute
+ *   {@link RequestTracker#onSuccess} or {@link RequestTracker#onError} for every query or batch
+ *   executed (QUERY, EXECUTE and BATCH requests).
+ * </p>
+ * @interface
+ * @alias module:tracker~RequestTracker
+ */
+declare abstract class RequestTracker {
+    /**
+     * Invoked each time a query or batch request succeeds.
+     * @param {Host} host The node that acted as coordinator of the request.
+     * @param {String|Array} query In the case of prepared or unprepared query executions, the provided
+     * query string. For batch requests, an Array containing the queries and parameters provided.
+     * @param {Array|Object|null} parameters In the case of prepared or unprepared query executions, the provided
+     * parameters.
+     * @param {ExecutionOptions} executionOptions The information related to the execution of the request.
+     * @param {Number} requestLength Length of the body of the request.
+     * @param {Number} responseLength Length of the body of the response.
+     * @param {Array<Number>} latency An array containing [seconds, nanoseconds] tuple, where nanoseconds is the
+     * remaining part of the real time that can't be represented in second precision (see <code>process.hrtime()</code>).
+     */
+    onSuccess?(host: Host, query: string | Array<{
+        query: string;
+        params?: any;
+    }>, parameters: any[] | {
+        [key: string]: any;
+    } | null, executionOptions: ExecutionOptions, requestLength: number, responseLength: number, latency: number[]): void;
+    /**
+     * Invoked each time a query or batch request fails.
+     * @param {Host} host The node that acted as coordinator of the request.
+     * @param {String|Array} query In the case of prepared or unprepared query executions, the provided
+     * query string. For batch requests, an Array containing the queries and parameters provided.
+     * @param {Array|Object|null} parameters In the case of prepared or unprepared query executions, the provided
+     * parameters.
+     * @param {ExecutionOptions} executionOptions The information related to the execution of the request.
+     * @param {Number} requestLength Length of the body of the request. When the failure occurred before the request was
+     * written to the wire, the length will be <code>0</code>.
+     * @param {Error} err The error that caused that caused the request to fail.
+     * @param {Array<Number>} latency An array containing [seconds, nanoseconds] tuple, where nanoseconds is the
+     * remaining part of the real time that can't be represented in second precision (see <code>process.hrtime()</code>).
+     */
+    onError?(host: Host, query: string | Array<{
+        query: string;
+        params?: any;
+    }>, parameters: any[] | {
+        [key: string]: any;
+    } | null, executionOptions: ExecutionOptions, requestLength: number, err: Error, latency: number[]): void;
+    /**
+     * Invoked when the Client is being shutdown.
+     */
+    shutdown?(): void;
+}
 
-        static now(callback: ValueCallback<TimeUuid>): void;
+/**
+ * Represents an error message from the server
+ */
+declare class ResponseError extends DriverError {
+    code: number;
+    consistencies: number;
+    required: number;
+    alive: number;
+    received: number;
+    blockFor: number;
+    failures: number;
+    reasons: object;
+    isDataPresent: any;
+    writeType: any;
+    queryId: any;
+    keyspace: any;
+    functionName: any;
+    argTypes: any[];
+    table: any;
+    /**
+     * Represents an error message from the server
+     * @param {Number} code Cassandra exception code
+     * @param {String} message
+     * @constructor
+     */
+    constructor(code: number, message: string);
+}
 
-        static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer): TimeUuid;
+/**
+ * Server error codes returned by Cassandra
+ * @type {Object}
+ * @property {Number} serverError Something unexpected happened.
+ * @property {Number} protocolError Some client message triggered a protocol violation.
+ * @property {Number} badCredentials Authentication was required and failed.
+ * @property {Number} unavailableException Raised when coordinator knows there is not enough replicas alive to perform a query with the requested consistency level.
+ * @property {Number} overloaded The request cannot be processed because the coordinator is overloaded.
+ * @property {Number} isBootstrapping The request was a read request but the coordinator node is bootstrapping.
+ * @property {Number} truncateError Error encountered during a truncate request.
+ * @property {Number} writeTimeout Timeout encountered on write query on coordinator waiting for response(s) from replicas.
+ * @property {Number} readTimeout Timeout encountered on read query on coordinator waitign for response(s) from replicas.
+ * @property {Number} readFailure A non-timeout error encountered during a read request.
+ * @property {Number} functionFailure A (user defined) function encountered during execution.
+ * @property {Number} writeFailure A non-timeout error encountered during a write request.
+ * @property {Number} syntaxError The submitted query has a syntax error.
+ * @property {Number} unauthorized The logged user doesn't have the right to perform the query.
+ * @property {Number} invalid The query is syntactically correct but invalid.
+ * @property {Number} configError The query is invalid because of some configuration issue.
+ * @property {Number} alreadyExists The query attempted to create a schema element (i.e. keyspace, table) that already exists.
+ * @property {Number} unprepared Can be thrown while a prepared statement tries to be executed if the provided statement is not known by the coordinator.
+ */
+declare const responseErrorCodes: {
+    serverError: number;
+    protocolError: number;
+    badCredentials: number;
+    unavailableException: number;
+    overloaded: number;
+    isBootstrapping: number;
+    truncateError: number;
+    writeTimeout: number;
+    readTimeout: number;
+    readFailure: number;
+    functionFailure: number;
+    writeFailure: number;
+    syntaxError: number;
+    unauthorized: number;
+    invalid: number;
+    configError: number;
+    alreadyExists: number;
+    unprepared: number;
+    clientWriteFailure: number;
+};
 
-        static fromDate(
-        date: Date,
-        ticks: number,
-        nodeId: string | Buffer,
-        clockId: string | Buffer,
-        callback: ValueCallback<TimeUuid>): void;
+/**
+ * Represents the result of an execution as an iterable of objects in the Mapper.
+ * @alias module:mapping~Result
+ */
+declare class Result {
+    [inspectMethod]: () => object[];
+    /**
+     * Creates a new instance of Result.
+     * @param {ResultSet} rs
+     * @param {ModelMappingInfo} info
+     * @param {Function} rowAdapter
+     */
+    constructor(rs: ResultSet, info: ModelMappingInfo, rowAdapter: Function);
+    /**
+     * When this instance is the result of a conditional update query, it returns whether it was successful.
+     * Otherwise, it returns <code>true</code>.
+     * <p>
+     *   For consistency, this method always returns <code>true</code> for non-conditional queries (although there is
+     *   no reason to call the method in that case). This is also the case for conditional DDL statements
+     *   (CREATE KEYSPACE... IF NOT EXISTS, CREATE TABLE... IF NOT EXISTS), for which the server doesn't return
+     *   information whether it was applied or not.
+     * </p>
+     */
+    wasApplied(): any;
+    /**
+     * Gets the first document in this result or null when the result is empty.
+     */
+    first(): any;
+    /**
+     * Returns a new Iterator object that contains the document values.
+     */
+    [Symbol.iterator](): Generator<any, void, unknown>;
+    /**
+     * Converts the current instance to an Array of documents.
+     * @return {Array<Object>}
+     */
+    toArray(): Array<object>;
+    /**
+     * Executes a provided function once per result element.
+     * @param {Function} callback Function to execute for each element, taking two arguments: currentValue and index.
+     * @param {Object} [thisArg] Value to use as <code>this</code> when executing callback.
+     */
+    forEach(callback: Function, thisArg: object): void;
+}
 
-        static fromString(value: string): TimeUuid;
+/**
+ * Type of result included in a response
+ * @internal
+ * @ignore
+ */
+declare const resultKind: {
+    voidResult: number;
+    rows: number;
+    setKeyspace: number;
+    prepared: number;
+    schemaChange: number;
+};
 
-        static max(date: Date, ticks: number): TimeUuid;
+/** @module types */
+/**
+ * @class
+ * @classdesc Represents the result of a query.
+ */
+declare class ResultSet {
+    /**
+     * Gets the async iterator function.
+     * <p>
+     *   Retrieves the async iterator representing the entire query result, the driver will fetch the following result
+     *   pages.
+     * </p>
+     * <p>Use the async iterator when the query result might contain more rows than the <code>fetchSize</code>.</p>
+     * <p>
+     *   Note that using the async iterator will not affect the internal state of the <code>ResultSet</code> instance.
+     *   You should avoid using both <code>rows</code> property that contains the row instances of the first page of
+     *   results, and the async iterator, that will yield all the rows in the result regardless on the number of pages.
+     * </p>
+     * <p>Multiple concurrent async iterations are not supported.</p>
+     * @alias module:types~ResultSet#@@asyncIterator
+     * @example <caption>Using for await...of statement</caption>
+     * const query = 'SELECT user_id, post_id, content FROM timeline WHERE user_id = ?';
+     * const result = await client.execute(query, [ id ], { prepare: true });
+     * for await (const row of result) {
+     *   console.log(row['email']);
+     * }
+     * @returns {AsyncIterator<Row>}
+     */
+    [asyncIteratorSymbol]: () => AsyncIterator<Row>;
+    info: {
+        queriedHost: string;
+        triedHosts: {
+            [key: string]: any;
+        };
+        speculativeExecutions: number;
+        achievedConsistency: typeof consistencies;
+        traceId: Uuid;
+        warnings: string[];
+        customPayload: any;
+        isSchemaInAgreement: boolean;
+    };
+    columns: Array<{
+        name: string;
+        type: {
+            code: typeof dataTypes[keyof typeof dataTypes];
+            info: any;
+        };
+    }>;
+    nextPage: (() => void) | null;
+    pageState: string;
+    rowLength: number;
+    rows: Row[];
+    nextPageAsync: Function | undefined;
+    rawPageState: any;
+    /**
+     * Creates a new instance of ResultSet.
+     * @class
+     * @classdesc Represents the result of a query.
+     * @param {Object} response
+     * @param {String} host
+     * @param {Object} triedHosts
+     * @param {Number} speculativeExecutions
+     * @param {Number} consistency
+     * @param {Boolean} isSchemaInAgreement
+     * @constructor
+     */
+    constructor(response: {
+        rows: Array<any>;
+        flags: {
+            traceId: Uuid;
+            warnings: string[];
+            customPayload: any;
+        };
+        meta?: {
+            columns: Array<{
+                name: string;
+                type: {
+                    code: typeof dataTypes[keyof typeof dataTypes];
+                    info: any;
+                };
+            }>;
+            pageState: Buffer;
+        };
+    }, host: string, triedHosts: {
+        [key: string]: any;
+    }, speculativeExecutions: number, consistency: typeof consistencies, isSchemaInAgreement: boolean);
+    /**
+     * Returns the first row or null if the result rows are empty.
+     */
+    first(): Row;
+    getPageState(): string;
+    getColumns(): {
+        name: string;
+        type: {
+            code: (typeof dataTypes)[keyof typeof dataTypes];
+            info: any;
+        };
+    }[];
+    /**
+     * When this instance is the result of a conditional update query, it returns whether it was successful.
+     * Otherwise, it returns <code>true</code>.
+     * <p>
+     *   For consistency, this method always returns <code>true</code> for non-conditional queries (although there is
+     *   no reason to call the method in that case). This is also the case for conditional DDL statements
+     *   (CREATE KEYSPACE... IF NOT EXISTS, CREATE TABLE... IF NOT EXISTS), for which the server doesn't return
+     *   information whether it was applied or not.
+     * </p>
+     */
+    wasApplied(): boolean;
+    /**
+     * Gets the iterator function.
+     * <p>
+     *   Retrieves the iterator of the underlying fetched rows, without causing the driver to fetch the following
+     *   result pages. For more information on result paging,
+     *   [visit the documentation]{@link http://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/}.
+     * </p>
+     * @alias module:types~ResultSet#@@iterator
+     * @see {@link module:types~ResultSet#@@asyncIterator}
+     * @example <caption>Using for...of statement</caption>
+     * const query = 'SELECT user_id, post_id, content FROM timeline WHERE user_id = ?';
+     * const result = await client.execute(query, [ id ], { prepare: true });
+     * for (const row of result) {
+     *   console.log(row['email']);
+     * }
+     * @returns {Iterator.<Row>}
+     */
+    [Symbol.iterator](): Iterator<Row>;
+    /**
+     * Determines whether there are more pages of results.
+     * If so, the driver will initially retrieve and contain only the first page of results.
+     * To obtain all the rows, use the [AsyncIterator]{@linkcode module:types~ResultSet#@@asyncIterator}.
+     * @returns {boolean}
+     */
+    isPaged(): boolean;
+}
 
-        static min(date: Date, ticks: number): TimeUuid;
+/**
+ * Represents results from different related executions.
+ */
+declare class ResultSetGroup_2 {
+    private _collectResults;
+    private _maxErrors;
+    totalExecuted: number;
+    errors: Error[];
+    resultItems: any[];
+    /**
+     * Creates a new instance of {@link ResultSetGroup}.
+     * @ignore
+     */
+    constructor(options: any);
+    /** @ignore */
+    setResultItem(index: any, rs: any): void;
+    /**
+     * Internal method to set the error of an execution.
+     * @ignore
+     */
+    setError(index: any, err: any): void;
+}
 
-        getDatePrecision(): { date: Date, ticks: number };
+/** @module types */
+/**
+ * Readable stream using to yield data from a result or a field
+ */
+declare class ResultStream extends Readable {
+    buffer: any[];
+    paused: boolean;
+    _cancelAllowed: boolean;
+    _handlersObject: {
+        resumeReadingHandler?: Function;
+        cancelHandler?: Function;
+    };
+    _highWaterMarkRows: number;
+    _readableState: any;
+    _readNext: Function;
+    constructor(opt: any);
+    _read(): void;
+    /**
+     * Allows for throttling, helping nodejs keep the internal buffers reasonably sized.
+     * @param {Function} readNext function that triggers reading the next result chunk
+     * @ignore
+     */
+    _valve(readNext: Function): void;
+    add(chunk: any): number;
+    _checkAboveHighWaterMark(): void;
+    _checkBelowHighWaterMark(): void;
+    /**
+     * When continuous paging is enabled, allows the client to notify to the server to stop pushing further pages.
+     * <p>Note: This is not part of the public API yet.</p>
+     * @param {Function} [callback] The cancel method accepts an optional callback.
+     * @example <caption>Cancelling a continuous paging execution</caption>
+     * const stream = client.stream(query, params, { prepare: true, continuousPaging: true });
+     * // ...
+     * // Ask the server to stop pushing rows.
+     * stream.cancel();
+     * @ignore
+     */
+    cancel(callback: Function): any;
+    /**
+     * Sets the pointer to the handler to be used to cancel the continuous page execution.
+     * @param options
+     * @internal
+     * @ignore
+     */
+    setHandlers(options: any): void;
+}
 
-        getDate(): Date;
-    }
-
-    export class Tuple {
-        elements: any[];
-        length: number;
-
-        constructor(...args: any[]);
-
-        static fromArray(elements: any[]): Tuple;
-
-        get(index: number): any;
-
-        toString(): string;
-
-        toJSON(): string;
-
-        values(): any[];
-    }
-
-    export class Uuid {
-        constructor(buffer: Buffer);
-
-        static fromString(value: string): Uuid;
-
-        static random(callback: ValueCallback<Uuid>): void;
-
-        static random(): Uuid;
-
-        equals(other: Uuid): boolean;
-
-        getBuffer(): Buffer;
-
-        toString(): string;
-
-        toJSON(): string;
+declare namespace retry {
+    export {
+        IdempotenceAwareRetryPolicy,
+        FallthroughRetryPolicy,
+        RetryPolicy,
+        _default_4 as default
     }
 }
 
-export declare type ValueCallback<T> = (err: Error, val: T) => void;
+/**
+ * Base and default RetryPolicy.
+ * Determines what to do when the driver encounters specific Cassandra exceptions.
+ */
+declare class RetryPolicy {
+    /**
+     * Determines what to do when the driver gets an UnavailableException response from a Cassandra node.
+     * @param {OperationInfo} info
+     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * the exception.
+     * @param {Number} required The number of replicas whose response is required to achieve the
+     * required [consistency]{@link module:types~consistencies}.
+     * @param {Number} alive The number of replicas that were known to be alive when the request had been processed
+     * (since an unavailable exception has been triggered, there will be alive &lt; required)
+     * @returns {DecisionInfo}
+     */
+    onUnavailable(info: OperationInfo, consistency: number, required: number, alive: number): DecisionInfo;
+    /**
+     * Determines what to do when the driver gets a ReadTimeoutException response from a Cassandra node.
+     * @param {OperationInfo} info
+     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * the exception.
+     * @param {Number} received The number of nodes having answered the request.
+     * @param {Number} blockFor The number of replicas whose response is required to achieve the
+     * required [consistency]{@link module:types~consistencies}.
+     * @param {Boolean} isDataPresent When <code>false</code>, it means the replica that was asked for data has not responded.
+     * @returns {DecisionInfo}
+     */
+    onReadTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo;
+    /**
+     * Determines what to do when the driver gets a WriteTimeoutException response from a Cassandra node.
+     * @param {OperationInfo} info
+     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * the exception.
+     * @param {Number} received The number of nodes having acknowledged the request.
+     * @param {Number} blockFor The number of replicas whose acknowledgement is required to achieve the required
+     * [consistency]{@link module:types~consistencies}.
+     * @param {String} writeType A <code>string</code> that describes the type of the write that timed out ("SIMPLE"
+     * / "BATCH" / "BATCH_LOG" / "UNLOGGED_BATCH" / "COUNTER").
+     * @returns {DecisionInfo}
+     */
+    onWriteTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, writeType: string): DecisionInfo;
+    /**
+     * Defines whether to retry and at which consistency level on an unexpected error.
+     * <p>
+     * This method might be invoked in the following situations:
+     * </p>
+     * <ol>
+     * <li>On a client timeout, while waiting for the server response
+     * (see [socketOptions.readTimeout]{@link ClientOptions}), being the error an instance of
+     * [OperationTimedOutError]{@link module:errors~OperationTimedOutError}.</li>
+     * <li>On a connection error (socket closed, etc.).</li>
+     * <li>When the contacted host replies with an error, such as <code>overloaded</code>, <code>isBootstrapping</code>,
+     * </code>serverError, etc. In this case, the error is instance of [ResponseError]{@link module:errors~ResponseError}.
+     * </li>
+     * </ol>
+     * <p>
+     * Note that when this method is invoked, <em>the driver cannot guarantee that the mutation has been effectively
+     * applied server-side</em>; a retry should only be attempted if the request is known to be idempotent.
+     * </p>
+     * @param {OperationInfo} info
+     * @param {Number|undefined} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * the exception.
+     * @param {Error} err The error that caused this request to fail.
+     * @returns {DecisionInfo}
+     */
+    onRequestError(info: OperationInfo, consistency: number | undefined, err: Error): DecisionInfo;
+    /**
+     * Returns a {@link DecisionInfo} to retry the request with the given [consistency]{@link module:types~consistencies}.
+     * @param {Number|undefined} [consistency] When specified, it retries the request with the given consistency.
+     * @param {Boolean} [useCurrentHost] When specified, determines if the retry should be made using the same coordinator.
+     * Default: true.
+     * @returns {DecisionInfo}
+     */
+    retryResult(consistency?: typeof consistencies, useCurrentHost?: boolean): DecisionInfo;
+    /**
+     * Returns a {@link DecisionInfo} to callback in error when a err is obtained for a given request.
+     * @returns {DecisionInfo}
+     */
+    rethrowResult(): DecisionInfo;
+    /**
+     * Determines the retry decision for the retry policies.
+     * @type {Object}
+     * @property {Number} rethrow
+     * @property {Number} retry
+     * @property {Number} ignore
+     * @static
+     */
+    static retryDecision: {
+        readonly rethrow: 0;
+        readonly retry: 1;
+        readonly ignore: 2;
+    };
+}
 
-export declare const version: number;
+/**
+ * This policy yield nodes in a round-robin fashion.
+ */
+declare class RoundRobinPolicy extends LoadBalancingPolicy {
+    index: number;
+    constructor();
+    /**
+     * Returns an iterator with the hosts to be used as coordinator for a query.
+     * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
+     * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+     * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
+     * second parameter.
+     */
+    newQueryPlan(keyspace: string, executionOptions: any, callback: Function): void;
+}
+
+/** @module types */
+/**
+ * Represents a result row
+ * @param {Array} columns
+ * @constructor
+ */
+declare class Row {
+    private readonly __columns;
+    [key: string]: any;
+    constructor(columns: Array<any>);
+    /**
+     * Returns the cell value.
+     * @param {String|Number} columnName Name or index of the column
+     */
+    get(columnName: string | number): any;
+    /**
+     * Returns an array of the values of the row
+     * @returns {Array}
+     */
+    values(): Array<any>;
+    /**
+     * Returns an array of the column names of the row
+     * @returns {Array}
+     */
+    keys(): Array<any>;
+    /**
+     * Executes the callback for each field in the row, containing the value as first parameter followed by the columnName
+     * @param {Function} callback
+     */
+    forEach(callback: Function): void;
+}
+
+/**
+ * @classdesc Describes a CQL function.
+ * @alias module:metadata~SchemaFunction
+ */
+declare class SchemaFunction {
+    /**
+     * Name of the cql function.
+     * @type {String}
+     */
+    name: string;
+    /**
+     * Name of the keyspace where the cql function is declared.
+     */
+    keyspaceName: string;
+    /**
+     * Signature of the function.
+     * @type {Array.<String>}
+     */
+    signature: Array<string>;
+    /**
+     * List of the function argument names.
+     * @type {Array.<String>}
+     */
+    argumentNames: Array<string>;
+    /**
+     * List of the function argument types.
+     * @type {Array.<{code, info}>}
+     */
+    argumentTypes: Array<{
+        code: number;
+        info?: (object | Array<any> | string);
+    }>;
+    /**
+     * Body of the function.
+     * @type {String}
+     */
+    body: string;
+    /**
+     * Determines if the function is called when the input is null.
+     * @type {Boolean}
+     */
+    calledOnNullInput: boolean;
+    /**
+     * Name of the programming language, for example: java, javascript, ...
+     * @type {String}
+     */
+    language: string;
+    /**
+     * Type of the return value.
+     * @type {{code: number, info: (Object|Array|null)}}
+     */
+    returnType: {
+        code: number;
+        info?: (object | Array<any> | string);
+    };
+    /**
+     * Indicates whether or not this function is deterministic.  This means that
+     * given a particular input, the function will always produce the same output.
+     * @type {Boolean}
+     */
+    deterministic: boolean;
+    /**
+     * Indicates whether or not this function is monotonic on all of its
+     * arguments.  This means that it is either entirely non-increasing or
+     * non-decreasing.  Even if the function is not monotonic on all of its
+     * arguments, it's possible to specify that it is monotonic on one of
+     * its arguments, meaning that partial applications of the function over
+     * that argument will be monotonic.
+     *
+     * Monotonicity is required to use the function in a GROUP BY clause.
+     * @type {Boolean}
+     */
+    monotonic: boolean;
+    /**
+     * The argument names that the function is monotonic on.
+     *
+     * If {@link monotonic} is true, this will return all argument names.
+     * Otherwise, this will return either one argument or an empty array.
+     * @type {Array.<String>}
+     */
+    monotonicOn: Array<string>;
+    /**
+     * Creates a new SchemaFunction.
+     * @alias module:metadata~SchemaFunction
+     * @constructor
+     */
+    constructor();
+}
+
+declare type SingleColumnInfo = {
+    code: SingleTypeCodes;
+    info?: null;
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+declare type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | typeof dataTypes.duration | typeof dataTypes.text);
+
+declare const singleTypeNames: Readonly<{
+    readonly 'org.apache.cassandra.db.marshal.UTF8Type': 13;
+    readonly 'org.apache.cassandra.db.marshal.AsciiType': 1;
+    readonly 'org.apache.cassandra.db.marshal.UUIDType': 12;
+    readonly 'org.apache.cassandra.db.marshal.TimeUUIDType': 15;
+    readonly 'org.apache.cassandra.db.marshal.Int32Type': 9;
+    readonly 'org.apache.cassandra.db.marshal.BytesType': 3;
+    readonly 'org.apache.cassandra.db.marshal.FloatType': 8;
+    readonly 'org.apache.cassandra.db.marshal.DoubleType': 7;
+    readonly 'org.apache.cassandra.db.marshal.BooleanType': 4;
+    readonly 'org.apache.cassandra.db.marshal.InetAddressType': 16;
+    readonly 'org.apache.cassandra.db.marshal.SimpleDateType': 17;
+    readonly 'org.apache.cassandra.db.marshal.TimeType': 18;
+    readonly 'org.apache.cassandra.db.marshal.ShortType': 19;
+    readonly 'org.apache.cassandra.db.marshal.ByteType': 20;
+    readonly 'org.apache.cassandra.db.marshal.DateType': 11;
+    readonly 'org.apache.cassandra.db.marshal.TimestampType': 11;
+    readonly 'org.apache.cassandra.db.marshal.LongType': 2;
+    readonly 'org.apache.cassandra.db.marshal.DecimalType': 6;
+    readonly 'org.apache.cassandra.db.marshal.IntegerType': 14;
+    readonly 'org.apache.cassandra.db.marshal.CounterColumnType': 5;
+}>;
+
+declare namespace speculativeExecution {
+    export {
+        NoSpeculativeExecutionPolicy,
+        SpeculativeExecutionPolicy,
+        ConstantSpeculativeExecutionPolicy,
+        _default_5 as default
+    }
+}
+
+/** @module policies/speculativeExecution */
+/**
+ * @classdesc
+ * The policy that decides if the driver will send speculative queries to the next hosts when the current host takes too
+ * long to respond.
+ * <p>Note that only idempotent statements will be speculatively retried.</p>
+ * @abstract
+ */
+declare class SpeculativeExecutionPolicy {
+    constructor();
+    /**
+     * Initialization method that gets invoked on Client startup.
+     * @param {Client} client
+     * @abstract
+     */
+    init(client: Client): void;
+    /**
+     * Gets invoked at client shutdown, giving the opportunity to the implementor to perform cleanup.
+     * @abstract
+     */
+    shutdown(): void;
+    /**
+     * Gets the plan to use for a new query.
+     * Returns an object with a <code>nextExecution()</code> method, which returns a positive number representing the
+     * amount of milliseconds to delay the next execution or a non-negative number to avoid further executions.
+     * @param {String} keyspace The currently logged keyspace.
+     * @param {String|Array<String>} queryInfo The query, or queries in the case of batches, for which to build a plan.
+     * @return {{nextExecution: function}}
+     * @abstract
+     */
+    newPlan(keyspace: string, queryInfo: string | Array<string>): {
+        nextExecution: () => number;
+    };
+    /**
+     * Gets an associative array containing the policy options.
+     */
+    getOptions(): Map<string, number>;
+}
+
+/**
+ * Represents a queue of ids from 0 to maximum stream id supported by the protocol version.
+ * Clients can dequeue a stream id using {@link StreamIdStack#shift()} and enqueue (release) using
+ * {@link StreamIdStack#push()}
+ */
+declare class StreamIdStack {
+    currentGroup: any[];
+    groupIndex: number;
+    groups: any[];
+    releaseTimeout: NodeJS.Timeout;
+    inUse: number;
+    releaseDelay: number;
+    maxGroups: number;
+    /**
+     * Creates a new instance of StreamIdStack.
+     * @param {number} version Protocol version
+     * @constructor
+     */
+    constructor(version: number);
+    /**
+     * Sets the protocol version
+     * @param {Number} version
+     */
+    setVersion(version: number): void;
+    /**
+     * Dequeues an id.
+     * Similar to {@link Array#pop()}.
+     * @returns {Number} Returns an id or null
+     */
+    pop(): number;
+    /**
+     * Enqueue an id for future use.
+     * Similar to {@link Array#push()}.
+     * @param {Number} id
+     */
+    push(id: number): void;
+    /**
+     * Clears all timers
+     */
+    clear(): void;
+    /**
+     * Tries to create an additional group and returns a new id
+     * @returns {Number} Returns a new id or null if it's not possible to create a new group
+     * @private
+     */
+    _tryCreateGroup(): number;
+    _tryIssueRelease(): void;
+    _releaseGroups(): void;
+}
+
+/**
+ * Contains a set of methods to represent a row into a document and a document into a row.
+ * @alias module:mapping~TableMappings
+ * @interface
+ */
+declare class TableMappings_2 {
+    /**
+     * Method that is called by the mapper to create the instance of the document.
+     * @return {Object}
+     */
+    newObjectInstance(): object;
+    /**
+     * Gets the name of the column based on the document property name.
+     * @param {String} propName The name of the property.
+     * @returns {String}
+     */
+    getColumnName(propName: string): string;
+    /**
+     * Gets the name of the document property based on the column name.
+     * @param {String} columnName The name of the column.
+     * @returns {String}
+     */
+    getPropertyName(columnName: string): string;
+}
+
+/** @private */
+declare class TimeoutError extends errors.DriverError {
+    /**
+     * @param {string} message
+     */
+    constructor(message: string);
+}
+
+declare namespace timestampGeneration {
+    export {
+        TimestampGenerator,
+        MonotonicTimestampGenerator,
+        _default_6 as default
+    }
+}
+
+/**
+ * Creates a new instance of {@link TimestampGenerator}.
+ * @classdesc
+ * Generates client-side, microsecond-precision query timestamps.
+ * <p>
+ *   Given that Cassandra uses those timestamps to resolve conflicts, implementations should generate
+ *   monotonically increasing timestamps for successive invocations of {@link TimestampGenerator.next()}.
+ * </p>
+ * @constructor
+ */
+declare class TimestampGenerator {
+    constructor();
+    /**
+     * Returns the next timestamp.
+     * <p>
+     *   Implementors should enforce increasing monotonicity of timestamps, that is,
+     *   a timestamp returned should always be strictly greater that any previously returned
+     *   timestamp.
+     * <p/>
+     * <p>
+     *   Implementors should strive to achieve microsecond precision in the best possible way,
+     *   which is usually largely dependent on the underlying operating system's capabilities.
+     * </p>
+     * @param {Client} client The {@link Client} instance to generate timestamps to.
+     * @returns {Long|Number|null} the next timestamp (in microseconds). If it's equals to <code>null</code>, it won't be
+     * sent by the driver, letting the server to generate the timestamp.
+     * @abstract
+     */
+    next(client: Client): Long | number | null;
+}
+
+/**
+ * If any of the arguments is not provided, it will be randomly generated, except for the date that will use the current
+ * date.
+ * <p>
+ *   Note that when nodeId and/or clockId portions are not provided, the constructor will generate them using
+ *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+ *   recommended that you use the callback-based version of the static methods <code>fromDate()</code> or
+ *   <code>now()</code> in that case.
+ * </p>
+ * @class
+ * @classdesc Represents an immutable version 1 universally unique identifier (UUID). A UUID represents a 128-bit value.
+ * <p>Usage: <code>TimeUuid.now()</code></p>
+ * @extends module:types~Uuid
+ */
+declare class TimeUuid extends Uuid {
+    /**
+     * Creates a new instance of Uuid based on the parameters provided according to rfc4122.
+     * If any of the arguments is not provided, it will be randomly generated, except for the date that will use the current
+     * date.
+     * <p>
+     *   Note that when nodeId and/or clockId portions are not provided, the constructor will generate them using
+     *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+     *   recommended that you use the callback-based version of the static methods <code>fromDate()</code> or
+     *   <code>now()</code> in that case.
+     * </p>
+     * This class represents an immutable version 1 universally unique identifier (UUID). A UUID represents a 128-bit value.
+     * <p>Usage: <code>TimeUuid.now()</code></p>
+     * @param {Date} [value] The datetime for the instance, if not provided, it will use the current Date.
+     * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
+     * as Ecmascript Dates have only milliseconds precision.
+     * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+     * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+     * @constructor
+     */
+    constructor(value: Date | Buffer, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer);
+    /**
+     * Generates a TimeUuid instance based on the Date provided using random node and clock values.
+     * @param {Date} date Date to generate the v1 uuid.
+     * @param {Number} [ticks] A number from 0 to 10000 representing the 100-nanoseconds units for this instance to fill in the information not available in the Date,
+     * as Ecmascript Dates have only milliseconds precision.
+     * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+     * If not provided, a random nodeId will be generated.
+     * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+     * If not provided a random clockId will be generated.
+     * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
+     * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
+     * <code>TimeUuid</code> instance are created asynchronously.
+     * <p>
+     *   When nodeId and/or clockId portions are not provided, this method will generate them using
+     *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+     *   recommended that you use the callback-based version of this method in that case.
+     * </p>
+     * @example <caption>Generate a TimeUuid from a ECMAScript Date</caption>
+     * const timeuuid = TimeUuid.fromDate(new Date());
+     * @example <caption>Generate a TimeUuid from a Date with ticks portion</caption>
+     * const timeuuid = TimeUuid.fromDate(new Date(), 1203);
+     * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
+     * const timeuuid = TimeUuid.fromDate(new Date(), 1203, 'host01', '02');
+     * @example <caption>Generate a TimeUuid from a Date with random node and clock identifiers</caption>
+     * TimeUuid.fromDate(new Date(), 1203, function (err, timeuuid) {
+     *   // do something with the generated timeuuid
+     * });
+     */
+    static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void;
+    /**
+     * Parses a string representation of a TimeUuid
+     * @param {String} value
+     * @returns {TimeUuid}
+     */
+    static fromString(value: string): TimeUuid;
+    /**
+     * Returns the smaller possible type 1 uuid with the provided Date.
+     */
+    static min(date: Date, ticks?: number): TimeUuid;
+    /**
+     * Returns the biggest possible type 1 uuid with the provided Date.
+     */
+    static max(date: Date, ticks?: number): TimeUuid;
+    /**
+     * Generates a TimeUuid instance based on the current date using random node and clock values.
+     * @param {String|Buffer} [nodeId] A 6-length Buffer or string of 6 ascii characters representing the node identifier, ie: 'host01'.
+     * If not provided, a random nodeId will be generated.
+     * @param {String|Buffer} [clockId] A 2-length Buffer or string of 6 ascii characters representing the clock identifier.
+     * If not provided a random clockId will be generated.
+     * @param {Function} [callback] An optional callback to be invoked with the error as first parameter and the created
+     * <code>TimeUuid</code> as second parameter. When a callback is provided, the random portions of the
+     * <code>TimeUuid</code> instance are created asynchronously.
+     * <p>
+     *   When nodeId and/or clockId portions are not provided, this method will generate them using
+     *   <code>crypto.randomBytes()</code>. As it's possible that <code>crypto.randomBytes()</code> might block, it's
+     *   recommended that you use the callback-based version of this method in that case.
+     * </p>
+     * @example <caption>Generate a TimeUuid from a Date without any random portion</caption>
+     * const timeuuid = TimeUuid.now('host01', '02');
+     * @example <caption>Generate a TimeUuid with random node and clock identifiers</caption>
+     * TimeUuid.now(function (err, timeuuid) {
+     *   // do something with the generated timeuuid
+     * });
+     * @example <caption>Generate a TimeUuid based on the current date (might block)</caption>
+     * const timeuuid = TimeUuid.now();
+     */
+    static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void;
+    /**
+     * Gets the Date and 100-nanoseconds units representation of this instance.
+     * @returns {{date: Date, ticks: Number}}
+     */
+    getDatePrecision(): {
+        date: Date;
+        ticks: number;
+    };
+    /**
+     * Gets the Date representation of this instance.
+     * @returns {Date}
+     */
+    getDate(): Date;
+    /**
+     * Returns the node id this instance
+     * @returns {Buffer}
+     */
+    getNodeId(): Buffer;
+    /**
+     * Returns the clock id this instance, with the variant applied (first 2 msb being 1 and 0).
+     * @returns {Buffer}
+     */
+    getClockId(): Buffer;
+    /**
+     * Returns the node id this instance as an ascii string
+     * @returns {String}
+     */
+    getNodeIdString(): string;
+}
+
+/**
+ * <p><strong>Backward compatibility only, use [TimeUuid]{@link module:types~TimeUuid} instead</strong>.</p>
+ * Generates and returns a RFC4122 v1 (timestamp based) UUID in a string representation.
+ * @param {{msecs, node, clockseq, nsecs}} [options]
+ * @param {Buffer} [buffer]
+ * @param {Number} [offset]
+ * @deprecated Use [TimeUuid]{@link module:types~TimeUuid} instead
+ */
+declare function timeuuid(options: any, buffer: any, offset: any): string | Buffer;
+
+/**
+ * Represents a token on the Cassandra ring.
+ */
+declare class Token {
+    _value: any;
+    constructor(value: any);
+    /**
+     * @returns {{code: number, info: *|Object}} The type info for the
+     *                                           type of the value of the token.
+     */
+    getType(): {
+        code: number;
+        info?: any | object;
+    };
+    /**
+     * @returns {*} The raw value of the token.
+     */
+    getValue(): any;
+    toString(): any;
+    /**
+     * Returns 0 if the values are equal, 1 if greater than other, -1
+     * otherwise.
+     *
+     * @param {Token} other
+     * @returns {Number}
+     */
+    compare(other: Token): number;
+    equals(other: any): boolean;
+    inspect(): string;
+}
+
+export declare const token: {
+    Token: Token_2;
+    TokenRange: TokenRange_2;
+};
+
+/**
+ * A wrapper load balancing policy that adds token awareness to a child policy.
+ */
+declare class TokenAwarePolicy extends LoadBalancingPolicy {
+    childPolicy: LoadBalancingPolicy;
+    /**
+     * A wrapper load balancing policy that add token awareness to a child policy.
+     * @param {LoadBalancingPolicy} childPolicy
+     * @constructor
+     */
+    constructor(childPolicy: LoadBalancingPolicy);
+    init(client: Client, hosts: HostMap, callback: Function): void;
+    getDistance(host: Host): number;
+    /**
+     * Returns the hosts to use for a new query.
+     * The returned plan will return local replicas first, if replicas can be determined, followed by the plan of the
+     * child policy.
+     * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
+     * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+     * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
+     * second parameter.
+     */
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    getOptions(): Map<string, any>;
+}
+
+/**
+ * Represents a set of methods that are able to generate and parse tokens for the C* partitioner.
+ * @abstract
+ */
+declare class Tokenizer {
+    constructor();
+    /**
+     * Creates a token based on the Buffer value provided
+     * @abstract
+     * @param {Buffer|Array} value
+     * @returns {Token} Computed token
+     */
+    hash(value: Buffer | Array<any>): Token;
+    /**
+     * Parses a token string and returns a representation of the token
+     * @abstract
+     * @param {String} value
+     */
+    parse(value: string): Token;
+    minToken(): void;
+    /**
+     * Splits the range specified by start and end into numberOfSplits equal parts.
+     * @param {Token} start Starting token
+     * @param {Token} end  End token
+     * @param {Number} numberOfSplits Number of splits to make.
+     */
+    split(start: Token, end: Token, numberOfSplits: number): void;
+    /**
+     * Common implementation for splitting token ranges when start is in
+     * a shared Integer format.
+     *
+     * @param {Integer} start Starting token
+     * @param {Integer} range How large the range of the split is
+     * @param {Integer} ringEnd The end point of the ring so we know where to wrap
+     * @param {Integer} ringLength The total size of the ring
+     * @param {Number} numberOfSplits The number of splits to make
+     * @returns {Array<Integer>} The evenly-split points on the range
+     */
+    splitBase(start: Integer, range: Integer, ringEnd: Integer, ringLength: Integer, numberOfSplits: number): Array<Integer>;
+    /**
+     * Return internal string based representation of a Token.
+     * @param {Token} token
+     */
+    stringify(token: Token): any;
+}
+
+/**
+ * Represents a range of tokens on a Cassandra ring.
+ *
+ * A range is start-exclusive and end-inclusive.  It is empty when
+ * start and end are the same token, except if that is the minimum
+ * token, in which case the range covers the whole ring (this is
+ * consistent with the behavior of CQL range queries).
+ *
+ * Note that CQL does not handle wrapping.  To query all partitions
+ * in a range, see {@link unwrap}.
+ */
+declare class TokenRange {
+    end: any;
+    start: any;
+    _tokenizer: any;
+    constructor(start: any, end: any, tokenizer: any);
+    /**
+     * Splits this range into a number of smaller ranges of equal "size"
+     * (referring to the number of tokens, not the actual amount of data).
+     *
+     * Splitting an empty range is not permitted.  But not that, in edge
+     * cases, splitting a range might produce one or more empty ranges.
+     *
+     * @param {Number} numberOfSplits Number of splits to make.
+     * @returns {TokenRange[]} Split ranges.
+     * @throws {Error} If splitting an empty range.
+     */
+    splitEvenly(numberOfSplits: number): TokenRange[];
+    /**
+     * A range is empty when start and end are the same token, except if
+     * that is the minimum token, in which case the range covers the
+     * whole ring.  This is consistent with the behavior of CQL range
+     * queries.
+     *
+     * @returns {boolean} Whether this range is empty.
+     */
+    isEmpty(): boolean;
+    /**
+     * A range wraps around the end of the ring when the start token
+     * is greater than the end token and the end token is not the
+     * minimum token.
+     *
+     * @returns {boolean} Whether this range wraps around.
+     */
+    isWrappedAround(): boolean;
+    /**
+     * Splits this range into a list of two non-wrapping ranges.
+     *
+     * This will return the range itself if it is non-wrapped, or two
+     * ranges otherwise.
+     *
+     * This is useful for CQL range queries, which do not handle
+     * wrapping.
+     *
+     * @returns {TokenRange[]} The list of non-wrapping ranges.
+     */
+    unwrap(): TokenRange[];
+    /**
+     * Whether this range contains a given Token.
+     *
+     * @param {*} token Token to check for.
+     * @returns {boolean} Whether or not the Token is in this range.
+     */
+    contains(token: any): boolean;
+    /**
+     * Determines if the input range is equivalent to this one.
+     *
+     * @param {TokenRange} other Range to compare with.
+     * @returns {boolean} Whether or not the ranges are equal.
+     */
+    equals(other: TokenRange): boolean;
+    /**
+     * Returns 0 if the values are equal, otherwise compares against
+     * start, if start is equal, compares against end.
+     *
+     * @param {TokenRange} other Range to compare with.
+     * @returns {Number}
+     */
+    compare(other: TokenRange): number;
+    toString(): string;
+}
+
+export declare const tracker: {
+    RequestTracker: typeof RequestTracker;
+    RequestLogger: typeof RequestLogger;
+};
+
+/**
+ * Authenticator that accounts for DSE authentication configured with transitional mode: normal.
+ *
+ * In this situation, the client is allowed to connect without authentication, but DSE
+ * would still send an AUTHENTICATE response. This Authenticator handles this situation
+ * by sending back a dummy credential.
+ */
+declare class TransitionalModePlainTextAuthenticator extends PlainTextAuthenticator {
+    constructor();
+}
+
+/**
+ * A radix tree where each node contains a key, a value and edges.
+ * @ignore
+ */
+declare class Tree extends Node {
+    length: number;
+    constructor();
+    /**
+     * Gets the existing item in the tree or creates a new one with the value provided by valueHandler
+     * @param {Iterator} keyIterator
+     * @param {Function} valueHandler
+     * @return {Object}
+     */
+    getOrCreate<T extends object>(keyIterator: Iterator<string>, valueHandler: () => T): T;
+    private _createBranch;
+    _onItemAdded(): void;
+}
+
+/** @module types */
+/**
+ * @class
+ * @classdesc A tuple is a sequence of immutable objects.
+ * Tuples are sequences, just like [Arrays]{@link Array}. The only difference is that tuples can't be changed.
+ * <p>
+ *   As tuples can be used as a Map keys, the {@link Tuple#toString toString()} method calls toString of each element,
+ *   to try to get a unique string key.
+ * </p>
+ */
+declare class Tuple {
+    elements: any[];
+    length: number;
+    /**
+     * Creates a new sequence of immutable objects with the parameters provided.
+     * A tuple is a sequence of immutable objects.
+     * Tuples are sequences, just like [Arrays]{@link Array}. The only difference is that tuples can't be changed.
+     * <p>
+     *   As tuples can be used as a Map keys, the {@link Tuple#toString toString()} method calls toString of each element,
+     *   to try to get a unique string key.
+     * </p>
+     * @param {any[]} args The sequence elements as arguments.
+     * @constructor
+     */
+    constructor(...args: any[]);
+    /**
+     * Creates a new instance of a tuple based on the Array
+     * @param {Array} elements
+     * @returns {Tuple}
+     */
+    static fromArray(elements: any[]): Tuple;
+    /**
+     * Returns the value located at the index.
+     * @param {Number} index Element index
+     */
+    get(index: number): any;
+    /**
+     * Returns the string representation of the sequence surrounded by parenthesis, ie: (1, 2).
+     * <p>
+     *   The returned value attempts to be a unique string representation of its values.
+     * </p>
+     * @returns {string}
+     */
+    toString(): string;
+    /**
+     * Returns the Array representation of the sequence.
+     * @returns {Array}
+     */
+    toJSON(): any[];
+    /**
+     * Gets the elements as an array
+     * @returns {Array}
+     */
+    values(): any[];
+}
+
+declare type TupleColumnInfo = {
+    code: (typeof dataTypes.tuple);
+    info: Array<ColumnInfo>;
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+declare type TupleListColumnInfoWithoutSubtype = {
+    code: (typeof dataTypes.tuple | typeof dataTypes.list);
+};
+
+export declare const types: {
+    opcodes: {
+        error: number;
+        startup: number;
+        ready: number;
+        authenticate: number;
+        credentials: number;
+        options: number;
+        supported: number;
+        query: number;
+        result: number;
+        prepare: number;
+        execute: number;
+        register: number;
+        event: number;
+        batch: number;
+        authChallenge: number;
+        authResponse: number;
+        authSuccess: number;
+        cancel: number;
+        /**
+         * Determines if the code is a valid opcode
+         */
+        isInRange: (code: any) => boolean;
+    };
+    consistencies: {
+        readonly any: 0;
+        readonly one: 1;
+        readonly two: 2;
+        readonly three: 3;
+        readonly quorum: 4;
+        readonly all: 5;
+        readonly localQuorum: 6;
+        readonly eachQuorum: 7;
+        readonly serial: 8;
+        readonly localSerial: 9;
+        readonly localOne: 10;
+    };
+    consistencyToString: {};
+    dataTypes: {
+        readonly custom: 0;
+        readonly ascii: 1;
+        readonly bigint: 2;
+        readonly blob: 3;
+        readonly boolean: 4;
+        readonly counter: 5;
+        readonly decimal: 6;
+        readonly double: 7;
+        readonly float: 8;
+        readonly int: 9;
+        readonly text: 10;
+        readonly timestamp: 11;
+        readonly uuid: 12;
+        readonly varchar: 13;
+        readonly varint: 14;
+        readonly timeuuid: 15;
+        readonly inet: 16;
+        readonly date: 17;
+        readonly time: 18;
+        readonly smallint: 19;
+        readonly tinyint: 20;
+        readonly duration: 21;
+        readonly list: 32;
+        readonly map: 33;
+        readonly set: 34;
+        readonly udt: 48;
+        readonly tuple: 49;
+        /**
+         * Returns the typeInfo of a given type name
+         * @param {string} name
+         * @returns {import('../encoder').ColumnInfo}
+         */
+        readonly getByName: (name: any) => {
+            code: any;
+        } | {
+            code: any;
+            info: any;
+            customTypeName?: undefined;
+        } | {
+            code: any;
+            customTypeName: string;
+            info: any[];
+        };
+    };
+    getDataTypeNameByCode: typeof getDataTypeNameByCode;
+    distance: {
+        local: number;
+        remote: number;
+        ignored: number;
+    };
+    frameFlags: {
+        compression: number;
+        tracing: number;
+        customPayload: number;
+        warning: number;
+    };
+    protocolEvents: {
+        topologyChange: string;
+        statusChange: string;
+        schemaChange: string;
+    };
+    protocolVersion: {
+        v1: number;
+        v2: number;
+        v3: number;
+        v4: number;
+        v5: number;
+        v6: number;
+        dseV1: number;
+        dseV2: number;
+        maxSupported: number;
+        minSupported: number;
+        isDse: (version: number) => boolean;
+        isSupportedCassandra: (version: number) => boolean;
+        isSupported: (version: number) => boolean;
+        supportsPrepareFlags: (version: number) => boolean;
+        supportsKeyspaceInRequest: (version: number) => boolean;
+        supportsResultMetadataId: (version: number) => boolean;
+        supportsPreparedPartitionKey: (version: number) => boolean;
+        supportsSchemaChangeFullMetadata: (version: any) => boolean;
+        supportsContinuousPaging: (version: any) => boolean;
+        supportsPaging: (version: any) => boolean;
+        supportsTimestamp: (version: number) => boolean;
+        supportsNamedParameters: (version: number) => boolean;
+        supportsUnset: (version: number) => boolean;
+        supportsFailureReasonMap: (version: any) => boolean;
+        uses2BytesStreamIds: (version: number) => boolean;
+        uses4BytesCollectionLength: (version: number) => boolean;
+        uses4BytesQueryFlags: (version: number) => boolean;
+        canStartupResponseErrorBeWrapped: (version: number) => boolean;
+        getLowerSupported: (version: number) => number;
+        getHighestCommon: (connection: default_4, hosts: HostMap_2) => number;
+        isBeta: (version: number) => boolean;
+    };
+    responseErrorCodes: {
+        serverError: number;
+        protocolError: number;
+        badCredentials: number;
+        unavailableException: number;
+        overloaded: number;
+        isBootstrapping: number;
+        truncateError: number;
+        writeTimeout: number;
+        readTimeout: number;
+        readFailure: number;
+        functionFailure: number;
+        writeFailure: number;
+        syntaxError: number;
+        unauthorized: number;
+        invalid: number;
+        configError: number;
+        alreadyExists: number;
+        unprepared: number;
+        clientWriteFailure: number;
+    };
+    resultKind: {
+        voidResult: number;
+        rows: number;
+        setKeyspace: number;
+        prepared: number;
+        schemaChange: number;
+    };
+    timeuuid: typeof timeuuid;
+    uuid: typeof uuid;
+    BigDecimal: typeof BigDecimal;
+    Duration: typeof Duration;
+    FrameHeader: typeof FrameHeader;
+    InetAddress: typeof InetAddress;
+    Integer: typeof Integer;
+    LocalDate: typeof LocalDate;
+    LocalTime: typeof LocalTime;
+    Long: typeof Long;
+    ResultSet: typeof ResultSet;
+    ResultStream: typeof ResultStream;
+    Row: typeof Row;
+    DriverError: DriverError_2;
+    TimeoutError: typeof TimeoutError;
+    TimeUuid: typeof TimeUuid;
+    Tuple: typeof Tuple;
+    Uuid: typeof Uuid;
+    unset: Readonly<{
+        readonly unset: true;
+    }>;
+    generateTimestamp: typeof generateTimestamp;
+    Vector: typeof Vector;
+};
+
+declare namespace types_2 {
+    export {
+        types as default,
+        opcodes,
+        consistencies,
+        consistencyToString,
+        dataTypes,
+        getDataTypeNameByCode,
+        frameFlags,
+        protocolEvents,
+        protocolVersion,
+        responseErrorCodes,
+        resultKind,
+        timeuuid,
+        uuid,
+        BigDecimal,
+        Duration,
+        FrameHeader,
+        InetAddress,
+        Integer,
+        LocalDate,
+        LocalTime,
+        Long,
+        ResultSet,
+        ResultStream,
+        Row,
+        DriverError_3 as DriverError,
+        TimeoutError,
+        TimeUuid,
+        Tuple,
+        Uuid,
+        unset,
+        generateTimestamp,
+        Vector,
+        distance
+    }
+}
+
+declare type UdtColumnInfo = {
+    code: (typeof dataTypes.udt);
+    info: {
+        name: string;
+        fields: Array<{
+            name: string;
+            type: ColumnInfo;
+        }>;
+    };
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+/**
+ * A [TableMappings]{@link module:mapping~TableMappings} implementation that converts CQL column names in all-lowercase
+ * identifiers with underscores (snake case) to camel case (initial lowercase letter) property names.
+ * <p>
+ *   The conversion is performed without any checks for the source format, you should make sure that the source
+ *   format is snake case for CQL identifiers and camel case for properties.
+ * </p>
+ * @alias module:mapping~UnderscoreCqlToCamelCaseMappings
+ * @implements {module:mapping~TableMappings}
+ */
+declare class UnderscoreCqlToCamelCaseMappings_2 extends TableMappings_2 {
+    /**
+     * Creates a new instance of {@link UnderscoreCqlToCamelCaseMappings}
+     */
+    constructor();
+    /**
+     * Converts a property name in camel case to snake case.
+     * @param {String} propName Name of the property to convert to snake case.
+     * @return {String}
+     */
+    getColumnName(propName: string): string;
+    /**
+     * Converts a column name in snake case to camel case.
+     * @param {String} columnName The column name to convert to camel case.
+     * @return {String}
+     */
+    getPropertyName(columnName: string): string;
+}
+
+/**
+ * Unset representation.
+ * <p>
+ *   Use this field if you want to set a parameter to <code>unset</code>. Valid for Cassandra 2.2 and above.
+ * </p>
+ */
+declare const unset: Readonly<{
+    readonly unset: true;
+}>;
+
+declare type UpdateDocInfo = {
+    fields?: string[];
+    ttl?: number;
+    ifExists?: boolean;
+    when?: {
+        [key: string]: any;
+    };
+    orderBy?: {
+        [key: string]: string;
+    };
+    limit?: number;
+    deleteOnlyColumns?: boolean;
+};
+
+/** @module types */
+/**
+ * @class
+ * @classdesc Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
+ */
+declare class Uuid {
+    buffer: Buffer;
+    /**
+     * Creates a new instance of Uuid based on a Buffer
+     * Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
+     * @param {Buffer} buffer The 16-length buffer.
+     * @constructor
+     */
+    constructor(buffer: Buffer);
+    /**
+     * Parses a string representation of a Uuid
+     * @param {String} value
+     * @returns {Uuid}
+     */
+    static fromString(value: string): Uuid;
+    /**
+     * Creates a new random (version 4) Uuid.
+     * @param {function} [callback] Optional callback to be invoked with the error as first parameter and the created Uuid as
+     * second parameter.
+     * @returns {Uuid}
+     */
+    static random(): Uuid;
+    static random(callback: (err: Error | null, uuid?: Uuid) => void): void;
+    /**
+     * Gets the bytes representation of a Uuid
+     * @returns {Buffer}
+     */
+    getBuffer(): Buffer;
+    /**
+     * Compares this object to the specified object.
+     * The result is true if and only if the argument is not null, is a UUID object, and contains the same value, bit for bit, as this UUID.
+     * @param {Uuid} other The other value to test for equality.
+     */
+    equals(other: Uuid): boolean;
+    /**
+     * Returns a string representation of the value of this Uuid instance.
+     * 32 hex separated by hyphens, in the form of 00000000-0000-0000-0000-000000000000.
+     * @returns {String}
+     */
+    toString(): string;
+    /**
+     * Provide the name of the constructor and the string representation
+     * @returns {string}
+     */
+    inspect(): string;
+    /**
+     * Returns the string representation.
+     * Method used by the native JSON.stringify() to serialize this instance.
+     */
+    toJSON(): string;
+}
+
+/**
+ * <p><strong>Backward compatibility only, use [Uuid]{@link module:types~Uuid} class instead</strong>.</p>
+ * Generate and return a RFC4122 v4 UUID in a string representation.
+ * @deprecated Use [Uuid]{@link module:types~Uuid} class instead
+ */
+declare function uuid(options: any, buffer: any, offset: any): any;
+
+declare type ValueCallback<T> = (err: Error, val?: T) => void;
+
+declare class Vector {
+    length: number;
+    subtype: string;
+    elements: number[];
+    /**
+     *
+     * @param {Float32Array | Array<any>} elements
+     * @param {string} [subtype]
+     */
+    constructor(elements: Float32Array | Array<any>, subtype?: string);
+    /**
+     * Returns the string representation of the vector.
+     * @returns {string}
+     */
+    toString(): string;
+    /**
+     *
+     * @param {number} index
+     */
+    at(index: number): number;
+    /**
+     *
+     * @returns {IterableIterator<any>} an iterator over the elements of the vector
+     */
+    [Symbol.iterator](): IterableIterator<any>;
+    static get [Symbol.species](): typeof Vector;
+    /**
+     *
+     * @param {(value: any, index: number, array: any[]) => void} callback
+     */
+    forEach(callback: (value: any, index: number, array: any[]) => void): void;
+    /**
+     * @returns {string | null} get the subtype string, e.g., "float", but it's optional so it can return null
+     */
+    getSubtype(): string | null;
+}
+
+declare type VectorColumnInfo = {
+    code: (typeof dataTypes.custom);
+    customTypeName: ('vector');
+    info: [ColumnInfo, number];
+    options?: {
+        frozen?: boolean;
+        reversed?: boolean;
+    };
+};
+
+export declare const version: string;
+
+/**
+ * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
+ */
+declare class VIntOutOfRangeException extends DriverError {
+    /**
+     * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
+     * @param {Long} long
+     */
+    constructor(long: Long);
+}
+
+/**
+ * @classdesc
+ * Exposed for backward-compatibility only, it's recommended that you use {@link AllowListPolicy} instead.
+ * @extends AllowListPolicy
+ * @deprecated Use allow-list instead. It will be removed in future major versions.
+ */
+declare class WhiteListPolicy extends AllowListPolicy {
+    /**
+     * Creates a new instance of WhiteListPolicy.
+     * @param {LoadBalancingPolicy} childPolicy - The wrapped policy.
+     * @param {Array.<string>} allowList - The hosts address in the format ipAddress:port.
+     * @deprecated Use AllowListPolicy instead. It will be removed in future major versions.
+     */
+    constructor(childPolicy: LoadBalancingPolicy, allowList: Array<string>);
+}
+
+/**
+ * Represents a queue that process one write at a time (FIFO).
+ * @extends {EventEmitter}
+ */
+declare class WriteQueue extends events.EventEmitter {
+    netClient: Socket;
+    encoder: Encoder;
+    isRunning: boolean;
+    queue: any[];
+    coalescingThreshold: any;
+    error: DriverError;
+    canWrite: boolean;
+    /**
+     * Creates a new WriteQueue instance.
+     * @param {Socket} netClient
+     * @param {Encoder} encoder
+     * @param {ClientOptions} options
+     */
+    constructor(netClient: Socket, encoder: Encoder, options: ClientOptions);
+    /**
+     * Enqueues a new request
+     * @param {OperationState} operation
+     * @param {Function} callback The write callback.
+     */
+    push(operation: OperationState, callback: Function): void;
+    run(): void;
+    process(): void;
+    /**
+     * Emits the 'error' event and callbacks items that haven't been written and clears them from the queue.
+     * @param err
+     */
+    setWriteError(err: any): void;
+}
 
 export { }

@@ -4,2217 +4,1067 @@
 
 ```ts
 
-import * as events from 'events';
-import _Long = require('long');
+import { AddressTranslator as AddressTranslator_2 } from './lib/policies/address-resolution';
+import { ArgumentError as ArgumentError_2 } from './lib/errors';
+import { asDouble } from './lib/datastax/graph';
+import { asDouble as asDouble_2 } from './graph/wrappers';
+import { asFloat } from './lib/datastax/graph';
+import { asFloat as asFloat_2 } from './graph/wrappers';
+import { asInt } from './lib/datastax/graph';
+import { asInt as asInt_2 } from './graph/wrappers';
+import { asTimestamp } from './lib/datastax/graph';
+import { asTimestamp as asTimestamp_2 } from './graph/wrappers';
+import { asUdt } from './lib/datastax/graph';
+import { asUdt as asUdt_2 } from './graph/wrappers';
+import { AuthenticationError as AuthenticationError_2 } from './lib/errors';
+import { Authenticator as Authenticator_2 } from './lib/auth/provider';
+import { AuthProvider as AuthProvider_2 } from './lib/auth/provider';
+import { BatchRequest } from './requests';
+import { BusyConnectionError as BusyConnectionError_2 } from './lib/errors';
+import { ByteOrderedTokenizer } from '../tokenizer';
+import { ClientOptions as ClientOptions_2 } from './lib/client';
+import { ConnectionOptions } from 'tls';
+import { DateRange } from './lib/datastax/index';
+import { default as default_10 } from './lib/types/local-date';
+import { default as default_11 } from './lib/types/local-time';
+import { default as default_12 } from 'long';
+import { default as default_13 } from './lib/types/result-set';
+import { default as default_14 } from './lib/types/result-stream';
+import { default as default_15 } from './lib/types/row';
+import { default as default_16 } from './lib/types/time-uuid';
+import { default as default_17 } from './lib/types/tuple';
+import { default as default_18 } from './lib/types/uuid';
+import { default as default_19 } from './lib/types/vector';
+import { default as default_2 } from './operation-state';
+import { default as default_20 } from './lib/auth/dse-gssapi-auth-provider';
+import { default as default_21 } from './lib/auth/dse-plain-text-auth-provider';
+import { default as default_22 } from './lib/auth/no-auth-provider';
+import { default as default_23 } from './lib/mapping/mapper';
+import { default as default_24 } from './lib/mapping/model-mapper';
+import { default as default_25 } from './lib/mapping/model-batch-mapper';
+import { default as default_26 } from './lib/mapping/result';
+import { default as default_27 } from './lib/tracker/request-tracker';
+import { default as default_28 } from './lib/tracker/request-logger';
+import { default as default_29 } from './lib/metrics/client-metrics';
+import { default as default_3 } from './table-metadata';
+import { default as default_30 } from './lib/metrics/default-metrics';
+import { default as default_31 } from './lib/geometry/point';
+import { default as default_32 } from './lib/geometry/line-string';
+import { default as default_33 } from './lib/geometry/polygon';
+import { default as default_34 } from './lib/geometry/geometry';
+import { default as default_35 } from './model-mapping-info';
+import { default as default_36 } from './graph/custom-type-serializers';
+import { default as default_37 } from './graph/result-set';
+import { default as default_4 } from '../connection';
+import { default as default_5 } from './lib/connection';
+import { default as default_6 } from './lib/types/big-decimal';
+import { default as default_7 } from './lib/types/duration';
+import { default as default_8 } from './lib/types/inet-address';
+import { default as default_9 } from './lib/types/integer';
+import { DefaultTableMappings } from './lib/mapping/table-mappings';
+import { DriverError as DriverError_2 } from '../errors';
+import { DriverError as DriverError_4 } from './lib/errors';
+import { DriverInternalError as DriverInternalError_2 } from './lib/errors';
+import { Edge } from './lib/datastax/graph';
+import { Edge as Edge_2 } from './graph/structure';
+import { Element } from './lib/datastax/graph';
+import { Element as Element_2 } from './graph/structure';
+import { EventEmitter } from 'stream';
+import { default as EventEmitter_2 } from 'events';
+import events from 'events';
+import { executeConcurrent } from './lib/concurrent/index';
+import { ExecuteRequest } from './requests';
+import { FrameHeader as FrameHeader_2 } from './lib/types/index';
+import { generateTimestamp as generateTimestamp_2 } from './lib/types/index';
+import { getCustomTypeSerializers } from './lib/datastax/graph';
+import { getDataTypeNameByCode as getDataTypeNameByCode_2 } from './lib/types/index';
+import { GraphResultSet as GraphResultSet_2 } from './lib/datastax/graph';
+import { GraphTypeWrapper } from './lib/datastax/graph';
+import { GraphTypeWrapper as GraphTypeWrapper_2 } from './graph/wrappers';
+import { HostMap as HostMap_2 } from '../host';
+import { HostMap as HostMap_3 } from './lib/host';
+import { Keyspace } from './schema-parser';
+import { libPoliciesAddressResolution } from './lib/policies/address-resolution';
+import { libPoliciesLoadBalancing } from './lib/policies/load-balancing';
+import { libPoliciesReconnection } from './lib/policies/reconnection';
+import { libPoliciesRetry } from './lib/policies/retry';
+import { libPoliciesSpeculativeExecution } from './lib/policies/speculative-execution';
+import { libPoliciesTimestampGeneration } from './lib/policies/timestamp-generation';
+import { LoadBalancingPolicy as LoadBalancingPolicy_2 } from './lib/policies/load-balancing';
+import { log } from './utils';
+import Long from 'long';
+import { ModelBatchItem } from './lib/mapping/model-batch-item';
+import { Murmur3Tokenizer } from '../tokenizer';
+import { NoHostAvailableError as NoHostAvailableError_2 } from './lib/errors';
+import { NotSupportedError as NotSupportedError_2 } from './lib/errors';
+import { OperationTimedOutError as OperationTimedOutError_2 } from './lib/errors';
+import { Path } from './lib/datastax/graph';
+import { Path as Path_2 } from './graph/structure';
+import { PlainTextAuthProvider } from './lib/auth/plain-text-auth-provider';
+import { Property } from './lib/datastax/graph';
+import { Property as Property_2 } from './graph/structure';
+import { QueryRequest } from './requests';
+import { RandomTokenizer } from '../tokenizer';
 import { Readable } from 'stream';
-import * as stream from 'stream';
-import * as tls from 'tls';
-import { URL as URL_2 } from 'url';
+import { ReconnectionPolicy as ReconnectionPolicy_2 } from './lib/policies/reconnection';
+import { ResponseError as ResponseError_2 } from './lib/errors';
+import { ResultSetGroup } from './lib/concurrent/index';
+import { RetryPolicy as RetryPolicy_2 } from './lib/policies/retry';
+import { Socket } from 'net';
+import { SpeculativeExecutionPolicy as SpeculativeExecutionPolicy_2 } from './lib/policies/speculative-execution';
+import { Stream } from 'stream';
+import { TableMappings } from './lib/mapping/table-mappings';
+import { TimeoutError as TimeoutError_2 } from './lib/types/index';
+import { TimestampGenerator as TimestampGenerator_2 } from './lib/policies/timestamp-generation';
+import { timeuuid as timeuuid_2 } from './lib/types/index';
+import { Token as Token_2 } from './lib/token';
+import { TokenRange as TokenRange_2 } from './lib/token';
+import { UdtGraphWrapper } from './lib/datastax/graph';
+import { UdtGraphWrapper as UdtGraphWrapper_2 } from './graph/wrappers';
+import { UnderscoreCqlToCamelCaseMappings } from './lib/mapping/table-mappings';
+import util from 'util';
+import { uuid as uuid_2 } from './lib/types/index';
+import { Vertex } from './lib/datastax/graph';
+import { Vertex as Vertex_2 } from './graph/structure';
+import { VertexProperty } from './lib/datastax/graph';
+import { VertexProperty as VertexProperty_2 } from './graph/structure';
+import { VIntOutOfRangeException as VIntOutOfRangeException_2 } from './lib/errors';
 
 // @public (undocumented)
-export type ArrayOrObject = any[]|{[key: string]: any};
+export const auth: {
+    Authenticator: typeof Authenticator;
+    AuthProvider: typeof AuthProvider;
+    DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
+    DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
+    NoAuthProvider: typeof NoAuthProvider;
+    PlainTextAuthProvider: typeof PlainTextAuthProvider_2;
+};
 
-// @public (undocumented)
-export namespace auth {
-    // (undocumented)
-    export interface Authenticator {
-        // (undocumented)
-        evaluateChallenge(challenge: Buffer, callback: Function): void;
-
-        // (undocumented)
-        initialResponse(callback: Function): void;
-
-        // (undocumented)
-        onAuthenticationSuccess(token?: Buffer): void;
-    }
-
-    // (undocumented)
-    export interface AuthProvider {
-        // (undocumented)
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    // (undocumented)
-    export class DseGssapiAuthProvider implements AuthProvider {
-        constructor(gssOptions?: { authorizationId?: string, service?: string, hostNameResolver?: Function });
-
-        // (undocumented)
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    // (undocumented)
-    export class DsePlainTextAuthProvider implements AuthProvider {
-        constructor(username: string, password: string, authorizationId?: string);
-
-        // (undocumented)
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-
-    // (undocumented)
-    export class PlainTextAuthProvider implements AuthProvider {
-        constructor(username: string, password: string);
-
-        // (undocumented)
-        newAuthenticator(endpoint: string, name: string): Authenticator;
-    }
-}
-
-// @public (undocumented)
+// @public
 export class Client extends events.EventEmitter {
-    constructor(options: DseClientOptions);
+    constructor(options: ClientOptions);
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, options?: QueryOptions): Promise<ResultSet>;
     // (undocumented)
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    options?: QueryOptions): Promise<types.ResultSet>;
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
     // (undocumented)
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    options: QueryOptions,
-    callback: ValueCallback<types.ResultSet>): void;
+    batch(queries: Array<string | {
+        query: string;
+        params?: ArrayOrObject;
+    }>, callback: ValueCallback<ResultSet>): void;
+    connect(callback?: Function): any;
     // (undocumented)
-    batch(
-    queries: Array<string|{query: string, params?: ArrayOrObject}>,
-    callback: ValueCallback<types.ResultSet>): void;
+    connected: boolean;
     // (undocumented)
-    connect(): Promise<void>;
-    // (undocumented)
-    connect(callback: EmptyCallback): void;
-    // (undocumented)
-    eachRow(query: string,
-    params: ArrayOrObject,
-    options: QueryOptions,
-    rowCallback: (n: number, row: types.Row) => void,
-    callback?: ValueCallback<types.ResultSet>): void;
-    // (undocumented)
-    eachRow(query: string,
-    params: ArrayOrObject,
-    rowCallback: (n: number, row: types.Row) => void,
-    callback?: ValueCallback<types.ResultSet>): void;
-    // (undocumented)
-    eachRow(query: string,
-    rowCallback: (n: number, row: types.Row) => void): void;
-    // (undocumented)
-    execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<types.ResultSet>;
-    // (undocumented)
-    execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<types.ResultSet>): void;
-    // (undocumented)
-    execute(query: string, params: ArrayOrObject, callback: ValueCallback<types.ResultSet>): void;
-    // (undocumented)
-    execute(query: string, callback: ValueCallback<types.ResultSet>): void;
-    // Warning: (ae-forgotten-export) The symbol "graph" needs to be exported by the entry point index.d.ts
+    connecting: boolean;
+    // Warning: (ae-forgotten-export) The symbol "ControlConnection" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    executeGraph(
-    traversal: string,
-    parameters: { [name: string]: any } | undefined,
-    options: GraphQueryOptions,
-    callback: ValueCallback<graph.GraphResultSet>): void;
+    controlConnection: ControlConnection;
+    _createBatchRequest(queryItems: {
+        query: any;
+        params: any;
+        info?: any;
+    }[], info: any): Promise<BatchRequest>;
+    _createExecuteRequest(query: any, queryId: any, info: any, params: any, meta: any): Promise<ExecuteRequest>;
+    _createQueryRequest(query: any, execOptions: any, params: any): Promise<QueryRequest>;
+    // Warning: (ae-forgotten-export) The symbol "Row" needs to be exported by the entry point index.d.ts
+    eachRow(query: string, params: ArrayOrObject, options: QueryOptions, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
     // (undocumented)
-    executeGraph(
-    traversal: string,
-    parameters: { [name: string]: any } | undefined,
-    callback: ValueCallback<graph.GraphResultSet>): void;
+    eachRow(query: string, params: ArrayOrObject, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
     // (undocumented)
-    executeGraph(traversal: string, callback: ValueCallback<graph.GraphResultSet>): void;
+    eachRow(query: string, rowCallback: (n: number, row: Row) => void): void;
+    // Warning: (ae-forgotten-export) The symbol "ArrayOrObject" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ResultSet" needs to be exported by the entry point index.d.ts
+    execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<ResultSet>;
+    // Warning: (ae-forgotten-export) The symbol "ValueCallback" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    executeGraph(
-    traversal: string,
-    parameters?: { [name: string]: any },
-    options?: GraphQueryOptions): Promise<graph.GraphResultSet>;
+    execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
     // (undocumented)
-    getReplicas(keyspace: string, token: Buffer): Host[];
+    execute(query: string, params: ArrayOrObject, callback: ValueCallback<ResultSet>): void;
     // (undocumented)
-    getState(): metadata.ClientState;
+    execute(query: string, callback: ValueCallback<ResultSet>): void;
+    _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet>;
+    // Warning: (ae-forgotten-export) The symbol "GraphQueryOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point index.d.ts
+    executeGraph(traversal: string, parameters: {
+        [name: string]: any;
+    } | undefined, options: GraphQueryOptions, callback: ValueCallback<GraphResultSet>): void;
     // (undocumented)
-    hosts: HostMap;
+    executeGraph(traversal: string, parameters: {
+        [name: string]: any;
+    } | undefined, callback: ValueCallback<GraphResultSet>): void;
     // (undocumented)
+    executeGraph(traversal: string, callback: ValueCallback<GraphResultSet>): void;
+    // (undocumented)
+    executeGraph(traversal: string, parameters?: {
+        [name: string]: any;
+    }, options?: GraphQueryOptions): Promise<GraphResultSet>;
+    // (undocumented)
+    _getEncoder(): Encoder;
+    // Warning: (ae-forgotten-export) The symbol "Host" needs to be exported by the entry point index.d.ts
+    getReplicas(keyspace: string, token: Buffer): Array<Host>;
+    // Warning: (ae-forgotten-export) The symbol "ClientState" needs to be exported by the entry point index.d.ts
+    getState(): ClientState;
+    // Warning: (ae-forgotten-export) The symbol "Connection" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    handleSchemaAgreementAndRefresh(connection: Connection, event: any): Promise<boolean>;
+    hosts: any;
+    // Warning: (ae-forgotten-export) The symbol "InsightsClient" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    insightsClient: InsightsClient;
+    // (undocumented)
+    isShuttingDown: boolean;
     keyspace: string;
     // (undocumented)
-    metadata: metadata.Metadata;
+    log: log;
+    // Warning: (ae-forgotten-export) The symbol "Metadata" needs to be exported by the entry point index.d.ts
+    metadata: Metadata;
+    // Warning: (ae-forgotten-export) The symbol "ClientMetrics" needs to be exported by the entry point index.d.ts
+    metrics: ClientMetrics;
+    // Warning: (ae-forgotten-export) The symbol "ClientOptions" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    metrics: metrics.ClientMetrics;
+    options: ClientOptions;
+    // Warning: (ae-forgotten-export) The symbol "ProfileManager" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    shutdown(): Promise<void>;
-    // (undocumented)
-    shutdown(callback: EmptyCallback): void;
-    // (undocumented)
-    stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): events.EventEmitter;
+    profileManager: ProfileManager;
+    _setHostListeners(): void;
+    _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta: any): Promise<void>;
+    shutdown(callback?: Function): Promise<any>;
+    // Warning: (ae-forgotten-export) The symbol "EmptyCallback" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ResultStream" needs to be exported by the entry point index.d.ts
+    stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): ResultStream;
+    _warmup(): Promise<any>;
 }
 
 // @public (undocumented)
-export interface ClientOptions {
-    // (undocumented)
-    authProvider?: auth.AuthProvider;
-    // (undocumented)
-    cloud?: {
-        secureConnectBundle: string | URL_2;
+export const concurrent: {
+    executeConcurrent: typeof executeConcurrent_2;
+    ResultSetGroup: typeof ResultSetGroup_2;
+};
+
+// @public (undocumented)
+export const datastax: {
+    graph: {
+        Edge: Edge_2;
+        Element: Element_2;
+        Path: Path_2;
+        Property: Property_2;
+        Vertex: Vertex_2;
+        VertexProperty: VertexProperty_2;
+        asInt: asInt_2;
+        asDouble: asDouble_2;
+        asFloat: asFloat_2;
+        asTimestamp: asTimestamp_2;
+        asUdt: asUdt_2;
+        direction: {
+            both: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            in: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            out: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            in_: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+        };
+        getCustomTypeSerializers: default_36;
+        GraphResultSet: default_37;
+        GraphTypeWrapper: GraphTypeWrapper_2;
+        t: {
+            id: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            key: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            label: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+            value: {
+                typeName: any;
+                elementName: any;
+                toString(): any;
+            };
+        };
+        UdtGraphWrapper: UdtGraphWrapper_2;
     };
-    // (undocumented)
-    contactPoints?: string[];
-    // (undocumented)
-    credentials?: {
-        username: string;
-        password: string;
-    }
-    // (undocumented)
-    encoding?: {
-        map?: Function;
-        set?: Function;
-        copyBuffer?: boolean;
-        useUndefinedAsUnset?: boolean;
-        useBigIntAsLong?: boolean;
-        useBigIntAsVarint?: boolean;
+    DateRange: typeof DateRange_2;
+};
+
+// @public (undocumented)
+const _default: {
+    Client: typeof Client;
+    ExecutionProfile: typeof ExecutionProfile;
+    ExecutionOptions: typeof ExecutionOptions;
+    types: {
+        opcodes: {
+            error: number;
+            startup: number;
+            ready: number;
+            authenticate: number;
+            credentials: number;
+            options: number;
+            supported: number;
+            query: number;
+            result: number;
+            prepare: number;
+            execute: number;
+            register: number;
+            event: number;
+            batch: number;
+            authChallenge: number;
+            authResponse: number;
+            authSuccess: number;
+            cancel: number;
+            isInRange: (code: any) => boolean;
+        };
+        consistencies: {
+            readonly any: 0;
+            readonly one: 1;
+            readonly two: 2;
+            readonly three: 3;
+            readonly quorum: 4;
+            readonly all: 5;
+            readonly localQuorum: 6;
+            readonly eachQuorum: 7;
+            readonly serial: 8;
+            readonly localSerial: 9;
+            readonly localOne: 10;
+        };
+        consistencyToString: {};
+        dataTypes: {
+            readonly custom: 0;
+            readonly ascii: 1;
+            readonly bigint: 2;
+            readonly blob: 3;
+            readonly boolean: 4;
+            readonly counter: 5;
+            readonly decimal: 6;
+            readonly double: 7;
+            readonly float: 8;
+            readonly int: 9;
+            readonly text: 10;
+            readonly timestamp: 11;
+            readonly uuid: 12;
+            readonly varchar: 13;
+            readonly varint: 14;
+            readonly timeuuid: 15;
+            readonly inet: 16;
+            readonly date: 17;
+            readonly time: 18;
+            readonly smallint: 19;
+            readonly tinyint: 20;
+            readonly duration: 21;
+            readonly list: 32;
+            readonly map: 33;
+            readonly set: 34;
+            readonly udt: 48;
+            readonly tuple: 49;
+            readonly getByName: (name: any) => {
+                code: any;
+            } | {
+                code: any;
+                info: any;
+                customTypeName?: undefined;
+            } | {
+                code: any;
+                customTypeName: string;
+                info: any[];
+            };
+        };
+        getDataTypeNameByCode: getDataTypeNameByCode_2;
+        distance: {
+            local: number;
+            remote: number;
+            ignored: number;
+        };
+        frameFlags: {
+            compression: number;
+            tracing: number;
+            customPayload: number;
+            warning: number;
+        };
+        protocolEvents: {
+            topologyChange: string;
+            statusChange: string;
+            schemaChange: string;
+        };
+        protocolVersion: {
+            v1: number;
+            v2: number;
+            v3: number;
+            v4: number;
+            v5: number;
+            v6: number;
+            dseV1: number;
+            dseV2: number;
+            maxSupported: number;
+            minSupported: number;
+            isDse: (version: number) => boolean;
+            isSupportedCassandra: (version: number) => boolean;
+            isSupported: (version: number) => boolean;
+            supportsPrepareFlags: (version: number) => boolean;
+            supportsKeyspaceInRequest: (version: number) => boolean;
+            supportsResultMetadataId: (version: number) => boolean;
+            supportsPreparedPartitionKey: (version: number) => boolean;
+            supportsSchemaChangeFullMetadata: (version: any) => boolean;
+            supportsContinuousPaging: (version: any) => boolean;
+            supportsPaging: (version: any) => boolean;
+            supportsTimestamp: (version: number) => boolean;
+            supportsNamedParameters: (version: number) => boolean;
+            supportsUnset: (version: number) => boolean;
+            supportsFailureReasonMap: (version: any) => boolean;
+            uses2BytesStreamIds: (version: number) => boolean;
+            uses4BytesCollectionLength: (version: number) => boolean;
+            uses4BytesQueryFlags: (version: number) => boolean;
+            canStartupResponseErrorBeWrapped: (version: number) => boolean;
+            getLowerSupported: (version: number) => number;
+            getHighestCommon: (connection: default_5, hosts: HostMap_3) => number;
+            isBeta: (version: number) => boolean;
+        };
+        responseErrorCodes: {
+            serverError: number;
+            protocolError: number;
+            badCredentials: number;
+            unavailableException: number;
+            overloaded: number;
+            isBootstrapping: number;
+            truncateError: number;
+            writeTimeout: number;
+            readTimeout: number;
+            readFailure: number;
+            functionFailure: number;
+            writeFailure: number;
+            syntaxError: number;
+            unauthorized: number;
+            invalid: number;
+            configError: number;
+            alreadyExists: number;
+            unprepared: number;
+            clientWriteFailure: number;
+        };
+        resultKind: {
+            voidResult: number;
+            rows: number;
+            setKeyspace: number;
+            prepared: number;
+            schemaChange: number;
+        };
+        timeuuid: timeuuid_2;
+        uuid: uuid_2;
+        BigDecimal: default_6;
+        Duration: default_7;
+        FrameHeader: FrameHeader_2;
+        InetAddress: default_8;
+        Integer: default_9;
+        LocalDate: default_10;
+        LocalTime: default_11;
+        Long: default_12;
+        ResultSet: default_13;
+        ResultStream: default_14;
+        Row: default_15;
+        DriverError: DriverError_4;
+        TimeoutError: TimeoutError_2;
+        TimeUuid: default_16;
+        Tuple: default_17;
+        Uuid: default_18;
+        unset: Readonly<{
+            readonly unset: true;
+        }>;
+        generateTimestamp: generateTimestamp_2;
+        Vector: default_19;
     };
-    // (undocumented)
-    isMetadataSyncEnabled?: boolean;
-    // (undocumented)
-    keyspace?: string;
-    // (undocumented)
-    localDataCenter?: string;
-    // (undocumented)
-    maxPrepared?: number;
-    // (undocumented)
-    metrics?: metrics.ClientMetrics;
-    // (undocumented)
-    policies?: {
-        addressResolution?: policies.addressResolution.AddressTranslator;
-        loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
-        reconnection?: policies.reconnection.ReconnectionPolicy;
-        retry?: policies.retry.RetryPolicy;
-        speculativeExecution?: policies.speculativeExecution.SpeculativeExecutionPolicy;
-        timestampGeneration?: policies.timestampGeneration.TimestampGenerator;
+    errors: {
+        ArgumentError: ArgumentError_2;
+        AuthenticationError: AuthenticationError_2;
+        BusyConnectionError: BusyConnectionError_2;
+        DriverError: DriverError_4;
+        OperationTimedOutError: OperationTimedOutError_2;
+        DriverInternalError: DriverInternalError_2;
+        NoHostAvailableError: NoHostAvailableError_2;
+        NotSupportedError: NotSupportedError_2;
+        ResponseError: ResponseError_2;
+        VIntOutOfRangeException: VIntOutOfRangeException_2;
     };
-    // (undocumented)
-    pooling?: {
-        coreConnectionsPerHost?: { [key: number]: number; };
-        heartBeatInterval?: number;
-        maxRequestsPerConnection?: number;
-        warmup?: boolean;
+    policies: {
+        addressResolution: libPoliciesAddressResolution;
+        loadBalancing: libPoliciesLoadBalancing;
+        reconnection: libPoliciesReconnection;
+        retry: libPoliciesRetry;
+        speculativeExecution: libPoliciesSpeculativeExecution;
+        timestampGeneration: libPoliciesTimestampGeneration;
+        defaultAddressTranslator: () => AddressTranslator_2;
+        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy_2;
+        defaultRetryPolicy: () => RetryPolicy_2;
+        defaultReconnectionPolicy: () => ReconnectionPolicy_2;
+        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy_2;
+        defaultTimestampGenerator: () => TimestampGenerator_2;
     };
-    // (undocumented)
-    prepareOnAllHosts?: boolean;
-    // (undocumented)
-    profiles?: ExecutionProfile[];
-    // (undocumented)
-    promiseFactory?: (handler: (callback: (err: Error, result?: any) => void) => void) => Promise<any>;
-    // (undocumented)
-    protocolOptions?: {
-        maxSchemaAgreementWaitSeconds?: number;
-        maxVersion?: number;
-        noCompact?: boolean;
-        port?: number;
+    auth: {
+        Authenticator: Authenticator_2;
+        AuthProvider: AuthProvider_2;
+        DseGssapiAuthProvider: default_20;
+        DsePlainTextAuthProvider: default_21;
+        NoAuthProvider: default_22;
+        PlainTextAuthProvider: PlainTextAuthProvider;
     };
-    // (undocumented)
-    queryOptions?: QueryOptions;
-    // (undocumented)
-    refreshSchemaDelay?: number;
-    // (undocumented)
-    rePrepareOnUp?: boolean;
-    // (undocumented)
-    requestTracker?: tracker.RequestTracker;
-    // (undocumented)
-    socketOptions?: {
-        coalescingThreshold?: number;
-        connectTimeout?: number;
-        defunctReadTimeoutThreshold?: number;
-        keepAlive?: boolean;
-        keepAliveDelay?: number;
-        readTimeout?: number;
-        tcpNoDelay?: boolean;
+    mapping: {
+        Mapper: default_23;
+        ModelMapper: default_24;
+        ModelBatchMapper: default_25;
+        ModelBatchItem: ModelBatchItem;
+        Result: default_26;
+        TableMappings: TableMappings;
+        DefaultTableMappings: DefaultTableMappings;
+        UnderscoreCqlToCamelCaseMappings: UnderscoreCqlToCamelCaseMappings;
+        q: object;
     };
+    tracker: {
+        RequestTracker: default_27;
+        RequestLogger: default_28;
+    };
+    metrics: {
+        ClientMetrics: default_29;
+        DefaultMetrics: default_30;
+    };
+    concurrent: {
+        executeConcurrent: executeConcurrent;
+        ResultSetGroup: ResultSetGroup;
+    };
+    token: {
+        Token: Token_2;
+        TokenRange: TokenRange_2;
+    };
+    metadata: {
+        Metadata: typeof Metadata;
+    };
+    Encoder: typeof Encoder;
+    geometry: {
+        Point: default_31;
+        LineString: default_32;
+        Polygon: default_33;
+        Geometry: default_34;
+    };
+    datastax: {
+        graph: {
+            Edge: Edge;
+            Element: Element;
+            Path: Path;
+            Property: Property;
+            Vertex: Vertex;
+            VertexProperty: VertexProperty;
+            asInt: asInt;
+            asDouble: asDouble;
+            asFloat: asFloat;
+            asTimestamp: asTimestamp;
+            asUdt: asUdt;
+            direction: {
+                both: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                out: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in_: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+            getCustomTypeSerializers: getCustomTypeSerializers;
+            GraphResultSet: GraphResultSet_2;
+            GraphTypeWrapper: GraphTypeWrapper;
+            t: {
+                id: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                key: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                label: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                value: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+            UdtGraphWrapper: UdtGraphWrapper;
+        };
+        DateRange: DateRange;
+    };
+    defaultOptions: () => ClientOptions_2;
+    version: string;
+};
+export default _default;
+
+// @public (undocumented)
+export const defaultOptions: () => ClientOptions_2;
+
+// @public (undocumented)
+export class Encoder {
+    constructor(protocolVersion: number, options: ClientOptions);
+    decode: (buffer: Buffer, type: ColumnInfo) => any;
+    encode: (value: any, typeInfo: ColumnInfo | number | string) => Buffer;
+    // @internal
+    static guessDataType: (value: any) => ColumnInfo | null;
+    // @internal
+    parseFqTypeName: (typeName: string, startIndex?: number, length?: number) => ColumnInfo;
+    // @internal
+    parseKeyTypes: (typesString: string) => {
+        types: Array<any>;
+        isComposite: boolean;
+        hasCollections: boolean;
+    };
+    // Warning: (ae-forgotten-export) The symbol "ColumnInfo" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    parseTypeName: (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function) => Promise<ColumnInfo>;
     // (undocumented)
-    sslOptions?: tls.ConnectionOptions;
+    protocolVersion: number;
+    // @internal
+    setProtocolVersion: (value: number) => void;
+    // @internal
+    setRoutingKeyFromMeta: (meta: any, params: Array<any>, execOptions: ExecutionOptions) => void;
+    // @internal
+    setRoutingKeyFromUser: (params: Array<any>, execOptions: ExecutionOptions, keys?: any) => void;
 }
 
 // @public (undocumented)
-export namespace concurrent {
-    // (undocumented)
-    export function executeConcurrent(
-    client: Client,
-    query: string,
-    parameters: any[][]|Readable,
-    options?: Options): Promise<ResultSetGroup>;
+export const errors: {
+    ArgumentError: typeof ArgumentError;
+    AuthenticationError: typeof AuthenticationError;
+    BusyConnectionError: typeof BusyConnectionError;
+    DriverError: typeof DriverError;
+    OperationTimedOutError: typeof OperationTimedOutError;
+    DriverInternalError: typeof DriverInternalError;
+    NoHostAvailableError: typeof NoHostAvailableError;
+    NotSupportedError: typeof NotSupportedError;
+    ResponseError: typeof ResponseError;
+    VIntOutOfRangeException: typeof VIntOutOfRangeException;
+};
 
-    // (undocumented)
-    export function executeConcurrent(
-    client: Client,
-    queries: Array<{query: string, params: any[]}>,
-    options?: Options): Promise<ResultSetGroup>;
-
-    // (undocumented)
-    export type Options = {
-        collectResults?: boolean;
-        concurrencyLevel?: number;
-        executionProfile?: string;
-        maxErrors?: number;
-        raiseOnFirstError?: boolean;
-    }
-
-    // (undocumented)
-    export interface ResultSetGroup {
-        // (undocumented)
-        errors: Error[];
-        // (undocumented)
-        resultItems: any[];
-        // (undocumented)
-        totalExecuted: number;
-    }
-}
-
-// @public (undocumented)
-export namespace datastax {
-    import graph = graphModule.graph;
-
-    import search = searchModule.search;
-}
-
-// @public (undocumented)
-export function defaultOptions(): ClientOptions;
-
-// @public (undocumented)
-export interface DseClientOptions extends ClientOptions {
-    // (undocumented)
-    applicationName?: string;
-    // (undocumented)
-    applicationVersion?: string;
-    // (undocumented)
-    graphOptions?: GraphOptions;
-    // (undocumented)
-    id?: Uuid;
-    // (undocumented)
-    monitorReporting?: { enabled?: boolean };
-}
-
-// @public (undocumented)
-export type EmptyCallback = (err: Error) => void;
-
-// @public (undocumented)
-export namespace errors {
-    // (undocumented)
-    export class ArgumentError extends DriverError {
-        constructor(message: string);
-    }
-
-    // (undocumented)
-    export class AuthenticationError extends DriverError {
-        constructor(message: string);
-    }
-
-    // (undocumented)
-    export class BusyConnectionError extends DriverError {
-        constructor(address: string, maxRequestsPerConnection: number, connectionLength: number);
-    }
-
-    // (undocumented)
-    export abstract class DriverError extends Error {
-        constructor(message: string, constructor?: any);
-
-        // (undocumented)
-        info: string;
-    }
-
-    // (undocumented)
-    export class DriverInternalError extends DriverError {
-        constructor(message: string);
-    }
-
-    // (undocumented)
-    export class NoHostAvailableError extends DriverError {
-        constructor(innerErrors: any, message?: string);
-
-        // (undocumented)
-        innerErrors: any;
-    }
-
-    // (undocumented)
-    export class NotSupportedError extends DriverError {
-        constructor(message: string);
-    }
-
-    // (undocumented)
-    export class OperationTimedOutError extends DriverError {
-        constructor(message: string, host?: string);
-
-        // (undocumented)
-        host?: string;
-    }
-
-    // (undocumented)
-    export class ResponseError extends DriverError {
-        constructor(code: number, message: string);
-
-        // (undocumented)
-        code: number;
-    }
-}
-
-// @public (undocumented)
-export interface ExecutionOptions {
-    // (undocumented)
+// @public
+export class ExecutionOptions {
+    constructor();
+    static empty(): ExecutionOptions;
     getCaptureStackTrace(): boolean;
-
-    // (undocumented)
-    getConsistency(): types.consistencies;
-
-    // (undocumented)
-    getCustomPayload(): { [key: string]: any };
-
-    // (undocumented)
+    getConsistency(): number;
+    getCustomPayload(): object;
     getFetchSize(): number;
-
-    // (undocumented)
     getFixedHost(): Host;
-
-    // (undocumented)
-    getHints(): string[] | string[][];
-
-    // (undocumented)
+    getHints(): Array<any> | Array<Array<any>>;
     getKeyspace(): string;
-
-    // (undocumented)
-    getLoadBalancingPolicy(): policies.loadBalancing.LoadBalancingPolicy;
-
-    // (undocumented)
+    // Warning: (ae-forgotten-export) The symbol "LoadBalancingPolicy" needs to be exported by the entry point index.d.ts
+    getLoadBalancingPolicy(): LoadBalancingPolicy;
+    getOrGenerateTimestamp(): Long | null;
     getPageState(): Buffer;
-
-    // (undocumented)
+    getPreferredHost(): any;
     getRawQueryOptions(): QueryOptions;
-
-    // (undocumented)
     getReadTimeout(): number;
-
-    // (undocumented)
-    getRetryPolicy(): policies.retry.RetryPolicy;
-
-    // (undocumented)
-    getRoutingKey(): Buffer | Buffer[];
-
-    // (undocumented)
-    getSerialConsistency(): types.consistencies;
-
-    // (undocumented)
+    // Warning: (ae-forgotten-export) The symbol "RetryPolicy" needs to be exported by the entry point index.d.ts
+    getRetryPolicy(): RetryPolicy;
+    getRoutingIndexes(): Array<any>;
+    getRoutingKey(): Buffer | Array<Buffer>;
+    getRoutingNames(): any;
+    getRowCallback(): any;
+    getSerialConsistency(): number;
     getTimestamp(): number | Long | undefined | null;
-
-    // (undocumented)
     isAutoPage(): boolean;
-
-    // (undocumented)
     isBatchCounter(): boolean;
-
-    // (undocumented)
     isBatchLogged(): boolean;
-
-    // (undocumented)
     isIdempotent(): boolean;
-
-    // (undocumented)
     isPrepared(): boolean;
-
-    // (undocumented)
     isQueryTracing(): boolean;
-
     // (undocumented)
-    setHints(hints: string[]): void;
+    setHints(hints: Array<any>): any;
+    setKeyspace(keyspace: string): any;
+    // (undocumented)
+    setPageState(pageState: Buffer): any;
+    setPreferredHost(host: Host): any;
+    setRoutingIndexes(routingIndexes: Array<any>): any;
+    setRoutingKey(value: any): any;
 }
 
-// @public (undocumented)
+// @public
 export class ExecutionProfile {
-    constructor(name: string, options: {
-        consistency?: types.consistencies;
-        loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
+    constructor(name: string, options?: {
+        consistency?: typeof consistencies;
+        loadBalancing?: LoadBalancingPolicy;
         readTimeout?: number;
-        retry?: policies.retry.RetryPolicy;
-        serialConsistency?: types.consistencies;
+        retry?: RetryPolicy;
+        serialConsistency?: typeof consistencies;
         graphOptions?: {
             name?: string;
             language?: string;
             source?: string;
-            readConsistency?: types.consistencies;
-            writeConsistency?: types.consistencies;
+            readConsistency?: typeof consistencies;
+            writeConsistency?: typeof consistencies;
         };
     });
-    // (undocumented)
-    consistency?: types.consistencies;
-    // (undocumented)
+    // Warning: (ae-forgotten-export) The symbol "consistencies" needs to be exported by the entry point index.d.ts
+    consistency?: typeof consistencies;
     graphOptions?: {
         name?: string;
         language?: string;
         source?: string;
-        readConsistency?: types.consistencies;
-        writeConsistency?: types.consistencies;
+        readConsistency?: typeof consistencies;
+        writeConsistency?: typeof consistencies;
+        results?: any;
     };
-    // (undocumented)
-    loadBalancing?: policies.loadBalancing.LoadBalancingPolicy;
-    // (undocumented)
+    loadBalancing?: LoadBalancingPolicy;
     name: string;
-    // (undocumented)
     readTimeout?: number;
-    // (undocumented)
-    retry?: policies.retry.RetryPolicy;
-    // (undocumented)
-    serialConsistency?: types.consistencies;
+    retry?: RetryPolicy;
+    serialConsistency?: typeof consistencies;
 }
 
 // @public (undocumented)
-export namespace geometry {
-    // (undocumented)
-    export class LineString {
-        constructor(...args: Point[]);
-
-        // (undocumented)
-        equals(other: LineString): boolean;
-
-        // (undocumented)
-        static fromBuffer(buffer: Buffer): LineString;
-
-        // (undocumented)
-        static fromString(textValue: string): LineString;
-
-        // (undocumented)
-        toBuffer(): Buffer;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toString(): string;
-
-    }
-
-    // (undocumented)
-    export class Point {
-        constructor(x: number, y: number);
-
-        // (undocumented)
-        equals(other: Point): boolean;
-
-        // (undocumented)
-        static fromBuffer(buffer: Buffer): Point;
-
-        // (undocumented)
-        static fromString(textValue: string): Point;
-
-        // (undocumented)
-        toBuffer(): Buffer;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toString(): string;
-
-    }
-
-    // (undocumented)
-    export class Polygon {
-        constructor(...args: Point[]);
-
-        // (undocumented)
-        equals(other: Polygon): boolean;
-
-        // (undocumented)
-        static fromBuffer(buffer: Buffer): Polygon;
-
-        // (undocumented)
-        static fromString(textValue: string): Polygon;
-
-        // (undocumented)
-        toBuffer(): Buffer;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toString(): string;
-    }
-}
-
-// @public (undocumented)
-export type GraphOptions = {
-    language?: string;
-    name?: string;
-    readConsistency?: types.consistencies;
-    readTimeout?: number;
-    source?: string;
-    writeConsistency?: types.consistencies;
+export const geometry: {
+    Point: typeof Point;
+    LineString: typeof LineString;
+    Polygon: typeof Polygon;
+    Geometry: typeof Geometry;
 };
 
 // @public (undocumented)
-export interface GraphQueryOptions extends QueryOptions {
-    // (undocumented)
-    graphLanguage?: string;
-    // (undocumented)
-    graphName?: string;
-    // (undocumented)
-    graphReadConsistency?: types.consistencies;
-    // (undocumented)
-    graphSource?: string;
-    // (undocumented)
-    graphWriteConsistency?: types.consistencies;
-}
+export const mapping: {
+    Mapper: typeof Mapper;
+    ModelMapper: typeof ModelMapper;
+    ModelBatchMapper: typeof ModelBatchMapper;
+    ModelBatchItem: typeof ModelBatchItem_2;
+    Result: typeof Result;
+    TableMappings: typeof TableMappings_2;
+    DefaultTableMappings: typeof DefaultTableMappings_2;
+    UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings_2;
+    q: object;
+};
 
 // @public (undocumented)
-export interface Host extends events.EventEmitter {
-    // (undocumented)
-    address: string;
-    // (undocumented)
-    canBeConsideredAsUp(): boolean;
-    // (undocumented)
-    cassandraVersion: string;
-    // (undocumented)
-    datacenter: string;
-    // (undocumented)
-    getCassandraVersion(): number[];
-    // (undocumented)
-    hostId: types.Uuid;
-    // (undocumented)
-    isUp(): boolean;
-    // (undocumented)
-    rack: string;
-    // (undocumented)
-    tokens: string[];
-}
+export const metadata: {
+    Metadata: typeof Metadata;
+};
 
 // @public (undocumented)
-export interface HostMap extends events.EventEmitter {
-    // (undocumented)
-    forEach(callback: (value: Host, key: string) => void): void;
-
-    // (undocumented)
-    get(key: string): Host;
-
-    // (undocumented)
-    keys(): string[];
-
-    // (undocumented)
-    length: number;
-
-    // (undocumented)
-    values(): Host[];
-}
+export const metrics: {
+    ClientMetrics: typeof ClientMetrics;
+    DefaultMetrics: typeof DefaultMetrics;
+};
 
 // @public (undocumented)
-export namespace mapping {
-    // (undocumented)
-    export class DefaultTableMappings implements TableMappings {
-        // (undocumented)
-        getColumnName(propName: string): string;
+export const policies: {
+    addressResolution: typeof addressResolution;
+    loadBalancing: typeof loadBalancing;
+    reconnection: typeof reconnection;
+    retry: typeof retry;
+    speculativeExecution: typeof speculativeExecution;
+    timestampGeneration: typeof timestampGeneration;
+    defaultAddressTranslator: () => addressResolution.AddressTranslator;
+    defaultLoadBalancingPolicy: (localDc?: string) => loadBalancing.LoadBalancingPolicy;
+    defaultRetryPolicy: () => retry.RetryPolicy;
+    defaultReconnectionPolicy: () => reconnection.ReconnectionPolicy;
+    defaultSpeculativeExecutionPolicy: () => speculativeExecution.SpeculativeExecutionPolicy;
+    defaultTimestampGenerator: () => timestampGeneration.TimestampGenerator;
+};
 
-        // (undocumented)
-        getPropertyName(columnName: string): string;
+// @public (undocumented)
+export const token: {
+    Token: Token_2;
+    TokenRange: TokenRange_2;
+};
 
-        // (undocumented)
-        newObjectInstance(): any;
-    }
+// @public (undocumented)
+export const tracker: {
+    RequestTracker: typeof RequestTracker;
+    RequestLogger: typeof RequestLogger;
+};
 
-    // (undocumented)
-    export type FindDocInfo = {
-        fields?: string[];
-        orderBy?: { [key: string]: string };
-        limit?: number;
-    }
-
-    // (undocumented)
-    export type InsertDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifNotExists?: boolean;
-    }
-
-    // (undocumented)
-    export class Mapper {
-        constructor(client: Client, options?: MappingOptions);
-
-        // (undocumented)
-        batch(items: ModelBatchItem[], executionOptions?: string | MappingExecutionOptions): Promise<Result>;
-
-        // (undocumented)
-        forModel<T = any>(name: string): ModelMapper<T>;
-    }
-
-    // (undocumented)
-    export type MappingExecutionOptions = {
-        executionProfile?: string;
-        isIdempotent?: boolean;
-        logged?: boolean;
-        timestamp?: number | Long;
-        fetchSize?: number;
-        pageState?: number;
-    }
-
-    // (undocumented)
-    export type MappingOptions = {
-        models: { [key: string]: ModelOptions };
-    }
-
-    // (undocumented)
-    export interface ModelBatchItem {
-
-    }
-
-    // (undocumented)
-    export interface ModelBatchMapper {
-        // (undocumented)
-        insert(doc: any, docInfo?: InsertDocInfo): ModelBatchItem;
-
-        // (undocumented)
-        remove(doc: any, docInfo?: RemoveDocInfo): ModelBatchItem;
-
-        // (undocumented)
-        update(doc: any, docInfo?: UpdateDocInfo): ModelBatchItem;
-    }
-
-    // (undocumented)
-    export type ModelColumnOptions = {
-        name: string;
-        toModel?: (columnValue: any) => any;
-        fromModel?: (modelValue: any) => any;
+// @public (undocumented)
+export const types: {
+    opcodes: {
+        error: number;
+        startup: number;
+        ready: number;
+        authenticate: number;
+        credentials: number;
+        options: number;
+        supported: number;
+        query: number;
+        result: number;
+        prepare: number;
+        execute: number;
+        register: number;
+        event: number;
+        batch: number;
+        authChallenge: number;
+        authResponse: number;
+        authSuccess: number;
+        cancel: number;
+        isInRange: (code: any) => boolean;
     };
-
-    // (undocumented)
-    export interface ModelMapper<T = any> {
-        // (undocumented)
-        batching: ModelBatchMapper;
-        // (undocumented)
-        find(doc: { [key: string]: any }, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-        // (undocumented)
-        findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-        // (undocumented)
-        get(doc: { [key: string]: any }, docInfo?: { fields?: string[] }, executionOptions?: string | MappingExecutionOptions): Promise<null | T>;
-        // (undocumented)
-        insert(doc: { [key: string]: any }, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-        // (undocumented)
-        mapWithQuery(
-        query: string,
-        paramsHandler: (doc: any) => any[],
-        executionOptions?: string | MappingExecutionOptions
-        ): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result<T>>;
-        // (undocumented)
-        name: string;
-        // (undocumented)
-        remove(doc: { [key: string]: any }, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-        // (undocumented)
-        update(doc: { [key: string]: any }, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
-    }
-
-    // (undocumented)
-    export type ModelOptions = {
-        tables?: string[] | ModelTables[];
-        mappings?: TableMappings;
-        columns?: { [key: string]: string|ModelColumnOptions };
-        keyspace?: string;
-    }
-
-    // (undocumented)
-    export interface ModelTables {
-        // (undocumented)
-        isView: boolean;
-        // (undocumented)
-        name: string;
-    }
-
-    // (undocumented)
-    export namespace q {
-        // (undocumented)
-        export function and(condition1: any, condition2: any): QueryOperator;
-
-        // (undocumented)
-        export function append(value: any): QueryOperator;
-
-        // (undocumented)
-        export function decr(value: any): QueryOperator;
-
-        // (undocumented)
-        export function gt(value: any): QueryOperator;
-
-        // (undocumented)
-        export function gte(value: any): QueryOperator;
-
-        // (undocumented)
-        export function in_(arr: any): QueryOperator;
-
-        // (undocumented)
-        export function incr(value: any): QueryOperator;
-
-        // (undocumented)
-        export function lt(value: any): QueryOperator;
-
-        // (undocumented)
-        export function lte(value: any): QueryOperator;
-
-        // (undocumented)
-        export function notEq(value: any): QueryOperator;
-
-        // (undocumented)
-        export function prepend(value: any): QueryOperator;
-
-        // (undocumented)
-        export interface QueryOperator {
-
-        }
-
-        // (undocumented)
-        export function remove(value: any): QueryOperator;
-    }
-
-    // (undocumented)
-    export type RemoveDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifExists?: boolean;
-        when?: { [key: string]: any };
-        deleteOnlyColumns?: boolean;
-    }
-
-    // (undocumented)
-    export interface Result<T = any> extends Iterator<T> {
-        // (undocumented)
-        first(): T | null;
-
-        // (undocumented)
-        forEach(callback: (currentValue: T, index: number) => void, thisArg?: any): void;
-
-        // (undocumented)
-        toArray(): T[];
-
-        // (undocumented)
-        wasApplied(): boolean;
-    }
-
-    // (undocumented)
-    export interface TableMappings {
-        // (undocumented)
-        getColumnName(propName: string): string;
-
-        // (undocumented)
-        getPropertyName(columnName: string): string;
-
-        // (undocumented)
-        newObjectInstance(): any;
-    }
-
-    // (undocumented)
-    export class UnderscoreCqlToCamelCaseMappings implements TableMappings {
-        // (undocumented)
-        getColumnName(propName: string): string;
-
-        // (undocumented)
-        getPropertyName(columnName: string): string;
-
-        // (undocumented)
-        newObjectInstance(): any;
-    }
-
-    // (undocumented)
-    export type UpdateDocInfo = {
-        fields?: string[];
-        ttl?: number;
-        ifExists?: boolean;
-        when?: { [key: string]: any };
-        orderBy?: { [key: string]: string };
-        limit?: number;
-        deleteOnlyColumns?: boolean;
-    }
-}
-
-// @public (undocumented)
-export namespace metadata {
-
-    // (undocumented)
-    export interface Aggregate {
-        // (undocumented)
-        argumentTypes: Array<{ code: dataTypes, info: any }>;
-        // (undocumented)
-        finalFunction: string;
-        // (undocumented)
-        initCondition: string;
-        // (undocumented)
-        keyspaceName: string;
-        // (undocumented)
-        returnType: string;
-        // (undocumented)
-        signature: string[];
-        // (undocumented)
-        stateFunction: string;
-        // (undocumented)
-        stateType: string;
-    }
-
-    // (undocumented)
-    export interface ClientState {
-        // (undocumented)
-        getConnectedHosts(): Host[];
-
-        // (undocumented)
-        getInFlightQueries(host: Host): number;
-
-        // (undocumented)
-        getOpenConnections(host: Host): number;
-
-        // (undocumented)
-        toString(): string;
-    }
-
-    // (undocumented)
-    export interface ColumnInfo {
-        // (undocumented)
-        name: string;
-        // (undocumented)
-        type: DataTypeInfo;
-    }
-
-    // (undocumented)
-    export interface DataCollection {
-        // (undocumented)
-        bloomFilterFalsePositiveChance: number;
-        // (undocumented)
-        caching: string;
-        // (undocumented)
-        clusteringKeys: ColumnInfo[];
-        // (undocumented)
-        clusteringOrder: string[];
-        // (undocumented)
-        columns: ColumnInfo[];
-        // (undocumented)
-        columnsByName: { [key: string]: ColumnInfo };
-        // (undocumented)
-        comment: string;
-        // (undocumented)
-        compactionClass: string;
-        // (undocumented)
-        compactionOptions: { [option: string]: any; };
-        // (undocumented)
-        compression: {
-            class?: string;
-            [option: string]: any;
+    consistencies: {
+        readonly any: 0;
+        readonly one: 1;
+        readonly two: 2;
+        readonly three: 3;
+        readonly quorum: 4;
+        readonly all: 5;
+        readonly localQuorum: 6;
+        readonly eachQuorum: 7;
+        readonly serial: 8;
+        readonly localSerial: 9;
+        readonly localOne: 10;
+    };
+    consistencyToString: {};
+    dataTypes: {
+        readonly custom: 0;
+        readonly ascii: 1;
+        readonly bigint: 2;
+        readonly blob: 3;
+        readonly boolean: 4;
+        readonly counter: 5;
+        readonly decimal: 6;
+        readonly double: 7;
+        readonly float: 8;
+        readonly int: 9;
+        readonly text: 10;
+        readonly timestamp: 11;
+        readonly uuid: 12;
+        readonly varchar: 13;
+        readonly varint: 14;
+        readonly timeuuid: 15;
+        readonly inet: 16;
+        readonly date: 17;
+        readonly time: 18;
+        readonly smallint: 19;
+        readonly tinyint: 20;
+        readonly duration: 21;
+        readonly list: 32;
+        readonly map: 33;
+        readonly set: 34;
+        readonly udt: 48;
+        readonly tuple: 49;
+        readonly getByName: (name: any) => {
+            code: any;
+        } | {
+            code: any;
+            info: any;
+            customTypeName?: undefined;
+        } | {
+            code: any;
+            customTypeName: string;
+            info: any[];
         };
-        // (undocumented)
-        crcCheckChange?: number;
-        // (undocumented)
-        defaultTtl: number;
-        // (undocumented)
-        extensions: { [option: string]: any; };
-        // (undocumented)
-        gcGraceSeconds: number;
-        // (undocumented)
-        localReadRepairChance: number;
-        // (undocumented)
-        maxIndexInterval?: number;
-        // (undocumented)
-        minIndexInterval?: number;
-        // (undocumented)
-        name: string;
-        // (undocumented)
-        partitionKeys: ColumnInfo[];
-        // (undocumented)
-        populateCacheOnFlush: boolean;
-        // (undocumented)
-        readRepairChance: number;
-        // (undocumented)
-        speculativeRetry: string;
-    }
-
-    // (undocumented)
-    export interface DataTypeInfo {
-        // (undocumented)
-        code: dataTypes;
-        // (undocumented)
-        info: string | DataTypeInfo | DataTypeInfo[];
-        // (undocumented)
-        options: {
-            frozen: boolean;
-            reversed: boolean;
-        };
-    }
-
-    // (undocumented)
-    export interface Index {
-        // (undocumented)
-        isCompositesKind(): boolean;
-        // (undocumented)
-        isCustomKind(): boolean;
-        // (undocumented)
-        isKeysKind(): boolean;
-        // (undocumented)
-        kind: IndexKind;
-        // (undocumented)
-        name: string;
-        // (undocumented)
-        options: object;
-        // (undocumented)
-        target: string;
-    }
-
-    // (undocumented)
-    export enum IndexKind {
-        // (undocumented)
-        composites,
-        // (undocumented)
-        custom = 0,
-        // (undocumented)
-        keys
-    }
-
-    // (undocumented)
-    export interface MaterializedView extends DataCollection {
-        // (undocumented)
-        includeAllColumns: boolean;
-        // (undocumented)
-        tableName: string;
-        // (undocumented)
-        whereClause: string;
-    }
-
-    // (undocumented)
-    export interface Metadata {
-        // (undocumented)
-        clearPrepared(): void;
-
-        // (undocumented)
-        getAggregate(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>, callback: ValueCallback<Aggregate>): void;
-
-        // (undocumented)
-        getAggregate(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>): Promise<Aggregate>;
-
-        // (undocumented)
-        getAggregates(keyspaceName: string, name: string, callback: ValueCallback<Aggregate[]>): void;
-
-        // (undocumented)
-        getAggregates(keyspaceName: string, name: string): Promise<Aggregate[]>;
-
-        // (undocumented)
-        getFunction(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>, callback: ValueCallback<SchemaFunction>): void;
-
-        // (undocumented)
-        getFunction(keyspaceName: string, name: string, signature: string[] | Array<{ code: number, info: any }>): Promise<SchemaFunction>;
-
-        // (undocumented)
-        getFunctions(keyspaceName: string, name: string, callback: ValueCallback<SchemaFunction[]>): void;
-
-        // (undocumented)
-        getFunctions(keyspaceName: string, name: string): Promise<SchemaFunction[]>;
-
-        // (undocumented)
-        getMaterializedView(keyspaceName: string, name: string, callback: ValueCallback<MaterializedView>): void;
-
-        // (undocumented)
-        getMaterializedView(keyspaceName: string, name: string, callback: EmptyCallback): Promise<MaterializedView>;
-
-        // (undocumented)
-        getReplicas(keyspaceName: string, token: Buffer | token.Token | token.TokenRange): Host[];
-
-        // (undocumented)
-        getTable(keyspaceName: string, name: string, callback: ValueCallback<TableMetadata>): void;
-
-        // (undocumented)
-        getTable(keyspaceName: string, name: string): Promise<TableMetadata>;
-
-        // (undocumented)
-        getTokenRanges(): Set<token.TokenRange>;
-
-        // (undocumented)
-        getTokenRangesForHost(keyspaceName: string, host: Host): Set<token.TokenRange> | null;
-
-        // (undocumented)
-        getTrace(traceId: Uuid, consistency: types.consistencies, callback: ValueCallback<QueryTrace>): void;
-
-        // (undocumented)
-        getTrace(traceId: Uuid, consistency: types.consistencies): Promise<QueryTrace>;
-
-        // (undocumented)
-        getTrace(traceId: Uuid, callback: ValueCallback<QueryTrace>): void;
-
-        // (undocumented)
-        getTrace(traceId: Uuid): Promise<QueryTrace>;
-
-        // (undocumented)
-        getUdt(keyspaceName: string, name: string, callback: ValueCallback<Udt>): void;
-
-        // (undocumented)
-        getUdt(keyspaceName: string, name: string): Promise<Udt>;
-
-        // (undocumented)
-        keyspaces: { [name: string]: { name: string, strategy: string }};
-
-        // (undocumented)
-        newToken(components: Buffer[] | Buffer | string): token.Token;
-
-        // (undocumented)
-        newTokenRange(start: token.Token, end: token.Token): token.TokenRange;
-
-        // (undocumented)
-        refreshKeyspace(name: string, callback: EmptyCallback): void;
-
-        // (undocumented)
-        refreshKeyspace(name: string): Promise<void>;
-
-        // (undocumented)
-        refreshKeyspaces(waitReconnect: boolean, callback: EmptyCallback): void;
-
-        // (undocumented)
-        refreshKeyspaces(waitReconnect?: boolean): Promise<void>;
-
-        // (undocumented)
-        refreshKeyspaces(callback: EmptyCallback): void;
-    }
-
-    // (undocumented)
-    export interface QueryTrace {
-        // (undocumented)
-        clientAddress: string;
-        // (undocumented)
-        coordinator: InetAddress;
-        // (undocumented)
-        duration: number;
-        // (undocumented)
-        events: Array<{ id: Uuid; activity: any; source: any; elapsed: any; thread: any }>;
-        // (undocumented)
-        parameters: { [key: string]: any };
-        // (undocumented)
-        requestType: string;
-        // (undocumented)
-        startedAt: number | types.Long;
-    }
-
-    // (undocumented)
-    export interface SchemaFunction {
-        // (undocumented)
-        argumentNames: string[];
-        // (undocumented)
-        argumentTypes: Array<{ code: dataTypes, info: any }>;
-        // (undocumented)
-        body: string;
-        // (undocumented)
-        calledOnNullInput: boolean;
-        // (undocumented)
-        keyspaceName: string;
-        // (undocumented)
-        language: string;
-        // (undocumented)
-        name: string;
-        // (undocumented)
-        returnType: string;
-        // (undocumented)
-        signature: string[];
-    }
-
-    // (undocumented)
-    export interface TableMetadata extends DataCollection {
-        // (undocumented)
-        cdc?: boolean;
-        // (undocumented)
-        indexes: Index[];
-        // (undocumented)
-        indexInterval?: number;
-        // (undocumented)
-        isCompact: boolean;
-        // (undocumented)
-        memtableFlushPeriod: number;
-        // (undocumented)
-        replicateOnWrite: boolean;
-        // (undocumented)
-        virtual: boolean;
-    }
-
-    // (undocumented)
-    export interface Udt {
-        // (undocumented)
-        fields: ColumnInfo[]
-        // (undocumented)
-        name: string;
-    }
-}
+    };
+    getDataTypeNameByCode: typeof getDataTypeNameByCode;
+    distance: {
+        local: number;
+        remote: number;
+        ignored: number;
+    };
+    frameFlags: {
+        compression: number;
+        tracing: number;
+        customPayload: number;
+        warning: number;
+    };
+    protocolEvents: {
+        topologyChange: string;
+        statusChange: string;
+        schemaChange: string;
+    };
+    protocolVersion: {
+        v1: number;
+        v2: number;
+        v3: number;
+        v4: number;
+        v5: number;
+        v6: number;
+        dseV1: number;
+        dseV2: number;
+        maxSupported: number;
+        minSupported: number;
+        isDse: (version: number) => boolean;
+        isSupportedCassandra: (version: number) => boolean;
+        isSupported: (version: number) => boolean;
+        supportsPrepareFlags: (version: number) => boolean;
+        supportsKeyspaceInRequest: (version: number) => boolean;
+        supportsResultMetadataId: (version: number) => boolean;
+        supportsPreparedPartitionKey: (version: number) => boolean;
+        supportsSchemaChangeFullMetadata: (version: any) => boolean;
+        supportsContinuousPaging: (version: any) => boolean;
+        supportsPaging: (version: any) => boolean;
+        supportsTimestamp: (version: number) => boolean;
+        supportsNamedParameters: (version: number) => boolean;
+        supportsUnset: (version: number) => boolean;
+        supportsFailureReasonMap: (version: any) => boolean;
+        uses2BytesStreamIds: (version: number) => boolean;
+        uses4BytesCollectionLength: (version: number) => boolean;
+        uses4BytesQueryFlags: (version: number) => boolean;
+        canStartupResponseErrorBeWrapped: (version: number) => boolean;
+        getLowerSupported: (version: number) => number;
+        getHighestCommon: (connection: default_4, hosts: HostMap_2) => number;
+        isBeta: (version: number) => boolean;
+    };
+    responseErrorCodes: {
+        serverError: number;
+        protocolError: number;
+        badCredentials: number;
+        unavailableException: number;
+        overloaded: number;
+        isBootstrapping: number;
+        truncateError: number;
+        writeTimeout: number;
+        readTimeout: number;
+        readFailure: number;
+        functionFailure: number;
+        writeFailure: number;
+        syntaxError: number;
+        unauthorized: number;
+        invalid: number;
+        configError: number;
+        alreadyExists: number;
+        unprepared: number;
+        clientWriteFailure: number;
+    };
+    resultKind: {
+        voidResult: number;
+        rows: number;
+        setKeyspace: number;
+        prepared: number;
+        schemaChange: number;
+    };
+    timeuuid: typeof timeuuid;
+    uuid: typeof uuid;
+    BigDecimal: typeof BigDecimal;
+    Duration: typeof Duration;
+    FrameHeader: typeof FrameHeader;
+    InetAddress: typeof InetAddress;
+    Integer: typeof Integer;
+    LocalDate: typeof LocalDate;
+    LocalTime: typeof LocalTime;
+    Long: typeof Long;
+    ResultSet: typeof ResultSet;
+    ResultStream: typeof ResultStream;
+    Row: typeof Row;
+    DriverError: DriverError_2;
+    TimeoutError: typeof TimeoutError;
+    TimeUuid: typeof TimeUuid;
+    Tuple: typeof Tuple;
+    Uuid: typeof Uuid;
+    unset: Readonly<{
+        readonly unset: true;
+    }>;
+    generateTimestamp: typeof generateTimestamp;
+    Vector: typeof Vector;
+};
 
 // @public (undocumented)
-export namespace metrics {
-    // (undocumented)
-    export interface ClientMetrics {
-        // (undocumented)
-        onAuthenticationError(e: Error | errors.AuthenticationError): void;
-
-        // (undocumented)
-        onClientTimeoutError(e: errors.OperationTimedOutError): void;
-
-        // (undocumented)
-        onClientTimeoutRetry(e: Error): void;
-
-        // (undocumented)
-        onConnectionError(e: Error): void;
-
-        // (undocumented)
-        onIgnoreError(e: Error): void;
-
-        // (undocumented)
-        onOtherError(e: Error): void;
-
-        // (undocumented)
-        onOtherErrorRetry(e: Error): void;
-
-        // (undocumented)
-        onReadTimeoutError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onReadTimeoutRetry(e: Error): void;
-
-        // (undocumented)
-        onResponse(latency: number[]): void;
-
-        // (undocumented)
-        onSpeculativeExecution(): void;
-
-        // (undocumented)
-        onSuccessfulResponse(latency: number[]): void;
-
-        // (undocumented)
-        onUnavailableError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onUnavailableRetry(e: Error): void;
-
-        // (undocumented)
-        onWriteTimeoutError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onWriteTimeoutRetry(e: Error): void;
-    }
-
-    // (undocumented)
-    export class DefaultMetrics implements ClientMetrics {
-        constructor();
-
-        // (undocumented)
-        onAuthenticationError(e: Error | errors.AuthenticationError): void;
-
-        // (undocumented)
-        onClientTimeoutError(e: errors.OperationTimedOutError): void;
-
-        // (undocumented)
-        onClientTimeoutRetry(e: Error): void;
-
-        // (undocumented)
-        onConnectionError(e: Error): void;
-
-        // (undocumented)
-        onIgnoreError(e: Error): void;
-
-        // (undocumented)
-        onOtherError(e: Error): void;
-
-        // (undocumented)
-        onOtherErrorRetry(e: Error): void;
-
-        // (undocumented)
-        onReadTimeoutError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onReadTimeoutRetry(e: Error): void;
-
-        // (undocumented)
-        onResponse(latency: number[]): void;
-
-        // (undocumented)
-        onSpeculativeExecution(): void;
-
-        // (undocumented)
-        onSuccessfulResponse(latency: number[]): void;
-
-        // (undocumented)
-        onUnavailableError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onUnavailableRetry(e: Error): void;
-
-        // (undocumented)
-        onWriteTimeoutError(e: errors.ResponseError): void;
-
-        // (undocumented)
-        onWriteTimeoutRetry(e: Error): void;
-    }
-}
-
-// @public (undocumented)
-export namespace policies {
-    // (undocumented)
-    export namespace addressResolution {
-        // (undocumented)
-        export interface AddressTranslator {
-            // (undocumented)
-            translate(address: string, port: number, callback: Function): void;
-        }
-
-        // (undocumented)
-        export class EC2MultiRegionTranslator implements AddressTranslator {
-            // (undocumented)
-            translate(address: string, port: number, callback: Function): void;
-        }
-    }
-
-    // (undocumented)
-    export function defaultAddressTranslator(): addressResolution.AddressTranslator;
-
-    // (undocumented)
-    export function defaultLoadBalancingPolicy(localDc?: string): loadBalancing.LoadBalancingPolicy;
-
-    // (undocumented)
-    export function defaultReconnectionPolicy(): reconnection.ReconnectionPolicy;
-
-    // (undocumented)
-    export function defaultRetryPolicy(): retry.RetryPolicy;
-
-    // (undocumented)
-    export function defaultSpeculativeExecutionPolicy(): speculativeExecution.SpeculativeExecutionPolicy;
-
-    // (undocumented)
-    export function defaultTimestampGenerator(): timestampGeneration.TimestampGenerator;
-
-    // (undocumented)
-    export namespace loadBalancing {
-        // (undocumented)
-        export class AllowListPolicy extends LoadBalancingPolicy {
-            constructor(childPolicy: LoadBalancingPolicy, allowList: string[]);
-        }
-
-        // (undocumented)
-        export class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
-            constructor(localDc: string);
-        }
-
-        // (undocumented)
-        export class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
-            constructor(options?: { localDc?: string, filter?: (host: Host) => boolean });
-        }
-
-        // (undocumented)
-        export abstract class LoadBalancingPolicy {
-            // (undocumented)
-            getDistance(host: Host): types.distance;
-
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
-
-            // (undocumented)
-            newQueryPlan(
-            keyspace: string,
-            executionOptions: ExecutionOptions,
-            callback: (error: Error, iterator: Iterator<Host>) => void): void;
-        }
-
-        // (undocumented)
-        export class RoundRobinPolicy extends LoadBalancingPolicy {
-            constructor();
-        }
-
-        // (undocumented)
-        export class TokenAwarePolicy extends LoadBalancingPolicy {
-            constructor(childPolicy: LoadBalancingPolicy);
-        }
-
-        // (undocumented)
-        export class WhiteListPolicy extends AllowListPolicy {
-        }
-    }
-
-    // (undocumented)
-    export namespace reconnection {
-        // (undocumented)
-        export class ConstantReconnectionPolicy implements ReconnectionPolicy {
-            constructor(delay: number);
-
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            newSchedule(): Iterator<number>;
-
-        }
-
-        // (undocumented)
-        export class ExponentialReconnectionPolicy implements ReconnectionPolicy {
-            constructor(baseDelay: number, maxDelay: number, startWithNoDelay?: boolean);
-
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            newSchedule(): Iterator<number>;
-        }
-
-        // (undocumented)
-        export interface ReconnectionPolicy {
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            newSchedule(): Iterator<number>;
-        }
-    }
-
-    // (undocumented)
-    export namespace retry {
-        // (undocumented)
-        export class DecisionInfo {
-            // (undocumented)
-            consistency: types.consistencies;
-            // (undocumented)
-            decision: number;
-        }
-
-        // (undocumented)
-        export class FallthroughRetryPolicy extends RetryPolicy {
-            constructor();
-        }
-
-        // (undocumented)
-        export class IdempotenceAwareRetryPolicy extends RetryPolicy {
-            constructor(childPolicy: RetryPolicy);
-        }
-
-        // (undocumented)
-        export class OperationInfo {
-            // (undocumented)
-            executionOptions: ExecutionOptions;
-            // (undocumented)
-            nbRetry: number;
-            // (undocumented)
-            query: string;
-        }
-
-        // (undocumented)
-        export namespace RetryDecision {
-            // (undocumented)
-            export enum retryDecision {
-                // (undocumented)
-                ignore,
-                // (undocumented)
-                rethrow,
-                // (undocumented)
-                retry
-            }
-        }
-
-        // (undocumented)
-        export class RetryPolicy {
-            // (undocumented)
-            onReadTimeout(
-            info: OperationInfo,
-            consistency: types.consistencies,
-            received: number,
-            blockFor: number,
-            isDataPresent: boolean): DecisionInfo;
-
-            // (undocumented)
-            onRequestError(info: OperationInfo, consistency: types.consistencies, err: Error): DecisionInfo;
-
-            // (undocumented)
-            onUnavailable(
-            info: OperationInfo, consistency: types.consistencies, required: number, alive: boolean): DecisionInfo;
-
-            // (undocumented)
-            onWriteTimeout(
-            info: OperationInfo,
-            consistency: types.consistencies,
-            received: number,
-            blockFor: number,
-            writeType: string): DecisionInfo;
-
-            // (undocumented)
-            rethrowResult(): DecisionInfo;
-
-            // (undocumented)
-            retryResult(consistency: types.consistencies, useCurrentHost?: boolean): DecisionInfo;
-        }
-    }
-
-    // (undocumented)
-    export namespace speculativeExecution {
-        // (undocumented)
-        export class ConstantSpeculativeExecutionPolicy implements SpeculativeExecutionPolicy {
-            constructor(delay: number, maxSpeculativeExecutions: number);
-
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            init(client: Client): void;
-
-            // (undocumented)
-            newPlan(keyspace: string, queryInfo: string | Array<object>): { nextExecution: Function };
-
-            // (undocumented)
-            shutdown(): void;
-        }
-
-        // (undocumented)
-        export class NoSpeculativeExecutionPolicy implements SpeculativeExecutionPolicy {
-            constructor();
-
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            init(client: Client): void;
-
-            // (undocumented)
-            newPlan(keyspace: string, queryInfo: string | Array<object>): { nextExecution: Function };
-
-            // (undocumented)
-            shutdown(): void;
-        }
-
-        // (undocumented)
-        export interface SpeculativeExecutionPolicy {
-            // (undocumented)
-            getOptions(): Map<string, object>;
-
-            // (undocumented)
-            init(client: Client): void;
-
-            // (undocumented)
-            newPlan(keyspace: string, queryInfo: string|Array<object>): { nextExecution: Function };
-
-            // (undocumented)
-            shutdown(): void;
-        }
-    }
-
-    // (undocumented)
-    export namespace timestampGeneration {
-        // (undocumented)
-        export class MonotonicTimestampGenerator implements TimestampGenerator {
-            constructor(warningThreshold: number, minLogInterval: number);
-
-            // (undocumented)
-            getDate(): number;
-
-            // (undocumented)
-            next(client: Client): types.Long | number;
-        }
-
-        // (undocumented)
-        export interface TimestampGenerator {
-            // (undocumented)
-            next(client: Client): types.Long|number;
-        }
-    }
-}
-
-// @public (undocumented)
-export interface QueryOptions {
-    // (undocumented)
-    autoPage?: boolean;
-    // (undocumented)
-    captureStackTrace?: boolean;
-    // (undocumented)
-    consistency?: number;
-    // (undocumented)
-    counter?: boolean;
-    // (undocumented)
-    customPayload?: any;
-    // (undocumented)
-    executionProfile?: string | ExecutionProfile;
-    // (undocumented)
-    fetchSize?: number;
-    // (undocumented)
-    hints?: string[] | string[][];
-    // (undocumented)
-    host?: Host;
-    // (undocumented)
-    isIdempotent?: boolean;
-    // (undocumented)
-    keyspace?: string;
-    // (undocumented)
-    logged?: boolean;
-    // (undocumented)
-    pageState?: Buffer | string;
-    // (undocumented)
-    prepare?: boolean;
-    // (undocumented)
-    readTimeout?: number;
-    // (undocumented)
-    retry?: policies.retry.RetryPolicy;
-    // (undocumented)
-    routingIndexes?: number[];
-    // (undocumented)
-    routingKey?: Buffer | Buffer[];
-    // (undocumented)
-    routingNames?: string[];
-    // (undocumented)
-    serialConsistency?: number;
-    // (undocumented)
-    timestamp?: number | Long;
-    // (undocumented)
-    traceQuery?: boolean;
-}
-
-// @public (undocumented)
-export namespace token {
-    // (undocumented)
-    export interface Token {
-        // (undocumented)
-        compare(other: Token): number;
-
-        // (undocumented)
-        equals(other: Token): boolean;
-
-        // (undocumented)
-        getType(): { code: types.dataTypes, info: any };
-
-        // (undocumented)
-        getValue(): any;
-    }
-
-    // (undocumented)
-    export interface TokenRange {
-        // (undocumented)
-        compare(other: TokenRange): number;
-        // (undocumented)
-        contains(token: Token): boolean;
-        // (undocumented)
-        end: Token;
-        // (undocumented)
-        equals(other: TokenRange): boolean;
-        // (undocumented)
-        isEmpty(): boolean;
-        // (undocumented)
-        isWrappedAround(): boolean;
-        // (undocumented)
-        splitEvenly(numberOfSplits: number): TokenRange[];
-        // (undocumented)
-        start: Token;
-        // (undocumented)
-        unwrap(): TokenRange[];
-    }
-}
-
-// @public (undocumented)
-export namespace tracker {
-    // (undocumented)
-    export class RequestLogger implements RequestTracker {
-        constructor(options: {
-            slowThreshold?: number;
-            logNormalRequests?: boolean;
-            logErroredRequests?: boolean;
-            messageMaxQueryLength?: number;
-            messageMaxParameterValueLength?: number;
-            messageMaxErrorStackTraceLength?: number;
-        });
-
-        // (undocumented)
-        onError(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, err: Error, latency: number[]): void;
-
-        // (undocumented)
-        onSuccess(host: Host, query: string | Array<{ query: string; params?: any }>, parameters: any[] | { [p: string]: any } | null, executionOptions: ExecutionOptions, requestLength: number, responseLength: number, latency: number[]): void;
-
-        // (undocumented)
-        shutdown(): void;
-    }
-
-    // (undocumented)
-    export interface RequestTracker {
-        // (undocumented)
-        onError(
-        host: Host,
-        query: string | Array<{ query: string, params?: any }>,
-        parameters: any[] | { [key: string]: any } | null,
-        executionOptions: ExecutionOptions,
-        requestLength: number,
-        err: Error,
-        latency: number[]): void;
-
-        // (undocumented)
-        onSuccess(
-        host: Host,
-        query: string | Array<{ query: string, params?: any }>,
-        parameters: any[] | { [key: string]: any } | null,
-        executionOptions: ExecutionOptions,
-        requestLength: number,
-        responseLength: number,
-        latency: number[]): void;
-
-        // (undocumented)
-        shutdown(): void;
-    }
-}
-
-// @public (undocumented)
-export namespace types {
-    // (undocumented)
-    export class BigDecimal {
-        constructor(unscaledValue: number, scale: number);
-
-        // (undocumented)
-        add(other: BigDecimal): BigDecimal;
-
-        // (undocumented)
-        compare(other: BigDecimal): number;
-
-        // (undocumented)
-        equals(other: BigDecimal): boolean;
-
-        // (undocumented)
-        static fromBuffer(buf: Buffer): BigDecimal;
-
-        // (undocumented)
-        static fromNumber(value: number): BigDecimal;
-
-        // (undocumented)
-        static fromString(value: string): BigDecimal;
-
-        // (undocumented)
-        greaterThan(other: BigDecimal): boolean;
-
-        // (undocumented)
-        isNegative(): boolean;
-
-        // (undocumented)
-        isZero(): boolean;
-
-        // (undocumented)
-        notEquals(other: BigDecimal): boolean;
-
-        // (undocumented)
-        subtract(other: BigDecimal): BigDecimal;
-
-        // (undocumented)
-        static toBuffer(value: BigDecimal): Buffer;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toNumber(): number;
-
-        // (undocumented)
-        toString(): string;
-    }
-
-    // (undocumented)
-    export enum consistencies {
-        // (undocumented)
-        all = 0x05,
-        // (undocumented)
-        any = 0x00,
-        // (undocumented)
-        eachQuorum = 0x07,
-        // (undocumented)
-        localOne = 0x0a,
-        // (undocumented)
-        localQuorum = 0x06,
-        // (undocumented)
-        localSerial = 0x09,
-        // (undocumented)
-        one = 0x01,
-        // (undocumented)
-        quorum = 0x04,
-        // (undocumented)
-        serial = 0x08,
-        // (undocumented)
-        three = 0x03,
-        // (undocumented)
-        two = 0x02
-    }
-
-    // (undocumented)
-    export enum dataTypes {
-        // (undocumented)
-        ascii = 0x0001,
-        // (undocumented)
-        bigint = 0x0002,
-        // (undocumented)
-        blob = 0x0003,
-        // (undocumented)
-        boolean = 0x0004,
-        // (undocumented)
-        counter = 0x0005,
-        // (undocumented)
-        custom = 0x0000,
-        // (undocumented)
-        date = 0x0011,
-        // (undocumented)
-        decimal = 0x0006,
-        // (undocumented)
-        double = 0x0007,
-        // (undocumented)
-        duration = 0x0015,
-        // (undocumented)
-        float = 0x0008,
-        // (undocumented)
-        inet = 0x0010,
-        // (undocumented)
-        int = 0x0009,
-        // (undocumented)
-        list = 0x0020,
-        // (undocumented)
-        map = 0x0021,
-        // (undocumented)
-        set = 0x0022,
-        // (undocumented)
-        smallint = 0x0013,
-        // (undocumented)
-        text = 0x000a,
-        // (undocumented)
-        time = 0x0012,
-        // (undocumented)
-        timestamp = 0x000b,
-        // (undocumented)
-        timeuuid = 0x000f,
-        // (undocumented)
-        tinyint = 0x0014,
-        // (undocumented)
-        tuple = 0x0031,
-        // (undocumented)
-        udt = 0x0030,
-        // (undocumented)
-        uuid = 0x000c,
-        // (undocumented)
-        varchar = 0x000d,
-        // (undocumented)
-        varint = 0x000e,
-    }
-
-    // (undocumented)
-    export enum distance {
-        // (undocumented)
-        ignored,
-        // (undocumented)
-        local = 0,
-        // (undocumented)
-        remote
-    }
-
-    // (undocumented)
-    export class Duration {
-        constructor(month: number, days: number, nanoseconds: number | Long);
-
-        // (undocumented)
-        equals(other: Duration): boolean;
-
-        // (undocumented)
-        static fromBuffer(buffer: Buffer): Duration;
-
-        // (undocumented)
-        static fromString(input: string): Duration;
-
-        // (undocumented)
-        toBuffer(): Buffer;
-
-        // (undocumented)
-        toString(): string;
-    }
-
-    // (undocumented)
-    export class InetAddress {
-        constructor(buffer: Buffer);
-
-        // (undocumented)
-        equals(other: InetAddress): boolean;
-
-        // (undocumented)
-        static fromString(value: string): InetAddress;
-
-        // (undocumented)
-        getBuffer(): Buffer;
-
-        // (undocumented)
-        length: number;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toString(): string;
-
-        // (undocumented)
-        version: number;
-    }
-
-    // (undocumented)
-    export class Integer {
-        constructor(bits: Array<number>, sign: number);
-        // (undocumented)
-        abs(): Integer;
-        // (undocumented)
-        add(other: Integer): Integer;
-        // (undocumented)
-        compare(other: Integer): number;
-        // (undocumented)
-        divide(other: Integer): Integer;
-        // (undocumented)
-        equals(other: Integer): boolean;
-        // (undocumented)
-        static fromBits(bits: Array<number>): Integer;
-        // (undocumented)
-        static fromBuffer(bits: Buffer): Integer;
-        // (undocumented)
-        static fromInt(value: number): Integer;
-        // (undocumented)
-        static fromNumber(value: number): Integer;
-        // (undocumented)
-        static fromString(str: string, opt_radix?: number): Integer;
-        // (undocumented)
-        getBits(index: number): number;
-        // (undocumented)
-        getBitsUnsigned(index: number): number;
-        // (undocumented)
-        getSign(): number;
-        // (undocumented)
-        greaterThan(other: Integer): boolean;
-        // (undocumented)
-        greaterThanOrEqual(other: Integer): boolean;
-        // (undocumented)
-        isNegative(): boolean;
-        // (undocumented)
-        isOdd(): boolean;
-        // (undocumented)
-        isZero(): boolean;
-        // (undocumented)
-        lessThan(other: Integer): boolean;
-        // (undocumented)
-        lessThanOrEqual(other: Integer): boolean;
-        // (undocumented)
-        modulo(other: Integer): Integer;
-        // (undocumented)
-        multiply(other: Integer): Integer;
-        // (undocumented)
-        negate(): Integer;
-        // (undocumented)
-        not(): Integer;
-        // (undocumented)
-        notEquals(other: Integer): boolean;
-        // (undocumented)
-        static ONE: Integer;
-        // (undocumented)
-        or(other: Integer): Integer;
-        // (undocumented)
-        shiftLeft(numBits: number): Integer;
-        // (undocumented)
-        shiftRight(numBits: number): Integer;
-        // (undocumented)
-        shorten(numBits: number): Integer;
-        // (undocumented)
-        subtract(other: Integer): Integer;
-        // (undocumented)
-        static toBuffer(value: Integer): Buffer;
-        // (undocumented)
-        toInt(): number;
-        // (undocumented)
-        toJSON(): string;
-        // (undocumented)
-        toNumber(): number;
-        // (undocumented)
-        toString(opt_radix?: number): string;
-        // (undocumented)
-        xor(other: Integer): Integer;
-        // (undocumented)
-        static ZERO: Integer;
-    }
-
-    const // (undocumented)
-    unset: object;
-
-    // (undocumented)
-    export class LocalDate {
-        constructor(year: number, month: number, day: number);
-        // (undocumented)
-        day: number;
-        // (undocumented)
-        equals(other: LocalDate): boolean;
-        // (undocumented)
-        static fromBuffer(buffer: Buffer): LocalDate;
-        // (undocumented)
-        static fromDate(date: Date): LocalDate;
-        // (undocumented)
-        static fromString(value: string): LocalDate;
-        // (undocumented)
-        inspect(): string;
-        // (undocumented)
-        month: number;
-        // (undocumented)
-        static now(): LocalDate;
-        // (undocumented)
-        toBuffer(): Buffer;
-        // (undocumented)
-        toJSON(): string;
-        // (undocumented)
-        toString(): string;
-        // (undocumented)
-        static utcNow(): LocalDate;
-        // (undocumented)
-        year: number;
-    }
-
-    // (undocumented)
-    export class LocalTime {
-        constructor(totalNanoseconds: Long);
-        // (undocumented)
-        compare(other: LocalTime): boolean;
-        // (undocumented)
-        equals(other: LocalTime): boolean;
-        // (undocumented)
-        static fromBuffer(value: Buffer): LocalTime;
-        // (undocumented)
-        static fromDate(date: Date, nanoseconds: number): LocalTime;
-        // (undocumented)
-        static fromMilliseconds(milliseconds: number, nanoseconds?: number): LocalTime;
-        // (undocumented)
-        static fromString(value: string): LocalTime;
-        // (undocumented)
-        getTotalNanoseconds(): Long;
-        // (undocumented)
-        hour: number;
-        // (undocumented)
-        inspect(): string;
-        // (undocumented)
-        minute: number;
-        // (undocumented)
-        nanosecond: number;
-        // (undocumented)
-        static now(nanoseconds?: number): LocalTime;
-        // (undocumented)
-        second: number;
-        // (undocumented)
-        toBuffer(): Buffer;
-        // (undocumented)
-        toJSON(): string;
-        // (undocumented)
-        toString(): string;
-    }
-
-    // (undocumented)
-    export class Long extends _Long {
-
-    }
-
-    // (undocumented)
-    export enum protocolVersion {
-        // (undocumented)
-        dseV1 = 0x41,
-        // (undocumented)
-        dseV2 = 0x42,
-        // (undocumented)
-        maxSupported = dseV2,
-        // (undocumented)
-        minSupported = v1,
-        // (undocumented)
-        v1 = 0x01,
-        // (undocumented)
-        v2 = 0x02,
-        // (undocumented)
-        v3 = 0x03,
-        // (undocumented)
-        v4 = 0x04,
-        // (undocumented)
-        v5 = 0x05,
-        // (undocumented)
-        v6 = 0x06
-    }
-
-    // (undocumented)
-    export namespace protocolVersion {
-        // (undocumented)
-        export function isSupported(version: protocolVersion): boolean;
-    }
-
-    // (undocumented)
-    export enum responseErrorCodes {
-        // (undocumented)
-        alreadyExists = 0x2400,
-        // (undocumented)
-        badCredentials = 0x0100,
-        // (undocumented)
-        clientWriteFailure = 0x8000,
-        // (undocumented)
-        configError = 0x2300,
-        // (undocumented)
-        functionFailure = 0x1400,
-        // (undocumented)
-        invalid = 0x2200,
-        // (undocumented)
-        isBootstrapping = 0x1002,
-        // (undocumented)
-        overloaded = 0x1001,
-        // (undocumented)
-        protocolError = 0x000A,
-        // (undocumented)
-        readFailure = 0x1300,
-        // (undocumented)
-        readTimeout = 0x1200,
-        // (undocumented)
-        serverError = 0x0000,
-        // (undocumented)
-        syntaxError = 0x2000,
-        // (undocumented)
-        truncateError = 0x1003,
-        // (undocumented)
-        unauthorized = 0x2100,
-        // (undocumented)
-        unavailableException = 0x1000,
-        // (undocumented)
-        unprepared = 0x2500,
-        // (undocumented)
-        writeFailure = 0x1500,
-        // (undocumented)
-        writeTimeout = 0x1100
-    }
-
-    // (undocumented)
-    export interface ResultSet extends Iterable<Row>, AsyncIterable<Row> {
-        // (undocumented)
-        columns: Array<{ name: string, type: { code: dataTypes, info: any } }>;
-
-        // (undocumented)
-        first(): Row;
-
-        // (undocumented)
-        info: {
-            queriedHost: string,
-            triedHosts: { [key: string]: any; },
-            speculativeExecutions: number,
-            achievedConsistency: consistencies,
-            traceId: Uuid,
-            warnings: string[],
-            customPayload: any
-        };
-
-        // (undocumented)
-        nextPage: (() => void) | null;
-
-        // (undocumented)
-        pageState: string;
-
-        // (undocumented)
-        rowLength: number;
-
-        // (undocumented)
-        rows: Row[];
-
-        // (undocumented)
-        wasApplied(): boolean;
-    }
-
-    // (undocumented)
-    export interface ResultStream extends stream.Readable {
-        // (undocumented)
-        add(chunk: Buffer): void;
-        // (undocumented)
-        buffer: Buffer;
-        // (undocumented)
-        paused: boolean;
-    }
-
-    // (undocumented)
-    export interface Row {
-        // (undocumented)
-        [key: string]: any;
-
-        // (undocumented)
-        forEach(callback: (row: Row) => void): void;
-
-        // (undocumented)
-        get(columnName: string | number): any;
-
-        // (undocumented)
-        keys(): string[];
-
-        // (undocumented)
-        values(): any[];
-    }
-
-    // (undocumented)
-    export class TimeUuid extends Uuid {
-        // (undocumented)
-        static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer): TimeUuid;
-
-        // (undocumented)
-        static fromDate(
-        date: Date,
-        ticks: number,
-        nodeId: string | Buffer,
-        clockId: string | Buffer,
-        callback: ValueCallback<TimeUuid>): void;
-
-        // (undocumented)
-        static fromString(value: string): TimeUuid;
-
-        // (undocumented)
-        getDate(): Date;
-
-        // (undocumented)
-        getDatePrecision(): { date: Date, ticks: number };
-
-        // (undocumented)
-        static max(date: Date, ticks: number): TimeUuid;
-
-        // (undocumented)
-        static min(date: Date, ticks: number): TimeUuid;
-
-        // (undocumented)
-        static now(): TimeUuid;
-
-        // (undocumented)
-        static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
-
-        // (undocumented)
-        static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
-
-        // (undocumented)
-        static now(callback: ValueCallback<TimeUuid>): void;
-    }
-
-    // (undocumented)
-    export class Tuple {
-        constructor(...args: any[]);
-        // (undocumented)
-        elements: any[];
-        // (undocumented)
-        static fromArray(elements: any[]): Tuple;
-        // (undocumented)
-        get(index: number): any;
-        // (undocumented)
-        length: number;
-        // (undocumented)
-        toJSON(): string;
-        // (undocumented)
-        toString(): string;
-        // (undocumented)
-        values(): any[];
-    }
-
-    // (undocumented)
-    export class Uuid {
-        constructor(buffer: Buffer);
-
-        // (undocumented)
-        equals(other: Uuid): boolean;
-
-        // (undocumented)
-        static fromString(value: string): Uuid;
-
-        // (undocumented)
-        getBuffer(): Buffer;
-
-        // (undocumented)
-        static random(callback: ValueCallback<Uuid>): void;
-
-        // (undocumented)
-        static random(): Uuid;
-
-        // (undocumented)
-        toJSON(): string;
-
-        // (undocumented)
-        toString(): string;
-    }
-}
-
-// @public (undocumented)
-export type ValueCallback<T> = (err: Error, val: T) => void;
-
-// @public (undocumented)
-export const version: number;
+export const version: string;
+
+// Warnings were encountered during analysis:
+//
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "Authenticator" needs to be exported by the entry point index.d.ts
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "AuthProvider" needs to be exported by the entry point index.d.ts
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "DseGssapiAuthProvider" needs to be exported by the entry point index.d.ts
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "DsePlainTextAuthProvider" needs to be exported by the entry point index.d.ts
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "NoAuthProvider" needs to be exported by the entry point index.d.ts
+// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "PlainTextAuthProvider_2" needs to be exported by the entry point index.d.ts
+// lib/concurrent/index.ts:370:3 - (ae-forgotten-export) The symbol "executeConcurrent_2" needs to be exported by the entry point index.d.ts
+// lib/concurrent/index.ts:370:3 - (ae-forgotten-export) The symbol "ResultSetGroup_2" needs to be exported by the entry point index.d.ts
+// lib/datastax/index.ts:28:44 - (ae-forgotten-export) The symbol "DateRange_2" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:230:5 - (ae-forgotten-export) The symbol "ArgumentError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:231:5 - (ae-forgotten-export) The symbol "AuthenticationError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:232:5 - (ae-forgotten-export) The symbol "BusyConnectionError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:233:5 - (ae-forgotten-export) The symbol "DriverError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:234:5 - (ae-forgotten-export) The symbol "OperationTimedOutError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:235:5 - (ae-forgotten-export) The symbol "DriverInternalError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:236:5 - (ae-forgotten-export) The symbol "NoHostAvailableError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:237:5 - (ae-forgotten-export) The symbol "NotSupportedError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:238:5 - (ae-forgotten-export) The symbol "ResponseError" needs to be exported by the entry point index.d.ts
+// lib/errors.ts:239:5 - (ae-forgotten-export) The symbol "VIntOutOfRangeException" needs to be exported by the entry point index.d.ts
+// lib/geometry/index.ts:32:5 - (ae-forgotten-export) The symbol "Point" needs to be exported by the entry point index.d.ts
+// lib/geometry/index.ts:33:5 - (ae-forgotten-export) The symbol "LineString" needs to be exported by the entry point index.d.ts
+// lib/geometry/index.ts:34:5 - (ae-forgotten-export) The symbol "Polygon" needs to be exported by the entry point index.d.ts
+// lib/geometry/index.ts:35:5 - (ae-forgotten-export) The symbol "Geometry" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "Mapper" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelMapper" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelBatchMapper" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelBatchItem_2" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "Result" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "TableMappings_2" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "DefaultTableMappings_2" needs to be exported by the entry point index.d.ts
+// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "UnderscoreCqlToCamelCaseMappings_2" needs to be exported by the entry point index.d.ts
+// lib/metrics/index.ts:21:42 - (ae-forgotten-export) The symbol "DefaultMetrics" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "addressResolution" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "loadBalancing" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "reconnection" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "retry" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "speculativeExecution" needs to be exported by the entry point index.d.ts
+// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "timestampGeneration" needs to be exported by the entry point index.d.ts
+// lib/tracker/index.ts:29:3 - (ae-forgotten-export) The symbol "RequestTracker" needs to be exported by the entry point index.d.ts
+// lib/tracker/index.ts:29:3 - (ae-forgotten-export) The symbol "RequestLogger" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "getDataTypeNameByCode" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "timeuuid" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "uuid" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "BigDecimal" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Duration" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "FrameHeader" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "InetAddress" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Integer" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "LocalDate" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "LocalTime" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "TimeoutError" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "TimeUuid" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Tuple" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Uuid" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "generateTimestamp" needs to be exported by the entry point index.d.ts
+// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Vector" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

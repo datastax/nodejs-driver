@@ -140,6 +140,7 @@ class Cache {
    * @returns {Iterator}
    */
   static *getRemoveKey(docKeys: Array<string>, doc: object, docInfo: RemoveDocInfo): Iterator<string>{
+    yield* Cache._yieldKeyAndOperators(docKeys, doc);
 
     if (docInfo) {
       if (docInfo.fields && docInfo.fields.length > 0) {

@@ -16,7 +16,6 @@
 
 import assert from "assert";
 import EventEmitter from "events";
-import proxyquire from "proxyquire";
 import sinon from "sinon";
 import Connection from "../../lib/connection";
 import requests from "../../lib/requests";
@@ -25,6 +24,7 @@ import errors from "../../lib/errors";
 import helper from "../test-helper";
 import ClientOptions from "../../lib/client-options";
 import { ExecutionOptions } from "../../lib/execution-options";
+import net from "net";
 
 const defaultOptions = ClientOptions.defaultOptions();
 describe('Connection', function () {
@@ -215,9 +215,9 @@ describe('Connection', function () {
         }
       }
 
-      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
+      const stub = sinon.stub(net, 'Socket').value(Socket);
 
-      const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
+      const c = new Connection('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
         cb(null, {});
@@ -234,6 +234,7 @@ describe('Connection', function () {
         c.close(function (err) {
           assert.ifError(err);
           assert.strictEqual(closeEmitted, 1);
+          stub.restore();
           done();
         });
       });
@@ -249,8 +250,8 @@ describe('Connection', function () {
         }
       }
 
-      const ConnectionInjected = proxyquire('../../lib/connection', { 'net': { Socket } });
-      const c = new ConnectionInjected('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
+      const stub = sinon.stub(net, 'Socket').value(Socket);
+      const c = new Connection('127.0.0.1:9042', 9042, utils.extend({}, defaultOptions));
       c.logEmitter = helper.noop;
       c.sendStream = function (r, o, cb) {
         cb(null, {});
@@ -268,6 +269,7 @@ describe('Connection', function () {
         c.close(function (err) {
           assert.ifError(err);
           assert.strictEqual(closeEmitted, 1);
+          stub.restore();
           done();
         });
       });

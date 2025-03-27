@@ -21,10 +21,10 @@ import helper from "../../test-helper";
 import errors from "../../../lib/errors";
 import types from "../../../lib/types/index";
 import { assert } from "chai";
-import { defaultOptions } from "../../../lib/client-options";
+import { defaultOptions as defaultOptionsFunction} from "../../../lib/client-options";
 import { protocolVersion } from "../../../lib/types";
 
-
+const defaultOptions = defaultOptionsFunction();
 const vit = helper.vit;
 
 describe('Connection', function () {
@@ -290,7 +290,7 @@ describe('Connection', function () {
 });
 
 /** @returns {Connection} */
-function newInstance(address, protocolVersion, options){
+function newInstance(address?, protocolVersion?, options?){
   if (!address) {
     address = helper.baseOptions.contactPoints[0];
   }

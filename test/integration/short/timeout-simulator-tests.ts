@@ -17,11 +17,10 @@ import { assert } from "chai";
 import Client from "../../../lib/client";
 import errors from "../../../lib/errors";
 import promiseUtils from "../../../lib/promise-utils";
-import helper from "../../test-helper";
+import helper, {OrderedLoadBalancingPolicy} from "../../test-helper";
 import simulacron from "../simulacron";
 
 
-const { OrderedLoadBalancingPolicy } = helper;
 
 const queryDelayedOnNode0 = 'INSERT INTO paused_on_first_node';
 const queryDelayedOnAllNodes = 'INSERT INTO paused_on_all_nodes';

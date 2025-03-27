@@ -43,7 +43,7 @@ describe('Metadata', function () {
             coordinator: "127.0.0.101",
             duration: 10000,
             request: 'Execute CQL3 query',
-            started_at: new types.LocalTime.now().getTotalNanoseconds()
+            started_at: types.LocalTime.now().getTotalNanoseconds()
           }
         ],
         column_types: {

@@ -29,7 +29,7 @@ import type { Host } from "../host";
  * @interface
  * @alias module:tracker~RequestTracker
  */
-abstract class RequestTracker {
+class RequestTracker {
 
   /**
    * Invoked each time a query or batch request succeeds.
@@ -51,7 +51,7 @@ abstract class RequestTracker {
     executionOptions: ExecutionOptions,
     requestLength: number,
     responseLength: number,
-    latency: number[]): void;
+    latency: number[]): void {};
 
   /**
    * Invoked each time a query or batch request fails.
@@ -74,12 +74,12 @@ abstract class RequestTracker {
     executionOptions: ExecutionOptions,
     requestLength: number,
     err: Error,
-    latency: number[]): void;
+    latency: number[]): void {};
 
   /**
    * Invoked when the Client is being shutdown.
    */
-  shutdown?(): void;
+  shutdown?(): void {};
 }
 
 export default RequestTracker;

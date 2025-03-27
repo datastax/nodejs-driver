@@ -2039,8 +2039,9 @@ class OrderedLoadBalancingPolicy extends policies.loadBalancing.RoundRobinPolicy
     return callback(null, hosts[Symbol.iterator]());
   }
 }
+helper.RetryMultipleTimes = RetryMultipleTimes;
+helper.OrderedLoadBalancingPolicy = OrderedLoadBalancingPolicy;
 
 export default helper;
 
-export { RetryMultipleTimes };
-export { OrderedLoadBalancingPolicy };
+export { RetryMultipleTimes, OrderedLoadBalancingPolicy };

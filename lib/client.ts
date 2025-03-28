@@ -497,9 +497,9 @@ interface QueryOptions {
   };
 }
 
-type ValueCallback<T> = (err: Error, val?: T) => void;
+type ValueCallback<T> = (err: Error, val: T) => void;
 type EmptyCallback = (err: Error) => void;
-type ArrayOrObject = any[]|{[key: string]: any};
+type ArrayOrObject = any[]|{[key: string]: any}|null;
 
 /**
  * Creates a new instance of {@link Client}.
@@ -779,7 +779,7 @@ class Client extends events.EventEmitter{
     catch (err) {
       // There was an error when parsing the user options
       if (callback) {
-        return callback(err);
+        return callback(err,null);
       }
 
       return Promise.reject(err);
@@ -901,7 +901,7 @@ class Client extends events.EventEmitter{
       execOptions = DefaultExecutionOptions.create(options as QueryOptions, this, rowCallback);
     }
     catch (e) {
-      return callback(e);
+      return callback(e, null);
     }
 
     let rowLength = 0;
@@ -910,7 +910,7 @@ class Client extends events.EventEmitter{
 
     function pageCallback(err, result) {
       if (err) {
-        return callback(err);
+        return callback(err, null);
       }
       // Next requests in case paging (auto or explicit) is used
       rowLength += result.rowLength;

@@ -351,7 +351,7 @@ const helper = {
    * @param {Client} client
    * @returns {Client}
    */
-  shutdownAfterThisTest: function(client) {
+  shutdownAfterThisTest: function(client: Client) {
     this.afterThisTest(() => client.shutdown());
 
     return client;
@@ -380,7 +380,7 @@ const helper = {
   /**
    * @returns {Function} A function with a single callback param, applying the fn with parameters
    */
-  toTask: function (fn, context) {
+  toTask: function (fn: Function, context) {
     const params = Array.prototype.slice.call(arguments, 2);
     return (function (next) {
       params.push(next);

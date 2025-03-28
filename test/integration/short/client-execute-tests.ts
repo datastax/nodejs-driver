@@ -1031,7 +1031,7 @@ describe('Client @SERVER_API', function () {
           ip:   types.InetAddress.fromString('12.10.126.11'),
           tup:  new types.Tuple(1, 300),
           d:    new types.LocalDate(2015, 6, 1),
-          t:    new types.LocalTime.fromMilliseconds(10160088, 123)
+          t:    types.LocalTime.fromMilliseconds(10160088, 123)
         };
         utils.series([
           function insert(next) {

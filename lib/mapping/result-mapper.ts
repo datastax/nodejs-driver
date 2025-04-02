@@ -21,7 +21,7 @@ import type ModelMappingInfo from "./model-mapping-info";
 
 
 /**
- * @ignore
+ * @ignore @internal
  */
 class ResultMapper {
   /**

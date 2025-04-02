@@ -81,7 +81,7 @@ class DsePlainTextAuthProvider extends AuthProvider {
 
 /**
  * @extends BaseDseAuthenticator
- * @private
+ * @private @internal
  */
 class PlainTextAuthenticator extends BaseDseAuthenticator {
   authenticatorId: Buffer;

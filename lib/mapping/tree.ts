@@ -19,7 +19,7 @@ import EventEmitter from "events";
 
 /**
  * Represents a tree node where the key is composed by 1 or more strings.
- * @ignore
+ * @ignore @internal
  */
 class Node extends EventEmitter {
   key: string[];
@@ -41,7 +41,7 @@ class Node extends EventEmitter {
 
 /**
  * A radix tree where each node contains a key, a value and edges.
- * @ignore
+ * @ignore @internal
  */
 class Tree extends Node {
   length: number;

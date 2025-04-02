@@ -43,7 +43,7 @@ class ModelBatchItem {
   }
 
   /**
-   * @ignore
+   * @ignore @internal
    * @returns <Promise<Array>>
    */
   getQueries() {

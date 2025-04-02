@@ -31,7 +31,8 @@ import utils from "../../utils";
  * const vertex = result.first();
  * @alias module:datastax/graph~GraphResultSet
  */
-class GraphResultSet {
+class GraphResultSet implements Iterable<any> {
+  //TODO: the following three were not exposed in .d.ts. I think we should.
   info: typeof ResultSet.prototype.info;
   length: number;
   pageState: string;
@@ -120,6 +121,7 @@ class GraphResultSet {
     }
   }
 
+  //TODO: this was not exposed in .d.ts. I think we should.
   /**
    * Gets the traversers contained in the result set.
    * @returns {IterableIterator}

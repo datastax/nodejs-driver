@@ -44,7 +44,7 @@ class ExecutionOptions {
 
   /**
    * Creates an empty instance, where all methods return undefined, used internally.
-   * @ignore
+   * @ignore @internal
    * @return {ExecutionOptions}
    */
   static empty(): ExecutionOptions {
@@ -200,7 +200,7 @@ class ExecutionOptions {
   /**
    * Internal method that gets the preferred host.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   getPreferredHost() {
     return null;
@@ -238,7 +238,7 @@ class ExecutionOptions {
   /**
    * Internal method to obtain the row callback, for "by row" results.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   getRowCallback() {
     return null;
@@ -246,7 +246,7 @@ class ExecutionOptions {
 
   /**
    * Internal method to get or generate a timestamp for the request execution.
-   * @ignore
+   * @ignore @internal
    * @returns {Long|null}
    */
   getOrGenerateTimestamp(): Long | null {
@@ -256,7 +256,7 @@ class ExecutionOptions {
   /**
    * Gets the index of the parameters that are part of the partition key to determine the routing.
    * @abstract
-   * @ignore
+   * @ignore @internal
    * @returns {Array}
    */
   getRoutingIndexes(): Array<any> {
@@ -276,7 +276,7 @@ class ExecutionOptions {
    * Gets the array of the parameters names that are part of the partition key to determine the
    * routing. Only valid for non-prepared requests.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   getRoutingNames() {
     return null;
@@ -304,7 +304,7 @@ class ExecutionOptions {
   /**
    * @param {Array} hints
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   setHints(hints: Array<any>) {
     return null;
@@ -312,7 +312,7 @@ class ExecutionOptions {
 
   /**
    * Sets the keyspace for the execution.
-   * @ignore
+   * @ignore @internal
    * @abstract
    * @param {String} keyspace
    */
@@ -322,7 +322,7 @@ class ExecutionOptions {
 
   /**
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   setPageState(pageState: Buffer) {
     return null;
@@ -331,7 +331,7 @@ class ExecutionOptions {
   /**
    * Internal method that sets the preferred host.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   setPreferredHost(host: Host) {
     return null;
@@ -341,7 +341,7 @@ class ExecutionOptions {
    * Sets the index of the parameters that are part of the partition key to determine the routing.
    * @param {Array} routingIndexes
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   setRoutingIndexes(routingIndexes: Array<any>) {
     return null;
@@ -350,7 +350,7 @@ class ExecutionOptions {
   /**
    * Sets the routing key.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   setRoutingKey(value) {
     return null;
@@ -360,7 +360,7 @@ class ExecutionOptions {
 /**
  * Internal implementation of {@link ExecutionOptions} that uses the value from the client options and execution
  * profile into account.
- * @ignore
+ * @ignore @internal
  */
 class DefaultExecutionOptions extends ExecutionOptions {
   _queryOptions: QueryOptions;
@@ -435,7 +435,7 @@ class DefaultExecutionOptions extends ExecutionOptions {
    * @param {QueryOptions|null} queryOptions
    * @param {Client} client
    * @param {Function|null} [rowCallback]
-   * @ignore
+   * @ignore @internal
    * @return {ExecutionOptions}
    */
   static create(queryOptions: QueryOptions | null, client: Client, rowCallback?: Function | null): ExecutionOptions {
@@ -563,7 +563,7 @@ class DefaultExecutionOptions extends ExecutionOptions {
 
   /**
    * Internal method to obtain the row callback, for "by row" results.
-   * @ignore
+   * @ignore @internal
    */
   getRowCallback() {
     return this._rowCallback;

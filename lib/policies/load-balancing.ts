@@ -304,7 +304,7 @@ class TokenAwarePolicy extends LoadBalancingPolicy {
 
 /**
  * An iterator that holds the context for the subsequent next() calls
- * @ignore
+ * @ignore @internal
  */
 class TokenAwareIterator {
   keyspace: string;
@@ -322,7 +322,7 @@ class TokenAwareIterator {
    * @param {Array} replicas
    * @param childPolicy
    * @constructor
-   * @ignore
+   * @ignore @internal
    */
   constructor(keyspace: string, execOptions: ExecutionOptions, replicas: Array<any>, childPolicy: LoadBalancingPolicy) {
     this.keyspace = keyspace;

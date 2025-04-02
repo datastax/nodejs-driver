@@ -601,7 +601,7 @@ class HostMap extends events.EventEmitter{
    * @param {Number} [begin]
    * @param {Number} [end]
    * @returns {Array}
-   * @ignore
+   * @ignore @internal
    */
   slice(begin: number, end: number): Array<any> {
     if (!begin && !end) {
@@ -614,7 +614,7 @@ class HostMap extends events.EventEmitter{
 
   /**
    * Deprecated: Use set() instead.
-   * @ignore
+   * @ignore @ignore
    * @deprecated
    */
   push(k, v) {

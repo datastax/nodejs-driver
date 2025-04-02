@@ -22,7 +22,7 @@ const _queueOverflowThreshold = 1000;
 
 /**
  * Debounce protocol events by acting on those events with a sliding delay.
- * @ignore
+ * @ignore @internal
  * @constructor
  */
 class EventDebouncer {

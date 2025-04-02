@@ -91,6 +91,6 @@ export {
    * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
    */
   defaultOptions,
-  version
+  version,
 };
 

@@ -35,7 +35,7 @@ const _versionPattern = /(\d+)\.(\d+)(?:\.(\d+))?(?:\.(\d+)?)?(?:[-~]([\w+]*(?:-
  * @property {String[]} preReleases Prerelease indicators if present, i.e. SNAPSHOT of X.Y.Z-SNAPSHOT.
  * @property {String} build Build string if present, i.e. build1 of X.Y.Z+build1.
  *
- * @ignore
+ * @ignore @internal
  */
 class VersionNumber {
   major: number;
@@ -63,7 +63,7 @@ class VersionNumber {
    * @property {String[]} preReleases Prerelease indicators if present, i.e. SNAPSHOT of X.Y.Z-SNAPSHOT.
    * @property {String} build Build string if present, i.e. build1 of X.Y.Z+build1.
    *
-   * @ignore
+   * @ignore @internal
    */
   constructor(major: number, minor: number, patch?: number, dsePatch?: number, preReleases?: string[], build?: string) {
     this.major = major;

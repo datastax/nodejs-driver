@@ -15,6 +15,7 @@
  */
 import types from "../../types/index";
 
+//TODO: Why not expose GraphTypeWrapper? It is the return value of exposed API anyway
 
 const { dataTypes } = types;
 
@@ -56,32 +57,35 @@ class UdtGraphWrapper {
  * Wraps a number or null value to hint the client driver that the data type of the value is an int
  * @memberOf module:datastax/graph
  */
-function asInt(value) { return new GraphTypeWrapper(value, dataTypes.int); }
+function asInt(value: number):object { return new GraphTypeWrapper(value, dataTypes.int); }
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-function asDouble(value) { return new GraphTypeWrapper(value, dataTypes.double); }
+function asDouble(value: number):object { return new GraphTypeWrapper(value, dataTypes.double); }
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-function asFloat(value) { return new GraphTypeWrapper(value, dataTypes.float); }
+function asFloat(value: number):object { return new GraphTypeWrapper(value, dataTypes.float); }
 
 /**
  * Wraps a Date or null value to hint the client driver that the data type of the value is a timestamp
  * @memberOf module:datastax/graph
  */
-function asTimestamp(value) { return new GraphTypeWrapper(value, dataTypes.timestamp); }
+function asTimestamp(value: Date):object { return new GraphTypeWrapper(value, dataTypes.timestamp); }
 
+//TODO: it was exposed as 
+// function asUdt(value: object): object;
+// That was clearly wrong because udtInfo argument is mandatory
 /**
  * Wraps an Object or null value to hint the client driver that the data type of the value is a user-defined type.
  * @memberOf module:datastax/graph
  * @param {object} value The object representing the UDT.
  * @param {{name: string, keyspace: string, fields: Array}} udtInfo The UDT metadata as defined by the driver.
  */
-function asUdt(value: object, udtInfo: { name: string; keyspace: string; fields: Array<any>; }) { return new UdtGraphWrapper(value, udtInfo); }
+function asUdt(value: object, udtInfo: { name: string; keyspace: string; fields: Array<any>; }):object { return new UdtGraphWrapper(value, udtInfo); }
 
 export { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper };

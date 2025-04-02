@@ -37,9 +37,9 @@ const emptyBuffer = utils.allocBuffer(0);
  */
 class DseGssapiAuthProvider extends AuthProvider {
   private _kerberos: any;
-  authorizationId: string;
-  service: string;
-  hostNameResolver: Function;
+  private authorizationId: string;
+  private service: string;
+  private hostNameResolver: Function;
 
   /**
    * Creates a new instance of <code>DseGssapiAuthProvider</code>.
@@ -114,7 +114,7 @@ class DseGssapiAuthProvider extends AuthProvider {
    * @param {String} ip IP address to resolve.
    * @param {Function} callback The callback function with <code>err</code> and <code>hostname</code> arguments.
    */
-  static lookupServiceResolver(ip: string, callback: Function) {
+  private static lookupServiceResolver(ip: string, callback: Function) {
     if (!dns.lookupService) {
       return DseGssapiAuthProvider.reverseDnsResolver(ip, callback);
     }
@@ -130,6 +130,7 @@ class DseGssapiAuthProvider extends AuthProvider {
     });
   }
 
+  //TODO: reverseDnsResolver and useIpResolver are in JSDoc but we didn't expose them in .d.ts. Should we?
   /**
    * Performs a reverse DNS query that resolves an IPv4 or IPv6 address to a hostname.
    * @param {String} ip IP address to resolve.
@@ -166,7 +167,7 @@ class DseGssapiAuthProvider extends AuthProvider {
  * @param {String} service
  * @param {Function} hostNameResolver
  * @extends Authenticator
- * @private
+ * @private @internal
  */
 class GssapiAuthenticator extends BaseDseAuthenticator {
   authorizationId: any;

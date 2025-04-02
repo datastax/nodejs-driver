@@ -21,7 +21,7 @@ const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
 
 /**
  * Constructs a signed int64 representation.
- * @ignore
+ * @ignore @internal
  */
 class MutableLong {
   _arr: number[];

@@ -19,7 +19,7 @@ import errors from "../errors";
 
 /**
  * Represents a CQL query operator, like >=, IN, <, ...
- * @ignore
+ * @ignore @internal
  */
 class QueryOperator {
   key: string;
@@ -59,7 +59,7 @@ class QueryOperator {
 
 /**
  * Represents a CQL assignment operation, like col = col + x.
- * @ignore
+ * @ignore @internal
  */
 class QueryAssignment {
   sign: any;

@@ -358,6 +358,10 @@ const serializersArray = [
   DurationSerializer
 ];
 
+//TODO: exported in javascript, but was not in .d.ts. 
+/**
+ * @internal
+ */
 function getCustomSerializers() {
   const customSerializers = {};
 

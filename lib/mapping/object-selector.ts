@@ -28,7 +28,7 @@ const keyMatches = {
 
 /**
  * Provides utility methods to choose the correct tables and views that should be included in a statement.
- * @ignore
+ * @ignore @internal
  */
 class ObjectSelector {
   /**

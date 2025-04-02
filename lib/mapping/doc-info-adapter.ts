@@ -21,7 +21,7 @@ import type ModelMappingInfo from "./model-mapping-info";
 
 /**
  * Provides utility methods to adapt and map user provided docInfo and executionOptions to a predictable object format.
- * @ignore
+ * @ignore @internal
  */
 class DocInfoAdapter {
   /**

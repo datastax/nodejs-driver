@@ -20,6 +20,9 @@ import Encoder from "../../encoder";
 
 const { dataTypes } = types;
 
+/**
+ * @internal
+ */
 function getTypeDefinitionByValue(value) {
   if (value instanceof types.Tuple) {
     return {
@@ -91,6 +94,9 @@ function getUdtTypeDefinition(udtInfo) {
   };
 }
 
+/**
+ * @internal
+ */
 function getUdtTypeDefinitionByValue(wrappedValue) {
   return getUdtTypeDefinition(wrappedValue.udtInfo);
 }

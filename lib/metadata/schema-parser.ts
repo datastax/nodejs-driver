@@ -32,7 +32,7 @@ const { format } = util;
 
 /**
  * @module metadata/schemaParser
- * @ignore
+ * @ignore @internal
  */
 
 const _selectAllKeyspacesV1 = "SELECT * FROM system.schema_keyspaces";
@@ -60,7 +60,7 @@ const _selectVirtualColumns = "SELECT * FROM system_virtual_schema.columns where
 
 /**
  * @abstract
- * @ignore
+ * @ignore @internal
  */
 abstract class SchemaParser {
   cc: ControlConnection;
@@ -76,7 +76,7 @@ abstract class SchemaParser {
    * @param {ClientOptions} options The client options
    * @param {ControlConnection} cc
    * @constructor
-   * @ignore
+   * @ignore @internal
    */
   constructor(options: ClientOptions, cc: ControlConnection) {
     this.cc = cc;
@@ -385,7 +385,7 @@ abstract class SchemaParser {
 
 /**
  * Used to parse schema information for Cassandra versions 1.2.x, and 2.x
- * @ignore
+ * @ignore @internal
  */
 class SchemaParserV1 extends SchemaParser {
 
@@ -617,7 +617,7 @@ class SchemaParserV1 extends SchemaParser {
  * @param {ClientOptions} options The client options
  * @param {ControlConnection} cc The control connection to be used
  * @param {Function} udtResolver The function to be used to retrieve the udts.
- * @ignore
+ * @ignore @internal
  */
 class SchemaParserV2 extends SchemaParser {
   udtResolver: Function;
@@ -876,7 +876,7 @@ class SchemaParserV2 extends SchemaParser {
  *
  * This parser similar to [SchemaParserV2] expect it also parses virtual
  * keyspaces.
- * @ignore
+ * @ignore @internal
  */
 class SchemaParserV3 extends SchemaParserV2 {
   /**

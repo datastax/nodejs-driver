@@ -28,7 +28,7 @@ const vmFileName = 'gen-param-getter.js';
 
 /**
  * Provides methods to generate a query and parameter handlers.
- * @ignore
+ * @ignore @internal
  */
 class QueryGenerator {
   /**

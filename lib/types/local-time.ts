@@ -232,7 +232,7 @@ class LocalTime {
 
   /**
    * @returns {Array.<Number>}
-   * @ignore
+   * @ignore @internal
    */
   private _getParts(): Array<number> {
     if (!this._partsCache) {

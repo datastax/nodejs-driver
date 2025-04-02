@@ -17,7 +17,7 @@ import g, { Edge, Vertex } from "./index";
 
 /**
  * @module datastax/graph/tinkerpop/typeSerializers
- * @ignore
+ * @ignore @internal
  */
 
 /**

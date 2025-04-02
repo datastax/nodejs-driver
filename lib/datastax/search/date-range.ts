@@ -43,6 +43,7 @@ const dateRangeType = {
   openSingle: 5
 } as const;
 
+//TODO: dateRangePrecision was exposed in .d.ts, but not used anywhere in .d.ts. Do we want to expose it or not?
 /**
  * Defines the possible values of date range precision.
  * @type {Object}
@@ -89,8 +90,8 @@ const dateRangePrecision = {
 class DateRange {
   lowerBound: DateRangeBound;
   upperBound: DateRangeBound;
-  _type: number;
-  constructor(lowerBound, upperBound?) {
+  private _type: number;
+  constructor(lowerBound: DateRangeBound, upperBound?: DateRangeBound) {
     if (!lowerBound) {
       throw new TypeError('The lower boundaries must be defined');
     }
@@ -128,7 +129,7 @@ class DateRange {
    * <p>String representations of dates are always expressed in Coordinated Universal Time (UTC)</p>
    * @param {String} dateRangeString
    */
-  static fromString(dateRangeString: string) {
+  static fromString(dateRangeString: string): DateRange {
     const matches = multipleBoundariesRegex.exec(dateRangeString);
     if (!matches) {
       return new DateRange(DateRangeBound.toLowerBound(DateRangeBound.fromString(dateRangeString)));
@@ -199,6 +200,10 @@ class DateRange {
     }
     return '[' + this.lowerBound.toString() + ' TO ' + this.upperBound.toString() + ']';
   }
+
+  /**
+   * @intenal
+   */
   toBuffer() {
     // Serializes the value containing:
     // <type>[<time0><precision0><time1><precision1>]
@@ -272,16 +277,17 @@ function readDate(buffer: Buffer, offset: number): Date {
 class DateRangeBound {
   date: Date;
   precision: number;
+  /**
+   * @internal
+   */
   static unbounded: Readonly<DateRangeBound>;
   /**
-   * @classdesc
    * Represents a date range boundary, composed by a <code>Date</code> and a precision.
    * @param {Date} date The timestamp portion, representing a single moment in time. Consider using
    * <code>Date.UTC()</code> method to build the <code>Date</code> instance.
    * @param {Number} precision The precision portion. Valid values for <code>DateRangeBound</code> precision are
    * defined in the [dateRangePrecision]{@link module:datastax/search~dateRangePrecision} member.
    * @constructor
-   * @memberOf module:datastax/search
    */
   constructor(date: Date, precision: number) {
     /**
@@ -454,6 +460,9 @@ class DateRangeBound {
     }
     return datesEqual(other.date, this.date);
   }
+  /**
+   * @internal
+   */
   isUnbounded() {
     return (this.precision === -1);
   }

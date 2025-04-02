@@ -210,25 +210,25 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    types: {\n        opcodes: {\n            error: number;\n            startup: number;\n            ready: number;\n            authenticate: number;\n            credentials: number;\n            options: number;\n            supported: number;\n            query: number;\n            result: number;\n            prepare: number;\n            execute: number;\n            register: number;\n            event: number;\n            batch: number;\n            authChallenge: number;\n            authResponse: number;\n            authSuccess: number;\n            cancel: number;\n            isInRange: (code: any) => boolean;\n        };\n        consistencies: {\n            readonly any: 0;\n            readonly one: 1;\n            readonly two: 2;\n            readonly three: 3;\n            readonly quorum: 4;\n            readonly all: 5;\n            readonly localQuorum: 6;\n            readonly eachQuorum: 7;\n            readonly serial: 8;\n            readonly localSerial: 9;\n            readonly localOne: 10;\n        };\n        consistencyToString: {};\n        dataTypes: {\n            readonly custom: 0;\n            readonly ascii: 1;\n            readonly bigint: 2;\n            readonly blob: 3;\n            readonly boolean: 4;\n            readonly counter: 5;\n            readonly decimal: 6;\n            readonly double: 7;\n            readonly float: 8;\n            readonly int: 9;\n            readonly text: 10;\n            readonly timestamp: 11;\n            readonly uuid: 12;\n            readonly varchar: 13;\n            readonly varint: 14;\n            readonly timeuuid: 15;\n            readonly inet: 16;\n            readonly date: 17;\n            readonly time: 18;\n            readonly smallint: 19;\n            readonly tinyint: 20;\n            readonly duration: 21;\n            readonly list: 32;\n            readonly map: 33;\n            readonly set: 34;\n            readonly udt: 48;\n            readonly tuple: 49;\n            readonly getByName: (name: any) => {\n                code: any;\n            } | {\n                code: any;\n                info: any;\n                customTypeName?: undefined;\n            } | {\n                code: any;\n                customTypeName: string;\n                info: any[];\n            };\n        };\n        getDataTypeNameByCode: typeof import(\"./lib/types/index\")."
+              "text": ";\n    types: {\n        opcodes: {\n            error: number;\n            startup: number;\n            ready: number;\n            authenticate: number;\n            credentials: number;\n            options: number;\n            supported: number;\n            query: number;\n            result: number;\n            prepare: number;\n            execute: number;\n            register: number;\n            event: number;\n            batch: number;\n            authChallenge: number;\n            authResponse: number;\n            authSuccess: number;\n            cancel: number;\n            isInRange: (code: any) => boolean;\n        };\n        consistencies: {\n            readonly any: 0;\n            readonly one: 1;\n            readonly two: 2;\n            readonly three: 3;\n            readonly quorum: 4;\n            readonly all: 5;\n            readonly localQuorum: 6;\n            readonly eachQuorum: 7;\n            readonly serial: 8;\n            readonly localSerial: 9;\n            readonly localOne: 10;\n        };\n        consistencyToString: {};\n        dataTypes: {\n            readonly custom: 0;\n            readonly ascii: 1;\n            readonly bigint: 2;\n            readonly blob: 3;\n            readonly boolean: 4;\n            readonly counter: 5;\n            readonly decimal: 6;\n            readonly double: 7;\n            readonly float: 8;\n            readonly int: 9;\n            readonly text: 10;\n            readonly timestamp: 11;\n            readonly uuid: 12;\n            readonly varchar: 13;\n            readonly varint: 14;\n            readonly timeuuid: 15;\n            readonly inet: 16;\n            readonly date: 17;\n            readonly time: 18;\n            readonly smallint: 19;\n            readonly tinyint: 20;\n            readonly duration: 21;\n            readonly list: 32;\n            readonly map: 33;\n            readonly set: 34;\n            readonly udt: 48;\n            readonly tuple: 49;\n            readonly getByName: (name: any) => {\n                code: any;\n            } | {\n                code: any;\n                info: any;\n                customTypeName?: undefined;\n            } | {\n                code: any;\n                customTypeName: string;\n                info: any[];\n            };\n        };\n        getDataTypeNameByCode: typeof "
             },
             {
               "kind": "Reference",
               "text": "getDataTypeNameByCode",
-              "canonicalReference": "cassandra-driver!~getDataTypeNameByCode"
+              "canonicalReference": "cassandra-driver!~getDataTypeNameByCode:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        distance: {\n            local: number;\n            remote: number;\n            ignored: number;\n        };\n        frameFlags: {\n            compression: number;\n            tracing: number;\n            customPayload: number;\n            warning: number;\n        };\n        protocolEvents: {\n            topologyChange: string;\n            statusChange: string;\n            schemaChange: string;\n        };\n        protocolVersion: {\n            v1: number;\n            v2: number;\n            v3: number;\n            v4: number;\n            v5: number;\n            v6: number;\n            dseV1: number;\n            dseV2: number;\n            maxSupported: number;\n            minSupported: number;\n            isDse: (version: number) => boolean;\n            isSupportedCassandra: (version: number) => boolean;\n            isSupported: (version: number) => boolean;\n            supportsPrepareFlags: (version: number) => boolean;\n            supportsKeyspaceInRequest: (version: number) => boolean;\n            supportsResultMetadataId: (version: number) => boolean;\n            supportsPreparedPartitionKey: (version: number) => boolean;\n            supportsSchemaChangeFullMetadata: (version: any) => boolean;\n            supportsContinuousPaging: (version: any) => boolean;\n            supportsPaging: (version: any) => boolean;\n            supportsTimestamp: (version: number) => boolean;\n            supportsNamedParameters: (version: number) => boolean;\n            supportsUnset: (version: number) => boolean;\n            supportsFailureReasonMap: (version: any) => boolean;\n            uses2BytesStreamIds: (version: number) => boolean;\n            uses4BytesCollectionLength: (version: number) => boolean;\n            uses4BytesQueryFlags: (version: number) => boolean;\n            canStartupResponseErrorBeWrapped: (version: number) => boolean;\n            getLowerSupported: (version: number) => number;\n            getHighestCommon: (connection: import(\"./lib/connection\")."
+              "text": ";\n        distance: {\n            local: number;\n            remote: number;\n            ignored: number;\n        };\n        frameFlags: {\n            compression: number;\n            tracing: number;\n            customPayload: number;\n            warning: number;\n        };\n        protocolEvents: {\n            topologyChange: string;\n            statusChange: string;\n            schemaChange: string;\n        };\n        protocolVersion: {\n            v1: number;\n            v2: number;\n            v3: number;\n            v4: number;\n            v5: number;\n            v6: number;\n            dseV1: number;\n            dseV2: number;\n            maxSupported: number;\n            minSupported: number;\n            isDse: (version: number) => boolean;\n            isSupportedCassandra: (version: number) => boolean;\n            isSupported: (version: number) => boolean;\n            supportsPrepareFlags: (version: number) => boolean;\n            supportsKeyspaceInRequest: (version: number) => boolean;\n            supportsResultMetadataId: (version: number) => boolean;\n            supportsPreparedPartitionKey: (version: number) => boolean;\n            supportsSchemaChangeFullMetadata: (version: any) => boolean;\n            supportsContinuousPaging: (version: any) => boolean;\n            supportsPaging: (version: any) => boolean;\n            supportsTimestamp: (version: number) => boolean;\n            supportsNamedParameters: (version: number) => boolean;\n            supportsUnset: (version: number) => boolean;\n            supportsFailureReasonMap: (version: any) => boolean;\n            uses2BytesStreamIds: (version: number) => boolean;\n            uses4BytesCollectionLength: (version: number) => boolean;\n            uses4BytesQueryFlags: (version: number) => boolean;\n            canStartupResponseErrorBeWrapped: (version: number) => boolean;\n            getLowerSupported: (version: number) => number;\n            getHighestCommon: (connection: "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Connection",
               "canonicalReference": "cassandra-driver!~Connection:class"
             },
             {
               "kind": "Content",
-              "text": ", hosts: import(\"./lib/host\")."
+              "text": ", hosts: "
             },
             {
               "kind": "Reference",
@@ -237,43 +237,43 @@
             },
             {
               "kind": "Content",
-              "text": ") => number;\n            isBeta: (version: number) => boolean;\n        };\n        responseErrorCodes: {\n            serverError: number;\n            protocolError: number;\n            badCredentials: number;\n            unavailableException: number;\n            overloaded: number;\n            isBootstrapping: number;\n            truncateError: number;\n            writeTimeout: number;\n            readTimeout: number;\n            readFailure: number;\n            functionFailure: number;\n            writeFailure: number;\n            syntaxError: number;\n            unauthorized: number;\n            invalid: number;\n            configError: number;\n            alreadyExists: number;\n            unprepared: number;\n            clientWriteFailure: number;\n        };\n        resultKind: {\n            voidResult: number;\n            rows: number;\n            setKeyspace: number;\n            prepared: number;\n            schemaChange: number;\n        };\n        timeuuid: typeof import(\"./lib/types/index\")."
+              "text": ") => number;\n            isBeta: (version: number) => boolean;\n        };\n        responseErrorCodes: {\n            serverError: number;\n            protocolError: number;\n            badCredentials: number;\n            unavailableException: number;\n            overloaded: number;\n            isBootstrapping: number;\n            truncateError: number;\n            writeTimeout: number;\n            readTimeout: number;\n            readFailure: number;\n            functionFailure: number;\n            writeFailure: number;\n            syntaxError: number;\n            unauthorized: number;\n            invalid: number;\n            configError: number;\n            alreadyExists: number;\n            unprepared: number;\n            clientWriteFailure: number;\n        };\n        resultKind: {\n            voidResult: number;\n            rows: number;\n            setKeyspace: number;\n            prepared: number;\n            schemaChange: number;\n        };\n        timeuuid: typeof "
             },
             {
               "kind": "Reference",
               "text": "timeuuid",
-              "canonicalReference": "cassandra-driver!~timeuuid"
+              "canonicalReference": "cassandra-driver!~timeuuid:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        uuid: typeof import(\"./lib/types/index\")."
+              "text": ";\n        uuid: typeof "
             },
             {
               "kind": "Reference",
               "text": "uuid",
-              "canonicalReference": "cassandra-driver!~uuid"
+              "canonicalReference": "cassandra-driver!~uuid:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        BigDecimal: typeof import(\"./lib/types/big-decimal\")."
+              "text": ";\n        BigDecimal: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "BigDecimal",
               "canonicalReference": "cassandra-driver!~BigDecimal:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Duration: typeof import(\"./lib/types/duration\")."
+              "text": ";\n        Duration: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Duration",
               "canonicalReference": "cassandra-driver!~Duration:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        FrameHeader: typeof import(\"./lib/types/index\")."
+              "text": ";\n        FrameHeader: typeof "
             },
             {
               "kind": "Reference",
@@ -282,79 +282,79 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        InetAddress: typeof import(\"./lib/types/inet-address\")."
+              "text": ";\n        InetAddress: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "InetAddress",
               "canonicalReference": "cassandra-driver!~InetAddress:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Integer: typeof import(\"./lib/types/integer\")."
+              "text": ";\n        Integer: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Integer",
               "canonicalReference": "cassandra-driver!~Integer:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        LocalDate: typeof import(\"./lib/types/local-date\")."
+              "text": ";\n        LocalDate: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "LocalDate",
               "canonicalReference": "cassandra-driver!~LocalDate:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        LocalTime: typeof import(\"./lib/types/local-time\")."
+              "text": ";\n        LocalTime: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "LocalTime",
               "canonicalReference": "cassandra-driver!~LocalTime:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Long: typeof import(\"long\", { with: { \"resolution-mode\": \"import\" } })."
+              "text": ";\n        Long: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Long",
               "canonicalReference": "long!Long:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        ResultSet: typeof import(\"./lib/types/result-set\")."
+              "text": ".default;\n        ResultSet: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "ResultSet",
               "canonicalReference": "cassandra-driver!~ResultSet:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        ResultStream: typeof import(\"./lib/types/result-stream\")."
+              "text": ";\n        ResultStream: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "ResultStream",
               "canonicalReference": "cassandra-driver!~ResultStream:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Row: typeof import(\"./lib/types/row\")."
+              "text": ";\n        Row: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Row",
               "canonicalReference": "cassandra-driver!~Row:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        DriverError: typeof import(\"./lib/errors\")."
+              "text": ";\n        DriverError: typeof "
             },
             {
               "kind": "Reference",
@@ -363,7 +363,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        TimeoutError: typeof import(\"./lib/types/index\")."
+              "text": ";\n        TimeoutError: typeof "
             },
             {
               "kind": "Reference",
@@ -372,29 +372,29 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        TimeUuid: typeof import(\"./lib/types/time-uuid\")."
+              "text": ";\n        TimeUuid: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "TimeUuid",
               "canonicalReference": "cassandra-driver!~TimeUuid:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Tuple: typeof import(\"./lib/types/tuple\")."
+              "text": ";\n        Tuple: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Tuple",
               "canonicalReference": "cassandra-driver!~Tuple:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Uuid: typeof import(\"./lib/types/uuid\")."
+              "text": ";\n        Uuid: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Uuid",
               "canonicalReference": "cassandra-driver!~Uuid:class"
             },
             {
@@ -408,25 +408,25 @@
             },
             {
               "kind": "Content",
-              "text": "<{\n            readonly unset: true;\n        }>;\n        generateTimestamp: typeof import(\"./lib/types/index\")."
+              "text": "<{\n            readonly unset: true;\n        }>;\n        generateTimestamp: typeof "
             },
             {
               "kind": "Reference",
               "text": "generateTimestamp",
-              "canonicalReference": "cassandra-driver!~generateTimestamp"
+              "canonicalReference": "cassandra-driver!~generateTimestamp:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        Vector: typeof import(\"./lib/types/vector\")."
+              "text": ";\n        Vector: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Vector",
               "canonicalReference": "cassandra-driver!~Vector:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    errors: {\n        ArgumentError: typeof import(\"./lib/errors\")."
+              "text": ";\n    };\n    errors: {\n        ArgumentError: typeof "
             },
             {
               "kind": "Reference",
@@ -435,7 +435,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        AuthenticationError: typeof import(\"./lib/errors\")."
+              "text": ";\n        AuthenticationError: typeof "
             },
             {
               "kind": "Reference",
@@ -444,7 +444,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        BusyConnectionError: typeof import(\"./lib/errors\")."
+              "text": ";\n        BusyConnectionError: typeof "
             },
             {
               "kind": "Reference",
@@ -453,7 +453,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        DriverError: typeof import(\"./lib/errors\")."
+              "text": ";\n        DriverError: typeof "
             },
             {
               "kind": "Reference",
@@ -462,7 +462,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        OperationTimedOutError: typeof import(\"./lib/errors\")."
+              "text": ";\n        OperationTimedOutError: typeof "
             },
             {
               "kind": "Reference",
@@ -471,7 +471,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        DriverInternalError: typeof import(\"./lib/errors\")."
+              "text": ";\n        DriverInternalError: typeof "
             },
             {
               "kind": "Reference",
@@ -480,7 +480,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        NoHostAvailableError: typeof import(\"./lib/errors\")."
+              "text": ";\n        NoHostAvailableError: typeof "
             },
             {
               "kind": "Reference",
@@ -489,7 +489,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        NotSupportedError: typeof import(\"./lib/errors\")."
+              "text": ";\n        NotSupportedError: typeof "
             },
             {
               "kind": "Reference",
@@ -498,7 +498,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        ResponseError: typeof import(\"./lib/errors\")."
+              "text": ";\n        ResponseError: typeof "
             },
             {
               "kind": "Reference",
@@ -507,7 +507,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        VIntOutOfRangeException: typeof import(\"./lib/errors\")."
+              "text": ";\n        VIntOutOfRangeException: typeof "
             },
             {
               "kind": "Reference",
@@ -516,7 +516,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    policies: {\n        addressResolution: typeof import(\"./lib/policies/address-resolution\");\n        loadBalancing: typeof import(\"./lib/policies/load-balancing\");\n        reconnection: typeof import(\"./lib/policies/reconnection\");\n        retry: typeof import(\"./lib/policies/retry\");\n        speculativeExecution: typeof import(\"./lib/policies/speculative-execution\");\n        timestampGeneration: typeof import(\"./lib/policies/timestamp-generation\");\n        defaultAddressTranslator: () => import(\"./lib/policies/address-resolution\")."
+              "text": ";\n    };\n    policies: {\n        addressResolution: {\n            AddressTranslator: typeof "
             },
             {
               "kind": "Reference",
@@ -525,7 +525,43 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        defaultLoadBalancingPolicy: (localDc?: string) => import(\"./lib/policies/load-balancing\")."
+              "text": ";\n            EC2MultiRegionTranslator: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "EC2MultiRegionTranslator",
+              "canonicalReference": "cassandra-driver!~EC2MultiRegionTranslator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        loadBalancing: {\n            AllowListPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "AllowListPolicy",
+              "canonicalReference": "cassandra-driver!~AllowListPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            DCAwareRoundRobinPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DCAwareRoundRobinPolicy",
+              "canonicalReference": "cassandra-driver!~DCAwareRoundRobinPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            DefaultLoadBalancingPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DefaultLoadBalancingPolicy",
+              "canonicalReference": "cassandra-driver!~DefaultLoadBalancingPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            LoadBalancingPolicy: typeof "
             },
             {
               "kind": "Reference",
@@ -534,16 +570,34 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        defaultRetryPolicy: () => import(\"./lib/policies/retry\")."
+              "text": ";\n            RoundRobinPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "RetryPolicy",
-              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+              "text": "RoundRobinPolicy",
+              "canonicalReference": "cassandra-driver!~RoundRobinPolicy:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        defaultReconnectionPolicy: () => import(\"./lib/policies/reconnection\")."
+              "text": ";\n            TokenAwarePolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "TokenAwarePolicy",
+              "canonicalReference": "cassandra-driver!~TokenAwarePolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            WhiteListPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "WhiteListPolicy",
+              "canonicalReference": "cassandra-driver!~WhiteListPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        reconnection: {\n            ReconnectionPolicy: typeof "
             },
             {
               "kind": "Reference",
@@ -552,7 +606,61 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        defaultSpeculativeExecutionPolicy: () => import(\"./lib/policies/speculative-execution\")."
+              "text": ";\n            ConstantReconnectionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ConstantReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ConstantReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            ExponentialReconnectionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExponentialReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ExponentialReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        retry: {\n            IdempotenceAwareRetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "IdempotenceAwareRetryPolicy",
+              "canonicalReference": "cassandra-driver!~IdempotenceAwareRetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            FallthroughRetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "FallthroughRetryPolicy",
+              "canonicalReference": "cassandra-driver!~FallthroughRetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            RetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "RetryPolicy",
+              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        speculativeExecution: {\n            NoSpeculativeExecutionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "NoSpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~NoSpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            SpeculativeExecutionPolicy: typeof "
             },
             {
               "kind": "Reference",
@@ -561,7 +669,16 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        defaultTimestampGenerator: () => import(\"./lib/policies/timestamp-generation\")."
+              "text": ";\n            ConstantSpeculativeExecutionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ConstantSpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~ConstantSpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        timestampGeneration: {\n            TimestampGenerator: typeof "
             },
             {
               "kind": "Reference",
@@ -570,7 +687,70 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    auth: {\n        Authenticator: typeof import(\"./lib/auth/provider\")."
+              "text": ";\n            MonotonicTimestampGenerator: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "MonotonicTimestampGenerator",
+              "canonicalReference": "cassandra-driver!~MonotonicTimestampGenerator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n        defaultAddressTranslator: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "AddressTranslator",
+              "canonicalReference": "cassandra-driver!~AddressTranslator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        defaultLoadBalancingPolicy: (localDc?: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "LoadBalancingPolicy",
+              "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        defaultRetryPolicy: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "RetryPolicy",
+              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        defaultReconnectionPolicy: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "ReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        defaultSpeculativeExecutionPolicy: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "SpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        defaultTimestampGenerator: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "TimestampGenerator",
+              "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    auth: {\n        Authenticator: typeof "
             },
             {
               "kind": "Reference",
@@ -579,7 +759,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        AuthProvider: typeof import(\"./lib/auth/provider\")."
+              "text": ";\n        AuthProvider: typeof "
             },
             {
               "kind": "Reference",
@@ -588,169 +768,169 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        DseGssapiAuthProvider: typeof import(\"./lib/auth/dse-gssapi-auth-provider\")."
+              "text": ";\n        DseGssapiAuthProvider: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "DseGssapiAuthProvider",
               "canonicalReference": "cassandra-driver!~DseGssapiAuthProvider:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        DsePlainTextAuthProvider: typeof import(\"./lib/auth/dse-plain-text-auth-provider\")."
+              "text": ";\n        DsePlainTextAuthProvider: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "DsePlainTextAuthProvider",
               "canonicalReference": "cassandra-driver!~DsePlainTextAuthProvider:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        NoAuthProvider: typeof import(\"./lib/auth/no-auth-provider\")."
+              "text": ";\n        NoAuthProvider: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "NoAuthProvider",
               "canonicalReference": "cassandra-driver!~NoAuthProvider:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        PlainTextAuthProvider: typeof import(\"./lib/auth/plain-text-auth-provider\")."
+              "text": ";\n        PlainTextAuthProvider: typeof "
             },
             {
               "kind": "Reference",
               "text": "PlainTextAuthProvider",
-              "canonicalReference": "cassandra-driver!~PlainTextAuthProvider_2:class"
+              "canonicalReference": "cassandra-driver!~PlainTextAuthProvider:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    mapping: {\n        Mapper: typeof import(\"./lib/mapping/mapper\")."
+              "text": ";\n    };\n    mapping: {\n        Mapper: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Mapper",
               "canonicalReference": "cassandra-driver!~Mapper:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        ModelMapper: typeof import(\"./lib/mapping/model-mapper\")."
+              "text": ";\n        ModelMapper: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "ModelMapper",
               "canonicalReference": "cassandra-driver!~ModelMapper:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        ModelBatchMapper: typeof import(\"./lib/mapping/model-batch-mapper\")."
+              "text": ";\n        ModelBatchMapper: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "ModelBatchMapper",
               "canonicalReference": "cassandra-driver!~ModelBatchMapper:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        ModelBatchItem: typeof import(\"./lib/mapping/model-batch-item\")."
+              "text": ";\n        ModelBatchItem: typeof "
             },
             {
               "kind": "Reference",
               "text": "ModelBatchItem",
-              "canonicalReference": "cassandra-driver!~ModelBatchItem_2:class"
+              "canonicalReference": "cassandra-driver!~ModelBatchItem:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Result: typeof import(\"./lib/mapping/result\")."
+              "text": ";\n        Result: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Result",
               "canonicalReference": "cassandra-driver!~Result:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        TableMappings: typeof import(\"./lib/mapping/table-mappings\")."
+              "text": ";\n        TableMappings: typeof "
             },
             {
               "kind": "Reference",
               "text": "TableMappings",
-              "canonicalReference": "cassandra-driver!~TableMappings_2:class"
+              "canonicalReference": "cassandra-driver!~TableMappings:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        DefaultTableMappings: typeof import(\"./lib/mapping/table-mappings\")."
+              "text": ";\n        DefaultTableMappings: typeof "
             },
             {
               "kind": "Reference",
               "text": "DefaultTableMappings",
-              "canonicalReference": "cassandra-driver!~DefaultTableMappings_2:class"
+              "canonicalReference": "cassandra-driver!~DefaultTableMappings:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        UnderscoreCqlToCamelCaseMappings: typeof import(\"./lib/mapping/table-mappings\")."
+              "text": ";\n        UnderscoreCqlToCamelCaseMappings: typeof "
             },
             {
               "kind": "Reference",
               "text": "UnderscoreCqlToCamelCaseMappings",
-              "canonicalReference": "cassandra-driver!~UnderscoreCqlToCamelCaseMappings_2:class"
+              "canonicalReference": "cassandra-driver!~UnderscoreCqlToCamelCaseMappings:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        q: object;\n    };\n    tracker: {\n        RequestTracker: typeof import(\"./lib/tracker/request-tracker\")."
+              "text": ";\n        q: object;\n    };\n    tracker: {\n        RequestTracker: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "RequestTracker",
               "canonicalReference": "cassandra-driver!~RequestTracker:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        RequestLogger: typeof import(\"./lib/tracker/request-logger\")."
+              "text": ";\n        RequestLogger: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "RequestLogger",
               "canonicalReference": "cassandra-driver!~RequestLogger:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    metrics: {\n        ClientMetrics: typeof import(\"./lib/metrics/client-metrics\")."
+              "text": ";\n    };\n    metrics: {\n        ClientMetrics: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "ClientMetrics",
               "canonicalReference": "cassandra-driver!~ClientMetrics:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        DefaultMetrics: typeof import(\"./lib/metrics/default-metrics\")."
+              "text": ";\n        DefaultMetrics: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "DefaultMetrics",
               "canonicalReference": "cassandra-driver!~DefaultMetrics:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    concurrent: {\n        executeConcurrent: typeof import(\"./lib/concurrent/index\")."
+              "text": ";\n    };\n    concurrent: {\n        executeConcurrent: typeof "
             },
             {
               "kind": "Reference",
               "text": "executeConcurrent",
-              "canonicalReference": "cassandra-driver!~executeConcurrent_2"
+              "canonicalReference": "cassandra-driver!~executeConcurrent:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        ResultSetGroup: typeof import(\"./lib/concurrent/index\")."
+              "text": ";\n        ResultSetGroup: typeof "
             },
             {
               "kind": "Reference",
               "text": "ResultSetGroup",
-              "canonicalReference": "cassandra-driver!~ResultSetGroup_2:class"
+              "canonicalReference": "cassandra-driver!~ResultSetGroup:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    token: {\n        Token: typeof import(\"./lib/token\")."
+              "text": ";\n    };\n    token: {\n        Token: typeof "
             },
             {
               "kind": "Reference",
@@ -759,7 +939,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        TokenRange: typeof import(\"./lib/token\")."
+              "text": ";\n        TokenRange: typeof "
             },
             {
               "kind": "Reference",
@@ -786,43 +966,43 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    geometry: {\n        Point: typeof import(\"./lib/geometry/point\")."
+              "text": ";\n    geometry: {\n        Point: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Point",
               "canonicalReference": "cassandra-driver!~Point:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        LineString: typeof import(\"./lib/geometry/line-string\")."
+              "text": ";\n        LineString: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "LineString",
               "canonicalReference": "cassandra-driver!~LineString:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Polygon: typeof import(\"./lib/geometry/polygon\")."
+              "text": ";\n        Polygon: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Polygon",
               "canonicalReference": "cassandra-driver!~Polygon:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        Geometry: typeof import(\"./lib/geometry/geometry\")."
+              "text": ";\n        Geometry: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Geometry",
               "canonicalReference": "cassandra-driver!~Geometry:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    datastax: {\n        graph: {\n            Edge: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n    };\n    datastax: {\n        graph: {\n            Edge: typeof "
             },
             {
               "kind": "Reference",
@@ -831,7 +1011,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            Element: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            Element: typeof "
             },
             {
               "kind": "Reference",
@@ -840,7 +1020,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            Path: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            Path: typeof "
             },
             {
               "kind": "Reference",
@@ -849,7 +1029,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            Property: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            Property: typeof "
             },
             {
               "kind": "Reference",
@@ -858,7 +1038,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            Vertex: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            Vertex: typeof "
             },
             {
               "kind": "Reference",
@@ -867,7 +1047,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            VertexProperty: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            VertexProperty: typeof "
             },
             {
               "kind": "Reference",
@@ -876,61 +1056,61 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            asInt: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            asInt: typeof "
             },
             {
               "kind": "Reference",
               "text": "asInt",
-              "canonicalReference": "cassandra-driver!~asInt"
+              "canonicalReference": "cassandra-driver!~asInt:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            asDouble: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            asDouble: typeof "
             },
             {
               "kind": "Reference",
               "text": "asDouble",
-              "canonicalReference": "cassandra-driver!~asDouble"
+              "canonicalReference": "cassandra-driver!~asDouble:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            asFloat: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            asFloat: typeof "
             },
             {
               "kind": "Reference",
               "text": "asFloat",
-              "canonicalReference": "cassandra-driver!~asFloat"
+              "canonicalReference": "cassandra-driver!~asFloat:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            asTimestamp: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            asTimestamp: typeof "
             },
             {
               "kind": "Reference",
               "text": "asTimestamp",
-              "canonicalReference": "cassandra-driver!~asTimestamp"
+              "canonicalReference": "cassandra-driver!~asTimestamp:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            asUdt: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            asUdt: typeof "
             },
             {
               "kind": "Reference",
               "text": "asUdt",
-              "canonicalReference": "cassandra-driver!~asUdt"
+              "canonicalReference": "cassandra-driver!~asUdt:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            direction: {\n                both: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                out: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in_: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            getCustomTypeSerializers: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            direction: {\n                both: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                out: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in_: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            getCustomTypeSerializers: typeof "
             },
             {
               "kind": "Reference",
-              "text": "getCustomTypeSerializers",
-              "canonicalReference": "cassandra-driver!~getCustomSerializers"
+              "text": "getCustomSerializers",
+              "canonicalReference": "cassandra-driver!~getCustomSerializers:function"
             },
             {
               "kind": "Content",
-              "text": ";\n            GraphResultSet: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            GraphResultSet: typeof "
             },
             {
               "kind": "Reference",
@@ -939,7 +1119,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            GraphTypeWrapper: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            GraphTypeWrapper: typeof "
             },
             {
               "kind": "Reference",
@@ -948,7 +1128,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n            t: {\n                id: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                key: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                label: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                value: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            UdtGraphWrapper: typeof import(\"./lib/datastax/graph\")."
+              "text": ";\n            t: {\n                id: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                key: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                label: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                value: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            UdtGraphWrapper: typeof "
             },
             {
               "kind": "Reference",
@@ -957,16 +1137,16 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        };\n        DateRange: typeof import(\"./lib/datastax/index\")."
+              "text": ";\n        };\n        DateRange: typeof "
             },
             {
               "kind": "Reference",
               "text": "DateRange",
-              "canonicalReference": "cassandra-driver!~DateRange_2:class"
+              "canonicalReference": "cassandra-driver!~DateRange:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    };\n    defaultOptions: () => import(\"./lib/client\")."
+              "text": ";\n    };\n    defaultOptions: () => "
             },
             {
               "kind": "Reference",
@@ -978,23 +1158,23 @@
               "text": ";\n    version: string;\n}"
             }
           ],
-          "fileUrlPath": "index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "_default",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 178
+            "endIndex": 218
           }
         },
         {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!auth:var",
-          "docComment": "",
+          "docComment": "/**\n * DSE Authentication module. <p> Contains the classes used for connecting to a DSE cluster secured with DseAuthenticator. </p>  @module auth\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$9: "
             },
             {
               "kind": "Content",
@@ -1048,14 +1228,14 @@
             {
               "kind": "Reference",
               "text": "PlainTextAuthProvider",
-              "canonicalReference": "cassandra-driver!~PlainTextAuthProvider_2:class"
+              "canonicalReference": "cassandra-driver!~PlainTextAuthProvider:class"
             },
             {
               "kind": "Content",
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/auth/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "auth",
@@ -1075,7 +1255,7 @@
             },
             {
               "kind": "Reference",
-              "text": "events.EventEmitter",
+              "text": "EventEmitter.EventEmitter",
               "canonicalReference": "!\"\\\"events\\\"\".EventEmitter.EventEmitter"
             },
             {
@@ -1083,7 +1263,7 @@
               "text": " "
             }
           ],
-          "fileUrlPath": "lib/client.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "releaseTag": "Public",
           "isAbstract": false,
           "name": "Client",
@@ -1121,7 +1301,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "<import(\"./requests\")."
+                  "text": "<"
                 },
                 {
                   "kind": "Reference",
@@ -1223,7 +1403,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "<import(\"./requests\")."
+                  "text": "<"
                 },
                 {
                   "kind": "Reference",
@@ -1333,7 +1513,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "<import(\"./requests\")."
+                  "text": "<"
                 },
                 {
                   "kind": "Reference",
@@ -1688,8 +1868,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ClientOptions",
-                  "canonicalReference": "cassandra-driver!~ClientOptions:interface"
+                  "text": "DseClientOptions",
+                  "canonicalReference": "cassandra-driver!~DseClientOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -3476,12 +3656,12 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "typeof import(\"./utils\")."
+                  "text": "typeof "
                 },
                 {
                   "kind": "Reference",
                   "text": "log",
-                  "canonicalReference": "cassandra-driver!~log"
+                  "canonicalReference": "cassandra-driver!~log:function"
                 },
                 {
                   "kind": "Content",
@@ -3792,7 +3972,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$4: "
             },
             {
               "kind": "Content",
@@ -3801,7 +3981,7 @@
             {
               "kind": "Reference",
               "text": "executeConcurrent",
-              "canonicalReference": "cassandra-driver!~executeConcurrent_2:function"
+              "canonicalReference": "cassandra-driver!~executeConcurrent:function"
             },
             {
               "kind": "Content",
@@ -3810,14 +3990,14 @@
             {
               "kind": "Reference",
               "text": "ResultSetGroup",
-              "canonicalReference": "cassandra-driver!~ResultSetGroup_2:class"
+              "canonicalReference": "cassandra-driver!~ResultSetGroup:class"
             },
             {
               "kind": "Content",
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/concurrent/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "concurrent",
@@ -3833,11 +4013,11 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$5: "
             },
             {
               "kind": "Content",
-              "text": "{\n    graph: {\n        Edge: typeof import(\"./graph/structure\")."
+              "text": "{\n    graph: {\n        Edge: typeof "
             },
             {
               "kind": "Reference",
@@ -3846,7 +4026,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        Element: typeof import(\"./graph/structure\")."
+              "text": ";\n        Element: typeof "
             },
             {
               "kind": "Reference",
@@ -3855,7 +4035,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        Path: typeof import(\"./graph/structure\")."
+              "text": ";\n        Path: typeof "
             },
             {
               "kind": "Reference",
@@ -3864,7 +4044,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        Property: typeof import(\"./graph/structure\")."
+              "text": ";\n        Property: typeof "
             },
             {
               "kind": "Reference",
@@ -3873,7 +4053,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        Vertex: typeof import(\"./graph/structure\")."
+              "text": ";\n        Vertex: typeof "
             },
             {
               "kind": "Reference",
@@ -3882,7 +4062,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        VertexProperty: typeof import(\"./graph/structure\")."
+              "text": ";\n        VertexProperty: typeof "
             },
             {
               "kind": "Reference",
@@ -3891,70 +4071,70 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        asInt: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        asInt: typeof "
             },
             {
               "kind": "Reference",
               "text": "asInt",
-              "canonicalReference": "cassandra-driver!~asInt"
+              "canonicalReference": "cassandra-driver!~asInt:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        asDouble: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        asDouble: typeof "
             },
             {
               "kind": "Reference",
               "text": "asDouble",
-              "canonicalReference": "cassandra-driver!~asDouble"
+              "canonicalReference": "cassandra-driver!~asDouble:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        asFloat: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        asFloat: typeof "
             },
             {
               "kind": "Reference",
               "text": "asFloat",
-              "canonicalReference": "cassandra-driver!~asFloat"
+              "canonicalReference": "cassandra-driver!~asFloat:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        asTimestamp: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        asTimestamp: typeof "
             },
             {
               "kind": "Reference",
               "text": "asTimestamp",
-              "canonicalReference": "cassandra-driver!~asTimestamp"
+              "canonicalReference": "cassandra-driver!~asTimestamp:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        asUdt: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        asUdt: typeof "
             },
             {
               "kind": "Reference",
               "text": "asUdt",
-              "canonicalReference": "cassandra-driver!~asUdt"
+              "canonicalReference": "cassandra-driver!~asUdt:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        direction: {\n            both: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            in: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            out: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            in_: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n        };\n        getCustomTypeSerializers: typeof import(\"./graph/custom-type-serializers\")."
+              "text": ";\n        direction: {\n            both: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            in: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            out: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            in_: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n        };\n        getCustomTypeSerializers: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
-              "canonicalReference": "cassandra-driver!~getCustomSerializers"
+              "text": "getCustomSerializers",
+              "canonicalReference": "cassandra-driver!~getCustomSerializers:function"
             },
             {
               "kind": "Content",
-              "text": ";\n        GraphResultSet: typeof import(\"./graph/result-set\")."
+              "text": ";\n        GraphResultSet: typeof "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "GraphResultSet",
               "canonicalReference": "cassandra-driver!~GraphResultSet:class"
             },
             {
               "kind": "Content",
-              "text": ";\n        GraphTypeWrapper: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        GraphTypeWrapper: typeof "
             },
             {
               "kind": "Reference",
@@ -3963,7 +4143,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        t: {\n            id: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            key: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            label: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            value: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n        };\n        UdtGraphWrapper: typeof import(\"./graph/wrappers\")."
+              "text": ";\n        t: {\n            id: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            key: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            label: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n            value: {\n                typeName: any;\n                elementName: any;\n                toString(): any;\n            };\n        };\n        UdtGraphWrapper: typeof "
             },
             {
               "kind": "Reference",
@@ -3977,14 +4157,14 @@
             {
               "kind": "Reference",
               "text": "DateRange",
-              "canonicalReference": "cassandra-driver!~DateRange_2:class"
+              "canonicalReference": "cassandra-driver!~DateRange:class"
             },
             {
               "kind": "Content",
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/datastax/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "datastax",
@@ -4003,19 +4183,15 @@
               "text": "defaultOptions: () => "
             },
             {
-              "kind": "Content",
-              "text": "import(\"./lib/client\")."
-            },
-            {
               "kind": "Reference",
               "text": "ClientOptions",
               "canonicalReference": "cassandra-driver!~ClientOptions:interface"
             }
           ],
-          "fileUrlPath": "index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "returnTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 3
+            "endIndex": 2
           },
           "releaseTag": "Public",
           "overloadIndex": 1,
@@ -4032,7 +4208,7 @@
               "text": "declare class Encoder "
             }
           ],
-          "fileUrlPath": "lib/encoder.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "releaseTag": "Public",
           "isAbstract": false,
           "name": "Encoder",
@@ -4219,7 +4395,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$a: "
             },
             {
               "kind": "Content",
@@ -4316,7 +4492,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/errors.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "errors",
@@ -4335,7 +4511,7 @@
               "text": "declare class ExecutionOptions "
             }
           ],
-          "fileUrlPath": "lib/execution-options.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "releaseTag": "Public",
           "isAbstract": false,
           "name": "ExecutionOptions",
@@ -4355,38 +4531,6 @@
               "isProtected": false,
               "overloadIndex": 1,
               "parameters": []
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions.empty:member(1)",
-              "docComment": "/**\n * Creates an empty instance, where all methods return undefined, used internally.  @ignore  @return {ExecutionOptions}\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "static empty(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionOptions",
-                  "canonicalReference": "cassandra-driver!ExecutionOptions:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": true,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "empty"
             },
             {
               "kind": "Method",
@@ -4663,42 +4807,6 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#getOrGenerateTimestamp:member(1)",
-              "docComment": "/**\n * Internal method to get or generate a timestamp for the request execution.  @ignore\n *\n * @returns {Long|null}\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getOrGenerateTimestamp(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Long",
-                  "canonicalReference": "long!Long:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | null"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "getOrGenerateTimestamp"
-            },
-            {
-              "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getPageState:member(1)",
               "docComment": "/**\n * Gets the Buffer representing the paging state.  @abstract\n *\n * @returns {Buffer}\n */\n",
               "excerptTokens": [
@@ -4728,37 +4836,6 @@
               "isOptional": false,
               "isAbstract": false,
               "name": "getPageState"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#getPreferredHost:member(1)",
-              "docComment": "/**\n * Internal method that gets the preferred host.  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getPreferredHost(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "getPreferredHost"
             },
             {
               "kind": "Method",
@@ -4857,42 +4934,6 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#getRoutingIndexes:member(1)",
-              "docComment": "/**\n * Gets the index of the parameters that are part of the partition key to determine the routing.  @abstract  @ignore\n *\n * @returns {Array}\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getRoutingIndexes(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "getRoutingIndexes"
-            },
-            {
-              "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getRoutingKey:member(1)",
               "docComment": "/**\n * Gets the partition key(s) to determine which coordinator should be used for the query.  @abstract\n *\n * @returns {Buffer|Array<Buffer>}\n */\n",
               "excerptTokens": [
@@ -4947,68 +4988,6 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#getRoutingNames:member(1)",
-              "docComment": "/**\n * Gets the array of the parameters names that are part of the partition key to determine the routing. Only valid for non-prepared requests.  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getRoutingNames(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "getRoutingNames"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#getRowCallback:member(1)",
-              "docComment": "/**\n * Internal method to obtain the row callback, for \"by row\" results.  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getRowCallback(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "getRowCallback"
-            },
-            {
-              "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getSerialConsistency:member(1)",
               "docComment": "/**\n * Gets the the consistency level to be used for the serial phase of conditional updates.  @abstract\n *\n * @returns {Number}\n */\n",
               "excerptTokens": [
@@ -5053,7 +5032,7 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Long",
+                  "text": "Long__default",
                   "canonicalReference": "long!Long:class"
                 },
                 {
@@ -5263,306 +5242,6 @@
               "isOptional": false,
               "isAbstract": false,
               "name": "isQueryTracing"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setHints:member(1)",
-              "docComment": "/**\n * @param hints -  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setHints(hints: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 4,
-                "endIndex": 5
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "hints",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 3
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setHints"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setKeyspace:member(1)",
-              "docComment": "/**\n * Sets the keyspace for the execution.  @ignore  @abstract\n *\n * @param keyspace - \n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setKeyspace(keyspace: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "keyspace",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setKeyspace"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setPageState:member(1)",
-              "docComment": "/**\n * @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setPageState(pageState: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "pageState",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setPageState"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setPreferredHost:member(1)",
-              "docComment": "/**\n * Internal method that sets the preferred host.  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setPreferredHost(host: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Host",
-                  "canonicalReference": "cassandra-driver!~Host:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "host",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setPreferredHost"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setRoutingIndexes:member(1)",
-              "docComment": "/**\n * Sets the index of the parameters that are part of the partition key to determine the routing.\n *\n * @param routingIndexes -  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setRoutingIndexes(routingIndexes: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 4,
-                "endIndex": 5
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "routingIndexes",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 3
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setRoutingIndexes"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!ExecutionOptions#setRoutingKey:member(1)",
-              "docComment": "/**\n * Sets the routing key.  @abstract  @ignore\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "setRoutingKey(value: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "value",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "setRoutingKey"
             }
           ],
           "implementsTokenRanges": []
@@ -5577,7 +5256,7 @@
               "text": "declare class ExecutionProfile "
             }
           ],
-          "fileUrlPath": "lib/execution-profile.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "releaseTag": "Public",
           "isAbstract": false,
           "name": "ExecutionProfile",
@@ -5931,11 +5610,11 @@
         {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!geometry:var",
-          "docComment": "",
+          "docComment": "/**\n * Geometry module. <p> Contains the classes to represent the set of additional CQL types for geospatial data that come with DSE 5.0. </p>  @module geometry\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$1: "
             },
             {
               "kind": "Content",
@@ -5978,7 +5657,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/geometry/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "geometry",
@@ -5994,7 +5673,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$3: "
             },
             {
               "kind": "Content",
@@ -6030,7 +5709,7 @@
             {
               "kind": "Reference",
               "text": "ModelBatchItem",
-              "canonicalReference": "cassandra-driver!~ModelBatchItem_2:class"
+              "canonicalReference": "cassandra-driver!~ModelBatchItem:class"
             },
             {
               "kind": "Content",
@@ -6048,7 +5727,7 @@
             {
               "kind": "Reference",
               "text": "TableMappings",
-              "canonicalReference": "cassandra-driver!~TableMappings_2:class"
+              "canonicalReference": "cassandra-driver!~TableMappings:class"
             },
             {
               "kind": "Content",
@@ -6057,7 +5736,7 @@
             {
               "kind": "Reference",
               "text": "DefaultTableMappings",
-              "canonicalReference": "cassandra-driver!~DefaultTableMappings_2:class"
+              "canonicalReference": "cassandra-driver!~DefaultTableMappings:class"
             },
             {
               "kind": "Content",
@@ -6066,14 +5745,14 @@
             {
               "kind": "Reference",
               "text": "UnderscoreCqlToCamelCaseMappings",
-              "canonicalReference": "cassandra-driver!~UnderscoreCqlToCamelCaseMappings_2:class"
+              "canonicalReference": "cassandra-driver!~UnderscoreCqlToCamelCaseMappings:class"
             },
             {
               "kind": "Content",
               "text": ";\n    q: object;\n}"
             }
           ],
-          "fileUrlPath": "lib/mapping/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "mapping",
@@ -6105,7 +5784,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "metadata",
@@ -6121,7 +5800,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$7: "
             },
             {
               "kind": "Content",
@@ -6146,7 +5825,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/metrics/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "metrics",
@@ -6162,69 +5841,195 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$2: "
             },
             {
               "kind": "Content",
-              "text": "{\n    addressResolution: typeof "
+              "text": "{\n    addressResolution: {\n        AddressTranslator: typeof "
             },
             {
               "kind": "Reference",
-              "text": "addressResolution",
-              "canonicalReference": "cassandra-driver!~addressResolution"
+              "text": "AddressTranslator",
+              "canonicalReference": "cassandra-driver!~AddressTranslator:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    loadBalancing: typeof "
+              "text": ";\n        EC2MultiRegionTranslator: typeof "
             },
             {
               "kind": "Reference",
-              "text": "loadBalancing",
-              "canonicalReference": "cassandra-driver!~loadBalancing"
+              "text": "EC2MultiRegionTranslator",
+              "canonicalReference": "cassandra-driver!~EC2MultiRegionTranslator:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    reconnection: typeof "
+              "text": ";\n    };\n    loadBalancing: {\n        AllowListPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "reconnection",
-              "canonicalReference": "cassandra-driver!~reconnection"
+              "text": "AllowListPolicy",
+              "canonicalReference": "cassandra-driver!~AllowListPolicy:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    retry: typeof "
+              "text": ";\n        DCAwareRoundRobinPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "retry",
-              "canonicalReference": "cassandra-driver!~retry"
+              "text": "DCAwareRoundRobinPolicy",
+              "canonicalReference": "cassandra-driver!~DCAwareRoundRobinPolicy:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    speculativeExecution: typeof "
+              "text": ";\n        DefaultLoadBalancingPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "speculativeExecution",
-              "canonicalReference": "cassandra-driver!~speculativeExecution"
+              "text": "DefaultLoadBalancingPolicy",
+              "canonicalReference": "cassandra-driver!~DefaultLoadBalancingPolicy:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    timestampGeneration: typeof "
+              "text": ";\n        LoadBalancingPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "timestampGeneration",
-              "canonicalReference": "cassandra-driver!~timestampGeneration"
+              "text": "LoadBalancingPolicy",
+              "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
             },
             {
               "kind": "Content",
-              "text": ";\n    defaultAddressTranslator: () => "
+              "text": ";\n        RoundRobinPolicy: typeof "
             },
             {
               "kind": "Reference",
-              "text": "addressResolution.AddressTranslator",
+              "text": "RoundRobinPolicy",
+              "canonicalReference": "cassandra-driver!~RoundRobinPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        TokenAwarePolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "TokenAwarePolicy",
+              "canonicalReference": "cassandra-driver!~TokenAwarePolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        WhiteListPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "WhiteListPolicy",
+              "canonicalReference": "cassandra-driver!~WhiteListPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    reconnection: {\n        ReconnectionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        ConstantReconnectionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ConstantReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ConstantReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        ExponentialReconnectionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExponentialReconnectionPolicy",
+              "canonicalReference": "cassandra-driver!~ExponentialReconnectionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    retry: {\n        IdempotenceAwareRetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "IdempotenceAwareRetryPolicy",
+              "canonicalReference": "cassandra-driver!~IdempotenceAwareRetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        FallthroughRetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "FallthroughRetryPolicy",
+              "canonicalReference": "cassandra-driver!~FallthroughRetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        RetryPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "RetryPolicy",
+              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    speculativeExecution: {\n        NoSpeculativeExecutionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "NoSpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~NoSpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        SpeculativeExecutionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "SpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        ConstantSpeculativeExecutionPolicy: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "ConstantSpeculativeExecutionPolicy",
+              "canonicalReference": "cassandra-driver!~ConstantSpeculativeExecutionPolicy:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    timestampGeneration: {\n        TimestampGenerator: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "TimestampGenerator",
+              "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        MonotonicTimestampGenerator: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "MonotonicTimestampGenerator",
+              "canonicalReference": "cassandra-driver!~MonotonicTimestampGenerator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    defaultAddressTranslator: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "AddressTranslator",
               "canonicalReference": "cassandra-driver!~AddressTranslator:class"
             },
             {
@@ -6233,7 +6038,7 @@
             },
             {
               "kind": "Reference",
-              "text": "loadBalancing.LoadBalancingPolicy",
+              "text": "LoadBalancingPolicy",
               "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
             },
             {
@@ -6242,7 +6047,7 @@
             },
             {
               "kind": "Reference",
-              "text": "retry.RetryPolicy",
+              "text": "RetryPolicy",
               "canonicalReference": "cassandra-driver!~RetryPolicy:class"
             },
             {
@@ -6251,7 +6056,7 @@
             },
             {
               "kind": "Reference",
-              "text": "reconnection.ReconnectionPolicy",
+              "text": "ReconnectionPolicy",
               "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
             },
             {
@@ -6260,7 +6065,7 @@
             },
             {
               "kind": "Reference",
-              "text": "speculativeExecution.SpeculativeExecutionPolicy",
+              "text": "SpeculativeExecutionPolicy",
               "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
             },
             {
@@ -6269,7 +6074,7 @@
             },
             {
               "kind": "Reference",
-              "text": "timestampGeneration.TimestampGenerator",
+              "text": "TimestampGenerator",
               "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
             },
             {
@@ -6277,13 +6082,13 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/policies/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "policies",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 26
+            "endIndex": 54
           }
         },
         {
@@ -6297,7 +6102,7 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    Token: typeof import(\"./lib/token\")."
+              "text": "{\n    Token: typeof "
             },
             {
               "kind": "Reference",
@@ -6306,7 +6111,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    TokenRange: typeof import(\"./lib/token\")."
+              "text": ";\n    TokenRange: typeof "
             },
             {
               "kind": "Reference",
@@ -6318,7 +6123,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "token",
@@ -6330,11 +6135,11 @@
         {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!tracker:var",
-          "docComment": "",
+          "docComment": "/**\n * Tracker module.  @module tracker\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$8: "
             },
             {
               "kind": "Content",
@@ -6359,7 +6164,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/tracker/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "tracker",
@@ -6375,7 +6180,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default: "
+              "text": "_default$6: "
             },
             {
               "kind": "Content",
@@ -6388,16 +6193,16 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    distance: {\n        local: number;\n        remote: number;\n        ignored: number;\n    };\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: {\n        v1: number;\n        v2: number;\n        v3: number;\n        v4: number;\n        v5: number;\n        v6: number;\n        dseV1: number;\n        dseV2: number;\n        maxSupported: number;\n        minSupported: number;\n        isDse: (version: number) => boolean;\n        isSupportedCassandra: (version: number) => boolean;\n        isSupported: (version: number) => boolean;\n        supportsPrepareFlags: (version: number) => boolean;\n        supportsKeyspaceInRequest: (version: number) => boolean;\n        supportsResultMetadataId: (version: number) => boolean;\n        supportsPreparedPartitionKey: (version: number) => boolean;\n        supportsSchemaChangeFullMetadata: (version: any) => boolean;\n        supportsContinuousPaging: (version: any) => boolean;\n        supportsPaging: (version: any) => boolean;\n        supportsTimestamp: (version: number) => boolean;\n        supportsNamedParameters: (version: number) => boolean;\n        supportsUnset: (version: number) => boolean;\n        supportsFailureReasonMap: (version: any) => boolean;\n        uses2BytesStreamIds: (version: number) => boolean;\n        uses4BytesCollectionLength: (version: number) => boolean;\n        uses4BytesQueryFlags: (version: number) => boolean;\n        canStartupResponseErrorBeWrapped: (version: number) => boolean;\n        getLowerSupported: (version: number) => number;\n        getHighestCommon: (connection: import(\"../connection\")."
+              "text": ";\n    distance: {\n        local: number;\n        remote: number;\n        ignored: number;\n    };\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: {\n        v1: number;\n        v2: number;\n        v3: number;\n        v4: number;\n        v5: number;\n        v6: number;\n        dseV1: number;\n        dseV2: number;\n        maxSupported: number;\n        minSupported: number;\n        isDse: (version: number) => boolean;\n        isSupportedCassandra: (version: number) => boolean;\n        isSupported: (version: number) => boolean;\n        supportsPrepareFlags: (version: number) => boolean;\n        supportsKeyspaceInRequest: (version: number) => boolean;\n        supportsResultMetadataId: (version: number) => boolean;\n        supportsPreparedPartitionKey: (version: number) => boolean;\n        supportsSchemaChangeFullMetadata: (version: any) => boolean;\n        supportsContinuousPaging: (version: any) => boolean;\n        supportsPaging: (version: any) => boolean;\n        supportsTimestamp: (version: number) => boolean;\n        supportsNamedParameters: (version: number) => boolean;\n        supportsUnset: (version: number) => boolean;\n        supportsFailureReasonMap: (version: any) => boolean;\n        uses2BytesStreamIds: (version: number) => boolean;\n        uses4BytesCollectionLength: (version: number) => boolean;\n        uses4BytesQueryFlags: (version: number) => boolean;\n        canStartupResponseErrorBeWrapped: (version: number) => boolean;\n        getLowerSupported: (version: number) => number;\n        getHighestCommon: (connection: "
             },
             {
               "kind": "Reference",
-              "text": "default",
+              "text": "Connection",
               "canonicalReference": "cassandra-driver!~Connection:class"
             },
             {
               "kind": "Content",
-              "text": ", hosts: import(\"../host\")."
+              "text": ", hosts: "
             },
             {
               "kind": "Reference",
@@ -6491,7 +6296,7 @@
             },
             {
               "kind": "Reference",
-              "text": "Long",
+              "text": "Long__default",
               "canonicalReference": "long!Long:class"
             },
             {
@@ -6523,7 +6328,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    DriverError: typeof import(\"../errors\")."
+              "text": ";\n    DriverError: typeof "
             },
             {
               "kind": "Reference",
@@ -6598,7 +6403,7 @@
               "text": ";\n}"
             }
           ],
-          "fileUrlPath": "lib/types/index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "types",
@@ -6621,7 +6426,7 @@
               "text": "string"
             }
           ],
-          "fileUrlPath": "index.ts",
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
           "isReadonly": true,
           "releaseTag": "Public",
           "name": "version",

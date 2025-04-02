@@ -34,6 +34,7 @@ const readFile = util.promisify(fs.readFile);
  * setting the connection options
  * @param {ClientOptions} options
  * @returns {Promise<void>}
+ * @internal
  */
 async function init(options: ClientOptions): Promise<void> {
   if (!options.cloud) {

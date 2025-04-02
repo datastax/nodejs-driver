@@ -64,7 +64,7 @@ class BaseDseAuthenticator extends Authenticator {
   /**
    * Determines if the name of the authenticator matches DSE 5+
    * @protected
-   * @ignore
+   * @ignore @internal
    */
   protected _isDseAuthenticator(): boolean {
     return this.authenticatorName === dseAuthenticatorName;

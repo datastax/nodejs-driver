@@ -45,7 +45,7 @@ import { ConnectionOptions } from "tls";
 import { Host } from "./host";
 import Metadata from "./metadata";
 import { Request } from "./requests";
-import type { GraphQueryOptions, GraphResultSet } from "./datastax/graph";
+import type { GraphResultSet } from "./datastax/graph";
 import Connection from "./connection";
 import Encoder from "./encoder";
 
@@ -336,6 +336,32 @@ interface ClientOptions {
   sslOptions?: ConnectionOptions;
 }
 
+interface DseClientOptions extends ClientOptions {
+  id?: Uuid;
+  applicationName?: string;
+  applicationVersion?: string;
+  monitorReporting?: { enabled?: boolean };
+  graphOptions?: GraphOptions;
+}
+
+interface GraphQueryOptions extends QueryOptions {
+  graphLanguage?: string;
+  graphName?: string;
+  graphReadConsistency?: typeof types.consistencies;
+  graphSource?: string;
+  graphWriteConsistency?: typeof types.consistencies;
+  graphResults?: string;
+}
+
+type GraphOptions = {
+  language?: string;
+  name?: string;
+  readConsistency?: typeof types.consistencies;
+  readTimeout?: number;
+  source?: string;
+  writeConsistency?: typeof types.consistencies;
+};
+
 /**
  * Query options
  * @typedef {Object} QueryOptions
@@ -566,7 +592,7 @@ class Client extends events.EventEmitter{
    * to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down
    * nodes should be made.
    * </p>
-   * @param {ClientOptions} options The options for this instance.
+   * @param {DseClientOptions} options The options for this instance.
    * @example <caption>Creating a new client instance</caption>
    * const client = new Client({
    *   contactPoints: ['10.0.1.101', '10.0.1.102'],
@@ -581,7 +607,7 @@ class Client extends events.EventEmitter{
    * console.log(row['key']);
    * @constructor
    */
-  constructor(options: ClientOptions) {
+  constructor(options: DseClientOptions) {
     super();
     this.options = clientOptions.extend({ logEmitter: this.emit.bind(this), id: types.Uuid.random() }, options);
     Object.defineProperty(this, 'profileManager', { value: new ProfileManager(this.options) });
@@ -1136,7 +1162,7 @@ class Client extends events.EventEmitter{
    * Waits until that the schema version in all nodes is the same or the waiting time passed.
    * @param {Connection} connection
    * @returns {Promise<boolean>}
-   * @ignore
+   * @ignore @internal
    */
   private async _waitForSchemaAgreement(connection: Connection): Promise<boolean> {
     if (this.hosts.length === 1) {

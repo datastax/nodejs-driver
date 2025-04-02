@@ -61,7 +61,7 @@ const protocolVersion = {
    * Determines whether the protocol version is a DSE-specific protocol version.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   isDse: function(version: number): boolean {
     return ((version >= this.dseV1 && version <= this.dseV2));
@@ -71,7 +71,7 @@ const protocolVersion = {
    * supported by this driver, false otherwise
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   isSupportedCassandra: function(version: number): boolean {
     return (version <= 0x04 && version >= 0x01);
@@ -80,7 +80,7 @@ const protocolVersion = {
    * Determines whether the protocol version is supported by this driver.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   isSupported: function (version: number): boolean {
     return (this.isDse(version) || this.isSupportedCassandra(version));
@@ -90,7 +90,7 @@ const protocolVersion = {
    * Determines whether the protocol includes flags for PREPARE messages.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsPrepareFlags: function (version: number): boolean {
     return (version === this.dseV2);
@@ -99,7 +99,7 @@ const protocolVersion = {
    * Determines whether the protocol supports sending the keyspace as part of PREPARE, QUERY, EXECUTE, and BATCH.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsKeyspaceInRequest: function (version: number): boolean {
     return (version === this.dseV2);
@@ -109,7 +109,7 @@ const protocolVersion = {
    * and `execute` request.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsResultMetadataId: function (version: number): boolean {
     return (version === this.dseV2);
@@ -118,7 +118,7 @@ const protocolVersion = {
    * Determines whether the protocol supports partition key indexes in the `prepared` RESULT responses.
    * @param {Number} version
    * @returns {Boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsPreparedPartitionKey: function (version: number): boolean {
     return (version >= this.v4);
@@ -128,7 +128,7 @@ const protocolVersion = {
    * schema change responses.
    * @param version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsSchemaChangeFullMetadata: function (version): boolean {
     return (version >= this.v3);
@@ -137,7 +137,7 @@ const protocolVersion = {
    * Determines whether the protocol supports continuous paging.
    * @param version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsContinuousPaging: function (version): boolean {
     return (this.isDse(version));
@@ -147,7 +147,7 @@ const protocolVersion = {
    * requests.
    * @param version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsPaging: function (version): boolean {
     return (version >= this.v2);
@@ -156,7 +156,7 @@ const protocolVersion = {
    * Determines whether the protocol supports timestamps parameters in BATCH, QUERY and EXECUTE requests.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsTimestamp: function (version: number): boolean {
     return (version >= this.v3);
@@ -165,7 +165,7 @@ const protocolVersion = {
    * Determines whether the protocol supports named parameters in QUERY and EXECUTE requests.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsNamedParameters: function (version: number): boolean {
     return (version >= this.v3);
@@ -174,7 +174,7 @@ const protocolVersion = {
    * Determines whether the protocol supports unset parameters.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsUnset: function (version: number): boolean {
     return (version >= this.v4);
@@ -183,7 +183,7 @@ const protocolVersion = {
    * Determines whether the protocol provides a reason map for read and write failure errors.
    * @param version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   supportsFailureReasonMap: function (version): boolean {
     return (version >= this.v5);
@@ -192,7 +192,7 @@ const protocolVersion = {
    * Determines whether the protocol supports timestamp and serial consistency parameters in BATCH requests.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   uses2BytesStreamIds: function (version: number): boolean {
     return (version >= this.v3);
@@ -201,7 +201,7 @@ const protocolVersion = {
    * Determines whether the collection length is encoded using 32 bits.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   uses4BytesCollectionLength: function (version: number): boolean {
     return (version >= this.v3);
@@ -210,7 +210,7 @@ const protocolVersion = {
    * Determines whether the QUERY, EXECUTE and BATCH flags are encoded using 32 bits.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   uses4BytesQueryFlags: function (version: number): boolean {
     return (this.isDse(version));
@@ -220,7 +220,7 @@ const protocolVersion = {
    * when is possible to receive such error.
    * @param {Number} version
    * @return {boolean}
-   * @ignore
+   * @ignore @internal
    */
   canStartupResponseErrorBeWrapped: function (version: number): boolean {
     return (version >= this.v4);
@@ -230,7 +230,7 @@ const protocolVersion = {
    * Returns zero when there isn't a lower supported version.
    * @param {Number} version
    * @return {Number}
-   * @ignore
+   * @ignore @internal
    */
   getLowerSupported: function (version: number): number {
     if (version >= this.v5) {

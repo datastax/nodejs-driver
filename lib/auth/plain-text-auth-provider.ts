@@ -61,7 +61,7 @@ class PlainTextAuthProvider extends AuthProvider {
 }
 
 /**
- * @ignore
+ * @ignore @internal
  */
 class PlainTextAuthenticator extends Authenticator {
   username: any;

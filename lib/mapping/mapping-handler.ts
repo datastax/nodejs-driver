@@ -29,7 +29,7 @@ import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".
 const cacheHighWaterMark = 100;
 
 /**
- * @ignore
+ * @ignore @internal
  */
 class MappingHandler {
   private _client: Client;

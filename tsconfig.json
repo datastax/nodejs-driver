@@ -15,7 +15,8 @@
 	  "declarationMap": true,
 	  "moduleDetection": "force",
 	  "resolveJsonModule": true,
-	  "moduleResolution": "nodenext"
+	  "moduleResolution": "nodenext",
+	  "checkJs": true,
 	},
 	"include": [
 		"lib/**/*.ts",

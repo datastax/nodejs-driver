@@ -18,7 +18,7 @@ import { TableMappings, DefaultTableMappings } from "./table-mappings";
 
 /**
  * Represents the parsed user information of the table mappings of a model.
- * @ignore
+ * @ignore @internal
  */
 class ModelMappingInfo {
   keyspace: string;

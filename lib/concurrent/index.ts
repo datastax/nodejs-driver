@@ -16,6 +16,7 @@
 import { Readable, Stream } from "stream";
 import utils from "../utils";
 import Client from "../client";
+import { options } from "../requests";
 
 
 
@@ -64,7 +65,16 @@ import Client from "../client";
  *
  * const result = await executeConcurrent(client, queryAndParameters);
  */
-function executeConcurrent(client: Client, query: string | Array<{ query; params; }>, parameters: Array<Array<any>> | Stream | object, options: { executionProfile?: string; concurrencyLevel?: number; raiseOnFirstError?: boolean; collectResults?: boolean; maxErrors?: number; }): Promise<ResultSetGroup> {
+function executeConcurrent(
+  client: Client,
+  query: string,
+  parameters: any[][]|Readable,
+  options?: Options): Promise<ResultSetGroup>;
+function executeConcurrent(
+  client: Client,
+  queries: Array<{query: string, params: any[]}>,
+  options?: Options): Promise<ResultSetGroup>;
+function executeConcurrent(client: Client, query: string | Array<{query: string, params: any[]}>, parameters?: any[][]|Readable|Options, options?: Options): Promise<ResultSetGroup> {
   if (!client) {
     throw new TypeError('Client instance is not defined');
   }
@@ -99,7 +109,7 @@ type Options = {
 
 /**
  * Wraps the functionality to execute given an Array.
- * @ignore
+ * @ignore @internal
  */
 class ArrayBasedExecutor {
   private _client: Client;
@@ -177,7 +187,7 @@ class ArrayBasedExecutor {
 
 /**
  * Wraps the functionality to execute given a Stream.
- * @ignore
+ * @ignore @internal
  */
 class StreamBasedExecutor {
   private _client: Client;
@@ -313,7 +323,7 @@ class ResultSetGroup {
 
   /**
    * Creates a new instance of {@link ResultSetGroup}.
-   * @ignore
+   * @ignore @internal
    */
   constructor(options) {
     this._collectResults = options.collectResults;
@@ -338,7 +348,7 @@ class ResultSetGroup {
     }
   }
 
-  /** @ignore */
+  /** @ignore @internal */
   setResultItem(index, rs) {
     this.totalExecuted++;
 
@@ -349,7 +359,7 @@ class ResultSetGroup {
 
   /**
    * Internal method to set the error of an execution.
-   * @ignore
+   * @ignore @internal
    */
   setError(index, err) {
     this.totalExecuted++;
@@ -366,7 +376,8 @@ class ResultSetGroup {
 
 export {
   executeConcurrent,
-  ResultSetGroup
+  ResultSetGroup,
+  type Options
 };
 
 export default {

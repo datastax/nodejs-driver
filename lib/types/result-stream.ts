@@ -58,7 +58,7 @@ class ResultStream extends Readable {
   /**
    * Allows for throttling, helping nodejs keep the internal buffers reasonably sized.
    * @param {Function} readNext function that triggers reading the next result chunk
-   * @ignore
+   * @ignore @internal
    */
   _valve(readNext: Function) {
     this._readNext = null;
@@ -110,7 +110,7 @@ class ResultStream extends Readable {
    * // ...
    * // Ask the server to stop pushing rows.
    * stream.cancel();
-   * @ignore
+   * @ignore @internal
    */
   cancel(callback: Function) {
     if (!this._cancelAllowed) {

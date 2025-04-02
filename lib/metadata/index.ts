@@ -135,7 +135,7 @@ class Metadata {
   }
 
   /**
-   * @ignore
+   * @ignore @internal
    * @param {String} partitionerName
    */
   setPartitioner(partitionerName: string) {
@@ -150,7 +150,7 @@ class Metadata {
 
   /**
    * Populates the information regarding primary replica per token, datacenters (+ racks) and sorted token ring.
-   * @ignore
+   * @ignore @internal
    * @param {HostMap} hosts
    */
   buildTokens(hosts: HostMap) {
@@ -443,22 +443,22 @@ class Metadata {
     this._preparedQueries.clear();
   }
 
-  /** @ignore */
+  /** @ignore @internal */
   getPreparedById(id) {
     return this._preparedQueries.getById(id);
   }
 
-  /** @ignore */
+  /** @ignore @internal */
   setPreparedById(info) {
     return this._preparedQueries.setById(info);
   }
 
-  /** @ignore */
+  /** @ignore @internal */
   getAllPrepared() {
     return this._preparedQueries.getAll();
   }
 
-  /** @ignore */
+  /** @ignore @internal */
   _uninitializedError() {
     return new Error('Metadata has not been initialized.  This could only happen if you have not connected yet.');
   }
@@ -955,7 +955,7 @@ type PreparedQueryInfo = {
 
 /**
  * Allows to store prepared queries and retrieval by query or query id.
- * @ignore
+ * @ignore @internal
  */
 class PreparedQueries {
   length: number;

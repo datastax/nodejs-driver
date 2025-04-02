@@ -5,7 +5,6 @@ import * as Long from 'long';
 import Long__default from 'long';
 import { Readable } from 'stream';
 import { Socket } from 'net';
-import { Stream } from 'stream';
 
 /* Excluded from this release type: AddressResolver */
 
@@ -208,25 +207,25 @@ declare type ArrayOrObject = any[] | {
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-declare function asDouble(value: any): GraphTypeWrapper;
+declare function asDouble(value: number): object;
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-declare function asFloat(value: any): GraphTypeWrapper;
+declare function asFloat(value: number): object;
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is an int
  * @memberOf module:datastax/graph
  */
-declare function asInt(value: any): GraphTypeWrapper;
+declare function asInt(value: number): object;
 
 /**
  * Wraps a Date or null value to hint the client driver that the data type of the value is a timestamp
  * @memberOf module:datastax/graph
  */
-declare function asTimestamp(value: any): GraphTypeWrapper;
+declare function asTimestamp(value: Date): object;
 
 /**
  * Wraps an Object or null value to hint the client driver that the data type of the value is a user-defined type.
@@ -238,7 +237,7 @@ declare function asUdt(value: object, udtInfo: {
     name: string;
     keyspace: string;
     fields: Array<any>;
-}): UdtGraphWrapper;
+}): object;
 
 declare const asyncIteratorSymbol: unique symbol;
 
@@ -573,7 +572,7 @@ export declare class Client extends EventEmitter.EventEmitter {
      * to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down
      * nodes should be made.
      * </p>
-     * @param {ClientOptions} options The options for this instance.
+     * @param {DseClientOptions} options The options for this instance.
      * @example <caption>Creating a new client instance</caption>
      * const client = new Client({
      *   contactPoints: ['10.0.1.101', '10.0.1.102'],
@@ -588,7 +587,7 @@ export declare class Client extends EventEmitter.EventEmitter {
      * console.log(row['key']);
      * @constructor
      */
-    constructor(options: ClientOptions);
+    constructor(options: DseClientOptions);
     /**
      * Emitted when a new host is added to the cluster.
      * <ul>
@@ -809,13 +808,7 @@ export declare class Client extends EventEmitter.EventEmitter {
     shutdown(callback?: Function): Promise<any>;
     /** @private */
     private _shutdown;
-    /**
-     * Waits until that the schema version in all nodes is the same or the waiting time passed.
-     * @param {Connection} connection
-     * @returns {Promise<boolean>}
-     * @ignore
-     */
-    private _waitForSchemaAgreement;
+    /* Excluded from this release type: _waitForSchemaAgreement */
     /* Excluded from this release type: handleSchemaAgreementAndRefresh */
     /**
      * Connects and handles the execution of prepared and simple statements.
@@ -2815,6 +2808,16 @@ declare class DriverInternalError extends DriverError {
     constructor(message: string);
 }
 
+declare interface DseClientOptions extends ClientOptions {
+    id?: Uuid;
+    applicationName?: string;
+    applicationVersion?: string;
+    monitorReporting?: {
+        enabled?: boolean;
+    };
+    graphOptions?: GraphOptions;
+}
+
 /**
  * @classdesc
  * AuthProvider that provides GSSAPI authenticator instances for clients to connect
@@ -2828,9 +2831,9 @@ declare class DriverInternalError extends DriverError {
  */
 declare class DseGssapiAuthProvider extends AuthProvider {
     private _kerberos;
-    authorizationId: string;
-    service: string;
-    hostNameResolver: Function;
+    private authorizationId;
+    private service;
+    private hostNameResolver;
     /**
      * Creates a new instance of <code>DseGssapiAuthProvider</code>.
      * @classdesc
@@ -2881,7 +2884,7 @@ declare class DseGssapiAuthProvider extends AuthProvider {
      * @param {String} ip IP address to resolve.
      * @param {Function} callback The callback function with <code>err</code> and <code>hostname</code> arguments.
      */
-    static lookupServiceResolver(ip: string, callback: Function): void;
+    private static lookupServiceResolver;
     /**
      * Performs a reverse DNS query that resolves an IPv4 or IPv6 address to a hostname.
      * @param {String} ip IP address to resolve.
@@ -3074,9 +3077,9 @@ declare class EC2MultiRegionTranslator extends AddressTranslator {
  * @memberOf module:datastax/graph
  */
 declare class Edge extends Element {
-    outV: any;
+    outV: Vertex;
     outVLabel: string;
-    inV: any;
+    inV: Vertex;
     inVLabel: string;
     properties: {
         [s: string]: any;
@@ -3090,7 +3093,7 @@ declare class Edge extends Element {
      * @param {String} inVLabel
      * @param {Object<string, Property>} properties
      */
-    constructor(id: any, outV: any, outVLabel: string, label: string, inV: any, inVLabel?: string, properties?: {
+    constructor(id: any, outV: Vertex, outVLabel: string, label: string, inV: Vertex, inVLabel?: string, properties?: {
         [s: string]: Property;
     });
     private adaptProperties;
@@ -3101,7 +3104,7 @@ declare class Edge extends Element {
  * @abstract
  * @memberOf module:datastax/graph
  */
-declare class Element {
+declare abstract class Element {
     id: any;
     label: string;
     /**
@@ -3418,16 +3421,12 @@ export declare const errors: {
  *
  * const result = await executeConcurrent(client, queryAndParameters);
  */
-declare function executeConcurrent(client: Client, query: string | Array<{
-    query: any;
-    params: any;
-}>, parameters: Array<Array<any>> | Stream | object, options: {
-    executionProfile?: string;
-    concurrencyLevel?: number;
-    raiseOnFirstError?: boolean;
-    collectResults?: boolean;
-    maxErrors?: number;
-}): Promise<ResultSetGroup>;
+declare function executeConcurrent(client: Client, query: string, parameters: any[][] | Readable, options?: Options): Promise<ResultSetGroup>;
+
+declare function executeConcurrent(client: Client, queries: Array<{
+    query: string;
+    params: any[];
+}>, options?: Options): Promise<ResultSetGroup>;
 
 /**
  * Writes a execute query (given a prepared queryId)
@@ -3476,12 +3475,7 @@ export declare class ExecutionOptions {
      * Creates a new instance of {@link ExecutionOptions}.
      */
     constructor();
-    /**
-     * Creates an empty instance, where all methods return undefined, used internally.
-     * @ignore
-     * @return {ExecutionOptions}
-     */
-    static empty(): ExecutionOptions;
+    /* Excluded from this release type: empty */
     /**
      * Determines if the stack trace before the query execution should be maintained.
      * @abstract
@@ -3583,12 +3577,7 @@ export declare class ExecutionOptions {
      * @returns {Buffer}
      */
     getPageState(): Buffer;
-    /**
-     * Internal method that gets the preferred host.
-     * @abstract
-     * @ignore
-     */
-    getPreferredHost(): any;
+    /* Excluded from this release type: getPreferredHost */
     /**
      * Gets the query options as provided to the execution method without setting the default values.
      * @returns {QueryOptions}
@@ -3609,38 +3598,16 @@ export declare class ExecutionOptions {
      * @returns {RetryPolicy} A <code>RetryPolicy</code> instance, it can't be <code>undefined</code>.
      */
     getRetryPolicy(): RetryPolicy;
-    /**
-     * Internal method to obtain the row callback, for "by row" results.
-     * @abstract
-     * @ignore
-     */
-    getRowCallback(): any;
-    /**
-     * Internal method to get or generate a timestamp for the request execution.
-     * @ignore
-     * @returns {Long|null}
-     */
-    getOrGenerateTimestamp(): Long__default | null;
-    /**
-     * Gets the index of the parameters that are part of the partition key to determine the routing.
-     * @abstract
-     * @ignore
-     * @returns {Array}
-     */
-    getRoutingIndexes(): Array<any>;
+    /* Excluded from this release type: getRowCallback */
+    /* Excluded from this release type: getOrGenerateTimestamp */
+    /* Excluded from this release type: getRoutingIndexes */
     /**
      * Gets the partition key(s) to determine which coordinator should be used for the query.
      * @abstract
      * @returns {Buffer|Array<Buffer>}
      */
     getRoutingKey(): Buffer | Array<Buffer>;
-    /**
-     * Gets the array of the parameters names that are part of the partition key to determine the
-     * routing. Only valid for non-prepared requests.
-     * @abstract
-     * @ignore
-     */
-    getRoutingNames(): any;
+    /* Excluded from this release type: getRoutingNames */
     /**
      * Gets the the consistency level to be used for the serial phase of conditional updates.
      * @abstract
@@ -3654,43 +3621,12 @@ export declare class ExecutionOptions {
      * @returns {Number|Long|undefined|null}
      */
     getTimestamp(): number | Long__default | undefined | null;
-    /**
-     * @param {Array} hints
-     * @abstract
-     * @ignore
-     */
-    setHints(hints: Array<any>): any;
-    /**
-     * Sets the keyspace for the execution.
-     * @ignore
-     * @abstract
-     * @param {String} keyspace
-     */
-    setKeyspace(keyspace: string): any;
-    /**
-     * @abstract
-     * @ignore
-     */
-    setPageState(pageState: Buffer): any;
-    /**
-     * Internal method that sets the preferred host.
-     * @abstract
-     * @ignore
-     */
-    setPreferredHost(host: Host): any;
-    /**
-     * Sets the index of the parameters that are part of the partition key to determine the routing.
-     * @param {Array} routingIndexes
-     * @abstract
-     * @ignore
-     */
-    setRoutingIndexes(routingIndexes: Array<any>): any;
-    /**
-     * Sets the routing key.
-     * @abstract
-     * @ignore
-     */
-    setRoutingKey(value: any): any;
+    /* Excluded from this release type: setHints */
+    /* Excluded from this release type: setKeyspace */
+    /* Excluded from this release type: setPageState */
+    /* Excluded from this release type: setPreferredHost */
+    /* Excluded from this release type: setRoutingIndexes */
+    /* Excluded from this release type: setRoutingKey */
 }
 
 /**
@@ -4038,66 +3974,13 @@ declare class Geometry {
         readonly LineString: 2;
         readonly Polygon: 3;
     };
-    /**
-     * @protected
-     * @param {Number} code
-     * @returns {String}
-     * @ignore
-     */
-    static getEndianness(code: number): string;
-    /**
-     * Reads an int32 from binary representation based on endianness.
-     * @protected
-     * @param {Buffer} buffer
-     * @param {String} endianness
-     * @param {Number} offset
-     * @returns Number
-     * @ignore
-     */
-    static readInt32(buffer: Buffer, endianness: string, offset: number): number;
-    /**
-     * Reads a 64-bit double from binary representation based on endianness.
-     * @protected
-     * @param {Buffer} buffer
-     * @param {String} endianness
-     * @param {Number} offset
-     * @returns Number
-     * @ignore
-     */
-    static readDouble(buffer: Buffer, endianness: string, offset: number): number;
-    /**
-     * Writes a 32-bit integer to binary representation based on OS endianness.
-     * @protected
-     * @param {Number} val
-     * @param {Buffer} buffer
-     * @param {Number} offset
-     * @ignore
-     */
-    writeInt32(val: number, buffer: Buffer, offset: number): void;
-    /**
-     * Writes a 64-bit double to binary representation based on OS endianness.
-     * @protected
-     * @param {Number} val
-     * @param {Buffer} buffer
-     * @param {Number} offset
-     * @ignore
-     */
-    writeDouble(val: number, buffer: Buffer, offset: number): void;
-    /**
-     * Writes an 8-bit int that represents the OS endianness.
-     * @protected
-     * @param {Buffer} buffer
-     * @param {Number} offset
-     * @ignore
-     */
-    writeEndianness(buffer: Buffer, offset: number): void;
-    /**
-     * Returns true if the serialization must be done in big-endian format.
-     * Designed to allow injection of OS endianness.
-     * @abstract
-     * @ignore
-     */
-    useBESerialization(): boolean;
+    /* Excluded from this release type: getEndianness */
+    /* Excluded from this release type: readInt32 */
+    /* Excluded from this release type: readDouble */
+    /* Excluded from this release type: writeInt32 */
+    /* Excluded from this release type: writeDouble */
+    /* Excluded from this release type: writeEndianness */
+    /* Excluded from this release type: useBESerialization */
 }
 
 /**
@@ -4115,16 +3998,25 @@ export declare const geometry: {
     Geometry: typeof Geometry;
 };
 
-declare function getCustomSerializers(): {};
+/* Excluded from this release type: getCustomSerializers */
 
 /* Excluded from this release type: getDataTypeNameByCode */
+
+declare type GraphOptions = {
+    language?: string;
+    name?: string;
+    readConsistency?: typeof types.consistencies;
+    readTimeout?: number;
+    source?: string;
+    writeConsistency?: typeof types.consistencies;
+};
 
 declare interface GraphQueryOptions extends QueryOptions {
     graphLanguage?: string;
     graphName?: string;
-    graphReadConsistency?: typeof consistencies;
+    graphReadConsistency?: typeof types.consistencies;
     graphSource?: string;
-    graphWriteConsistency?: typeof consistencies;
+    graphWriteConsistency?: typeof types.consistencies;
     graphResults?: string;
 }
 
@@ -4143,7 +4035,7 @@ declare interface GraphQueryOptions extends QueryOptions {
  * const vertex = result.first();
  * @alias module:datastax/graph~GraphResultSet
  */
-declare class GraphResultSet {
+declare class GraphResultSet implements Iterable<any> {
     info: typeof ResultSet.prototype.info;
     length: number;
     pageState: string;
@@ -4317,18 +4209,10 @@ declare class HostMap extends EventEmitter.EventEmitter {
      * @fires HostMap#add
      */
     set(key: string, value: Host): Host;
-    /**
-     * Returns a shallow copy of a portion of the items into a new array object.
-     * Backward-compatibility.
-     * @param {Number} [begin]
-     * @param {Number} [end]
-     * @returns {Array}
-     * @ignore
-     */
-    slice(begin: number, end: number): Array<any>;
+    /* Excluded from this release type: slice */
     /**
      * Deprecated: Use set() instead.
-     * @ignore
+     * @ignore @ignore
      * @deprecated
      */
     push(k: any, v: any): void;
@@ -5201,11 +5085,7 @@ declare class LocalTime {
      * @returns {String}
      */
     toJSON(): string;
-    /**
-     * @returns {Array.<Number>}
-     * @ignore
-     */
-    private _getParts;
+    /* Excluded from this release type: _getParts */
 }
 
 /**
@@ -5320,94 +5200,7 @@ declare type MappingExecutionOptions = {
     pageState?: number;
 };
 
-/**
- * @ignore
- */
-declare class MappingHandler {
-    private _client;
-    private _cache;
-    info: ModelMappingInfo;
-    /**
-     * @param {Client} client
-     * @param {ModelMappingInfo} mappingInfo
-     */
-    constructor(client: Client, mappingInfo: ModelMappingInfo);
-    /**
-     * Gets a function to be used to execute SELECT the query using the document.
-     * @param {Object} doc
-     * @param {{fields, orderBy, limit}} docInfo
-     * @param {Boolean} allPKsDefined Determines whether all primary keys must be defined in the doc for the query to
-     * be valid.
-     * @return {Promise<Function>}
-     */
-    getSelectExecutor(doc: object, docInfo: FindDocInfo, allPKsDefined: boolean): Promise<Function>;
-    getSelectAllExecutor(docInfo: any): any;
-    /**
-     * Executes a SELECT query and returns the adapted results.
-     * When a result adapter is not yet created, it gets a new one and caches it.
-     * @private
-     */
-    private _executeSelect;
-    /**
-     * Gets a function to be used to execute INSERT the query using the document.
-     * @param {Object} doc
-     * @param {{ifNotExists, ttl, fields}} docInfo
-     * @return {Promise<Function>}
-     */
-    getInsertExecutor(doc: object, docInfo: InsertDocInfo): Promise<Function>;
-    /**
-     * Creates an Array containing the query and the params getter function for each table affected by the INSERT.
-     * @param {Array<String>} docKeys
-     * @param {Object} doc
-     * @param {{ifNotExists, ttl, fields}} docInfo
-     * @returns {Promise<Array<{query, paramsGetter}>>}
-     */
-    createInsertQueries(docKeys: Array<string>, doc: object, docInfo: InsertDocInfo): Promise<Array<{
-        query: any;
-        paramsGetter: any;
-    }>>;
-    /**
-     * Gets a function to be used to execute the UPDATE queries with the provided document.
-     * @param {Object} doc
-     * @param {{ifExists, when, ttl, fields}} docInfo
-     * @return {Promise<Function>}
-     */
-    getUpdateExecutor(doc: object, docInfo: UpdateDocInfo): Promise<Function>;
-    /**
-     * Creates an Array containing the query and the params getter function for each table affected by the UPDATE.
-     * @param {Array<String>} docKeys
-     * @param {Object} doc
-     * @param {Object} docInfo
-     * @returns {Promise<Array<{query, paramsGetter, isIdempotent}>>}
-     */
-    createUpdateQueries(docKeys: Array<string>, doc: object, docInfo: UpdateDocInfo): Promise<Array<{
-        query: any;
-        paramsGetter: any;
-        isIdempotent: any;
-    }>>;
-    /**
-     * Gets a function to be used to execute the DELETE queries with the provided document.
-     * @param {Object} doc
-     * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
-     * @return {Promise<Function>}
-     */
-    getDeleteExecutor(doc: object, docInfo: RemoveDocInfo): Promise<Function>;
-    /**
-     * Creates an Array containing the query and the params getter function for each table affected by the DELETE.
-     * @param {Array<String>} docKeys
-     * @param {Object} doc
-     * @param {{when, ifExists, fields, deleteOnlyColumns}} docInfo
-     * @returns {Promise<Array<{query, paramsGetter}>>}
-     */
-    createDeleteQueries(docKeys: Array<string>, doc: object, docInfo: RemoveDocInfo): Promise<Array<{
-        query: any;
-        paramsGetter: any;
-    }>>;
-    getExecutorFromQuery(query: any, paramsHandler: any, commonExecutionOptions: any): (doc: any, executionOptions: any) => Promise<Result>;
-    private _setSingleExecutor;
-    private _setBatchExecutor;
-    private _validateCacheLength;
-}
+/* Excluded from this release type: MappingHandler */
 
 declare type MappingOptions = {
     models: {
@@ -5479,17 +5272,8 @@ declare class Metadata {
      */
     isDbaas(): boolean;
     /* Excluded from this release type: setProductTypeAsDbaas */
-    /**
-     * @ignore
-     * @param {String} partitionerName
-     */
-    setPartitioner(partitionerName: string): Murmur3Tokenizer | RandomTokenizer | ByteOrderedTokenizer;
-    /**
-     * Populates the information regarding primary replica per token, datacenters (+ racks) and sorted token ring.
-     * @ignore
-     * @param {HostMap} hosts
-     */
-    buildTokens(hosts: HostMap): void;
+    /* Excluded from this release type: setPartitioner */
+    /* Excluded from this release type: buildTokens */
     /**
      * Gets the keyspace metadata information and updates the internal state of the driver.
      * <p>
@@ -5564,14 +5348,10 @@ declare class Metadata {
      * Following calls to the Client using the prepare flag will re-prepare the statements.
      */
     clearPrepared(): void;
-    /** @ignore */
-    getPreparedById(id: any): any;
-    /** @ignore */
-    setPreparedById(info: any): void;
-    /** @ignore */
-    getAllPrepared(): PreparedQueryInfo[];
-    /** @ignore */
-    _uninitializedError(): Error;
+    /* Excluded from this release type: getPreparedById */
+    /* Excluded from this release type: setPreparedById */
+    /* Excluded from this release type: getAllPrepared */
+    /* Excluded from this release type: _uninitializedError */
     /**
      * Gets the definition of an user-defined type.
      * <p>
@@ -5821,11 +5601,7 @@ declare class ModelBatchItem {
      * @param {Tree} cache
      */
     constructor(doc: object, docInfo: DocInfo, handler: MappingHandler, cache: Tree);
-    /**
-     * @ignore
-     * @returns <Promise<Array>>
-     */
-    getQueries(): any;
+    /* Excluded from this release type: getQueries */
     /**
      * Gets the cache key for this item.
      * @abstract
@@ -5851,17 +5627,7 @@ declare class ModelBatchItem {
 declare class ModelBatchMapper {
     private _handler;
     private _cache;
-    /**
-     * Creates a new instance of model batch mapper.
-     * <p>
-     *   An instance of this class is exposed as a singleton in the <code>batching</code> field of the
-     *   [ModelMapper]{@link module:mapping~ModelMapper}. Note that new instances should not be create with this
-     *   constructor.
-     * </p>
-     * @param {MappingHandler} handler
-     * @ignore
-     */
-    constructor(handler: MappingHandler);
+    /* Excluded from this release type: __constructor */
     /**
      * Gets a [ModelBatchItem]{@link module:mapping~ModelBatchItem} containing the queries for the INSERT mutation to be
      * used in a batch execution.
@@ -6173,44 +5939,7 @@ declare class ModelMapper {
     mapWithQuery(query: string, paramsHandler: Function, executionOptions: object | string): Function;
 }
 
-/**
- * Represents the parsed user information of the table mappings of a model.
- * @ignore
- */
-declare class ModelMappingInfo {
-    keyspace: string;
-    tables: {
-        name: any;
-        isView: any;
-    }[];
-    _mappings: TableMappings;
-    _columns: Map<string, ModelColumnInfo>;
-    _documentProperties: Map<any, any>;
-    /**
-     * @param {String} keyspace
-     * @param {Array<{name, isView}>} tables
-     * @param {TableMappings} mappings
-     * @param {Map<String,ModelColumnInfo>} columns
-     */
-    constructor(keyspace: string, tables: Array<{
-        name: any;
-        isView: any;
-    }>, mappings: TableMappings, columns: Map<string, ModelColumnInfo>);
-    getColumnName(propName: any): any;
-    getPropertyName(columnName: any): any;
-    getFromModelFn(propName: any): any;
-    getToModelFn(columnName: any): any;
-    newInstance(): object;
-    /**
-     * Parses the user options into a map of model names and ModelMappingInfo.
-     * @param {MappingOptions} options
-     * @param {String} currentKeyspace
-     * @returns {Map<String, ModelMappingInfo>}
-     */
-    static parse(options: MappingOptions, currentKeyspace: string): Map<string, ModelMappingInfo>;
-    static _create(modelName: any, currentKeyspace: any, modelOptions: any): ModelMappingInfo;
-    static createDefault(modelName: any, currentKeyspace: any): ModelMappingInfo;
-}
+/* Excluded from this release type: ModelMappingInfo */
 
 declare type ModelOptions = {
     tables?: string[] | ModelTables[];
@@ -6336,103 +6065,13 @@ declare class Murmur3Tokenizer extends Tokenizer {
     stringify(token: any): string;
 }
 
-/**
- * Constructs a signed int64 representation.
- * @ignore
- */
-declare class MutableLong {
-    _arr: number[];
-    constructor(b00?: any, b16?: any, b32?: any, b48?: any);
-    static one: MutableLong;
-    toString(): string;
-    /**
-     * Compares this value with the provided value.
-     * @param {MutableLong} other
-     * @return {number}
-     */
-    compare(other: MutableLong): number;
-    _compareBits(other: MutableLong): 0 | 1 | -1;
-    getUint16(index: any): number;
-    getLowBitsUnsigned(): number;
-    getHighBitsUnsigned(): number;
-    toNumber(): number;
-    /**
-     * Performs the bitwise NOT of this value.
-     * @return {MutableLong}
-     */
-    not(): MutableLong;
-    add(addend: any): this;
-    shiftLeft(numBits: any): this;
-    shiftRightUnsigned(numBits: any): this;
-    or(other: any): this;
-    /**
-     * Returns the bitwise XOR of this Long and the given one.
-     * @param {MutableLong} other
-     * @returns {MutableLong} this instance.
-     */
-    xor(other: MutableLong): MutableLong;
-    clone(): MutableLong;
-    /**
-     * Performs the product of this and the specified Long.
-     * @param {MutableLong} multiplier
-     * @returns {MutableLong} this instance.
-     */
-    multiply(multiplier: MutableLong): MutableLong;
-    toZero(): this;
-    isZero(): boolean;
-    isNegative(): boolean;
-    /**
-     * Negates this value.
-     * @return {MutableLong}
-     */
-    negate(): MutableLong;
-    equals(other: any): boolean;
-    toImmutable(): Long__default;
-    static fromNumber(value: any): any;
-    static fromBits(low32Bits: any, high32Bits: any): MutableLong;
-    /**
-     * Returns a Long representation of the given string, written using the specified radix.
-     * @param {String} str
-     * @param {Number} [radix]
-     * @return {MutableLong}
-     */
-    static fromString(str: string, radix?: number): MutableLong;
-}
+/* Excluded from this release type: MutableLong */
 
-/**
- * An authenticator throws an error when authentication flow is started.
- * @ignore
- */
-declare class NoAuthAuthenticator extends Authenticator {
-    endpoint: any;
-    constructor(endpoint: any);
-    initialResponse(callback: any): void;
-}
+/* Excluded from this release type: NoAuthAuthenticator */
 
-/**
- * Internal authentication provider that is used when no provider has been set by the user.
- * @ignore
- */
-declare class NoAuthProvider extends AuthProvider {
-    newAuthenticator(endpoint: any, name: any): TransitionalModePlainTextAuthenticator | NoAuthAuthenticator;
-}
+/* Excluded from this release type: NoAuthProvider */
 
-/**
- * Represents a tree node where the key is composed by 1 or more strings.
- * @ignore
- */
-declare class Node extends EventEmitter {
-    key: string[];
-    value: object;
-    edges: any[];
-    /**
-     * Creates a new instance of {@link Node}.
-     * @param {Array<String>} key
-     * @param {Object} value
-     * @param {Array} [edges]
-     */
-    constructor(key: Array<string>, value: object, edges?: Array<any>);
-}
+/* Excluded from this release type: Node */
 
 /**
  * Represents an error when a query cannot be performed because no host is available or could be reached by the driver.
@@ -6565,6 +6204,14 @@ declare class OperationTimedOutError extends DriverError {
     constructor(message: string, host?: string);
 }
 
+declare type Options = {
+    collectResults?: boolean;
+    concurrencyLevel?: number;
+    executionProfile?: string;
+    maxErrors?: number;
+    raiseOnFirstError?: boolean;
+};
+
 declare type OtherCustomColumnInfo = {
     code: (typeof dataTypes.custom);
     info: string;
@@ -6579,25 +6226,16 @@ declare type OtherCustomColumnInfo = {
  * @memberOf module:datastax/graph
  */
 declare class Path {
-    labels: Array<any>;
-    objects: Array<any>;
+    labels: any[];
+    objects: any[];
     /**
-     * @param {Array} labels
-     * @param {Array} objects
+     * @param {any[]} labels
+     * @param {any[]} objects
      */
-    constructor(labels: Array<any>, objects: Array<any>);
+    constructor(labels: any[], objects: any[]);
 }
 
-/**
- * @ignore
- */
-declare class PlainTextAuthenticator extends Authenticator {
-    username: any;
-    password: any;
-    constructor(username: any, password: any);
-    initialResponse(callback: any): void;
-    evaluateChallenge(challenge: any, callback: any): void;
-}
+/* Excluded from this release type: PlainTextAuthenticator */
 
 /**
  * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
@@ -6810,61 +6448,7 @@ declare type PreparedQueryInfo = {
     meta?: DataCollection;
 } & EventEmitter_2;
 
-/**
- * Contains the logic to handle the different execution profiles of a {@link Client}.
- * @ignore
- */
-declare class ProfileManager {
-    private _profiles;
-    private _defaultConfiguredRetryPolicy;
-    private _loadBalancingPolicies;
-    private _profilesMap;
-    private _customPayloadCache;
-    private _graphOptionsCache;
-    private _defaultProfile;
-    /**
-     * @param {ClientOptions} options
-     */
-    constructor(options: ClientOptions);
-    /**
-     * @param {Client} client
-     * @param {HostMap} hosts
-     */
-    init(client: Client, hosts: HostMap): Promise<void>;
-    /**
-     * Uses the load-balancing policies to get the relative distance to the host and return the closest one.
-     * @param {Host} host
-     */
-    getDistance(host: Host): number;
-    /**
-     * @param {String|ExecutionProfile} name
-     * @returns {ExecutionProfile|undefined} It returns the execution profile by name or the default profile when name is
-     * undefined. It returns undefined when the profile does not exist.
-     */
-    getProfile(name: string | ExecutionProfile): ExecutionProfile | undefined;
-    /** @returns {ExecutionProfile} */
-    getDefault(): ExecutionProfile;
-    /** @returns {LoadBalancingPolicy} */
-    getDefaultLoadBalancing(): LoadBalancingPolicy;
-    /**
-     * Gets the cached default graph options for a given profile. If it doesn't exist, it creates new options using the
-     * handler and inserts it into the cache
-     * @param {ExecutionProfile} profile
-     * @param {Function} createHandler
-     */
-    getOrCreateGraphOptions(profile: ExecutionProfile, createHandler: Function): any;
-    /**
-     * @private
-     * @param {ClientOptions} options
-     */
-    _setDefault(options: ClientOptions): void;
-    /**
-     * Gets all the execution profiles currently defined.
-     * @returns {Array.<ExecutionProfile>}
-     */
-    getAll(): Array<ExecutionProfile>;
-    getDefaultConfiguredRetryPolicy(): any;
-}
+/* Excluded from this release type: ProfileManager */
 
 /**
  * Represents a property.
@@ -7535,18 +7119,9 @@ declare class ResultSetGroup {
     totalExecuted: number;
     errors: Error[];
     resultItems: any[];
-    /**
-     * Creates a new instance of {@link ResultSetGroup}.
-     * @ignore
-     */
-    constructor(options: any);
-    /** @ignore */
-    setResultItem(index: any, rs: any): void;
-    /**
-     * Internal method to set the error of an execution.
-     * @ignore
-     */
-    setError(index: any, err: any): void;
+    /* Excluded from this release type: __constructor */
+    /* Excluded from this release type: setResultItem */
+    /* Excluded from this release type: setError */
 }
 
 /** @module types */
@@ -7566,27 +7141,11 @@ declare class ResultStream extends Readable {
     _readNext: Function;
     constructor(opt: any);
     _read(): void;
-    /**
-     * Allows for throttling, helping nodejs keep the internal buffers reasonably sized.
-     * @param {Function} readNext function that triggers reading the next result chunk
-     * @ignore
-     */
-    _valve(readNext: Function): void;
+    /* Excluded from this release type: _valve */
     add(chunk: any): number;
     _checkAboveHighWaterMark(): void;
     _checkBelowHighWaterMark(): void;
-    /**
-     * When continuous paging is enabled, allows the client to notify to the server to stop pushing further pages.
-     * <p>Note: This is not part of the public API yet.</p>
-     * @param {Function} [callback] The cancel method accepts an optional callback.
-     * @example <caption>Cancelling a continuous paging execution</caption>
-     * const stream = client.stream(query, params, { prepare: true, continuousPaging: true });
-     * // ...
-     * // Ask the server to stop pushing rows.
-     * stream.cancel();
-     * @ignore
-     */
-    cancel(callback: Function): any;
+    /* Excluded from this release type: cancel */
     /* Excluded from this release type: setHandlers */
 }
 
@@ -8405,34 +7964,9 @@ export declare const tracker: {
     RequestLogger: typeof RequestLogger;
 };
 
-/**
- * Authenticator that accounts for DSE authentication configured with transitional mode: normal.
- *
- * In this situation, the client is allowed to connect without authentication, but DSE
- * would still send an AUTHENTICATE response. This Authenticator handles this situation
- * by sending back a dummy credential.
- */
-declare class TransitionalModePlainTextAuthenticator extends PlainTextAuthenticator {
-    constructor();
-}
+/* Excluded from this release type: TransitionalModePlainTextAuthenticator */
 
-/**
- * A radix tree where each node contains a key, a value and edges.
- * @ignore
- */
-declare class Tree extends Node {
-    length: number;
-    constructor();
-    /**
-     * Gets the existing item in the tree or creates a new one with the value provided by valueHandler
-     * @param {Iterator} keyIterator
-     * @param {Function} valueHandler
-     * @return {Object}
-     */
-    getOrCreate<T extends object>(keyIterator: Iterator<string>, valueHandler: () => T): T;
-    private _createBranch;
-    _onItemAdded(): void;
-}
+/* Excluded from this release type: Tree */
 
 /** @module types */
 /**
@@ -8872,15 +8406,15 @@ export declare const version: string;
  */
 declare class Vertex extends Element {
     properties: {
-        [s: string]: Array<any>;
+        [key: string]: any[];
     };
     /**
      * @param id
      * @param {String} label
-     * @param {Object<string, Array>} properties
+     * @param {{ [key: string]: any[] }} properties
      */
     constructor(id: any, label: string, properties?: {
-        [s: string]: Array<any>;
+        [key: string]: any[];
     });
 }
 
@@ -8892,7 +8426,7 @@ declare class Vertex extends Element {
 declare class VertexProperty extends Element {
     value: any;
     key: string;
-    properties: object;
+    properties: any;
     /**
      * @param id
      * @param {String} label

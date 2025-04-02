@@ -4,145 +4,28 @@
 
 ```ts
 
-import { AddressTranslator as AddressTranslator_2 } from './lib/policies/address-resolution';
-import { ArgumentError as ArgumentError_2 } from './lib/errors';
-import { asDouble } from './lib/datastax/graph';
-import { asDouble as asDouble_2 } from './graph/wrappers';
-import { asFloat } from './lib/datastax/graph';
-import { asFloat as asFloat_2 } from './graph/wrappers';
-import { asInt } from './lib/datastax/graph';
-import { asInt as asInt_2 } from './graph/wrappers';
-import { asTimestamp } from './lib/datastax/graph';
-import { asTimestamp as asTimestamp_2 } from './graph/wrappers';
-import { asUdt } from './lib/datastax/graph';
-import { asUdt as asUdt_2 } from './graph/wrappers';
-import { AuthenticationError as AuthenticationError_2 } from './lib/errors';
-import { Authenticator as Authenticator_2 } from './lib/auth/provider';
-import { AuthProvider as AuthProvider_2 } from './lib/auth/provider';
-import { BatchRequest } from './requests';
-import { BusyConnectionError as BusyConnectionError_2 } from './lib/errors';
-import { ByteOrderedTokenizer } from '../tokenizer';
-import { ClientOptions as ClientOptions_2 } from './lib/client';
 import { ConnectionOptions } from 'tls';
-import { DateRange } from './lib/datastax/index';
-import { default as default_10 } from './lib/types/local-date';
-import { default as default_11 } from './lib/types/local-time';
-import { default as default_12 } from 'long';
-import { default as default_13 } from './lib/types/result-set';
-import { default as default_14 } from './lib/types/result-stream';
-import { default as default_15 } from './lib/types/row';
-import { default as default_16 } from './lib/types/time-uuid';
-import { default as default_17 } from './lib/types/tuple';
-import { default as default_18 } from './lib/types/uuid';
-import { default as default_19 } from './lib/types/vector';
-import { default as default_2 } from './operation-state';
-import { default as default_20 } from './lib/auth/dse-gssapi-auth-provider';
-import { default as default_21 } from './lib/auth/dse-plain-text-auth-provider';
-import { default as default_22 } from './lib/auth/no-auth-provider';
-import { default as default_23 } from './lib/mapping/mapper';
-import { default as default_24 } from './lib/mapping/model-mapper';
-import { default as default_25 } from './lib/mapping/model-batch-mapper';
-import { default as default_26 } from './lib/mapping/result';
-import { default as default_27 } from './lib/tracker/request-tracker';
-import { default as default_28 } from './lib/tracker/request-logger';
-import { default as default_29 } from './lib/metrics/client-metrics';
-import { default as default_3 } from './table-metadata';
-import { default as default_30 } from './lib/metrics/default-metrics';
-import { default as default_31 } from './lib/geometry/point';
-import { default as default_32 } from './lib/geometry/line-string';
-import { default as default_33 } from './lib/geometry/polygon';
-import { default as default_34 } from './lib/geometry/geometry';
-import { default as default_35 } from './model-mapping-info';
-import { default as default_36 } from './graph/custom-type-serializers';
-import { default as default_37 } from './graph/result-set';
-import { default as default_4 } from '../connection';
-import { default as default_5 } from './lib/connection';
-import { default as default_6 } from './lib/types/big-decimal';
-import { default as default_7 } from './lib/types/duration';
-import { default as default_8 } from './lib/types/inet-address';
-import { default as default_9 } from './lib/types/integer';
-import { DefaultTableMappings } from './lib/mapping/table-mappings';
-import { DriverError as DriverError_2 } from '../errors';
-import { DriverError as DriverError_4 } from './lib/errors';
-import { DriverInternalError as DriverInternalError_2 } from './lib/errors';
-import { Edge } from './lib/datastax/graph';
-import { Edge as Edge_2 } from './graph/structure';
-import { Element } from './lib/datastax/graph';
-import { Element as Element_2 } from './graph/structure';
-import { EventEmitter } from 'stream';
-import { default as EventEmitter_2 } from 'events';
-import events from 'events';
-import { executeConcurrent } from './lib/concurrent/index';
-import { ExecuteRequest } from './requests';
-import { FrameHeader as FrameHeader_2 } from './lib/types/index';
-import { generateTimestamp as generateTimestamp_2 } from './lib/types/index';
-import { getCustomTypeSerializers } from './lib/datastax/graph';
-import { getDataTypeNameByCode as getDataTypeNameByCode_2 } from './lib/types/index';
-import { GraphResultSet as GraphResultSet_2 } from './lib/datastax/graph';
-import { GraphTypeWrapper } from './lib/datastax/graph';
-import { GraphTypeWrapper as GraphTypeWrapper_2 } from './graph/wrappers';
-import { HostMap as HostMap_2 } from '../host';
-import { HostMap as HostMap_3 } from './lib/host';
-import { Keyspace } from './schema-parser';
-import { libPoliciesAddressResolution } from './lib/policies/address-resolution';
-import { libPoliciesLoadBalancing } from './lib/policies/load-balancing';
-import { libPoliciesReconnection } from './lib/policies/reconnection';
-import { libPoliciesRetry } from './lib/policies/retry';
-import { libPoliciesSpeculativeExecution } from './lib/policies/speculative-execution';
-import { libPoliciesTimestampGeneration } from './lib/policies/timestamp-generation';
-import { LoadBalancingPolicy as LoadBalancingPolicy_2 } from './lib/policies/load-balancing';
-import { log } from './utils';
-import Long from 'long';
-import { ModelBatchItem } from './lib/mapping/model-batch-item';
-import { Murmur3Tokenizer } from '../tokenizer';
-import { NoHostAvailableError as NoHostAvailableError_2 } from './lib/errors';
-import { NotSupportedError as NotSupportedError_2 } from './lib/errors';
-import { OperationTimedOutError as OperationTimedOutError_2 } from './lib/errors';
-import { Path } from './lib/datastax/graph';
-import { Path as Path_2 } from './graph/structure';
-import { PlainTextAuthProvider } from './lib/auth/plain-text-auth-provider';
-import { Property } from './lib/datastax/graph';
-import { Property as Property_2 } from './graph/structure';
-import { QueryRequest } from './requests';
-import { RandomTokenizer } from '../tokenizer';
+import EventEmitter from 'events';
+import { EventEmitter as EventEmitter_2 } from 'stream';
+import * as Long from 'long';
+import Long__default from 'long';
 import { Readable } from 'stream';
-import { ReconnectionPolicy as ReconnectionPolicy_2 } from './lib/policies/reconnection';
-import { ResponseError as ResponseError_2 } from './lib/errors';
-import { ResultSetGroup } from './lib/concurrent/index';
-import { RetryPolicy as RetryPolicy_2 } from './lib/policies/retry';
 import { Socket } from 'net';
-import { SpeculativeExecutionPolicy as SpeculativeExecutionPolicy_2 } from './lib/policies/speculative-execution';
-import { Stream } from 'stream';
-import { TableMappings } from './lib/mapping/table-mappings';
-import { TimeoutError as TimeoutError_2 } from './lib/types/index';
-import { TimestampGenerator as TimestampGenerator_2 } from './lib/policies/timestamp-generation';
-import { timeuuid as timeuuid_2 } from './lib/types/index';
-import { Token as Token_2 } from './lib/token';
-import { TokenRange as TokenRange_2 } from './lib/token';
-import { UdtGraphWrapper } from './lib/datastax/graph';
-import { UdtGraphWrapper as UdtGraphWrapper_2 } from './graph/wrappers';
-import { UnderscoreCqlToCamelCaseMappings } from './lib/mapping/table-mappings';
-import util from 'util';
-import { uuid as uuid_2 } from './lib/types/index';
-import { Vertex } from './lib/datastax/graph';
-import { Vertex as Vertex_2 } from './graph/structure';
-import { VertexProperty } from './lib/datastax/graph';
-import { VertexProperty as VertexProperty_2 } from './graph/structure';
-import { VIntOutOfRangeException as VIntOutOfRangeException_2 } from './lib/errors';
 
-// @public (undocumented)
+// @public
 export const auth: {
     Authenticator: typeof Authenticator;
     AuthProvider: typeof AuthProvider;
     DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
     DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
     NoAuthProvider: typeof NoAuthProvider;
-    PlainTextAuthProvider: typeof PlainTextAuthProvider_2;
+    PlainTextAuthProvider: typeof PlainTextAuthProvider;
 };
 
 // @public
-export class Client extends events.EventEmitter {
-    constructor(options: ClientOptions);
+export class Client extends EventEmitter.EventEmitter {
+    // Warning: (ae-forgotten-export) The symbol "DseClientOptions" needs to be exported by the entry point cassandra-rollup.d.ts
+    constructor(options: DseClientOptions);
     batch(queries: Array<string | {
         query: string;
         params?: ArrayOrObject;
@@ -162,28 +45,31 @@ export class Client extends events.EventEmitter {
     connected: boolean;
     // (undocumented)
     connecting: boolean;
-    // Warning: (ae-forgotten-export) The symbol "ControlConnection" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ControlConnection" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // (undocumented)
     controlConnection: ControlConnection;
+    // Warning: (ae-forgotten-export) The symbol "BatchRequest" needs to be exported by the entry point cassandra-rollup.d.ts
     _createBatchRequest(queryItems: {
         query: any;
         params: any;
         info?: any;
     }[], info: any): Promise<BatchRequest>;
+    // Warning: (ae-forgotten-export) The symbol "ExecuteRequest" needs to be exported by the entry point cassandra-rollup.d.ts
     _createExecuteRequest(query: any, queryId: any, info: any, params: any, meta: any): Promise<ExecuteRequest>;
+    // Warning: (ae-forgotten-export) The symbol "QueryRequest" needs to be exported by the entry point cassandra-rollup.d.ts
     _createQueryRequest(query: any, execOptions: any, params: any): Promise<QueryRequest>;
-    // Warning: (ae-forgotten-export) The symbol "Row" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Row" needs to be exported by the entry point cassandra-rollup.d.ts
     eachRow(query: string, params: ArrayOrObject, options: QueryOptions, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
     // (undocumented)
     eachRow(query: string, params: ArrayOrObject, rowCallback: (n: number, row: Row) => void, callback?: ValueCallback<ResultSet>): void;
     // (undocumented)
     eachRow(query: string, rowCallback: (n: number, row: Row) => void): void;
-    // Warning: (ae-forgotten-export) The symbol "ArrayOrObject" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ResultSet" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ArrayOrObject" needs to be exported by the entry point cassandra-rollup.d.ts
+    // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point cassandra-rollup.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ResultSet" needs to be exported by the entry point cassandra-rollup.d.ts
     execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<ResultSet>;
-    // Warning: (ae-forgotten-export) The symbol "ValueCallback" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ValueCallback" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // (undocumented)
     execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
@@ -192,8 +78,8 @@ export class Client extends events.EventEmitter {
     // (undocumented)
     execute(query: string, callback: ValueCallback<ResultSet>): void;
     _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet>;
-    // Warning: (ae-forgotten-export) The symbol "GraphQueryOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "GraphQueryOptions" needs to be exported by the entry point cassandra-rollup.d.ts
+    // Warning: (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point cassandra-rollup.d.ts
     executeGraph(traversal: string, parameters: {
         [name: string]: any;
     } | undefined, options: GraphQueryOptions, callback: ValueCallback<GraphResultSet>): void;
@@ -209,65 +95,67 @@ export class Client extends events.EventEmitter {
     }, options?: GraphQueryOptions): Promise<GraphResultSet>;
     // (undocumented)
     _getEncoder(): Encoder;
-    // Warning: (ae-forgotten-export) The symbol "Host" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Host" needs to be exported by the entry point cassandra-rollup.d.ts
     getReplicas(keyspace: string, token: Buffer): Array<Host>;
-    // Warning: (ae-forgotten-export) The symbol "ClientState" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ClientState" needs to be exported by the entry point cassandra-rollup.d.ts
     getState(): ClientState;
-    // Warning: (ae-forgotten-export) The symbol "Connection" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Connection" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // @internal
     handleSchemaAgreementAndRefresh(connection: Connection, event: any): Promise<boolean>;
     hosts: any;
-    // Warning: (ae-forgotten-export) The symbol "InsightsClient" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "InsightsClient" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // (undocumented)
     insightsClient: InsightsClient;
     // (undocumented)
     isShuttingDown: boolean;
     keyspace: string;
+    // Warning: (ae-forgotten-export) The symbol "log" needs to be exported by the entry point cassandra-rollup.d.ts
+    //
     // (undocumented)
-    log: log;
-    // Warning: (ae-forgotten-export) The symbol "Metadata" needs to be exported by the entry point index.d.ts
+    log: typeof log;
+    // Warning: (ae-forgotten-export) The symbol "Metadata" needs to be exported by the entry point cassandra-rollup.d.ts
     metadata: Metadata;
-    // Warning: (ae-forgotten-export) The symbol "ClientMetrics" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ClientMetrics" needs to be exported by the entry point cassandra-rollup.d.ts
     metrics: ClientMetrics;
-    // Warning: (ae-forgotten-export) The symbol "ClientOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ClientOptions" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // (undocumented)
     options: ClientOptions;
-    // Warning: (ae-forgotten-export) The symbol "ProfileManager" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ProfileManager" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // (undocumented)
     profileManager: ProfileManager;
     _setHostListeners(): void;
     _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta: any): Promise<void>;
     shutdown(callback?: Function): Promise<any>;
-    // Warning: (ae-forgotten-export) The symbol "EmptyCallback" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ResultStream" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "EmptyCallback" needs to be exported by the entry point cassandra-rollup.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ResultStream" needs to be exported by the entry point cassandra-rollup.d.ts
     stream(query: string, params?: ArrayOrObject, options?: QueryOptions, callback?: EmptyCallback): ResultStream;
     _warmup(): Promise<any>;
 }
 
 // @public (undocumented)
 export const concurrent: {
-    executeConcurrent: typeof executeConcurrent_2;
-    ResultSetGroup: typeof ResultSetGroup_2;
+    executeConcurrent: typeof executeConcurrent;
+    ResultSetGroup: typeof ResultSetGroup;
 };
 
 // @public (undocumented)
 export const datastax: {
     graph: {
-        Edge: Edge_2;
-        Element: Element_2;
-        Path: Path_2;
-        Property: Property_2;
-        Vertex: Vertex_2;
-        VertexProperty: VertexProperty_2;
-        asInt: asInt_2;
-        asDouble: asDouble_2;
-        asFloat: asFloat_2;
-        asTimestamp: asTimestamp_2;
-        asUdt: asUdt_2;
+        Edge: typeof Edge;
+        Element: typeof Element;
+        Path: typeof Path;
+        Property: typeof Property;
+        Vertex: typeof Vertex;
+        VertexProperty: typeof VertexProperty;
+        asInt: typeof asInt;
+        asDouble: typeof asDouble;
+        asFloat: typeof asFloat;
+        asTimestamp: typeof asTimestamp;
+        asUdt: typeof asUdt;
         direction: {
             both: {
                 typeName: any;
@@ -290,9 +178,9 @@ export const datastax: {
                 toString(): any;
             };
         };
-        getCustomTypeSerializers: default_36;
-        GraphResultSet: default_37;
-        GraphTypeWrapper: GraphTypeWrapper_2;
+        getCustomTypeSerializers: typeof getCustomSerializers;
+        GraphResultSet: typeof GraphResultSet;
+        GraphTypeWrapper: typeof GraphTypeWrapper;
         t: {
             id: {
                 typeName: any;
@@ -315,9 +203,9 @@ export const datastax: {
                 toString(): any;
             };
         };
-        UdtGraphWrapper: UdtGraphWrapper_2;
+        UdtGraphWrapper: typeof UdtGraphWrapper;
     };
-    DateRange: typeof DateRange_2;
+    DateRange: typeof DateRange;
 };
 
 // @public (undocumented)
@@ -401,7 +289,7 @@ const _default: {
                 info: any[];
             };
         };
-        getDataTypeNameByCode: getDataTypeNameByCode_2;
+        getDataTypeNameByCode: typeof getDataTypeNameByCode;
         distance: {
             local: number;
             remote: number;
@@ -448,7 +336,7 @@ const _default: {
             uses4BytesQueryFlags: (version: number) => boolean;
             canStartupResponseErrorBeWrapped: (version: number) => boolean;
             getLowerSupported: (version: number) => number;
-            getHighestCommon: (connection: default_5, hosts: HostMap_3) => number;
+            getHighestCommon: (connection: Connection, hosts: HostMap) => number;
             isBeta: (version: number) => boolean;
         };
         responseErrorCodes: {
@@ -479,114 +367,140 @@ const _default: {
             prepared: number;
             schemaChange: number;
         };
-        timeuuid: timeuuid_2;
-        uuid: uuid_2;
-        BigDecimal: default_6;
-        Duration: default_7;
-        FrameHeader: FrameHeader_2;
-        InetAddress: default_8;
-        Integer: default_9;
-        LocalDate: default_10;
-        LocalTime: default_11;
-        Long: default_12;
-        ResultSet: default_13;
-        ResultStream: default_14;
-        Row: default_15;
-        DriverError: DriverError_4;
-        TimeoutError: TimeoutError_2;
-        TimeUuid: default_16;
-        Tuple: default_17;
-        Uuid: default_18;
+        timeuuid: typeof timeuuid;
+        uuid: typeof uuid;
+        BigDecimal: typeof BigDecimal;
+        Duration: typeof Duration;
+        FrameHeader: typeof FrameHeader;
+        InetAddress: typeof InetAddress;
+        Integer: typeof Integer;
+        LocalDate: typeof LocalDate;
+        LocalTime: typeof LocalTime;
+        Long: typeof Long.default;
+        ResultSet: typeof ResultSet;
+        ResultStream: typeof ResultStream;
+        Row: typeof Row;
+        DriverError: typeof DriverError;
+        TimeoutError: typeof TimeoutError;
+        TimeUuid: typeof TimeUuid;
+        Tuple: typeof Tuple;
+        Uuid: typeof Uuid;
         unset: Readonly<{
             readonly unset: true;
         }>;
-        generateTimestamp: generateTimestamp_2;
-        Vector: default_19;
+        generateTimestamp: typeof generateTimestamp;
+        Vector: typeof Vector;
     };
     errors: {
-        ArgumentError: ArgumentError_2;
-        AuthenticationError: AuthenticationError_2;
-        BusyConnectionError: BusyConnectionError_2;
-        DriverError: DriverError_4;
-        OperationTimedOutError: OperationTimedOutError_2;
-        DriverInternalError: DriverInternalError_2;
-        NoHostAvailableError: NoHostAvailableError_2;
-        NotSupportedError: NotSupportedError_2;
-        ResponseError: ResponseError_2;
-        VIntOutOfRangeException: VIntOutOfRangeException_2;
+        ArgumentError: typeof ArgumentError;
+        AuthenticationError: typeof AuthenticationError;
+        BusyConnectionError: typeof BusyConnectionError;
+        DriverError: typeof DriverError;
+        OperationTimedOutError: typeof OperationTimedOutError;
+        DriverInternalError: typeof DriverInternalError;
+        NoHostAvailableError: typeof NoHostAvailableError;
+        NotSupportedError: typeof NotSupportedError;
+        ResponseError: typeof ResponseError;
+        VIntOutOfRangeException: typeof VIntOutOfRangeException;
     };
     policies: {
-        addressResolution: libPoliciesAddressResolution;
-        loadBalancing: libPoliciesLoadBalancing;
-        reconnection: libPoliciesReconnection;
-        retry: libPoliciesRetry;
-        speculativeExecution: libPoliciesSpeculativeExecution;
-        timestampGeneration: libPoliciesTimestampGeneration;
-        defaultAddressTranslator: () => AddressTranslator_2;
-        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy_2;
-        defaultRetryPolicy: () => RetryPolicy_2;
-        defaultReconnectionPolicy: () => ReconnectionPolicy_2;
-        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy_2;
-        defaultTimestampGenerator: () => TimestampGenerator_2;
+        addressResolution: {
+            AddressTranslator: typeof AddressTranslator;
+            EC2MultiRegionTranslator: typeof EC2MultiRegionTranslator;
+        };
+        loadBalancing: {
+            AllowListPolicy: typeof AllowListPolicy;
+            DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
+            DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
+            LoadBalancingPolicy: typeof LoadBalancingPolicy;
+            RoundRobinPolicy: typeof RoundRobinPolicy;
+            TokenAwarePolicy: typeof TokenAwarePolicy;
+            WhiteListPolicy: typeof WhiteListPolicy;
+        };
+        reconnection: {
+            ReconnectionPolicy: typeof ReconnectionPolicy;
+            ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
+            ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
+        };
+        retry: {
+            IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
+            FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
+            RetryPolicy: typeof RetryPolicy;
+        };
+        speculativeExecution: {
+            NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
+            SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
+            ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
+        };
+        timestampGeneration: {
+            TimestampGenerator: typeof TimestampGenerator;
+            MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
+        };
+        defaultAddressTranslator: () => AddressTranslator;
+        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy;
+        defaultRetryPolicy: () => RetryPolicy;
+        defaultReconnectionPolicy: () => ReconnectionPolicy;
+        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy;
+        defaultTimestampGenerator: () => TimestampGenerator;
     };
     auth: {
-        Authenticator: Authenticator_2;
-        AuthProvider: AuthProvider_2;
-        DseGssapiAuthProvider: default_20;
-        DsePlainTextAuthProvider: default_21;
-        NoAuthProvider: default_22;
-        PlainTextAuthProvider: PlainTextAuthProvider;
+        Authenticator: typeof Authenticator;
+        AuthProvider: typeof AuthProvider;
+        DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
+        DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
+        NoAuthProvider: typeof NoAuthProvider;
+        PlainTextAuthProvider: typeof PlainTextAuthProvider;
     };
     mapping: {
-        Mapper: default_23;
-        ModelMapper: default_24;
-        ModelBatchMapper: default_25;
-        ModelBatchItem: ModelBatchItem;
-        Result: default_26;
-        TableMappings: TableMappings;
-        DefaultTableMappings: DefaultTableMappings;
-        UnderscoreCqlToCamelCaseMappings: UnderscoreCqlToCamelCaseMappings;
+        Mapper: typeof Mapper;
+        ModelMapper: typeof ModelMapper;
+        ModelBatchMapper: typeof ModelBatchMapper;
+        ModelBatchItem: typeof ModelBatchItem;
+        Result: typeof Result;
+        TableMappings: typeof TableMappings;
+        DefaultTableMappings: typeof DefaultTableMappings;
+        UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
         q: object;
     };
     tracker: {
-        RequestTracker: default_27;
-        RequestLogger: default_28;
+        RequestTracker: typeof RequestTracker;
+        RequestLogger: typeof RequestLogger;
     };
     metrics: {
-        ClientMetrics: default_29;
-        DefaultMetrics: default_30;
+        ClientMetrics: typeof ClientMetrics;
+        DefaultMetrics: typeof DefaultMetrics;
     };
     concurrent: {
-        executeConcurrent: executeConcurrent;
-        ResultSetGroup: ResultSetGroup;
+        executeConcurrent: typeof executeConcurrent;
+        ResultSetGroup: typeof ResultSetGroup;
     };
     token: {
-        Token: Token_2;
-        TokenRange: TokenRange_2;
+        Token: typeof Token;
+        TokenRange: typeof TokenRange;
     };
     metadata: {
         Metadata: typeof Metadata;
     };
     Encoder: typeof Encoder;
     geometry: {
-        Point: default_31;
-        LineString: default_32;
-        Polygon: default_33;
-        Geometry: default_34;
+        Point: typeof Point;
+        LineString: typeof LineString;
+        Polygon: typeof Polygon;
+        Geometry: typeof Geometry;
     };
     datastax: {
         graph: {
-            Edge: Edge;
-            Element: Element;
-            Path: Path;
-            Property: Property;
-            Vertex: Vertex;
-            VertexProperty: VertexProperty;
-            asInt: asInt;
-            asDouble: asDouble;
-            asFloat: asFloat;
-            asTimestamp: asTimestamp;
-            asUdt: asUdt;
+            Edge: typeof Edge;
+            Element: typeof Element;
+            Path: typeof Path;
+            Property: typeof Property;
+            Vertex: typeof Vertex;
+            VertexProperty: typeof VertexProperty;
+            asInt: typeof asInt;
+            asDouble: typeof asDouble;
+            asFloat: typeof asFloat;
+            asTimestamp: typeof asTimestamp;
+            asUdt: typeof asUdt;
             direction: {
                 both: {
                     typeName: any;
@@ -609,9 +523,9 @@ const _default: {
                     toString(): any;
                 };
             };
-            getCustomTypeSerializers: getCustomTypeSerializers;
-            GraphResultSet: GraphResultSet_2;
-            GraphTypeWrapper: GraphTypeWrapper;
+            getCustomTypeSerializers: typeof getCustomSerializers;
+            GraphResultSet: typeof GraphResultSet;
+            GraphTypeWrapper: typeof GraphTypeWrapper;
             t: {
                 id: {
                     typeName: any;
@@ -634,17 +548,17 @@ const _default: {
                     toString(): any;
                 };
             };
-            UdtGraphWrapper: UdtGraphWrapper;
+            UdtGraphWrapper: typeof UdtGraphWrapper;
         };
-        DateRange: DateRange;
+        DateRange: typeof DateRange;
     };
-    defaultOptions: () => ClientOptions_2;
+    defaultOptions: () => ClientOptions;
     version: string;
 };
 export default _default;
 
 // @public (undocumented)
-export const defaultOptions: () => ClientOptions_2;
+export const defaultOptions: () => ClientOptions;
 
 // @public (undocumented)
 export class Encoder {
@@ -661,7 +575,7 @@ export class Encoder {
         isComposite: boolean;
         hasCollections: boolean;
     };
-    // Warning: (ae-forgotten-export) The symbol "ColumnInfo" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ColumnInfo" needs to be exported by the entry point cassandra-rollup.d.ts
     //
     // @internal
     parseTypeName: (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function) => Promise<ColumnInfo>;
@@ -692,6 +606,7 @@ export const errors: {
 // @public
 export class ExecutionOptions {
     constructor();
+    // @internal
     static empty(): ExecutionOptions;
     getCaptureStackTrace(): boolean;
     getConsistency(): number;
@@ -700,34 +615,41 @@ export class ExecutionOptions {
     getFixedHost(): Host;
     getHints(): Array<any> | Array<Array<any>>;
     getKeyspace(): string;
-    // Warning: (ae-forgotten-export) The symbol "LoadBalancingPolicy" needs to be exported by the entry point index.d.ts
     getLoadBalancingPolicy(): LoadBalancingPolicy;
-    getOrGenerateTimestamp(): Long | null;
+    // @internal
+    getOrGenerateTimestamp(): Long__default | null;
     getPageState(): Buffer;
+    // @internal
     getPreferredHost(): any;
     getRawQueryOptions(): QueryOptions;
     getReadTimeout(): number;
-    // Warning: (ae-forgotten-export) The symbol "RetryPolicy" needs to be exported by the entry point index.d.ts
     getRetryPolicy(): RetryPolicy;
+    // @internal
     getRoutingIndexes(): Array<any>;
     getRoutingKey(): Buffer | Array<Buffer>;
+    // @internal
     getRoutingNames(): any;
+    // @internal
     getRowCallback(): any;
     getSerialConsistency(): number;
-    getTimestamp(): number | Long | undefined | null;
+    getTimestamp(): number | Long__default | undefined | null;
     isAutoPage(): boolean;
     isBatchCounter(): boolean;
     isBatchLogged(): boolean;
     isIdempotent(): boolean;
     isPrepared(): boolean;
     isQueryTracing(): boolean;
-    // (undocumented)
+    // @internal (undocumented)
     setHints(hints: Array<any>): any;
+    // @internal
     setKeyspace(keyspace: string): any;
-    // (undocumented)
+    // @internal (undocumented)
     setPageState(pageState: Buffer): any;
+    // @internal
     setPreferredHost(host: Host): any;
+    // @internal
     setRoutingIndexes(routingIndexes: Array<any>): any;
+    // @internal
     setRoutingKey(value: any): any;
 }
 
@@ -747,7 +669,7 @@ export class ExecutionProfile {
             writeConsistency?: typeof consistencies;
         };
     });
-    // Warning: (ae-forgotten-export) The symbol "consistencies" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "consistencies" needs to be exported by the entry point cassandra-rollup.d.ts
     consistency?: typeof consistencies;
     graphOptions?: {
         name?: string;
@@ -764,7 +686,7 @@ export class ExecutionProfile {
     serialConsistency?: typeof consistencies;
 }
 
-// @public (undocumented)
+// @public
 export const geometry: {
     Point: typeof Point;
     LineString: typeof LineString;
@@ -777,11 +699,11 @@ export const mapping: {
     Mapper: typeof Mapper;
     ModelMapper: typeof ModelMapper;
     ModelBatchMapper: typeof ModelBatchMapper;
-    ModelBatchItem: typeof ModelBatchItem_2;
+    ModelBatchItem: typeof ModelBatchItem;
     Result: typeof Result;
-    TableMappings: typeof TableMappings_2;
-    DefaultTableMappings: typeof DefaultTableMappings_2;
-    UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings_2;
+    TableMappings: typeof TableMappings;
+    DefaultTableMappings: typeof DefaultTableMappings;
+    UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
     q: object;
 };
 
@@ -798,27 +720,53 @@ export const metrics: {
 
 // @public (undocumented)
 export const policies: {
-    addressResolution: typeof addressResolution;
-    loadBalancing: typeof loadBalancing;
-    reconnection: typeof reconnection;
-    retry: typeof retry;
-    speculativeExecution: typeof speculativeExecution;
-    timestampGeneration: typeof timestampGeneration;
-    defaultAddressTranslator: () => addressResolution.AddressTranslator;
-    defaultLoadBalancingPolicy: (localDc?: string) => loadBalancing.LoadBalancingPolicy;
-    defaultRetryPolicy: () => retry.RetryPolicy;
-    defaultReconnectionPolicy: () => reconnection.ReconnectionPolicy;
-    defaultSpeculativeExecutionPolicy: () => speculativeExecution.SpeculativeExecutionPolicy;
-    defaultTimestampGenerator: () => timestampGeneration.TimestampGenerator;
+    addressResolution: {
+        AddressTranslator: typeof AddressTranslator;
+        EC2MultiRegionTranslator: typeof EC2MultiRegionTranslator;
+    };
+    loadBalancing: {
+        AllowListPolicy: typeof AllowListPolicy;
+        DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
+        DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
+        LoadBalancingPolicy: typeof LoadBalancingPolicy;
+        RoundRobinPolicy: typeof RoundRobinPolicy;
+        TokenAwarePolicy: typeof TokenAwarePolicy;
+        WhiteListPolicy: typeof WhiteListPolicy;
+    };
+    reconnection: {
+        ReconnectionPolicy: typeof ReconnectionPolicy;
+        ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
+        ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
+    };
+    retry: {
+        IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
+        FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
+        RetryPolicy: typeof RetryPolicy;
+    };
+    speculativeExecution: {
+        NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
+        SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
+        ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
+    };
+    timestampGeneration: {
+        TimestampGenerator: typeof TimestampGenerator;
+        MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
+    };
+    defaultAddressTranslator: () => AddressTranslator;
+    defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy;
+    defaultRetryPolicy: () => RetryPolicy;
+    defaultReconnectionPolicy: () => ReconnectionPolicy;
+    defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy;
+    defaultTimestampGenerator: () => TimestampGenerator;
 };
 
 // @public (undocumented)
 export const token: {
-    Token: Token_2;
-    TokenRange: TokenRange_2;
+    Token: typeof Token;
+    TokenRange: typeof TokenRange;
 };
 
-// @public (undocumented)
+// @public
 export const tracker: {
     RequestTracker: typeof RequestTracker;
     RequestLogger: typeof RequestLogger;
@@ -948,7 +896,7 @@ export const types: {
         uses4BytesQueryFlags: (version: number) => boolean;
         canStartupResponseErrorBeWrapped: (version: number) => boolean;
         getLowerSupported: (version: number) => number;
-        getHighestCommon: (connection: default_4, hosts: HostMap_2) => number;
+        getHighestCommon: (connection: Connection, hosts: HostMap) => number;
         isBeta: (version: number) => boolean;
     };
     responseErrorCodes: {
@@ -988,11 +936,11 @@ export const types: {
     Integer: typeof Integer;
     LocalDate: typeof LocalDate;
     LocalTime: typeof LocalTime;
-    Long: typeof Long;
+    Long: typeof Long__default;
     ResultSet: typeof ResultSet;
     ResultStream: typeof ResultStream;
     Row: typeof Row;
-    DriverError: DriverError_2;
+    DriverError: typeof DriverError;
     TimeoutError: typeof TimeoutError;
     TimeUuid: typeof TimeUuid;
     Tuple: typeof Tuple;
@@ -1009,62 +957,93 @@ export const version: string;
 
 // Warnings were encountered during analysis:
 //
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "Authenticator" needs to be exported by the entry point index.d.ts
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "AuthProvider" needs to be exported by the entry point index.d.ts
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "DseGssapiAuthProvider" needs to be exported by the entry point index.d.ts
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "DsePlainTextAuthProvider" needs to be exported by the entry point index.d.ts
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "NoAuthProvider" needs to be exported by the entry point index.d.ts
-// lib/auth/index.ts:39:3 - (ae-forgotten-export) The symbol "PlainTextAuthProvider_2" needs to be exported by the entry point index.d.ts
-// lib/concurrent/index.ts:370:3 - (ae-forgotten-export) The symbol "executeConcurrent_2" needs to be exported by the entry point index.d.ts
-// lib/concurrent/index.ts:370:3 - (ae-forgotten-export) The symbol "ResultSetGroup_2" needs to be exported by the entry point index.d.ts
-// lib/datastax/index.ts:28:44 - (ae-forgotten-export) The symbol "DateRange_2" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:230:5 - (ae-forgotten-export) The symbol "ArgumentError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:231:5 - (ae-forgotten-export) The symbol "AuthenticationError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:232:5 - (ae-forgotten-export) The symbol "BusyConnectionError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:233:5 - (ae-forgotten-export) The symbol "DriverError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:234:5 - (ae-forgotten-export) The symbol "OperationTimedOutError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:235:5 - (ae-forgotten-export) The symbol "DriverInternalError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:236:5 - (ae-forgotten-export) The symbol "NoHostAvailableError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:237:5 - (ae-forgotten-export) The symbol "NotSupportedError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:238:5 - (ae-forgotten-export) The symbol "ResponseError" needs to be exported by the entry point index.d.ts
-// lib/errors.ts:239:5 - (ae-forgotten-export) The symbol "VIntOutOfRangeException" needs to be exported by the entry point index.d.ts
-// lib/geometry/index.ts:32:5 - (ae-forgotten-export) The symbol "Point" needs to be exported by the entry point index.d.ts
-// lib/geometry/index.ts:33:5 - (ae-forgotten-export) The symbol "LineString" needs to be exported by the entry point index.d.ts
-// lib/geometry/index.ts:34:5 - (ae-forgotten-export) The symbol "Polygon" needs to be exported by the entry point index.d.ts
-// lib/geometry/index.ts:35:5 - (ae-forgotten-export) The symbol "Geometry" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "Mapper" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelMapper" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelBatchMapper" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "ModelBatchItem_2" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "Result" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "TableMappings_2" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "DefaultTableMappings_2" needs to be exported by the entry point index.d.ts
-// lib/mapping/index.ts:111:3 - (ae-forgotten-export) The symbol "UnderscoreCqlToCamelCaseMappings_2" needs to be exported by the entry point index.d.ts
-// lib/metrics/index.ts:21:42 - (ae-forgotten-export) The symbol "DefaultMetrics" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "addressResolution" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "loadBalancing" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "reconnection" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "retry" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "speculativeExecution" needs to be exported by the entry point index.d.ts
-// lib/policies/index.ts:100:3 - (ae-forgotten-export) The symbol "timestampGeneration" needs to be exported by the entry point index.d.ts
-// lib/tracker/index.ts:29:3 - (ae-forgotten-export) The symbol "RequestTracker" needs to be exported by the entry point index.d.ts
-// lib/tracker/index.ts:29:3 - (ae-forgotten-export) The symbol "RequestLogger" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "getDataTypeNameByCode" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "timeuuid" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "uuid" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "BigDecimal" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Duration" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "FrameHeader" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "InetAddress" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Integer" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "LocalDate" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "LocalTime" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "TimeoutError" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "TimeUuid" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Tuple" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Uuid" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "generateTimestamp" needs to be exported by the entry point index.d.ts
-// lib/types/index.ts:144:6 - (ae-forgotten-export) The symbol "Vector" needs to be exported by the entry point index.d.ts
+// out/cassandra-rollup.d.ts:3558:5 - (ae-forgotten-export) The symbol "Authenticator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3559:5 - (ae-forgotten-export) The symbol "AuthProvider" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3560:5 - (ae-forgotten-export) The symbol "DseGssapiAuthProvider" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3561:5 - (ae-forgotten-export) The symbol "DsePlainTextAuthProvider" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3562:5 - (ae-forgotten-export) The symbol "NoAuthProvider" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3563:5 - (ae-forgotten-export) The symbol "PlainTextAuthProvider" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7568:9 - (ae-forgotten-export) The symbol "Edge" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7569:9 - (ae-forgotten-export) The symbol "Element" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7570:9 - (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7571:9 - (ae-forgotten-export) The symbol "Property" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7572:9 - (ae-forgotten-export) The symbol "Vertex" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7573:9 - (ae-forgotten-export) The symbol "VertexProperty" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7574:9 - (ae-forgotten-export) The symbol "asInt" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7575:9 - (ae-forgotten-export) The symbol "asDouble" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7576:9 - (ae-forgotten-export) The symbol "asFloat" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7577:9 - (ae-forgotten-export) The symbol "asTimestamp" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7578:9 - (ae-forgotten-export) The symbol "asUdt" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7601:9 - (ae-forgotten-export) The symbol "getCustomSerializers" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7603:9 - (ae-forgotten-export) The symbol "GraphTypeWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7626:9 - (ae-forgotten-export) The symbol "UdtGraphWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7628:5 - (ae-forgotten-export) The symbol "DateRange" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7978:5 - (ae-forgotten-export) The symbol "executeConcurrent" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7979:5 - (ae-forgotten-export) The symbol "ResultSetGroup" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:8953:9 - (ae-forgotten-export) The symbol "getDataTypeNameByCode" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9000:13 - (ae-forgotten-export) The symbol "HostMap" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9031:9 - (ae-forgotten-export) The symbol "timeuuid" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9032:9 - (ae-forgotten-export) The symbol "uuid" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9033:9 - (ae-forgotten-export) The symbol "BigDecimal" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9034:9 - (ae-forgotten-export) The symbol "Duration" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9035:9 - (ae-forgotten-export) The symbol "FrameHeader" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9036:9 - (ae-forgotten-export) The symbol "InetAddress" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9037:9 - (ae-forgotten-export) The symbol "Integer" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9038:9 - (ae-forgotten-export) The symbol "LocalDate" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9039:9 - (ae-forgotten-export) The symbol "LocalTime" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9044:9 - (ae-forgotten-export) The symbol "DriverError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9045:9 - (ae-forgotten-export) The symbol "TimeoutError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9046:9 - (ae-forgotten-export) The symbol "TimeUuid" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9047:9 - (ae-forgotten-export) The symbol "Tuple" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9048:9 - (ae-forgotten-export) The symbol "Uuid" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9052:9 - (ae-forgotten-export) The symbol "generateTimestamp" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9053:9 - (ae-forgotten-export) The symbol "Vector" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9056:9 - (ae-forgotten-export) The symbol "ArgumentError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9057:9 - (ae-forgotten-export) The symbol "AuthenticationError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9058:9 - (ae-forgotten-export) The symbol "BusyConnectionError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9060:9 - (ae-forgotten-export) The symbol "OperationTimedOutError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9061:9 - (ae-forgotten-export) The symbol "DriverInternalError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9062:9 - (ae-forgotten-export) The symbol "NoHostAvailableError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9063:9 - (ae-forgotten-export) The symbol "NotSupportedError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9064:9 - (ae-forgotten-export) The symbol "ResponseError" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9065:9 - (ae-forgotten-export) The symbol "VIntOutOfRangeException" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9069:13 - (ae-forgotten-export) The symbol "AddressTranslator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9070:13 - (ae-forgotten-export) The symbol "EC2MultiRegionTranslator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9073:13 - (ae-forgotten-export) The symbol "AllowListPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9074:13 - (ae-forgotten-export) The symbol "DCAwareRoundRobinPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9075:13 - (ae-forgotten-export) The symbol "DefaultLoadBalancingPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9076:13 - (ae-forgotten-export) The symbol "LoadBalancingPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9077:13 - (ae-forgotten-export) The symbol "RoundRobinPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9078:13 - (ae-forgotten-export) The symbol "TokenAwarePolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9079:13 - (ae-forgotten-export) The symbol "WhiteListPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9082:13 - (ae-forgotten-export) The symbol "ReconnectionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9083:13 - (ae-forgotten-export) The symbol "ConstantReconnectionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9084:13 - (ae-forgotten-export) The symbol "ExponentialReconnectionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9087:13 - (ae-forgotten-export) The symbol "IdempotenceAwareRetryPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9088:13 - (ae-forgotten-export) The symbol "FallthroughRetryPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9089:13 - (ae-forgotten-export) The symbol "RetryPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9092:13 - (ae-forgotten-export) The symbol "NoSpeculativeExecutionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9093:13 - (ae-forgotten-export) The symbol "SpeculativeExecutionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9094:13 - (ae-forgotten-export) The symbol "ConstantSpeculativeExecutionPolicy" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9097:13 - (ae-forgotten-export) The symbol "TimestampGenerator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9098:13 - (ae-forgotten-export) The symbol "MonotonicTimestampGenerator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9116:9 - (ae-forgotten-export) The symbol "Mapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9117:9 - (ae-forgotten-export) The symbol "ModelMapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9118:9 - (ae-forgotten-export) The symbol "ModelBatchMapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9119:9 - (ae-forgotten-export) The symbol "ModelBatchItem" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9120:9 - (ae-forgotten-export) The symbol "Result" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9121:9 - (ae-forgotten-export) The symbol "TableMappings" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9122:9 - (ae-forgotten-export) The symbol "DefaultTableMappings" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9123:9 - (ae-forgotten-export) The symbol "UnderscoreCqlToCamelCaseMappings" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9127:9 - (ae-forgotten-export) The symbol "RequestTracker" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9128:9 - (ae-forgotten-export) The symbol "RequestLogger" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9132:9 - (ae-forgotten-export) The symbol "DefaultMetrics" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9139:9 - (ae-forgotten-export) The symbol "Token" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9140:9 - (ae-forgotten-export) The symbol "TokenRange" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9147:9 - (ae-forgotten-export) The symbol "Point" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9148:9 - (ae-forgotten-export) The symbol "LineString" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9149:9 - (ae-forgotten-export) The symbol "Polygon" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9150:9 - (ae-forgotten-export) The symbol "Geometry" needs to be exported by the entry point cassandra-rollup.d.ts
 
 // (No @packageDocumentation comment for this package)
 

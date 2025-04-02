@@ -19,7 +19,7 @@
  * @abstract
  * @memberOf module:datastax/graph
  */
-class Element {
+abstract class Element {
   id: any;
   label: string;
 
@@ -46,14 +46,14 @@ class Element {
  * @memberOf module:datastax/graph
  */
 class Vertex extends Element {
-  properties: { [s: string]: Array<any> };
+  properties: { [key: string]: any[] };
 
   /**
    * @param id
    * @param {String} label
-   * @param {Object<string, Array>} properties
+   * @param {{ [key: string]: any[] }} properties
    */
-  constructor(id: any, label: string, properties?: { [s: string]: Array<any> }) {
+  constructor(id: any, label: string, properties?: { [key: string]: any[] }) {
     super(id, label);
     /**
      * Gets the vertex properties.
@@ -69,11 +69,11 @@ class Vertex extends Element {
  * @memberOf module:datastax/graph
  */
 class Edge extends Element {
-  outV: any;
+  outV: Vertex;
   outVLabel: string;
-  inV: any;
+  inV: Vertex;
   inVLabel: string;
-  properties: { [s: string]: any };
+  properties: { [s: string]: any }; //TODO: it was object. But I think it should be { [s: string]: any }
 
   /**
    * @param id
@@ -86,10 +86,10 @@ class Edge extends Element {
    */
   constructor(
     id: any,
-    outV: any,
+    outV: Vertex,
     outVLabel: string,
     label: string,
-    inV: any,
+    inV: Vertex,
     inVLabel?: string,
     properties?: { [s: string]: Property }
   ) {
@@ -137,7 +137,7 @@ class Edge extends Element {
 class VertexProperty extends Element {
   value: any;
   key: string;
-  properties: object;
+  properties: any;
 
   /**
    * @param id
@@ -176,14 +176,14 @@ class Property {
  * @memberOf module:datastax/graph
  */
 class Path {
-  labels: Array<any>;
-  objects: Array<any>;
+  labels: any[];
+  objects: any[];
 
   /**
-   * @param {Array} labels
-   * @param {Array} objects
+   * @param {any[]} labels
+   * @param {any[]} objects
    */
-  constructor(labels: Array<any>, objects: Array<any>) {
+  constructor(labels: any[], objects: any[]) {
     this.labels = labels;
     this.objects = objects;
   }

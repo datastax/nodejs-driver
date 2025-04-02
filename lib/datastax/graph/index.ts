@@ -17,14 +17,21 @@ import GraphResultSet from "./result-set";
 import getCustomTypeSerializers from "./custom-type-serializers";
 import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers";
 import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
-import type { QueryOptions } from "../../client";
-import * as types from "../../types";
 
 
 
 class EnumValue {
+  /**
+   * @internal
+   */
   typeName: any;
+  /**
+   * @internal
+   */
   elementName: any;
+   /**
+   * @internal
+   */
   constructor(typeName, elementName) {
     this.typeName = typeName;
     this.elementName = elementName;
@@ -57,24 +64,6 @@ const direction = {
   // TinkerPop JavaScript GLV only exposes `in` but it can lead to issues for TypeScript users and others.
   // Expose an extra property to represent `Direction.IN`.
   'in_': directionIn
-};
-
-export interface GraphQueryOptions extends QueryOptions {
-  graphLanguage?: string;
-  graphName?: string;
-  graphReadConsistency?: typeof types.consistencies;
-  graphSource?: string;
-  graphWriteConsistency?: typeof types.consistencies;
-  graphResults?: string;
-}
-
-export type GraphOptions = {
-  language?: string;
-  name?: string;
-  readConsistency?: typeof types.consistencies;
-  readTimeout?: number;
-  source?: string;
-  writeConsistency?: typeof types.consistencies;
 };
 
 export default {

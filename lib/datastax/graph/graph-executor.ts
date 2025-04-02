@@ -47,7 +47,7 @@ const defaultWriters = new Map([
 type QueryObject = {graphLanguage: any, value: any, queryWriterFactory: any};
 /**
  * Internal class that contains the logic for executing a graph traversal.
- * @ignore
+ * @ignore @internal
  */
 class GraphExecutor {
   _client: Client;

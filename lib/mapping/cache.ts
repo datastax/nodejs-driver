@@ -18,7 +18,7 @@ import { QueryOperator, QueryAssignment } from "./q";
 
 /**
  * Provides utility methods for obtaining a caching keys based on the specifics of the Mapper methods.
- * @ignore
+ * @ignore @internal
  */
 class Cache {
   /**

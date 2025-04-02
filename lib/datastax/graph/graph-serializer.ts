@@ -17,7 +17,7 @@ import typeSerializers from "./type-serializers";
 
 /**
  * @module datastax/graph/tinkerpop/graphSerializers
- * @ignore
+ * @ignore @internal
  */
 
 

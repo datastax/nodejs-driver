@@ -30,7 +30,7 @@ class Geometry {
    * @protected
    * @param {Number} code
    * @returns {String}
-   * @ignore
+   * @ignore @internal
    */
   static getEndianness(code: number): string {
     const value = endianness[code.toString()];
@@ -47,7 +47,7 @@ class Geometry {
    * @param {String} endianness
    * @param {Number} offset
    * @returns Number
-   * @ignore
+   * @ignore @internal
    */
   static readInt32(buffer: Buffer, endianness: string, offset: number): number {
     if (endianness === 'BE') {
@@ -65,7 +65,7 @@ class Geometry {
    * @param {String} endianness
    * @param {Number} offset
    * @returns Number
-   * @ignore
+   * @ignore @internal
    */
   static readDouble(buffer: Buffer, endianness: string, offset: number): number {
     if (endianness === 'BE') {
@@ -80,7 +80,7 @@ class Geometry {
    * @param {Number} val
    * @param {Buffer} buffer
    * @param {Number} offset
-   * @ignore
+   * @ignore @internal
    */
   writeInt32(val: number, buffer: Buffer, offset: number): void {
     if (this.useBESerialization()) {
@@ -96,7 +96,7 @@ class Geometry {
    * @param {Number} val
    * @param {Buffer} buffer
    * @param {Number} offset
-   * @ignore
+   * @ignore @internal
    */
   writeDouble(val: number, buffer: Buffer, offset: number): void {
     if (this.useBESerialization()) {
@@ -111,7 +111,7 @@ class Geometry {
    * @protected
    * @param {Buffer} buffer
    * @param {Number} offset
-   * @ignore
+   * @ignore @internal
    */
   writeEndianness(buffer: Buffer, offset: number): void {
     if (this.useBESerialization()) {
@@ -125,7 +125,7 @@ class Geometry {
    * Returns true if the serialization must be done in big-endian format.
    * Designed to allow injection of OS endianness.
    * @abstract
-   * @ignore
+   * @ignore @internal
    */
   useBESerialization(): boolean {
     throw new Error('Not Implemented');

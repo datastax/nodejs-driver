@@ -218,7 +218,7 @@ class ExecutionProfile {
 
 /**
  * Contains the logic to handle the different execution profiles of a {@link Client}.
- * @ignore
+ * @ignore @internal
  */
 class ProfileManager {
   private _profiles: any;

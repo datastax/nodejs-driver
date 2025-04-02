@@ -33,7 +33,7 @@ class ModelBatchMapper {
    *   constructor.
    * </p>
    * @param {MappingHandler} handler
-   * @ignore
+   * @ignore @internal
    */
   constructor(handler: MappingHandler) {
     this._handler = handler;

@@ -130,3 +130,4 @@ class EC2MultiRegionTranslator extends AddressTranslator {
 }
 
 export { AddressTranslator, EC2MultiRegionTranslator };
+export default { AddressTranslator, EC2MultiRegionTranslator };

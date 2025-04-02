@@ -28,8 +28,8 @@ import utils from "../utils";
  * @alias module:auth~PlainTextAuthProvider
  */
 class PlainTextAuthProvider extends AuthProvider {
-  username: string;
-  password: string;
+  private username: string;
+  private password: string;
 
   /**
    * Creates a new instance of the Authenticator provider

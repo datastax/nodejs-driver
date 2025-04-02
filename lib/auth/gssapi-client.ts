@@ -21,6 +21,7 @@ import utils from "../utils";
 /**
  * GSSAPI Client interface.
  * @ignore
+ * @internal
  */
 class GssapiClient {
   authorizationId: string;
@@ -74,7 +75,7 @@ class GssapiClient {
 
 /**
  * GSSAPI Client implementation using kerberos module.
- * @ignore
+ * @ignore @internal
  */
 class StandardGssClient extends GssapiClient {
   kerberos: any;

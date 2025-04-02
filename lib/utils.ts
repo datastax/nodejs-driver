@@ -565,6 +565,7 @@ class HashSet {
 
 /**
  * Utility class that resolves host names into addresses.
+ * @internal
  */
 class AddressResolver {
   private _resolve4: any;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
+
 import types from "../types/index";
 import utils from "../utils";
 import errors from "../errors";
@@ -28,8 +28,11 @@ const newlyUpInterval = 60000;
  * Base class for Load Balancing Policies.
  */
 class LoadBalancingPolicy {
-  client: Client;
-  hosts: HostMap;
+  protected client: Client;
+  protected hosts: HostMap;
+  /**
+   * @internal
+   */
   localDc: string;
 
   /**
@@ -77,7 +80,7 @@ class LoadBalancingPolicy {
  * This policy yield nodes in a round-robin fashion.
  */
 class RoundRobinPolicy extends LoadBalancingPolicy {
-  index: number;
+  private index: number;
 
   constructor() {
     super();
@@ -122,9 +125,12 @@ class RoundRobinPolicy extends LoadBalancingPolicy {
  * data center.
  */
 class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
-  localDc: string | null;
-  index: number;
-  localHostsArray: any;
+  /**
+   * @internal
+   */
+  localDc: string;
+  private index: number;
+  private localHostsArray: any;
 
   /**
    * A data-center aware Round-robin load balancing policy.
@@ -234,7 +240,7 @@ class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
  * A wrapper load balancing policy that adds token awareness to a child policy.
  */
 class TokenAwarePolicy extends LoadBalancingPolicy {
-  childPolicy: LoadBalancingPolicy;
+  private childPolicy: LoadBalancingPolicy;
 
   /**
    * A wrapper load balancing policy that add token awareness to a child policy.
@@ -399,8 +405,8 @@ class TokenAwareIterator {
  * @extends LoadBalancingPolicy
  */
 class AllowListPolicy extends LoadBalancingPolicy {
-  childPolicy: LoadBalancingPolicy;
-  allowList: Map<string, boolean>;
+  private childPolicy: LoadBalancingPolicy;
+  private allowList: Map<string, boolean>;
   /**
    * Create a new policy that wraps the provided child policy but only "allow" hosts
    * from the provided list.
@@ -470,6 +476,7 @@ class AllowListPolicy extends LoadBalancingPolicy {
 
   /**
    * Returns the hosts to use for a new query filtered by the allow list.
+   * @internal
    */
   newQueryPlan(keyspace: string, info: ExecutionOptions | null, callback: Function) {
     const self = this;
@@ -685,7 +692,7 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
    * @param iterable
    * @private
    */
-  static *_getPreferredHostFirst(preferredHost, iterable) {
+  private static *_getPreferredHostFirst(preferredHost, iterable) {
     yield preferredHost;
 
     for (const host of iterable) {

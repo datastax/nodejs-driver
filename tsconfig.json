@@ -6,7 +6,7 @@
 	  "sourceMap": true,
 	  "strict": false,
 	  "noImplicitAny": false,
-	//   "outDir": "out",
+	  "outDir": "out",
 	  "declaration": true,
 	  "allowJs": true,
 	  "esModuleInterop": true,

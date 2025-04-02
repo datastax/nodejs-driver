@@ -19,13 +19,20 @@ import type { ResultSet } from "../types";
 import type ModelMappingInfo from "./model-mapping-info";
 
 
-const inspectMethod = util.inspect.custom || 'inspect';
+// @ts-ignore
+const inspectMethod : unique symbol = util.inspect.custom || 'inspect';
 
 /**
  * Represents the result of an execution as an iterable of objects in the Mapper.
  * @alias module:mapping~Result
  */
 class Result {
+  private _rs: ResultSet;
+  private _info: ModelMappingInfo;
+  private _rowAdapter: Function;
+  private _isEmptyLwt: boolean;
+  length: number;
+  pageState: string;
   /**
    * Creates a new instance of Result.
    * @param {ResultSet} rs

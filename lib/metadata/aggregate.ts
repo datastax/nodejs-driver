@@ -22,68 +22,71 @@
  * @constructor
  */
 class Aggregate {
+  /**
+   * Name of the aggregate.
+   * @type {String}
+   * @internal
+   */
   name: string;
+  /**
+   * Name of the keyspace where the aggregate is declared.
+   */
   keyspaceName: string;
+  /**
+   * Signature of the aggregate.
+   * @type {Array.<String>}
+   */
   signature: Array<string>;
-  argumentTypes: Array<{code: number, info?: (object|Array<any>|string)}>;
+  /**
+   * List of the CQL aggregate argument types.
+   * @type {Array.<{code, info}>}
+   */
+  argumentTypes: Array<{ code: number, info?: (object | Array<any> | string) }>;
+  /**
+   * State Function.
+   * @type {String}
+   */
   stateFunction: string;
-  stateType: {code: number, info?: (object|Array<any>|string)};
+  /**
+   * State Type.
+   * @type {{code, info}}
+   */
+  stateType: { code: number, info?: (object | Array<any> | string) };
+  /**
+    * Final Function.
+    * @type {String}
+    */
   finalFunction: string;
+  // @internal 
   initConditionRaw: any;
+  /**
+   * Initial state value of this aggregate.
+   * @type {String}
+   */
   initCondition: string;
-  returnType: {code: number, info?: (object|Array<any>|string)};
+  /**
+   * Type of the return value.
+   * @type {{code: number, info: (Object|Array|null)}}
+   */
+  returnType: { code: number, info?: (object | Array<any> | string) };
+  /**
+   * Indicates whether or not this aggregate is deterministic.  This means that
+   * given a particular input, the aggregate will always produce the same output.
+   * @type {Boolean}
+   */
+  //TODO: It was not exposed. I believe it should be.
   deterministic: boolean;
   constructor() {
-    /**
-     * Name of the aggregate.
-     * @type {String}
-     */
     this.name = null;
-    /**
-     * Name of the keyspace where the aggregate is declared.
-     */
     this.keyspaceName = null;
-    /**
-     * Signature of the aggregate.
-     * @type {Array.<String>}
-     */
     this.signature = null;
-    /**
-     * List of the CQL aggregate argument types.
-     * @type {Array.<{code, info}>}
-     */
     this.argumentTypes = null;
-    /**
-     * State Function.
-     * @type {String}
-     */
     this.stateFunction = null;
-    /**
-     * State Type.
-     * @type {{code, info}}
-     */
     this.stateType = null;
-    /**
-     * Final Function.
-     * @type {String}
-     */
     this.finalFunction = null;
     this.initConditionRaw = null;
-    /**
-     * Initial state value of this aggregate.
-     * @type {String}
-     */
     this.initCondition = null;
-    /**
-     * Type of the return value.
-     * @type {{code: number, info: (Object|Array|null)}}
-     */
     this.returnType = null;
-    /**
-     * Indicates whether or not this aggregate is deterministic.  This means that
-     * given a particular input, the aggregate will always produce the same output.
-     * @type {Boolean}
-     */
     this.deterministic = null;
   }
 }

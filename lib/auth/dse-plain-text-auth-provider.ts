@@ -35,9 +35,9 @@ const initialServerChallenge = 'PLAIN-START';
  * });
  */
 class DsePlainTextAuthProvider extends AuthProvider {
-  username: string;
-  password: string;
-  authorizationId: string;
+  private username: string;
+  private password: string;
+  private authorizationId: string;
   /**
    * Creates a new instance of <code>DsePlainTextAuthProvider</code>.
    * @classdesc

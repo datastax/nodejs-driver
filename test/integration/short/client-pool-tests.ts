@@ -1074,13 +1074,34 @@ describe('Client', function () {
       });
     });
   });
+  //TODO: figure out why this test is failing. The driver before migration could pass this test. But then I messed around and even the version before migration will fail on this test.
+  // describe('customize test for spex', function(){
+  //   helper.setup(3, { initClient: false });
+  //   it('customize', async function(){
+  //     let policy = new ConstantSpeculativeExecutionPolicy(100, 1);
+  //     helper.ccmHelper.pauseNode(1);
+  //     const client = newInstance({
+  //       pooling: { warmup: true },
+  //       policies: {
+  //         speculativeExecution: policy,
+  //         loadBalancing: new OrderedLoadBalancingPolicy(),
+  //         retry: new helper.FallthroughRetryPolicy()
+  //       },
+  //       socketOptions: {
+  //         readTimeout: 5000
+  //       }
+  //     });
+  //     const result = await client.execute('SELECT * FROM system.local', null, { prepare: true, isIdempotent: true });
+  //     assert.strictEqual(result.info.queriedHost, client.hosts.keys()[1]);
+  //   })
+  // })
 });
 
 /**
  * @param {ClientOptions} [options]
  * @returns {Client}
  */
-function newInstance(options) {
+function newInstance(options?) {
   const client = new Client(utils.deepExtend({}, helper.baseOptions, options));
   helper.shutdownAfterThisTest(client);
   return client;

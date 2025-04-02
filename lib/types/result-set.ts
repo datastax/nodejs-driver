@@ -19,7 +19,8 @@ import Row from "./row";
 import type {consistencies, dataTypes, Uuid} from "../types";
 
 
-const asyncIteratorSymbol = Symbol.asyncIterator || '@@asyncIterator';
+// @ts-ignore
+const asyncIteratorSymbol : unique symbol = Symbol.asyncIterator || '@@asyncIterator';
 
 /** @module types */
 

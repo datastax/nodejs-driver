@@ -15,18 +15,18 @@
  */
 
 
-import * as addressResolution from './address-resolution';
-import * as loadBalancing from './load-balancing';
-import * as reconnection from './reconnection';
-import * as retry from './retry';
-import * as speculativeExecution from './speculative-execution';
-import * as timestampGeneration from './timestamp-generation';
+import addressResolution, { type AddressTranslator } from './address-resolution';
+import loadBalancing, { type LoadBalancingPolicy } from './load-balancing';
+import reconnection, { type ReconnectionPolicy } from './reconnection';
+import retry, { type RetryPolicy } from './retry';
+import speculativeExecution, { type SpeculativeExecutionPolicy } from './speculative-execution';
+import timestampGeneration, { type TimestampGenerator } from './timestamp-generation';
 
 /**
  * Returns a new instance of the default address translator policy used by the driver.
  * @returns {AddressTranslator}
  */
-const defaultAddressTranslator = function (): addressResolution.AddressTranslator {
+const defaultAddressTranslator = function (): AddressTranslator {
   return new addressResolution.AddressTranslator();
 };
 
@@ -38,7 +38,7 @@ const defaultAddressTranslator = function (): addressResolution.AddressTranslato
  * provided in the {@link ClientOptions}.</p>
  * @returns {LoadBalancingPolicy}
  */
-const defaultLoadBalancingPolicy = function (localDc?: string): loadBalancing.LoadBalancingPolicy {
+const defaultLoadBalancingPolicy = function (localDc?: string): LoadBalancingPolicy {
   return new loadBalancing.DefaultLoadBalancingPolicy(localDc);
 };
 
@@ -46,7 +46,7 @@ const defaultLoadBalancingPolicy = function (localDc?: string): loadBalancing.Lo
  * Returns a new instance of the default retry policy used by the driver.
  * @returns {RetryPolicy}
  */
-const defaultRetryPolicy = function (): retry.RetryPolicy {
+const defaultRetryPolicy = function (): RetryPolicy {
   return new retry.RetryPolicy();
 };
 
@@ -54,7 +54,7 @@ const defaultRetryPolicy = function (): retry.RetryPolicy {
  * Returns a new instance of the default reconnection policy used by the driver.
  * @returns {ReconnectionPolicy}
  */
-const defaultReconnectionPolicy = function (): reconnection.ReconnectionPolicy {
+const defaultReconnectionPolicy = function (): ReconnectionPolicy {
   return new reconnection.ExponentialReconnectionPolicy(1000, 10 * 60 * 1000, false);
 };
 
@@ -63,7 +63,7 @@ const defaultReconnectionPolicy = function (): reconnection.ReconnectionPolicy {
  * Returns a new instance of the default speculative execution policy used by the driver.
  * @returns {SpeculativeExecutionPolicy}
  */
-const defaultSpeculativeExecutionPolicy = function (): speculativeExecution.SpeculativeExecutionPolicy {
+const defaultSpeculativeExecutionPolicy = function (): SpeculativeExecutionPolicy {
   return new speculativeExecution.NoSpeculativeExecutionPolicy();
 };
 
@@ -71,7 +71,7 @@ const defaultSpeculativeExecutionPolicy = function (): speculativeExecution.Spec
  * Returns a new instance of the default timestamp generator used by the driver.
  * @returns {TimestampGenerator}
  */
-const defaultTimestampGenerator = function (): timestampGeneration.TimestampGenerator {
+const defaultTimestampGenerator = function (): TimestampGenerator {
   return new timestampGeneration.MonotonicTimestampGenerator();
 };
 

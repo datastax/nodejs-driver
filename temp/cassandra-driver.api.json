@@ -876,7 +876,115 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        q: object;\n    };\n    tracker: {\n        RequestTracker: typeof "
+              "text": ";\n        q: {\n            in_: (arr: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            gt: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            gte: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            lt: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            lte: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            notEq: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            and: (condition1: any, condition2: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            incr: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            decr: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            append: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            prepend: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            remove: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        };\n    };\n    tracker: {\n        RequestTracker: typeof "
             },
             {
               "kind": "Reference",
@@ -1164,7 +1272,7 @@
           "name": "_default",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 218
+            "endIndex": 242
           }
         },
         {
@@ -5749,7 +5857,115 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    q: object;\n}"
+              "text": ";\n    q: {\n        in_: (arr: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        gt: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        gte: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        lt: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        lte: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        notEq: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        and: (condition1: any, condition2: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryOperator",
+              "canonicalReference": "cassandra-driver!~QueryOperator:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        incr: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        decr: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        append: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        prepend: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        remove: (value: any) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "QueryAssignment",
+              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n}"
             }
           ],
           "fileUrlPath": "out/cassandra-rollup.d.ts",
@@ -5758,7 +5974,7 @@
           "name": "mapping",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 18
+            "endIndex": 42
           }
         },
         {

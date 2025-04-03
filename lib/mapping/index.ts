@@ -103,7 +103,7 @@ export {
   type ModelOptions,
   ModelColumnOptions,
   ModelTables,
-  MappingExecutionOptions,
+  type MappingExecutionOptions,
   type FindDocInfo,
   type InsertDocInfo,
   type UpdateDocInfo,

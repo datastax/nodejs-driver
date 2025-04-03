@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
+
 import utils from "../utils";
 import Geometry from "./geometry";
 import Point from "./point";
@@ -34,8 +34,12 @@ import LineString from "./line-string";
  * @alias module:geometry~Polygon
  */
 class Polygon extends Geometry {
+  /**
+   * @internal
+   */
   rings: ReadonlyArray<ReadonlyArray<Point>>;
 
+  //TODO: exposed as constructor(...args: Point[]); but clearly constructor(...args: Point[][])
   /**
    * Creates a new {@link Polygon} instance.
    * @param {...Array.<Point>}[ringPoints] A sequence of Array of [Point]{@link module:geometry~Point} items as arguments
@@ -186,6 +190,9 @@ class Polygon extends Geometry {
     return true;
   }
 
+  /**
+   * @internal
+   */
   useBESerialization(): boolean {
     return false;
   }

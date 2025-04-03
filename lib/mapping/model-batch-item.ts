@@ -25,11 +25,24 @@ type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo
  * @alias module:mapping~ModelBatchItem
  */
 class ModelBatchItem {
+  /**
+   * @internal
+   */
   doc: object;
+  /**
+   * @internal
+   */
   docInfo: DocInfo;
+  /**
+   * @internal
+   */
   handler: MappingHandler;
+  /**
+   * @internal
+   */
   cache: Tree;
   /**
+   * @internal
    * @param {Object} doc
    * @param {Object} docInfo
    * @param {MappingHandler} handler
@@ -60,6 +73,7 @@ class ModelBatchItem {
   /**
    * Gets the cache key for this item.
    * @abstract
+   * @internal
    * @param {Array} docKeys
    * @returns {Iterator}
    */
@@ -70,6 +84,7 @@ class ModelBatchItem {
   /**
    * Gets the Promise to create the queries.
    * @abstract
+   * @internal
    * @param {Array} docKeys
    * @returns {Promise<Array>}
    */

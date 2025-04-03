@@ -22,16 +22,25 @@ import type ModelMappingInfo from "./model-mapping-info";
 // @ts-ignore
 const inspectMethod : unique symbol = util.inspect.custom || 'inspect';
 
+//TODO: It was interface Result<T = any> extends Iterator<T> in the previous .d.ts.
+// But it didn't have the method of next(); So I added it there
 /**
  * Represents the result of an execution as an iterable of objects in the Mapper.
  * @alias module:mapping~Result
  */
-class Result {
+class Result<T = any> implements IterableIterator<T> {
   private _rs: ResultSet;
   private _info: ModelMappingInfo;
   private _rowAdapter: Function;
   private _isEmptyLwt: boolean;
+  private _iteratorIndex: number;
+  /**
+   * @internal
+   */
   length: number;
+  /**
+   * @internal
+   */
   pageState: string;
   /**
    * Creates a new instance of Result.
@@ -71,6 +80,7 @@ class Result {
      * @default null
      */
     this.pageState = rs.pageState;
+    this._iteratorIndex = 0;
   }
 
   /**
@@ -83,14 +93,14 @@ class Result {
    *   information whether it was applied or not.
    * </p>
    */
-  wasApplied() {
+  wasApplied(): boolean {
     return this._rs.wasApplied();
   }
 
   /**
    * Gets the first document in this result or null when the result is empty.
    */
-  first() {
+  first(): T | null {
     if (!this._rs.rowLength || this._isEmptyLwt) {
       return null;
     }
@@ -100,7 +110,7 @@ class Result {
   /**
    * Returns a new Iterator object that contains the document values.
    */
-  *[Symbol.iterator]() {
+  *[Symbol.iterator](): IterableIterator<T> {
     if (this._isEmptyLwt) {
       // Empty iterator
       return;
@@ -113,9 +123,9 @@ class Result {
 
   /**
    * Converts the current instance to an Array of documents.
-   * @return {Array<Object>}
+   * @return {Array<T>}
    */
-  toArray(): Array<object> {
+  toArray(): T[] {
     if (this._isEmptyLwt || !this._rs.rows) {
       return utils.emptyArray as any[];
     }
@@ -128,7 +138,7 @@ class Result {
    * @param {Function} callback Function to execute for each element, taking two arguments: currentValue and index.
    * @param {Object} [thisArg] Value to use as <code>this</code> when executing callback.
    */
-  forEach(callback: Function, thisArg: object) {
+  forEach(callback: (currentValue: T, index: number) => void, thisArg: any):void {
     let index = 0;
     thisArg = thisArg || this;
     for (const doc of this) {
@@ -138,6 +148,16 @@ class Result {
 
   [inspectMethod]() {
     return this.toArray();
+  }
+
+  next(): {done: boolean; value: T} {
+    if(this._isEmptyLwt) {
+      return {done: true, value: undefined};
+    }
+    if (this._iteratorIndex >= this._rs.rows.length) {
+      return {done: true, value: undefined};
+    }
+    return {done: false, value: this._rowAdapter(this._rs.rows[this._iteratorIndex++], this._info) as T};
   }
 }
 

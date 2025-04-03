@@ -19,15 +19,28 @@ import errors from "../errors";
 
 /**
  * Represents a CQL query operator, like >=, IN, <, ...
- * @ignore @internal
+ * @ignore
  */
 class QueryOperator {
+  /**
+   * @internal
+   */
   key: string;
+  /**
+   * @internal
+   */
   value: any;
+  /**
+   * @internal
+   */
   hasChildValues: any;
+  /**
+   * @internal
+   */
   isInOperator: any;
   /**
    * Creates a new instance of <code>QueryOperator</code>.
+   * @internal
    * @param {String} key
    * @param value
    * @param [hasChildValues]
@@ -59,12 +72,24 @@ class QueryOperator {
 
 /**
  * Represents a CQL assignment operation, like col = col + x.
- * @ignore @internal
+ * @ignore
  */
 class QueryAssignment {
+  /**
+   * @internal
+   */
   sign: any;
+  /**
+   * @internal
+   */
   value: any;
+  /**
+   * @internal
+   */
   inverted: boolean;
+  /**
+   * @internal
+   */
   constructor(sign, value, inverted?) {
     /**
      * Gets the sign of the assignment operation.
@@ -102,55 +127,57 @@ class QueryAssignment {
  * @property {function} prepend Represents the CQL prepend assignment used for lists, e.g: "col = x + col"
  * @property {function} remove Represents the CQL remove assignment used for collections, e.g: "col = col - x"
  */
-const q: object = {
-  in_: function in_(arr) {
+const q = {
+  in_: function in_(arr:any):QueryOperator {
     if (!Array.isArray(arr)) {
       throw new errors.ArgumentError('IN operator supports only Array values');
     }
     return new QueryOperator('IN', arr, false, true);
   },
 
-  gt: function gt(value) {
+  gt: function gt(value:any):QueryOperator {
     return new QueryOperator('>', value);
   },
 
-  gte: function gte(value) {
+  gte: function gte(value:any):QueryOperator {
     return new QueryOperator('>=', value);
   },
 
-  lt: function lt(value) {
+  lt: function lt(value:any):QueryOperator {
     return new QueryOperator('<', value);
   },
 
-  lte: function lte(value) {
+  lte: function lte(value:any):QueryOperator {
     return new QueryOperator('<=', value);
   },
 
-  notEq: function notEq(value) {
+  notEq: function notEq(value:any):QueryOperator {
     return new QueryOperator('!=', value);
   },
 
-  and: function (condition1, condition2) {
+  and: function (condition1:any, condition2:any):QueryOperator {
     return new QueryOperator('AND', [ condition1, condition2 ], true);
   },
 
-  incr: function incr(value) {
+  //TODO: these had a return type of QueryOperator, but they are clearly returning QueryAssignment 
+  // and QueryAssignment clearly does not extend QueryOperator
+  incr: function incr(value:any):QueryAssignment {
     return new QueryAssignment('+', value);
   },
 
-  decr: function decr(value) {
+  decr: function decr(value:any):QueryAssignment {
     return new QueryAssignment('-', value);
   },
 
-  append: function append(value) {
+  append: function append(value:any):QueryAssignment {
     return new QueryAssignment('+', value);
   },
 
-  prepend: function prepend(value) {
+  prepend: function prepend(value:any):QueryAssignment {
     return new QueryAssignment('+', value, true);
   },
 
-  remove: function remove(value) {
+  remove: function remove(value:any):QueryAssignment {
     return new QueryAssignment('-', value);
   }
 };

@@ -29,7 +29,7 @@ class EnumValue {
    * @internal
    */
   elementName: any;
-   /**
+  /**
    * @internal
    */
   constructor(typeName, elementName) {

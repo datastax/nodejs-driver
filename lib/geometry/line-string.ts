@@ -27,6 +27,9 @@ import Point from "./point";
  * @extends {Geometry}
  */
 class LineString extends Geometry {
+  /**
+   * @internal
+   */
   points: ReadonlyArray<Point>;
 
   /**
@@ -181,12 +184,14 @@ class LineString extends Geometry {
 
   /**
    * Returns false to indicate little-endian serialization.
+   * @internal
    * @returns {Boolean}
    */
   useBESerialization(): boolean {
     return false;
   }
 
+  //TODO: it was exposed as toJSON(): string; But it clearly returns an object
   /**
    * Returns a JSON representation of this geo-spatial type.
    */

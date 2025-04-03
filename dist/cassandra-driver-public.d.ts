@@ -2073,8 +2073,8 @@ declare const dataTypes: {
 declare class DateRange {
     lowerBound: DateRangeBound;
     upperBound: DateRangeBound;
-    _type: number;
-    constructor(lowerBound: any, upperBound?: any);
+    private _type;
+    constructor(lowerBound: DateRangeBound, upperBound?: DateRangeBound);
     /**
      * Returns the <code>DateRange</code> representation of a given string.
      * <p>String representations of dates are always expressed in Coordinated Universal Time (UTC)</p>
@@ -2098,6 +2098,9 @@ declare class DateRange {
      * @return {String}
      */
     toString(): string;
+    /**
+     * @intenal
+     */
     toBuffer(): any;
 }
 
@@ -2114,16 +2117,14 @@ declare class DateRange {
 declare class DateRangeBound {
     date: Date;
     precision: number;
-    static unbounded: Readonly<DateRangeBound>;
+    /* Excluded from this release type: unbounded */
     /**
-     * @classdesc
      * Represents a date range boundary, composed by a <code>Date</code> and a precision.
      * @param {Date} date The timestamp portion, representing a single moment in time. Consider using
      * <code>Date.UTC()</code> method to build the <code>Date</code> instance.
      * @param {Number} precision The precision portion. Valid values for <code>DateRangeBound</code> precision are
      * defined in the [dateRangePrecision]{@link module:datastax/search~dateRangePrecision} member.
      * @constructor
-     * @memberOf module:datastax/search
      */
     constructor(date: Date, precision: number);
     /**
@@ -2159,7 +2160,7 @@ declare class DateRangeBound {
      * @return {boolean}
      */
     equals(other: DateRangeBound): boolean;
-    isUnbounded(): boolean;
+    /* Excluded from this release type: isUnbounded */
 }
 
 /**
@@ -2469,7 +2470,20 @@ declare const _default: {
         TableMappings: typeof TableMappings;
         DefaultTableMappings: typeof DefaultTableMappings;
         UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
-        q: object;
+        q: {
+            in_: (arr: any) => QueryOperator;
+            gt: (value: any) => QueryOperator;
+            gte: (value: any) => QueryOperator;
+            lt: (value: any) => QueryOperator;
+            lte: (value: any) => QueryOperator;
+            notEq: (value: any) => QueryOperator;
+            and: (condition1: any, condition2: any) => QueryOperator;
+            incr: (value: any) => QueryAssignment;
+            decr: (value: any) => QueryAssignment;
+            append: (value: any) => QueryAssignment;
+            prepend: (value: any) => QueryAssignment;
+            remove: (value: any) => QueryAssignment;
+        };
     };
     tracker: {
         RequestTracker: typeof RequestTracker;
@@ -2769,9 +2783,9 @@ declare class DefaultTableMappings extends TableMappings {
      */
     constructor();
     /**  @override */
-    getColumnName(propName: any): string;
+    getColumnName(propName: string): string;
     /** @override */
-    getPropertyName(columnName: any): string;
+    getPropertyName(columnName: string): string;
     /**
      * Creates a new object instance, using object initializer.
      */
@@ -4800,7 +4814,7 @@ declare interface Keyspace {
  * @extends {Geometry}
  */
 declare class LineString extends Geometry {
-    points: ReadonlyArray<Point>;
+    /* Excluded from this release type: points */
     /**
      * Creates a new {@link LineString} instance.
      * @param {...Point} points A sequence of {@link Point} items as arguments.
@@ -4840,11 +4854,7 @@ declare class LineString extends Geometry {
      * @returns {String}
      */
     toString(): string;
-    /**
-     * Returns false to indicate little-endian serialization.
-     * @returns {Boolean}
-     */
-    useBESerialization(): boolean;
+    /* Excluded from this release type: useBESerialization */
     /**
      * Returns a JSON representation of this geo-spatial type.
      */
@@ -5137,7 +5147,7 @@ declare type MapColumnInfo = {
  * const mapper = new Mapper(client, mappingOptions);
  */
 declare class Mapper {
-    client: Client;
+    private client;
     private _modelMappingInfos;
     private _modelMappers;
     /**
@@ -5153,7 +5163,7 @@ declare class Mapper {
      * @param {String} name The name to identify the model. Note that the name is case-sensitive.
      * @returns {ModelMapper} A [ModelMapper]{@link module:mapping~ModelMapper} instance.
      */
-    forModel(name: string): ModelMapper;
+    forModel<T = any>(name: string): ModelMapper<T>;
     /**
      * Executes a batch of queries represented in the items.
      * @param {Array<ModelBatchItem>} items
@@ -5176,7 +5186,7 @@ declare class Mapper {
      * unix epoch (00:00:00, January 1st, 1970).
      * @returns {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result}.
      */
-    batch(items: Array<ModelBatchItem>, executionOptions: MappingExecutionOptions): Promise<Result>;
+    batch(items: Array<ModelBatchItem>, executionOptions: string | MappingExecutionOptions): Promise<Result>;
 }
 
 export declare const mapping: {
@@ -5188,7 +5198,20 @@ export declare const mapping: {
     TableMappings: typeof TableMappings;
     DefaultTableMappings: typeof DefaultTableMappings;
     UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
-    q: object;
+    q: {
+        in_: (arr: any) => QueryOperator;
+        gt: (value: any) => QueryOperator;
+        gte: (value: any) => QueryOperator;
+        lt: (value: any) => QueryOperator;
+        lte: (value: any) => QueryOperator;
+        notEq: (value: any) => QueryOperator;
+        and: (condition1: any, condition2: any) => QueryOperator;
+        incr: (value: any) => QueryAssignment;
+        decr: (value: any) => QueryAssignment;
+        append: (value: any) => QueryAssignment;
+        prepend: (value: any) => QueryAssignment;
+        remove: (value: any) => QueryAssignment;
+    };
 };
 
 declare type MappingExecutionOptions = {
@@ -5590,32 +5613,14 @@ export declare const metrics: {
  * @alias module:mapping~ModelBatchItem
  */
 declare class ModelBatchItem {
-    doc: object;
-    docInfo: DocInfo;
-    handler: MappingHandler;
-    cache: Tree;
-    /**
-     * @param {Object} doc
-     * @param {Object} docInfo
-     * @param {MappingHandler} handler
-     * @param {Tree} cache
-     */
-    constructor(doc: object, docInfo: DocInfo, handler: MappingHandler, cache: Tree);
+    /* Excluded from this release type: doc */
+    /* Excluded from this release type: docInfo */
+    /* Excluded from this release type: handler */
+    /* Excluded from this release type: cache */
+    /* Excluded from this release type: __constructor */
     /* Excluded from this release type: getQueries */
-    /**
-     * Gets the cache key for this item.
-     * @abstract
-     * @param {Array} docKeys
-     * @returns {Iterator}
-     */
-    getCacheKey(docKeys: Array<any>): Iterator<string>;
-    /**
-     * Gets the Promise to create the queries.
-     * @abstract
-     * @param {Array} docKeys
-     * @returns {Promise<Array>}
-     */
-    createQueries(docKeys: Array<any>): Promise<Array<any>>;
+    /* Excluded from this release type: getCacheKey */
+    /* Excluded from this release type: createQueries */
     /* Excluded from this release type: pushQueries */
     /* Excluded from this release type: getMappingInfo */
 }
@@ -5715,7 +5720,7 @@ declare type ModelColumnOptions = {
  * Represents an object mapper for a specific model.
  * @alias module:mapping~ModelMapper
  */
-declare class ModelMapper {
+declare class ModelMapper<T = any> {
     /**
      * Gets the name identifier of the model.
      * @type {String}
@@ -5728,7 +5733,7 @@ declare class ModelMapper {
      * @type {ModelBatchMapper}
      */
     batching: ModelBatchMapper;
-    constructor(name: any, handler: any);
+    /* Excluded from this release type: __constructor */
     /**
      * Gets the first document matching the provided filter or null when not found.
      * <p>
@@ -5747,9 +5752,11 @@ declare class ModelMapper {
      * @example <caption>Get a video by id, selecting specific columns</caption>
      * videoMapper.get({ id }, fields: ['name', 'description'])
      */
-    get(doc: object, docInfo: {
-        fields?: Array<string>;
-    }, executionOptions: object | string): Promise<object>;
+    get(doc: {
+        [key: string]: any;
+    }, docInfo?: {
+        fields?: string[];
+    }, executionOptions?: string | MappingExecutionOptions): Promise<null | T>;
     /**
      * Executes a SELECT query based on the filter and returns the result as an iterable of documents.
      * @param {Object} doc An object containing the properties that map to the primary keys to filter.
@@ -5777,7 +5784,9 @@ declare class ModelMapper {
      * @example <caption>Get user's videos in reverse order</caption>
      * videoMapper.find({ userId }, { orderBy: { addedDate: 'desc' }});
      */
-    find(doc: object, docInfo: FindDocInfo, executionOptions: object | string): Promise<Result>;
+    find(doc: {
+        [key: string]: any;
+    }, docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
     /**
      * Executes a SELECT query without a filter and returns the result as an iterable of documents.
      * <p>
@@ -5799,7 +5808,7 @@ declare class ModelMapper {
      * <p>When provided, the query will be executed starting from a given paging state.</p>
      * @return {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result} instance.
      */
-    findAll(docInfo: FindDocInfo, executionOptions: object | string): Promise<Result>;
+    findAll(docInfo?: FindDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
     /**
      * Inserts a document.
      * <p>
@@ -5831,7 +5840,9 @@ declare class ModelMapper {
      * @example <caption>Insert a video</caption>
      * videoMapper.insert({ id, name });
      */
-    insert(doc: object, docInfo: InsertDocInfo, executionOptions: object | string): Promise<Result>;
+    insert(doc: {
+        [key: string]: any;
+    }, docInfo?: InsertDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
     /**
      * Updates a document.
      * <p>
@@ -5875,7 +5886,9 @@ declare class ModelMapper {
      * @example <caption>Update the name of a video</caption>
      * videoMapper.update({ id, name });
      */
-    update(doc: object, docInfo: UpdateDocInfo, executionOptions: object | string): Promise<Result>;
+    update(doc: {
+        [key: string]: any;
+    }, docInfo?: UpdateDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
     /**
      * Deletes a document.
      * @param {Object} doc A document containing the primary keys values of the document to delete.
@@ -5916,7 +5929,9 @@ declare class ModelMapper {
      * @example <caption>Delete a video</caption>
      * videoMapper.remove({ id });
      */
-    remove(doc: object, docInfo: RemoveDocInfo, executionOptions: object | string): Promise<Result>;
+    remove(doc: {
+        [key: string]: any;
+    }, docInfo?: RemoveDocInfo, executionOptions?: string | MappingExecutionOptions): Promise<Result<T>>;
     /**
      * Uses the provided query and param getter function to execute a query and map the results.
      * Gets a function that takes the document, executes the query and returns the mapped results.
@@ -5936,7 +5951,7 @@ declare class ModelMapper {
      * @return {Function} Returns a function that takes the document and execution options as parameters and returns a
      * Promise the resolves to a [Result]{@link module:mapping~Result} instance.
      */
-    mapWithQuery(query: string, paramsHandler: Function, executionOptions: object | string): Function;
+    mapWithQuery(query: string, paramsHandler: (doc: any) => any[], executionOptions?: string | MappingExecutionOptions): (doc: any, executionOptions?: string | MappingExecutionOptions) => Promise<Result<T>>;
 }
 
 /* Excluded from this release type: ModelMappingInfo */
@@ -6281,8 +6296,8 @@ declare class PlainTextAuthProvider extends AuthProvider {
  * @alias module:geometry~Point
  */
 declare class Point extends Geometry {
-    x: number;
-    y: number;
+    /* Excluded from this release type: x */
+    /* Excluded from this release type: y */
     /**
      * Creates a new {@link Point} instance.
      * @param {Number} x The X coordinate.
@@ -6322,7 +6337,7 @@ declare class Point extends Geometry {
      * @returns {String}
      */
     toString(): string;
-    useBESerialization(): boolean;
+    /* Excluded from this release type: useBESerialization */
     /**
      * Returns a JSON representation of this geo-spatial type.
      * @returns {Object}
@@ -6386,7 +6401,7 @@ export declare const policies: {
  * @alias module:geometry~Polygon
  */
 declare class Polygon extends Geometry {
-    rings: ReadonlyArray<ReadonlyArray<Point>>;
+    /* Excluded from this release type: rings */
     /**
      * Creates a new {@link Polygon} instance.
      * @param {...Array.<Point>}[ringPoints] A sequence of Array of [Point]{@link module:geometry~Point} items as arguments
@@ -6428,7 +6443,7 @@ declare class Polygon extends Geometry {
      * @returns {Boolean}
      */
     equals(other: Polygon): boolean;
-    useBESerialization(): boolean;
+    /* Excluded from this release type: useBESerialization */
     /**
      * Returns Well-known Text (WKT) representation of the geometry object.
      * @returns {String}
@@ -6462,6 +6477,29 @@ declare class Property {
      * @param value
      */
     constructor(key: string, value: any);
+}
+
+/**
+ * Represents a CQL assignment operation, like col = col + x.
+ * @ignore
+ */
+declare class QueryAssignment {
+    /* Excluded from this release type: sign */
+    /* Excluded from this release type: value */
+    /* Excluded from this release type: inverted */
+    /* Excluded from this release type: __constructor */
+}
+
+/**
+ * Represents a CQL query operator, like >=, IN, <, ...
+ * @ignore
+ */
+declare class QueryOperator {
+    /* Excluded from this release type: key */
+    /* Excluded from this release type: value */
+    /* Excluded from this release type: hasChildValues */
+    /* Excluded from this release type: isInOperator */
+    /* Excluded from this release type: __constructor */
 }
 
 /**
@@ -6927,13 +6965,14 @@ declare class ResponseError extends DriverError {
  * Represents the result of an execution as an iterable of objects in the Mapper.
  * @alias module:mapping~Result
  */
-declare class Result {
+declare class Result<T = any> implements IterableIterator<T> {
     private _rs;
     private _info;
     private _rowAdapter;
     private _isEmptyLwt;
-    length: number;
-    pageState: string;
+    private _iteratorIndex;
+    /* Excluded from this release type: length */
+    /* Excluded from this release type: pageState */
     /**
      * Creates a new instance of Result.
      * @param {ResultSet} rs
@@ -6955,23 +6994,27 @@ declare class Result {
     /**
      * Gets the first document in this result or null when the result is empty.
      */
-    first(): any;
+    first(): T | null;
     /**
      * Returns a new Iterator object that contains the document values.
      */
-    [Symbol.iterator](): Generator<any, void, unknown>;
+    [Symbol.iterator](): IterableIterator<T>;
     /**
      * Converts the current instance to an Array of documents.
-     * @return {Array<Object>}
+     * @return {Array<T>}
      */
-    toArray(): Array<object>;
+    toArray(): T[];
     /**
      * Executes a provided function once per result element.
      * @param {Function} callback Function to execute for each element, taking two arguments: currentValue and index.
      * @param {Object} [thisArg] Value to use as <code>this</code> when executing callback.
      */
-    forEach(callback: Function, thisArg: object): void;
-    [inspectMethod](): object[];
+    forEach(callback: (currentValue: T, index: number) => void, thisArg: any): void;
+    [inspectMethod](): T[];
+    next(): {
+        done: boolean;
+        value: T;
+    };
 }
 
 /** @module types */

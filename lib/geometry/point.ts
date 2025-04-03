@@ -26,7 +26,13 @@ import Geometry from "./geometry";
  * @alias module:geometry~Point
  */
 class Point extends Geometry {
+  /**
+   * @internal
+   */
   x: number;
+  /**
+   * @internal
+   */
   y: number;
 
   /**
@@ -122,10 +128,14 @@ class Point extends Geometry {
     return util.format("POINT (%d %d)", this.x, this.y);
   }
 
+  /**
+   * @internal
+   */
   useBESerialization(): boolean {
     return false;
   }
 
+  //TODO: exposed as toJSON(): string;, but clearly returning object
   /**
    * Returns a JSON representation of this geo-spatial type.
    * @returns {Object}

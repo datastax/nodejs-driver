@@ -100,19 +100,19 @@ class DefaultTableMappings extends TableMappings {
   }
 
   /**  @override */
-  getColumnName(propName) {
+  getColumnName(propName: string): string {
     return super.getColumnName(propName);
   }
 
   /** @override */
-  getPropertyName(columnName) {
+  getPropertyName(columnName: string): string {
     return super.getPropertyName(columnName);
   }
 
   /**
    * Creates a new object instance, using object initializer.
    */
-  newObjectInstance() {
+  newObjectInstance(): object {
     return super.newObjectInstance();
   }
 }

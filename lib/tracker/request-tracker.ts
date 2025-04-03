@@ -51,7 +51,7 @@ class RequestTracker {
     executionOptions: ExecutionOptions,
     requestLength: number,
     responseLength: number,
-    latency: number[]): void {};
+    latency: number[]): void {}
 
   /**
    * Invoked each time a query or batch request fails.
@@ -74,12 +74,12 @@ class RequestTracker {
     executionOptions: ExecutionOptions,
     requestLength: number,
     err: Error,
-    latency: number[]): void {};
+    latency: number[]): void {}
 
   /**
    * Invoked when the Client is being shutdown.
    */
-  shutdown?(): void {};
+  shutdown?(): void {}
 }
 
 export default RequestTracker;

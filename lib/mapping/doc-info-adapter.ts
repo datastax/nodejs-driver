@@ -133,7 +133,7 @@ class DocInfoAdapter {
    * @param {Boolean} isIdempotent
    * @param {Boolean} isCounter
    */
-  static adaptBatchOptions(executionOptions: MappingExecutionOptions, isIdempotent: boolean, isCounter: boolean) {
+  static adaptBatchOptions(executionOptions: string | MappingExecutionOptions, isIdempotent: boolean, isCounter: boolean) {
     const options = {
       prepare: true,
       executionProfile: undefined,

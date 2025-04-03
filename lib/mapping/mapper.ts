@@ -58,7 +58,7 @@ import type { MappingExecutionOptions, MappingOptions} from ".";
  * const mapper = new Mapper(client, mappingOptions);
  */
 class Mapper {
-  client: Client;
+  private client: Client;
   private _modelMappingInfos: Map<string, ModelMappingInfo>;
   private _modelMappers: Map<any, any>;
   /**
@@ -88,7 +88,7 @@ class Mapper {
    * @param {String} name The name to identify the model. Note that the name is case-sensitive.
    * @returns {ModelMapper} A [ModelMapper]{@link module:mapping~ModelMapper} instance.
    */
-  forModel(name: string): ModelMapper {
+  forModel<T = any>(name: string): ModelMapper<T> {
     let modelMapper = this._modelMappers.get(name);
 
     if (modelMapper === undefined) {
@@ -138,7 +138,7 @@ class Mapper {
    * unix epoch (00:00:00, January 1st, 1970).
    * @returns {Promise<Result>} A Promise that resolves to a [Result]{@link module:mapping~Result}.
    */
-  batch(items: Array<ModelBatchItem>, executionOptions: MappingExecutionOptions): Promise<Result> {
+  batch(items: Array<ModelBatchItem>, executionOptions: string | MappingExecutionOptions): Promise<Result> {
     if (!Array.isArray(items) || !(items.length > 0)) {
       return Promise.reject(
         new errors.ArgumentError('First parameter items should be an Array with 1 or more ModelBatchItem instances'));

@@ -49,6 +49,7 @@ const supportedDbaas = 'DATASTAX_APOLLO';
 /**
  * Represents a connection used by the driver to receive events and to check the status of the cluster.
  * <p>It uses an existing connection from the hosts' connection pool to maintain the driver metadata up-to-date.</p>
+ * @ignore @internal
  */
 class ControlConnection extends events.EventEmitter {
   protocolVersion: number;

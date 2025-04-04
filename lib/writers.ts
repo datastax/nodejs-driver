@@ -179,6 +179,7 @@ class FrameWriter {
 /**
  * Represents a queue that process one write at a time (FIFO).
  * @extends {EventEmitter}
+ * @ignore @internal
  */
 class WriteQueue extends events.EventEmitter {
   netClient: Socket;

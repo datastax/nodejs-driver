@@ -21,7 +21,7 @@ import utils from "../utils";
  * @classdesc Represents an v4 or v6 Internet Protocol (IP) address.
  */
 class InetAddress {
-  buffer: Buffer;
+  private buffer: Buffer;
   length: number;
   version: number;
 
@@ -141,6 +141,7 @@ class InetAddress {
   /**
    * Provide the name of the constructor and the string representation
    * @returns {string}
+   * @internal
    */
   inspect(): string {
     return this.constructor.name + ': ' + this.toString();
@@ -155,7 +156,7 @@ class InetAddress {
    *   In cases where there is more than one field of only zeros, it can be shortened. For example, 2001:0db8:0:0:0:1:0:1
    *   will be expressed as 2001:0db8::1:0:1.
    * </p>
-   * @param {String} [encoding]
+   * @param {String} [encoding] If set to 'hex', the hex representation of the buffer is returned.
    * @returns {String}
    */
   toString(encoding?: string): string {

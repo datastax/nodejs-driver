@@ -321,7 +321,8 @@ type OperationInfo = {
 export {
   IdempotenceAwareRetryPolicy,
   FallthroughRetryPolicy,
-  RetryPolicy
+  RetryPolicy,
+  type DecisionInfo
 };
 
 export default {

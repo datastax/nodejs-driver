@@ -29,10 +29,11 @@ import { type PreparedQueryInfo } from "./metadata";
 /**
  * Encapsulates the logic for dealing with the different prepare request and response flows, including failover when
  * trying to prepare a query.
+ * @ignore @internal
  */
 class PrepareHandler {
-  _client: Client;
-  _loadBalancing: LoadBalancingPolicy;
+  private _client: Client;
+  private _loadBalancing: LoadBalancingPolicy;
   logEmitter: any;
   log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
   /**

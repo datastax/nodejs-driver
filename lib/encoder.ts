@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import util from "util";
-import types, { getDataTypeByName, InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
+import types, { InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
 import MutableLong from "./types/mutable-long";
 import utils from "./utils";
 import token from "./token";
@@ -1837,7 +1837,7 @@ class Encoder{
         };
       }
       else if (typeof typeInfo === 'string') {
-        type = getDataTypeByName(typeInfo);
+        type = dataTypes.getByName(typeInfo);
       }
       else if (typeof typeInfo.code === 'number') {
         type = typeInfo;
@@ -1935,7 +1935,7 @@ class Encoder{
         // try to fetch the subtype from the Vector, or else guess
         if (value.subtype) {
           try {
-            subtypeColumnInfo = getDataTypeByName(value.subtype);
+            subtypeColumnInfo = dataTypes.getByName(value.subtype);
           } catch (TypeError) {
             // ignore
           }

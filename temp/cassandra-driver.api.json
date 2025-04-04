@@ -174,1160 +174,12 @@
       "members": [
         {
           "kind": "Variable",
-          "canonicalReference": "cassandra-driver!_default:var",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "_default: "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    Client: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Client",
-              "canonicalReference": "cassandra-driver!Client:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    ExecutionProfile: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ExecutionProfile",
-              "canonicalReference": "cassandra-driver!ExecutionProfile:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    ExecutionOptions: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ExecutionOptions",
-              "canonicalReference": "cassandra-driver!ExecutionOptions:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    types: {\n        opcodes: {\n            error: number;\n            startup: number;\n            ready: number;\n            authenticate: number;\n            credentials: number;\n            options: number;\n            supported: number;\n            query: number;\n            result: number;\n            prepare: number;\n            execute: number;\n            register: number;\n            event: number;\n            batch: number;\n            authChallenge: number;\n            authResponse: number;\n            authSuccess: number;\n            cancel: number;\n            isInRange: (code: any) => boolean;\n        };\n        consistencies: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "consistencies",
-              "canonicalReference": "cassandra-driver!~consistencies:enum"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        consistencyToString: {};\n        dataTypes: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "dataTypes",
-              "canonicalReference": "cassandra-driver!~dataTypes:enum"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        getDataTypeNameByCode: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "getDataTypeNameByCode",
-              "canonicalReference": "cassandra-driver!~getDataTypeNameByCode:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        getDataTypeByName: (name: string) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "DataTypeInfo",
-              "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        distance: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "distance",
-              "canonicalReference": "cassandra-driver!~distance:enum"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        frameFlags: {\n            compression: number;\n            tracing: number;\n            customPayload: number;\n            warning: number;\n        };\n        protocolEvents: {\n            topologyChange: string;\n            statusChange: string;\n            schemaChange: string;\n        };\n        protocolVersion: {\n            v1: number;\n            v2: number;\n            v3: number;\n            v4: number;\n            v5: number;\n            v6: number;\n            dseV1: number;\n            dseV2: number;\n            maxSupported: number;\n            minSupported: number;\n            isDse: (version: number) => boolean;\n            isSupportedCassandra: (version: number) => boolean;\n            isSupported: (version: number) => boolean;\n            supportsPrepareFlags: (version: number) => boolean;\n            supportsKeyspaceInRequest: (version: number) => boolean;\n            supportsResultMetadataId: (version: number) => boolean;\n            supportsPreparedPartitionKey: (version: number) => boolean;\n            supportsSchemaChangeFullMetadata: (version: any) => boolean;\n            supportsContinuousPaging: (version: any) => boolean;\n            supportsPaging: (version: any) => boolean;\n            supportsTimestamp: (version: number) => boolean;\n            supportsNamedParameters: (version: number) => boolean;\n            supportsUnset: (version: number) => boolean;\n            supportsFailureReasonMap: (version: any) => boolean;\n            uses2BytesStreamIds: (version: number) => boolean;\n            uses4BytesCollectionLength: (version: number) => boolean;\n            uses4BytesQueryFlags: (version: number) => boolean;\n            canStartupResponseErrorBeWrapped: (version: number) => boolean;\n            getLowerSupported: (version: number) => number;\n            getHighestCommon: (connection: "
-            },
-            {
-              "kind": "Reference",
-              "text": "Connection",
-              "canonicalReference": "cassandra-driver!~Connection:class"
-            },
-            {
-              "kind": "Content",
-              "text": ", hosts: "
-            },
-            {
-              "kind": "Reference",
-              "text": "HostMap",
-              "canonicalReference": "cassandra-driver!~HostMap:class"
-            },
-            {
-              "kind": "Content",
-              "text": ") => number;\n            isBeta: (version: number) => boolean;\n        };\n        responseErrorCodes: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "responseErrorCodes",
-              "canonicalReference": "cassandra-driver!~responseErrorCodes:enum"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        resultKind: {\n            voidResult: number;\n            rows: number;\n            setKeyspace: number;\n            prepared: number;\n            schemaChange: number;\n        };\n        timeuuid: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "timeuuid",
-              "canonicalReference": "cassandra-driver!~timeuuid:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        uuid: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "uuid",
-              "canonicalReference": "cassandra-driver!~uuid:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        BigDecimal: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "BigDecimal",
-              "canonicalReference": "cassandra-driver!~BigDecimal:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Duration: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Duration",
-              "canonicalReference": "cassandra-driver!~Duration:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        FrameHeader: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "FrameHeader",
-              "canonicalReference": "cassandra-driver!~FrameHeader:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        InetAddress: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "InetAddress",
-              "canonicalReference": "cassandra-driver!~InetAddress:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Integer: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Integer",
-              "canonicalReference": "cassandra-driver!~Integer:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        LocalDate: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "LocalDate",
-              "canonicalReference": "cassandra-driver!~LocalDate:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        LocalTime: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "LocalTime",
-              "canonicalReference": "cassandra-driver!~LocalTime:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Long: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Long",
-              "canonicalReference": "long!Long:class"
-            },
-            {
-              "kind": "Content",
-              "text": ".default;\n        ResultSet: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ResultSet",
-              "canonicalReference": "cassandra-driver!~ResultSet:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ResultStream: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ResultStream",
-              "canonicalReference": "cassandra-driver!~ResultStream:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Row: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Row",
-              "canonicalReference": "cassandra-driver!~Row:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DriverError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DriverError",
-              "canonicalReference": "cassandra-driver!~DriverError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        TimeoutError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TimeoutError",
-              "canonicalReference": "cassandra-driver!~TimeoutError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        TimeUuid: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TimeUuid",
-              "canonicalReference": "cassandra-driver!~TimeUuid:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Tuple: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Tuple",
-              "canonicalReference": "cassandra-driver!~Tuple:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Uuid: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Uuid",
-              "canonicalReference": "cassandra-driver!~Uuid:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        unset: "
-            },
-            {
-              "kind": "Reference",
-              "text": "Readonly",
-              "canonicalReference": "!Readonly:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<{\n            readonly unset: true;\n        }>;\n        generateTimestamp: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "generateTimestamp",
-              "canonicalReference": "cassandra-driver!~generateTimestamp:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Vector: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Vector",
-              "canonicalReference": "cassandra-driver!~Vector:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    errors: {\n        ArgumentError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ArgumentError",
-              "canonicalReference": "cassandra-driver!~ArgumentError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        AuthenticationError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "AuthenticationError",
-              "canonicalReference": "cassandra-driver!~AuthenticationError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        BusyConnectionError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "BusyConnectionError",
-              "canonicalReference": "cassandra-driver!~BusyConnectionError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DriverError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DriverError",
-              "canonicalReference": "cassandra-driver!~DriverError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        OperationTimedOutError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "OperationTimedOutError",
-              "canonicalReference": "cassandra-driver!~OperationTimedOutError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DriverInternalError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DriverInternalError",
-              "canonicalReference": "cassandra-driver!~DriverInternalError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        NoHostAvailableError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "NoHostAvailableError",
-              "canonicalReference": "cassandra-driver!~NoHostAvailableError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        NotSupportedError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "NotSupportedError",
-              "canonicalReference": "cassandra-driver!~NotSupportedError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ResponseError: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ResponseError",
-              "canonicalReference": "cassandra-driver!~ResponseError:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        VIntOutOfRangeException: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "VIntOutOfRangeException",
-              "canonicalReference": "cassandra-driver!~VIntOutOfRangeException:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    policies: {\n        addressResolution: {\n            AddressTranslator: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "AddressTranslator",
-              "canonicalReference": "cassandra-driver!~AddressTranslator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            EC2MultiRegionTranslator: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "EC2MultiRegionTranslator",
-              "canonicalReference": "cassandra-driver!~EC2MultiRegionTranslator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        loadBalancing: {\n            AllowListPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "AllowListPolicy",
-              "canonicalReference": "cassandra-driver!~AllowListPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            DCAwareRoundRobinPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DCAwareRoundRobinPolicy",
-              "canonicalReference": "cassandra-driver!~DCAwareRoundRobinPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            DefaultLoadBalancingPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DefaultLoadBalancingPolicy",
-              "canonicalReference": "cassandra-driver!~DefaultLoadBalancingPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            LoadBalancingPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "LoadBalancingPolicy",
-              "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            RoundRobinPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "RoundRobinPolicy",
-              "canonicalReference": "cassandra-driver!~RoundRobinPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            TokenAwarePolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TokenAwarePolicy",
-              "canonicalReference": "cassandra-driver!~TokenAwarePolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            WhiteListPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "WhiteListPolicy",
-              "canonicalReference": "cassandra-driver!~WhiteListPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        reconnection: {\n            ReconnectionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ReconnectionPolicy",
-              "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            ConstantReconnectionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ConstantReconnectionPolicy",
-              "canonicalReference": "cassandra-driver!~ConstantReconnectionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            ExponentialReconnectionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ExponentialReconnectionPolicy",
-              "canonicalReference": "cassandra-driver!~ExponentialReconnectionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        retry: {\n            IdempotenceAwareRetryPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "IdempotenceAwareRetryPolicy",
-              "canonicalReference": "cassandra-driver!~IdempotenceAwareRetryPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            FallthroughRetryPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "FallthroughRetryPolicy",
-              "canonicalReference": "cassandra-driver!~FallthroughRetryPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            RetryPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "RetryPolicy",
-              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        speculativeExecution: {\n            NoSpeculativeExecutionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "NoSpeculativeExecutionPolicy",
-              "canonicalReference": "cassandra-driver!~NoSpeculativeExecutionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            SpeculativeExecutionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "SpeculativeExecutionPolicy",
-              "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            ConstantSpeculativeExecutionPolicy: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ConstantSpeculativeExecutionPolicy",
-              "canonicalReference": "cassandra-driver!~ConstantSpeculativeExecutionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        timestampGeneration: {\n            TimestampGenerator: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TimestampGenerator",
-              "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            MonotonicTimestampGenerator: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "MonotonicTimestampGenerator",
-              "canonicalReference": "cassandra-driver!~MonotonicTimestampGenerator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        defaultAddressTranslator: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "AddressTranslator",
-              "canonicalReference": "cassandra-driver!~AddressTranslator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        defaultLoadBalancingPolicy: (localDc?: string) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "LoadBalancingPolicy",
-              "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        defaultRetryPolicy: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "RetryPolicy",
-              "canonicalReference": "cassandra-driver!~RetryPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        defaultReconnectionPolicy: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "ReconnectionPolicy",
-              "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        defaultSpeculativeExecutionPolicy: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "SpeculativeExecutionPolicy",
-              "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        defaultTimestampGenerator: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "TimestampGenerator",
-              "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    auth: {\n        Authenticator: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Authenticator",
-              "canonicalReference": "cassandra-driver!~Authenticator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        AuthProvider: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "AuthProvider",
-              "canonicalReference": "cassandra-driver!~AuthProvider:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DseGssapiAuthProvider: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DseGssapiAuthProvider",
-              "canonicalReference": "cassandra-driver!~DseGssapiAuthProvider:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DsePlainTextAuthProvider: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DsePlainTextAuthProvider",
-              "canonicalReference": "cassandra-driver!~DsePlainTextAuthProvider:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        NoAuthProvider: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "NoAuthProvider",
-              "canonicalReference": "cassandra-driver!~NoAuthProvider:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        PlainTextAuthProvider: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "PlainTextAuthProvider",
-              "canonicalReference": "cassandra-driver!~PlainTextAuthProvider:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    mapping: {\n        Mapper: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Mapper",
-              "canonicalReference": "cassandra-driver!~Mapper:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ModelMapper: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ModelMapper",
-              "canonicalReference": "cassandra-driver!~ModelMapper:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ModelBatchMapper: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ModelBatchMapper",
-              "canonicalReference": "cassandra-driver!~ModelBatchMapper:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ModelBatchItem: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ModelBatchItem",
-              "canonicalReference": "cassandra-driver!~ModelBatchItem:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Result: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Result",
-              "canonicalReference": "cassandra-driver!~Result:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        TableMappings: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TableMappings",
-              "canonicalReference": "cassandra-driver!~TableMappings:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DefaultTableMappings: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DefaultTableMappings",
-              "canonicalReference": "cassandra-driver!~DefaultTableMappings:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        UnderscoreCqlToCamelCaseMappings: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "UnderscoreCqlToCamelCaseMappings",
-              "canonicalReference": "cassandra-driver!~UnderscoreCqlToCamelCaseMappings:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        q: {\n            in_: (arr: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            gt: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            gte: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            lt: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            lte: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            notEq: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            and: (condition1: any, condition2: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryOperator",
-              "canonicalReference": "cassandra-driver!~QueryOperator:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            incr: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryAssignment",
-              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            decr: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryAssignment",
-              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            append: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryAssignment",
-              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            prepend: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryAssignment",
-              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            remove: (value: any) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "QueryAssignment",
-              "canonicalReference": "cassandra-driver!~QueryAssignment:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n    };\n    tracker: {\n        RequestTracker: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "RequestTracker",
-              "canonicalReference": "cassandra-driver!~RequestTracker:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        RequestLogger: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "RequestLogger",
-              "canonicalReference": "cassandra-driver!~RequestLogger:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    metrics: {\n        ClientMetrics: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ClientMetrics",
-              "canonicalReference": "cassandra-driver!~ClientMetrics:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        DefaultMetrics: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DefaultMetrics",
-              "canonicalReference": "cassandra-driver!~DefaultMetrics:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    concurrent: {\n        executeConcurrent: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "executeConcurrent",
-              "canonicalReference": "cassandra-driver!~executeConcurrent:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        ResultSetGroup: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "ResultSetGroup",
-              "canonicalReference": "cassandra-driver!~ResultSetGroup:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    token: {\n        Token: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Token",
-              "canonicalReference": "cassandra-driver!~Token:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        TokenRange: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "TokenRange",
-              "canonicalReference": "cassandra-driver!~TokenRange:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    metadata: {\n        Metadata: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Metadata",
-              "canonicalReference": "cassandra-driver!~Metadata:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    Encoder: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Encoder",
-              "canonicalReference": "cassandra-driver!Encoder:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    geometry: {\n        Point: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Point",
-              "canonicalReference": "cassandra-driver!~Point:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        LineString: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "LineString",
-              "canonicalReference": "cassandra-driver!~LineString:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Polygon: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Polygon",
-              "canonicalReference": "cassandra-driver!~Polygon:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        Geometry: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Geometry",
-              "canonicalReference": "cassandra-driver!~Geometry:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    datastax: {\n        graph: {\n            Edge: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Edge",
-              "canonicalReference": "cassandra-driver!~Edge:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            Element: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Element",
-              "canonicalReference": "cassandra-driver!~Element:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            Path: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Path",
-              "canonicalReference": "cassandra-driver!~Path:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            Property: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Property",
-              "canonicalReference": "cassandra-driver!~Property:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            Vertex: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "Vertex",
-              "canonicalReference": "cassandra-driver!~Vertex:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            VertexProperty: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "VertexProperty",
-              "canonicalReference": "cassandra-driver!~VertexProperty:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            asInt: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "asInt",
-              "canonicalReference": "cassandra-driver!~asInt:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            asDouble: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "asDouble",
-              "canonicalReference": "cassandra-driver!~asDouble:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            asFloat: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "asFloat",
-              "canonicalReference": "cassandra-driver!~asFloat:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            asTimestamp: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "asTimestamp",
-              "canonicalReference": "cassandra-driver!~asTimestamp:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            asUdt: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "asUdt",
-              "canonicalReference": "cassandra-driver!~asUdt:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            direction: {\n                both: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                out: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                in_: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            getCustomTypeSerializers: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "getCustomSerializers",
-              "canonicalReference": "cassandra-driver!~getCustomSerializers:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            GraphResultSet: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "GraphResultSet",
-              "canonicalReference": "cassandra-driver!~GraphResultSet:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            GraphTypeWrapper: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "GraphTypeWrapper",
-              "canonicalReference": "cassandra-driver!~GraphTypeWrapper:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n            t: {\n                id: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                key: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                label: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n                value: {\n                    typeName: any;\n                    elementName: any;\n                    toString(): any;\n                };\n            };\n            UdtGraphWrapper: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "UdtGraphWrapper",
-              "canonicalReference": "cassandra-driver!~UdtGraphWrapper:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n        };\n        DateRange: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "DateRange",
-              "canonicalReference": "cassandra-driver!~DateRange:class"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    };\n    defaultOptions: () => "
-            },
-            {
-              "kind": "Reference",
-              "text": "ClientOptions",
-              "canonicalReference": "cassandra-driver!~ClientOptions:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    version: string;\n}"
-            }
-          ],
-          "fileUrlPath": "out/cassandra-rollup.d.ts",
-          "isReadonly": true,
-          "releaseTag": "Public",
-          "name": "_default",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 252
-          }
-        },
-        {
-          "kind": "Variable",
           "canonicalReference": "cassandra-driver!auth:var",
           "docComment": "/**\n * DSE Authentication module. <p> Contains the classes used for connecting to a DSE cluster secured with DseAuthenticator. </p>  @module auth\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$9: "
+              "text": "_default$8: "
             },
             {
               "kind": "Content",
@@ -1423,594 +275,6 @@
           "preserveMemberOrder": false,
           "members": [
             {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_createBatchRequest:member(1)",
-              "docComment": "/**\n * Returns a BatchRequest instance and fills the routing key information in the provided options.  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_createBatchRequest(queryItems: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        query: any;\n        params: any;\n        info?: any;\n    }[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", info: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "BatchRequest",
-                  "canonicalReference": "cassandra-driver!~BatchRequest:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 5,
-                "endIndex": 9
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "queryItems",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "info",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_createBatchRequest"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_createExecuteRequest:member(1)",
-              "docComment": "/**\n * Returns an ExecuteRequest instance and fills the routing key information in the provided options.  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_createExecuteRequest(query: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", queryId: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", info: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", params: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", meta: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecuteRequest",
-                  "canonicalReference": "cassandra-driver!~ExecuteRequest:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 11,
-                "endIndex": 15
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "query",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "queryId",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "info",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "params",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 7,
-                    "endIndex": 8
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "meta",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 9,
-                    "endIndex": 10
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_createExecuteRequest"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_createQueryRequest:member(1)",
-              "docComment": "/**\n * Returns a QueryRequest instance and fills the routing key information in the provided options.  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_createQueryRequest(query: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", execOptions: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", params: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "QueryRequest",
-                  "canonicalReference": "cassandra-driver!~QueryRequest:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 7,
-                "endIndex": 11
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "query",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "execOptions",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "params",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_createQueryRequest"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_execute:member(1)",
-              "docComment": "/**\n * Connects and handles the execution of prepared and simple statements.\n *\n * @param query - \n *\n * @param params - \n *\n * @param execOptions - \n *\n * @returns {Promise<ResultSet>}  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_execute(query: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", params: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", execOptions: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionOptions",
-                  "canonicalReference": "cassandra-driver!ExecutionOptions:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ResultSet",
-                  "canonicalReference": "cassandra-driver!~ResultSet:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 8,
-                "endIndex": 12
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "query",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "params",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 5
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "execOptions",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 6,
-                    "endIndex": 7
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_execute"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_getEncoder:member(1)",
-              "docComment": "/**\n * @returns {Encoder}  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_getEncoder(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Encoder",
-                  "canonicalReference": "cassandra-driver!Encoder:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_getEncoder"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_setHostListeners:member(1)",
-              "docComment": "/**\n * Sets the listeners for the nodes.  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_setHostListeners(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_setHostListeners"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_setRoutingInfo:member(1)",
-              "docComment": "/**\n * Sets the routing key based on the parameter values or the provided routing key components.\n *\n * @param execOptions - \n *\n * @param params - \n *\n * @param meta -  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_setRoutingInfo(execOptions: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionOptions",
-                  "canonicalReference": "cassandra-driver!ExecutionOptions:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", params: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", meta: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<void>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 8,
-                "endIndex": 10
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "execOptions",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "params",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 5
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "meta",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 6,
-                    "endIndex": 7
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_setRoutingInfo"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "cassandra-driver!Client#_warmup:member(1)",
-              "docComment": "/**\n * Sets the distance to each host and when warmup is true, creates all connections to local hosts.\n *\n * @returns {Promise}  @private\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_warmup(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "isAbstract": false,
-              "name": "_warmup"
-            },
-            {
               "kind": "Constructor",
               "canonicalReference": "cassandra-driver!Client:constructor(1)",
               "docComment": "/**\n * Creates a new instance of {@link Client}. Represents a database client that maintains multiple connections to the cluster nodes, providing methods to execute CQL statements. <p> The <code>Client</code> uses [policies]{@link module:policies} to decide which nodes to connect to, which node to use per each query execution, when it should retry failed or timed-out executions and how reconnection to down nodes should be made. </p>\n *\n * @param options - The options for this instance.\n *\n * @example\n *\n * <caption>Creating a new client instance</caption> const client = new Client({ contactPoints: ['10.0.1.101', '10.0.1.102'], localDataCenter: 'datacenter1' });\n *\n * @example\n *\n * <caption>Executing a query</caption> const result = await client.connect(); console.log(`Connected to ${client.hosts.length} nodes in the cluster: ${client.hosts.keys().join(', ')}`);\n *\n * @example\n *\n * <caption>Executing a query</caption> const result = await client.execute('SELECT key FROM system.local'); const row = result.first(); console.log(row['key']);  @constructor\n */\n",
@@ -2077,7 +341,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -2170,7 +434,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -2344,12 +608,48 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "connect(callback?: "
+                  "text": "connect(): "
                 },
                 {
                   "kind": "Reference",
-                  "text": "Function",
-                  "canonicalReference": "!Function:interface"
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "connect"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "cassandra-driver!Client#connect:member(2)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "connect(callback: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EmptyCallback",
+                  "canonicalReference": "cassandra-driver!~EmptyCallback:type"
                 },
                 {
                   "kind": "Content",
@@ -2357,7 +657,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "any"
+                  "text": "void"
                 },
                 {
                   "kind": "Content",
@@ -2371,7 +671,7 @@
               },
               "releaseTag": "Public",
               "isProtected": false,
-              "overloadIndex": 1,
+              "overloadIndex": 2,
               "parameters": [
                 {
                   "parameterName": "callback",
@@ -2379,103 +679,12 @@
                     "startIndex": 1,
                     "endIndex": 2
                   },
-                  "isOptional": true
+                  "isOptional": false
                 }
               ],
               "isOptional": false,
               "isAbstract": false,
               "name": "connect"
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#connected:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "connected: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "connected",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#connecting:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "connecting: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "connecting",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#controlConnection:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "controlConnection: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ControlConnection",
-                  "canonicalReference": "cassandra-driver!~ControlConnection:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "controlConnection",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
             },
             {
               "kind": "Method",
@@ -2506,7 +715,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -2836,7 +1045,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -2932,7 +1141,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -3687,8 +1896,9 @@
                   "text": "hosts: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "any"
+                  "kind": "Reference",
+                  "text": "HostMap",
+                  "canonicalReference": "cassandra-driver!~HostMap:class"
                 },
                 {
                   "kind": "Content",
@@ -3699,67 +1909,6 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "hosts",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#insightsClient:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "insightsClient: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "InsightsClient",
-                  "canonicalReference": "cassandra-driver!~InsightsClient:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "insightsClient",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#isShuttingDown:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "isShuttingDown: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "isShuttingDown",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -3793,41 +1942,6 @@
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#log:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "log: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "typeof "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "log",
-                  "canonicalReference": "cassandra-driver!~log:function"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "log",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
               },
               "isStatic": false,
               "isProtected": false,
@@ -3887,68 +2001,6 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "metrics",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#options:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "options: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ClientOptions",
-                  "canonicalReference": "cassandra-driver!~ClientOptions:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "options",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "cassandra-driver!Client#profileManager:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "profileManager: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ProfileManager",
-                  "canonicalReference": "cassandra-driver!~ProfileManager:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "profileManager",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -4040,7 +2092,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -4119,13 +2171,707 @@
           "implementsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "cassandra-driver!ClientOptions:interface",
+          "docComment": "/**\n * Client options. <p>While the driver provides lots of extensibility points and configurability, few client options are required.</p> <p>Default values for all settings are designed to be suitable for the majority of use cases, you should avoid fine tuning it when not needed.</p> <p>See [Client constructor]{@link Client} documentation for recommended options.</p>  @typedef {Object} ClientOptions  @property {Array.<string>} contactPoints Array of addresses or host names of the nodes to add as contact points. <p> Contact points are addresses of Cassandra nodes that the driver uses to discover the cluster topology. </p> <p> Only one contact point is required (the driver will retrieve the address of the other nodes automatically), but it is usually a good idea to provide more than one contact point, because if that single contact point is unavailable, the driver will not be able to initialize correctly. </p>  @property {String} [localDataCenter] The local data center to use. <p> If using DCAwareRoundRobinPolicy (default), this option is required and only hosts from this data center are connected to and used in query plans. </p>  @property {String} [keyspace] The logged keyspace for all the connections created within the {@link Client} instance.  @property {Object} [credentials] An object containing the username and password for plain-text authentication. It configures the authentication provider to be used against Apache Cassandra's PasswordAuthenticator or DSE's DseAuthenticator, when default auth scheme is plain-text. <p> Note that you should configure either <code>credentials</code> or <code>authProvider</code> to connect to an auth-enabled cluster, but not both. </p>  @property {String} [credentials.username] The username to use for plain-text authentication.  @property {String} [credentials.password] The password to use for plain-text authentication.  @property {Uuid} [id] A unique identifier assigned to a {@link Client} object, that will be communicated to the server (DSE 6.0+) to identify the client instance created with this options. When not defined, the driver will generate a random identifier.  @property {String} [applicationName] An optional setting identifying the name of the application using the {@link Client} instance. <p>This value is passed to DSE and is useful as metadata for describing a client connection on the server side.</p>  @property {String} [applicationVersion] An optional setting identifying the version of the application using the {@link Client} instance. <p>This value is passed to DSE and is useful as metadata for describing a client connection on the server side.</p>  @property {Object} [monitorReporting] Options for reporting mechanism from the client to the DSE server, for versions that support it.  @property {Boolean} [monitorReporting.enabled=true] Determines whether the reporting mechanism is enabled. Defaults to <code>true</code>.  @property {Object} [cloud] The options to connect to a cloud instance.  @property {String|URL} cloud.secureConnectBundle Determines the file path for the credentials file bundle.  @property {Number} [refreshSchemaDelay] The default window size in milliseconds used to debounce node list and schema refresh metadata requests. Default: 1000.  @property {Boolean} [isMetadataSyncEnabled] Determines whether client-side schema metadata retrieval and update is enabled. <p>Setting this value to <code>false</code> will cause keyspace information not to be automatically loaded, affecting replica calculation per token in the different keyspaces. When disabling metadata synchronization, use [Metadata.refreshKeyspaces()]{@link module:metadata~Metadata#refreshKeyspaces} to keep keyspace information up to date or token-awareness will not work correctly.</p> Default: <code>true</code>.  @property {Boolean} [prepareOnAllHosts] Determines if the driver should prepare queries on all hosts in the cluster. Default: <code>true</code>.  @property {Boolean} [rePrepareOnUp] Determines if the driver should re-prepare all cached prepared queries on a host when it marks it back up. Default: <code>true</code>.  @property {Number} [maxPrepared] Determines the maximum amount of different prepared queries before evicting items from the internal cache. Reaching a high threshold hints that the queries are not being reused, like when hard-coding parameter values inside the queries. Default: <code>500</code>.  @property {Object} [policies]  @property {LoadBalancingPolicy} [policies.loadBalancing] The load balancing policy instance to be used to determine the coordinator per query.  @property {RetryPolicy} [policies.retry] The retry policy.  @property {ReconnectionPolicy} [policies.reconnection] The reconnection policy to be used.  @property {AddressTranslator} [policies.addressResolution] The address resolution policy.  @property {SpeculativeExecutionPolicy} [policies.speculativeExecution] The <code>SpeculativeExecutionPolicy</code> instance to be used to determine if the client should send speculative queries when the selected host takes more time than expected. <p> Default: <code>[NoSpeculativeExecutionPolicy]{@link module:policies/speculativeExecution~NoSpeculativeExecutionPolicy}</code> </p>  @property {TimestampGenerator} [policies.timestampGeneration] The client-side [query timestamp generator]{@link module:policies/timestampGeneration~TimestampGenerator}. <p> Default: <code>[MonotonicTimestampGenerator]{@link module:policies/timestampGeneration~MonotonicTimestampGenerator} </code> </p> <p>Use <code>null</code> to disable client-side timestamp generation.</p>  @property {QueryOptions} [queryOptions] Default options for all queries.  @property {Object} [pooling] Pooling options.  @property {Number} [pooling.heartBeatInterval] The amount of idle time in milliseconds that has to pass before the driver issues a request on an active connection to avoid idle time disconnections. Default: 30000.  @property {Object} [pooling.coreConnectionsPerHost] Associative array containing amount of connections per host distance.  @property {Number} [pooling.maxRequestsPerConnection] The maximum number of requests per connection. The default value is: <ul> <li>For modern protocol versions (v3 and above): 2048</li> <li>For older protocol versions (v1 and v2): 128</li> </ul>  @property {Boolean} [pooling.warmup] Determines if all connections to hosts in the local datacenter must be opened on connect. Default: true.  @property {Object} [protocolOptions]  @property {Number} [protocolOptions.port] The port to use to connect to the Cassandra host. If not set through this method, the default port (9042) will be used instead.  @property {Number} [protocolOptions.maxSchemaAgreementWaitSeconds] The maximum time in seconds to wait for schema agreement between nodes before returning from a DDL query. Default: 10.  @property {Number} [protocolOptions.maxVersion] When set, it limits the maximum protocol version used to connect to the nodes. Useful for using the driver against a cluster that contains nodes with different major/minor versions of Cassandra.  @property {Boolean} [protocolOptions.noCompact] When set to true, enables the NO_COMPACT startup option. <p> When this option is supplied <code>SELECT</code>, <code>UPDATE</code>, <code>DELETE</code>, and <code>BATCH</code> statements on <code>COMPACT STORAGE</code> tables function in \"compatibility\" mode which allows seeing these tables as if they were \"regular\" CQL tables. </p> <p> This option only effects interactions with interactions with tables using <code>COMPACT STORAGE</code> and is only supported by C* 3.0.16+, 3.11.2+, 4.0+ and DSE 6.0+. </p>  @property {Object} [socketOptions]  @property {Number} [socketOptions.connectTimeout] Connection timeout in milliseconds. Default: 5000.  @property {Number} [socketOptions.defunctReadTimeoutThreshold] Determines the amount of requests that simultaneously have to timeout before closing the connection. Default: 64.  @property {Boolean} [socketOptions.keepAlive] Whether to enable TCP keep-alive on the socket. Default: true.  @property {Number} [socketOptions.keepAliveDelay] TCP keep-alive delay in milliseconds. Default: 0.  @property {Number} [socketOptions.readTimeout] Per-host read timeout in milliseconds. <p> Please note that this is not the maximum time a call to {@link Client#execute} may have to wait; this is the maximum time that call will wait for one particular Cassandra host, but other hosts will be tried if one of them timeout. In other words, a {@link Client#execute} call may theoretically wait up to <code>readTimeout * number_of_cassandra_hosts</code> (though the total number of hosts tried for a given query also depends on the LoadBalancingPolicy in use). <p>When setting this value, keep in mind the following:</p> <ul> <li>the timeout settings used on the Cassandra side (*_request_timeout_in_ms in cassandra.yaml) should be taken into account when picking a value for this read timeout. You should pick a value a couple of seconds greater than the Cassandra timeout settings. </li> <li> the read timeout is only approximate and only control the timeout to one Cassandra host, not the full query. </li> </ul> Setting a value of 0 disables read timeouts. Default: <code>12000</code>.  @property {Boolean} [socketOptions.tcpNoDelay] When set to true, it disables the Nagle algorithm. Default: true.  @property {Number} [socketOptions.coalescingThreshold] Buffer length in bytes use by the write queue before flushing the frames. Default: 8000.  @property {AuthProvider} [authProvider] Provider to be used to authenticate to an auth-enabled cluster.  @property {RequestTracker} [requestTracker] The instance of RequestTracker used to monitor or log requests executed with this instance.  @property {Object} [sslOptions] Client-to-node ssl options. When set the driver will use the secure layer. You can specify cert, ca, ... options named after the Node.js <code>tls.connect()</code> options. <p> It uses the same default values as Node.js <code>tls.connect()</code> except for <code>rejectUnauthorized</code> which is set to <code>false</code> by default (for historical reasons). This setting is likely to change in upcoming versions to enable validation by default. </p>  @property {Object} [encoding] Encoding options.  @property {Function} [encoding.map] Map constructor to use for Cassandra map<k,v> type encoding and decoding. If not set, it will default to Javascript Object with map keys as property names.  @property {Function} [encoding.set] Set constructor to use for Cassandra set<k> type encoding and decoding. If not set, it will default to Javascript Array.  @property {Boolean} [encoding.copyBuffer] Determines if the network buffer should be copied for buffer based data types (blob, uuid, timeuuid and inet). <p> Setting it to true will cause that the network buffer is copied for each row value of those types, causing additional allocations but freeing the network buffer to be reused. Setting it to true is a good choice for cases where the Row and ResultSet returned by the queries are long-lived objects. </p> <p> Setting it to false will cause less overhead and the reference of the network buffer to be maintained until the row / result set are de-referenced. Default: true. </p>  @property {Boolean} [encoding.useUndefinedAsUnset] Valid for Cassandra 2.2 and above. Determines that, if a parameter is set to <code>undefined</code> it should be encoded as <code>unset</code>. <p> By default, ECMAScript <code>undefined</code> is encoded as <code>null</code> in the driver. Cassandra 2.2 introduced the concept of unset. At driver level, you can set a parameter to unset using the field <code>types.unset</code>. Setting this flag to true allows you to use ECMAScript undefined as Cassandra <code>unset</code>. </p> <p> Default: true. </p>  @property {Boolean} [encoding.useBigIntAsLong] Use [BigInt ECMAScript type](https://tc39.github.io/proposal-bigint/) to represent CQL bigint and counter data types.  @property {Boolean} [encoding.useBigIntAsVarint] Use [BigInt ECMAScript type](https://tc39.github.io/proposal-bigint/) to represent CQL varint data type.  @property {Array.<ExecutionProfile>} [profiles] The array of [execution profiles]{@link ExecutionProfile}.  @property {Function} [promiseFactory] Function to be used to create a <code>Promise</code> from a callback-style function. <p> Promise libraries often provide different methods to create a promise. For example, you can use Bluebird's <code>Promise.fromCallback()</code> method. </p> <p> By default, the driver will use the [Promise constructor]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise}. </p>\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface ClientOptions "
+            }
+          ],
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
+          "releaseTag": "Public",
+          "name": "ClientOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#authProvider:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "authProvider?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AuthProvider",
+                  "canonicalReference": "cassandra-driver!~AuthProvider:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "authProvider",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#cloud:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "cloud?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        secureConnectBundle: string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "URL",
+                  "canonicalReference": "!\"\\\"url\\\"\".__global.URL:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "cloud",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#contactPoints:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "contactPoints?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "contactPoints",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#credentials:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "credentials?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        username: string;\n        password: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "credentials",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#encoding:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "encoding?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        map?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Function",
+                  "canonicalReference": "!Function:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        set?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Function",
+                  "canonicalReference": "!Function:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        copyBuffer?: boolean;\n        useUndefinedAsUnset?: boolean;\n        useBigIntAsLong?: boolean;\n        useBigIntAsVarint?: boolean;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "encoding",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#isMetadataSyncEnabled:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "isMetadataSyncEnabled?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "isMetadataSyncEnabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#keyspace:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "keyspace?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "keyspace",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#maxPrepared:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxPrepared?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxPrepared",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#metrics:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "metrics?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ClientMetrics",
+                  "canonicalReference": "cassandra-driver!~ClientMetrics:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "metrics",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#policies:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "policies?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        addressResolution?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AddressTranslator",
+                  "canonicalReference": "cassandra-driver!~AddressTranslator:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        loadBalancing?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "LoadBalancingPolicy",
+                  "canonicalReference": "cassandra-driver!~LoadBalancingPolicy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        reconnection?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReconnectionPolicy",
+                  "canonicalReference": "cassandra-driver!~ReconnectionPolicy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        retry?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RetryPolicy",
+                  "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        speculativeExecution?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SpeculativeExecutionPolicy",
+                  "canonicalReference": "cassandra-driver!~SpeculativeExecutionPolicy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        timestampGeneration?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TimestampGenerator",
+                  "canonicalReference": "cassandra-driver!~TimestampGenerator:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "policies",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 14
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#pooling:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pooling?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        coreConnectionsPerHost?: {\n            [key: number]: number;\n        };\n        heartBeatInterval?: number;\n        maxRequestsPerConnection?: number;\n        warmup?: boolean;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "pooling",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#prepareOnAllHosts:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "prepareOnAllHosts?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "prepareOnAllHosts",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#profiles:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "profiles?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExecutionProfile",
+                  "canonicalReference": "cassandra-driver!ExecutionProfile:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "profiles",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#promiseFactory:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "promiseFactory?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(handler: (callback: (err: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", result?: any) => void) => void) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "promiseFactory",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#protocolOptions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "protocolOptions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        maxSchemaAgreementWaitSeconds?: number;\n        maxVersion?: number;\n        noCompact?: boolean;\n        port?: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "protocolOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#queryOptions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "queryOptions?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "QueryOptions",
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "queryOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#refreshSchemaDelay:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "refreshSchemaDelay?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "refreshSchemaDelay",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#rePrepareOnUp:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "rePrepareOnUp?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "rePrepareOnUp",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#requestTracker:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "requestTracker?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RequestTracker",
+                  "canonicalReference": "cassandra-driver!~RequestTracker:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "requestTracker",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#socketOptions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "socketOptions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        coalescingThreshold?: number;\n        connectTimeout?: number;\n        defunctReadTimeoutThreshold?: number;\n        keepAlive?: boolean;\n        keepAliveDelay?: number;\n        readTimeout?: number;\n        tcpNoDelay?: boolean;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "socketOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!ClientOptions#sslOptions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sslOptions?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ConnectionOptions",
+                  "canonicalReference": "!\"\\\"tls\\\"\".ConnectionOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "sslOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!concurrent:var",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$4: "
+              "text": "_default$2: "
             },
             {
               "kind": "Content",
@@ -4162,11 +2908,11 @@
         {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!datastax:var",
-          "docComment": "",
+          "docComment": "/**\n * DataStax module. <p> Contains modules and classes to represent functionality that is specific to DataStax products. </p>  @module datastax\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$5: "
+              "text": "_default: "
             },
             {
               "kind": "Content",
@@ -4338,7 +3084,7 @@
             {
               "kind": "Reference",
               "text": "ClientOptions",
-              "canonicalReference": "cassandra-driver!~ClientOptions:interface"
+              "canonicalReference": "cassandra-driver!ClientOptions:interface"
             }
           ],
           "fileUrlPath": "out/cassandra-rollup.d.ts",
@@ -4387,7 +3133,7 @@
                 {
                   "kind": "Reference",
                   "text": "ClientOptions",
-                  "canonicalReference": "cassandra-driver!~ClientOptions:interface"
+                  "canonicalReference": "cassandra-driver!ClientOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -4548,7 +3294,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$a: "
+              "text": "_default$9: "
             },
             {
               "kind": "Content",
@@ -4751,7 +3497,7 @@
             {
               "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getCustomPayload:member(1)",
-              "docComment": "/**\n * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use this data.  @abstract\n *\n * @returns {Object}\n */\n",
+              "docComment": "/**\n * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use this data.  @abstract\n *\n * @returns {{ [key: string]: any }}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4759,7 +3505,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "object"
+                  "text": "{\n        [key: string]: any;\n    }"
                 },
                 {
                   "kind": "Content",
@@ -4845,38 +3591,15 @@
             {
               "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getHints:member(1)",
-              "docComment": "/**\n * Gets the type hints for parameters given in the query, ordered as for the parameters.  @abstract\n *\n * @returns {Array|Array<Array>}\n */\n",
+              "docComment": "/**\n * Gets the type hints for parameters given in the query, ordered as for the parameters.  @abstract\n *\n * @returns {string[] | string[][]}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
                   "text": "getHints(): "
                 },
                 {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
                   "kind": "Content",
-                  "text": "<any> | "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Array",
-                  "canonicalReference": "!Array:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<any>>"
+                  "text": "string[] | string[][]"
                 },
                 {
                   "kind": "Content",
@@ -4886,7 +3609,7 @@
               "isStatic": false,
               "returnTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 7
+                "endIndex": 2
               },
               "releaseTag": "Public",
               "isProtected": false,
@@ -5003,7 +3726,7 @@
                 {
                   "kind": "Reference",
                   "text": "QueryOptions",
-                  "canonicalReference": "cassandra-driver!~QueryOptions:interface"
+                  "canonicalReference": "cassandra-driver!QueryOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -5143,15 +3866,16 @@
             {
               "kind": "Method",
               "canonicalReference": "cassandra-driver!ExecutionOptions#getSerialConsistency:member(1)",
-              "docComment": "/**\n * Gets the the consistency level to be used for the serial phase of conditional updates.  @abstract\n *\n * @returns {Number}\n */\n",
+              "docComment": "/**\n * Gets the the consistency level to be used for the serial phase of conditional updates.  @abstract\n *\n * @returns {consistencies}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
                   "text": "getSerialConsistency(): "
                 },
                 {
-                  "kind": "Content",
-                  "text": "number"
+                  "kind": "Reference",
+                  "text": "consistencies",
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5186,7 +3910,7 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Long__default",
+                  "text": "Long",
                   "canonicalReference": "long!Long:class"
                 },
                 {
@@ -6054,7 +4778,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$7: "
+              "text": "_default$5: "
             },
             {
               "kind": "Content",
@@ -6095,7 +4819,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$2: "
+              "text": "_default$4: "
             },
             {
               "kind": "Content",
@@ -6346,6 +5070,727 @@
           }
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "cassandra-driver!QueryOptions:interface",
+          "docComment": "/**\n * Query options  @typedef {Object} QueryOptions  @property {Boolean} [autoPage] Determines if the driver must retrieve the following result pages automatically. <p> This setting is only considered by the [Client#eachRow()]{@link Client#eachRow} method. For more information, check the [paging results documentation]{@link https://docs.datastax.com/en/developer/nodejs-driver/latest/features/paging/}. </p>  @property {Boolean} [captureStackTrace] Determines if the stack trace before the query execution should be maintained. <p> Useful for debugging purposes, it should be set to <code>false</code> under production environment as it adds an unnecessary overhead to each execution. </p> Default: false.  @property {Number} [consistency] [Consistency level]{@link module:types~consistencies}. <p> Defaults to <code>localOne</code> for Apache Cassandra and DSE deployments. For DataStax Astra, it defaults to <code>localQuorum</code>. </p>  @property {Object} [customPayload] Key-value payload to be passed to the server. On the Cassandra side, implementations of QueryHandler can use this data.  @property {String} [executeAs] The user or role name to act as when executing this statement. <p>When set, it executes as a different user/role than the one currently authenticated (a.k.a. proxy execution).</p> <p>This feature is only available in DSE 5.1+.</p>  @property {String|ExecutionProfile} [executionProfile] Name or instance of the [profile]{@link ExecutionProfile} to be used for this execution. If not set, it will the use \"default\" execution profile.  @property {Number} [fetchSize] Amount of rows to retrieve per page.  @property {Array|Array<Array>} [hints] Type hints for parameters given in the query, ordered as for the parameters. <p>For batch queries, an array of such arrays, ordered as with the queries in the batch.</p>  @property {Host} [host] The host that should handle the query. <p> Use of this option is <em>heavily discouraged</em> and should only be used in the following cases: </p> <ol> <li> Querying node-local tables, such as tables in the <code>system</code> and <code>system_views</code> keyspaces. </li> <li> Applying a series of schema changes, where it may be advantageous to execute schema changes in sequence on the same node. </li> </ol> <p> Configuring a specific host causes the configured [LoadBalancingPolicy]{@link module:policies/loadBalancing~LoadBalancingPolicy} to be completely bypassed. However, if the load balancing policy dictates that the host is at a [distance of ignored]{@link module:types~distance} or there is no active connectivity to the host, the request will fail with a [NoHostAvailableError]{@link module:errors~NoHostAvailableError}. </p>  @property {Boolean} [isIdempotent] Defines whether the query can be applied multiple times without changing the result beyond the initial application. <p> The query execution idempotence can be used at [RetryPolicy]{@link module:policies/retry~RetryPolicy} level to determine if an statement can be retried in case of request error or write timeout. </p> <p>Default: <code>false</code>.</p>  @property {String} [keyspace] Specifies the keyspace for the query. It is used for the following: <ol> <li>To indicate what keyspace the statement is applicable to (protocol V5+ only). This is useful when the query does not provide an explicit keyspace and you want to override the current {@link Client#keyspace}.</li> <li>For query routing when the query operates on a different keyspace than the current {@link Client#keyspace}.</li> </ol>  @property {Boolean} [logged] Determines if the batch should be written to the batchlog. Only valid for [Client#batch()]{@link Client#batch}, it will be ignored by other methods. Default: true.  @property {Boolean} [counter] Determines if its a counter batch. Only valid for [Client#batch()]{@link Client#batch}, it will be ignored by other methods. Default: false.  @property {Buffer|String} [pageState] Buffer or string token representing the paging state. <p>Useful for manual paging, if provided, the query will be executed starting from a given paging state.</p>  @property {Boolean} [prepare] Determines if the query must be executed as a prepared statement.  @property {Number} [readTimeout] When defined, it overrides the default read timeout (<code>socketOptions.readTimeout</code>) in milliseconds for this execution per coordinator. <p> Suitable for statements for which the coordinator may allow a longer server-side timeout, for example aggregation queries. </p> <p> A value of <code>0</code> disables client side read timeout for the execution. Default: <code>undefined</code>. </p>  @property {RetryPolicy} [retry] Retry policy for the query. <p> This property can be used to specify a different [retry policy]{@link module:policies/retry} to the one specified in the {@link ClientOptions}.policies. </p>  @property {Array} [routingIndexes] Index of the parameters that are part of the partition key to determine the routing.  @property {Buffer|Array} [routingKey] Partition key(s) to determine which coordinator should be used for the query.  @property {Array} [routingNames] Array of the parameters names that are part of the partition key to determine the routing. Only valid for non-prepared requests, it's recommended that you use the prepare flag instead.  @property {Number} [serialConsistency] Serial consistency is the consistency level for the serial phase of conditional updates. This option will be ignored for anything else that a conditional update/insert.  @property {Number|Long} [timestamp] The default timestamp for the query in microseconds from the unix epoch (00:00:00, January 1st, 1970). <p>If provided, this will replace the server side assigned timestamp as default timestamp.</p> <p>Use [generateTimestamp()]{@link module:types~generateTimestamp} utility method to generate a valid timestamp based on a Date and microseconds parts.</p>  @property {Boolean} [traceQuery] Enable query tracing for the execution. Use query tracing to diagnose performance problems related to query executions. Default: false. <p>To retrieve trace, you can call [Metadata.getTrace()]{@link module:metadata~Metadata#getTrace} method.</p>  @property {Object} [graphOptions] Default options for graph query executions. <p> These options are meant to provide defaults for all graph query executions. Consider using [execution profiles]{@link ExecutionProfile} if you plan to reuse different set of options across different query executions. </p>  @property {String} [graphOptions.language] The graph language to use in graph queries. Default: <code>'gremlin-groovy'</code>.  @property {String} [graphOptions.name] The graph name to be used in all graph queries. <p> This property is required but there is no default value for it. This value can be overridden at query level. </p>  @property {Number} [graphOptions.readConsistency] Overrides the [consistency level]{@link module:types~consistencies} defined in the query options for graph read queries.  @property {Number} [graphOptions.readTimeout] Overrides the default per-host read timeout (in milliseconds) for all graph queries. Default: <code>0</code>. <p> Use <code>null</code> to reset the value and use the default on <code>socketOptions.readTimeout</code> . </p>  @property {String} [graphOptions.source] The graph traversal source name to use in graph queries. Default: <code>'g'</code>.  @property {Number} [graphOptions.writeConsistency] Overrides the [consistency level]{@link module:types~consistencies} defined in the query options for graph write queries.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface QueryOptions "
+            }
+          ],
+          "fileUrlPath": "out/cassandra-rollup.d.ts",
+          "releaseTag": "Public",
+          "name": "QueryOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#autoPage:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "autoPage?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "autoPage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#captureStackTrace:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "captureStackTrace?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "captureStackTrace",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#consistency:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "consistency?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "consistencies",
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "consistency",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#counter:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "counter?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "counter",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#customPayload:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "customPayload?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "object"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "customPayload",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#executeAs:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "executeAs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "executeAs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#executionProfile:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "executionProfile?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExecutionProfile",
+                  "canonicalReference": "cassandra-driver!ExecutionProfile:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "executionProfile",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#fetchSize:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "fetchSize?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "fetchSize",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#graphOptions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "graphOptions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        language?: string;\n        name?: string;\n        readConsistency?: number;\n        readTimeout?: number;\n        source?: string;\n        writeConsistency?: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "graphOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#hints:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "hints?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "hints",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#host:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "host?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Host",
+                  "canonicalReference": "cassandra-driver!~Host:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "host",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#isIdempotent:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "isIdempotent?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "isIdempotent",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#keyspace:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "keyspace?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "keyspace",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#logged:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "logged?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "logged",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#pageState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pageState?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Buffer",
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "pageState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#prepare:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "prepare?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "prepare",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#readTimeout:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readTimeout?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "readTimeout",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#retry:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "retry?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RetryPolicy",
+                  "canonicalReference": "cassandra-driver!~RetryPolicy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "retry",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#routingIndexes:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "routingIndexes?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "routingIndexes",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#routingKey:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "routingKey?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Buffer",
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Buffer",
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "routingKey",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#routingNames:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "routingNames?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "routingNames",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#serialConsistency:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "serialConsistency?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "serialConsistency",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#timestamp:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "timestamp?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Long",
+                  "canonicalReference": "long!Long:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timestamp",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "cassandra-driver!QueryOptions#traceQuery:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "traceQuery?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "traceQuery",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "cassandra-driver!token:var",
           "docComment": "",
@@ -6393,7 +5838,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$8: "
+              "text": "_default$6: "
             },
             {
               "kind": "Content",
@@ -6434,7 +5879,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "_default$6: "
+              "text": "_default$7: "
             },
             {
               "kind": "Content",
@@ -6465,15 +5910,6 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    getDataTypeByName: (name: string) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "DataTypeInfo",
-              "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
-            },
-            {
-              "kind": "Content",
               "text": ";\n    distance: typeof "
             },
             {
@@ -6483,25 +5919,16 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: {\n        v1: number;\n        v2: number;\n        v3: number;\n        v4: number;\n        v5: number;\n        v6: number;\n        dseV1: number;\n        dseV2: number;\n        maxSupported: number;\n        minSupported: number;\n        isDse: (version: number) => boolean;\n        isSupportedCassandra: (version: number) => boolean;\n        isSupported: (version: number) => boolean;\n        supportsPrepareFlags: (version: number) => boolean;\n        supportsKeyspaceInRequest: (version: number) => boolean;\n        supportsResultMetadataId: (version: number) => boolean;\n        supportsPreparedPartitionKey: (version: number) => boolean;\n        supportsSchemaChangeFullMetadata: (version: any) => boolean;\n        supportsContinuousPaging: (version: any) => boolean;\n        supportsPaging: (version: any) => boolean;\n        supportsTimestamp: (version: number) => boolean;\n        supportsNamedParameters: (version: number) => boolean;\n        supportsUnset: (version: number) => boolean;\n        supportsFailureReasonMap: (version: any) => boolean;\n        uses2BytesStreamIds: (version: number) => boolean;\n        uses4BytesCollectionLength: (version: number) => boolean;\n        uses4BytesQueryFlags: (version: number) => boolean;\n        canStartupResponseErrorBeWrapped: (version: number) => boolean;\n        getLowerSupported: (version: number) => number;\n        getHighestCommon: (connection: "
+              "text": ";\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: typeof "
             },
             {
               "kind": "Reference",
-              "text": "Connection",
-              "canonicalReference": "cassandra-driver!~Connection:class"
+              "text": "protocolVersion",
+              "canonicalReference": "cassandra-driver!~protocolVersion:enum"
             },
             {
               "kind": "Content",
-              "text": ", hosts: "
-            },
-            {
-              "kind": "Reference",
-              "text": "HostMap",
-              "canonicalReference": "cassandra-driver!~HostMap:class"
-            },
-            {
-              "kind": "Content",
-              "text": ") => number;\n        isBeta: (version: number) => boolean;\n    };\n    responseErrorCodes: typeof "
+              "text": ";\n    responseErrorCodes: typeof "
             },
             {
               "kind": "Reference",
@@ -6595,7 +6022,7 @@
             },
             {
               "kind": "Reference",
-              "text": "Long__default",
+              "text": "Long",
               "canonicalReference": "long!Long:class"
             },
             {
@@ -6708,7 +6135,7 @@
           "name": "types",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 60
+            "endIndex": 56
           }
         },
         {

@@ -33,15 +33,16 @@ const state = {
 
 /**
  * Maintains the state information of a request inside a Connection.
+ * @ignore @internal
  */
 class OperationState {
   streamId: number;
   request: Request;
-  _rowCallback: Function;
-  _callback: Function;
-  _timeout: NodeJS.Timeout;
-  _state: number;
-  _rowIndex: number;
+  private _rowCallback: Function;
+  private _callback: Function;
+  private _timeout: NodeJS.Timeout;
+  private _state: number;
+  private _rowIndex: number;
   /**
    * Creates a new instance of OperationState.
    * @param {Request} request

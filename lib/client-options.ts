@@ -108,6 +108,7 @@ function defaultOptions (): ClientOptions {
  * @param {ClientOptions} [baseOptions] The source object instance that will be overridden
  * @param {ClientOptions} userOptions
  * @returns {Object}
+ * @internal @ignore
  */
 function extend(userOptions: Partial<ClientOptions>): ClientOptions;
 function extend(baseOptions: Partial<ClientOptions>, userOptions: Partial<ClientOptions>): ClientOptions;

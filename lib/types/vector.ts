@@ -21,14 +21,18 @@
  */
 import util from 'util';
 class Vector {
+      /**
+       * Returns the number of the elements.
+       * @type Number
+       */
   length: number;
   subtype: string;
-  elements: number[];
+  elements: any[];
   /**
-     *
-     * @param {Float32Array | Array<any>} elements
-     * @param {string} [subtype]
-     */
+   *
+   * @param {Float32Array | Array<any>} elements
+   * @param {string} [subtype]
+   */
   constructor (elements: Float32Array | Array<any>, subtype?: string) {
     if (elements instanceof Float32Array) {
       this.elements = Array.from(elements);
@@ -42,10 +46,6 @@ class Vector {
     if (this.elements.length === 0) {
       throw new TypeError('Vector must contain at least one value');
     }
-    /**
-         * Returns the number of the elements.
-         * @type Number
-         */
     this.length = this.elements.length;
     this.subtype = subtype;
     return new Proxy(this, {
@@ -70,7 +70,6 @@ class Vector {
           return { enumerable: true, configurable: true};
         }
         return Reflect.getOwnPropertyDescriptor(target, key);
-                
       }
     });
   }
@@ -85,7 +84,7 @@ class Vector {
      *
      * @param {number} index
      */
-  at(index: number) {
+  at(index: number):any {
     return this.elements[index];
   }
 

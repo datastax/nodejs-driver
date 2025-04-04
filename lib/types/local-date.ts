@@ -45,8 +45,12 @@ const dateCenter = Math.pow(2, 31);
  * </p>
  */
 class LocalDate {
+  //TODO: not exposed. I believe it should.
+  /**
+   * The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
+   */
   date: Date;
-  _value: number | null;
+  private _value: number | null;
   year: number;
   month: number;
   day: number;
@@ -68,8 +72,6 @@ class LocalDate {
    * @param {Number} year The year or days since epoch.  If days since epoch, month and day should not be provided.
    * @param {Number} [month] Between 1 and 12 inclusive.
    * @param {Number} [day] Between 1 and the number of days in the given month of the given year.
-   *
-   * @property {Date} date The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
    *
    * @constructor
    */

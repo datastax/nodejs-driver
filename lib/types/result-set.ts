@@ -17,10 +17,10 @@ import utils from "../utils";
 import errors from "../errors";
 import Row from "./row";
 import type {consistencies, dataTypes, Uuid} from "../types";
+import type { DataTypeInfo } from "../encoder";
 
 
-// @ts-ignore
-const asyncIteratorSymbol : unique symbol = Symbol.asyncIterator || '@@asyncIterator';
+//TODO: Node.js started to support Symbol.asyncIterator since version 10. Can we drop the support for `@@asyncIterator`?
 
 /** @module types */
 
@@ -28,7 +28,7 @@ const asyncIteratorSymbol : unique symbol = Symbol.asyncIterator || '@@asyncIter
  * @class
  * @classdesc Represents the result of a query.
  */
-class ResultSet {
+class ResultSet implements Iterable<Row>, AsyncIterable<Row> {
   info: {
     queriedHost: string,
     triedHosts: { [key: string]: any; },
@@ -37,21 +37,22 @@ class ResultSet {
     traceId: Uuid,
     warnings: string[],
     customPayload: any,
-    // This was not exposed in the past, why?
+    //TODO: This was not exposed in the past, I believe it should
     isSchemaInAgreement: boolean
   };
-  columns: Array<{ name: string, type: { code: dataTypes, info: any } }>;
+  columns: Array<{ name: string, type: DataTypeInfo }>;
   nextPage: (() => void) | null;
   pageState: string;
   rowLength: number;
   rows: Row[];
+  /** @internal */
   nextPageAsync: Function | undefined;
+  /** @internal */
   rawPageState: any;
 
   /**
    * Creates a new instance of ResultSet.
-   * @class
-   * @classdesc Represents the result of a query.
+   * @internal
    * @param {Object} response
    * @param {String} host
    * @param {Object} triedHosts
@@ -60,7 +61,7 @@ class ResultSet {
    * @param {Boolean} isSchemaInAgreement
    * @constructor
    */
-  constructor(response: { rows: Array<any>, flags: { traceId: Uuid, warnings: string[], customPayload: any }, meta?: { columns: Array<{ name: string, type: { code: dataTypes, info: any } }>, pageState: Buffer } }, host: string, triedHosts: { [key: string]: any; }, speculativeExecutions: number, consistency: consistencies, isSchemaInAgreement: boolean) {
+  constructor(response: { rows: Array<any>, flags: { traceId: Uuid, warnings: string[], customPayload: any }, meta?: { columns: Array<{ name: string, type: DataTypeInfo }>, pageState: Buffer } }, host: string, triedHosts: { [key: string]: any; }, speculativeExecutions: number, consistency: consistencies, isSchemaInAgreement: boolean) {
     // if no execution was made at all, set to 0.
     if (speculativeExecutions === -1) {
       speculativeExecutions = 0;
@@ -173,18 +174,18 @@ class ResultSet {
   /**
    * Returns the first row or null if the result rows are empty.
    */
-  first() {
+  first(): Row {
     if (this.rows && this.rows.length) {
       return this.rows[0];
     }
     return null;
   }
 
-  getPageState() {
+  getPageState(): string {
     return this.pageState;
   }
 
-  getColumns() {
+  getColumns(): Array<{ name: string, type: DataTypeInfo }> {
     return this.columns;
   }
 
@@ -198,7 +199,7 @@ class ResultSet {
    *   information whether it was applied or not.
    * </p>
    */
-  wasApplied() {
+  wasApplied(): boolean {
     if (!this.rows || this.rows.length === 0) {
       return true;
     }
@@ -253,7 +254,7 @@ class ResultSet {
    * }
    * @returns {AsyncIterator<Row>}
    */
-  [asyncIteratorSymbol](): AsyncIterator<Row> {
+  [Symbol.asyncIterator](): AsyncIterator<Row> {
     let index = 0;
     let pageState = this.rawPageState;
     let rows = this.rows;

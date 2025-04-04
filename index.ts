@@ -15,7 +15,7 @@
  */
 import auth from './lib/auth/index';
 import clientOptions from "./lib/client-options";
-import Client from "./lib/client";
+import Client, {type ClientOptions, type QueryOptions } from "./lib/client";
 import types from "./lib/types/index";
 import errors from "./lib/errors";
 import policies from "./lib/policies/index";
@@ -44,29 +44,29 @@ const defaultOptions = function () {
 const version = packageJson.version;
 
 
-export default {
-  Client,
-  ExecutionProfile,
-  ExecutionOptions,
-  types,
-  errors,
-  policies,
-  auth,
-  mapping,
-  tracker,
-  metrics,
-  concurrent,
-  token,
-  metadata,
-  Encoder,
-  geometry,
-  datastax,
-  /**
-   * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
-   */
-  defaultOptions,
-  version
-};
+// export default {
+//   Client,
+//   ExecutionProfile,
+//   ExecutionOptions,
+//   types,
+//   errors,
+//   policies,
+//   auth,
+//   mapping,
+//   tracker,
+//   metrics,
+//   concurrent,
+//   token,
+//   metadata,
+//   Encoder,
+//   geometry,
+//   datastax,
+//   /**
+//    * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+//    */
+//   defaultOptions,
+//   version
+// };
 
 
 
@@ -92,5 +92,7 @@ export {
    */
   defaultOptions,
   version,
+  type QueryOptions,
+  type ClientOptions
 };
 

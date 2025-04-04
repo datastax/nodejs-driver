@@ -24,6 +24,7 @@ class Row {
   private readonly __columns: Array<any>;
   [key: string]: any;
 
+  /** @internal */
   constructor(columns: Array<any>) {
     if (!columns) {
       throw new Error('Columns not defined');
@@ -60,7 +61,7 @@ class Row {
    * Returns an array of the column names of the row
    * @returns {Array}
    */
-  keys(): Array<any> {
+  keys(): string[] {
     const keysArray = [];
     this.forEach(function (val, key) {
       keysArray.push(key);
@@ -68,11 +69,12 @@ class Row {
     return keysArray;
   }
 
+  //TODO: was exposed as forEach(callback: (row: Row) => void): void;
   /**
    * Executes the callback for each field in the row, containing the value as first parameter followed by the columnName
    * @param {Function} callback
    */
-  forEach(callback: Function): void {
+  forEach(callback: (val: any, key: string) => void): void {
     for (const columnName in this) {
       if (!this.hasOwnProperty(columnName)) {
         continue;

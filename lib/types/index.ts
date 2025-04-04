@@ -140,51 +140,53 @@ enum dataTypes {
   tuple = 0x0031
 }
 
-/**
- * Returns the typeInfo of a given type name
- * @param {string} name
- * @returns {DateTypeInfo}
- */
-const getDataTypeByName = function (name: string): DataTypeInfo {
-  name = name.toLowerCase();
-  if (name.indexOf('<') > 0) {
-    const listMatches = /^(list|set)<(.+)>$/.exec(name);
-    if (listMatches) {
-      return { code: dataTypes[listMatches[1]], info: getDataTypeByName(listMatches[2]) };
+namespace dataTypes {
+  /**
+   * Returns the typeInfo of a given type name
+   * @param {string} name
+   * @returns {DateTypeInfo}
+   */
+  export function getByName(name: string): DataTypeInfo {
+    name = name.toLowerCase();
+    if (name.indexOf('<') > 0) {
+      const listMatches = /^(list|set)<(.+)>$/.exec(name);
+      if (listMatches) {
+        return { code: dataTypes[listMatches[1]], info: getByName(listMatches[2]) };
+      }
+      const mapMatches = /^(map)< *(.+) *, *(.+)>$/.exec(name);
+      if (mapMatches) {
+        return { code: dataTypes[mapMatches[1]], info: [getByName(mapMatches[2]), getByName(mapMatches[3])] };
+      }
+      const udtMatches = /^(udt)<(.+)>$/.exec(name);
+      if (udtMatches) {
+        //udt name as raw string
+        return { code: dataTypes[udtMatches[1]], info: udtMatches[2] };
+      }
+      const tupleMatches = /^(tuple)<(.+)>$/.exec(name);
+      if (tupleMatches) {
+        //tuple info as an array of types
+        return {
+          code: dataTypes[tupleMatches[1]], info: tupleMatches[2].split(',').map(function (x) {
+            return getByName(x.trim());
+          }, dataTypes)
+        };
+      }
+      const vectorMatches = /^vector<\s*(.+)\s*,\s*(\d+)\s*>$/.exec(name);
+      if (vectorMatches) {
+        return {
+          code: dataTypes.custom,
+          customTypeName: 'vector',
+          info: [getByName(vectorMatches[1]), parseInt(vectorMatches[2], 10)]
+        };
+      }
     }
-    const mapMatches = /^(map)< *(.+) *, *(.+)>$/.exec(name);
-    if (mapMatches) {
-      return { code: dataTypes[mapMatches[1]], info: [getDataTypeByName (mapMatches[2]), getDataTypeByName(mapMatches[3])] };
+    const typeInfo = { code: dataTypes[name] };
+    if (typeof typeInfo.code !== 'number') {
+      throw new TypeError('Data type with name ' + name + ' not valid');
     }
-    const udtMatches = /^(udt)<(.+)>$/.exec(name);
-    if (udtMatches) {
-      //udt name as raw string
-      return { code: dataTypes[udtMatches[1]], info: udtMatches[2] };
-    }
-    const tupleMatches = /^(tuple)<(.+)>$/.exec(name);
-    if (tupleMatches) {
-      //tuple info as an array of types
-      return {
-        code: dataTypes[tupleMatches[1]], info: tupleMatches[2].split(',').map(function (x) {
-          return getDataTypeByName(x.trim());
-        }, dataTypes)
-      };
-    }
-    const vectorMatches = /^vector<\s*(.+)\s*,\s*(\d+)\s*>$/.exec(name);
-    if (vectorMatches) {
-      return {
-        code: dataTypes.custom,
-        customTypeName: 'vector',
-        info: [getDataTypeByName(vectorMatches[1]), parseInt(vectorMatches[2], 10)]
-      };
-    }
-  }
-  const typeInfo = { code: dataTypes[name] };
-  if (typeof typeInfo.code !== 'number') {
-    throw new TypeError('Data type with name ' + name + ' not valid');
-  }
-  return typeInfo;
-};
+    return typeInfo;
+  };
+}
 
 /**
  * Map of Data types by code
@@ -459,7 +461,7 @@ function getDataTypeNameByCode(item) {
 }
 
 //classes
-
+/** @internal @ignore */
 class FrameHeader {
   version: number;
   flags: number;
@@ -589,6 +591,7 @@ Long.prototype["toJSON"] = function () {
  * @param {Date} [date] The date to generate the value, if not provided it will use the current date.
  * @param {Number} [microseconds] A number from 0 to 999 used to build the microseconds part of the date.
  * @returns {Long}
+ * @internal @ignore
  */
 function generateTimestamp(date, microseconds) {
   if (!date) {
@@ -631,8 +634,8 @@ export default {
   consistencies,
   consistencyToString,
   dataTypes,
+  /** @internal */
   getDataTypeNameByCode,
-  getDataTypeByName,
   distance,
   frameFlags,
   protocolEvents,
@@ -643,6 +646,7 @@ export default {
   uuid,
   BigDecimal,
   Duration,
+  /** @internal */
   FrameHeader,
   InetAddress,
   Integer,
@@ -658,6 +662,7 @@ export default {
   Tuple,
   Uuid,
   unset,
+  /** @internal */
   generateTimestamp,
   Vector,
 };
@@ -668,8 +673,8 @@ export {
   consistencyToString,
   dataTypes,
   distance,
+  /** @internal */
   getDataTypeNameByCode,
-  getDataTypeByName,
   frameFlags,
   protocolEvents,
   protocolVersion,
@@ -679,6 +684,7 @@ export {
   uuid,
   BigDecimal,
   Duration,
+  /** @internal */
   FrameHeader,
   InetAddress,
   Integer,
@@ -694,6 +700,7 @@ export {
   Tuple,
   Uuid,
   unset,
+  /** @internal */
   generateTimestamp,
   Vector
 };

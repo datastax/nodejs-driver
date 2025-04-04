@@ -42,7 +42,7 @@ import { AuthProvider } from "./auth";
 import { RequestTracker } from "./tracker";
 import { ClientMetrics } from "./metrics";
 import { ConnectionOptions } from "tls";
-import { Host } from "./host";
+import { Host, type HostMap } from "./host";
 import Metadata from "./metadata";
 import { Request } from "./requests";
 import type { GraphResultSet } from "./datastax/graph";
@@ -260,12 +260,16 @@ const warmupLimit = 32;
  */
 interface ClientOptions {
   //TODO: remove when bundled. Remove insight-clients relevant doc too. 
+  /** @internal */
   applicationName?: string;
+  /** @internal */
   applicationVersion?: string;
   authProvider?: AuthProvider;
   contactPoints?: string[];
-  localDataCenter?: string;
-  logEmitter?: any;
+  /** @internal */
+  localDataCenter?: string; //TODO: not exposed. Should we?
+  /** @internal */
+  logEmitter?: any; //TODO: not exposed. Should we?
   keyspace?: string;
   credentials?: {
     username: string;
@@ -284,10 +288,12 @@ interface ClientOptions {
     useBigIntAsLong?: boolean;
     useBigIntAsVarint?: boolean;
   };
+  /** @internal */
   id?: Uuid;
   isMetadataSyncEnabled?: boolean;
   maxPrepared?: number;
   metrics?: ClientMetrics;
+  /** @internal */
   monitorReporting?: {
     enabled?: boolean;
   };
@@ -318,7 +324,7 @@ interface ClientOptions {
   refreshSchemaDelay?: number;
   rePrepareOnUp?: boolean;
   requestTracker?: RequestTracker;
-  //TODO: driver internal. Should be removed when bundled.
+  /** @internal */
   sni?: {
     address?: string;
     port?: string;
@@ -336,6 +342,7 @@ interface ClientOptions {
   sslOptions?: ConnectionOptions;
 }
 
+//TODO: are they all insight-clients related? Should we remove all of them?
 interface DseClientOptions extends ClientOptions {
   id?: Uuid;
   applicationName?: string;
@@ -550,10 +557,12 @@ interface QueryOptions {
  * console.log(row['key']);
  */
 class Client extends events.EventEmitter{
+  /** @internal */
   options: ClientOptions;
+  /** @internal */
   profileManager: ProfileManager;
-  connected: boolean;
-  isShuttingDown: boolean;
+  private connected: boolean;
+  private isShuttingDown: boolean;
   /**
      * Gets the name of the active keyspace.
      * @type {String}
@@ -564,12 +573,13 @@ class Client extends events.EventEmitter{
      * @type {Metadata}
      */
   metadata: Metadata;
+  /** @internal */
   controlConnection: ControlConnection;
   /**
      * Gets an associative array of cluster hosts.
      * @type {HostMap}
      */
-  hosts: any;
+  hosts: HostMap;
   /**
      * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
      * behavior and of the server as seen from the driver side.
@@ -578,8 +588,8 @@ class Client extends events.EventEmitter{
      */
   metrics: ClientMetrics;
   private _graphExecutor: GraphExecutor;
-  connecting: boolean;
-  insightsClient: InsightsClient;
+  private connecting: boolean;
+  private insightsClient: InsightsClient;
   /**
    * Creates a new instance of {@link Client}.
    * Represents a database client that maintains multiple connections to the cluster nodes, providing methods to
@@ -682,12 +692,13 @@ class Client extends events.EventEmitter{
    * @example <caption>Usage example</caption>
    * await client.connect();
    */
-  connect(callback?: Function) {
+  connect(): Promise<void>;
+  connect(callback: EmptyCallback): void;
+  connect(callback?: EmptyCallback) {
     if (this.connected && callback) {
       // Avoid creating Promise to immediately resolve them
-      return callback();
+      return callback(null);
     }
-
     return promiseUtils.optionalCallback(this._connect(), callback);
   }
   /**
@@ -743,7 +754,7 @@ class Client extends events.EventEmitter{
     this.connecting = false;
     this.emit('connected');
   }
-
+  /** @internal */
   log = utils.log;
 
   /**
@@ -776,11 +787,8 @@ class Client extends events.EventEmitter{
    * @see {@link ExecutionProfile} to reuse a set of options across different query executions.
    */
   execute(query: string, params?: ArrayOrObject, options?: QueryOptions): Promise<ResultSet>;
-
   execute(query: string, params: ArrayOrObject, options: QueryOptions, callback: ValueCallback<ResultSet>): void;
-
   execute(query: string, params: ArrayOrObject, callback: ValueCallback<ResultSet>): void;
-
   execute(query: string, callback: ValueCallback<ResultSet>): void;
   execute(query: string, params?: Array<any> | ValueCallback<ResultSet>, options?: QueryOptions | ValueCallback<ResultSet>, callback?: ValueCallback<ResultSet>) {
     // This method acts as a wrapper for the async method _execute()
@@ -968,7 +976,7 @@ class Client extends events.EventEmitter{
    *   hosts if needed.
    * </p>
    * @param {String} query The query to prepare and execute.
-   * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+   * @param {ArrayOrObject} [params] Array of parameter values or an associative array (object) containing parameter names
    * as keys and its value
    * @param {QueryOptions} [options] The query options.
    * @param {function} [callback] executes callback(err) after all rows have been received or if there is an error
@@ -1226,7 +1234,7 @@ class Client extends events.EventEmitter{
    * @returns {Promise<ResultSet>}
    * @private
    */
-  async _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet> {
+  private async _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet> {
     const version = this.controlConnection.protocolVersion;
 
     if (!execOptions.isPrepared() && params && !Array.isArray(params) &&
@@ -1261,7 +1269,7 @@ class Client extends events.EventEmitter{
    * Sets the listeners for the nodes.
    * @private
    */
-  _setHostListeners() {
+  private _setHostListeners() {
     function getHostUpListener(emitter, h) {
       return () => emitter.emit('hostUp', h);
     }
@@ -1296,7 +1304,7 @@ class Client extends events.EventEmitter{
    * @returns {Promise}
    * @private
    */
-  _warmup(): Promise<any> {
+  private _warmup(): Promise<any> {
     const hosts = this.hosts.values();
 
     return promiseUtils.times(hosts.length, warmupLimit, async (index) => {
@@ -1324,7 +1332,7 @@ class Client extends events.EventEmitter{
    * @returns {Encoder}
    * @private
    */
-  _getEncoder(): Encoder {
+  private _getEncoder(): Encoder {
     const encoder = this.controlConnection.getEncoder();
     if (!encoder) {
       throw new errors.DriverInternalError('Encoder is not defined');
@@ -1335,7 +1343,7 @@ class Client extends events.EventEmitter{
    * Returns a BatchRequest instance and fills the routing key information in the provided options.
    * @private
    */
-  async _createBatchRequest(queryItems: {query; params; info?}[], info) {
+  private async _createBatchRequest(queryItems: {query; params; info?}[], info) {
     const firstQuery = queryItems[0];
     if (!("meta" in firstQuery)) {
       return new requests.BatchRequest(queryItems, info);
@@ -1348,7 +1356,7 @@ class Client extends events.EventEmitter{
    * Returns an ExecuteRequest instance and fills the routing key information in the provided options.
    * @private
    */
-  async _createExecuteRequest(query, queryId, info, params, meta) {
+  private async _createExecuteRequest(query, queryId, info, params, meta) {
     params = utils.adaptNamedParamsPrepared(params, meta.columns);
     await this._setRoutingInfo(info, params, meta);
     return new requests.ExecuteRequest(query, queryId, params, info, meta);
@@ -1357,7 +1365,7 @@ class Client extends events.EventEmitter{
    * Returns a QueryRequest instance and fills the routing key information in the provided options.
    * @private
    */
-  async _createQueryRequest(query, execOptions, params) {
+  private async _createQueryRequest(query, execOptions, params) {
     await this.metadata.adaptUserHints(this.keyspace, execOptions.getHints());
     const paramsInfo = utils.adaptNamedParamsWithHints(params, execOptions);
     this._getEncoder().setRoutingKeyFromUser(paramsInfo.params, execOptions, paramsInfo.keyIndexes);
@@ -1371,7 +1379,7 @@ class Client extends events.EventEmitter{
    * @param meta
    * @private
    */
-  async _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta) {
+  private async _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta) {
     const encoder = this._getEncoder();
 
     if (!execOptions.getKeyspace() && meta.keyspace) {
@@ -1410,7 +1418,6 @@ class Client extends events.EventEmitter{
 export default Client;
 
 export {
-  Client,
   type ClientOptions,
   type QueryOptions,
   type GraphQueryOptions

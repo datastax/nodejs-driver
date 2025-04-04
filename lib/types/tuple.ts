@@ -91,6 +91,7 @@ class Tuple {
     );
   }
 
+  //TODO: was exposed with return type of string.
   /**
    * Returns the Array representation of the sequence.
    * @returns {Array}

@@ -35,6 +35,7 @@ const mconst6 = MutableLong.fromNumber(0x38495ab5);
 /**
  * Represents a set of methods that are able to generate and parse tokens for the C* partitioner.
  * @abstract
+ * @internal @ignore
  */
 class Tokenizer {
   constructor() {
@@ -120,6 +121,7 @@ class Tokenizer {
 
 /**
  * Uniformly distributes data across the cluster based on Cassandra flavored Murmur3 hashed values.
+ * @ignore @internal
  */
 class Murmur3Tokenizer extends Tokenizer {
   _minToken: Murmur3Token;
@@ -356,6 +358,7 @@ class Murmur3Tokenizer extends Tokenizer {
 
 /**
  * Uniformly distributes data across the cluster based on MD5 hash values.
+ * @ignore @internal
  */
 class RandomTokenizer extends Tokenizer {
   _crypto: any;
@@ -435,6 +438,9 @@ class RandomTokenizer extends Tokenizer {
   }
 }
 
+/**
+ * @ignore @internal
+ */
 class ByteOrderedTokenizer extends Tokenizer {
   _minToken: any;
   constructor() {

@@ -73,9 +73,9 @@ class ExecutionOptions {
    * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use
    * this data.
    * @abstract
-   * @returns {Object}
+   * @returns {{ [key: string]: any }}
    */
-  getCustomPayload(): object {
+  getCustomPayload(): { [key: string]: any } {
     return null;
   }
 
@@ -100,9 +100,9 @@ class ExecutionOptions {
   /**
    * Gets the type hints for parameters given in the query, ordered as for the parameters.
    * @abstract
-   * @returns {Array|Array<Array>}
+   * @returns {string[] | string[][]}
    */
-  getHints(): Array<any> | Array<Array<any>> {
+  getHints(): string[] | string[][] {
     return null;
   }
 
@@ -202,7 +202,7 @@ class ExecutionOptions {
    * @abstract
    * @ignore @internal
    */
-  getPreferredHost() {
+  getPreferredHost(): Host {
     return null;
   }
 
@@ -285,9 +285,9 @@ class ExecutionOptions {
   /**
    * Gets the the consistency level to be used for the serial phase of conditional updates.
    * @abstract
-   * @returns {Number}
+   * @returns {consistencies}
    */
-  getSerialConsistency(): number {
+  getSerialConsistency(): consistencies {
     return null;
   }
 
@@ -301,12 +301,13 @@ class ExecutionOptions {
     return null;
   }
 
+  //TODO: was exposed in .d.t.s. Are we removing it?
   /**
    * @param {Array} hints
    * @abstract
    * @ignore @internal
    */
-  setHints(hints: Array<any>) {
+  setHints(hints: string[]) {
     return null;
   }
 
@@ -363,18 +364,18 @@ class ExecutionOptions {
  * @ignore @internal
  */
 class DefaultExecutionOptions extends ExecutionOptions {
-  _queryOptions: QueryOptions;
-  _rowCallback: Function;
-  _routingKey: any;
-  _hints: any;
-  _keyspace: any;
-  _routingIndexes: any;
-  _pageState: any;
-  _preferredHost: null;
-  _client: Client;
-  _defaultQueryOptions: QueryOptions;
-  _profile: ExecutionProfile;
-  _customPayload: object;
+  protected _queryOptions: QueryOptions;
+  protected _rowCallback: Function;
+  protected _routingKey: any;
+  protected _hints: any;
+  protected _keyspace: any;
+  protected _routingIndexes: any;
+  protected _pageState: any;
+  protected _preferredHost: Host;
+  protected _client: Client;
+  protected _defaultQueryOptions: QueryOptions;
+  protected _profile: ExecutionProfile;
+  protected _customPayload: object;
   /**
    * Creates a new instance of {@link ExecutionOptions}.
    * @param {QueryOptions} queryOptions

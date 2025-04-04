@@ -15,7 +15,7 @@
  */
 import errors, { DriverError, ResponseError } from "./errors";
 import requests from "./requests";
-import retry from "./policies/retry";
+import retry, { type DecisionInfo } from "./policies/retry";
 import types, { consistencies } from "./types/index";
 import utils from "./utils";
 import promiseUtils from "./promise-utils";
@@ -76,12 +76,6 @@ const metricsRetryHandlers = new Map([
   [ errorCodes.serverErrorWriteTimeout, (metrics, err) => metrics.onWriteTimeoutRetry(err) ],
   [ errorCodes.serverErrorOther, (metrics, err) => metrics.onOtherErrorRetry(err) ]
 ]);
-
-type DecisionInfo = {
-  decision: number;
-  consistency?: consistencies;
-  useCurrentHost?: boolean;
-}
 
 class RequestExecution {
   private _parent: RequestHandler;

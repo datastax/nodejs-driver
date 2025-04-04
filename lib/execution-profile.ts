@@ -90,6 +90,7 @@ class ExecutionProfile {
     source?: string;
     readConsistency?: consistencies;
     writeConsistency?: consistencies;
+    /** @internal */
     results?: any;
   };
 

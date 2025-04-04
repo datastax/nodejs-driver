@@ -30,27 +30,34 @@ const healthResponseCountInterval = 200;
  */
 class Host extends events.EventEmitter {
   address: string;
-  setDownAt: number;
-  log: (type: any, info: any, furtherInfo?: any, options?: any) => void;
+  private setDownAt: number;
+  private log: (type: any, info: any, furtherInfo?: any, options?: any) => void;
+  /** @internal */
   isUpSince: number;
+  /** @internal */
   pool: any;
   cassandraVersion: string;
   datacenter: string;
   rack: string;
   tokens: string[];
   hostId: Uuid;
+  /** @internal */
   dseVersion: string;
+  /** @internal */
   workloads: readonly any[];
-  _distance: number;
-  _healthResponseCounter: number;
+  private _distance: number;
+  private _healthResponseCounter: number;
+  /** @internal */
   reconnectionSchedule: any;
+  /** @internal */
   options: any;
-  reconnectionDelay: number;
-  _healthResponseCountTimer: any;
-  _metadata: any;
+  private reconnectionDelay: number;
+  private _healthResponseCountTimer: any;
+  private _metadata: any;
 
   /**
    * Creates a new Host instance.
+   * @internal @ignore
    */
   constructor(address, protocolVersion, options, metadata) {
     super();
@@ -393,7 +400,7 @@ class Host extends events.EventEmitter {
    * If the amount of connections is 0 for not ignored hosts, the host must be down.
    * @private
    */
-  _checkPoolState() {
+  private _checkPoolState() {
     if (this.pool.isClosing()) {
       return;
     }
@@ -415,7 +422,7 @@ class Host extends events.EventEmitter {
    * Executed after an scheduled new connection attempt finished
    * @private
    */
-  async _onNewConnectionOpen(err) {
+  private async _onNewConnectionOpen(err) {
     if (err) {
       this._checkPoolState();
       return;
@@ -446,12 +453,13 @@ class Host extends events.EventEmitter {
     return this.cassandraVersion.split('-')[0].split('.').map(x => parseInt(x, 10));
   }
 
+  //TODO: was not exposed. Should we?
   /**
    * Gets the DSE version of the host as an Array, containing the major version in the first position.
    * In case the cluster is not a DSE cluster, it returns an empty Array.
-   * @returns {Array}
+   * @returns {Array.<Number>}
    */
-  getDseVersion(): Array<any> {
+  getDseVersion(): Array<number> {
     if (!this.dseVersion) {
       return utils.emptyArray as number[];
     }
@@ -467,9 +475,10 @@ class Host extends events.EventEmitter {
  * @constructor
  */
 class HostMap extends events.EventEmitter{
-  _items: Map<any, any>;
-  _values: any;
+  private _items: Map<any, any>;
+  private _values: any;
   length: number;
+  /** @internal */
   constructor() {
     super();
 
@@ -490,9 +499,9 @@ class HostMap extends events.EventEmitter{
 
   /**
    * Executes a provided function once per map element.
-   * @param callback
+   * @param {Function} callback
    */
-  forEach(callback) {
+  forEach(callback: (value: Host, key: string) => void): void{
     const items = this._items;
     for (const [ key, value ] of items) {
       callback(value, key);
@@ -520,6 +529,7 @@ class HostMap extends events.EventEmitter{
    * Removes an item from the map.
    * @param {String} key The key of the host
    * @fires HostMap#remove
+   * @internal @ignore
    */
   remove(key: string) {
     const value = this._items.get(key);
@@ -542,6 +552,7 @@ class HostMap extends events.EventEmitter{
    * Removes multiple hosts from the map.
    * @param {Array.<String>} keys
    * @fires HostMap#remove
+   * @ignore @internal
    */
   removeMultiple(keys: Array<string>) {
     // Clear value cache
@@ -572,6 +583,7 @@ class HostMap extends events.EventEmitter{
    * @param {Host} value The host to be added
    * @fires HostMap#remove
    * @fires HostMap#add
+   * @ignore @internal
    */
   set(key: string, value: Host) {
     // Clear values cache
@@ -614,7 +626,7 @@ class HostMap extends events.EventEmitter{
 
   /**
    * Deprecated: Use set() instead.
-   * @ignore @ignore
+   * @ignore @internal
    * @deprecated
    */
   push(k, v) {
@@ -637,6 +649,7 @@ class HostMap extends events.EventEmitter{
   /**
    * Removes all items from the map.
    * @returns {Array.<Host>} The previous items
+   * @ignore @internal
    */
   clear(): Array<Host> {
     const previousItems = this.values();
@@ -653,10 +666,12 @@ class HostMap extends events.EventEmitter{
     return previousItems;
   }
 
+  /** @internal @ignore */
   inspect() {
     return this._items;
   }
 
+  /** @internal @ignore */
   toJSON() {
     // Node.js 10 and below don't support Object.fromEntries()
     if (Object.fromEntries) {

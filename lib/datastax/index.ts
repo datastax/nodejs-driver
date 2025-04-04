@@ -25,10 +25,35 @@
  */
 
 import graph from "./graph/index";
+import { Edge, Element, Path, Property, Vertex, VertexProperty, asInt, asDouble, asFloat, asTimestamp, asUdt, direction, getCustomTypeSerializers,
+  GraphResultSet, GraphTypeWrapper, t, UdtGraphWrapper
+ } from "./graph/index";
 import { DateRange } from "./search/index";
 
 export default {
-  graph,
+  // Had to do this for api-extractor to remove the internal exports
+  graph: {
+    Edge,
+    Element,
+    Path,
+    Property,
+    Vertex,
+    VertexProperty,
+    asInt,
+    asDouble,
+    asFloat,
+    asTimestamp,
+    asUdt,
+    direction,
+    /** @internal */
+    getCustomTypeSerializers,
+    GraphResultSet,
+    /** @internal */
+    GraphTypeWrapper,
+    t,
+    /** @internal */
+    UdtGraphWrapper
+  },
   DateRange
 };
 

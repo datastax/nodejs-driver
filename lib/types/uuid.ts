@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import crypto from "crypto";
-import utils from "../utils";
+import utils, { type ValueCallback } from "../utils";
 
 /** @module types */
 
@@ -23,6 +23,7 @@ import utils from "../utils";
  * @classdesc Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
  */
 class Uuid {
+  /** @internal */
   buffer: Buffer;
 
   /**
@@ -58,12 +59,12 @@ class Uuid {
    * @returns {Uuid}
    */
   static random(): Uuid;
-  static random(callback: (err: Error | null, uuid?: Uuid) => void): void;
-  static random(callback?: (err: Error | null, uuid?: Uuid) => void): Uuid | void {
+  static random(callback: ValueCallback<Uuid>): void;
+  static random(callback?: ValueCallback<Uuid>): Uuid | void {
     if (callback) {
       getRandomBytes(function(err, buffer) {
         if (err) {
-          return callback(err);
+          return callback(err, null);
         }
         return callback(null, createUuidFromBuffer(buffer));
       });

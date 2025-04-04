@@ -34,6 +34,7 @@ export {
   AuthProvider,
   DseGssapiAuthProvider,
   DsePlainTextAuthProvider,
+  /** @internal */
   NoAuthProvider,
   PlainTextAuthProvider
 };
@@ -43,6 +44,7 @@ export default {
   AuthProvider,
   DseGssapiAuthProvider,
   DsePlainTextAuthProvider,
+  /** @internal */
   NoAuthProvider,
   PlainTextAuthProvider
 };

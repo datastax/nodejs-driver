@@ -73,10 +73,13 @@ export default {
   asTimestamp,
   asUdt,
   direction,
+  /** @internal */
   getCustomTypeSerializers,
   GraphResultSet,
+  /** @internal */
   GraphTypeWrapper,
   t,
+  /** @internal */
   UdtGraphWrapper
 };
 
@@ -93,9 +96,12 @@ export {
   asTimestamp,
   asUdt,
   direction,
+  /** @internal */
   getCustomTypeSerializers,
   GraphResultSet,
+  /** @internal */
   GraphTypeWrapper,
   t,
+  /** @internal */
   UdtGraphWrapper
 };

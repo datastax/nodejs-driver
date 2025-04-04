@@ -51,10 +51,26 @@ const millisInDay = 86400000;
  * </p>
  */
 class LocalTime {
-  value: Long;
+  private value: Long;
+  /**
+   * Gets the hour component of the time represented by the current instance, a number from 0 to 23.
+   * @type Number
+   */
   hour: number;
+  /**
+   * Gets the minute component of the time represented by the current instance, a number from 0 to 59.
+   * @type Number
+   */
   minute: number;
+  /**
+   * Gets the second component of the time represented by the current instance, a number from 0 to 59.
+   * @type Number
+   */
   second: number;
+  /**
+   * Gets the nanoseconds component of the time represented by the current instance, a number from 0 to 999999999.
+   * @type Number
+   */
   nanosecond: number;
   private _partsCache?: Array<number>;
 
@@ -75,25 +91,9 @@ class LocalTime {
       throw new Error('Total nanoseconds out of range');
     }
     this.value = totalNanoseconds;
-    /**
-     * Gets the hour component of the time represented by the current instance, a number from 0 to 23.
-     * @type Number
-     */
     this.hour = this._getParts()[0];
-    /**
-     * Gets the minute component of the time represented by the current instance, a number from 0 to 59.
-     * @type Number
-     */
     this.minute = this._getParts()[1];
-    /**
-     * Gets the second component of the time represented by the current instance, a number from 0 to 59.
-     * @type Number
-     */
     this.second = this._getParts()[2];
-    /**
-     * Gets the nanoseconds component of the time represented by the current instance, a number from 0 to 999999999.
-     * @type Number
-     */
     this.nanosecond = this._getParts()[3];
   }
 

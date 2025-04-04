@@ -927,7 +927,7 @@ class Metadata {
         continue;
       }
 
-      const type = types.getDataTypeByName(hint);
+      const type = types.dataTypes.getByName(hint);
       this._checkUdtTypes(udts, type as {code, info}, keyspace);
       hints[i] = type;
     }

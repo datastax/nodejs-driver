@@ -15,15 +15,16 @@
  */
 import Long from "long";
 import util from "util";
+import type { consistencies } from "./types";
 
 /**
  * Contains the error classes exposed by the driver.
  * @module errors
  */
 
+//TODO: most of the properties were not exposed. I think we should expose them all.
 /**
  * Base Error
- * @private
  */
 class DriverError extends Error {
   info: string;
@@ -74,20 +75,20 @@ class NoHostAvailableError extends DriverError {
  */
 class ResponseError extends DriverError {
   code: number;
-  consistencies: number;
-  required: number;
-  alive: number;
-  received: number;
-  blockFor: number;
-  failures: number;
-  reasons: object;
-  isDataPresent: any;
-  writeType: any;
-  queryId: any;
-  keyspace: any;
-  functionName: any;
-  argTypes: any[];
-  table: any;
+  consistencies?: consistencies;
+  required?: number;
+  alive?: number;
+  received?: number;
+  blockFor?: number;
+  failures?: number;
+  reasons?: object;
+  isDataPresent?: any;
+  writeType?: any;
+  queryId?: any;
+  keyspace?: string;
+  functionName?: string;
+  argTypes?: string[];
+  table?: string;
 
   /**
    * Represents an error message from the server

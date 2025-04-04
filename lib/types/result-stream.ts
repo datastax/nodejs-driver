@@ -26,11 +26,12 @@ import errors from "../errors";
 class ResultStream extends Readable {
   buffer: any[];
   paused: boolean;
-  _cancelAllowed: boolean;
-  _handlersObject: { resumeReadingHandler?: Function, cancelHandler?: Function };
-  _highWaterMarkRows: number;
-  _readableState: any;
-  _readNext: Function;
+  private _cancelAllowed: boolean;
+  private _handlersObject: { resumeReadingHandler?: Function, cancelHandler?: Function };
+  private _highWaterMarkRows: number;
+  private _readableState: any;
+  private _readNext: Function;
+  /** @internal */
   constructor(opt) {
     super(opt);
     this.buffer = [];
@@ -40,6 +41,7 @@ class ResultStream extends Readable {
     this._highWaterMarkRows = 0;
   }
 
+  /** @internal @ignore */
   _read() {
     this.paused = false;
     if (this.buffer.length === 0) {
@@ -80,7 +82,7 @@ class ResultStream extends Readable {
     return length;
   }
 
-  _checkAboveHighWaterMark() {
+  private _checkAboveHighWaterMark() {
     if (!this._handlersObject || !this._handlersObject.resumeReadingHandler) {
       return;
     }
@@ -90,7 +92,7 @@ class ResultStream extends Readable {
     this._handlersObject.resumeReadingHandler(false);
   }
 
-  _checkBelowHighWaterMark() {
+  private _checkBelowHighWaterMark() {
     if (!this._handlersObject || !this._handlersObject.resumeReadingHandler) {
       return;
     }

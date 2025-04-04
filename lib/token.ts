@@ -18,9 +18,9 @@ import types from "./types/index";
 import util from "util";
 
 
-const _Murmur3TokenType = types.getDataTypeByName('bigint');
-const _RandomTokenType = types.getDataTypeByName('varint');
-const _OrderedTokenType = types.getDataTypeByName('blob');
+const _Murmur3TokenType = types.dataTypes.getByName('bigint');
+const _RandomTokenType = types.dataTypes.getByName('varint');
+const _OrderedTokenType = types.dataTypes.getByName('blob');
 
 /**
  * Represents a token on the Cassandra ring.

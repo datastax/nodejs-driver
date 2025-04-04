@@ -1,8 +1,7 @@
 import { ConnectionOptions } from 'tls';
 import EventEmitter from 'events';
 import { EventEmitter as EventEmitter_2 } from 'stream';
-import * as Long from 'long';
-import Long__default from 'long';
+import Long from 'long';
 import { Readable } from 'stream';
 import { Socket } from 'net';
 
@@ -239,8 +238,6 @@ declare function asUdt(value: object, udtInfo: {
     fields: Array<any>;
 }): object;
 
-declare const asyncIteratorSymbol: unique symbol;
-
 /**
  * DSE Authentication module.
  * <p>
@@ -253,7 +250,7 @@ export declare const auth: {
     AuthProvider: typeof AuthProvider;
     DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
     DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
-    NoAuthProvider: typeof NoAuthProvider;
+    /* Excluded from this release type: NoAuthProvider */
     PlainTextAuthProvider: typeof PlainTextAuthProvider;
 };
 
@@ -311,32 +308,6 @@ declare class AuthProvider {
      * @returns {Authenticator}
      */
     newAuthenticator(endpoint: string, name: string): Authenticator;
-}
-
-declare class BatchRequest extends Request_2 {
-    queries: Array<{
-        query: any;
-        params: any;
-        info?: any;
-    }>;
-    options: ExecutionOptions;
-    hints: readonly any[];
-    type: number;
-    /**
-     * Creates a new instance of BatchRequest.
-     * @param {Array.<{query, params, [info]}>} queries Array of objects with the properties query and params
-     * @param {ExecutionOptions} execOptions
-     */
-    constructor(queries: Array<{
-        query: any;
-        params: any;
-        info?: any;
-    }>, execOptions: ExecutionOptions);
-    /**
-     * Writes a batch request
-     */
-    write(encoder: Encoder, streamId: any): Buffer;
-    clone(): BatchRequest;
 }
 
 /** @module types */
@@ -401,7 +372,7 @@ declare class BigDecimal {
      * @returns {Boolean}
      */
     equals(other: BigDecimal): boolean;
-    inspect(): string;
+    /* Excluded from this release type: inspect */
     /**
      * @param {BigDecimal} other
      * @returns {boolean}
@@ -469,33 +440,9 @@ declare class BusyConnectionError extends DriverError {
     constructor(address: string, maxRequestsPerConnection: number, connectionLength: number);
 }
 
-/**
- * Represents a token from a Cassandra ring where the partitioner
- * is ByteOrderedPartitioner.
- *
- * The raw token type is a blob (represented by Buffer or Array).
- */
-declare class ByteOrderedToken extends Token {
-    constructor(value: any);
-    getType(): DataTypeInfo;
-    toString(): any;
-}
+/* Excluded from this release type: ByteOrderedToken */
 
-declare class ByteOrderedTokenizer extends Tokenizer {
-    _minToken: any;
-    constructor();
-    /**
-     * @param {Buffer | Array<any>} value
-     * @returns {ByteOrderedToken}
-     */
-    hash(value: Buffer | Array<any>): ByteOrderedToken;
-    stringify(token: any): any;
-    parse(value: any): ByteOrderedToken;
-    minToken(): any;
-    _toNumber(buffer: any, significantBytes: any): Integer;
-    _toBuffer(number: any, significantBytes: any): Buffer;
-    split(start: any, end: any, numberOfSplits: any): ByteOrderedToken[];
-}
+/* Excluded from this release type: ByteOrderedTokenizer */
 
 /**
  * Creates a new instance of {@link Client}.
@@ -523,10 +470,10 @@ declare class ByteOrderedTokenizer extends Tokenizer {
  * console.log(row['key']);
  */
 export declare class Client extends EventEmitter.EventEmitter {
-    options: ClientOptions;
-    profileManager: ProfileManager;
-    connected: boolean;
-    isShuttingDown: boolean;
+    /* Excluded from this release type: options */
+    /* Excluded from this release type: profileManager */
+    private connected;
+    private isShuttingDown;
     /**
      * Gets the name of the active keyspace.
      * @type {String}
@@ -537,12 +484,12 @@ export declare class Client extends EventEmitter.EventEmitter {
      * @type {Metadata}
      */
     metadata: Metadata;
-    controlConnection: ControlConnection;
+    /* Excluded from this release type: controlConnection */
     /**
      * Gets an associative array of cluster hosts.
      * @type {HostMap}
      */
-    hosts: any;
+    hosts: HostMap;
     /**
      * The [ClientMetrics]{@link module:metrics~ClientMetrics} instance used to expose measurements of its internal
      * behavior and of the server as seen from the driver side.
@@ -551,8 +498,8 @@ export declare class Client extends EventEmitter.EventEmitter {
      */
     metrics: ClientMetrics;
     private _graphExecutor;
-    connecting: boolean;
-    insightsClient: InsightsClient;
+    private connecting;
+    private insightsClient;
     /**
      * Creates a new instance of {@link Client}.
      * Represents a database client that maintains multiple connections to the cluster nodes, providing methods to
@@ -616,13 +563,14 @@ export declare class Client extends EventEmitter.EventEmitter {
      * @example <caption>Usage example</caption>
      * await client.connect();
      */
-    connect(callback?: Function): any;
+    connect(): Promise<void>;
+    connect(callback: EmptyCallback): void;
     /**
      * Async-only version of {@link Client#connect()}.
      * @private
      */
     private _connect;
-    log: typeof log;
+    /* Excluded from this release type: log */
     /**
      * Executes a query on an available connection.
      * <p>The query can be prepared (recommended) or not depending on the [prepare]{@linkcode QueryOptions} flag.</p>
@@ -739,7 +687,7 @@ export declare class Client extends EventEmitter.EventEmitter {
      *   hosts if needed.
      * </p>
      * @param {String} query The query to prepare and execute.
-     * @param {Array|Object} [params] Array of parameter values or an associative array (object) containing parameter names
+     * @param {ArrayOrObject} [params] Array of parameter values or an associative array (object) containing parameter names
      * as keys and its value
      * @param {QueryOptions} [options] The query options.
      * @param {function} [callback] executes callback(err) after all rows have been received or if there is an error
@@ -808,42 +756,38 @@ export declare class Client extends EventEmitter.EventEmitter {
      * @returns {Promise<ResultSet>}
      * @private
      */
-    _execute(query: string, params: Array<any>, execOptions: ExecutionOptions): Promise<ResultSet>;
+    private _execute;
     /**
      * Sets the listeners for the nodes.
      * @private
      */
-    _setHostListeners(): void;
+    private _setHostListeners;
     /**
      * Sets the distance to each host and when warmup is true, creates all connections to local hosts.
      * @returns {Promise}
      * @private
      */
-    _warmup(): Promise<any>;
+    private _warmup;
     /**
      * @returns {Encoder}
      * @private
      */
-    _getEncoder(): Encoder;
+    private _getEncoder;
     /**
      * Returns a BatchRequest instance and fills the routing key information in the provided options.
      * @private
      */
-    _createBatchRequest(queryItems: {
-        query: any;
-        params: any;
-        info?: any;
-    }[], info: any): Promise<BatchRequest>;
+    private _createBatchRequest;
     /**
      * Returns an ExecuteRequest instance and fills the routing key information in the provided options.
      * @private
      */
-    _createExecuteRequest(query: any, queryId: any, info: any, params: any, meta: any): Promise<ExecuteRequest>;
+    private _createExecuteRequest;
     /**
      * Returns a QueryRequest instance and fills the routing key information in the provided options.
      * @private
      */
-    _createQueryRequest(query: any, execOptions: any, params: any): Promise<QueryRequest>;
+    private _createQueryRequest;
     /**
      * Sets the routing key based on the parameter values or the provided routing key components.
      * @param {ExecutionOptions} execOptions
@@ -851,7 +795,7 @@ export declare class Client extends EventEmitter.EventEmitter {
      * @param meta
      * @private
      */
-    _setRoutingInfo(execOptions: ExecutionOptions, params: Array<any>, meta: any): Promise<void>;
+    private _setRoutingInfo;
 }
 
 /**
@@ -1147,13 +1091,13 @@ declare class ClientMetrics {
  *   [Promise constructor]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise}.
  * </p>
  */
-declare interface ClientOptions {
-    applicationName?: string;
-    applicationVersion?: string;
+export declare interface ClientOptions {
+    /* Excluded from this release type: applicationName */
+    /* Excluded from this release type: applicationVersion */
     authProvider?: AuthProvider;
     contactPoints?: string[];
-    localDataCenter?: string;
-    logEmitter?: any;
+    /* Excluded from this release type: localDataCenter */
+    /* Excluded from this release type: logEmitter */
     keyspace?: string;
     credentials?: {
         username: string;
@@ -1170,13 +1114,11 @@ declare interface ClientOptions {
         useBigIntAsLong?: boolean;
         useBigIntAsVarint?: boolean;
     };
-    id?: Uuid;
+    /* Excluded from this release type: id */
     isMetadataSyncEnabled?: boolean;
     maxPrepared?: number;
     metrics?: ClientMetrics;
-    monitorReporting?: {
-        enabled?: boolean;
-    };
+    /* Excluded from this release type: monitorReporting */
     policies?: {
         addressResolution?: AddressTranslator;
         loadBalancing?: LoadBalancingPolicy;
@@ -1206,11 +1148,7 @@ declare interface ClientOptions {
     refreshSchemaDelay?: number;
     rePrepareOnUp?: boolean;
     requestTracker?: RequestTracker;
-    sni?: {
-        address?: string;
-        port?: string;
-        addressResolver?: AddressResolver;
-    };
+    /* Excluded from this release type: sni */
     socketOptions?: {
         coalescingThreshold?: number;
         connectTimeout?: number;
@@ -1274,160 +1212,7 @@ export declare const concurrent: {
     ResultSetGroup: typeof ResultSetGroup;
 };
 
-/**
- * Represents a connection to a Cassandra node
- */
-declare class Connection extends EventEmitter.EventEmitter {
-    endpoint: string;
-    endpointFriendlyName: any;
-    _serverName: string;
-    address: any;
-    port: any;
-    _checkingVersion: boolean;
-    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
-    protocolVersion: number;
-    _operations: Map<any, any>;
-    _pendingWrites: any[];
-    _preparing: Map<string, PreparedQueryInfo>;
-    _idleTimeout: NodeJS.Timeout;
-    timedOutOperations: number;
-    _streamIds: StreamIdStack;
-    _metrics: any;
-    encoder: Encoder;
-    keyspace: string;
-    emitDrain: boolean;
-    connected: boolean;
-    isSocketOpen: boolean;
-    send: (arg1: Request_2, arg2: ExecutionOptions) => Promise<OperationState>;
-    closeAsync: () => Promise<unknown>;
-    openAsync: () => Promise<unknown>;
-    prepareOnceAsync: (arg1: string, arg2: string) => Promise<{
-        id: any;
-        meta: any;
-    }>;
-    netClient: any;
-    protocol: any;
-    parser: any;
-    writeQueue: WriteQueue;
-    options: ClientOptions;
-    toBeKeyspace: string;
-    sendingIdleQuery: any;
-    /**
-     * Creates a new instance of Connection.
-     * @param {String} endpoint An string containing ip address and port of the host
-     * @param {Number|null} protocolVersion
-     * @param {ClientOptions} options
-     */
-    constructor(endpoint: string, protocolVersion: number | null, options: ClientOptions);
-    /**
-     * Binds the necessary event listeners for the socket
-     */
-    bindSocketListeners(): void;
-    /**
-     * Connects a socket and sends the startup protocol messages.
-     * Note that when open() callbacks in error, the caller should immediately call {@link Connection#close}.
-     */
-    open(callback: any): void;
-    /**
-     * Determines the protocol version to use and sends the STARTUP request
-     * @param {Function} callback
-     */
-    startup(callback: Function): void;
-    errorConnecting(err: any, destroy: any, callback: any): void;
-    /**
-     * Sets the connection to ready/connected status
-     */
-    connectionReady(callback: any): void;
-    /** @param {Number} lowerVersion */
-    decreaseVersion(lowerVersion: number): void;
-    /**
-     * Handle socket errors, if the socket is not readable invoke all pending callbacks
-     */
-    handleSocketError(err: any): void;
-    /**
-     * Cleans all internal state and invokes all pending callbacks of sent streams
-     */
-    clearAndInvokePending(innerError?: any): void;
-    /**
-     * Starts the SASL flow
-     * @param {String} authenticatorName
-     * @param {Function} callback
-     */
-    startAuthenticating(authenticatorName: string, callback: Function): any;
-    /**
-     * Handles authentication requests and responses.
-     * @param {Authenticator} authenticator
-     * @param {Buffer} token
-     * @param {Function} callback
-     */
-    authenticate(authenticator: Authenticator, token: Buffer, callback: Function): void;
-    onAuthenticationError(callback: any, err: any): void;
-    /**
-     * Executes a 'USE ' query, if keyspace is provided and it is different from the current keyspace
-     * @param {?String} keyspace
-     */
-    changeKeyspace(keyspace: string | null): Promise<any>;
-    /**
-     * Prepares a query on a given connection. If its already being prepared, it queues the callback.
-     * @param {String} query
-     * @param {String} keyspace
-     * @param {function} callback
-     */
-    prepareOnce(query: string, keyspace: string, callback: (...args: any[]) => void): void;
-    /**
-     * Queues the operation to be written to the wire and invokes the callback once the response was obtained or with an
-     * error (socket error or OperationTimedOutError or serialization-related error).
-     * @param {Request} request
-     * @param {ExecutionOptions|null} execOptions
-     * @param {function} callback Function to be called once the response has been received
-     * @return {OperationState}
-     */
-    sendStream(request: Request_2, execOptions: ExecutionOptions | null, callback: Function): OperationState;
-    /**
-     * Pushes the item into the queue.
-     * @param {OperationState} operation
-     * @param {Number} streamId
-     * @private
-     */
-    _write(operation: OperationState, streamId: number): void;
-    _setIdleTimeout(): void;
-    /**
-     * Function that gets executed once the idle timeout has passed to issue a request to keep the connection alive
-     */
-    _idleTimeoutHandler(): void;
-    /**
-     * Returns an available streamId or null if there isn't any available
-     * @returns {Number}
-     */
-    _getStreamId(): number;
-    freeStreamId(header: any): void;
-    _writeNext(): void;
-    /**
-     * Returns the number of requests waiting for response
-     * @returns {Number}
-     */
-    getInFlight(): number;
-    /**
-     * Handles a result and error response
-     */
-    handleResult(header: any, err: any, result: any): void;
-    handleNodeEvent(header: any, event: any): void;
-    /**
-     * Handles a row response
-     */
-    handleRow(header: any, row: any, meta: any, rowLength: any, flags: any): void;
-    /**
-     * Closes the socket (if not already closed) and cancels all in-flight requests.
-     * Multiple calls to this method have no additional side-effects.
-     * @param {Function} [callback]
-     */
-    close(callback?: () => void): void;
-    /**
-     * Gets the local IP address to which this connection socket is bound to.
-     * @returns {String|undefined}
-     */
-    getLocalAddress(): string | undefined;
-}
+/* Excluded from this release type: Connection */
 
 /**
  * Consistency levels
@@ -1497,218 +1282,16 @@ declare class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPol
      * initial execution. Must be strictly positive.
      */
     constructor(delay: number, maxSpeculativeExecutions: number);
-    newPlan(): {
+    newPlan(keyspace: string, queryInfo: string | Array<string>): {
         nextExecution: () => number;
     };
     /**
      * Gets an associative array containing the policy options.
      */
-    getOptions(): Map<string, number>;
+    getOptions(): Map<string, any>;
 }
 
-/**
- * Represents a connection used by the driver to receive events and to check the status of the cluster.
- * <p>It uses an existing connection from the hosts' connection pool to maintain the driver metadata up-to-date.</p>
- */
-declare class ControlConnection extends EventEmitter.EventEmitter {
-    protocolVersion: number;
-    hosts: HostMap;
-    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
-    metadata: Metadata;
-    private options;
-    initialized: boolean;
-    host: Host;
-    connection: Connection;
-    private _addressTranslator;
-    private _reconnectionPolicy;
-    private _reconnectionSchedule;
-    private _isShuttingDown;
-    private _encoder;
-    private _debouncer;
-    private _profileManager;
-    private _triedHosts;
-    private _resolvedContactPoints;
-    private _contactPoints;
-    private _topologyChangeTimeout;
-    private _nodeStatusChangeTimeout;
-    /**
-     * Creates a new instance of <code>ControlConnection</code>.
-     * @param {Object} options
-     * @param {ProfileManager} profileManager
-     * @param {{borrowHostConnection: function, createConnection: function}} [context] An object containing methods to
-     * allow dependency injection.
-     */
-    constructor(options: Partial<ClientOptions>, profileManager: ProfileManager, context?: {
-        borrowHostConnection: (host: Host) => Connection;
-        createConnection: (contactPoint: string) => Promise<Connection>;
-    });
-    /**
-     * Stores the contact point information and what it resolved to.
-     * @param {String|null} address
-     * @param {String} port
-     * @param {String} name
-     * @param {Boolean} isIPv6
-     */
-    _addContactPoint(address: string | null, port: string, name: string, isIPv6: boolean): void;
-    _parseContactPoint(name: any): Promise<void>;
-    /**
-     * Initializes the control connection by establishing a Connection using a suitable protocol
-     * version to be used and retrieving cluster metadata.
-     */
-    init(): Promise<void>;
-    _setHealthListeners(host: any, connection: any): void;
-    /**
-     * Iterates through the hostIterator and Gets the following open connection.
-     * @param {Iterator<Host>} hostIterator
-     * @returns {Connection!}
-     */
-    _borrowAConnection(hostIterator: Iterator<Host>): Connection;
-    /**
-     * Iterates through the contact points and tries to open a connection.
-     * @param {Iterator<string>} contactPointsIterator
-     * @returns {Promise<void>}
-     */
-    _borrowFirstConnection(contactPointsIterator: Iterator<string>): Promise<void>;
-    /** Default implementation for borrowing connections, that can be injected at constructor level */
-    private _borrowHostConnection;
-    /**
-     * Default implementation for creating initial connections, that can be injected at constructor level
-     * @param {String} contactPoint
-     */
-    _createConnection(contactPoint: string): Promise<Connection>;
-    /**
-     * Gets the info from local and peer metadata, reloads the keyspaces metadata and rebuilds tokens.
-     * <p>It throws an error when there's a failure or when reconnecting and there's no connection.</p>
-     * @param {Boolean} initializing Determines whether this function was called in order to initialize the control
-     * connection the first time
-     * @param {Boolean} isReconnecting Determines whether the refresh is being done because the ControlConnection is
-     * switching to use this connection to this host.
-     */
-    _refreshHosts(initializing: boolean, isReconnecting: boolean): Promise<void>;
-    _refreshControlConnection(hostIterator: any): Promise<void>;
-    /**
-     * Acquires a new connection and refreshes topology and keyspace metadata.
-     * <p>When it fails obtaining a connection and there aren't any more hosts, it schedules reconnection.</p>
-     * <p>When it fails obtaining the metadata, it marks connection and/or host unusable and retries using the same
-     * iterator from query plan / host list</p>
-     * @param {Iterator<Host>} [hostIterator]
-     */
-    _refresh(hostIterator?: Iterator<Host>): any;
-    /**
-     * Acquires a connection and refreshes topology and keyspace metadata for the first time.
-     * @returns {Promise<void>}
-     */
-    _initializeConnection(): Promise<void>;
-    _getSupportedOptions(): Promise<void>;
-    _registerToConnectionEvents(): Promise<void>;
-    /**
-     * Handles a TOPOLOGY_CHANGE event
-     */
-    _nodeTopologyChangeHandler(event: any): void;
-    /**
-     * Handles a STATUS_CHANGE event
-     */
-    _nodeStatusChangeHandler(event: any): void;
-    /**
-     * Handles a SCHEMA_CHANGE event
-     */
-    _nodeSchemaChangeHandler(event: any): void;
-    /**
-     * Schedules metadata refresh and callbacks when is refreshed.
-     * @param {{keyspace: string, isKeyspace: boolean, schemaChangeType, table, udt, functionName, aggregate}} event
-     * @param {Boolean} processNow
-     * @returns {Promise<void>}
-     */
-    handleSchemaChange(event: {
-        keyspace: string;
-        isKeyspace: boolean;
-        schemaChangeType: any;
-        table: any;
-        udt: any;
-        functionName: any;
-        aggregate: any;
-    }, processNow: boolean): Promise<void>;
-    /**
-     * @param {Function} handler
-     * @param {String} keyspace
-     * @param {String} cqlObject
-     * @param {Boolean} processNow
-     * @returns {Promise<void>}
-     */
-    _scheduleObjectRefresh(handler: Function, keyspace: string, cqlObject: string, processNow: boolean): Promise<void>;
-    /**
-     * @param {String} keyspace
-     * @param {Boolean} processNow
-     * @returns {Promise<void>}
-     */
-    _scheduleKeyspaceRefresh(keyspace: string, processNow: boolean): Promise<void>;
-    /** @returns {Promise<void>} */
-    _scheduleRefreshHosts(): Promise<void>;
-    /**
-     * Sets the information for the host used by the control connection.
-     * @param {Boolean} initializing
-     * @param {Connection} c
-     * @param {Boolean} setCurrentHost Determines if the host retrieved must be set as the current host
-     * @param result
-     */
-    _setLocalInfo(initializing: boolean, setCurrentHost: boolean, c: Connection, result: any): void;
-    /**
-     * @param {Boolean} initializing Determines whether this function was called in order to initialize the control
-     * connection the first time.
-     * @param {ResultSet} result
-     */
-    setPeersInfo(initializing: boolean, result: ResultSet): Promise<void>;
-    /**
-     * Gets the address from a peers row and translates the address.
-     * @param {Object|Row} row
-     * @param {Number} defaultPort
-     * @returns {Promise<string>}
-     */
-    getAddressForPeerHost(row: object | Row, defaultPort: number): Promise<string>;
-    /**
-     * Uses the DNS protocol to resolve a IPv4 and IPv6 addresses (A and AAAA records) for the hostname.
-     * It returns an Array of addresses that can be empty and logs the error.
-     * @private
-     * @param name
-     */
-    _resolveAll(name: any): Promise<any[]>;
-    /**
-     * Waits for a connection to be available. If timeout expires before getting a connection it callbacks in error.
-     * @returns {Promise<void>}
-     */
-    _waitForReconnection(): Promise<void>;
-    /**
-     * Executes a query using the active connection
-     * @param {String|Request} cqlQuery
-     * @param {Boolean} [waitReconnect] Determines if it should wait for reconnection in case the control connection is not
-     * connected at the moment. Default: true.
-     */
-    query(cqlQuery: string | Request_2, waitReconnect?: boolean): Promise<OperationState>;
-    /** @returns {Encoder} The encoder used by the current connection */
-    getEncoder(): Encoder;
-    /**
-     * Cancels all timers and shuts down synchronously.
-     */
-    shutdown(): void;
-    /**
-     * Resets the Connection to its initial state.
-     */
-    reset(): Promise<void>;
-    /**
-     * Gets a Map containing the original contact points and the addresses that each one resolved to.
-     */
-    getResolvedContactPoints(): Map<any, any>;
-    /**
-     * Gets the local IP address to which the control connection socket is bound to.
-     * @returns {String|undefined}
-     */
-    getLocalAddress(): string | undefined;
-    /**
-     * Gets the address and port of host the control connection is connected to.
-     * @returns {String|undefined}
-     */
-    getEndpoint(): string | undefined;
-}
+/* Excluded from this release type: ControlConnection */
 
 declare type CustomSimpleColumnInfo = {
     code: (dataTypes.custom);
@@ -1889,6 +1472,13 @@ declare class DataCollection extends EventEmitter.EventEmitter {
     /* Excluded from this release type: __constructor */
 }
 
+/**
+ * DataStax module.
+ * <p>
+ *   Contains modules and classes to represent functionality that is specific to DataStax products.
+ * </p>
+ * @module datastax
+ */
 export declare const datastax: {
     graph: {
         Edge: typeof Edge;
@@ -1924,9 +1514,9 @@ export declare const datastax: {
                 toString(): any;
             };
         };
-        getCustomTypeSerializers: typeof getCustomSerializers;
+        /* Excluded from this release type: getCustomTypeSerializers */
         GraphResultSet: typeof GraphResultSet;
-        GraphTypeWrapper: typeof GraphTypeWrapper;
+        /* Excluded from this release type: GraphTypeWrapper */
         t: {
             id: {
                 typeName: any;
@@ -1949,7 +1539,7 @@ export declare const datastax: {
                 toString(): any;
             };
         };
-        UdtGraphWrapper: typeof UdtGraphWrapper;
+        /* Excluded from this release type: UdtGraphWrapper */
     };
     DateRange: typeof DateRange;
 };
@@ -2014,6 +1604,15 @@ declare enum dataTypes {
     set = 34,
     udt = 48,
     tuple = 49
+}
+
+declare namespace dataTypes {
+    /**
+     * Returns the typeInfo of a given type name
+     * @param {string} name
+     * @returns {DateTypeInfo}
+     */
+    function getByName(name: string): DataTypeInfo;
 }
 
 /**
@@ -2185,296 +1784,6 @@ declare type DecisionInfo = {
     consistency?: consistencies;
     useCurrentHost?: boolean;
 };
-
-declare const _default: {
-    Client: typeof Client;
-    ExecutionProfile: typeof ExecutionProfile;
-    ExecutionOptions: typeof ExecutionOptions;
-    types: {
-        opcodes: {
-            error: number;
-            startup: number;
-            ready: number;
-            authenticate: number;
-            credentials: number;
-            options: number;
-            supported: number;
-            query: number;
-            result: number;
-            prepare: number;
-            execute: number;
-            register: number;
-            event: number;
-            batch: number;
-            authChallenge: number;
-            authResponse: number;
-            authSuccess: number;
-            cancel: number;
-            isInRange: (code: any) => boolean;
-        };
-        consistencies: typeof consistencies;
-        consistencyToString: {};
-        dataTypes: typeof dataTypes;
-        getDataTypeNameByCode: typeof getDataTypeNameByCode;
-        getDataTypeByName: (name: string) => DataTypeInfo;
-        distance: typeof distance;
-        frameFlags: {
-            compression: number;
-            tracing: number;
-            customPayload: number;
-            warning: number;
-        };
-        protocolEvents: {
-            topologyChange: string;
-            statusChange: string;
-            schemaChange: string;
-        };
-        protocolVersion: {
-            v1: number;
-            v2: number;
-            v3: number;
-            v4: number;
-            v5: number;
-            v6: number;
-            dseV1: number;
-            dseV2: number;
-            maxSupported: number;
-            minSupported: number;
-            isDse: (version: number) => boolean;
-            isSupportedCassandra: (version: number) => boolean;
-            isSupported: (version: number) => boolean;
-            supportsPrepareFlags: (version: number) => boolean;
-            supportsKeyspaceInRequest: (version: number) => boolean;
-            supportsResultMetadataId: (version: number) => boolean;
-            supportsPreparedPartitionKey: (version: number) => boolean;
-            supportsSchemaChangeFullMetadata: (version: any) => boolean;
-            supportsContinuousPaging: (version: any) => boolean;
-            supportsPaging: (version: any) => boolean;
-            supportsTimestamp: (version: number) => boolean;
-            supportsNamedParameters: (version: number) => boolean;
-            supportsUnset: (version: number) => boolean;
-            supportsFailureReasonMap: (version: any) => boolean;
-            uses2BytesStreamIds: (version: number) => boolean;
-            uses4BytesCollectionLength: (version: number) => boolean;
-            uses4BytesQueryFlags: (version: number) => boolean;
-            canStartupResponseErrorBeWrapped: (version: number) => boolean;
-            getLowerSupported: (version: number) => number;
-            getHighestCommon: (connection: Connection, hosts: HostMap) => number;
-            isBeta: (version: number) => boolean;
-        };
-        responseErrorCodes: typeof responseErrorCodes;
-        resultKind: {
-            voidResult: number;
-            rows: number;
-            setKeyspace: number;
-            prepared: number;
-            schemaChange: number;
-        };
-        timeuuid: typeof timeuuid;
-        uuid: typeof uuid;
-        BigDecimal: typeof BigDecimal;
-        Duration: typeof Duration;
-        FrameHeader: typeof FrameHeader;
-        InetAddress: typeof InetAddress;
-        Integer: typeof Integer;
-        LocalDate: typeof LocalDate;
-        LocalTime: typeof LocalTime;
-        Long: typeof Long.default;
-        ResultSet: typeof ResultSet;
-        ResultStream: typeof ResultStream;
-        Row: typeof Row;
-        DriverError: typeof DriverError;
-        TimeoutError: typeof TimeoutError;
-        TimeUuid: typeof TimeUuid;
-        Tuple: typeof Tuple;
-        Uuid: typeof Uuid;
-        unset: Readonly<{
-            readonly unset: true;
-        }>;
-        generateTimestamp: typeof generateTimestamp;
-        Vector: typeof Vector;
-    };
-    errors: {
-        ArgumentError: typeof ArgumentError;
-        AuthenticationError: typeof AuthenticationError;
-        BusyConnectionError: typeof BusyConnectionError;
-        DriverError: typeof DriverError;
-        OperationTimedOutError: typeof OperationTimedOutError;
-        DriverInternalError: typeof DriverInternalError;
-        NoHostAvailableError: typeof NoHostAvailableError;
-        NotSupportedError: typeof NotSupportedError;
-        ResponseError: typeof ResponseError;
-        VIntOutOfRangeException: typeof VIntOutOfRangeException;
-    };
-    policies: {
-        addressResolution: {
-            AddressTranslator: typeof AddressTranslator;
-            EC2MultiRegionTranslator: typeof EC2MultiRegionTranslator;
-        };
-        loadBalancing: {
-            AllowListPolicy: typeof AllowListPolicy;
-            DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
-            DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
-            LoadBalancingPolicy: typeof LoadBalancingPolicy;
-            RoundRobinPolicy: typeof RoundRobinPolicy;
-            TokenAwarePolicy: typeof TokenAwarePolicy;
-            WhiteListPolicy: typeof WhiteListPolicy;
-        };
-        reconnection: {
-            ReconnectionPolicy: typeof ReconnectionPolicy;
-            ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
-            ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
-        };
-        retry: {
-            IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
-            FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
-            RetryPolicy: typeof RetryPolicy;
-        };
-        speculativeExecution: {
-            NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
-            SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
-            ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
-        };
-        timestampGeneration: {
-            TimestampGenerator: typeof TimestampGenerator;
-            MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
-        };
-        defaultAddressTranslator: () => AddressTranslator;
-        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy;
-        defaultRetryPolicy: () => RetryPolicy;
-        defaultReconnectionPolicy: () => ReconnectionPolicy;
-        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy;
-        defaultTimestampGenerator: () => TimestampGenerator;
-    };
-    auth: {
-        Authenticator: typeof Authenticator;
-        AuthProvider: typeof AuthProvider;
-        DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
-        DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
-        NoAuthProvider: typeof NoAuthProvider;
-        PlainTextAuthProvider: typeof PlainTextAuthProvider;
-    };
-    mapping: {
-        Mapper: typeof Mapper;
-        ModelMapper: typeof ModelMapper;
-        ModelBatchMapper: typeof ModelBatchMapper;
-        ModelBatchItem: typeof ModelBatchItem;
-        Result: typeof Result;
-        TableMappings: typeof TableMappings;
-        DefaultTableMappings: typeof DefaultTableMappings;
-        UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
-        q: {
-            in_: (arr: any) => QueryOperator;
-            gt: (value: any) => QueryOperator;
-            gte: (value: any) => QueryOperator;
-            lt: (value: any) => QueryOperator;
-            lte: (value: any) => QueryOperator;
-            notEq: (value: any) => QueryOperator;
-            and: (condition1: any, condition2: any) => QueryOperator;
-            incr: (value: any) => QueryAssignment;
-            decr: (value: any) => QueryAssignment;
-            append: (value: any) => QueryAssignment;
-            prepend: (value: any) => QueryAssignment;
-            remove: (value: any) => QueryAssignment;
-        };
-    };
-    tracker: {
-        RequestTracker: typeof RequestTracker;
-        RequestLogger: typeof RequestLogger;
-    };
-    metrics: {
-        ClientMetrics: typeof ClientMetrics;
-        DefaultMetrics: typeof DefaultMetrics;
-    };
-    concurrent: {
-        executeConcurrent: typeof executeConcurrent;
-        ResultSetGroup: typeof ResultSetGroup;
-    };
-    token: {
-        Token: typeof Token;
-        TokenRange: typeof TokenRange;
-    };
-    metadata: {
-        Metadata: typeof Metadata;
-    };
-    Encoder: typeof Encoder;
-    geometry: {
-        Point: typeof Point;
-        LineString: typeof LineString;
-        Polygon: typeof Polygon;
-        Geometry: typeof Geometry;
-    };
-    datastax: {
-        graph: {
-            Edge: typeof Edge;
-            Element: typeof Element;
-            Path: typeof Path;
-            Property: typeof Property;
-            Vertex: typeof Vertex;
-            VertexProperty: typeof VertexProperty;
-            asInt: typeof asInt;
-            asDouble: typeof asDouble;
-            asFloat: typeof asFloat;
-            asTimestamp: typeof asTimestamp;
-            asUdt: typeof asUdt;
-            direction: {
-                both: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                in: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                out: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                in_: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-            };
-            getCustomTypeSerializers: typeof getCustomSerializers;
-            GraphResultSet: typeof GraphResultSet;
-            GraphTypeWrapper: typeof GraphTypeWrapper;
-            t: {
-                id: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                key: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                label: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-                value: {
-                    typeName: any;
-                    elementName: any;
-                    toString(): any;
-                };
-            };
-            UdtGraphWrapper: typeof UdtGraphWrapper;
-        };
-        DateRange: typeof DateRange;
-    };
-    /**
-     * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
-     */
-    defaultOptions: () => ClientOptions;
-    version: string;
-};
-export default _default;
 
 /**
  * A load-balancing policy implementation that attempts to fairly distribute the load based on the amount of in-flight
@@ -2706,7 +2015,6 @@ declare type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocIn
  */
 /**
  * Base Error
- * @private
  */
 declare class DriverError extends Error {
     info: string;
@@ -2875,10 +2183,10 @@ declare class DsePlainTextAuthProvider extends AuthProvider {
  * @constructor
  */
 declare class Duration {
-    months: number;
-    days: number;
-    nanoseconds: Long__default;
-    constructor(months: number, days: number, nanoseconds: number | Long__default);
+    private months;
+    private days;
+    private nanoseconds;
+    constructor(months: number, days: number, nanoseconds: number | Long);
     /**
      * Returns true if the value of the Duration instance and other are the same
      * @param {Duration} other
@@ -3349,40 +2657,6 @@ declare function executeConcurrent(client: Client, queries: Array<{
 }>, options?: Options): Promise<ResultSetGroup>;
 
 /**
- * Writes a execute query (given a prepared queryId)
- * @param {String} query
- * @param {Buffer} queryId
- * @param {Array} params
- * @param options
- */
-declare class ExecuteRequest extends Request_2 {
-    query: string;
-    queryId: any;
-    params: any;
-    meta: any;
-    options: ExecutionOptions;
-    consistency: any;
-    namedParameters: boolean;
-    /**
-     * @param {String} query
-     * @param queryId
-     * @param params
-     * @param {ExecutionOptions} execOptions
-     * @param meta
-     */
-    constructor(query: string, queryId: any, params: any, execOptions: ExecutionOptions, meta: any);
-    getParamType(index: any): any;
-    write(encoder: any, streamId: any): Buffer;
-    /**
-     * Writes v1 and v2 execute query parameters
-     * @param {FrameWriter} frameWriter
-     * @param {Encoder} encoder
-     * @param {Boolean} [isQuery] True if query, otherwise assumed to be execute request.
-     */
-    writeQueryParameters(frameWriter: FrameWriter, encoder: Encoder, isQuery?: boolean): void;
-}
-
-/**
  * A base class that represents a wrapper around the user provided query options with getter methods and proper
  * default values.
  * <p>
@@ -3412,9 +2686,11 @@ export declare class ExecutionOptions {
      * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use
      * this data.
      * @abstract
-     * @returns {Object}
+     * @returns {{ [key: string]: any }}
      */
-    getCustomPayload(): object;
+    getCustomPayload(): {
+        [key: string]: any;
+    };
     /**
      * Gets the amount of rows to retrieve per page.
      * @abstract
@@ -3430,9 +2706,9 @@ export declare class ExecutionOptions {
     /**
      * Gets the type hints for parameters given in the query, ordered as for the parameters.
      * @abstract
-     * @returns {Array|Array<Array>}
+     * @returns {string[] | string[][]}
      */
-    getHints(): Array<any> | Array<Array<any>>;
+    getHints(): string[] | string[][];
     /**
      * Determines whether the driver must retrieve the following result pages automatically.
      * <p>
@@ -3531,16 +2807,16 @@ export declare class ExecutionOptions {
     /**
      * Gets the the consistency level to be used for the serial phase of conditional updates.
      * @abstract
-     * @returns {Number}
+     * @returns {consistencies}
      */
-    getSerialConsistency(): number;
+    getSerialConsistency(): consistencies;
     /**
      * Gets the provided timestamp for the execution in microseconds from the unix epoch (00:00:00, January 1st, 1970).
      * <p>When a timestamp generator is used, this method returns <code>undefined</code>.</p>
      * @abstract
      * @returns {Number|Long|undefined|null}
      */
-    getTimestamp(): number | Long__default | undefined | null;
+    getTimestamp(): number | Long | undefined | null;
     /* Excluded from this release type: setHints */
     /* Excluded from this release type: setKeyspace */
     /* Excluded from this release type: setPageState */
@@ -3615,7 +2891,7 @@ export declare class ExecutionProfile {
         source?: string;
         readConsistency?: consistencies;
         writeConsistency?: consistencies;
-        results?: any;
+        /* Excluded from this release type: results */
     };
     /**
      * Creates a new instance of {@link ExecutionProfile}.
@@ -3793,98 +3069,9 @@ declare type FindDocInfo = {
     limit?: number;
 };
 
-declare class FrameHeader {
-    version: number;
-    flags: number;
-    streamId: number;
-    opcode: number;
-    bodyLength: number;
-    /**
-     * Represents a frame header that could be used to read from a Buffer or to write to a Buffer
-     * @ignore
-     * @param {Number} version Protocol version
-     * @param {Number} flags
-     * @param {Number} streamId
-     * @param {Number} opcode
-     * @param {Number} bodyLength
-     * @constructor
-     */
-    constructor(version: number, flags: number, streamId: number, opcode: number, bodyLength: number);
-    /**
-     * The length of the header of the frame based on the protocol version
-     * @returns {Number}
-     */
-    static size(version: any): number;
-    /**
-     * Gets the protocol version based on the first byte of the header
-     * @param {Buffer} buffer
-     * @returns {Number}
-     */
-    static getProtocolVersion(buffer: Buffer): number;
-    /**
-     * @param {Buffer} buf
-     * @param {Number} [offset]
-     * @returns {FrameHeader}
-     */
-    static fromBuffer(buf: Buffer, offset?: number): FrameHeader;
-    /** @returns {Buffer} */
-    toBuffer(): Buffer;
-}
+/* Excluded from this release type: FrameHeader */
 
-/**
- * Contains the logic to write all the different types to the frame.
- */
-declare class FrameWriter {
-    bodyLength: any;
-    buffers: any[];
-    opcode: number;
-    /**
-     * Creates a new instance of FrameWriter.
-     * @param {Number} opcode
-     */
-    constructor(opcode: number);
-    add(buf: any): void;
-    writeShort(num: any): void;
-    writeInt(num: any): void;
-    /** @param {Long} num */
-    writeLong(num: Long__default): void;
-    /**
-     * Writes bytes according to Cassandra <int byteLength><bytes>
-     * @param {Buffer|null|types.unset} bytes
-     */
-    writeBytes(bytes: Buffer | null | typeof types.unset): void;
-    /**
-     * Writes a buffer according to Cassandra protocol: bytes.length (2) + bytes
-     * @param {Buffer} bytes
-     */
-    writeShortBytes(bytes: Buffer): void;
-    /**
-     * Writes a single byte
-     * @param {Number} num Value of the byte, a number between 0 and 255.
-     */
-    writeByte(num: number): void;
-    writeString(str: any): void;
-    writeLString(str: any): void;
-    writeStringList(values: any): void;
-    writeCustomPayload(payload: any): void;
-    writeStringMap(map: any): void;
-    /**
-     * @param {Number} version
-     * @param {Number} streamId
-     * @param {Number} [flags] Header flags
-     * @returns {Buffer}
-     * @throws {TypeError}
-     */
-    write(version: number, streamId: number, flags?: number): Buffer;
-}
-
-/**
- * Generates a value representing the timestamp for the query in microseconds based on the date and the microseconds provided
- * @param {Date} [date] The date to generate the value, if not provided it will use the current date.
- * @param {Number} [microseconds] A number from 0 to 999 used to build the microseconds part of the date.
- * @returns {Long}
- */
-declare function generateTimestamp(date: any, microseconds: any): Long__default;
+/* Excluded from this release type: generateTimestamp */
 
 declare class Geometry {
     static types: {
@@ -4006,28 +3193,25 @@ declare class GraphResultSet implements Iterable<any> {
  */
 declare class Host extends EventEmitter.EventEmitter {
     address: string;
-    setDownAt: number;
-    log: (type: any, info: any, furtherInfo?: any, options?: any) => void;
-    isUpSince: number;
-    pool: any;
+    private setDownAt;
+    private log;
+    /* Excluded from this release type: isUpSince */
+    /* Excluded from this release type: pool */
     cassandraVersion: string;
     datacenter: string;
     rack: string;
     tokens: string[];
     hostId: Uuid;
-    dseVersion: string;
-    workloads: readonly any[];
-    _distance: number;
-    _healthResponseCounter: number;
-    reconnectionSchedule: any;
-    options: any;
-    reconnectionDelay: number;
-    _healthResponseCountTimer: any;
-    _metadata: any;
-    /**
-     * Creates a new Host instance.
-     */
-    constructor(address: any, protocolVersion: any, options: any, metadata: any);
+    /* Excluded from this release type: dseVersion */
+    /* Excluded from this release type: workloads */
+    private _distance;
+    private _healthResponseCounter;
+    /* Excluded from this release type: reconnectionSchedule */
+    /* Excluded from this release type: options */
+    private reconnectionDelay;
+    private _healthResponseCountTimer;
+    private _metadata;
+    /* Excluded from this release type: __constructor */
     /* Excluded from this release type: setDown */
     /* Excluded from this release type: setUp */
     /* Excluded from this release type: checkIsUp */
@@ -4059,12 +3243,12 @@ declare class Host extends EventEmitter.EventEmitter {
      * If the amount of connections is 0 for not ignored hosts, the host must be down.
      * @private
      */
-    _checkPoolState(): void;
+    private _checkPoolState;
     /**
      * Executed after an scheduled new connection attempt finished
      * @private
      */
-    _onNewConnectionOpen(err: any): Promise<void>;
+    private _onNewConnectionOpen;
     /**
      * Returns an array containing the Cassandra Version as an Array of Numbers having the major version in the first
      * position.
@@ -4074,9 +3258,9 @@ declare class Host extends EventEmitter.EventEmitter {
     /**
      * Gets the DSE version of the host as an Array, containing the major version in the first position.
      * In case the cluster is not a DSE cluster, it returns an empty Array.
-     * @returns {Array}
+     * @returns {Array.<Number>}
      */
-    getDseVersion(): Array<any>;
+    getDseVersion(): Array<number>;
 }
 
 /**
@@ -4087,15 +3271,15 @@ declare class Host extends EventEmitter.EventEmitter {
  * @constructor
  */
 declare class HostMap extends EventEmitter.EventEmitter {
-    _items: Map<any, any>;
-    _values: any;
+    private _items;
+    private _values;
     length: number;
-    constructor();
+    /* Excluded from this release type: __constructor */
     /**
      * Executes a provided function once per map element.
-     * @param callback
+     * @param {Function} callback
      */
-    forEach(callback: any): void;
+    forEach(callback: (value: Host, key: string) => void): void;
     /**
      * Gets a {@link Host host} by key or undefined if not found.
      * @param {String} key
@@ -4107,45 +3291,19 @@ declare class HostMap extends EventEmitter.EventEmitter {
      * @returns {Array.<String>}
      */
     keys(): Array<string>;
-    /**
-     * Removes an item from the map.
-     * @param {String} key The key of the host
-     * @fires HostMap#remove
-     */
-    remove(key: string): void;
-    /**
-     * Removes multiple hosts from the map.
-     * @param {Array.<String>} keys
-     * @fires HostMap#remove
-     */
-    removeMultiple(keys: Array<string>): void;
-    /**
-     * Adds a new item to the map.
-     * @param {String} key The key of the host
-     * @param {Host} value The host to be added
-     * @fires HostMap#remove
-     * @fires HostMap#add
-     */
-    set(key: string, value: Host): Host;
+    /* Excluded from this release type: remove */
+    /* Excluded from this release type: removeMultiple */
+    /* Excluded from this release type: set */
     /* Excluded from this release type: slice */
-    /**
-     * Deprecated: Use set() instead.
-     * @ignore @ignore
-     * @deprecated
-     */
-    push(k: any, v: any): void;
+    /* Excluded from this release type: push */
     /**
      * Returns a shallow copy of the values of the map.
      * @returns {Array.<Host>}
      */
     values(): Array<Host>;
-    /**
-     * Removes all items from the map.
-     * @returns {Array.<Host>} The previous items
-     */
-    clear(): Array<Host>;
-    inspect(): Map<any, any>;
-    toJSON(): any;
+    /* Excluded from this release type: clear */
+    /* Excluded from this release type: inspect */
+    /* Excluded from this release type: toJSON */
 }
 
 /**
@@ -4245,7 +3403,7 @@ declare enum IndexKind {
  * @classdesc Represents an v4 or v6 Internet Protocol (IP) address.
  */
 declare class InetAddress {
-    buffer: Buffer;
+    private buffer;
     length: number;
     version: number;
     /**
@@ -4270,11 +3428,7 @@ declare class InetAddress {
      * @returns {Buffer}
      */
     getBuffer(): Buffer;
-    /**
-     * Provide the name of the constructor and the string representation
-     * @returns {string}
-     */
-    inspect(): string;
+    /* Excluded from this release type: inspect */
     /**
      * Returns the string representation of the IP address.
      * <p>For v4 IP addresses, a string in the form of d.d.d.d is returned.</p>
@@ -4284,7 +3438,7 @@ declare class InetAddress {
      *   In cases where there is more than one field of only zeros, it can be shortened. For example, 2001:0db8:0:0:0:1:0:1
      *   will be expressed as 2001:0db8::1:0:1.
      * </p>
-     * @param {String} [encoding]
+     * @param {String} [encoding] If set to 'hex', the hex representation of the buffer is returned.
      * @returns {String}
      */
     toString(encoding?: string): string;
@@ -4306,93 +3460,6 @@ declare type InsertDocInfo = {
     ttl?: number;
     ifNotExists?: boolean;
 };
-
-/**
- * Contains methods and functionality to send events to DSE Insights.
- */
-declare class InsightsClient {
-    private _client;
-    private _sessionId;
-    private _enabled;
-    private _closed;
-    private _firstTimeout;
-    private _recurrentTimeout;
-    private _statusErrorLogs;
-    private _statusEventDelay;
-    private _errorCallback;
-    /**
-     * Creates a new instance of the {@link InsightsClient} using the driver {@link Client}.
-     * @param {Client} client
-     * @param {Object} [options]
-     * @param {Number} [options.statusEventDelay]
-     * @param {Function} [options.errorCallback]
-     */
-    constructor(client: Client, options?: {
-        statusEventDelay?: number;
-        errorCallback?: Function;
-    });
-    /**
-     * Initializes the insights client in the background by sending the startup event and scheduling status events at
-     * regular intervals.
-     * @returns {undefined}
-     */
-    init(): undefined;
-    _init(): Promise<void>;
-    /**
-     * Sends the startup event.
-     * @returns {Promise}
-     * @private
-     */
-    _sendStartupEvent(): Promise<any>;
-    /**
-     * Sends the status event.
-     * @returns {Promise} A promise that is never rejected.
-     * @private
-     */
-    _sendStatusEvent(): Promise<any>;
-    /**
-     * Validates the minimum server version for all nodes in the cluster.
-     * @private
-     */
-    _dseSupportsInsights(): any;
-    /**
-     * @returns {Promise<String>} Returns a json string with the startup message.
-     * @private
-     */
-    _getStartupMessage(): Promise<string>;
-    _getConfigAntiPatterns(): {
-        sslWithoutCertValidation?: string;
-    };
-    /**
-     * Gets an array of data centers the driver connects to.
-     * Whether the driver connects to a certain host is determined by the host distance (local and remote hosts)
-     * and the pooling options (whether connection length for remote hosts is greater than 0).
-     * @returns {Array}
-     * @private
-     */
-    _getDataCenters(): Array<any>;
-    /**
-     * Tries to obtain the application name and version from
-     * @param {ClientOptions} options
-     * @returns {Promise}
-     * @private
-     */
-    _getAppInfo(options: ClientOptions): Promise<any>;
-    /**
-     * @private
-     * @returns {Promise<string>} A Promise that will never be rejected
-     */
-    _readPackageInfoFile(packageInfoPath: any): Promise<string>;
-    /**
-     * @returns {String} Returns a json string with the startup message.
-     * @private
-     */
-    _getStatusEvent(): string;
-    /**
-     * Cleans any timer used internally and sets the client as closed.
-     */
-    shutdown(): void;
-}
 
 declare const inspectMethod: unique symbol;
 
@@ -4656,11 +3723,7 @@ declare class Integer {
      * @return {!Integer} This shifted to the right by the given amount.
      */
     shiftRight(numBits: number): Integer;
-    /**
-     * Provide the name of the constructor and the string representation
-     * @returns {string}
-     */
-    inspect(): string;
+    /* Excluded from this release type: inspect */
     /**
      * Returns a Integer whose value is the absolute value of this
      * @returns {Integer}
@@ -4804,8 +3867,11 @@ declare class LoadBalancingPolicy {
  * </p>
  */
 declare class LocalDate {
+    /**
+     * The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
+     */
     date: Date;
-    _value: number | null;
+    private _value;
     year: number;
     month: number;
     day: number;
@@ -4826,8 +3892,6 @@ declare class LocalDate {
      * @param {Number} year The year or days since epoch.  If days since epoch, month and day should not be provided.
      * @param {Number} [month] Between 1 and 12 inclusive.
      * @param {Number} [day] Between 1 and the number of days in the given month of the given year.
-     *
-     * @property {Date} date The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
      *
      * @constructor
      */
@@ -4896,10 +3960,26 @@ declare class LocalDate {
  * </p>
  */
 declare class LocalTime {
-    value: Long__default;
+    private value;
+    /**
+     * Gets the hour component of the time represented by the current instance, a number from 0 to 23.
+     * @type Number
+     */
     hour: number;
+    /**
+     * Gets the minute component of the time represented by the current instance, a number from 0 to 59.
+     * @type Number
+     */
     minute: number;
+    /**
+     * Gets the second component of the time represented by the current instance, a number from 0 to 59.
+     * @type Number
+     */
     second: number;
+    /**
+     * Gets the nanoseconds component of the time represented by the current instance, a number from 0 to 999999999.
+     * @type Number
+     */
     nanosecond: number;
     private _partsCache?;
     /**
@@ -4911,7 +3991,7 @@ declare class LocalTime {
      * @param {Long} totalNanoseconds Total nanoseconds since midnight.
      * @constructor
      */
-    constructor(totalNanoseconds: Long__default);
+    constructor(totalNanoseconds: Long);
     /**
      * Parses a string representation and returns a new LocalTime.
      * @param {String} value
@@ -4961,7 +4041,7 @@ declare class LocalTime {
      * Gets the total amount of nanoseconds since midnight for this instance.
      * @returns {Long}
      */
-    getTotalNanoseconds(): Long__default;
+    getTotalNanoseconds(): Long;
     inspect(): string;
     /**
      * Returns a big-endian bytes representation of the instance
@@ -5101,7 +4181,7 @@ declare type MappingExecutionOptions = {
     executionProfile?: string;
     isIdempotent?: boolean;
     logged?: boolean;
-    timestamp?: number | Long__default;
+    timestamp?: number | Long;
     fetchSize?: number;
     pageState?: number;
 };
@@ -5396,7 +4476,7 @@ declare class Metadata {
      * second parameter.
      */
     getMaterializedView(keyspaceName: string, name: string, callback: ValueCallback<MaterializedView>): void;
-    getMaterializedView(keyspaceName: string, name: string, callback: EmptyCallback): Promise<MaterializedView>;
+    getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
@@ -5871,69 +4951,17 @@ declare class MonotonicTimestampGenerator extends TimestampGenerator {
      * @returns {Number}
      */
     getDate(): number;
-    next(client: any): number | Long__default;
+    next(client: Client): Long | number | null;
     /**
      * @private
      * @returns {Number|Long}
      */
-    _generateMicroseconds(): number | Long__default;
+    private _generateMicroseconds;
 }
 
-/**
- * Represents a token from a Cassandra ring where the partitioner
- * is Murmur3Partitioner.
- *
- * The raw token type is a varint (represented by MutableLong).
- */
-declare class Murmur3Token extends Token {
-    constructor(value: any);
-    getType(): DataTypeInfo;
-}
+/* Excluded from this release type: Murmur3Token */
 
-/**
- * Uniformly distributes data across the cluster based on Cassandra flavored Murmur3 hashed values.
- */
-declare class Murmur3Tokenizer extends Tokenizer {
-    _minToken: Murmur3Token;
-    _maxToken: Murmur3Token;
-    _maxValue: Integer;
-    _minValue: Integer;
-    _ringLength: Integer;
-    constructor();
-    /**
-     * @param {Buffer} value
-     * @return {Murmur3Token}
-     */
-    hash(value: Buffer): Murmur3Token;
-    /**
-     *
-     * @param {Buffer} key
-     * @param {Number} offset
-     * @param {Number} index
-     * @return {MutableLong}
-     */
-    getBlock(key: Buffer, offset: number, index: number): MutableLong;
-    /**
-     * @param {MutableLong} v
-     * @param {Number} n
-     */
-    rotl64(v: MutableLong, n: number): void;
-    /** @param {MutableLong} k */
-    fmix(k: MutableLong): void;
-    /**
-     * Parses a int64 decimal string representation into a MutableLong.
-     * @param {String} value
-     * @returns {Murmur3Token}
-     */
-    parse(value: string): Murmur3Token;
-    minToken(): Murmur3Token;
-    maxToken(): Murmur3Token;
-    maxValue(): Integer;
-    minValue(): Integer;
-    ringLength(): Integer;
-    split(start: any, end: any, numberOfSplits: any): Murmur3Token[];
-    stringify(token: any): string;
-}
+/* Excluded from this release type: Murmur3Tokenizer */
 
 /* Excluded from this release type: MutableLong */
 
@@ -5969,7 +4997,7 @@ declare class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
      * Creates a new instance of NoSpeculativeExecutionPolicy.
      */
     constructor();
-    newPlan(): {
+    newPlan(keyspace: string, queryInfo: string | Array<string>): {
         nextExecution: () => number;
     };
 }
@@ -5999,64 +5027,7 @@ declare type OperationInfo = {
     nbRetry: number;
 };
 
-/**
- * Maintains the state information of a request inside a Connection.
- */
-declare class OperationState {
-    streamId: number;
-    request: Request_2;
-    _rowCallback: Function;
-    _callback: Function;
-    _timeout: NodeJS.Timeout;
-    _state: number;
-    _rowIndex: number;
-    /**
-     * Creates a new instance of OperationState.
-     * @param {Request} request
-     * @param {Function} rowCallback
-     * @param {Function} callback
-     */
-    constructor(request: Request_2, rowCallback: Function, callback: Function);
-    /**
-     * Marks the operation as cancelled, clearing all callbacks and timeouts.
-     */
-    cancel(): void;
-    /**
-     * Determines if the operation can be written to the wire (when it hasn't been cancelled or it hasn't timed out).
-     */
-    canBeWritten(): boolean;
-    /**
-     * Determines if the response is going to be yielded by row.
-     * @return {boolean}
-     */
-    isByRow(): boolean;
-    /**
-     * Creates the timeout for the request.
-     * @param {ExecutionOptions} execOptions
-     * @param {Number} defaultReadTimeout
-     * @param {String} address
-     * @param {Function} onTimeout The callback to be invoked when it times out.
-     * @param {Function} onResponse The callback to be invoked if a response is obtained after it timed out.
-     */
-    setRequestTimeout(execOptions: ExecutionOptions, defaultReadTimeout: number, address: string, onTimeout: Function, onResponse: Function): void;
-    setResultRow(row: any, meta: any, rowLength: any, flags: any, header: any): void;
-    /**
-     * Marks the current operation as timed out.
-     * @param {Error} err
-     * @param {Function} onResponse
-     * @private
-     */
-    _markAsTimedOut(err: Error, onResponse: Function): void;
-    _markAsCompleted(): void;
-    /**
-     * Sets the result of this operation, declaring that no further input will be processed for this operation.
-     * @param {Error} err
-     * @param {Object} [result]
-     * @param {Number} [length]
-     */
-    setResult(err: Error, result?: object, length?: number): void;
-    _swapCallbackAndInvoke(err: any, result: any, length: any, newCallback?: any): void;
-}
+/* Excluded from this release type: OperationState */
 
 /**
  * Represents a client-side error that is raised when the client didn't hear back from the server within
@@ -6335,6 +5306,65 @@ declare class Property {
 }
 
 /**
+ * Contains information for the different protocol versions supported by the driver.
+ * @type {Object}
+ * @property {Number} v1 Cassandra protocol v1, supported in Apache Cassandra 1.2-->2.2.
+ * @property {Number} v2 Cassandra protocol v2, supported in Apache Cassandra 2.0-->2.2.
+ * @property {Number} v3 Cassandra protocol v3, supported in Apache Cassandra 2.1-->3.x.
+ * @property {Number} v4 Cassandra protocol v4, supported in Apache Cassandra 2.2-->3.x.
+ * @property {Number} v5 Cassandra protocol v5, in beta from Apache Cassandra 3.x+. Currently not supported by the
+ * driver.
+ * @property {Number} dseV1 DataStax Enterprise protocol v1, DSE 5.1+
+ * @property {Number} dseV2 DataStax Enterprise protocol v2, DSE 6.0+
+ * @property {Number} maxSupported Returns the higher protocol version that is supported by this driver.
+ * @property {Number} minSupported Returns the lower protocol version that is supported by this driver.
+ * @property {Function} isSupported A function that returns a boolean determining whether a given protocol version
+ * is supported.
+ * @alias module:types~protocolVersion
+ */
+declare enum protocolVersion {
+    v1 = 1,
+    v2 = 2,
+    v3 = 3,
+    v4 = 4,
+    v5 = 5,
+    v6 = 6,
+    dseV1 = 65,
+    dseV2 = 66,
+    maxSupported = 66,
+    minSupported = 1
+}
+
+declare namespace protocolVersion {
+    /* Excluded from this release type: isDse */
+    /* Excluded from this release type: isSupportedCassandra */
+    /**
+     * Determines whether the protocol version is supported by this driver.
+     * @param {Number} version
+     * @returns {Boolean}
+     */
+    function isSupported(version: number): boolean;
+    /* Excluded from this release type: supportsPrepareFlags */
+    /* Excluded from this release type: supportsKeyspaceInRequest */
+    /* Excluded from this release type: supportsResultMetadataId */
+    /* Excluded from this release type: supportsPreparedPartitionKey */
+    /* Excluded from this release type: supportsSchemaChangeFullMetadata */
+    /* Excluded from this release type: supportsContinuousPaging */
+    /* Excluded from this release type: supportsPaging */
+    /* Excluded from this release type: supportsTimestamp */
+    /* Excluded from this release type: supportsNamedParameters */
+    /* Excluded from this release type: supportsUnset */
+    /* Excluded from this release type: supportsFailureReasonMap */
+    /* Excluded from this release type: uses2BytesStreamIds */
+    /* Excluded from this release type: uses4BytesCollectionLength */
+    /* Excluded from this release type: uses4BytesQueryFlags */
+    /* Excluded from this release type: canStartupResponseErrorBeWrapped */
+    /* Excluded from this release type: getLowerSupported */
+    /* Excluded from this release type: getHighestCommon */
+    /* Excluded from this release type: isBeta */
+}
+
+/**
  * Represents a CQL assignment operation, like col = col + x.
  * @ignore
  */
@@ -6508,10 +5538,10 @@ declare class QueryOperator {
  * @property {Number} [graphOptions.writeConsistency] Overrides the [consistency
  * level]{@link module:types~consistencies} defined in the query options for graph write queries.
  */
-declare interface QueryOptions {
+export declare interface QueryOptions {
     autoPage?: boolean;
     captureStackTrace?: boolean;
-    consistency?: number;
+    consistency?: consistencies;
     customPayload?: object;
     executeAs?: string;
     executionProfile?: string | ExecutionProfile;
@@ -6530,7 +5560,7 @@ declare interface QueryOptions {
     routingKey?: Buffer | Buffer[];
     routingNames?: string[];
     serialConsistency?: number;
-    timestamp?: number | Long__default;
+    timestamp?: number | Long;
     traceQuery?: boolean;
     graphOptions?: {
         language?: string;
@@ -6542,26 +5572,13 @@ declare interface QueryOptions {
     };
 }
 
-declare class QueryRequest extends ExecuteRequest {
-    hints: any;
-    /**
-     * @param {String} query
-     * @param params
-     * @param {ExecutionOptions} [execOptions]
-     * @param {Boolean} [namedParameters]
-     */
-    constructor(query: string, params?: any, execOptions?: ExecutionOptions, namedParameters?: boolean);
-    getParamType(index: any): any;
-    write(encoder: any, streamId: any): Buffer;
-}
-
 declare interface QueryTrace {
     requestType: string;
     coordinator: InetAddress;
     parameters: {
         [key: string]: any;
     };
-    startedAt: number | Long__default;
+    startedAt: number | Long;
     duration: number;
     clientAddress: string;
     events: Array<{
@@ -6573,42 +5590,9 @@ declare interface QueryTrace {
     }>;
 }
 
-/**
- * Represents a token from a Cassandra ring where the partitioner
- * is RandomPartitioner.
- *
- * The raw token type is a bigint (represented by Number).
- */
-declare class RandomToken extends Token {
-    constructor(value: any);
-    getType(): DataTypeInfo;
-}
+/* Excluded from this release type: RandomToken */
 
-/**
- * Uniformly distributes data across the cluster based on MD5 hash values.
- */
-declare class RandomTokenizer extends Tokenizer {
-    _crypto: any;
-    _minToken: any;
-    _maxValue: any;
-    _maxToken: any;
-    _ringLength: any;
-    constructor();
-    /**
-     * @param {Buffer|Array} value
-     * @returns {RandomToken}
-     */
-    hash(value: Buffer | Array<any>): RandomToken;
-    /**
-     * @returns {Token}
-     */
-    parse(value: any): Token;
-    minToken(): any;
-    maxValue(): any;
-    maxToken(): any;
-    ringLength(): any;
-    split(start: any, end: any, numberOfSplits: any): RandomToken[];
-}
+/* Excluded from this release type: RandomTokenizer */
 
 /** @module policies/reconnection */
 /**
@@ -6670,18 +5654,25 @@ declare class Request_2 {
  * const client = new Client({ contactPoints, requestTracker: requestLogger });
  */
 declare class RequestLogger extends RequestTracker {
-    _options: {
-        slowThreshold?: number;
-        requestSizeThreshold?: number;
-        logNormalRequests?: boolean;
-        logErroredRequests?: boolean;
-        messageMaxQueryLength?: number;
-        messageMaxParameterValueLength?: number;
-        messageMaxErrorStackTraceLength?: number;
-    };
-    logNormalRequests: any;
-    logErroredRequests: any;
-    emitter: EventEmitter<[never]>;
+    private _options;
+    /**
+     * Determines whether it should emit 'normal' events for every EXECUTE, QUERY and BATCH request executed
+     * successfully, useful only for debugging
+     * @type {Boolean}
+     */
+    private logNormalRequests;
+    /**
+     * Determines whether it should emit 'failure' events for every EXECUTE, QUERY and BATCH request execution that
+     * resulted in an error
+     * @type {Boolean}
+     */
+    private logErroredRequests;
+    /**
+     * The object instance that emits <code>'slow'</code>, <code>'large'</code>, <code>'normal'</code> and
+     * <code>'failure'</code> events.
+     * @type {EventEmitter}
+     */
+    private emitter;
     /**
      * Creates a new instance of {@link RequestLogger}.
      * @param {Object} options
@@ -6799,20 +5790,20 @@ declare class RequestTracker {
  */
 declare class ResponseError extends DriverError {
     code: number;
-    consistencies: number;
-    required: number;
-    alive: number;
-    received: number;
-    blockFor: number;
-    failures: number;
-    reasons: object;
-    isDataPresent: any;
-    writeType: any;
-    queryId: any;
-    keyspace: any;
-    functionName: any;
-    argTypes: any[];
-    table: any;
+    consistencies?: consistencies;
+    required?: number;
+    alive?: number;
+    received?: number;
+    blockFor?: number;
+    failures?: number;
+    reasons?: object;
+    isDataPresent?: any;
+    writeType?: any;
+    queryId?: any;
+    keyspace?: string;
+    functionName?: string;
+    argTypes?: string[];
+    table?: string;
     /**
      * Represents an error message from the server
      * @param {Number} code Cassandra exception code
@@ -6878,13 +5869,7 @@ declare class Result<T = any> implements IterableIterator<T> {
     private _iteratorIndex;
     /* Excluded from this release type: length */
     /* Excluded from this release type: pageState */
-    /**
-     * Creates a new instance of Result.
-     * @param {ResultSet} rs
-     * @param {ModelMappingInfo} info
-     * @param {Function} rowAdapter
-     */
-    constructor(rs: ResultSet, info: ModelMappingInfo, rowAdapter: Function);
+    /* Excluded from this release type: __constructor */
     /**
      * When this instance is the result of a conditional update query, it returns whether it was successful.
      * Otherwise, it returns <code>true</code>.
@@ -6927,7 +5912,7 @@ declare class Result<T = any> implements IterableIterator<T> {
  * @class
  * @classdesc Represents the result of a query.
  */
-declare class ResultSet {
+declare class ResultSet implements Iterable<Row>, AsyncIterable<Row> {
     info: {
         queriedHost: string;
         triedHosts: {
@@ -6942,61 +5927,24 @@ declare class ResultSet {
     };
     columns: Array<{
         name: string;
-        type: {
-            code: dataTypes;
-            info: any;
-        };
+        type: DataTypeInfo;
     }>;
     nextPage: (() => void) | null;
     pageState: string;
     rowLength: number;
     rows: Row[];
-    nextPageAsync: Function | undefined;
-    rawPageState: any;
-    /**
-     * Creates a new instance of ResultSet.
-     * @class
-     * @classdesc Represents the result of a query.
-     * @param {Object} response
-     * @param {String} host
-     * @param {Object} triedHosts
-     * @param {Number} speculativeExecutions
-     * @param {Number} consistency
-     * @param {Boolean} isSchemaInAgreement
-     * @constructor
-     */
-    constructor(response: {
-        rows: Array<any>;
-        flags: {
-            traceId: Uuid;
-            warnings: string[];
-            customPayload: any;
-        };
-        meta?: {
-            columns: Array<{
-                name: string;
-                type: {
-                    code: dataTypes;
-                    info: any;
-                };
-            }>;
-            pageState: Buffer;
-        };
-    }, host: string, triedHosts: {
-        [key: string]: any;
-    }, speculativeExecutions: number, consistency: consistencies, isSchemaInAgreement: boolean);
+    /* Excluded from this release type: nextPageAsync */
+    /* Excluded from this release type: rawPageState */
+    /* Excluded from this release type: __constructor */
     /**
      * Returns the first row or null if the result rows are empty.
      */
     first(): Row;
     getPageState(): string;
-    getColumns(): {
+    getColumns(): Array<{
         name: string;
-        type: {
-            code: dataTypes;
-            info: any;
-        };
-    }[];
+        type: DataTypeInfo;
+    }>;
     /**
      * When this instance is the result of a conditional update query, it returns whether it was successful.
      * Otherwise, it returns <code>true</code>.
@@ -7048,7 +5996,7 @@ declare class ResultSet {
      * }
      * @returns {AsyncIterator<Row>}
      */
-    [asyncIteratorSymbol](): AsyncIterator<Row>;
+    [Symbol.asyncIterator](): AsyncIterator<Row>;
     /**
      * Determines whether there are more pages of results.
      * If so, the driver will initially retrieve and contain only the first page of results.
@@ -7079,20 +6027,17 @@ declare class ResultSetGroup {
 declare class ResultStream extends Readable {
     buffer: any[];
     paused: boolean;
-    _cancelAllowed: boolean;
-    _handlersObject: {
-        resumeReadingHandler?: Function;
-        cancelHandler?: Function;
-    };
-    _highWaterMarkRows: number;
-    _readableState: any;
-    _readNext: Function;
-    constructor(opt: any);
-    _read(): void;
+    private _cancelAllowed;
+    private _handlersObject;
+    private _highWaterMarkRows;
+    private _readableState;
+    private _readNext;
+    /* Excluded from this release type: __constructor */
+    /* Excluded from this release type: _read */
     /* Excluded from this release type: _valve */
     add(chunk: any): number;
-    _checkAboveHighWaterMark(): void;
-    _checkBelowHighWaterMark(): void;
+    private _checkAboveHighWaterMark;
+    private _checkBelowHighWaterMark;
     /* Excluded from this release type: cancel */
     /* Excluded from this release type: setHandlers */
 }
@@ -7229,7 +6174,7 @@ declare class RoundRobinPolicy extends LoadBalancingPolicy {
 declare class Row {
     private readonly __columns;
     [key: string]: any;
-    constructor(columns: Array<any>);
+    /* Excluded from this release type: __constructor */
     /**
      * Returns the cell value.
      * @param {String|Number} columnName Name or index of the column
@@ -7244,12 +6189,12 @@ declare class Row {
      * Returns an array of the column names of the row
      * @returns {Array}
      */
-    keys(): Array<any>;
+    keys(): string[];
     /**
      * Executes the callback for each field in the row, containing the value as first parameter followed by the columnName
      * @param {Function} callback
      */
-    forEach(callback: Function): void;
+    forEach(callback: (val: any, key: string) => void): void;
 }
 
 /**
@@ -7400,7 +6345,7 @@ declare class SpeculativeExecutionPolicy {
     /**
      * Gets an associative array containing the policy options.
      */
-    getOptions(): Map<string, number>;
+    getOptions(): Map<string, any>;
 }
 
 /**
@@ -7564,7 +6509,7 @@ declare class TimestampGenerator {
      * sent by the driver, letting the server to generate the timestamp.
      * @abstract
      */
-    next(client: Client): Long__default | number | null;
+    next(client: Client): Long | number | null;
 }
 
 /**
@@ -7630,7 +6575,8 @@ declare class TimeUuid extends Uuid {
      *   // do something with the generated timeuuid
      * });
      */
-    static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void;
+    static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer): TimeUuid;
+    static fromDate(date: Date, ticks: number, nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
     /**
      * Parses a string representation of a TimeUuid
      * @param {String} value
@@ -7668,7 +6614,9 @@ declare class TimeUuid extends Uuid {
      * @example <caption>Generate a TimeUuid based on the current date (might block)</caption>
      * const timeuuid = TimeUuid.now();
      */
-    static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void;
+    static now(): TimeUuid;
+    static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
+    static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
     /**
      * Gets the Date and 100-nanoseconds units representation of this instance.
      * @returns {{date: Date, ticks: Number}}
@@ -7718,21 +6666,18 @@ declare function timeuuid(options: {
  * Represents a token on the Cassandra ring.
  */
 declare class Token {
-    _value: any;
-    constructor(value: any);
+    protected _value: any;
+    /* Excluded from this release type: __constructor */
     /**
-     * @returns {{code: number, info: *|Object}} The type info for the
+     * @returns {DataTypeInfo} The type info for the
      *                                           type of the value of the token.
      */
-    getType(): {
-        code: number;
-        info?: any | object;
-    };
+    getType(): DataTypeInfo;
     /**
      * @returns {*} The raw value of the token.
      */
     getValue(): any;
-    toString(): any;
+    /* Excluded from this release type: toString */
     /**
      * Returns 0 if the values are equal, 1 if greater than other, -1
      * otherwise.
@@ -7741,8 +6686,8 @@ declare class Token {
      * @returns {Number}
      */
     compare(other: Token): number;
-    equals(other: any): boolean;
-    inspect(): string;
+    equals(other: Token): boolean;
+    /* Excluded from this release type: inspect */
 }
 
 export declare const token: {
@@ -7776,51 +6721,7 @@ declare class TokenAwarePolicy extends LoadBalancingPolicy {
     getOptions(): Map<string, any>;
 }
 
-/**
- * Represents a set of methods that are able to generate and parse tokens for the C* partitioner.
- * @abstract
- */
-declare class Tokenizer {
-    constructor();
-    /**
-     * Creates a token based on the Buffer value provided
-     * @abstract
-     * @param {Buffer|Array} value
-     * @returns {Token} Computed token
-     */
-    hash(value: Buffer | Array<any>): Token;
-    /**
-     * Parses a token string and returns a representation of the token
-     * @abstract
-     * @param {String} value
-     */
-    parse(value: string): Token;
-    minToken(): void;
-    /**
-     * Splits the range specified by start and end into numberOfSplits equal parts.
-     * @param {Token} start Starting token
-     * @param {Token} end  End token
-     * @param {Number} numberOfSplits Number of splits to make.
-     */
-    split(start: Token, end: Token, numberOfSplits: number): void;
-    /**
-     * Common implementation for splitting token ranges when start is in
-     * a shared Integer format.
-     *
-     * @param {Integer} start Starting token
-     * @param {Integer} range How large the range of the split is
-     * @param {Integer} ringEnd The end point of the ring so we know where to wrap
-     * @param {Integer} ringLength The total size of the ring
-     * @param {Number} numberOfSplits The number of splits to make
-     * @returns {Array<Integer>} The evenly-split points on the range
-     */
-    splitBase(start: Integer, range: Integer, ringEnd: Integer, ringLength: Integer, numberOfSplits: number): Array<Integer>;
-    /**
-     * Return internal string based representation of a Token.
-     * @param {Token} token
-     */
-    stringify(token: Token): any;
-}
+/* Excluded from this release type: Tokenizer */
 
 /**
  * Represents a range of tokens on a Cassandra ring.
@@ -7834,10 +6735,10 @@ declare class Tokenizer {
  * in a range, see {@link unwrap}.
  */
 declare class TokenRange {
-    end: any;
-    start: any;
-    _tokenizer: any;
-    constructor(start: any, end: any, tokenizer: any);
+    end: Token;
+    start: Token;
+    private _tokenizer;
+    /* Excluded from this release type: __constructor */
     /**
      * Splits this range into a number of smaller ranges of equal "size"
      * (referring to the number of tokens, not the actual amount of data).
@@ -7882,10 +6783,10 @@ declare class TokenRange {
     /**
      * Whether this range contains a given Token.
      *
-     * @param {*} token Token to check for.
+     * @param {Token} token Token to check for.
      * @returns {boolean} Whether or not the Token is in this range.
      */
-    contains(token: any): boolean;
+    contains(token: Token): boolean;
     /**
      * Determines if the input range is equivalent to this one.
      *
@@ -7901,7 +6802,7 @@ declare class TokenRange {
      * @returns {Number}
      */
     compare(other: TokenRange): number;
-    toString(): string;
+    /* Excluded from this release type: toString */
 }
 
 /**
@@ -8014,8 +6915,7 @@ export declare const types: {
     consistencies: typeof consistencies;
     consistencyToString: {};
     dataTypes: typeof dataTypes;
-    getDataTypeNameByCode: typeof getDataTypeNameByCode;
-    getDataTypeByName: (name: string) => DataTypeInfo;
+    /* Excluded from this release type: getDataTypeNameByCode */
     distance: typeof distance;
     frameFlags: {
         compression: number;
@@ -8028,39 +6928,7 @@ export declare const types: {
         statusChange: string;
         schemaChange: string;
     };
-    protocolVersion: {
-        v1: number;
-        v2: number;
-        v3: number;
-        v4: number;
-        v5: number;
-        v6: number;
-        dseV1: number;
-        dseV2: number;
-        maxSupported: number;
-        minSupported: number;
-        isDse: (version: number) => boolean;
-        isSupportedCassandra: (version: number) => boolean;
-        isSupported: (version: number) => boolean;
-        supportsPrepareFlags: (version: number) => boolean;
-        supportsKeyspaceInRequest: (version: number) => boolean;
-        supportsResultMetadataId: (version: number) => boolean;
-        supportsPreparedPartitionKey: (version: number) => boolean;
-        supportsSchemaChangeFullMetadata: (version: any) => boolean;
-        supportsContinuousPaging: (version: any) => boolean;
-        supportsPaging: (version: any) => boolean;
-        supportsTimestamp: (version: number) => boolean;
-        supportsNamedParameters: (version: number) => boolean;
-        supportsUnset: (version: number) => boolean;
-        supportsFailureReasonMap: (version: any) => boolean;
-        uses2BytesStreamIds: (version: number) => boolean;
-        uses4BytesCollectionLength: (version: number) => boolean;
-        uses4BytesQueryFlags: (version: number) => boolean;
-        canStartupResponseErrorBeWrapped: (version: number) => boolean;
-        getLowerSupported: (version: number) => number;
-        getHighestCommon: (connection: Connection, hosts: HostMap) => number;
-        isBeta: (version: number) => boolean;
-    };
+    protocolVersion: typeof protocolVersion;
     responseErrorCodes: typeof responseErrorCodes;
     resultKind: {
         voidResult: number;
@@ -8073,12 +6941,12 @@ export declare const types: {
     uuid: typeof uuid;
     BigDecimal: typeof BigDecimal;
     Duration: typeof Duration;
-    FrameHeader: typeof FrameHeader;
+    /* Excluded from this release type: FrameHeader */
     InetAddress: typeof InetAddress;
     Integer: typeof Integer;
     LocalDate: typeof LocalDate;
     LocalTime: typeof LocalTime;
-    Long: typeof Long__default;
+    Long: typeof Long;
     ResultSet: typeof ResultSet;
     ResultStream: typeof ResultStream;
     Row: typeof Row;
@@ -8090,7 +6958,7 @@ export declare const types: {
     unset: Readonly<{
         readonly unset: true;
     }>;
-    generateTimestamp: typeof generateTimestamp;
+    /* Excluded from this release type: generateTimestamp */
     Vector: typeof Vector;
 };
 
@@ -8165,7 +7033,7 @@ declare type UpdateDocInfo = {
  * @classdesc Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
  */
 declare class Uuid {
-    buffer: Buffer;
+    /* Excluded from this release type: buffer */
     /**
      * Creates a new instance of Uuid based on a Buffer
      * Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
@@ -8186,7 +7054,7 @@ declare class Uuid {
      * @returns {Uuid}
      */
     static random(): Uuid;
-    static random(callback: (err: Error | null, uuid?: Uuid) => void): void;
+    static random(callback: ValueCallback<Uuid>): void;
     /**
      * Gets the bytes representation of a Uuid
      * @returns {Buffer}
@@ -8226,9 +7094,13 @@ declare function uuid(options: any, buffer: any, offset: any): any;
 declare type ValueCallback<T> = (err: Error, val: T) => void;
 
 declare class Vector {
+    /**
+     * Returns the number of the elements.
+     * @type Number
+     */
     length: number;
     subtype: string;
-    elements: number[];
+    elements: any[];
     /**
      *
      * @param {Float32Array | Array<any>} elements
@@ -8244,7 +7116,7 @@ declare class Vector {
      *
      * @param {number} index
      */
-    at(index: number): number;
+    at(index: number): any;
     /**
      *
      * @returns {IterableIterator<any>} an iterator over the elements of the vector
@@ -8319,7 +7191,7 @@ declare class VIntOutOfRangeException extends DriverError {
      * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
      * @param {Long} long
      */
-    constructor(long: Long__default);
+    constructor(long: Long);
 }
 
 /**
@@ -8338,38 +7210,6 @@ declare class WhiteListPolicy extends AllowListPolicy {
     constructor(childPolicy: LoadBalancingPolicy, allowList: Array<string>);
 }
 
-/**
- * Represents a queue that process one write at a time (FIFO).
- * @extends {EventEmitter}
- */
-declare class WriteQueue extends EventEmitter.EventEmitter {
-    netClient: Socket;
-    encoder: Encoder;
-    isRunning: boolean;
-    queue: any[];
-    coalescingThreshold: any;
-    error: DriverError;
-    canWrite: boolean;
-    /**
-     * Creates a new WriteQueue instance.
-     * @param {Socket} netClient
-     * @param {Encoder} encoder
-     * @param {ClientOptions} options
-     */
-    constructor(netClient: Socket, encoder: Encoder, options: ClientOptions);
-    /**
-     * Enqueues a new request
-     * @param {OperationState} operation
-     * @param {Function} callback The write callback.
-     */
-    push(operation: OperationState, callback: Function): void;
-    run(): void;
-    process(): void;
-    /**
-     * Emits the 'error' event and callbacks items that haven't been written and clears them from the queue.
-     * @param err
-     */
-    setWriteError(err: any): void;
-}
+/* Excluded from this release type: WriteQueue */
 
 export { }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
+
 import { Transform, Writable } from "stream";
 import types, { FrameHeader } from "./types/index";
 import utils from "./utils";

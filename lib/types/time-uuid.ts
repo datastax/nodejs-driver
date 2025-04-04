@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
 import crypto from "crypto";
 import Long from "long";
 import Uuid from "./uuid";
-import utils from "../utils";
+import utils, { type ValueCallback } from "../utils";
 
 /** @module types */
 /**
@@ -132,7 +131,14 @@ class TimeUuid extends Uuid {
    *   // do something with the generated timeuuid
    * });
    */
-  static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void {
+  static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer): TimeUuid;
+  static fromDate(
+    date: Date,
+    ticks: number,
+    nodeId: string | Buffer,
+    clockId: string | Buffer,
+    callback: ValueCallback<TimeUuid>): void;
+  static fromDate(date: Date, ticks?: number, nodeId?: string | Buffer, clockId?: string | Buffer, callback?: ValueCallback<TimeUuid>): TimeUuid | void {
     if (typeof ticks === 'function') {
       callback = ticks;
       ticks = nodeId = clockId = null;
@@ -153,14 +159,14 @@ class TimeUuid extends Uuid {
       next => getOrGenerateRandom(clockId, 2, (err, buffer) => next(err, clockId = buffer)),
     ], (err) => {
       if (err) {
-        return callback(err);
+        return callback(err, null);
       }
 
       let timeUuid;
       try {
         timeUuid = new TimeUuid(date, ticks, nodeId, clockId);
       } catch (e) {
-        return callback(e);
+        return callback(e, null);
       }
 
       callback(null, timeUuid);
@@ -213,7 +219,11 @@ class TimeUuid extends Uuid {
    * @example <caption>Generate a TimeUuid based on the current date (might block)</caption>
    * const timeuuid = TimeUuid.now();
    */
-  static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: Function): TimeUuid | void {
+  static now(): TimeUuid;
+  static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
+  static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
+  //TODO: this was exposed: static now(callback: ValueCallback<TimeUuid>): void; But I think it never works
+  static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: ValueCallback<TimeUuid>): TimeUuid | void {
     return TimeUuid.fromDate(null, null, nodeId, clockId, callback);
   }
 
@@ -247,6 +257,7 @@ class TimeUuid extends Uuid {
     return this.getDatePrecision().date;
   }
 
+  //TODO: getNodeId, getClockId, and getNodeIdString were not exposed. I think they should be
   /**
    * Returns the node id this instance
    * @returns {Buffer}

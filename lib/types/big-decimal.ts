@@ -125,6 +125,7 @@ class BigDecimal {
     return ((other instanceof BigDecimal) && this.compare(other) === 0);
   }
 
+  /** @internal */
   inspect(): string {
     return this.constructor.name + ': ' + this.toString();
   }

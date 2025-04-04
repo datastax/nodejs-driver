@@ -43,6 +43,7 @@ class Result<T = any> implements IterableIterator<T> {
    * @param {ResultSet} rs
    * @param {ModelMappingInfo} info
    * @param {Function} rowAdapter
+   * @ignore @internal
    */
   constructor(rs: ResultSet, info: ModelMappingInfo, rowAdapter: Function) {
     this._rs = rs;

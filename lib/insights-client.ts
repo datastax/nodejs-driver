@@ -48,6 +48,8 @@ const maxStatusErrorLogs = 5;
 
 /**
  * Contains methods and functionality to send events to DSE Insights.
+ * @internal
+ * @ignore
  */
 class InsightsClient {
   private _client: Client;

@@ -22,6 +22,7 @@ import type { GraphQueryOptions } from "../../client";
 import type { QueryOptions } from "../../client";
 import type Client from "../../client";
 import type { RetryPolicy } from "../../policies/retry";
+import type { Host } from "../../host";
 
 
 const Long = types.Long;
@@ -222,7 +223,7 @@ function loadConsistencyNames() {
  */
 class GraphExecutionOptions extends DefaultExecutionOptions {
   _defaultGraphOptions: GraphQueryOptions;
-  _preferredHost: null;
+  _preferredHost: Host;
   _graphSubProtocol: any;
   _graphLanguage: any;
 

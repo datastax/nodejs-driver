@@ -37,6 +37,7 @@ import type { PreparedQueryInfo } from "./metadata";
 
 /**
  * Represents a connection to a Cassandra node
+ * @ignore @internal
  */
 class Connection extends events.EventEmitter {
   endpoint: string;

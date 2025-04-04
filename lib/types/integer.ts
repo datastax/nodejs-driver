@@ -800,6 +800,7 @@ class Integer {
 
   /**
    * Provide the name of the constructor and the string representation
+   * @internal
    * @returns {string}
    */
   inspect(): string {
@@ -818,7 +819,7 @@ class Integer {
    * Returns the string representation.
    * Method used by the native JSON.stringify() to serialize this instance.
    */
-  toJSON() {
+  toJSON(): string {
     return this.toString();
   }
 }

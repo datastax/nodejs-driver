@@ -54,9 +54,9 @@ const iso8601AlternateRegex = /P(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/
  * @constructor
  */
 class Duration {
-  months: number;
-  days: number;
-  nanoseconds: Long;
+  private months: number;
+  private days: number;
+  private nanoseconds: Long;
 
   constructor(months: number, days: number, nanoseconds: number | Long) {
     this.months = months;

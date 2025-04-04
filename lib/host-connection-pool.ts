@@ -53,6 +53,7 @@ const state = {
 
 /**
  * Represents a pool of connections to a host
+ * @ignore @internal
  */
 class HostConnectionPool extends events.EventEmitter {
   private _address: any;

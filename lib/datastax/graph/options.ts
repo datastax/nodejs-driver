@@ -18,7 +18,7 @@ import types from "../../types/index";
 import utils from "../../utils";
 import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
 import type { ExecutionProfile, ProfileManager } from "../../execution-profile";
-import type { GraphQueryOptions } from ".";
+import type { GraphQueryOptions } from "../../client";
 import type { QueryOptions } from "../../client";
 import type Client from "../../client";
 import type { RetryPolicy } from "../../policies/retry";

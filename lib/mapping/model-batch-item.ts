@@ -25,21 +25,13 @@ type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo
  * @alias module:mapping~ModelBatchItem
  */
 class ModelBatchItem {
-  /**
-   * @internal
-   */
+  /** @internal */
   doc: object;
-  /**
-   * @internal
-   */
+  /** @internal */
   docInfo: DocInfo;
-  /**
-   * @internal
-   */
+  /** @internal */
   handler: MappingHandler;
-  /**
-   * @internal
-   */
+  /** @internal */
   cache: Tree;
   /**
    * @internal

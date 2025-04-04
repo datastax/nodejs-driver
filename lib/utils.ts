@@ -22,6 +22,9 @@ import promiseUtils from "./promise-utils";
 import type { ExecutionOptions } from "./execution-options";
 import type { ClientOptions } from "./client";
 
+type ValueCallback<T> = (err: Error, val: T) => void;
+type EmptyCallback = (err: Error) => void;
+type ArrayOrObject = any[]|{[key: string]: any}|null;
 
 /**
  * Max int that can be accurately represented with 64-bit Number (2^53)
@@ -1470,5 +1473,8 @@ export {
   validateFn,
   whilst,
   HashSet,
-  VIntCoding
+  VIntCoding,
+  type ValueCallback,
+  type EmptyCallback,
+  type ArrayOrObject
 };

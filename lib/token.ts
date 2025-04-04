@@ -13,28 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import type { DataTypeInfo } from "./encoder";
 import types from "./types/index";
 import util from "util";
 
 
-const _Murmur3TokenType = types.dataTypes.getByName('bigint');
-const _RandomTokenType = types.dataTypes.getByName('varint');
-const _OrderedTokenType = types.dataTypes.getByName('blob');
+const _Murmur3TokenType = types.getDataTypeByName('bigint');
+const _RandomTokenType = types.getDataTypeByName('varint');
+const _OrderedTokenType = types.getDataTypeByName('blob');
 
 /**
  * Represents a token on the Cassandra ring.
  */
 class Token {
-  _value: any;
+  protected _value: any;
+  /** @internal */
   constructor(value) {
     this._value = value;
   }
 
   /**
-   * @returns {{code: number, info: *|Object}} The type info for the
+   * @returns {DataTypeInfo} The type info for the
    *                                           type of the value of the token.
    */
-  getType(): { code: number; info?: any | object; } {
+  getType(): DataTypeInfo {
     throw new Error('You must implement a getType function for this Token instance');
   }
 
@@ -45,6 +47,7 @@ class Token {
     return this._value;
   }
 
+  /** @internal */
   toString() {
     return this._value.toString();
   }
@@ -60,10 +63,11 @@ class Token {
     return this._value.compare(other._value);
   }
 
-  equals(other) {
+  equals(other: Token): boolean {
     return this.compare(other) === 0;
   }
 
+  /** @internal */
   inspect() {
     return this.constructor.name + ' { ' + this.toString() + ' }';
   }
@@ -74,6 +78,7 @@ class Token {
  * is Murmur3Partitioner.
  * 
  * The raw token type is a varint (represented by MutableLong).
+ * @internal @ignore
  */
 class Murmur3Token extends Token {
   constructor(value) {
@@ -90,6 +95,7 @@ class Murmur3Token extends Token {
  * is RandomPartitioner.
  * 
  * The raw token type is a bigint (represented by Number).
+ * @internal @ignore
  */
 class RandomToken extends Token {
   constructor(value) {
@@ -106,6 +112,7 @@ class RandomToken extends Token {
  * is ByteOrderedPartitioner.
  * 
  * The raw token type is a blob (represented by Buffer or Array).
+ * @internal @ignore
  */
 class ByteOrderedToken extends Token {
   constructor(value) {
@@ -133,9 +140,11 @@ class ByteOrderedToken extends Token {
  * in a range, see {@link unwrap}.
  */
 class TokenRange {
-  end: any;
-  start: any;
-  _tokenizer: any;
+  end: Token;
+  start: Token;
+  private _tokenizer: any;
+
+  /** @internal */
   constructor(start, end, tokenizer) {
     this.start = start;
     this.end = end;
@@ -221,10 +230,10 @@ class TokenRange {
   /**
    * Whether this range contains a given Token.
    * 
-   * @param {*} token Token to check for.
+   * @param {Token} token Token to check for.
    * @returns {boolean} Whether or not the Token is in this range.
    */
-  contains(token: any): boolean {
+  contains(token: Token): boolean {
     if (this.isEmpty()) {
       return false;
     }
@@ -274,6 +283,7 @@ class TokenRange {
     return compareStart !== 0 ? compareStart : this.end.compare(other.end);
   }
 
+  /** @internal */
   toString() {
     return util.format(']%s, %s]', 
       this.start.toString(),

@@ -16,9 +16,9 @@
 //TODO: fix the types
 import events from "events";
 import util from "util";
-import utils, { AddressResolver } from "./utils";
+import utils, { AddressResolver, type ArrayOrObject, type EmptyCallback, type ValueCallback } from "./utils";
 import errors from "./errors";
-import types, { Long, ResultSet, ResultStream, Row, Uuid } from "./types/index";
+import types, { Long, ResultSet, ResultStream, Row, Uuid, type consistencies } from "./types/index";
 import { ExecutionProfile, ProfileManager } from "./execution-profile";
 import requests from "./requests";
 import clientOptions from "./client-options";
@@ -347,19 +347,19 @@ interface DseClientOptions extends ClientOptions {
 interface GraphQueryOptions extends QueryOptions {
   graphLanguage?: string;
   graphName?: string;
-  graphReadConsistency?: typeof types.consistencies;
+  graphReadConsistency?: consistencies;
   graphSource?: string;
-  graphWriteConsistency?: typeof types.consistencies;
+  graphWriteConsistency?: consistencies;
   graphResults?: string;
 }
 
 type GraphOptions = {
   language?: string;
   name?: string;
-  readConsistency?: typeof types.consistencies;
+  readConsistency?: consistencies;
   readTimeout?: number;
   source?: string;
-  writeConsistency?: typeof types.consistencies;
+  writeConsistency?: consistencies;
 };
 
 /**
@@ -492,7 +492,7 @@ type GraphOptions = {
 interface QueryOptions {
   autoPage?: boolean;
   captureStackTrace?: boolean;
-  consistency?: number;
+  consistency?: consistencies;
   customPayload?: object;
   executeAs?: string;
   executionProfile?: string | ExecutionProfile;
@@ -513,6 +513,7 @@ interface QueryOptions {
   serialConsistency?: number;
   timestamp?: number | Long;
   traceQuery?: boolean;
+  //TODO: graphOptions was not exposed. Should we?
   graphOptions?: {
     language?: string;
     name?: string;
@@ -522,10 +523,6 @@ interface QueryOptions {
     writeConsistency?: number;
   };
 }
-
-type ValueCallback<T> = (err: Error, val: T) => void;
-type EmptyCallback = (err: Error) => void;
-type ArrayOrObject = any[]|{[key: string]: any}|null;
 
 /**
  * Creates a new instance of {@link Client}.
@@ -1415,5 +1412,6 @@ export default Client;
 export {
   Client,
   type ClientOptions,
-  type QueryOptions
+  type QueryOptions,
+  type GraphQueryOptions
 };

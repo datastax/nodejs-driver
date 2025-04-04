@@ -49,7 +49,7 @@ class ExecutionProfile {
    * Consistency level.
    * @type {Number}
    */
-  consistency?: typeof consistencies;
+  consistency?: consistencies;
   /**
    * Load-balancing policy
    * @type {LoadBalancingPolicy}
@@ -74,7 +74,7 @@ class ExecutionProfile {
    * Serial consistency level.
    * @type {Number}
    */
-  serialConsistency?: typeof consistencies;
+  serialConsistency?: consistencies;
   /**
    * The graph options for this profile.
    * @type {Object}
@@ -88,8 +88,8 @@ class ExecutionProfile {
     name?: string;
     language?: string;
     source?: string;
-    readConsistency?: typeof consistencies;
-    writeConsistency?: typeof consistencies;
+    readConsistency?: consistencies;
+    writeConsistency?: consistencies;
     results?: any;
   };
 
@@ -146,17 +146,17 @@ class ExecutionProfile {
    * @constructor
    */
   constructor(name: string, options?: {
-    consistency?: typeof consistencies;
+    consistency?: consistencies;
     loadBalancing?: LoadBalancingPolicy;
     readTimeout?: number;
     retry?: RetryPolicy;
-    serialConsistency?: typeof consistencies;
+    serialConsistency?: consistencies;
     graphOptions?: {
       name?: string;
       language?: string;
       source?: string;
-      readConsistency?: typeof consistencies;
-      writeConsistency?: typeof consistencies;
+      readConsistency?: consistencies;
+      writeConsistency?: consistencies;
     };
   }){
     if (typeof name !== 'string') {

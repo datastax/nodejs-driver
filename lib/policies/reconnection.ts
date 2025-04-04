@@ -25,15 +25,15 @@ class ReconnectionPolicy {
   }
   /**
    * A new reconnection schedule.
-   * @returns {{next: function}} An infinite iterator
+   * @returns {Iterator<number>} An infinite iterator
    */
-  newSchedule(): { next: Function; } {
+  newSchedule(): Iterator<number> {
     throw new Error('You must implement a new schedule for the Reconnection class');
   }
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions() {
+  getOptions(): Map<string, any> {
     return new Map();
   }
 }
@@ -44,7 +44,7 @@ class ReconnectionPolicy {
  * A reconnection policy that waits a constant time between each reconnection attempt.
  */
 class ConstantReconnectionPolicy extends ReconnectionPolicy {
-  delay: number;
+  private delay: number;
   /**
    * A reconnection policy that waits a constant time between each reconnection attempt.
    * @param {Number} delay Delay in ms
@@ -56,9 +56,9 @@ class ConstantReconnectionPolicy extends ReconnectionPolicy {
   }
   /**
    * A new reconnection schedule that returns the same next delay value
-   * @returns {{next: Function}} An infinite iterator
+   * @returns { Iterator<number>} An infinite iterator
    */
-  newSchedule(): { next: Function; } {
+  newSchedule(): Iterator<number> {
     const self = this;
     return {
       next: function () {
@@ -69,7 +69,7 @@ class ConstantReconnectionPolicy extends ReconnectionPolicy {
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions() {
+  getOptions(): Map<string, any> {
     return new Map([['delay', this.delay]]);
   }
 }
@@ -84,9 +84,9 @@ class ConstantReconnectionPolicy extends ReconnectionPolicy {
  * </p>
  */
 class ExponentialReconnectionPolicy extends ReconnectionPolicy {
-  baseDelay: number;
-  maxDelay: number;
-  startWithNoDelay: boolean;
+  private baseDelay: number;
+  private maxDelay: number;
+  private startWithNoDelay: boolean;
   /**
    * A reconnection policy that waits exponentially longer between each
    * reconnection attempt (but keeps a constant delay once a maximum delay is reached).
@@ -97,10 +97,10 @@ class ExponentialReconnectionPolicy extends ReconnectionPolicy {
    * </p>
    * @param {Number} baseDelay The base delay in milliseconds to use for the schedules created by this policy.
    * @param {Number} maxDelay The maximum delay in milliseconds to wait between two reconnection attempt.
-   * @param {Boolean} startWithNoDelay Determines if the first attempt should be zero delay
+   * @param {Boolean} [startWithNoDelay] Determines if the first attempt should be zero delay
    * @constructor
    */
-  constructor(baseDelay: number, maxDelay: number, startWithNoDelay: boolean) {
+  constructor(baseDelay: number, maxDelay: number, startWithNoDelay?: boolean) {
     super();
     this.baseDelay = baseDelay;
     this.maxDelay = maxDelay;
@@ -108,9 +108,9 @@ class ExponentialReconnectionPolicy extends ReconnectionPolicy {
   }
   /**
    * A new schedule that uses an exponentially growing delay between reconnection attempts.
-   * @returns {{next: Function}} An infinite iterator.
+   * @returns {Iterator<number>} An infinite iterator.
    */
-  *newSchedule(): { next: Function; } {
+  *newSchedule(): Iterator<number> {
     let index = this.startWithNoDelay ? -1 : 0;
 
     while (true) {
@@ -132,7 +132,7 @@ class ExponentialReconnectionPolicy extends ReconnectionPolicy {
    * Initially, its adds a random value of 15% to avoid reconnection before reaching the base delay.
    * When the schedule reaches max delay, only subtracts a random portion of 15%.
    */
-  _addJitter(value) {
+  private _addJitter(value) {
     if (value === 0) {
       // Instant reconnection without jitter
       return value;
@@ -156,7 +156,7 @@ class ExponentialReconnectionPolicy extends ReconnectionPolicy {
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions() {
+  getOptions(): Map<string, any> {
     return new Map<string, any>([
       ['baseDelay', this.baseDelay],
       ['maxDelay', this.maxDelay],

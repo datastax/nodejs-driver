@@ -57,13 +57,14 @@ class Aggregate {
     * @type {String}
     */
   finalFunction: string;
-  // @internal 
+  /** @internal */
   initConditionRaw: any;
   /**
    * Initial state value of this aggregate.
    * @type {String}
    */
   initCondition: string;
+  //TODO: was exposed as a string.
   /**
    * Type of the return value.
    * @type {{code: number, info: (Object|Array|null)}}
@@ -76,6 +77,7 @@ class Aggregate {
    */
   //TODO: It was not exposed. I believe it should be.
   deterministic: boolean;
+  /** @internal */
   constructor() {
     this.name = null;
     this.keyspaceName = null;

@@ -34,13 +34,9 @@ class Result<T = any> implements IterableIterator<T> {
   private _rowAdapter: Function;
   private _isEmptyLwt: boolean;
   private _iteratorIndex: number;
-  /**
-   * @internal
-   */
+  /** @internal */
   length: number;
-  /**
-   * @internal
-   */
+  /** @internal */
   pageState: string;
   /**
    * Creates a new instance of Result.

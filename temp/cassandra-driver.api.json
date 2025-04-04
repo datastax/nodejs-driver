@@ -210,7 +210,25 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    types: {\n        opcodes: {\n            error: number;\n            startup: number;\n            ready: number;\n            authenticate: number;\n            credentials: number;\n            options: number;\n            supported: number;\n            query: number;\n            result: number;\n            prepare: number;\n            execute: number;\n            register: number;\n            event: number;\n            batch: number;\n            authChallenge: number;\n            authResponse: number;\n            authSuccess: number;\n            cancel: number;\n            isInRange: (code: any) => boolean;\n        };\n        consistencies: {\n            readonly any: 0;\n            readonly one: 1;\n            readonly two: 2;\n            readonly three: 3;\n            readonly quorum: 4;\n            readonly all: 5;\n            readonly localQuorum: 6;\n            readonly eachQuorum: 7;\n            readonly serial: 8;\n            readonly localSerial: 9;\n            readonly localOne: 10;\n        };\n        consistencyToString: {};\n        dataTypes: {\n            readonly custom: 0;\n            readonly ascii: 1;\n            readonly bigint: 2;\n            readonly blob: 3;\n            readonly boolean: 4;\n            readonly counter: 5;\n            readonly decimal: 6;\n            readonly double: 7;\n            readonly float: 8;\n            readonly int: 9;\n            readonly text: 10;\n            readonly timestamp: 11;\n            readonly uuid: 12;\n            readonly varchar: 13;\n            readonly varint: 14;\n            readonly timeuuid: 15;\n            readonly inet: 16;\n            readonly date: 17;\n            readonly time: 18;\n            readonly smallint: 19;\n            readonly tinyint: 20;\n            readonly duration: 21;\n            readonly list: 32;\n            readonly map: 33;\n            readonly set: 34;\n            readonly udt: 48;\n            readonly tuple: 49;\n            readonly getByName: (name: any) => {\n                code: any;\n            } | {\n                code: any;\n                info: any;\n                customTypeName?: undefined;\n            } | {\n                code: any;\n                customTypeName: string;\n                info: any[];\n            };\n        };\n        getDataTypeNameByCode: typeof "
+              "text": ";\n    types: {\n        opcodes: {\n            error: number;\n            startup: number;\n            ready: number;\n            authenticate: number;\n            credentials: number;\n            options: number;\n            supported: number;\n            query: number;\n            result: number;\n            prepare: number;\n            execute: number;\n            register: number;\n            event: number;\n            batch: number;\n            authChallenge: number;\n            authResponse: number;\n            authSuccess: number;\n            cancel: number;\n            isInRange: (code: any) => boolean;\n        };\n        consistencies: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "consistencies",
+              "canonicalReference": "cassandra-driver!~consistencies:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        consistencyToString: {};\n        dataTypes: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "dataTypes",
+              "canonicalReference": "cassandra-driver!~dataTypes:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        getDataTypeNameByCode: typeof "
             },
             {
               "kind": "Reference",
@@ -219,7 +237,25 @@
             },
             {
               "kind": "Content",
-              "text": ";\n        distance: {\n            local: number;\n            remote: number;\n            ignored: number;\n        };\n        frameFlags: {\n            compression: number;\n            tracing: number;\n            customPayload: number;\n            warning: number;\n        };\n        protocolEvents: {\n            topologyChange: string;\n            statusChange: string;\n            schemaChange: string;\n        };\n        protocolVersion: {\n            v1: number;\n            v2: number;\n            v3: number;\n            v4: number;\n            v5: number;\n            v6: number;\n            dseV1: number;\n            dseV2: number;\n            maxSupported: number;\n            minSupported: number;\n            isDse: (version: number) => boolean;\n            isSupportedCassandra: (version: number) => boolean;\n            isSupported: (version: number) => boolean;\n            supportsPrepareFlags: (version: number) => boolean;\n            supportsKeyspaceInRequest: (version: number) => boolean;\n            supportsResultMetadataId: (version: number) => boolean;\n            supportsPreparedPartitionKey: (version: number) => boolean;\n            supportsSchemaChangeFullMetadata: (version: any) => boolean;\n            supportsContinuousPaging: (version: any) => boolean;\n            supportsPaging: (version: any) => boolean;\n            supportsTimestamp: (version: number) => boolean;\n            supportsNamedParameters: (version: number) => boolean;\n            supportsUnset: (version: number) => boolean;\n            supportsFailureReasonMap: (version: any) => boolean;\n            uses2BytesStreamIds: (version: number) => boolean;\n            uses4BytesCollectionLength: (version: number) => boolean;\n            uses4BytesQueryFlags: (version: number) => boolean;\n            canStartupResponseErrorBeWrapped: (version: number) => boolean;\n            getLowerSupported: (version: number) => number;\n            getHighestCommon: (connection: "
+              "text": ";\n        getDataTypeByName: (name: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "DataTypeInfo",
+              "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        distance: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "distance",
+              "canonicalReference": "cassandra-driver!~distance:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        frameFlags: {\n            compression: number;\n            tracing: number;\n            customPayload: number;\n            warning: number;\n        };\n        protocolEvents: {\n            topologyChange: string;\n            statusChange: string;\n            schemaChange: string;\n        };\n        protocolVersion: {\n            v1: number;\n            v2: number;\n            v3: number;\n            v4: number;\n            v5: number;\n            v6: number;\n            dseV1: number;\n            dseV2: number;\n            maxSupported: number;\n            minSupported: number;\n            isDse: (version: number) => boolean;\n            isSupportedCassandra: (version: number) => boolean;\n            isSupported: (version: number) => boolean;\n            supportsPrepareFlags: (version: number) => boolean;\n            supportsKeyspaceInRequest: (version: number) => boolean;\n            supportsResultMetadataId: (version: number) => boolean;\n            supportsPreparedPartitionKey: (version: number) => boolean;\n            supportsSchemaChangeFullMetadata: (version: any) => boolean;\n            supportsContinuousPaging: (version: any) => boolean;\n            supportsPaging: (version: any) => boolean;\n            supportsTimestamp: (version: number) => boolean;\n            supportsNamedParameters: (version: number) => boolean;\n            supportsUnset: (version: number) => boolean;\n            supportsFailureReasonMap: (version: any) => boolean;\n            uses2BytesStreamIds: (version: number) => boolean;\n            uses4BytesCollectionLength: (version: number) => boolean;\n            uses4BytesQueryFlags: (version: number) => boolean;\n            canStartupResponseErrorBeWrapped: (version: number) => boolean;\n            getLowerSupported: (version: number) => number;\n            getHighestCommon: (connection: "
             },
             {
               "kind": "Reference",
@@ -237,7 +273,16 @@
             },
             {
               "kind": "Content",
-              "text": ") => number;\n            isBeta: (version: number) => boolean;\n        };\n        responseErrorCodes: {\n            serverError: number;\n            protocolError: number;\n            badCredentials: number;\n            unavailableException: number;\n            overloaded: number;\n            isBootstrapping: number;\n            truncateError: number;\n            writeTimeout: number;\n            readTimeout: number;\n            readFailure: number;\n            functionFailure: number;\n            writeFailure: number;\n            syntaxError: number;\n            unauthorized: number;\n            invalid: number;\n            configError: number;\n            alreadyExists: number;\n            unprepared: number;\n            clientWriteFailure: number;\n        };\n        resultKind: {\n            voidResult: number;\n            rows: number;\n            setKeyspace: number;\n            prepared: number;\n            schemaChange: number;\n        };\n        timeuuid: typeof "
+              "text": ") => number;\n            isBeta: (version: number) => boolean;\n        };\n        responseErrorCodes: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "responseErrorCodes",
+              "canonicalReference": "cassandra-driver!~responseErrorCodes:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        resultKind: {\n            voidResult: number;\n            rows: number;\n            setKeyspace: number;\n            prepared: number;\n            schemaChange: number;\n        };\n        timeuuid: typeof "
             },
             {
               "kind": "Reference",
@@ -1272,7 +1317,7 @@
           "name": "_default",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 242
+            "endIndex": 252
           }
         },
         {
@@ -4395,8 +4440,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ColumnInfo",
-                  "canonicalReference": "cassandra-driver!~ColumnInfo:type"
+                  "text": "DataTypeInfo",
+                  "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
                 },
                 {
                   "kind": "Content",
@@ -4434,8 +4479,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ColumnInfo",
-                  "canonicalReference": "cassandra-driver!~ColumnInfo:type"
+                  "text": "DataTypeInfo",
+                  "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
                 },
                 {
                   "kind": "Content",
@@ -4681,8 +4726,9 @@
                   "text": "getConsistency(): "
                 },
                 {
-                  "kind": "Content",
-                  "text": "number"
+                  "kind": "Reference",
+                  "text": "consistencies",
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5389,12 +5435,12 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        consistency?: typeof "
+                  "text": "{\n        consistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5416,30 +5462,30 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n        serialConsistency?: typeof "
+                  "text": ";\n        serialConsistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n        graphOptions?: {\n            name?: string;\n            language?: string;\n            source?: string;\n            readConsistency?: typeof "
+                  "text": ";\n        graphOptions?: {\n            name?: string;\n            language?: string;\n            source?: string;\n            readConsistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n            writeConsistency?: typeof "
+                  "text": ";\n            writeConsistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5482,13 +5528,9 @@
                   "text": "consistency?: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "typeof "
-                },
-                {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5501,7 +5543,7 @@
               "name": "consistency",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 3
+                "endIndex": 2
               },
               "isStatic": false,
               "isProtected": false,
@@ -5518,21 +5560,21 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        name?: string;\n        language?: string;\n        source?: string;\n        readConsistency?: typeof "
+                  "text": "{\n        name?: string;\n        language?: string;\n        source?: string;\n        readConsistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n        writeConsistency?: typeof "
+                  "text": ";\n        writeConsistency?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5687,13 +5729,9 @@
                   "text": "serialConsistency?: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "typeof "
-                },
-                {
                   "kind": "Reference",
                   "text": "consistencies",
-                  "canonicalReference": "cassandra-driver!~consistencies:var"
+                  "canonicalReference": "cassandra-driver!~consistencies:enum"
                 },
                 {
                   "kind": "Content",
@@ -5706,7 +5744,7 @@
               "name": "serialConsistency",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 3
+                "endIndex": 2
               },
               "isStatic": false,
               "isProtected": false,
@@ -6400,7 +6438,25 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    opcodes: {\n        error: number;\n        startup: number;\n        ready: number;\n        authenticate: number;\n        credentials: number;\n        options: number;\n        supported: number;\n        query: number;\n        result: number;\n        prepare: number;\n        execute: number;\n        register: number;\n        event: number;\n        batch: number;\n        authChallenge: number;\n        authResponse: number;\n        authSuccess: number;\n        cancel: number;\n        isInRange: (code: any) => boolean;\n    };\n    consistencies: {\n        readonly any: 0;\n        readonly one: 1;\n        readonly two: 2;\n        readonly three: 3;\n        readonly quorum: 4;\n        readonly all: 5;\n        readonly localQuorum: 6;\n        readonly eachQuorum: 7;\n        readonly serial: 8;\n        readonly localSerial: 9;\n        readonly localOne: 10;\n    };\n    consistencyToString: {};\n    dataTypes: {\n        readonly custom: 0;\n        readonly ascii: 1;\n        readonly bigint: 2;\n        readonly blob: 3;\n        readonly boolean: 4;\n        readonly counter: 5;\n        readonly decimal: 6;\n        readonly double: 7;\n        readonly float: 8;\n        readonly int: 9;\n        readonly text: 10;\n        readonly timestamp: 11;\n        readonly uuid: 12;\n        readonly varchar: 13;\n        readonly varint: 14;\n        readonly timeuuid: 15;\n        readonly inet: 16;\n        readonly date: 17;\n        readonly time: 18;\n        readonly smallint: 19;\n        readonly tinyint: 20;\n        readonly duration: 21;\n        readonly list: 32;\n        readonly map: 33;\n        readonly set: 34;\n        readonly udt: 48;\n        readonly tuple: 49;\n        readonly getByName: (name: any) => {\n            code: any;\n        } | {\n            code: any;\n            info: any;\n            customTypeName?: undefined;\n        } | {\n            code: any;\n            customTypeName: string;\n            info: any[];\n        };\n    };\n    getDataTypeNameByCode: typeof "
+              "text": "{\n    opcodes: {\n        error: number;\n        startup: number;\n        ready: number;\n        authenticate: number;\n        credentials: number;\n        options: number;\n        supported: number;\n        query: number;\n        result: number;\n        prepare: number;\n        execute: number;\n        register: number;\n        event: number;\n        batch: number;\n        authChallenge: number;\n        authResponse: number;\n        authSuccess: number;\n        cancel: number;\n        isInRange: (code: any) => boolean;\n    };\n    consistencies: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "consistencies",
+              "canonicalReference": "cassandra-driver!~consistencies:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    consistencyToString: {};\n    dataTypes: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "dataTypes",
+              "canonicalReference": "cassandra-driver!~dataTypes:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    getDataTypeNameByCode: typeof "
             },
             {
               "kind": "Reference",
@@ -6409,7 +6465,25 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    distance: {\n        local: number;\n        remote: number;\n        ignored: number;\n    };\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: {\n        v1: number;\n        v2: number;\n        v3: number;\n        v4: number;\n        v5: number;\n        v6: number;\n        dseV1: number;\n        dseV2: number;\n        maxSupported: number;\n        minSupported: number;\n        isDse: (version: number) => boolean;\n        isSupportedCassandra: (version: number) => boolean;\n        isSupported: (version: number) => boolean;\n        supportsPrepareFlags: (version: number) => boolean;\n        supportsKeyspaceInRequest: (version: number) => boolean;\n        supportsResultMetadataId: (version: number) => boolean;\n        supportsPreparedPartitionKey: (version: number) => boolean;\n        supportsSchemaChangeFullMetadata: (version: any) => boolean;\n        supportsContinuousPaging: (version: any) => boolean;\n        supportsPaging: (version: any) => boolean;\n        supportsTimestamp: (version: number) => boolean;\n        supportsNamedParameters: (version: number) => boolean;\n        supportsUnset: (version: number) => boolean;\n        supportsFailureReasonMap: (version: any) => boolean;\n        uses2BytesStreamIds: (version: number) => boolean;\n        uses4BytesCollectionLength: (version: number) => boolean;\n        uses4BytesQueryFlags: (version: number) => boolean;\n        canStartupResponseErrorBeWrapped: (version: number) => boolean;\n        getLowerSupported: (version: number) => number;\n        getHighestCommon: (connection: "
+              "text": ";\n    getDataTypeByName: (name: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "DataTypeInfo",
+              "canonicalReference": "cassandra-driver!~DataTypeInfo:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    distance: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "distance",
+              "canonicalReference": "cassandra-driver!~distance:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    frameFlags: {\n        compression: number;\n        tracing: number;\n        customPayload: number;\n        warning: number;\n    };\n    protocolEvents: {\n        topologyChange: string;\n        statusChange: string;\n        schemaChange: string;\n    };\n    protocolVersion: {\n        v1: number;\n        v2: number;\n        v3: number;\n        v4: number;\n        v5: number;\n        v6: number;\n        dseV1: number;\n        dseV2: number;\n        maxSupported: number;\n        minSupported: number;\n        isDse: (version: number) => boolean;\n        isSupportedCassandra: (version: number) => boolean;\n        isSupported: (version: number) => boolean;\n        supportsPrepareFlags: (version: number) => boolean;\n        supportsKeyspaceInRequest: (version: number) => boolean;\n        supportsResultMetadataId: (version: number) => boolean;\n        supportsPreparedPartitionKey: (version: number) => boolean;\n        supportsSchemaChangeFullMetadata: (version: any) => boolean;\n        supportsContinuousPaging: (version: any) => boolean;\n        supportsPaging: (version: any) => boolean;\n        supportsTimestamp: (version: number) => boolean;\n        supportsNamedParameters: (version: number) => boolean;\n        supportsUnset: (version: number) => boolean;\n        supportsFailureReasonMap: (version: any) => boolean;\n        uses2BytesStreamIds: (version: number) => boolean;\n        uses4BytesCollectionLength: (version: number) => boolean;\n        uses4BytesQueryFlags: (version: number) => boolean;\n        canStartupResponseErrorBeWrapped: (version: number) => boolean;\n        getLowerSupported: (version: number) => number;\n        getHighestCommon: (connection: "
             },
             {
               "kind": "Reference",
@@ -6427,7 +6501,16 @@
             },
             {
               "kind": "Content",
-              "text": ") => number;\n        isBeta: (version: number) => boolean;\n    };\n    responseErrorCodes: {\n        serverError: number;\n        protocolError: number;\n        badCredentials: number;\n        unavailableException: number;\n        overloaded: number;\n        isBootstrapping: number;\n        truncateError: number;\n        writeTimeout: number;\n        readTimeout: number;\n        readFailure: number;\n        functionFailure: number;\n        writeFailure: number;\n        syntaxError: number;\n        unauthorized: number;\n        invalid: number;\n        configError: number;\n        alreadyExists: number;\n        unprepared: number;\n        clientWriteFailure: number;\n    };\n    resultKind: {\n        voidResult: number;\n        rows: number;\n        setKeyspace: number;\n        prepared: number;\n        schemaChange: number;\n    };\n    timeuuid: typeof "
+              "text": ") => number;\n        isBeta: (version: number) => boolean;\n    };\n    responseErrorCodes: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "responseErrorCodes",
+              "canonicalReference": "cassandra-driver!~responseErrorCodes:enum"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    resultKind: {\n        voidResult: number;\n        rows: number;\n        setKeyspace: number;\n        prepared: number;\n        schemaChange: number;\n    };\n    timeuuid: typeof "
             },
             {
               "kind": "Reference",
@@ -6625,7 +6708,7 @@
           "name": "types",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 50
+            "endIndex": 60
           }
         },
         {

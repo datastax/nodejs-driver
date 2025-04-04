@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import types from "../types/index";
-import utils from "../utils";
+import types, { type distance } from "../types/index";
+import utils, { type EmptyCallback } from "../utils";
 import errors from "../errors";
 import type Client from "../client";
 import type { Host, HostMap } from "../host";
 import type { ExecutionOptions } from "../execution-options";
 
-const doneIteratorObject = Object.freeze({ done: true });
+const doneIteratorObject = Object.freeze({ done: true, value: null });
 const newlyUpInterval = 60000;
 
 /**
@@ -30,28 +30,26 @@ const newlyUpInterval = 60000;
 class LoadBalancingPolicy {
   protected client: Client;
   protected hosts: HostMap;
-  /**
-   * @internal
-   */
+  /** @internal */
   localDc: string;
 
   /**
    * Initializes the load balancing policy, called after the driver obtained the information of the cluster.
    * @param {Client} client
    * @param {HostMap} hosts
-   * @param {Function} callback
+   * @param {EmptyCallback} callback
    */
-  init(client: Client, hosts: HostMap, callback: Function): void {
+  init(client: Client, hosts: HostMap, callback: EmptyCallback): void {
     this.client = client;
     this.hosts = hosts;
-    callback();
+    callback(null);
   }
 
   /**
    * Returns the distance assigned by this policy to the provided host.
    * @param {Host} host
    */
-  getDistance(host: Host): number {
+  getDistance(host: Host): distance {
     return types.distance.local;
   }
 
@@ -60,12 +58,14 @@ class LoadBalancingPolicy {
    * Each new query will call this method. The first host in the result will
    * then be used to perform the query.
    * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
-   * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+   * @param {ExecutionOptions} executionOptions The information related to the execution of the request.
    * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
    * second parameter.
    */
-  newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void {
-    callback(new Error("You must implement a query plan for the LoadBalancingPolicy class"));
+  newQueryPlan(keyspace: string,
+    executionOptions: ExecutionOptions,
+    callback: (error: Error, iterator: Iterator<Host>) => void): void{
+    callback(new Error("You must implement a query plan for the LoadBalancingPolicy class"),null);
   }
 
   /**
@@ -94,9 +94,11 @@ class RoundRobinPolicy extends LoadBalancingPolicy {
    * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
    * second parameter.
    */
-  newQueryPlan(keyspace: string, executionOptions: any, callback: Function): void {
+  newQueryPlan(keyspace: string,
+    executionOptions: ExecutionOptions,
+    callback: (error: Error, iterator: Iterator<Host>) => void): void{
     if (!this.hosts) {
-      return callback(new Error('Load balancing policy not initialized'));
+      return callback(new Error('Load balancing policy not initialized'), null);
     }
     const hosts = this.hosts.values();
     const self = this;
@@ -114,7 +116,7 @@ class RoundRobinPolicy extends LoadBalancingPolicy {
           return doneIteratorObject;
         }
         return {value: hosts[planIndex++ % hosts.length], done: false};
-      }
+      },
     });
   }
 }
@@ -125,9 +127,7 @@ class RoundRobinPolicy extends LoadBalancingPolicy {
  * data center.
  */
 class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
-  /**
-   * @internal
-   */
+  /** @internal */
   localDc: string;
   private index: number;
   private localHostsArray: any;
@@ -136,19 +136,19 @@ class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
    * A data-center aware Round-robin load balancing policy.
    * This policy provides round-robin queries over the nodes of the local
    * data center.
-   * @param {?String} [localDc] local datacenter name.  This value overrides the 'localDataCenter' Client option \
+   * @param {String} [localDc] local datacenter name.  This value overrides the 'localDataCenter' Client option \
    * and is useful for cases where you have multiple execution profiles that you intend on using for routing
    * requests to different data centers.
    * @constructor
    */
-  constructor(localDc?: string | null) {
+  constructor(localDc?: string) {
     super();
     this.localDc = localDc;
     this.index = 0;
     this.localHostsArray = null;
   }
 
-  init(client: Client, hosts: HostMap, callback: Function): void {
+  init(client: Client, hosts: HostMap, callback: EmptyCallback): void {
     this.client = client;
     this.hosts = hosts;
     hosts.on("add", this._cleanHostCache.bind(this));
@@ -160,14 +160,14 @@ class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
       return callback(err);
     }
 
-    callback();
+    callback(null);
   }
 
   /**
    * Returns the distance depending on the datacenter.
    * @param {Host} host
    */
-  getDistance(host: Host): number {
+  getDistance(host: Host): distance {
     if (host.datacenter === this.localDc) {
       return types.distance.local;
     }
@@ -204,9 +204,11 @@ class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
    * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
    * second parameter.
    */
-  newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void {
+  newQueryPlan(keyspace: string,
+    executionOptions: ExecutionOptions,
+    callback: (error: Error, iterator: Iterator<Host>) => void): void {
     if (!this.hosts) {
-      return callback(new Error('Load balancing policy not initialized'));
+      return callback(new Error('Load balancing policy not initialized'),null);
     }
     this.index += 1;
     if (this.index >= utils.maxInt) {
@@ -255,13 +257,13 @@ class TokenAwarePolicy extends LoadBalancingPolicy {
     this.childPolicy = childPolicy;
   }
 
-  init(client: Client, hosts: HostMap, callback: Function): void {
+  init(client: Client, hosts: HostMap, callback: EmptyCallback): void {
     this.client = client;
     this.hosts = hosts;
     this.childPolicy.init(client, hosts, callback);
   }
 
-  getDistance(host: Host): number {
+  getDistance(host: Host): distance {
     return this.childPolicy.getDistance(host);
   }
 
@@ -274,7 +276,9 @@ class TokenAwarePolicy extends LoadBalancingPolicy {
    * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
    * second parameter.
    */
-  newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void {
+  newQueryPlan(keyspace: string,
+    executionOptions: ExecutionOptions,
+    callback: (error: Error, iterator: Iterator<Host>) => void): void {
     let routingKey;
     if (executionOptions) {
       routingKey = executionOptions.getRoutingKey();
@@ -448,7 +452,7 @@ class AllowListPolicy extends LoadBalancingPolicy {
     this.allowList = new Map(allowList.map(address => [address, true]));
   }
 
-  init(client: Client, hosts: HostMap, callback: Function) {
+  init(client: Client, hosts: HostMap, callback: EmptyCallback):void {
     this.childPolicy.init(client, hosts, callback);
   }
 
@@ -457,7 +461,7 @@ class AllowListPolicy extends LoadBalancingPolicy {
    * Any host not in the while list will be considered ignored.
    * @param host
    */
-  getDistance(host: Host): number {
+  getDistance(host: Host): distance {
     if (!this._contains(host)) {
       return types.distance.ignored;
     }
@@ -478,11 +482,11 @@ class AllowListPolicy extends LoadBalancingPolicy {
    * Returns the hosts to use for a new query filtered by the allow list.
    * @internal
    */
-  newQueryPlan(keyspace: string, info: ExecutionOptions | null, callback: Function) {
+  newQueryPlan(keyspace: string, info: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void {
     const self = this;
     this.childPolicy.newQueryPlan(keyspace, info, function (err, iterator) {
       if (err) {
-        return callback(err);
+        return callback(err, null);
       }
       callback(null, self._filter(iterator));
     });
@@ -613,7 +617,7 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
    * @param {HostMap} hosts
    * @param {Function} callback
    */
-  init(client: Client, hosts: HostMap, callback: Function) {
+  init(client: Client, hosts: HostMap, callback: EmptyCallback):void {
     this._client = client;
     this._hosts = hosts;
 
@@ -627,14 +631,14 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
       return callback(err);
     }
 
-    callback();
+    callback(null);
   }
 
   /**
    * Returns the distance assigned by this policy to the provided host, relatively to the client instance.
    * @param {Host} host
    */
-  getDistance(host: Host) : number{
+  getDistance(host: Host) : distance{
     if (this._preferredHost !== null && host === this._preferredHost) {
       // Set the last preferred host as local.
       // It ensures that the pool for the graph analytics host has the appropriate size
@@ -655,7 +659,7 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
    * @param {ExecutionOptions} executionOptions
    * @param {Function} callback
    */
-  newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: Function) {
+  newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void {
     let routingKey;
     let preferredHost;
 
@@ -883,7 +887,7 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions() {
+  getOptions(): Map<string, any> {
     return new Map<string, any>([
       ['localDataCenter', this.localDc ],
       ['filterFunction', this._filter !== this._defaultFilter ]

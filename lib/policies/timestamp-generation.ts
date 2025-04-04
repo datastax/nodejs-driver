@@ -122,7 +122,7 @@ class MonotonicTimestampGenerator extends TimestampGenerator {
   getDate(): number {
     return Date.now();
   }
-  next(client) {
+  next(client: Client): Long | number | null{
     let date = this.getDate();
     let drifted = 0;
     if (date > this._lastDate) {
@@ -166,7 +166,7 @@ class MonotonicTimestampGenerator extends TimestampGenerator {
    * @private
    * @returns {Number|Long}
    */
-  _generateMicroseconds(): number | Long {
+  private _generateMicroseconds(): number | Long {
     if (this._lastDate < _maxSafeNumberDate) {
       // We are safe until Jun 06 2255, its faster to perform this operations on Number than on Long
       // We hope to have native int64 by then :)

@@ -33,14 +33,14 @@ class ResultSet {
     queriedHost: string,
     triedHosts: { [key: string]: any; },
     speculativeExecutions: number,
-    achievedConsistency: typeof consistencies,
+    achievedConsistency: consistencies,
     traceId: Uuid,
     warnings: string[],
     customPayload: any,
     // This was not exposed in the past, why?
     isSchemaInAgreement: boolean
   };
-  columns: Array<{ name: string, type: { code: typeof dataTypes[keyof typeof dataTypes], info: any } }>;
+  columns: Array<{ name: string, type: { code: dataTypes, info: any } }>;
   nextPage: (() => void) | null;
   pageState: string;
   rowLength: number;
@@ -60,7 +60,7 @@ class ResultSet {
    * @param {Boolean} isSchemaInAgreement
    * @constructor
    */
-  constructor(response: { rows: Array<any>, flags: { traceId: Uuid, warnings: string[], customPayload: any }, meta?: { columns: Array<{ name: string, type: { code: typeof dataTypes[keyof typeof dataTypes], info: any } }>, pageState: Buffer } }, host: string, triedHosts: { [key: string]: any; }, speculativeExecutions: number, consistency: typeof consistencies, isSchemaInAgreement: boolean) {
+  constructor(response: { rows: Array<any>, flags: { traceId: Uuid, warnings: string[], customPayload: any }, meta?: { columns: Array<{ name: string, type: { code: dataTypes, info: any } }>, pageState: Buffer } }, host: string, triedHosts: { [key: string]: any; }, speculativeExecutions: number, consistency: consistencies, isSchemaInAgreement: boolean) {
     // if no execution was made at all, set to 0.
     if (speculativeExecutions === -1) {
       speculativeExecutions = 0;

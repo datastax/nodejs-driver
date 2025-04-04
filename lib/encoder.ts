@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import util from "util";
-import types, { InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
+import types, { getDataTypeByName, InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
 import MutableLong from "./types/mutable-long";
 import utils from "./utils";
 import token from "./token";
@@ -123,7 +123,7 @@ const zeroLengthTypesSupported: Set<number> = new Set([
   dataTypes.blob
 ]);
 
-type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | typeof dataTypes.duration | typeof dataTypes.text);
+type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | dataTypes.duration | dataTypes.text);
 
 type CustomSimpleTypeCodes = ('point' | 'polygon' | 'duration' | 'lineString' | 'dateRange');
 
@@ -131,23 +131,23 @@ type CustomSimpleTypeNames = (typeof customTypeNames[CustomSimpleTypeCodes]) | C
 
 type SingleColumnInfo = { code: SingleTypeCodes; info?: null; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type CustomSimpleColumnInfo = { code: (typeof dataTypes.custom); info: CustomSimpleTypeNames; options?: { frozen?: boolean; reversed?: boolean; }; };
+type CustomSimpleColumnInfo = { code: (dataTypes.custom); info: CustomSimpleTypeNames; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type MapColumnInfo = { code: (typeof dataTypes.map); info: [ColumnInfo, ColumnInfo]; options?: { frozen?: boolean; reversed?: boolean; }; };
+type MapColumnInfo = { code: (dataTypes.map); info: [DataTypeInfo, DataTypeInfo]; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type TupleColumnInfo = { code: (typeof dataTypes.tuple); info: Array<ColumnInfo>; options?: { frozen?: boolean; reversed?: boolean; }; };
+type TupleColumnInfo = { code: (dataTypes.tuple); info: Array<DataTypeInfo>; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type TupleListColumnInfoWithoutSubtype = { code: (typeof dataTypes.tuple | typeof dataTypes.list); };
+type TupleListColumnInfoWithoutSubtype = { code: (dataTypes.tuple | dataTypes.list); };
 
-type ListSetColumnInfo = { code: (typeof dataTypes.list | typeof dataTypes.set); info: ColumnInfo; options?: { frozen?: boolean; reversed?: boolean; }; };
+type ListSetColumnInfo = { code: (dataTypes.list | dataTypes.set); info: DataTypeInfo; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type UdtColumnInfo = { code: (typeof dataTypes.udt); info: { name: string; fields: Array<{ name: string; type: ColumnInfo; }>; }; options?: { frozen?: boolean; reversed?: boolean; }; };
+type UdtColumnInfo = { code: (dataTypes.udt); info: { name: string; fields: Array<{ name: string; type: DataTypeInfo; }>; }; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type VectorColumnInfo = { code: (typeof dataTypes.custom); customTypeName: ('vector'); info: [ColumnInfo, number]; options?: { frozen?: boolean; reversed?: boolean; }; };
+type VectorColumnInfo = { code: (dataTypes.custom); customTypeName: ('vector'); info: [DataTypeInfo, number]; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type OtherCustomColumnInfo = { code: (typeof dataTypes.custom); info: string; options?: { frozen?: boolean; reversed?: boolean; }; };
+type OtherCustomColumnInfo = { code: (dataTypes.custom); info: string; options?: { frozen?: boolean; reversed?: boolean; }; };
 
-type ColumnInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
+type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
 
 
 class Encoder{
@@ -1032,10 +1032,10 @@ class Encoder{
   };
 
   /**
-   * @param {ColumnInfo} cqlType
+   * @param {DataTypeInfo} cqlType
    * @returns {Number}
    */
-  private serializationSizeIfFixed = function (cqlType: ColumnInfo): number {
+  private serializationSizeIfFixed = function (cqlType: DataTypeInfo): number {
     switch (cqlType.code) {
       case dataTypes.bigint:
         return 8;
@@ -1276,12 +1276,12 @@ class Encoder{
    * @param {Number|null} length
    * @param {Function} udtResolver
    * @async
-   * @returns {Promise.<ColumnInfo>} callback Callback invoked with err and  {{code: number, info: Object|Array|null, options: {frozen: Boolean}}}
+   * @returns {Promise.<DataTypeInfo>} callback Callback invoked with err and  {{code: number, info: Object|Array|null, options: {frozen: Boolean}}}
    * @internal
    * @throws {Error}
    * @ignore
    */
-  parseTypeName = async function (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function): Promise<ColumnInfo> {
+  parseTypeName = async function (keyspace: string, typeName: string, startIndex: number, length: number | null, udtResolver: Function): Promise<DataTypeInfo> {
     startIndex = startIndex || 0;
     if (!length) {
       length = typeName.length;
@@ -1462,11 +1462,11 @@ class Encoder{
    * @param {Number} [startIndex]
    * @param {Number} [length]
    * @throws {TypeError}
-   * @returns {ColumnInfo}
+   * @returns {DataTypeInfo}
    * @internal
    * @ignore
    */
-  parseFqTypeName = function (typeName: string, startIndex?: number, length?: number): ColumnInfo {
+  parseFqTypeName = function (typeName: string, startIndex?: number, length?: number): DataTypeInfo {
     let frozen = false;
     let reversed = false;
     startIndex = startIndex || 0;
@@ -1774,9 +1774,9 @@ class Encoder{
    * This is part of an <b>experimental</b> API, this can be changed future releases.
    * </p>
    * @param {Buffer} buffer Raw buffer to be decoded.
-   * @param {ColumnInfo} type 
+   * @param {DataTypeInfo} type 
    */
-  public decode = function (buffer: Buffer, type: ColumnInfo) {
+  public decode = function (buffer: Buffer, type: DataTypeInfo) {
     if (buffer === null || (buffer.length === 0 && !zeroLengthTypesSupported.has(type.code))) {
       return null;
     }
@@ -1797,7 +1797,7 @@ class Encoder{
    * This is part of an <b>experimental</b> API, this can be changed future releases.
    * </p>
    * @param {*} value The value to be converted.
-   * @param {ColumnInfo | Number | String} typeInfo The type information.
+   * @param {DataTypeInfo | Number | String} typeInfo The type information.
    * <p>It can be either a:</p>
    * <ul>
    *   <li>A <code>String</code> representing the data type.</li>
@@ -1809,7 +1809,7 @@ class Encoder{
    * @returns {Buffer}
    * @throws {TypeError} When there is an encoding error
    */
-  public encode = function (value: any, typeInfo: ColumnInfo | number | string): Buffer {
+  public encode = function (value: any, typeInfo: DataTypeInfo | number | string): Buffer {
     if (value === undefined) {
       value = this.encodingOptions.useUndefinedAsUnset && this.protocolVersion >= 4 ? types.unset : null;
     }
@@ -1827,8 +1827,8 @@ class Encoder{
       return value;
     }
 
-    /** @type {ColumnInfo | null} */
-    let type: ColumnInfo | null = null;
+    /** @type {DataTypeInfo | null} */
+    let type: DataTypeInfo | null = null;
 
     if (typeInfo) {
       if (typeof typeInfo === 'number') {
@@ -1837,7 +1837,7 @@ class Encoder{
         };
       }
       else if (typeof typeInfo === 'string') {
-        type = dataTypes.getByName(typeInfo);
+        type = getDataTypeByName(typeInfo);
       }
       else if (typeof typeInfo.code === 'number') {
         type = typeInfo;
@@ -1866,11 +1866,11 @@ class Encoder{
   /**
    * Try to guess the Cassandra type to be stored, based on the javascript value type
    * @param value
-   * @returns {ColumnInfo | null}
+   * @returns {DataTypeInfo | null}
    * @ignore
    * @internal
    */
-  public static guessDataType = function (value): ColumnInfo | null {
+  public static guessDataType = function (value): DataTypeInfo | null {
     const esTypeName = (typeof value);
     if (esTypeName === 'number') {
       return {code : dataTypes.double};
@@ -1930,12 +1930,12 @@ class Encoder{
           };
         }
        
-        /** @type {ColumnInfo?} */
-        let subtypeColumnInfo: ColumnInfo | null = null;
+        /** @type {DataTypeInfo?} */
+        let subtypeColumnInfo: DataTypeInfo | null = null;
         // try to fetch the subtype from the Vector, or else guess
         if (value.subtype) {
           try {
-            subtypeColumnInfo = dataTypes.getByName(value.subtype);
+            subtypeColumnInfo = getDataTypeByName(value.subtype);
           } catch (TypeError) {
             // ignore
           }
@@ -2207,3 +2207,7 @@ function invertObject(obj) {
 }
 
 export default Encoder;
+
+export {
+  type DataTypeInfo
+};

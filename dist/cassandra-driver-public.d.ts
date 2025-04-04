@@ -90,7 +90,7 @@ declare class Aggregate {
      * @type {String}
      */
     finalFunction: string;
-    initConditionRaw: any;
+    /* Excluded from this release type: initConditionRaw */
     /**
      * Initial state value of this aggregate.
      * @type {String}
@@ -110,7 +110,7 @@ declare class Aggregate {
      * @type {Boolean}
      */
     deterministic: boolean;
-    constructor();
+    /* Excluded from this release type: __constructor */
 }
 
 /**
@@ -165,13 +165,13 @@ declare class AllowListPolicy extends LoadBalancingPolicy {
      * @constructor
      */
     constructor(childPolicy: LoadBalancingPolicy, allowList: Array<string>);
-    init(client: Client, hosts: HostMap, callback: Function): void;
+    init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
     /**
      * Uses the child policy to return the distance to the host if included in the allow list.
      * Any host not in the while list will be considered ignored.
      * @param host
      */
-    getDistance(host: Host): number;
+    getDistance(host: Host): distance;
     /**
      * Checks if the host is in the allow list.
      * @param {Host} host
@@ -477,17 +477,7 @@ declare class BusyConnectionError extends DriverError {
  */
 declare class ByteOrderedToken extends Token {
     constructor(value: any);
-    getType(): {
-        code: any;
-    } | {
-        code: any;
-        info: any;
-        customTypeName?: undefined;
-    } | {
-        code: any;
-        customTypeName: string;
-        info: any[];
-    };
+    getType(): DataTypeInfo;
     toString(): any;
 }
 
@@ -1242,24 +1232,10 @@ declare interface ClientOptions {
  * @constructor
  */
 declare class ClientState {
-    _hosts: Host[];
-    _openConnections: {
-        [key: string]: number;
-    };
-    _inFlightQueries: {
-        [key: string]: number;
-    };
-    /**
-     * Creates a new instance of <code>ClientState</code>.
-     * @param {Array<Host>} hosts
-     * @param {Object.<String, Number>} openConnections
-     * @param {Object.<String, Number>} inFlightQueries
-     */
-    constructor(hosts: Array<Host>, openConnections: {
-        [key: string]: number;
-    }, inFlightQueries: {
-        [key: string]: number;
-    });
+    private _hosts;
+    private _openConnections;
+    private _inFlightQueries;
+    /* Excluded from this release type: __constructor */
     /**
      * Get an array of hosts to which the client is connected to.
      * @return {Array<Host>}
@@ -1288,7 +1264,10 @@ declare class ClientState {
     /* Excluded from this release type: from */
 }
 
-declare type ColumnInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
+declare interface ColumnInfo {
+    name: string;
+    type: DataTypeInfo;
+}
 
 export declare const concurrent: {
     executeConcurrent: typeof executeConcurrent;
@@ -1465,25 +1444,25 @@ declare class Connection extends EventEmitter.EventEmitter {
  * @property {Number} localSerial Same as serial but confined to the data center. A write must be written conditionally to the commit log and memtable on a quorum of replica nodes in the same data center.
  * @property {Number} localOne Similar to One but only within the DC the coordinator is in.
  */
-declare const consistencies: {
-    readonly any: 0;
-    readonly one: 1;
-    readonly two: 2;
-    readonly three: 3;
-    readonly quorum: 4;
-    readonly all: 5;
-    readonly localQuorum: 6;
-    readonly eachQuorum: 7;
-    readonly serial: 8;
-    readonly localSerial: 9;
-    readonly localOne: 10;
-};
+declare enum consistencies {
+    any = 0,
+    one = 1,
+    two = 2,
+    three = 3,
+    quorum = 4,
+    all = 5,
+    localQuorum = 6,
+    eachQuorum = 7,
+    serial = 8,
+    localSerial = 9,
+    localOne = 10
+}
 
 /**
  * A reconnection policy that waits a constant time between each reconnection attempt.
  */
 declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
-    delay: number;
+    private delay;
     /**
      * A reconnection policy that waits a constant time between each reconnection attempt.
      * @param {Number} delay Delay in ms
@@ -1492,15 +1471,13 @@ declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
     constructor(delay: number);
     /**
      * A new reconnection schedule that returns the same next delay value
-     * @returns {{next: Function}} An infinite iterator
+     * @returns { Iterator<number>} An infinite iterator
      */
-    newSchedule(): {
-        next: Function;
-    };
+    newSchedule(): Iterator<number>;
     /**
      * Gets an associative array containing the policy options.
      */
-    getOptions(): Map<string, number>;
+    getOptions(): Map<string, any>;
 }
 
 /**
@@ -1734,7 +1711,7 @@ declare class ControlConnection extends EventEmitter.EventEmitter {
 }
 
 declare type CustomSimpleColumnInfo = {
-    code: (typeof dataTypes.custom);
+    code: (dataTypes.custom);
     info: CustomSimpleTypeNames;
     options?: {
         frozen?: boolean;
@@ -1798,12 +1775,17 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * Associative-array containing the compaction options keys and values.
      * @type {Object}
      */
-    compactionOptions: object;
+    compactionOptions: {
+        [option: string]: any;
+    };
     /**
      * Associative-array containing the compaction options keys and values.
      * @type {Object}
      */
-    compression: object;
+    compression: {
+        class?: string;
+        [option: string]: any;
+    };
     /**
      * Specifies the probability of read repairs being invoked over all replicas in the current data center.
      * @type {number}
@@ -1822,7 +1804,9 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * </p>
      * @type {Object}
      */
-    extensions: object;
+    extensions: {
+        [option: string]: any;
+    };
     /**
      * When compression is enabled, this option defines the probability
      * with which checksums for compressed blocks are checked during reads.
@@ -1832,7 +1816,7 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * </p>
      * @type {Number|null}
      */
-    crcCheckChance: number | null;
+    crcCheckChance?: number;
     /**
      * Whether the populate I/O cache on flush is set on this table.
      * @type {Boolean}
@@ -1856,7 +1840,7 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * </p>
      * @type {Number|null}
      */
-    minIndexInterval: number | null;
+    minIndexInterval?: number;
     /**
      * Returns the maximum index interval option for this table.
      * <p>
@@ -1865,32 +1849,34 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * </p>
      * @type {Number|null}
      */
-    maxIndexInterval: number | null;
+    maxIndexInterval?: number;
     /**
      * Array describing the table columns.
      * @type {Array}
      */
-    columns: any[];
+    columns: ColumnInfo[];
     /**
      * An associative Array of columns by name.
      * @type {Object}
      */
-    columnsByName: object;
+    columnsByName: {
+        [key: string]: ColumnInfo;
+    };
     /**
      * Array describing the columns that are part of the partition key.
      * @type {Array}
      */
-    partitionKeys: any[];
+    partitionKeys: ColumnInfo[];
     /**
      * Array describing the columns that form the clustering key.
      * @type {Array}
      */
-    clusteringKeys: any[];
+    clusteringKeys: ColumnInfo[];
     /**
      * Array describing the clustering order of the columns in the same order as the clusteringKeys.
      * @type {Array}
      */
-    clusteringOrder: any[];
+    clusteringOrder: string[];
     /**
      * An associative Array containing nodesync options for this table.
      * <p>
@@ -1899,13 +1885,8 @@ declare class DataCollection extends EventEmitter.EventEmitter {
      * </p>
      * @type {Object}
      */
-    nodesync: object;
-    /**
-     * Creates a new instance of DataCollection
-     * @param {String} name Name of the data object.
-     * @constructor
-     */
-    constructor(name: string);
+    nodesync?: object;
+    /* Excluded from this release type: __constructor */
 }
 
 export declare const datastax: {
@@ -1973,6 +1954,8 @@ export declare const datastax: {
     DateRange: typeof DateRange;
 };
 
+declare type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
+
 /**
  * CQL data types
  * @type {Object}
@@ -2003,51 +1986,35 @@ export declare const datastax: {
  * @property {Number} udt User-defined type.
  * @property {Number} tuple A sequence of values.
  */
-declare const dataTypes: {
-    readonly custom: 0;
-    readonly ascii: 1;
-    readonly bigint: 2;
-    readonly blob: 3;
-    readonly boolean: 4;
-    readonly counter: 5;
-    readonly decimal: 6;
-    readonly double: 7;
-    readonly float: 8;
-    readonly int: 9;
-    readonly text: 10;
-    readonly timestamp: 11;
-    readonly uuid: 12;
-    readonly varchar: 13;
-    readonly varint: 14;
-    readonly timeuuid: 15;
-    readonly inet: 16;
-    readonly date: 17;
-    readonly time: 18;
-    readonly smallint: 19;
-    readonly tinyint: 20;
-    readonly duration: 21;
-    readonly list: 32;
-    readonly map: 33;
-    readonly set: 34;
-    readonly udt: 48;
-    readonly tuple: 49;
-    /**
-     * Returns the typeInfo of a given type name
-     * @param {string} name
-     * @returns {import('../encoder').ColumnInfo}
-     */
-    readonly getByName: (name: any) => {
-        code: any;
-    } | {
-        code: any;
-        info: any;
-        customTypeName?: undefined;
-    } | {
-        code: any;
-        customTypeName: string;
-        info: any[];
-    };
-};
+declare enum dataTypes {
+    custom = 0,
+    ascii = 1,
+    bigint = 2,
+    blob = 3,
+    boolean = 4,
+    counter = 5,
+    decimal = 6,
+    double = 7,
+    float = 8,
+    int = 9,
+    text = 10,
+    timestamp = 11,
+    uuid = 12,
+    varchar = 13,
+    varint = 14,
+    timeuuid = 15,
+    inet = 16,
+    date = 17,
+    time = 18,
+    smallint = 19,
+    tinyint = 20,
+    duration = 21,
+    list = 32,
+    map = 33,
+    set = 34,
+    udt = 48,
+    tuple = 49
+}
 
 /**
  * @classdesc
@@ -2176,18 +2143,18 @@ declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
      * A data-center aware Round-robin load balancing policy.
      * This policy provides round-robin queries over the nodes of the local
      * data center.
-     * @param {?String} [localDc] local datacenter name.  This value overrides the 'localDataCenter' Client option \
+     * @param {String} [localDc] local datacenter name.  This value overrides the 'localDataCenter' Client option \
      * and is useful for cases where you have multiple execution profiles that you intend on using for routing
      * requests to different data centers.
      * @constructor
      */
-    constructor(localDc?: string | null);
-    init(client: Client, hosts: HostMap, callback: Function): void;
+    constructor(localDc?: string);
+    init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
     /**
      * Returns the distance depending on the datacenter.
      * @param {Host} host
      */
-    getDistance(host: Host): number;
+    getDistance(host: Host): distance;
     private _cleanHostCache;
     private _resolveLocalHosts;
     /**
@@ -2197,7 +2164,7 @@ declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
      * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
      * second parameter.
      */
-    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void;
     getOptions(): Map<string, any>;
 }
 
@@ -2215,7 +2182,7 @@ declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
  */
 declare type DecisionInfo = {
     decision: number;
-    consistency?: typeof consistencies;
+    consistency?: consistencies;
     useCurrentHost?: boolean;
 };
 
@@ -2245,66 +2212,12 @@ declare const _default: {
             cancel: number;
             isInRange: (code: any) => boolean;
         };
-        consistencies: {
-            readonly any: 0;
-            readonly one: 1;
-            readonly two: 2;
-            readonly three: 3;
-            readonly quorum: 4;
-            readonly all: 5;
-            readonly localQuorum: 6;
-            readonly eachQuorum: 7;
-            readonly serial: 8;
-            readonly localSerial: 9;
-            readonly localOne: 10;
-        };
+        consistencies: typeof consistencies;
         consistencyToString: {};
-        dataTypes: {
-            readonly custom: 0;
-            readonly ascii: 1;
-            readonly bigint: 2;
-            readonly blob: 3;
-            readonly boolean: 4;
-            readonly counter: 5;
-            readonly decimal: 6;
-            readonly double: 7;
-            readonly float: 8;
-            readonly int: 9;
-            readonly text: 10;
-            readonly timestamp: 11;
-            readonly uuid: 12;
-            readonly varchar: 13;
-            readonly varint: 14;
-            readonly timeuuid: 15;
-            readonly inet: 16;
-            readonly date: 17;
-            readonly time: 18;
-            readonly smallint: 19;
-            readonly tinyint: 20;
-            readonly duration: 21;
-            readonly list: 32;
-            readonly map: 33;
-            readonly set: 34;
-            readonly udt: 48;
-            readonly tuple: 49;
-            readonly getByName: (name: any) => {
-                code: any;
-            } | {
-                code: any;
-                info: any;
-                customTypeName?: undefined;
-            } | {
-                code: any;
-                customTypeName: string;
-                info: any[];
-            };
-        };
+        dataTypes: typeof dataTypes;
         getDataTypeNameByCode: typeof getDataTypeNameByCode;
-        distance: {
-            local: number;
-            remote: number;
-            ignored: number;
-        };
+        getDataTypeByName: (name: string) => DataTypeInfo;
+        distance: typeof distance;
         frameFlags: {
             compression: number;
             tracing: number;
@@ -2349,27 +2262,7 @@ declare const _default: {
             getHighestCommon: (connection: Connection, hosts: HostMap) => number;
             isBeta: (version: number) => boolean;
         };
-        responseErrorCodes: {
-            serverError: number;
-            protocolError: number;
-            badCredentials: number;
-            unavailableException: number;
-            overloaded: number;
-            isBootstrapping: number;
-            truncateError: number;
-            writeTimeout: number;
-            readTimeout: number;
-            readFailure: number;
-            functionFailure: number;
-            writeFailure: number;
-            syntaxError: number;
-            unauthorized: number;
-            invalid: number;
-            configError: number;
-            alreadyExists: number;
-            unprepared: number;
-            clientWriteFailure: number;
-        };
+        responseErrorCodes: typeof responseErrorCodes;
         resultKind: {
             voidResult: number;
             rows: number;
@@ -2628,12 +2521,12 @@ declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
      * @param {HostMap} hosts
      * @param {Function} callback
      */
-    init(client: Client, hosts: HostMap, callback: Function): any;
+    init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
     /**
      * Returns the distance assigned by this policy to the provided host, relatively to the client instance.
      * @param {Host} host
      */
-    getDistance(host: Host): number;
+    getDistance(host: Host): distance;
     /**
      * Returns a host iterator to be used for a query execution.
      * @override
@@ -2641,7 +2534,7 @@ declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
      * @param {ExecutionOptions} executionOptions
      * @param {Function} callback
      */
-    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: Function): any;
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void;
     /**
      * Yields the preferred host first, followed by the host in the provided iterable
      * @param preferredHost
@@ -2737,37 +2630,37 @@ declare class DefaultMetrics extends ClientMetrics {
      */
     constructor();
     /** @override */
-    onAuthenticationError(e: any): void;
+    onAuthenticationError(e: Error | AuthenticationError): void;
     /** @override */
-    onConnectionError(e: any): void;
+    onConnectionError(e: Error): void;
     /** @override */
-    onReadTimeoutError(e: any): void;
+    onReadTimeoutError(e: ResponseError): void;
     /** @override */
-    onWriteTimeoutError(e: any): void;
+    onWriteTimeoutError(e: ResponseError): void;
     /** @override */
-    onUnavailableError(e: any): void;
+    onUnavailableError(e: Error): void;
     /** @override */
-    onClientTimeoutError(e: any): void;
+    onClientTimeoutError(e: OperationTimedOutError): void;
     /** @override */
-    onOtherError(e: any): void;
+    onOtherError(e: Error): void;
     /** @override */
-    onClientTimeoutRetry(e: any): void;
+    onClientTimeoutRetry(e: Error): void;
     /** @override */
-    onOtherErrorRetry(e: any): void;
+    onOtherErrorRetry(e: Error): void;
     /** @override */
-    onReadTimeoutRetry(e: any): void;
+    onReadTimeoutRetry(e: Error): void;
     /** @override */
-    onUnavailableRetry(e: any): void;
+    onUnavailableRetry(e: Error): void;
     /** @override */
-    onWriteTimeoutRetry(e: any): void;
+    onWriteTimeoutRetry(e: Error): void;
     /** @override */
-    onIgnoreError(e: any): void;
+    onIgnoreError(e: Error): void;
     /** @override */
     onSpeculativeExecution(): void;
     /** @override */
-    onSuccessfulResponse(latency: any): void;
+    onSuccessfulResponse(latency: number[]): void;
     /** @override */
-    onResponse(latency: any): void;
+    onResponse(latency: number[]): void;
 }
 
 export declare const defaultOptions: () => ClientOptions;
@@ -2790,6 +2683,19 @@ declare class DefaultTableMappings extends TableMappings {
      * Creates a new object instance, using object initializer.
      */
     newObjectInstance(): object;
+}
+
+/**
+ * Represents the distance of Cassandra node as assigned by a LoadBalancingPolicy relatively to the driver instance.
+ * @type {Object}
+ * @property {Number} local A local node.
+ * @property {Number} remote A remote node.
+ * @property {Number} ignored A node that is meant to be ignored.
+ */
+declare enum distance {
+    local = 0,
+    remote = 1,
+    ignored = 2
 }
 
 declare type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocInfo;
@@ -3304,7 +3210,7 @@ export declare class Encoder {
      */
     private decodeVector;
     /**
-     * @param {ColumnInfo} cqlType
+     * @param {DataTypeInfo} cqlType
      * @returns {Number}
      */
     private serializationSizeIfFixed;
@@ -3352,16 +3258,16 @@ export declare class Encoder {
      * This is part of an <b>experimental</b> API, this can be changed future releases.
      * </p>
      * @param {Buffer} buffer Raw buffer to be decoded.
-     * @param {ColumnInfo} type
+     * @param {DataTypeInfo} type
      */
-    decode: (buffer: Buffer, type: ColumnInfo) => any;
+    decode: (buffer: Buffer, type: DataTypeInfo) => any;
     /**
      * Encodes Javascript types into Buffer according to the Cassandra protocol.
      * <p>
      * This is part of an <b>experimental</b> API, this can be changed future releases.
      * </p>
      * @param {*} value The value to be converted.
-     * @param {ColumnInfo | Number | String} typeInfo The type information.
+     * @param {DataTypeInfo | Number | String} typeInfo The type information.
      * <p>It can be either a:</p>
      * <ul>
      *   <li>A <code>String</code> representing the data type.</li>
@@ -3373,7 +3279,7 @@ export declare class Encoder {
      * @returns {Buffer}
      * @throws {TypeError} When there is an encoding error
      */
-    encode: (value: any, typeInfo: ColumnInfo | number | string) => Buffer;
+    encode: (value: any, typeInfo: DataTypeInfo | number | string) => Buffer;
     /* Excluded from this release type: guessDataType */
     private static isTypedArray;
 }
@@ -3501,7 +3407,7 @@ export declare class ExecutionOptions {
      * @abstract
      * @returns {Number}
      */
-    getConsistency(): number;
+    getConsistency(): consistencies;
     /**
      * Key-value payload to be passed to the server. On the server side, implementations of QueryHandler can use
      * this data.
@@ -3668,7 +3574,7 @@ export declare class ExecutionProfile {
      * Consistency level.
      * @type {Number}
      */
-    consistency?: typeof consistencies;
+    consistency?: consistencies;
     /**
      * Load-balancing policy
      * @type {LoadBalancingPolicy}
@@ -3693,7 +3599,7 @@ export declare class ExecutionProfile {
      * Serial consistency level.
      * @type {Number}
      */
-    serialConsistency?: typeof consistencies;
+    serialConsistency?: consistencies;
     /**
      * The graph options for this profile.
      * @type {Object}
@@ -3707,8 +3613,8 @@ export declare class ExecutionProfile {
         name?: string;
         language?: string;
         source?: string;
-        readConsistency?: typeof consistencies;
-        writeConsistency?: typeof consistencies;
+        readConsistency?: consistencies;
+        writeConsistency?: consistencies;
         results?: any;
     };
     /**
@@ -3790,17 +3696,17 @@ export declare class ExecutionProfile {
      * @constructor
      */
     constructor(name: string, options?: {
-        consistency?: typeof consistencies;
+        consistency?: consistencies;
         loadBalancing?: LoadBalancingPolicy;
         readTimeout?: number;
         retry?: RetryPolicy;
-        serialConsistency?: typeof consistencies;
+        serialConsistency?: consistencies;
         graphOptions?: {
             name?: string;
             language?: string;
             source?: string;
-            readConsistency?: typeof consistencies;
-            writeConsistency?: typeof consistencies;
+            readConsistency?: consistencies;
+            writeConsistency?: consistencies;
         };
     });
 }
@@ -3815,9 +3721,9 @@ export declare class ExecutionProfile {
  * </p>
  */
 declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
-    baseDelay: number;
-    maxDelay: number;
-    startWithNoDelay: boolean;
+    private baseDelay;
+    private maxDelay;
+    private startWithNoDelay;
     /**
      * A reconnection policy that waits exponentially longer between each
      * reconnection attempt (but keeps a constant delay once a maximum delay is reached).
@@ -3828,23 +3734,21 @@ declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
      * </p>
      * @param {Number} baseDelay The base delay in milliseconds to use for the schedules created by this policy.
      * @param {Number} maxDelay The maximum delay in milliseconds to wait between two reconnection attempt.
-     * @param {Boolean} startWithNoDelay Determines if the first attempt should be zero delay
+     * @param {Boolean} [startWithNoDelay] Determines if the first attempt should be zero delay
      * @constructor
      */
-    constructor(baseDelay: number, maxDelay: number, startWithNoDelay: boolean);
+    constructor(baseDelay: number, maxDelay: number, startWithNoDelay?: boolean);
     /**
      * A new schedule that uses an exponentially growing delay between reconnection attempts.
-     * @returns {{next: Function}} An infinite iterator.
+     * @returns {Iterator<number>} An infinite iterator.
      */
-    newSchedule(): {
-        next: Function;
-    };
+    newSchedule(): Iterator<number>;
     /**
      * Adds a random portion of +-15% to the delay provided.
      * Initially, its adds a random value of 15% to avoid reconnection before reaching the base delay.
      * When the schedule reaches max delay, only subtracts a random portion of 15%.
      */
-    _addJitter(value: any): any;
+    private _addJitter;
     /**
      * Gets an associative array containing the policy options.
      */
@@ -3866,19 +3770,19 @@ declare class FallthroughRetryPolicy extends RetryPolicy {
     /**
      * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
      */
-    onReadTimeout(): DecisionInfo;
+    onReadTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo;
     /**
      * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
      */
-    onRequestError(): DecisionInfo;
+    onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo;
     /**
      * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
      */
-    onUnavailable(): DecisionInfo;
+    onUnavailable(info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo;
     /**
      * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
      */
-    onWriteTimeout(): DecisionInfo;
+    onWriteTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, writeType: string): DecisionInfo;
 }
 
 declare type FindDocInfo = {
@@ -4019,18 +3923,18 @@ export declare const geometry: {
 declare type GraphOptions = {
     language?: string;
     name?: string;
-    readConsistency?: typeof types.consistencies;
+    readConsistency?: consistencies;
     readTimeout?: number;
     source?: string;
-    writeConsistency?: typeof types.consistencies;
+    writeConsistency?: consistencies;
 };
 
 declare interface GraphQueryOptions extends QueryOptions {
     graphLanguage?: string;
     graphName?: string;
-    graphReadConsistency?: typeof types.consistencies;
+    graphReadConsistency?: consistencies;
     graphSource?: string;
-    graphWriteConsistency?: typeof types.consistencies;
+    graphWriteConsistency?: consistencies;
     graphResults?: string;
 }
 
@@ -4258,7 +4162,7 @@ declare class HostMap extends EventEmitter.EventEmitter {
  * default retry policy instead.
  */
 declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
-    _childPolicy: RetryPolicy;
+    private _childPolicy;
     /**
      * Creates a new instance of <code>IdempotenceAwareRetryPolicy</code>.
      * This is a retry policy that avoids retrying non-idempotent statements.
@@ -4275,13 +4179,13 @@ declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
      * default retry policy instead.
      */
     constructor(childPolicy?: RetryPolicy);
-    onReadTimeout(info: any, consistency: any, received: any, blockFor: any, isDataPresent: any): DecisionInfo;
-    onRequestError(info: any, consistency: any, err: any): DecisionInfo;
-    onUnavailable(info: any, consistency: any, required: any, alive: any): DecisionInfo;
+    onReadTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo;
+    onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo;
+    onUnavailable(info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo;
     /**
      * If the query is not idempotent, it return a rethrow decision. Otherwise, it relies on the child policy to decide.
      */
-    onWriteTimeout(info: any, consistency: any, received: any, blockFor: any, writeType: any): DecisionInfo;
+    onWriteTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, writeType: string): DecisionInfo;
 }
 
 /**
@@ -4301,44 +4205,17 @@ declare class Index {
     target: string;
     /**
      * A numeric value representing index kind (0: custom, 1: keys, 2: composite);
-     * @type {Number}
+     * @type {IndexKind}
      */
-    kind: number;
+    kind: IndexKind;
     /**
      * An associative array containing the index options
      * @type {Object}
      */
     options: object;
-    /**
-     * Creates a new Index instance.
-     * @classdesc Describes a CQL index.
-     * @param {String} name
-     * @param {String} target
-     * @param {Number|String} kind
-     * @param {Object} options
-     * @constructor
-     */
-    constructor(name: string, target: string, kind: number | string, options: object);
-    /**
-     * Parses Index information from rows in the 'system_schema.indexes' table
-     * @deprecated It will be removed in the next major version.
-     * @param {Array.<Row>} indexRows
-     * @returns {Array.<Index>}
-     */
-    static fromRows(indexRows: Array<Row>): Array<Index>;
-    /**
-     * Parses Index information from rows in the legacy 'system.schema_columns' table.
-     * @deprecated It will be removed in the next major version.
-     * @param {Array.<Row>} columnRows
-     * @param {Object.<String, {name, type}>} columnsByName
-     * @returns {Array.<Index>}
-     */
-    static fromColumnRows(columnRows: Array<Row>, columnsByName: {
-        [key: string]: {
-            name: any;
-            type: any;
-        };
-    }): Array<Index>;
+    /* Excluded from this release type: __constructor */
+    /* Excluded from this release type: fromRows */
+    /* Excluded from this release type: fromColumnRows */
     /**
      * Determines if the index is of composites kind
      * @returns {Boolean}
@@ -4354,6 +4231,12 @@ declare class Index {
      * @returns {Boolean}
      */
     isCustomKind(): boolean;
+}
+
+declare enum IndexKind {
+    custom = 0,
+    keys = 1,
+    composites = 2
 }
 
 /** @module types */
@@ -4862,8 +4745,8 @@ declare class LineString extends Geometry {
 }
 
 declare type ListSetColumnInfo = {
-    code: (typeof dataTypes.list | typeof dataTypes.set);
-    info: ColumnInfo;
+    code: (dataTypes.list | dataTypes.set);
+    info: DataTypeInfo;
     options?: {
         frozen?: boolean;
         reversed?: boolean;
@@ -4881,24 +4764,24 @@ declare class LoadBalancingPolicy {
      * Initializes the load balancing policy, called after the driver obtained the information of the cluster.
      * @param {Client} client
      * @param {HostMap} hosts
-     * @param {Function} callback
+     * @param {EmptyCallback} callback
      */
-    init(client: Client, hosts: HostMap, callback: Function): void;
+    init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
     /**
      * Returns the distance assigned by this policy to the provided host.
      * @param {Host} host
      */
-    getDistance(host: Host): number;
+    getDistance(host: Host): distance;
     /**
      * Returns an iterator with the hosts for a new query.
      * Each new query will call this method. The first host in the result will
      * then be used to perform the query.
      * @param {String} keyspace Name of currently logged keyspace at <code>Client</code> level.
-     * @param {ExecutionOptions|null} executionOptions The information related to the execution of the request.
+     * @param {ExecutionOptions} executionOptions The information related to the execution of the request.
      * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
      * second parameter.
      */
-    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void;
     /**
      * Gets an associative array containing the policy options.
      */
@@ -5107,8 +4990,8 @@ declare class LocalTime {
 declare function log(type: string, info: string, furtherInfo?: any, options?: any): void;
 
 declare type MapColumnInfo = {
-    code: (typeof dataTypes.map);
-    info: [ColumnInfo, ColumnInfo];
+    code: (dataTypes.map);
+    info: [DataTypeInfo, DataTypeInfo];
     options?: {
         frozen?: boolean;
         reversed?: boolean;
@@ -5253,13 +5136,7 @@ declare class MaterializedView extends DataCollection {
      * @type {boolean}
      */
     includeAllColumns: boolean;
-    /**
-     * Creates a new MaterializedView.
-     * @param {String} name Name of the View.
-     * @augments {module:metadata~DataCollection}
-     * @constructor
-     */
-    constructor(name: string);
+    /* Excluded from this release type: __constructor */
 }
 
 /**
@@ -5267,26 +5144,23 @@ declare class MaterializedView extends DataCollection {
  * The metadata class acts as a internal state of the driver.
  */
 declare class Metadata {
-    keyspaces: {};
-    initialized: boolean;
+    keyspaces: {
+        [name: string]: Keyspace;
+    };
+    /* Excluded from this release type: initialized */
     private _isDbaas;
     private _schemaParser;
-    log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
+    /* Excluded from this release type: log */
     private _preparedQueries;
-    tokenizer: Tokenizer;
-    primaryReplicas: {};
-    ring: any[];
-    tokenRanges: Set<TokenRange>;
-    ringTokensAsStrings: any[];
-    datacenters: {};
+    /* Excluded from this release type: tokenizer */
+    /* Excluded from this release type: primaryReplicas */
+    /* Excluded from this release type: ring */
+    /* Excluded from this release type: tokenRanges */
+    /* Excluded from this release type: ringTokensAsStrings */
+    /* Excluded from this release type: datacenters */
     private options;
     private controlConnection;
-    /**
-     * Creates a new instance of {@link Metadata}.
-     * @param {ClientOptions} options
-     * @param {ControlConnection} controlConnection Control connection used to retrieve information.
-     */
-    constructor(options: ClientOptions, controlConnection: ControlConnection);
+    /* Excluded from this release type: __constructor */
     /* Excluded from this release type: setCassandraVersion */
     /**
      * Determines whether the cluster is provided as a service.
@@ -5306,12 +5180,13 @@ declare class Metadata {
      * @param {String} name Name of the keyspace.
      * @param {Function} [callback] Optional callback.
      */
-    refreshKeyspace(name: string, callback?: Function): Promise<any>;
+    refreshKeyspace(name: string, callback: EmptyCallback): void;
+    refreshKeyspace(name: string): Promise<void>;
     /**
      * @param {String} name
      * @private
      */
-    _refreshKeyspace(name: string): Promise<Keyspace>;
+    private _refreshKeyspace;
     /**
      * Gets the metadata information of all the keyspaces and updates the internal state of the driver.
      * <p>
@@ -5322,9 +5197,11 @@ declare class Metadata {
      * connected at the moment. Default: true.
      * @param {Function} [callback] Optional callback.
      */
-    refreshKeyspaces(waitReconnect: boolean | Function, callback: Function): any;
+    refreshKeyspaces(waitReconnect: boolean, callback: EmptyCallback): void;
+    refreshKeyspaces(waitReconnect?: boolean): Promise<void>;
+    refreshKeyspaces(callback: EmptyCallback): void;
     /* Excluded from this release type: refreshKeyspacesInternal */
-    _getKeyspaceReplicas(keyspace: any): any;
+    private _getKeyspaceReplicas;
     /**
      * Gets the host list representing the replicas that contain the given partition key, token or token range.
      * <p>
@@ -5335,7 +5212,7 @@ declare class Metadata {
      * @param {Buffer|Token|TokenRange} token Can be Buffer (serialized partition key), Token or TokenRange
      * @returns {Array}
      */
-    getReplicas(keyspaceName: string, token: Buffer | Token | TokenRange): Array<any>;
+    getReplicas(keyspaceName: string, token: Buffer | Token | TokenRange): Array<Host>;
     /**
      * Gets the token ranges that define data distribution in the ring.
      *
@@ -5362,7 +5239,7 @@ declare class Metadata {
      * Constructs a TokenRange from the given start and end tokens.
      * @param {Token} start
      * @param {Token} end
-     * @returns TokenRange build range spanning from start (exclusive) to end (inclusive).
+     * @returns {TokenRange} build range spanning from start (exclusive) to end (inclusive).
      */
     newTokenRange(start: Token, end: Token): TokenRange;
     /* Excluded from this release type: getPreparedInfo */
@@ -5389,14 +5266,15 @@ declare class Metadata {
      * @param {String} name Name of the UDT.
      * @param {Function} [callback] The callback to invoke when retrieval completes.
      */
-    getUdt(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    getUdt(keyspaceName: string, name: string, callback: ValueCallback<Udt>): void;
+    getUdt(keyspaceName: string, name: string): Promise<Udt>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
      * @returns {Promise<Object|null>}
      * @private
      */
-    _getUdt(keyspaceName: string, name: string): Promise<object | null>;
+    private _getUdt;
     /**
      * Gets the definition of a table.
      * <p>
@@ -5412,13 +5290,14 @@ declare class Metadata {
      * @param {Function} [callback] The callback with the err as a first parameter and the {@link TableMetadata} as
      * second parameter.
      */
-    getTable(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    getTable(keyspaceName: string, name: string, callback: ValueCallback<TableMetadata>): void;
+    getTable(keyspaceName: string, name: string): Promise<TableMetadata>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
      * @private
      */
-    _getTable(keyspaceName: string, name: string): Promise<TableMetadata>;
+    private _getTable;
     /**
      * Gets the definition of CQL functions for a given name.
      * <p>
@@ -5434,13 +5313,14 @@ declare class Metadata {
      * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link SchemaFunction}
      * as second parameter.
      */
-    getFunctions(keyspaceName: string, name: string, callback: Function): Promise<any>;
+    getFunctions(keyspaceName: string, name: string, callback: ValueCallback<SchemaFunction[]>): void;
+    getFunctions(keyspaceName: string, name: string): Promise<SchemaFunction[]>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
      * @private
      */
-    _getFunctionsWrapper(keyspaceName: string, name: string): Promise<any[]>;
+    private _getFunctionsWrapper;
     /**
      * Gets a definition of CQL function for a given name and signature.
      * <p>
@@ -5457,10 +5337,8 @@ declare class Metadata {
      * @param {Function} [callback] The callback with the err as a first parameter and the {@link SchemaFunction} as second
      * parameter.
      */
-    getFunction(keyspaceName: string, name: string, signature: Array<string> | Array<{
-        code: any;
-        info: any;
-    }>, callback: Function): Promise<any>;
+    getFunction(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback: ValueCallback<SchemaFunction>): void;
+    getFunction(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>): Promise<SchemaFunction>;
     /**
      * Gets the definition of CQL aggregate for a given name.
      * <p>
@@ -5476,13 +5354,14 @@ declare class Metadata {
      * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link Aggregate} as
      * second parameter.
      */
-    getAggregates(keyspaceName: string, name: string, callback: Function): Promise<any>;
+    getAggregates(keyspaceName: string, name: string, callback: ValueCallback<Aggregate[]>): void;
+    getAggregates(keyspaceName: string, name: string): Promise<Aggregate[]>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
      * @private
      */
-    _getAggregates(keyspaceName: string, name: string): Promise<any[]>;
+    private _getAggregates;
     /**
      * Gets a definition of CQL aggregate for a given name and signature.
      * <p>
@@ -5498,10 +5377,8 @@ declare class Metadata {
      * @param {Array.<String>|Array.<{code, info}>} signature Array of types of the parameters.
      * @param {Function} [callback] The callback with the err as a first parameter and the {@link Aggregate} as second parameter.
      */
-    getAggregate(keyspaceName: string, name: string, signature: Array<string> | Array<{
-        code: any;
-        info: any;
-    }>, callback: Function): Promise<any>;
+    getAggregate(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback: ValueCallback<Aggregate>): void;
+    getAggregate(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>): Promise<Aggregate>;
     /**
      * Gets the definition of a CQL materialized view for a given name.
      * <p>
@@ -5518,14 +5395,15 @@ declare class Metadata {
      * @param {Function} [callback] The callback with the err as a first parameter and the {@link MaterializedView} as
      * second parameter.
      */
-    getMaterializedView(keyspaceName: string, name: string, callback?: Function): Promise<any>;
+    getMaterializedView(keyspaceName: string, name: string, callback: ValueCallback<MaterializedView>): void;
+    getMaterializedView(keyspaceName: string, name: string, callback: EmptyCallback): Promise<MaterializedView>;
     /**
      * @param {String} keyspaceName
      * @param {String} name
      * @returns {Promise<MaterializedView|null>}
      * @private
      */
-    _getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView | null>;
+    private _getMaterializedView;
     /**
      * Gets a map of cql function definitions or aggregates based on signature.
      * @param {String} keyspaceName
@@ -5534,7 +5412,7 @@ declare class Metadata {
      * @returns {Promise<Map>}
      * @private
      */
-    _getFunctions(keyspaceName: string, name: string, aggregate: boolean): Promise<Map<any, any>>;
+    private _getFunctions;
     /**
      * Gets a single cql function or aggregate definition
      * @param {String} keyspaceName
@@ -5544,7 +5422,7 @@ declare class Metadata {
      * @returns {Promise<SchemaFunction|Aggregate|null>}
      * @private
      */
-    _getSingleFunction(keyspaceName: string, name: string, signature: Array<any>, aggregate: boolean): Promise<SchemaFunction | Aggregate | null>;
+    private _getSingleFunction;
     /**
      * Gets the trace session generated by Cassandra when query tracing is enabled for the
      * query. The trace itself is stored in Cassandra in the <code>sessions</code> and
@@ -5558,33 +5436,23 @@ declare class Metadata {
      * @param {Number} [consistency] The consistency level to obtain the trace.
      * @param {Function} [callback] The callback with the err as first parameter and the query trace as second parameter.
      */
-    getTrace(traceId: Uuid, consistency: number, callback: Function): Promise<any>;
+    getTrace(traceId: Uuid, consistency: consistencies, callback: ValueCallback<QueryTrace>): void;
+    getTrace(traceId: Uuid, consistency: consistencies): Promise<QueryTrace>;
+    getTrace(traceId: Uuid, callback: ValueCallback<QueryTrace>): void;
+    getTrace(traceId: Uuid): Promise<QueryTrace>;
     /**
      * @param {Uuid} traceId
      * @param {Number} consistency
      * @returns {Promise<Object>}
      * @private
      */
-    _getTrace(traceId: Uuid, consistency: number): Promise<object>;
-    /**
-     * Checks whether hosts that are currently up agree on the schema definition.
-     * <p>
-     *   This method performs a one-time check only, without any form of retry; therefore
-     *   <code>protocolOptions.maxSchemaAgreementWaitSeconds</code> setting does not apply in this case.
-     * </p>
-     * @param {Function} [callback] A function that is invoked with a value
-     * <code>true</code> when all hosts agree on the schema and <code>false</code> when there is no agreement or when
-     * the check could not be performed (for example, if the control connection is down).
-     * @returns {Promise} Returns a <code>Promise</code> when a callback is not provided. The promise resolves to
-     * <code>true</code> when all hosts agree on the schema and <code>false</code> when there is no agreement or when
-     * the check could not be performed (for example, if the control connection is down).
-     */
-    checkSchemaAgreement(callback: Function): Promise<any>;
+    private _getTrace;
+    /* Excluded from this release type: checkSchemaAgreement */
     /**
      * Async-only version of check schema agreement.
      * @private
      */
-    _checkSchemaAgreement(): Promise<boolean>;
+    private _checkSchemaAgreement;
     /* Excluded from this release type: adaptUserHints */
     /**
      * @param {Array} udts
@@ -5592,10 +5460,7 @@ declare class Metadata {
      * @param {string} keyspace
      * @private
      */
-    _checkUdtTypes(udts: Array<any>, type: {
-        code: any;
-        info: any;
-    }, keyspace: string): any;
+    private _checkUdtTypes;
     /* Excluded from this release type: compareSchemaVersions */
 }
 
@@ -6022,17 +5887,7 @@ declare class MonotonicTimestampGenerator extends TimestampGenerator {
  */
 declare class Murmur3Token extends Token {
     constructor(value: any);
-    getType(): {
-        code: any;
-    } | {
-        code: any;
-        info: any;
-        customTypeName?: undefined;
-    } | {
-        code: any;
-        customTypeName: string;
-        info: any[];
-    };
+    getType(): DataTypeInfo;
 }
 
 /**
@@ -6228,7 +6083,7 @@ declare type Options = {
 };
 
 declare type OtherCustomColumnInfo = {
-    code: (typeof dataTypes.custom);
+    code: (dataTypes.custom);
     info: string;
     options?: {
         frozen?: boolean;
@@ -6700,6 +6555,24 @@ declare class QueryRequest extends ExecuteRequest {
     write(encoder: any, streamId: any): Buffer;
 }
 
+declare interface QueryTrace {
+    requestType: string;
+    coordinator: InetAddress;
+    parameters: {
+        [key: string]: any;
+    };
+    startedAt: number | Long__default;
+    duration: number;
+    clientAddress: string;
+    events: Array<{
+        id: Uuid;
+        activity: any;
+        source: any;
+        elapsed: any;
+        thread: any;
+    }>;
+}
+
 /**
  * Represents a token from a Cassandra ring where the partitioner
  * is RandomPartitioner.
@@ -6708,17 +6581,7 @@ declare class QueryRequest extends ExecuteRequest {
  */
 declare class RandomToken extends Token {
     constructor(value: any);
-    getType(): {
-        code: any;
-    } | {
-        code: any;
-        info: any;
-        customTypeName?: undefined;
-    } | {
-        code: any;
-        customTypeName: string;
-        info: any[];
-    };
+    getType(): DataTypeInfo;
 }
 
 /**
@@ -6755,15 +6618,13 @@ declare class ReconnectionPolicy {
     constructor();
     /**
      * A new reconnection schedule.
-     * @returns {{next: function}} An infinite iterator
+     * @returns {Iterator<number>} An infinite iterator
      */
-    newSchedule(): {
-        next: Function;
-    };
+    newSchedule(): Iterator<number>;
     /**
      * Gets an associative array containing the policy options.
      */
-    getOptions(): Map<any, any>;
+    getOptions(): Map<string, any>;
 }
 
 declare type RemoveDocInfo = {
@@ -6962,6 +6823,50 @@ declare class ResponseError extends DriverError {
 }
 
 /**
+ * Server error codes returned by Cassandra
+ * @type {Object}
+ * @property {Number} serverError Something unexpected happened.
+ * @property {Number} protocolError Some client message triggered a protocol violation.
+ * @property {Number} badCredentials Authentication was required and failed.
+ * @property {Number} unavailableException Raised when coordinator knows there is not enough replicas alive to perform a query with the requested consistency level.
+ * @property {Number} overloaded The request cannot be processed because the coordinator is overloaded.
+ * @property {Number} isBootstrapping The request was a read request but the coordinator node is bootstrapping.
+ * @property {Number} truncateError Error encountered during a truncate request.
+ * @property {Number} writeTimeout Timeout encountered on write query on coordinator waiting for response(s) from replicas.
+ * @property {Number} readTimeout Timeout encountered on read query on coordinator waitign for response(s) from replicas.
+ * @property {Number} readFailure A non-timeout error encountered during a read request.
+ * @property {Number} functionFailure A (user defined) function encountered during execution.
+ * @property {Number} writeFailure A non-timeout error encountered during a write request.
+ * @property {Number} syntaxError The submitted query has a syntax error.
+ * @property {Number} unauthorized The logged user doesn't have the right to perform the query.
+ * @property {Number} invalid The query is syntactically correct but invalid.
+ * @property {Number} configError The query is invalid because of some configuration issue.
+ * @property {Number} alreadyExists The query attempted to create a schema element (i.e. keyspace, table) that already exists.
+ * @property {Number} unprepared Can be thrown while a prepared statement tries to be executed if the provided statement is not known by the coordinator.
+ */
+declare enum responseErrorCodes {
+    serverError = 0,
+    protocolError = 10,
+    badCredentials = 256,
+    unavailableException = 4096,
+    overloaded = 4097,
+    isBootstrapping = 4098,
+    truncateError = 4099,
+    writeTimeout = 4352,
+    readTimeout = 4608,
+    readFailure = 4864,
+    functionFailure = 5120,
+    writeFailure = 5376,
+    syntaxError = 8192,
+    unauthorized = 8448,
+    invalid = 8704,
+    configError = 8960,
+    alreadyExists = 9216,
+    unprepared = 9472,
+    clientWriteFailure = 32768
+}
+
+/**
  * Represents the result of an execution as an iterable of objects in the Mapper.
  * @alias module:mapping~Result
  */
@@ -7029,7 +6934,7 @@ declare class ResultSet {
             [key: string]: any;
         };
         speculativeExecutions: number;
-        achievedConsistency: typeof consistencies;
+        achievedConsistency: consistencies;
         traceId: Uuid;
         warnings: string[];
         customPayload: any;
@@ -7038,7 +6943,7 @@ declare class ResultSet {
     columns: Array<{
         name: string;
         type: {
-            code: typeof dataTypes[keyof typeof dataTypes];
+            code: dataTypes;
             info: any;
         };
     }>;
@@ -7071,7 +6976,7 @@ declare class ResultSet {
             columns: Array<{
                 name: string;
                 type: {
-                    code: typeof dataTypes[keyof typeof dataTypes];
+                    code: dataTypes;
                     info: any;
                 };
             }>;
@@ -7079,7 +6984,7 @@ declare class ResultSet {
         };
     }, host: string, triedHosts: {
         [key: string]: any;
-    }, speculativeExecutions: number, consistency: typeof consistencies, isSchemaInAgreement: boolean);
+    }, speculativeExecutions: number, consistency: consistencies, isSchemaInAgreement: boolean);
     /**
      * Returns the first row or null if the result rows are empty.
      */
@@ -7088,7 +6993,7 @@ declare class ResultSet {
     getColumns(): {
         name: string;
         type: {
-            code: (typeof dataTypes)[keyof typeof dataTypes];
+            code: dataTypes;
             info: any;
         };
     }[];
@@ -7200,7 +7105,7 @@ declare class RetryPolicy {
     /**
      * Determines what to do when the driver gets an UnavailableException response from a Cassandra node.
      * @param {OperationInfo} info
-     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
      * the exception.
      * @param {Number} required The number of replicas whose response is required to achieve the
      * required [consistency]{@link module:types~consistencies}.
@@ -7208,11 +7113,11 @@ declare class RetryPolicy {
      * (since an unavailable exception has been triggered, there will be alive &lt; required)
      * @returns {DecisionInfo}
      */
-    onUnavailable(info: OperationInfo, consistency: number, required: number, alive: number): DecisionInfo;
+    onUnavailable(info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo;
     /**
      * Determines what to do when the driver gets a ReadTimeoutException response from a Cassandra node.
      * @param {OperationInfo} info
-     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
      * the exception.
      * @param {Number} received The number of nodes having answered the request.
      * @param {Number} blockFor The number of replicas whose response is required to achieve the
@@ -7220,11 +7125,11 @@ declare class RetryPolicy {
      * @param {Boolean} isDataPresent When <code>false</code>, it means the replica that was asked for data has not responded.
      * @returns {DecisionInfo}
      */
-    onReadTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo;
+    onReadTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo;
     /**
      * Determines what to do when the driver gets a WriteTimeoutException response from a Cassandra node.
      * @param {OperationInfo} info
-     * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
      * the exception.
      * @param {Number} received The number of nodes having acknowledged the request.
      * @param {Number} blockFor The number of replicas whose acknowledgement is required to achieve the required
@@ -7233,7 +7138,7 @@ declare class RetryPolicy {
      * / "BATCH" / "BATCH_LOG" / "UNLOGGED_BATCH" / "COUNTER").
      * @returns {DecisionInfo}
      */
-    onWriteTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, writeType: string): DecisionInfo;
+    onWriteTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, writeType: string): DecisionInfo;
     /**
      * Defines whether to retry and at which consistency level on an unexpected error.
      * <p>
@@ -7253,38 +7158,50 @@ declare class RetryPolicy {
      * applied server-side</em>; a retry should only be attempted if the request is known to be idempotent.
      * </p>
      * @param {OperationInfo} info
-     * @param {Number|undefined} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+     * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
      * the exception.
      * @param {Error} err The error that caused this request to fail.
      * @returns {DecisionInfo}
      */
-    onRequestError(info: OperationInfo, consistency: number | undefined, err: Error): DecisionInfo;
+    onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo;
     /**
      * Returns a {@link DecisionInfo} to retry the request with the given [consistency]{@link module:types~consistencies}.
-     * @param {Number|undefined} [consistency] When specified, it retries the request with the given consistency.
+     * @param {consistencies} [consistency] When specified, it retries the request with the given consistency.
      * @param {Boolean} [useCurrentHost] When specified, determines if the retry should be made using the same coordinator.
      * Default: true.
      * @returns {DecisionInfo}
      */
-    retryResult(consistency?: typeof consistencies, useCurrentHost?: boolean): DecisionInfo;
+    retryResult(consistency?: consistencies, useCurrentHost?: boolean): DecisionInfo;
     /**
      * Returns a {@link DecisionInfo} to callback in error when a err is obtained for a given request.
      * @returns {DecisionInfo}
      */
     rethrowResult(): DecisionInfo;
-    /**
-     * Determines the retry decision for the retry policies.
-     * @type {Object}
-     * @property {Number} rethrow
-     * @property {Number} retry
-     * @property {Number} ignore
-     * @static
-     */
-    static retryDecision: {
-        readonly rethrow: 0;
-        readonly retry: 1;
-        readonly ignore: 2;
-    };
+}
+
+/**
+ *     namespace RetryDecision {
+ enum retryDecision {
+ ignore,
+ rethrow,
+ retry
+ }
+ }
+ */
+/**
+ * Determines the retry decision for the retry policies.
+ * @type {Object}
+ * @property {Number} rethrow
+ * @property {Number} retry
+ * @property {Number} ignore
+ * @static
+ */
+declare namespace RetryPolicy {
+    enum retryDecision {
+        rethrow = 0,
+        retry = 1,
+        ignore = 2
+    }
 }
 
 /**
@@ -7300,7 +7217,7 @@ declare class RoundRobinPolicy extends LoadBalancingPolicy {
      * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
      * second parameter.
      */
-    newQueryPlan(keyspace: string, executionOptions: any, callback: Function): void;
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void;
 }
 
 /** @module types */
@@ -7363,10 +7280,7 @@ declare class SchemaFunction {
      * List of the function argument types.
      * @type {Array.<{code, info}>}
      */
-    argumentTypes: Array<{
-        code: number;
-        info?: (object | Array<any> | string);
-    }>;
+    argumentTypes: Array<DataTypeInfo>;
     /**
      * Body of the function.
      * @type {String}
@@ -7384,12 +7298,9 @@ declare class SchemaFunction {
     language: string;
     /**
      * Type of the return value.
-     * @type {{code: number, info: (Object|Array|null)}}
+     * @type {DataTypeInfo}
      */
-    returnType: {
-        code: number;
-        info?: (object | Array<any> | string);
-    };
+    returnType: DataTypeInfo;
     /**
      * Indicates whether or not this function is deterministic.  This means that
      * given a particular input, the function will always produce the same output.
@@ -7416,12 +7327,7 @@ declare class SchemaFunction {
      * @type {Array.<String>}
      */
     monotonicOn: Array<string>;
-    /**
-     * Creates a new SchemaFunction.
-     * @alias module:metadata~SchemaFunction
-     * @constructor
-     */
-    constructor();
+    /* Excluded from this release type: __constructor */
 }
 
 declare type SingleColumnInfo = {
@@ -7433,29 +7339,29 @@ declare type SingleColumnInfo = {
     };
 };
 
-declare type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | typeof dataTypes.duration | typeof dataTypes.text);
+declare type SingleTypeCodes = (typeof singleTypeNames[keyof typeof singleTypeNames] | dataTypes.duration | dataTypes.text);
 
 declare const singleTypeNames: Readonly<{
-    readonly 'org.apache.cassandra.db.marshal.UTF8Type': 13;
-    readonly 'org.apache.cassandra.db.marshal.AsciiType': 1;
-    readonly 'org.apache.cassandra.db.marshal.UUIDType': 12;
-    readonly 'org.apache.cassandra.db.marshal.TimeUUIDType': 15;
-    readonly 'org.apache.cassandra.db.marshal.Int32Type': 9;
-    readonly 'org.apache.cassandra.db.marshal.BytesType': 3;
-    readonly 'org.apache.cassandra.db.marshal.FloatType': 8;
-    readonly 'org.apache.cassandra.db.marshal.DoubleType': 7;
-    readonly 'org.apache.cassandra.db.marshal.BooleanType': 4;
-    readonly 'org.apache.cassandra.db.marshal.InetAddressType': 16;
-    readonly 'org.apache.cassandra.db.marshal.SimpleDateType': 17;
-    readonly 'org.apache.cassandra.db.marshal.TimeType': 18;
-    readonly 'org.apache.cassandra.db.marshal.ShortType': 19;
-    readonly 'org.apache.cassandra.db.marshal.ByteType': 20;
-    readonly 'org.apache.cassandra.db.marshal.DateType': 11;
-    readonly 'org.apache.cassandra.db.marshal.TimestampType': 11;
-    readonly 'org.apache.cassandra.db.marshal.LongType': 2;
-    readonly 'org.apache.cassandra.db.marshal.DecimalType': 6;
-    readonly 'org.apache.cassandra.db.marshal.IntegerType': 14;
-    readonly 'org.apache.cassandra.db.marshal.CounterColumnType': 5;
+    readonly 'org.apache.cassandra.db.marshal.UTF8Type': dataTypes.varchar;
+    readonly 'org.apache.cassandra.db.marshal.AsciiType': dataTypes.ascii;
+    readonly 'org.apache.cassandra.db.marshal.UUIDType': dataTypes.uuid;
+    readonly 'org.apache.cassandra.db.marshal.TimeUUIDType': dataTypes.timeuuid;
+    readonly 'org.apache.cassandra.db.marshal.Int32Type': dataTypes.int;
+    readonly 'org.apache.cassandra.db.marshal.BytesType': dataTypes.blob;
+    readonly 'org.apache.cassandra.db.marshal.FloatType': dataTypes.float;
+    readonly 'org.apache.cassandra.db.marshal.DoubleType': dataTypes.double;
+    readonly 'org.apache.cassandra.db.marshal.BooleanType': dataTypes.boolean;
+    readonly 'org.apache.cassandra.db.marshal.InetAddressType': dataTypes.inet;
+    readonly 'org.apache.cassandra.db.marshal.SimpleDateType': dataTypes.date;
+    readonly 'org.apache.cassandra.db.marshal.TimeType': dataTypes.time;
+    readonly 'org.apache.cassandra.db.marshal.ShortType': dataTypes.smallint;
+    readonly 'org.apache.cassandra.db.marshal.ByteType': dataTypes.tinyint;
+    readonly 'org.apache.cassandra.db.marshal.DateType': dataTypes.timestamp;
+    readonly 'org.apache.cassandra.db.marshal.TimestampType': dataTypes.timestamp;
+    readonly 'org.apache.cassandra.db.marshal.LongType': dataTypes.bigint;
+    readonly 'org.apache.cassandra.db.marshal.DecimalType': dataTypes.decimal;
+    readonly 'org.apache.cassandra.db.marshal.IntegerType': dataTypes.varint;
+    readonly 'org.apache.cassandra.db.marshal.CounterColumnType': dataTypes.counter;
 }>;
 
 /** @module policies/speculativeExecution */
@@ -7598,7 +7504,7 @@ declare class TableMetadata extends DataCollection {
      * </p>
      * @type {Number|null}
      */
-    indexInterval: number | null;
+    indexInterval?: number;
     /**
      * Determines  whether the table uses the COMPACT STORAGE option.
      * @type {Boolean}
@@ -7613,18 +7519,13 @@ declare class TableMetadata extends DataCollection {
      * Determines whether the Change Data Capture (CDC) flag is set for the table.
      * @type {Boolean|null}
      */
-    cdc: boolean | null;
+    cdc?: boolean;
     /**
      * Determines whether the table is a virtual table or not.
      * @type {Boolean}
      */
     virtual: boolean;
-    /**
-     * Creates a new instance of TableMetadata
-     * @param {String} name Name of the Table
-     * @constructor
-     */
-    constructor(name: string);
+    /* Excluded from this release type: __constructor */
 }
 
 /** @private */
@@ -7806,7 +7707,12 @@ declare class TimeUuid extends Uuid {
  * @param {Number} [offset]
  * @deprecated Use [TimeUuid]{@link module:types~TimeUuid} instead
  */
-declare function timeuuid(options: any, buffer: any, offset: any): string | Buffer;
+declare function timeuuid(options: {
+    msecs: any;
+    node: any;
+    clockseq: any;
+    nsecs: any;
+}, buffer: Buffer, offset: number): string | Buffer;
 
 /**
  * Represents a token on the Cassandra ring.
@@ -7855,8 +7761,8 @@ declare class TokenAwarePolicy extends LoadBalancingPolicy {
      * @constructor
      */
     constructor(childPolicy: LoadBalancingPolicy);
-    init(client: Client, hosts: HostMap, callback: Function): void;
-    getDistance(host: Host): number;
+    init(client: Client, hosts: HostMap, callback: EmptyCallback): void;
+    getDistance(host: Host): distance;
     /**
      * Returns the hosts to use for a new query.
      * The returned plan will return local replicas first, if replicas can be determined, followed by the plan of the
@@ -7866,7 +7772,7 @@ declare class TokenAwarePolicy extends LoadBalancingPolicy {
      * @param {Function} callback The function to be invoked with the error as first parameter and the host iterator as
      * second parameter.
      */
-    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions | null, callback: Function): void;
+    newQueryPlan(keyspace: string, executionOptions: ExecutionOptions, callback: (error: Error, iterator: Iterator<Host>) => void): void;
     getOptions(): Map<string, any>;
 }
 
@@ -8068,8 +7974,8 @@ declare class Tuple {
 }
 
 declare type TupleColumnInfo = {
-    code: (typeof dataTypes.tuple);
-    info: Array<ColumnInfo>;
+    code: (dataTypes.tuple);
+    info: Array<DataTypeInfo>;
     options?: {
         frozen?: boolean;
         reversed?: boolean;
@@ -8077,7 +7983,7 @@ declare type TupleColumnInfo = {
 };
 
 declare type TupleListColumnInfoWithoutSubtype = {
-    code: (typeof dataTypes.tuple | typeof dataTypes.list);
+    code: (dataTypes.tuple | dataTypes.list);
 };
 
 export declare const types: {
@@ -8105,71 +8011,12 @@ export declare const types: {
          */
         isInRange: (code: any) => boolean;
     };
-    consistencies: {
-        readonly any: 0;
-        readonly one: 1;
-        readonly two: 2;
-        readonly three: 3;
-        readonly quorum: 4;
-        readonly all: 5;
-        readonly localQuorum: 6;
-        readonly eachQuorum: 7;
-        readonly serial: 8;
-        readonly localSerial: 9;
-        readonly localOne: 10;
-    };
+    consistencies: typeof consistencies;
     consistencyToString: {};
-    dataTypes: {
-        readonly custom: 0;
-        readonly ascii: 1;
-        readonly bigint: 2;
-        readonly blob: 3;
-        readonly boolean: 4;
-        readonly counter: 5;
-        readonly decimal: 6;
-        readonly double: 7;
-        readonly float: 8;
-        readonly int: 9;
-        readonly text: 10;
-        readonly timestamp: 11;
-        readonly uuid: 12;
-        readonly varchar: 13;
-        readonly varint: 14;
-        readonly timeuuid: 15;
-        readonly inet: 16;
-        readonly date: 17;
-        readonly time: 18;
-        readonly smallint: 19;
-        readonly tinyint: 20;
-        readonly duration: 21;
-        readonly list: 32;
-        readonly map: 33;
-        readonly set: 34;
-        readonly udt: 48;
-        readonly tuple: 49;
-        /**
-         * Returns the typeInfo of a given type name
-         * @param {string} name
-         * @returns {import('../encoder').ColumnInfo}
-         */
-        readonly getByName: (name: any) => {
-            code: any;
-        } | {
-            code: any;
-            info: any;
-            customTypeName?: undefined;
-        } | {
-            code: any;
-            customTypeName: string;
-            info: any[];
-        };
-    };
+    dataTypes: typeof dataTypes;
     getDataTypeNameByCode: typeof getDataTypeNameByCode;
-    distance: {
-        local: number;
-        remote: number;
-        ignored: number;
-    };
+    getDataTypeByName: (name: string) => DataTypeInfo;
+    distance: typeof distance;
     frameFlags: {
         compression: number;
         tracing: number;
@@ -8214,27 +8061,7 @@ export declare const types: {
         getHighestCommon: (connection: Connection, hosts: HostMap) => number;
         isBeta: (version: number) => boolean;
     };
-    responseErrorCodes: {
-        serverError: number;
-        protocolError: number;
-        badCredentials: number;
-        unavailableException: number;
-        overloaded: number;
-        isBootstrapping: number;
-        truncateError: number;
-        writeTimeout: number;
-        readTimeout: number;
-        readFailure: number;
-        functionFailure: number;
-        writeFailure: number;
-        syntaxError: number;
-        unauthorized: number;
-        invalid: number;
-        configError: number;
-        alreadyExists: number;
-        unprepared: number;
-        clientWriteFailure: number;
-    };
+    responseErrorCodes: typeof responseErrorCodes;
     resultKind: {
         voidResult: number;
         rows: number;
@@ -8267,13 +8094,18 @@ export declare const types: {
     Vector: typeof Vector;
 };
 
+declare interface Udt {
+    name: string;
+    fields: ColumnInfo[];
+}
+
 declare type UdtColumnInfo = {
-    code: (typeof dataTypes.udt);
+    code: (dataTypes.udt);
     info: {
         name: string;
         fields: Array<{
             name: string;
-            type: ColumnInfo;
+            type: DataTypeInfo;
         }>;
     };
     options?: {
@@ -8431,9 +8263,9 @@ declare class Vector {
 }
 
 declare type VectorColumnInfo = {
-    code: (typeof dataTypes.custom);
+    code: (dataTypes.custom);
     customTypeName: ('vector');
-    info: [ColumnInfo, number];
+    info: [DataTypeInfo, number];
     options?: {
         frozen?: boolean;
         reversed?: boolean;

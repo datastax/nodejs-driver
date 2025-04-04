@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
-import events from "events";
 
+import events from "events";
+import type { ColumnInfo } from ".";
 
 /**
  * Creates a new instance of DataCollection
@@ -60,12 +60,15 @@ class DataCollection extends events.EventEmitter {
    * Associative-array containing the compaction options keys and values.
    * @type {Object}
    */
-  compactionOptions: object;
+  compactionOptions: { [option: string]: any; };
   /**
    * Associative-array containing the compaction options keys and values.
    * @type {Object}
    */
-  compression: object;
+  compression: {
+    class?: string;
+    [option: string]: any;
+  };
   /**
    * Specifies the probability of read repairs being invoked over all replicas in the current data center.
    * @type {number}
@@ -84,7 +87,7 @@ class DataCollection extends events.EventEmitter {
    * </p>
    * @type {Object}
    */
-  extensions: object;
+  extensions: { [option: string]: any; };
   /**
    * When compression is enabled, this option defines the probability
    * with which checksums for compressed blocks are checked during reads.
@@ -94,7 +97,7 @@ class DataCollection extends events.EventEmitter {
    * </p>
    * @type {Number|null}
    */
-  crcCheckChance: number | null;
+  crcCheckChance?: number;
   /**
    * Whether the populate I/O cache on flush is set on this table.
    * @type {Boolean}
@@ -118,7 +121,7 @@ class DataCollection extends events.EventEmitter {
    * </p>
    * @type {Number|null}
    */
-  minIndexInterval: number | null;
+  minIndexInterval?: number;
   /**
    * Returns the maximum index interval option for this table.
    * <p>
@@ -127,32 +130,33 @@ class DataCollection extends events.EventEmitter {
    * </p>
    * @type {Number|null}
    */
-  maxIndexInterval: number | null;
+  maxIndexInterval?: number ;
   /**
    * Array describing the table columns.
    * @type {Array}
    */
-  columns: any[];
+  columns: ColumnInfo[];
   /**
    * An associative Array of columns by name.
    * @type {Object}
    */
-  columnsByName: object;
+  columnsByName: { [key: string]: ColumnInfo };
   /**
    * Array describing the columns that are part of the partition key.
    * @type {Array}
    */
-  partitionKeys: any[];
+  partitionKeys: ColumnInfo[];
   /**
    * Array describing the columns that form the clustering key.
    * @type {Array}
    */
-  clusteringKeys: any[];
+  clusteringKeys: ColumnInfo[];
   /**
    * Array describing the clustering order of the columns in the same order as the clusteringKeys.
    * @type {Array}
    */
-  clusteringOrder: any[];
+  clusteringOrder: string[];
+  //TODO: not exposed, I believe it should be
   /**
    * An associative Array containing nodesync options for this table.
    * <p>
@@ -161,9 +165,10 @@ class DataCollection extends events.EventEmitter {
    * </p>
    * @type {Object}
    */
-  nodesync: object;
+  nodesync?: object;
   /**
    * Creates a new instance of DataCollection
+   * @internal
    * @param {String} name Name of the data object.
    * @constructor
    */

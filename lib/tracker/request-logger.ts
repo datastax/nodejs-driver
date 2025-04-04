@@ -38,10 +38,25 @@ const defaultMaxErrorStackTraceLength = 200;
  * const client = new Client({ contactPoints, requestTracker: requestLogger });
  */
 class RequestLogger extends RequestTracker {
-  _options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; };
-  logNormalRequests: any;
-  logErroredRequests: any;
-  emitter: events<[never]>;
+  private _options: { slowThreshold?: number; requestSizeThreshold?: number; logNormalRequests?: boolean; logErroredRequests?: boolean; messageMaxQueryLength?: number; messageMaxParameterValueLength?: number; messageMaxErrorStackTraceLength?: number; };
+  /**
+   * Determines whether it should emit 'normal' events for every EXECUTE, QUERY and BATCH request executed
+   * successfully, useful only for debugging
+   * @type {Boolean}
+   */
+  private logNormalRequests: boolean;
+  /**
+   * Determines whether it should emit 'failure' events for every EXECUTE, QUERY and BATCH request execution that
+   * resulted in an error
+   * @type {Boolean}
+   */
+  private logErroredRequests: boolean;
+  /**
+   * The object instance that emits <code>'slow'</code>, <code>'large'</code>, <code>'normal'</code> and
+   * <code>'failure'</code> events.
+   * @type {EventEmitter}
+   */
+  private emitter: events<any>;
 
   /**
    * Creates a new instance of {@link RequestLogger}.
@@ -71,25 +86,10 @@ class RequestLogger extends RequestTracker {
 
     this._options = options;
 
-    /**
-     * Determines whether it should emit 'normal' events for every EXECUTE, QUERY and BATCH request executed
-     * successfully, useful only for debugging
-     * @type {Boolean}
-     */
     this.logNormalRequests = this._options.logNormalRequests;
 
-    /**
-     * Determines whether it should emit 'failure' events for every EXECUTE, QUERY and BATCH request execution that
-     * resulted in an error
-     * @type {Boolean}
-     */
     this.logErroredRequests = this._options.logErroredRequests;
 
-    /**
-     * The object instance that emits <code>'slow'</code>, <code>'large'</code>, <code>'normal'</code> and
-     * <code>'failure'</code> events.
-     * @type {EventEmitter}
-     */
     this.emitter = new events.EventEmitter();
   }
 

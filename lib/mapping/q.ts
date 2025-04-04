@@ -22,21 +22,13 @@ import errors from "../errors";
  * @ignore
  */
 class QueryOperator {
-  /**
-   * @internal
-   */
+  /** @internal */
   key: string;
-  /**
-   * @internal
-   */
+  /** @internal */
   value: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   hasChildValues: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   isInOperator: any;
   /**
    * Creates a new instance of <code>QueryOperator</code>.
@@ -75,21 +67,13 @@ class QueryOperator {
  * @ignore
  */
 class QueryAssignment {
-  /**
-   * @internal
-   */
+  /** @internal */
   sign: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   value: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   inverted: boolean;
-  /**
-   * @internal
-   */
+  /** @internal */
   constructor(sign, value, inverted?) {
     /**
      * Gets the sign of the assignment operation.

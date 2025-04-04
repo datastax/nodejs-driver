@@ -277,9 +277,7 @@ function readDate(buffer: Buffer, offset: number): Date {
 class DateRangeBound {
   date: Date;
   precision: number;
-  /**
-   * @internal
-   */
+  /** @internal */
   static unbounded: Readonly<DateRangeBound>;
   /**
    * Represents a date range boundary, composed by a <code>Date</code> and a precision.
@@ -460,9 +458,7 @@ class DateRangeBound {
     }
     return datesEqual(other.date, this.date);
   }
-  /**
-   * @internal
-   */
+  /** @internal */
   isUnbounded() {
     return (this.precision === -1);
   }

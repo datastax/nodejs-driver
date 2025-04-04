@@ -21,17 +21,11 @@ import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structu
 
 
 class EnumValue {
-  /**
-   * @internal
-   */
+  /** @internal */
   typeName: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   elementName: any;
-  /**
-   * @internal
-   */
+  /** @internal */
   constructor(typeName, elementName) {
     this.typeName = typeName;
     this.elementName = elementName;

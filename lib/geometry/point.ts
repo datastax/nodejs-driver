@@ -26,13 +26,9 @@ import Geometry from "./geometry";
  * @alias module:geometry~Point
  */
 class Point extends Geometry {
-  /**
-   * @internal
-   */
+  /** @internal */
   x: number;
-  /**
-   * @internal
-   */
+  /** @internal */
   y: number;
 
   /**
@@ -128,9 +124,7 @@ class Point extends Geometry {
     return util.format("POINT (%d %d)", this.x, this.y);
   }
 
-  /**
-   * @internal
-   */
+  /** @internal */
   useBESerialization(): boolean {
     return false;
   }

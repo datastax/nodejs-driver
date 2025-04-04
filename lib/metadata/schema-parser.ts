@@ -129,7 +129,7 @@ abstract class SchemaParser {
    * @param {Boolean} waitReconnect
    * @returns {Promise<Object<string, Object>>}
    */
-  abstract getKeyspaces(waitReconnect: boolean): Promise<{ [s: string]: object; }>;
+  abstract getKeyspaces(waitReconnect: boolean): Promise<{ [name: string]: Keyspace}>;
 
   /**
    * @param {String} keyspaceName
@@ -990,13 +990,13 @@ function pruneDenseTableColumns(tableInfo: TableMetadata) {
   let i = tableInfo.columns.length;
   while (i--) {
     const c = tableInfo.columns[i];
-    if (!c.isStatic && c.type.code === types.dataTypes.custom && c.type.info === 'empty') {
+    if (!c["isStatic"] && c.type.code === types.dataTypes.custom && c.type.info === 'empty') {
       // remove "value blob" regular column
       tableInfo.columns.splice(i, 1);
       delete tableInfo.columnsByName[c.name];
       continue;
     }
-    c.isStatic = false;
+    c["isStatic"] = false;
   }
 }
 
@@ -1195,5 +1195,5 @@ export {
   getByVersion,
   isDoneForToken,
   SchemaParser,
-  Keyspace
+  type Keyspace
 };

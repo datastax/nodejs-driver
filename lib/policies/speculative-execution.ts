@@ -58,7 +58,7 @@ class SpeculativeExecutionPolicy {
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions() : Map<string, number> {
+  getOptions() : Map<string, any> {
     return new Map();
   }
 }
@@ -86,7 +86,7 @@ class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
       }
     };
   }
-  newPlan() {
+  newPlan(keyspace: string, queryInfo: string | Array<string>): { nextExecution: () => number; }{
     return this._plan;
   }
 }
@@ -119,7 +119,8 @@ class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
     this._delay = delay;
     this._maxSpeculativeExecutions = maxSpeculativeExecutions;
   }
-  newPlan() {
+  
+  newPlan(keyspace: string, queryInfo: string | Array<string>): { nextExecution: () => number; }{
     let executions = 0;
     const self = this;
     return {
@@ -134,7 +135,7 @@ class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
   /**
    * Gets an associative array containing the policy options.
    */
-  getOptions(): Map<string, number> {
+  getOptions(): Map<string, any> {
     return new Map([
       ['delay', this._delay],
       ['maxSpeculativeExecutions', this._maxSpeculativeExecutions]

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import type { AuthenticationError, OperationTimedOutError, ResponseError } from "../errors";
 import ClientMetrics from "./client-metrics";
 import EventEmitter from "events";
 
 
 
+//TODO: The fields like errors were not exposed. I believe we should.
 /**
  * A default implementation of [ClientMetrics]{@link module:metrics~ClientMetrics} that exposes the driver events as
  * Node.js events.
@@ -131,78 +133,78 @@ class DefaultMetrics extends ClientMetrics {
   }
 
   /** @override */
-  onAuthenticationError(e) {
+  onAuthenticationError(e: Error | AuthenticationError) {
     this.errors.authentication.emit('increment', e);
     this.errors.emit('increment', e);}
 
   /** @override */
-  onConnectionError(e) {
+  onConnectionError(e: Error) {
     this.errors.connection.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onReadTimeoutError(e) {
+  onReadTimeoutError(e : ResponseError) {
     this.errors.readTimeout.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onWriteTimeoutError(e) {
+  onWriteTimeoutError(e: ResponseError) {
     this.errors.writeTimeout.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onUnavailableError(e) {
+  onUnavailableError(e: Error) {
     this.errors.unavailable.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onClientTimeoutError(e) {
+  onClientTimeoutError(e: OperationTimedOutError) {
     this.errors.clientTimeout.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onOtherError(e) {
+  onOtherError(e: Error) {
     this.errors.other.emit('increment', e);
     this.errors.emit('increment', e);
   }
 
   /** @override */
-  onClientTimeoutRetry(e) {
+  onClientTimeoutRetry(e: Error) {
     this.retries.clientTimeout.emit('increment', e);
     this.retries.emit('increment', e);
   }
 
   /** @override */
-  onOtherErrorRetry(e) {
+  onOtherErrorRetry(e: Error) {
     this.retries.other.emit('increment', e);
     this.retries.emit('increment', e);
   }
 
   /** @override */
-  onReadTimeoutRetry(e) {
+  onReadTimeoutRetry(e: Error) {
     this.retries.readTimeout.emit('increment', e);
     this.retries.emit('increment', e);
   }
 
   /** @override */
-  onUnavailableRetry(e) {
+  onUnavailableRetry(e: Error) {
     this.retries.unavailable.emit('increment', e);
     this.retries.emit('increment', e);
   }
 
   /** @override */
-  onWriteTimeoutRetry(e) {
+  onWriteTimeoutRetry(e: Error) {
     this.retries.writeTimeout.emit('increment', e);
     this.retries.emit('increment', e);
   }
 
   /** @override */
-  onIgnoreError(e) {
+  onIgnoreError(e: Error) {
     this.ignoredErrors.emit('increment', e);
   }
 
@@ -212,12 +214,12 @@ class DefaultMetrics extends ClientMetrics {
   }
 
   /** @override */
-  onSuccessfulResponse(latency) {
+  onSuccessfulResponse(latency: number[]) {
     this.responses.success.emit('increment', latency);
   }
 
   /** @override */
-  onResponse(latency) {
+  onResponse(latency: number[]) {
     this.responses.emit('increment', latency);
   }
 }

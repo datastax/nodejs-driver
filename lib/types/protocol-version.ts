@@ -26,6 +26,29 @@ const v300 = VersionNumber.parse('3.0.0');
 const v510 = VersionNumber.parse('5.1.0');
 const v600 = VersionNumber.parse('6.0.0');
 
+//TODO
+/**
+ * This was the existing .d.ts
+ *     export enum protocolVersion {
+        v1 = 0x01,
+        v2 = 0x02,
+        v3 = 0x03,
+        v4 = 0x04,
+        v5 = 0x05,
+        v6 = 0x06,
+        dseV1 = 0x41,
+        dseV2 = 0x42,
+        maxSupported = dseV2,
+        minSupported = v1
+    }
+
+    export namespace protocolVersion {
+        export function isSupported(version: protocolVersion): boolean;
+    }
+ * Need to think about whether we break any API
+ */
+
+
 /**
  * Contains information for the different protocol versions supported by the driver.
  * @type {Object}

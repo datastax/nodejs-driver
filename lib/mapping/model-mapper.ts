@@ -35,9 +35,7 @@ class ModelMapper<T=any> {
    * @type {ModelBatchMapper}
    */
   batching: ModelBatchMapper;
-  /**
-   * @internal
-   */
+  /** @internal */
   constructor(name, handler) {
     this.name = name;
     this._handler = handler;

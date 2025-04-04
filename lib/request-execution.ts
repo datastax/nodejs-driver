@@ -79,7 +79,7 @@ const metricsRetryHandlers = new Map([
 
 type DecisionInfo = {
   decision: number;
-  consistency?: typeof consistencies;
+  consistency?: consistencies;
   useCurrentHost?: boolean;
 }
 
@@ -421,7 +421,7 @@ class RequestExecution {
    * @param {Object} [meta]
    * @private
    */
-  _retry(consistency: typeof consistencies, useCurrentHost: boolean, meta?: object) {
+  _retry(consistency: consistencies, useCurrentHost: boolean, meta?: object) {
     if (this._cancelled) {
       // No point in retrying
       return;

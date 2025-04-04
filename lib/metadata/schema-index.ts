@@ -18,12 +18,12 @@ import utils from "../utils";
 import types, { Row } from "../types/index";
 
 
-/** @private */
-const kind = {
-  custom: 0,
-  keys: 1,
-  composites: 2
-} as const;
+enum IndexKind {
+  custom = 0,
+  keys = 1,
+  composites = 2
+}
+
 /**
  * @classdesc Describes a CQL index.
  * @alias module:metadata~Index
@@ -41,9 +41,9 @@ class Index {
   target: string;
   /**
    * A numeric value representing index kind (0: custom, 1: keys, 2: composite);
-   * @type {Number}
+   * @type {IndexKind}
    */
-  kind: number;
+  kind: IndexKind;
   /**
    * An associative array containing the index options
    * @type {Object}
@@ -52,6 +52,7 @@ class Index {
   /**
    * Creates a new Index instance.
    * @classdesc Describes a CQL index.
+   * @internal
    * @param {String} name
    * @param {String} target
    * @param {Number|String} kind
@@ -83,6 +84,7 @@ class Index {
   /**
    * Parses Index information from rows in the 'system_schema.indexes' table
    * @deprecated It will be removed in the next major version.
+   * @internal
    * @param {Array.<Row>} indexRows
    * @returns {Array.<Index>}
    */
@@ -98,6 +100,7 @@ class Index {
   /**
    * Parses Index information from rows in the legacy 'system.schema_columns' table.
    * @deprecated It will be removed in the next major version.
+   * @internal
    * @param {Array.<Row>} columnRows
    * @param {Object.<String, {name, type}>} columnsByName
    * @returns {Array.<Index>}
@@ -135,21 +138,21 @@ class Index {
    * @returns {Boolean}
    */
   isCompositesKind(): boolean {
-    return this.kind === kind.composites;
+    return this.kind === IndexKind.composites;
   }
   /**
    * Determines if the index is of keys kind
    * @returns {Boolean}
    */
   isKeysKind(): boolean {
-    return this.kind === kind.keys;
+    return this.kind === IndexKind.keys;
   }
   /**
    * Determines if the index is of custom kind
    * @returns {Boolean}
    */
   isCustomKind(): boolean {
-    return this.kind === kind.custom;
+    return this.kind === IndexKind.custom;
   }
 }
 
@@ -159,11 +162,11 @@ class Index {
  * @returns {Number}
  * @private
  */
-function getKindByName(name: string): number {
+function getKindByName(name: string): IndexKind {
   if (!name) {
-    return kind.custom;
+    return IndexKind.custom;
   }
-  return kind[name.toLowerCase()];
+  return IndexKind[name.toLowerCase()];
 }
 
 export default Index;

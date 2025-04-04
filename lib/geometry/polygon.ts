@@ -34,9 +34,7 @@ import LineString from "./line-string";
  * @alias module:geometry~Polygon
  */
 class Polygon extends Geometry {
-  /**
-   * @internal
-   */
+  /** @internal */
   rings: ReadonlyArray<ReadonlyArray<Point>>;
 
   //TODO: exposed as constructor(...args: Point[]); but clearly constructor(...args: Point[][])
@@ -190,9 +188,7 @@ class Polygon extends Geometry {
     return true;
   }
 
-  /**
-   * @internal
-   */
+  /** @internal */
   useBESerialization(): boolean {
     return false;
   }

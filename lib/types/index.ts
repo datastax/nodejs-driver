@@ -32,6 +32,7 @@ import ResultStream from './result-stream';
 import Row from './row';
 import Tuple from './tuple';
 import Vector from "./vector";
+import type { DataTypeInfo } from "../encoder";
 
 /**
  * Consistency levels
@@ -48,19 +49,19 @@ import Vector from "./vector";
  * @property {Number} localSerial Same as serial but confined to the data center. A write must be written conditionally to the commit log and memtable on a quorum of replica nodes in the same data center.
  * @property {Number} localOne Similar to One but only within the DC the coordinator is in.
  */
-const consistencies = {
-  any:          0x00,
-  one:          0x01,
-  two:          0x02,
-  three:        0x03,
-  quorum:       0x04,
-  all:          0x05,
-  localQuorum:  0x06,
-  eachQuorum:   0x07,
-  serial:       0x08,
-  localSerial:  0x09,
-  localOne:     0x0a
-} as const;
+enum consistencies {
+  any = 0x00,
+  one = 0x01,
+  two = 0x02,
+  three = 0x03,
+  quorum = 0x04,
+  all = 0x05,
+  localQuorum = 0x06,
+  eachQuorum = 0x07,
+  serial = 0x08,
+  localSerial = 0x09,
+  localOne = 0x0a
+}
 
 /**
  * Mapping of consistency level codes to their string representation.
@@ -109,78 +110,81 @@ consistencyToString[consistencies.localOne] = 'LOCAL_ONE';
  * @property {Number} udt User-defined type.
  * @property {Number} tuple A sequence of values.
  */
-const dataTypes = {
-  custom:     0x0000,
-  ascii:      0x0001,
-  bigint:     0x0002,
-  blob:       0x0003,
-  boolean:    0x0004,
-  counter:    0x0005,
-  decimal:    0x0006,
-  double:     0x0007,
-  float:      0x0008,
-  int:        0x0009,
-  text:       0x000a,
-  timestamp:  0x000b,
-  uuid:       0x000c,
-  varchar:    0x000d,
-  varint:     0x000e,
-  timeuuid:   0x000f,
-  inet:       0x0010,
-  date:       0x0011,
-  time:       0x0012,
-  smallint:   0x0013,
-  tinyint:    0x0014,
-  duration:   0x0015,
-  list:       0x0020,
-  map:        0x0021,
-  set:        0x0022,
-  udt:        0x0030,
-  tuple:      0x0031,
-  /**
-   * Returns the typeInfo of a given type name
-   * @param {string} name
-   * @returns {import('../encoder').ColumnInfo}
-   */
-  getByName:  function(name) {
-    name = name.toLowerCase();
-    if (name.indexOf('<') > 0) {
-      const listMatches = /^(list|set)<(.+)>$/.exec(name);
-      if (listMatches) {
-        return { code: this[listMatches[1]], info: this.getByName(listMatches[2])};
-      }
-      const mapMatches = /^(map)< *(.+) *, *(.+)>$/.exec(name);
-      if (mapMatches) {
-        return { code: this[mapMatches[1]], info: [this.getByName(mapMatches[2]), this.getByName(mapMatches[3])]};
-      }
-      const udtMatches = /^(udt)<(.+)>$/.exec(name);
-      if (udtMatches) {
-        //udt name as raw string
-        return { code: this[udtMatches[1]], info: udtMatches[2]};
-      }
-      const tupleMatches = /^(tuple)<(.+)>$/.exec(name);
-      if (tupleMatches) {
-        //tuple info as an array of types
-        return { code: this[tupleMatches[1]], info: tupleMatches[2].split(',').map(function (x) {
-          return this.getByName(x.trim());
-        }, this)};
-      }
-      const vectorMatches = /^vector<\s*(.+)\s*,\s*(\d+)\s*>$/.exec(name);
-      if(vectorMatches){
-        return {
-          code: this.custom,
-          customTypeName: 'vector',
-          info: [this.getByName(vectorMatches[1]), parseInt(vectorMatches[2], 10)]
-        };
-      }
+enum dataTypes {
+  custom = 0x0000,
+  ascii = 0x0001,
+  bigint = 0x0002,
+  blob = 0x0003,
+  boolean = 0x0004,
+  counter = 0x0005,
+  decimal = 0x0006,
+  double = 0x0007,
+  float = 0x0008,
+  int = 0x0009,
+  text = 0x000a,
+  timestamp = 0x000b,
+  uuid = 0x000c,
+  varchar = 0x000d,
+  varint = 0x000e,
+  timeuuid = 0x000f,
+  inet = 0x0010,
+  date = 0x0011,
+  time = 0x0012,
+  smallint = 0x0013,
+  tinyint = 0x0014,
+  duration = 0x0015,
+  list = 0x0020,
+  map = 0x0021,
+  set = 0x0022,
+  udt = 0x0030,
+  tuple = 0x0031
+}
+
+/**
+ * Returns the typeInfo of a given type name
+ * @param {string} name
+ * @returns {DateTypeInfo}
+ */
+const getDataTypeByName = function (name: string): DataTypeInfo {
+  name = name.toLowerCase();
+  if (name.indexOf('<') > 0) {
+    const listMatches = /^(list|set)<(.+)>$/.exec(name);
+    if (listMatches) {
+      return { code: dataTypes[listMatches[1]], info: getDataTypeByName(listMatches[2]) };
     }
-    const typeInfo = { code: this[name]};
-    if (typeof typeInfo.code !== 'number') {
-      throw new TypeError('Data type with name ' + name + ' not valid');
+    const mapMatches = /^(map)< *(.+) *, *(.+)>$/.exec(name);
+    if (mapMatches) {
+      return { code: dataTypes[mapMatches[1]], info: [getDataTypeByName (mapMatches[2]), getDataTypeByName(mapMatches[3])] };
     }
-    return typeInfo;
+    const udtMatches = /^(udt)<(.+)>$/.exec(name);
+    if (udtMatches) {
+      //udt name as raw string
+      return { code: dataTypes[udtMatches[1]], info: udtMatches[2] };
+    }
+    const tupleMatches = /^(tuple)<(.+)>$/.exec(name);
+    if (tupleMatches) {
+      //tuple info as an array of types
+      return {
+        code: dataTypes[tupleMatches[1]], info: tupleMatches[2].split(',').map(function (x) {
+          return getDataTypeByName(x.trim());
+        }, dataTypes)
+      };
+    }
+    const vectorMatches = /^vector<\s*(.+)\s*,\s*(\d+)\s*>$/.exec(name);
+    if (vectorMatches) {
+      return {
+        code: dataTypes.custom,
+        customTypeName: 'vector',
+        info: [getDataTypeByName(vectorMatches[1]), parseInt(vectorMatches[2], 10)]
+      };
+    }
   }
-} as const;
+  const typeInfo = { code: dataTypes[name] };
+  if (typeof typeInfo.code !== 'number') {
+    throw new TypeError('Data type with name ' + name + ' not valid');
+  }
+  return typeInfo;
+};
 
 /**
  * Map of Data types by code
@@ -190,7 +194,7 @@ const dataTypes = {
  */
 const _dataTypesByCode = (function () {
   /**@type {Record<number, string>} */
-  const result = {};
+  const result: Record<number, string> = {};
   for (const key in dataTypes) {
     if (!dataTypes.hasOwnProperty(key)) {
       continue;
@@ -211,11 +215,11 @@ const _dataTypesByCode = (function () {
  * @property {Number} remote A remote node.
  * @property {Number} ignored A node that is meant to be ignored.
  */
-const distance = {
-  local:    0,
-  remote:   1,
-  ignored:  2
-};
+enum distance {
+  local= 0,
+  remote= 1,
+  ignored= 2
+}
 
 /**
  * An integer byte that distinguish the actual message from and to Cassandra
@@ -284,27 +288,27 @@ const protocolEvents = {
  * @property {Number} alreadyExists The query attempted to create a schema element (i.e. keyspace, table) that already exists.
  * @property {Number} unprepared Can be thrown while a prepared statement tries to be executed if the provided statement is not known by the coordinator.
  */
-const responseErrorCodes = {
-  serverError:            0x0000,
-  protocolError:          0x000A,
-  badCredentials:         0x0100,
-  unavailableException:   0x1000,
-  overloaded:             0x1001,
-  isBootstrapping:        0x1002,
-  truncateError:          0x1003,
-  writeTimeout:           0x1100,
-  readTimeout:            0x1200,
-  readFailure:            0x1300,
-  functionFailure:        0x1400,
-  writeFailure:           0x1500,
-  syntaxError:            0x2000,
-  unauthorized:           0x2100,
-  invalid:                0x2200,
-  configError:            0x2300,
-  alreadyExists:          0x2400,
-  unprepared:             0x2500,
-  clientWriteFailure:     0x8000,
-};
+enum responseErrorCodes {
+  serverError = 0x0000,
+  protocolError = 0x000A,
+  badCredentials = 0x0100,
+  unavailableException = 0x1000,
+  overloaded = 0x1001,
+  isBootstrapping = 0x1002,
+  truncateError = 0x1003,
+  writeTimeout = 0x1100,
+  readTimeout = 0x1200,
+  readFailure = 0x1300,
+  functionFailure = 0x1400,
+  writeFailure = 0x1500,
+  syntaxError = 0x2000,
+  unauthorized = 0x2100,
+  invalid = 0x2200,
+  configError = 0x2300,
+  alreadyExists = 0x2400,
+  unprepared = 0x2500,
+  clientWriteFailure = 0x8000
+}
 
 /**
  * Type of result included in a response
@@ -360,7 +364,7 @@ let _timestampTicks = 0;
  * @param {Number} [offset]
  * @deprecated Use [TimeUuid]{@link module:types~TimeUuid} instead
  */
-function timeuuid(options, buffer, offset) {
+function timeuuid(options: { msecs; node; clockseq; nsecs; }, buffer: Buffer, offset: number) {
   let date;
   let ticks;
   let nodeId;
@@ -628,6 +632,7 @@ export default {
   consistencyToString,
   dataTypes,
   getDataTypeNameByCode,
+  getDataTypeByName,
   distance,
   frameFlags,
   protocolEvents,
@@ -654,7 +659,7 @@ export default {
   Uuid,
   unset,
   generateTimestamp,
-  Vector
+  Vector,
 };
 
 export {
@@ -662,7 +667,9 @@ export {
   consistencies,
   consistencyToString,
   dataTypes,
+  distance,
   getDataTypeNameByCode,
+  getDataTypeByName,
   frameFlags,
   protocolEvents,
   protocolVersion,
@@ -690,6 +697,3 @@ export {
   generateTimestamp,
   Vector
 };
-
-// export distance
-export { distance };

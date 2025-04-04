@@ -44,7 +44,7 @@ class TableMetadata extends DataCollection {
    * </p>
    * @type {Number|null}
    */
-  indexInterval: number | null;
+  indexInterval?: number;
   /**
    * Determines  whether the table uses the COMPACT STORAGE option.
    * @type {Boolean}
@@ -60,15 +60,16 @@ class TableMetadata extends DataCollection {
    * Determines whether the Change Data Capture (CDC) flag is set for the table.
    * @type {Boolean|null}
    */
-  cdc: boolean | null;
+  cdc?: boolean;
 
   /**
    * Determines whether the table is a virtual table or not.
    * @type {Boolean}
    */
-  virtual: boolean = false;
+  virtual: boolean;
   /**
    * Creates a new instance of TableMetadata
+   * @internal
    * @param {String} name Name of the Table
    * @constructor
    */

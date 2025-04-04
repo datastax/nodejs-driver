@@ -22,7 +22,7 @@ import { GraphExecutionOptions, graphProtocol } from "./options";
 import { type ClientOptions } from "../../client";
 import type Client from "../../client";
 import type { Host } from "../../host";
-import type { GraphQueryOptions } from ".";
+import type { GraphQueryOptions } from "../../client";
 
 
 const graphLanguageGroovyString = 'gremlin-groovy';

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import utils from "./utils";
-import types, { Long } from "./types/index";
+import types, { Long, type consistencies } from "./types/index";
 import errors from "./errors";
 import type { Host } from "./host";
 import type { QueryOptions } from "./client";
@@ -65,7 +65,7 @@ class ExecutionOptions {
    * @abstract
    * @returns {Number}
    */
-  getConsistency(): number {
+  getConsistency(): consistencies {
     return null;
   }
 

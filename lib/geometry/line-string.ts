@@ -27,9 +27,7 @@ import Point from "./point";
  * @extends {Geometry}
  */
 class LineString extends Geometry {
-  /**
-   * @internal
-   */
+  /** @internal */
   points: ReadonlyArray<Point>;
 
   /**

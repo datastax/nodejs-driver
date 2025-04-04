@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
+
 import DataCollection from "./data-collection";
 
 
@@ -42,6 +42,7 @@ class MaterializedView extends DataCollection {
   includeAllColumns: boolean;
   /**
    * Creates a new MaterializedView.
+   * @internal
    * @param {String} name Name of the View.
    * @augments {module:metadata~DataCollection}
    * @constructor

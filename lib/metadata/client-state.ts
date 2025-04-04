@@ -29,12 +29,13 @@ import type Client from "../client";
  * @constructor
  */
 class ClientState {
-  _hosts: Host[];
-  _openConnections: { [key: string]: number; };
-  _inFlightQueries: { [key: string]: number; };
+  private _hosts: Host[];
+  private _openConnections: { [key: string]: number; };
+  private _inFlightQueries: { [key: string]: number; };
 
   /**
    * Creates a new instance of <code>ClientState</code>.
+   * @internal
    * @param {Array<Host>} hosts
    * @param {Object.<String, Number>} openConnections
    * @param {Object.<String, Number>} inFlightQueries
@@ -86,7 +87,7 @@ class ClientState {
   /**
    * Returns the string representation of the instance.
    */
-  toString() {
+  toString(): string {
     return util.format('{"hosts": %j, "openConnections": %j, "inFlightQueries": %j}',
       this._hosts.map(function (h) { return h.address; }), this._openConnections, this._inFlightQueries);
   }

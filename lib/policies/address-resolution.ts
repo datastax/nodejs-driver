@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import dns from "dns";
-import util from "util";
 import utils from "../utils";
 
 /**
@@ -118,6 +117,7 @@ class EC2MultiRegionTranslator extends AddressTranslator {
     });
   }
 
+  //TODO: not exposed. I believe it should.
   /**
    * Log method called to log errors that occurred while performing dns resolution.
    * You can assign your own method to the class instance to do proper logging.

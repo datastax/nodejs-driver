@@ -22,10 +22,11 @@ import type { ExecutionOptions } from "../execution-options";
  */
 class RetryPolicy {
 
+  //TODO: alive was in type boolean. But I think it's number
   /**
    * Determines what to do when the driver gets an UnavailableException response from a Cassandra node.
    * @param {OperationInfo} info
-   * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+   * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
    * the exception.
    * @param {Number} required The number of replicas whose response is required to achieve the
    * required [consistency]{@link module:types~consistencies}.
@@ -33,7 +34,7 @@ class RetryPolicy {
    * (since an unavailable exception has been triggered, there will be alive &lt; required)
    * @returns {DecisionInfo}
    */
-  onUnavailable(info: OperationInfo, consistency: number, required: number, alive: number): DecisionInfo {
+  onUnavailable(info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo {
     if (info.nbRetry > 0) {
       return this.rethrowResult();
     }
@@ -43,7 +44,7 @@ class RetryPolicy {
   /**
    * Determines what to do when the driver gets a ReadTimeoutException response from a Cassandra node.
    * @param {OperationInfo} info
-   * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+   * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
    * the exception.
    * @param {Number} received The number of nodes having answered the request.
    * @param {Number} blockFor The number of replicas whose response is required to achieve the
@@ -51,7 +52,7 @@ class RetryPolicy {
    * @param {Boolean} isDataPresent When <code>false</code>, it means the replica that was asked for data has not responded.
    * @returns {DecisionInfo}
    */
-  onReadTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo {
+  onReadTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, isDataPresent: boolean): DecisionInfo {
     if (info.nbRetry > 0) {
       return this.rethrowResult();
     }
@@ -63,7 +64,7 @@ class RetryPolicy {
   /**
    * Determines what to do when the driver gets a WriteTimeoutException response from a Cassandra node.
    * @param {OperationInfo} info
-   * @param {Number} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+   * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
    * the exception.
    * @param {Number} received The number of nodes having acknowledged the request.
    * @param {Number} blockFor The number of replicas whose acknowledgement is required to achieve the required
@@ -72,7 +73,7 @@ class RetryPolicy {
    * / "BATCH" / "BATCH_LOG" / "UNLOGGED_BATCH" / "COUNTER").
    * @returns {DecisionInfo}
    */
-  onWriteTimeout(info: OperationInfo, consistency: number, received: number, blockFor: number, writeType: string): DecisionInfo {
+  onWriteTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, writeType: string): DecisionInfo {
     if (info.nbRetry > 0) {
       return this.rethrowResult();
     }
@@ -99,12 +100,12 @@ class RetryPolicy {
    * applied server-side</em>; a retry should only be attempted if the request is known to be idempotent.
    * </p>
    * @param {OperationInfo} info
-   * @param {Number|undefined} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
+   * @param {consistencies} consistency The [consistency]{@link module:types~consistencies} level of the query that triggered
    * the exception.
    * @param {Error} err The error that caused this request to fail.
    * @returns {DecisionInfo}
    */
-  onRequestError(info: OperationInfo, consistency: number | undefined, err: Error): DecisionInfo {
+  onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo {
     // The default implementation triggers a retry on the next host in the query plan with the same consistency level,
     // regardless of the statement's idempotence, for historical reasons.
     return this.retryResult(undefined, false);
@@ -112,12 +113,12 @@ class RetryPolicy {
 
   /**
    * Returns a {@link DecisionInfo} to retry the request with the given [consistency]{@link module:types~consistencies}.
-   * @param {Number|undefined} [consistency] When specified, it retries the request with the given consistency.
+   * @param {consistencies} [consistency] When specified, it retries the request with the given consistency.
    * @param {Boolean} [useCurrentHost] When specified, determines if the retry should be made using the same coordinator.
    * Default: true.
    * @returns {DecisionInfo}
    */
-  retryResult(consistency?: typeof consistencies, useCurrentHost: boolean = true): DecisionInfo {
+  retryResult(consistency?: consistencies, useCurrentHost: boolean = true): DecisionInfo {
     return {
       decision: RetryPolicy.retryDecision.retry,
       consistency,
@@ -132,20 +133,33 @@ class RetryPolicy {
   rethrowResult(): DecisionInfo {
     return { decision: RetryPolicy.retryDecision.rethrow };
   }
+}
 
-  /**
-   * Determines the retry decision for the retry policies.
-   * @type {Object}
-   * @property {Number} rethrow
-   * @property {Number} retry
-   * @property {Number} ignore
-   * @static
-   */
-  static retryDecision = {
-    rethrow: 0,
-    retry: 1,
-    ignore: 2,
-  } as const;
+//TODO: What is happening to the previous .d.ts?
+/**
+ *     namespace RetryDecision {
+    enum retryDecision {
+      ignore,
+      rethrow,
+      retry
+    }
+  }
+  */
+// This RetryDecision doesn't exist in JavaScript or anywhere else
+/**
+ * Determines the retry decision for the retry policies.
+ * @type {Object}
+ * @property {Number} rethrow
+ * @property {Number} retry
+ * @property {Number} ignore
+ * @static
+ */
+namespace RetryPolicy {
+  export enum retryDecision {
+    rethrow = 0,
+    retry = 1,
+    ignore = 2
+  }
 }
 
 /**
@@ -162,7 +176,7 @@ class RetryPolicy {
  * default retry policy instead.
  */
 class IdempotenceAwareRetryPolicy extends RetryPolicy {
-  _childPolicy: RetryPolicy;
+  private _childPolicy: RetryPolicy;
 
   /**
    * Creates a new instance of <code>IdempotenceAwareRetryPolicy</code>.
@@ -184,25 +198,36 @@ class IdempotenceAwareRetryPolicy extends RetryPolicy {
     this._childPolicy = childPolicy;
   }
 
-  onReadTimeout(info, consistency, received, blockFor, isDataPresent) {
+  onReadTimeout(
+    info: OperationInfo,
+    consistency: consistencies,
+    received: number,
+    blockFor: number,
+    isDataPresent: boolean): DecisionInfo {
     return this._childPolicy.onReadTimeout(info, consistency, received, blockFor, isDataPresent);
   }
 
-  onRequestError(info, consistency, err) {
+  onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo{
     if (info.executionOptions.isIdempotent()) {
       return this._childPolicy.onRequestError(info, consistency, err);
     }
     return this.rethrowResult();
   }
 
-  onUnavailable(info, consistency, required, alive) {
+  onUnavailable(
+    info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo{
     return this._childPolicy.onUnavailable(info, consistency, required, alive);
   }
 
   /**
    * If the query is not idempotent, it return a rethrow decision. Otherwise, it relies on the child policy to decide.
    */
-  onWriteTimeout(info, consistency, received, blockFor, writeType) {
+  onWriteTimeout(
+    info: OperationInfo,
+    consistency: consistencies,
+    received: number,
+    blockFor: number,
+    writeType: string): DecisionInfo {
     if (info.executionOptions.isIdempotent()) {
       return this._childPolicy.onWriteTimeout(info, consistency, received, blockFor, writeType);
     }
@@ -226,27 +251,38 @@ class FallthroughRetryPolicy extends RetryPolicy {
   /**
    * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
    */
-  onReadTimeout() {
+  onReadTimeout(
+    info: OperationInfo,
+    consistency: consistencies,
+    received: number,
+    blockFor: number,
+    isDataPresent: boolean): DecisionInfo {
     return this.rethrowResult();
   }
 
   /**
    * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
    */
-  onRequestError() {
+  onRequestError(info: OperationInfo, consistency: consistencies, err: Error): DecisionInfo{
     return this.rethrowResult();
   }
 
   /**
    * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
    */
-  onUnavailable() {
+  onUnavailable(
+    info: OperationInfo, consistency: consistencies, required: number, alive: number): DecisionInfo{
     return this.rethrowResult();
   }
   /**
    * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
    */
-  onWriteTimeout() {
+  onWriteTimeout(
+    info: OperationInfo,
+    consistency: consistencies,
+    received: number,
+    blockFor: number,
+    writeType: string): DecisionInfo {
     return this.rethrowResult();
   }
 }
@@ -265,7 +301,7 @@ class FallthroughRetryPolicy extends RetryPolicy {
  */
 type DecisionInfo = {
   decision: number;
-  consistency?: typeof consistencies;
+  consistency?: consistencies;
   useCurrentHost?: boolean;
 }
 

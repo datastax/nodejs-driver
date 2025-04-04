@@ -16,11 +16,11 @@
 import events from "events";
 import util from "util";
 import t, {Tokenizer} from "../tokenizer";
-import utils from "../utils";
+import utils, { type EmptyCallback, type ValueCallback } from "../utils";
 import errors from "../errors";
-import types, { Uuid } from "../types/index";
+import types, { Uuid, type consistencies, type InetAddress, type Long } from "../types/index";
 import requests from "../requests";
-import schemaParserFactory, {SchemaParser} from "./schema-parser";
+import schemaParserFactory, {SchemaParser, type Keyspace} from "./schema-parser";
 import promiseUtils from "../promise-utils";
 import { Token, TokenRange } from "../token";
 import { ExecutionOptions } from "../execution-options";
@@ -33,6 +33,28 @@ import SchemaFunction from "./schema-function";
 import Aggregate from "./aggregate";
 import { EventEmitter } from "stream";
 import DataCollection from "./data-collection";
+import type { DataTypeInfo } from "../encoder";
+import type TableMetadata from "./table-metadata";
+
+interface ColumnInfo {
+  name: string;
+  type: DataTypeInfo;
+}
+
+interface QueryTrace {
+  requestType: string;
+  coordinator: InetAddress;
+  parameters: { [key: string]: any };
+  startedAt: number | Long;
+  duration: number;
+  clientAddress: string;
+  events: Array<{ id: Uuid; activity: any; source: any; elapsed: any; thread: any }>;
+}
+
+interface Udt {
+  name: string;
+  fields: ColumnInfo[]
+}
 
 /**
  * @const
@@ -65,28 +87,40 @@ const _traceMaxAttemps = 5;
  */
 const _traceAttemptDelay = 400;
 
+//TODO: I enhanced the types from {code: number, info: any} to DataTypeInfo in some methods' signature in this class.
+//TODO: Also enhanced { name: string, strategy: string } to interface Keyspace
 /**
  * Represents cluster and schema information.
  * The metadata class acts as a internal state of the driver.
  */
 class Metadata {
-  keyspaces: {};
+
+  keyspaces: { [name: string]: Keyspace};
+  /** @internal */
   initialized: boolean;
   private _isDbaas: boolean;
   private _schemaParser: SchemaParser;
+  /** @internal */
   log: (type: string, info: string, furtherInfo?: any, options?: any) => void;
   private _preparedQueries: PreparedQueries;
+  /** @internal */
   tokenizer: Tokenizer;
+  /** @internal */
   primaryReplicas: {};
+  /** @internal */
   ring: any[];
+  /** @internal */
   tokenRanges: Set<TokenRange>;
+  /** @internal */
   ringTokensAsStrings: any[];
+  /** @internal */
   datacenters: {};
   private options: ClientOptions;
   private controlConnection: ControlConnection;
 
   /**
    * Creates a new instance of {@link Metadata}.
+   * @internal
    * @param {ClientOptions} options
    * @param {ControlConnection} controlConnection Control connection used to retrieve information.
    */
@@ -116,6 +150,7 @@ class Metadata {
       this.options, this.controlConnection, this.getUdt.bind(this), version, this._schemaParser);
   }
 
+  //TODO: not exposed. I believe it should.
   /**
    * Determines whether the cluster is provided as a service.
    * @returns {boolean} true when the cluster is provided as a service (DataStax Astra), <code>false<code> when it's a
@@ -221,7 +256,9 @@ class Metadata {
    * @param {String} name Name of the keyspace.
    * @param {Function} [callback] Optional callback.
    */
-  refreshKeyspace(name: string, callback?: Function) {
+  refreshKeyspace(name: string, callback: EmptyCallback): void;
+  refreshKeyspace(name: string): Promise<void>;
+  refreshKeyspace(name: string, callback?: EmptyCallback): void | Promise<void> {
     return promiseUtils.optionalCallback(this._refreshKeyspace(name), callback);
   }
 
@@ -229,7 +266,7 @@ class Metadata {
    * @param {String} name
    * @private
    */
-  async _refreshKeyspace(name: string) {
+  private async _refreshKeyspace(name: string) {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -261,7 +298,10 @@ class Metadata {
    * connected at the moment. Default: true.
    * @param {Function} [callback] Optional callback.
    */
-  refreshKeyspaces(waitReconnect: boolean | Function, callback: Function) {
+  refreshKeyspaces(waitReconnect: boolean, callback: EmptyCallback): void;
+  refreshKeyspaces(waitReconnect?: boolean): Promise<void>;
+  refreshKeyspaces(callback: EmptyCallback): void;
+  refreshKeyspaces(waitReconnect?: boolean | EmptyCallback, callback?: EmptyCallback): void | Promise<void> {
     if (typeof waitReconnect === 'function' || typeof waitReconnect === 'undefined') {
       callback = waitReconnect;
       waitReconnect = true;
@@ -294,7 +334,7 @@ class Metadata {
     }
   }
 
-  _getKeyspaceReplicas(keyspace) {
+  private _getKeyspaceReplicas(keyspace) {
     if (!keyspace.replicas) {
       //Calculate replicas the first time for the keyspace
       keyspace.replicas =
@@ -313,7 +353,7 @@ class Metadata {
    * @param {Buffer|Token|TokenRange} token Can be Buffer (serialized partition key), Token or TokenRange
    * @returns {Array}
    */
-  getReplicas(keyspaceName: string, token: Buffer | Token | TokenRange): Array<any> {
+  getReplicas(keyspaceName: string, token: Buffer | Token | TokenRange): Array<Host> {
     if (!this.ring) {
       return null;
     }
@@ -415,9 +455,9 @@ class Metadata {
    * Constructs a TokenRange from the given start and end tokens.
    * @param {Token} start
    * @param {Token} end
-   * @returns TokenRange build range spanning from start (exclusive) to end (inclusive).
+   * @returns {TokenRange} build range spanning from start (exclusive) to end (inclusive).
    */
-  newTokenRange(start: Token, end: Token) {
+  newTokenRange(start: Token, end: Token): TokenRange {
     if (!this.tokenizer) {
       throw new Error('Partitioner not established.  This should only happen if metadata was disabled or you have not connected yet.');
     }
@@ -439,7 +479,7 @@ class Metadata {
    * Clears the internal state related to the prepared statements.
    * Following calls to the Client using the prepare flag will re-prepare the statements.
    */
-  clearPrepared() {
+  clearPrepared():void {
     this._preparedQueries.clear();
   }
 
@@ -459,7 +499,7 @@ class Metadata {
   }
 
   /** @ignore @internal */
-  _uninitializedError() {
+  private _uninitializedError() {
     return new Error('Metadata has not been initialized.  This could only happen if you have not connected yet.');
   }
 
@@ -477,7 +517,9 @@ class Metadata {
    * @param {String} name Name of the UDT.
    * @param {Function} [callback] The callback to invoke when retrieval completes.
    */
-  getUdt(keyspaceName: string, name: string, callback?: Function) {
+  getUdt(keyspaceName: string, name: string, callback: ValueCallback<Udt>): void;
+  getUdt(keyspaceName: string, name: string): Promise<Udt>;
+  getUdt(keyspaceName: string, name: string, callback?: ValueCallback<Udt>): void | Promise<Udt> {
     return promiseUtils.optionalCallback(this._getUdt(keyspaceName, name), callback);
   }
 
@@ -487,7 +529,7 @@ class Metadata {
    * @returns {Promise<Object|null>}
    * @private
    */
-  async _getUdt(keyspaceName: string, name: string): Promise<object | null> {
+  private async _getUdt(keyspaceName: string, name: string): Promise<object | null> {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -517,7 +559,9 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link TableMetadata} as
    * second parameter.
    */
-  getTable(keyspaceName: string, name: string, callback?: Function) {
+  getTable(keyspaceName: string, name: string, callback: ValueCallback<TableMetadata>): void;
+  getTable(keyspaceName: string, name: string): Promise<TableMetadata>;
+  getTable(keyspaceName: string, name: string, callback?: ValueCallback<TableMetadata>): void | Promise<TableMetadata> {
     return promiseUtils.optionalCallback(this._getTable(keyspaceName, name), callback);
   }
 
@@ -526,7 +570,7 @@ class Metadata {
    * @param {String} name
    * @private
    */
-  async _getTable(keyspaceName: string, name: string) {
+  private async _getTable(keyspaceName: string, name: string) {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -558,7 +602,9 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link SchemaFunction}
    * as second parameter.
    */
-  getFunctions(keyspaceName: string, name: string, callback: Function) {
+  getFunctions(keyspaceName: string, name: string, callback: ValueCallback<SchemaFunction[]>): void;
+  getFunctions(keyspaceName: string, name: string): Promise<SchemaFunction[]>;
+  getFunctions(keyspaceName: string, name: string, callback?: ValueCallback<SchemaFunction[]>): void | Promise<SchemaFunction[]> {
     return promiseUtils.optionalCallback(this._getFunctionsWrapper(keyspaceName, name), callback);
   }
 
@@ -567,7 +613,7 @@ class Metadata {
    * @param {String} name
    * @private
    */
-  async _getFunctionsWrapper(keyspaceName: string, name: string) {
+  private async _getFunctionsWrapper(keyspaceName: string, name: string) {
     if (!keyspaceName || !name) {
       throw new errors.ArgumentError('You must provide the keyspace name and cql function name to retrieve the metadata');
     }
@@ -591,7 +637,9 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link SchemaFunction} as second
    * parameter.
    */
-  getFunction(keyspaceName: string, name: string, signature: Array<string> | Array<{ code; info; }>, callback: Function) {
+  getFunction(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback: ValueCallback<SchemaFunction>): void;
+  getFunction(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>): Promise<SchemaFunction>;
+  getFunction(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback?: ValueCallback<SchemaFunction>): void | Promise<SchemaFunction> {
     return promiseUtils.optionalCallback(this._getSingleFunction(keyspaceName, name, signature, false), callback);
   }
 
@@ -610,7 +658,9 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the array of {@link Aggregate} as
    * second parameter.
    */
-  getAggregates(keyspaceName: string, name: string, callback: Function) {
+  getAggregates(keyspaceName: string, name: string, callback: ValueCallback<Aggregate[]>): void;
+  getAggregates(keyspaceName: string, name: string): Promise<Aggregate[]>;
+  getAggregates(keyspaceName: string, name: string, callback?: ValueCallback<Aggregate[]>): void | Promise<Aggregate[]> {
     return promiseUtils.optionalCallback(this._getAggregates(keyspaceName, name), callback);
   }
 
@@ -619,7 +669,7 @@ class Metadata {
    * @param {String} name
    * @private
    */
-  async _getAggregates(keyspaceName: string, name: string) {
+  private async _getAggregates(keyspaceName: string, name: string) {
     if (!keyspaceName || !name) {
       throw new errors.ArgumentError('You must provide the keyspace name and cql aggregate name to retrieve the metadata');
     }
@@ -642,7 +692,9 @@ class Metadata {
    * @param {Array.<String>|Array.<{code, info}>} signature Array of types of the parameters.
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link Aggregate} as second parameter.
    */
-  getAggregate(keyspaceName: string, name: string, signature: Array<string> | Array<{ code; info; }>, callback: Function) {
+  getAggregate(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback: ValueCallback<Aggregate>): void;
+  getAggregate(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>): Promise<Aggregate>;
+  getAggregate(keyspaceName: string, name: string, signature: string[] | Array<DataTypeInfo>, callback?: ValueCallback<Aggregate>): void | Promise<Aggregate> {
     return promiseUtils.optionalCallback(this._getSingleFunction(keyspaceName, name, signature, true), callback);
   }
 
@@ -662,7 +714,9 @@ class Metadata {
    * @param {Function} [callback] The callback with the err as a first parameter and the {@link MaterializedView} as
    * second parameter.
    */
-  getMaterializedView(keyspaceName: string, name: string, callback?: Function) {
+  getMaterializedView(keyspaceName: string, name: string, callback: ValueCallback<MaterializedView>): void;
+  getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView>; //TODO: It was getMaterializedView(keyspaceName: string, name: string, callback: EmptyCallback): Promise<MaterializedView>;
+  getMaterializedView(keyspaceName: string, name: string, callback?: ValueCallback<MaterializedView>): void | Promise<MaterializedView> {
     return promiseUtils.optionalCallback(this._getMaterializedView(keyspaceName, name), callback);
   }
 
@@ -672,7 +726,7 @@ class Metadata {
    * @returns {Promise<MaterializedView|null>}
    * @private
    */
-  async _getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView | null> {
+  private async _getMaterializedView(keyspaceName: string, name: string): Promise<MaterializedView | null> {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -695,7 +749,7 @@ class Metadata {
    * @returns {Promise<Map>}
    * @private
    */
-  async _getFunctions(keyspaceName: string, name: string, aggregate: boolean): Promise<Map<any, any>> {
+  private async _getFunctions(keyspaceName: string, name: string, aggregate: boolean): Promise<Map<any, any>> {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -719,7 +773,7 @@ class Metadata {
    * @returns {Promise<SchemaFunction|Aggregate|null>}
    * @private
    */
-  async _getSingleFunction(keyspaceName: string, name: string, signature: Array<any>, aggregate: boolean): Promise<SchemaFunction | Aggregate | null> {
+  private async _getSingleFunction(keyspaceName: string, name: string, signature: Array<any>, aggregate: boolean): Promise<SchemaFunction | Aggregate | null> {
     if (!keyspaceName || !name) {
       throw new errors.ArgumentError('You must provide the keyspace name and cql function name to retrieve the metadata');
     }
@@ -749,7 +803,11 @@ class Metadata {
    * @param {Number} [consistency] The consistency level to obtain the trace.
    * @param {Function} [callback] The callback with the err as first parameter and the query trace as second parameter.
    */
-  getTrace(traceId: Uuid, consistency: number, callback: Function) {
+  getTrace(traceId: Uuid, consistency: consistencies, callback: ValueCallback<QueryTrace>): void;
+  getTrace(traceId: Uuid, consistency: consistencies): Promise<QueryTrace>;
+  getTrace(traceId: Uuid, callback: ValueCallback<QueryTrace>): void;
+  getTrace(traceId: Uuid): Promise<QueryTrace>;
+  getTrace(traceId: Uuid, consistency?: consistencies | ValueCallback<QueryTrace>, callback?: ValueCallback<QueryTrace>): void | Promise<QueryTrace> {
     if (!callback && typeof consistency === 'function') {
       // Both callback and consistency are optional parameters
       // In this case, the second parameter is the callback
@@ -757,7 +815,7 @@ class Metadata {
       consistency = null;
     }
 
-    return promiseUtils.optionalCallback(this._getTrace(traceId, consistency), callback);
+    return promiseUtils.optionalCallback(this._getTrace(traceId, consistency as consistencies), callback);
   }
 
   /**
@@ -766,7 +824,7 @@ class Metadata {
    * @returns {Promise<Object>}
    * @private
    */
-  async _getTrace(traceId: Uuid, consistency: number): Promise<object> {
+  private async _getTrace(traceId: Uuid, consistency: consistencies): Promise<object> {
     if (!this.initialized) {
       throw this._uninitializedError();
     }
@@ -817,6 +875,7 @@ class Metadata {
 
   /**
    * Checks whether hosts that are currently up agree on the schema definition.
+   * @internal
    * <p>
    *   This method performs a one-time check only, without any form of retry; therefore
    *   <code>protocolOptions.maxSchemaAgreementWaitSeconds</code> setting does not apply in this case.
@@ -836,7 +895,7 @@ class Metadata {
    * Async-only version of check schema agreement.
    * @private
    */
-  async _checkSchemaAgreement() {
+  private async _checkSchemaAgreement() {
     const connection = this.controlConnection.connection;
     if (!connection) {
       return false;
@@ -868,7 +927,7 @@ class Metadata {
         continue;
       }
 
-      const type = types.dataTypes.getByName(hint);
+      const type = types.getDataTypeByName(hint);
       this._checkUdtTypes(udts, type as {code, info}, keyspace);
       hints[i] = type;
     }
@@ -888,7 +947,7 @@ class Metadata {
    * @param {string} keyspace
    * @private
    */
-  _checkUdtTypes(udts: Array<any>, type: {code; info}, keyspace: string) {
+  private _checkUdtTypes(udts: Array<any>, type: {code; info}, keyspace: string) {
     if (type.code === types.dataTypes.udt) {
       const udtName = type.info.split('.');
       type.info = {
@@ -1051,4 +1110,4 @@ class PreparedQueries {
 
 export default Metadata;
 
-export { Metadata, PreparedQueryInfo };
+export { type PreparedQueryInfo, type ColumnInfo};

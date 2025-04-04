@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import type { DataTypeInfo } from "../encoder";
+import type { dataTypes } from "../types";
+
 
 /**
  * @classdesc Describes a CQL function.
@@ -43,7 +46,7 @@ class SchemaFunction {
    * List of the function argument types.
    * @type {Array.<{code, info}>}
    */
-  argumentTypes: Array<{code: number, info?: (object|Array<any>|string)}>;
+  argumentTypes: Array<DataTypeInfo>;
   /**
    * Body of the function.
    * @type {String}
@@ -59,17 +62,22 @@ class SchemaFunction {
    * @type {String}
    */
   language: string;
+
+  // Was exposed as string, but I believe it should be DataTypeInfo
   /**
    * Type of the return value.
-   * @type {{code: number, info: (Object|Array|null)}}
+   * @type {DataTypeInfo}
    */
-  returnType: { code: number; info?: (object | Array<any> | string); };
+  returnType: DataTypeInfo;
+
+  //TODO: not exposed. I believe it should be.
   /**
    * Indicates whether or not this function is deterministic.  This means that
    * given a particular input, the function will always produce the same output.
    * @type {Boolean}
    */
   deterministic: boolean;
+  //TODO: not exposed. I believe it should be.
   /**
    * Indicates whether or not this function is monotonic on all of its
    * arguments.  This means that it is either entirely non-increasing or
@@ -82,6 +90,7 @@ class SchemaFunction {
    * @type {Boolean}
    */
   monotonic: boolean;
+  //TODO: not exposed. I believe it should be.
   /**
    * The argument names that the function is monotonic on.
    *
@@ -92,6 +101,7 @@ class SchemaFunction {
   monotonicOn: Array<string>;
   /**
    * Creates a new SchemaFunction.
+   * @internal
    * @alias module:metadata~SchemaFunction
    * @constructor
    */

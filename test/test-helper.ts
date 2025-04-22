@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 import { assert } from "chai";
-import sinon from "sinon";
-import util from "util";
-import path from "path";
-import policies from "../lib/policies/index";
-import types from "../lib/types/index";
-import utils from "../lib/utils";
+import { spawn } from "child_process";
 import http from "http";
+import path from "path";
+import sinon from "sinon";
+import Temp from "temp";
+import util from "util";
 import Client from "../lib/client";
+import { defaultOptions } from "../lib/client-options";
 import { Host, HostMap } from "../lib/host";
 import OperationState from "../lib/operation-state";
+import policies from "../lib/policies/index";
 import promiseUtils from "../lib/promise-utils";
-import { spawn, exec } from "child_process";
-import { defaultOptions } from "../lib/client-options";
-import Temp from "temp";
+import types from "../lib/types/index";
+import utils from "../lib/utils";
 
 
 
@@ -606,7 +606,7 @@ const helper = {
   isTracing: function () {
     return (process.env.TEST_TRACE === 'on');
   },
-  trace: function (format) {
+  trace: function (_format) {
     if (!helper.isTracing()) {
       return;
     }
@@ -868,7 +868,7 @@ const helper = {
             });
             return op;
           },
-          prepareOnceAsync: function (q, ks) {
+          prepareOnceAsync: function (q, _ks) {
             return new Promise((resolve, reject) => {
               h.prepareCalled++;
 
@@ -2044,4 +2044,5 @@ helper.OrderedLoadBalancingPolicy = OrderedLoadBalancingPolicy;
 
 export default helper;
 
-export { RetryMultipleTimes, OrderedLoadBalancingPolicy };
+export { OrderedLoadBalancingPolicy, RetryMultipleTimes };
+

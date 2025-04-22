@@ -99,7 +99,7 @@ describe('Client', function() {
           consistency_level: 'LOCAL_ONE'
         }
       }, () => {
-        client.execute(query, [], { host: host }, (err, result) => {
+        client.execute(query, [], { host: host }, (err, _result) => {
           assert.ok(err);
           helper.assertInstanceOf(err, errors.NoHostAvailableError);
           assert.strictEqual(Object.keys(err.innerErrors).length, 1);

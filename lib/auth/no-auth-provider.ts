@@ -16,7 +16,7 @@
 
 
 
-import { AuthProvider, Authenticator } from './provider';
+import { Authenticator, AuthProvider } from './provider';
 import { PlainTextAuthenticator } from './plain-text-auth-provider';
 import errors from "../errors";
 const dseAuthenticator = 'com.datastax.bdp.cassandra.auth.DseAuthenticator';

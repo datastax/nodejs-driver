@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import errors from "../errors";
 import type Client from "../client";
 

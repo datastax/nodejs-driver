@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 import { Readable, Stream } from "stream";
-import utils from "../utils";
 import Client from "../client";
-import { options } from "../requests";
+import utils from "../utils";
 
 
 

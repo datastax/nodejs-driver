@@ -25,8 +25,8 @@
  */
 
 import graph from "./graph/index";
-import { Edge, Element, Path, Property, Vertex, VertexProperty, asInt, asDouble, asFloat, asTimestamp, asUdt, direction, getCustomTypeSerializers,
-  GraphResultSet, GraphTypeWrapper, t, UdtGraphWrapper
+import { asDouble, asFloat, asInt, asTimestamp, asUdt, direction, Edge, Element, getCustomTypeSerializers, GraphResultSet, GraphTypeWrapper, Path, Property,
+  t, UdtGraphWrapper, Vertex, VertexProperty
 } from "./graph/index";
 import { DateRange } from "./search/index";
 

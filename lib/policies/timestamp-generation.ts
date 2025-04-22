@@ -64,6 +64,7 @@ class TimestampGenerator {
    * sent by the driver, letting the server to generate the timestamp.
    * @abstract
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next(client: Client): Long | number | null {
     throw new Error('next() must be implemented');
   }

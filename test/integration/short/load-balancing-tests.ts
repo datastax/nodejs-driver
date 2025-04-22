@@ -19,7 +19,7 @@ import helper from "../../test-helper";
 import Client from "../../../lib/client";
 import utils from "../../../lib/utils";
 import types from "../../../lib/types/index";
-import { RoundRobinPolicy, AllowListPolicy, TokenAwarePolicy} from "../../../lib/policies/load-balancing";
+import { AllowListPolicy, RoundRobinPolicy, TokenAwarePolicy} from "../../../lib/policies/load-balancing";
 
 
 const vdescribe = helper.vdescribe;
@@ -210,7 +210,7 @@ context('with a reusable 3 node cluster', function () {
     });
     it('should target the correct replica using user-provided Buffer routingKey', function (done) {
       // Use [0] which should map to node 1
-      testWithQueryOptions((client) => ({
+      testWithQueryOptions((_client) => ({
         routingKey: Buffer.from([0])
       }), '1', done);
     });

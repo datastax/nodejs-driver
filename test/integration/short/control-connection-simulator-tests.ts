@@ -108,7 +108,7 @@ function testWithNodes(nodeVersions, expectedProtocolVersion, maxVersion) {
         }, next);
       },
       function connect(next) {
-        client.connect(function (err, result) {
+        client.connect(function (err, _result) {
           if (expectedProtocolVersion < 3) {
             // An error is expected here since simulacron can't connect with < protocol v3.
             assert.ok(err);

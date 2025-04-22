@@ -17,7 +17,7 @@
 import assert from "assert";
 import helper from "../test-helper";
 import utils from "../../lib/utils";
-import { Uuid, TimeUuid } from "../../lib/types";
+import { TimeUuid, Uuid } from "../../lib/types";
 
 describe('Uuid', function () {
   describe('constructor', function () {

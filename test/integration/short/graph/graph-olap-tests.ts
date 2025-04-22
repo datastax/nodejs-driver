@@ -17,13 +17,13 @@
 import { assert } from "chai";
 import util from "util";
 import Client from "../../../../lib/client";
-import promiseUtils from "../../../../lib/promise-utils";
-import helper from "../../../test-helper";
-import loadBalancing from "../../../../lib/policies/load-balancing";
-import utils from "../../../../lib/utils";
 import graphModule from "../../../../lib/datastax/graph/index";
-import graphTestHelper from "./graph-test-helper";
 import { ExecutionProfile } from "../../../../lib/execution-profile";
+import loadBalancing from "../../../../lib/policies/load-balancing";
+import promiseUtils from "../../../../lib/promise-utils";
+import utils from "../../../../lib/utils";
+import helper from "../../../test-helper";
+import graphTestHelper from "./graph-test-helper";
 
 const vdescribe = helper.vdescribe;
 const DefaultLoadBalancingPolicy = loadBalancing.DefaultLoadBalancingPolicy;
@@ -196,7 +196,7 @@ async function waitForWorkers(client, expectedWorkers) {
     let master;
     try {
       master = await findSparkMasterAsync(client);
-    } catch (err) {
+    } catch (_err) {
       await promiseUtils.delay(delay);
       continue;
     }

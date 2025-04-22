@@ -63,7 +63,7 @@ vdescribe('5.0.0', 'Vector tests', function () {
 
             const updatedValues = data.value.slice();
             updatedValues[0] = updatedValues[1];
-            client.execute(`UPDATE ${table} SET ${subtypeStringToColumnName(data.subtypeString)} = ? WHERE id = ?`, [new Vector(updatedValues, data.subtypeString), id], { prepare: true }, function (err, result) {
+            client.execute(`UPDATE ${table} SET ${subtypeStringToColumnName(data.subtypeString)} = ? WHERE id = ?`, [new Vector(updatedValues, data.subtypeString), id], { prepare: true }, function (err, _result) {
               if (err) { return done(err); }
               done();
             });

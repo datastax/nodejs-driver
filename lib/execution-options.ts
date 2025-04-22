@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "./utils";
-import types, { Long, type consistencies } from "./types/index";
-import errors from "./errors";
-import type { Host } from "./host";
-import type { QueryOptions } from "./client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type Client from "./client";
+import type { QueryOptions } from "./client";
+import errors from "./errors";
 import { ExecutionProfile } from "./execution-profile";
+import type { Host } from "./host";
 import { LoadBalancingPolicy } from "./policies/load-balancing";
 import { RetryPolicy } from "./policies/retry";
+import types, { type consistencies, Long } from "./types/index";
+import utils from "./utils";
 
 
 const proxyExecuteKey = 'ProxyExecute';
@@ -633,4 +634,4 @@ function ifUndefined3(v1, v2, v3) {
   return v2 !== undefined ? v2 : v3;
 }
 
-export { ExecutionOptions, DefaultExecutionOptions, proxyExecuteKey };
+export { DefaultExecutionOptions, ExecutionOptions, proxyExecuteKey };

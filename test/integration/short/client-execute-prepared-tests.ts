@@ -1175,7 +1175,7 @@ describe('Client @SERVER_API', function () {
       }
       const client = setupInfo.client;
       return client.execute('select * from local', {prepare: true}, {keyspace: 'system'})
-        .then((result) => {
+        .then((_result) => {
           throw new Error('should have failed');
         })
         .catch(function (err) {

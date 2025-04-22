@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import type { MappingOptions } from ".";
-import { TableMappings, DefaultTableMappings } from "./table-mappings";
+import { DefaultTableMappings, TableMappings } from "./table-mappings";
 
 /**
  * Represents the parsed user information of the table mappings of a model.

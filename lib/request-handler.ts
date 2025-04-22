@@ -37,7 +37,7 @@ class RequestHandler {
   request: Request;
   executionOptions: ExecutionOptions;
   stackContainer: object;
-  triedHosts: {};
+  triedHosts: Record<string, Error | string>;
   speculativeExecutions: number;
   _hostIterator: Iterator<Host>;
   _resolveCallback: Function;

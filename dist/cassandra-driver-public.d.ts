@@ -3279,6 +3279,37 @@ declare class GraphResultSet implements Iterable<any> {
 /* Excluded from this release type: GraphTypeWrapper */
 
 /**
+ * Represents a unique set of values.
+ * @constructor
+ */
+declare class HashSet {
+    length: number;
+    items: object;
+    constructor();
+    /**
+     * Adds a new item to the set.
+     * @param {Object} key
+     * @returns {boolean} Returns true if it was added to the set; false if the key is already present.
+     */
+    add(key: any): boolean;
+    /**
+     * @returns {boolean} Returns true if the key is present in the set.
+     */
+    contains(key: any): boolean;
+    /**
+     * Removes the item from set.
+     * @param key
+     * @return {boolean} Returns true if the key existed and was removed, otherwise it returns false.
+     */
+    remove(key: any): boolean;
+    /**
+     * Returns an array containing the set items.
+     * @returns {Array}
+     */
+    toArray(): Array<any>;
+}
+
+/**
  * Represents a Cassandra node.
  * @extends EventEmitter
  */

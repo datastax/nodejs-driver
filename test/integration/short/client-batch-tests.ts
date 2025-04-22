@@ -565,7 +565,7 @@ describe('Client @SERVER_API', function () {
       ];
 
       return client.batch(queries, {prepare: true, keyspace: keyspace})
-        .then((result) =>
+        .then((_result) =>
           client.execute(util.format(selectQuery, table1Short), [id], {prepare: true, keyspace: keyspace})
         )
         .then((result) => {
@@ -591,7 +591,7 @@ describe('Client @SERVER_API', function () {
         {query: util.format(insertQuery, table1Short), params: [id, ts2, 2000]}
       ];
       return client.batch(queries, {prepare: true, keyspace: keyspace})
-        .then((result) => {
+        .then((_result) => {
           throw new Error('should have failed');
         })
         .catch(function (err) {

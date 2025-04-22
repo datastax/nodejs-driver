@@ -28,7 +28,7 @@ const _queueOverflowThreshold = 1000;
 class EventDebouncer {
   private _delay: number;
   private _logger: Function;
-  private _queue: { callbacks: undefined[]; keyspaces: {}; mainEvent?: {handler: Function} };
+  private _queue: { callbacks: undefined[]; keyspaces: object; mainEvent?: {handler: Function} };
   private _timeout: NodeJS.Timeout;
 
   /**

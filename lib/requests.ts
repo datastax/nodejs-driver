@@ -80,6 +80,7 @@ class Request {
    * @throws {TypeError}
    * @returns {Buffer}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   write(encoder: Encoder, streamId: number): Buffer {
     throw new Error('Method must be implemented');
   }

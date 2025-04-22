@@ -11,7 +11,7 @@ module.exports = {
   "parserOptions": {
     "ecmaVersion": 2017
   },
-  "extends": ["eslint:recommended", 'plugin:@typescript-eslint/recommended'],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/eslint-recommended", 'plugin:@typescript-eslint/recommended'],
   "rules": {
     "indent": [
       "error",
@@ -37,8 +37,16 @@ module.exports = {
     "strict": ["error", "global"],
     "array-callback-return": "error",
     "curly": "error",
-    "no-unused-vars": ["error", { "args": "none" }],
-    "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+    "no-prototype-builtins": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-duplicate-enum-values": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^_"
+    }],
+    "@typescript-eslint/no-unsafe-function-type": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "global-require": "error",
     "eqeqeq": ["error", "allow-null"],
 
@@ -73,7 +81,7 @@ module.exports = {
     "no-new-wrappers": "error",
     "no-octal-escape": "error",
     "no-proto": "error",
-    "no-redeclare": "error",
+    "no-redeclare": "off",
     "no-restricted-properties": ["error", {
       object: "arguments",
       property: "callee",
@@ -112,7 +120,19 @@ module.exports = {
     "yoda": "error",
     "constructor-super": "error",
     "require-await": "error",
-    "require-atomic-updates": "off"
+    "require-atomic-updates": "off",
+    "prefer-rest-params": "off",
+    "sort-imports": 
+    [
+      "error", 
+      { 
+        "ignoreCase": true, 
+        "ignoreDeclarationSort": true 
+      }
+    ], 
+    "@typescript-eslint/no-require-imports": "off",
+    "prefer-spread": "off",
+    "@typescript-eslint/no-unsafe-function-types": "off",
   },
   "globals": {
     "Buffer": false,

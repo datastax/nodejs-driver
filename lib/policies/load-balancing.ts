@@ -49,6 +49,7 @@ class LoadBalancingPolicy {
    * Returns the distance assigned by this policy to the provided host.
    * @param {Host} host
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDistance(host: Host): distance {
     return types.distance.local;
   }
@@ -316,7 +317,7 @@ class TokenAwareIterator {
   options: ExecutionOptions;
   localReplicas: any[];
   replicaIndex: number;
-  replicaMap: {};
+  replicaMap: Record<string, boolean>;
   childIterator: Iterator<any>;
   startIndex: number;
   /**
@@ -721,7 +722,7 @@ class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
     // have been exhausted in a lazy manner.
     const canBeYield = localReplicas
       ? h => localReplicas.indexOf(h) === -1
-      : h => true;
+      : _h => true;
 
     for (let i = 0; i < hosts.length; i++) {
       const h = hosts[(i + initialIndex) % hosts.length];

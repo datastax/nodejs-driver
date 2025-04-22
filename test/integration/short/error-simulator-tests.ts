@@ -65,7 +65,7 @@ describe('Client', function() {
     alive: 4,
     required: 5,
     consistency_level: 'LOCAL_QUORUM'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.unavailableException);
@@ -80,7 +80,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: false
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -96,7 +96,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: false
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -112,7 +112,7 @@ describe('Client', function() {
     block_for: 2,
     consistency_level: 'TWO',
     data_present: true
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readTimeout);
@@ -132,7 +132,7 @@ describe('Client', function() {
       '127.0.0.1': 'READ_TOO_MANY_TOMBSTONES',
       '127.0.0.2': 'UNKNOWN'
     },
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.readFailure);
@@ -149,7 +149,7 @@ describe('Client', function() {
     block_for: 3,
     consistency_level: 'QUORUM',
     write_type: 'SIMPLE'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeTimeout);
@@ -165,7 +165,7 @@ describe('Client', function() {
     block_for: 1,
     consistency_level: 'ONE',
     write_type: 'BATCH_LOG'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeTimeout);
@@ -184,7 +184,7 @@ describe('Client', function() {
     },
     consistency_level: 'THREE',
     write_type: 'COUNTER'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.writeFailure);
@@ -201,7 +201,7 @@ describe('Client', function() {
     function: 'foo',
     arg_types: ['int', 'varchar', 'blob'],
     detail: 'Could not execute function'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.functionFailure);
@@ -215,7 +215,7 @@ describe('Client', function() {
     message: 'The table already exists!',
     keyspace: 'myks',
     table: 'myTbl'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.alreadyExists);
@@ -228,7 +228,7 @@ describe('Client', function() {
     message: 'The keyspace already exists!',
     keyspace: 'myks',
     table: ''
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.alreadyExists);
@@ -239,7 +239,7 @@ describe('Client', function() {
   it ('should error with configError', errorResultTest({
     result: 'config_error',
     message: 'Invalid Configuration!'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.configError);
@@ -248,7 +248,7 @@ describe('Client', function() {
   it ('should error with invalid', errorResultTest({
     result: 'invalid',
     message: 'Invalid Query!'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.invalid);
@@ -257,7 +257,7 @@ describe('Client', function() {
   it ('should error with protocolError', errorResultTest({
     result: 'protocol_error',
     message: 'Protocol Error!'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.protocolError);
@@ -266,7 +266,7 @@ describe('Client', function() {
   it ('should error with serverError', errorResultTest({
     result: 'server_error',
     message: 'Server Error!',
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.serverError);
@@ -275,7 +275,7 @@ describe('Client', function() {
   it ('should error with syntaxError', errorResultTest({
     result: 'syntax_error',
     message: 'Invalid Syntax!',
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.syntaxError);
@@ -284,7 +284,7 @@ describe('Client', function() {
   it ('should error with unauthorized', errorResultTest({
     result: 'unauthorized',
     message: 'Unauthorized!',
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.ResponseError);
     assert.strictEqual(err.code, types.responseErrorCodes.unauthorized);
@@ -294,7 +294,7 @@ describe('Client', function() {
   it ('should error with isBootstrapping', errorResultTest({
     result: 'is_bootstrapping',
     message: 'Bootstrapping!'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);
@@ -308,7 +308,7 @@ describe('Client', function() {
   it ('should error with overloaded', errorResultTest({
     result: 'overloaded',
     message: 'Overloaded!'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);
@@ -322,7 +322,7 @@ describe('Client', function() {
   it ('should error with truncateError', errorResultTest({
     result: 'truncate_error',
     message: 'Timeout while truncating table'
-  }, (err, result) => {
+  }, (err, _result) => {
     assert.ok(err);
     helper.assertInstanceOf(err, errors.NoHostAvailableError);
     assert.strictEqual(Object.keys(err.innerErrors).length, 3);

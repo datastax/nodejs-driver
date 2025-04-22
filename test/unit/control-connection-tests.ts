@@ -297,7 +297,7 @@ describe('ControlConnection', function () {
         }
       }
       ));
-      stubs.push(sinon.stub(dns, 'resolve6').callsFake((name, cb) => {
+      stubs.push(sinon.stub(dns, 'resolve6').callsFake((_name, _cb) => {
         throw new Error('IPv6 resolution errors should be ignored');
       }));
       stubs.push(sinon.stub(dns, 'lookup').callsFake(() => {

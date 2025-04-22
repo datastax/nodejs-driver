@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { AuthProvider, Authenticator } from './provider';
+import { Authenticator, AuthProvider } from './provider';
 import utils from "../utils";
 
 /**

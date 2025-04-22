@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import type Connection from "../connection";
-import type { Host, HostMap } from "../host";
+import type { HostMap } from "../host";
 import utils from "../utils";
 import VersionNumber from "./version-number";
 
@@ -316,7 +316,7 @@ namespace protocolVersion {
           // Anything else is < 2.x and requires protocol version V1.
           maxVersion = this.v1;
         }
-      } catch (e) {
+      } catch (_e) {
         log('warning', 'Encountered host ' + h.address + ' with unparseable cassandra version ' + h.cassandraVersion
           + ' skipping as part of protocol version evaluation');
       }

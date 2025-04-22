@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 import events from "events";
+import { EventEmitter } from "stream";
 import util from "util";
-import t, {Tokenizer} from "../tokenizer";
-import utils, { type EmptyCallback, type ValueCallback } from "../utils";
-import errors from "../errors";
-import types, { Uuid, type consistencies, type InetAddress, type Long } from "../types/index";
-import requests from "../requests";
-import schemaParserFactory, {SchemaParser, type Keyspace} from "./schema-parser";
-import promiseUtils from "../promise-utils";
-import { Token, TokenRange } from "../token";
-import { ExecutionOptions } from "../execution-options";
 import type { ClientOptions } from "../client";
-import type ControlConnection from "../control-connection";
-import { Host, HostMap } from "../host";
 import Connection from "../connection";
+import type ControlConnection from "../control-connection";
+import type { DataTypeInfo } from "../encoder";
+import errors from "../errors";
+import { ExecutionOptions } from "../execution-options";
+import { Host, HostMap } from "../host";
+import promiseUtils from "../promise-utils";
+import requests from "../requests";
+import { Token, TokenRange } from "../token";
+import t, { Tokenizer } from "../tokenizer";
+import types, { type consistencies, type InetAddress, type Long, Uuid } from "../types/index";
+import utils, { type EmptyCallback, type HashSet, type ValueCallback } from "../utils";
+import Aggregate from "./aggregate";
+import DataCollection from "./data-collection";
 import MaterializedView from "./materialized-view";
 import SchemaFunction from "./schema-function";
-import Aggregate from "./aggregate";
-import { EventEmitter } from "stream";
-import DataCollection from "./data-collection";
-import type { DataTypeInfo } from "../encoder";
+import schemaParserFactory, { type Keyspace, SchemaParser } from "./schema-parser";
 import type TableMetadata from "./table-metadata";
 
 interface ColumnInfo {
@@ -106,7 +106,7 @@ class Metadata {
   /** @internal */
   tokenizer: Tokenizer;
   /** @internal */
-  primaryReplicas: {};
+  primaryReplicas: Record<string, Host>;
   /** @internal */
   ring: any[];
   /** @internal */
@@ -114,7 +114,7 @@ class Metadata {
   /** @internal */
   ringTokensAsStrings: any[];
   /** @internal */
-  datacenters: {};
+  datacenters: { [datacenter: string]: { hostLength: number; racks: HashSet } };
   private options: ClientOptions;
   private controlConnection: ControlConnection;
 
@@ -903,7 +903,7 @@ class Metadata {
     try {
       return await this.compareSchemaVersions(connection);
     }
-    catch (err) {
+    catch (_err) {
       return false;
     }
   }
@@ -1110,4 +1110,4 @@ class PreparedQueries {
 
 export default Metadata;
 
-export { type PreparedQueryInfo, type ColumnInfo};
+export { type ColumnInfo, type PreparedQueryInfo };

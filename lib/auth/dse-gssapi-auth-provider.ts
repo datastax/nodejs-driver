@@ -252,6 +252,7 @@ class GssapiAuthenticator extends BaseDseAuthenticator {
   /**
    * @override
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onAuthenticationSuccess(token?: Buffer) {
     this.client.shutdown(function noop() { });
   }

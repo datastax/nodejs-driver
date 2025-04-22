@@ -73,7 +73,7 @@ class UnderscoreCqlToCamelCaseMappings extends TableMappings {
    * @return {String}
    */
   getColumnName(propName: string): string {
-    return propName.replace(/[a-z][A-Z]/g, (match, offset) => match.charAt(0) + '_' + match.charAt(1)).toLowerCase();
+    return propName.replace(/[a-z][A-Z]/g, (match, _offset) => match.charAt(0) + '_' + match.charAt(1)).toLowerCase();
   }
 
   /**

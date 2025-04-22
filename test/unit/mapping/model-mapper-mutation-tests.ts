@@ -15,11 +15,10 @@
  */
 
 import assert from "assert";
-import types from "../../../lib/types/index";
-import helper from "../../test-helper";
-import mapperTestHelper from "./mapper-unit-test-helper";
 import { q } from "../../../lib/mapping/q";
 import { dataTypes } from "../../../lib/types/index";
+import helper from "../../test-helper";
+import mapperTestHelper from "./mapper-unit-test-helper";
 
 describe('ModelMapper', () => {
   describe('#insert()', () => {

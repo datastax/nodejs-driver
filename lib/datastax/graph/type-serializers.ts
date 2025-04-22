@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import g, { Edge, Vertex } from "./index";
 
 /**
@@ -46,7 +47,7 @@ const typeKey = '@type';
 /**
  * @abstract
  */
-class TypeSerializer {
+export class TypeSerializer {
   reader: any;
   writer: any;
   serialize(item) {

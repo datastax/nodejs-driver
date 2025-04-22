@@ -124,6 +124,7 @@ class EC2MultiRegionTranslator extends AddressTranslator {
    * @param {String} address
    * @param {Error} err
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logError(address: string, err: Error): void {
     //Do nothing by default
   }

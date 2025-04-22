@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import errors, { DriverError, ResponseError } from "./errors";
-import requests from "./requests";
+import Connection from "./connection";
+import errors, { ResponseError } from "./errors";
+import type { Host } from "./host";
+import type { ClientMetrics } from "./metrics";
+import type OperationState from "./operation-state";
 import retry, { type DecisionInfo } from "./policies/retry";
-import types, { consistencies } from "./types/index";
-import utils from "./utils";
 import promiseUtils from "./promise-utils";
 import type RequestHandler from "./request-handler";
-import type { Host } from "./host";
-import Connection from "./connection";
-import type OperationState from "./operation-state";
-import type { ClientMetrics } from "./metrics";
+import requests from "./requests";
+import types, { consistencies } from "./types/index";
+import utils from "./utils";
 
 
 const retryOnCurrentHost = Object.freeze({
@@ -444,7 +444,7 @@ class RequestExecution {
       // When there was a socket error, the connection provided was already removed from the pool earlier.
       try {
         this._connection = this._host.borrowConnection(this._connection);
-      } catch (err) {
+      } catch (_err) {
         // All connections are busy (`BusyConnectionError`) or there isn't a ready connection in the pool (`Error`)
         // The retry policy declared the intention to retry on the current host but its not available anymore.
         // Use the next host

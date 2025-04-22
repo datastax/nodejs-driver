@@ -225,9 +225,9 @@ class ProfileManager {
   private _profiles: any;
   private _defaultConfiguredRetryPolicy: any;
   private _loadBalancingPolicies: any[];
-  private _profilesMap: {};
-  private _customPayloadCache: {};
-  private _graphOptionsCache: {};
+  private _profilesMap: Record<string, ExecutionProfile>;
+  private _customPayloadCache: Record<string, Record<any,any>>;
+  private _graphOptionsCache: Record<string, object>;
   private _defaultProfile: ExecutionProfile;
 
   /**

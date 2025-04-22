@@ -379,7 +379,7 @@ describe('InsightsClient', function () {
       const statusEventDelay = 100;
 
       const client = getClient({
-        rpcCallback: m => messages++
+        rpcCallback: _m => messages++
       });
 
       const insights = new InsightsClient(client, {
@@ -451,7 +451,7 @@ function getClient(options) {
   const client = new Client(helper.getOptions(clientOptions));
 
   // Provide a fake control connection
-  client.controlConnection.query = (request, w) => {
+  client.controlConnection.query = (request, _w) => {
     rpcCallback(request.params[0]);
     const err = errorGetter();
 

@@ -583,7 +583,7 @@ describe('Client', function () {
           assert.ok(result);
           if (result.nextPage) {
             // make schema change.
-            client.execute(util.format('alter table %s add b int', table), (sErr, sResult) => {
+            client.execute(util.format('alter table %s add b int', table), (sErr, _sResult) => {
               assert.ifError(sErr);
               schemaChangeMade = true;
               // retrieve next page after schema change is made.

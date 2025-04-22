@@ -19,7 +19,7 @@ import { assert } from "chai";
 import util from "util";
 import Client from "../../../../lib/client";
 import helper from "../../../test-helper";
-import { Point, LineString, Polygon } from "../../../../lib/geometry/index";
+import { LineString, Point, Polygon } from "../../../../lib/geometry/index";
 import types from "../../../../lib/types/index";
 import utils from "../../../../lib/utils";
 import graphModule from "../../../../lib/datastax/graph/index";

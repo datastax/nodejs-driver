@@ -197,7 +197,7 @@ class HostConnectionPool extends events.EventEmitter {
         for (const connection of this.connections) {
           await connection.changeKeyspace(keyspace);
         }
-      } catch (err) {
+      } catch (_err) {
         // Log it and move on, it could be a momentary schema mismatch failure
         this.log('warning', `Connection(s) to host ${this._address} could not be switched to keyspace ${keyspace}`);
       }

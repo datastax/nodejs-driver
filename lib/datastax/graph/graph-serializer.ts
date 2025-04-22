@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import typeSerializers from "./type-serializers";
+import typeSerializers, { type TypeSerializer } from "./type-serializers";
 
 /**
  * @module datastax/graph/tinkerpop/graphSerializers
@@ -118,7 +118,7 @@ class GraphSON3Writer extends GraphSON2Writer {
  */
 class GraphSON2Reader {
   _options: { serializers?: object; };
-  _deserializers: {};
+  _deserializers: Record<string, TypeSerializer>;
   /**
    * GraphSON Reader
    * @param {Object} [options]

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import Tree from "./tree";
-import {ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem} from "./model-batch-item";
+import {InsertModelBatchItem, ModelBatchItem, RemoveModelBatchItem, UpdateModelBatchItem} from "./model-batch-item";
 import type MappingHandler from "./mapping-handler";
 import type { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
 

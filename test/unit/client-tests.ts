@@ -27,7 +27,7 @@ import Encoder from "../../lib/encoder";
 import clientOptions from "../../lib/client-options";
 import * as PrepareHandlerAggregate from "../../lib/prepare-handler";
 import {Host, HostMap} from "../../lib/host";
-import { ProfileManager, ExecutionProfile } from "../../lib/execution-profile";
+import { ExecutionProfile, ProfileManager } from "../../lib/execution-profile";
 import * as RequestHandlerAggregate from "../../lib/request-handler";
 import PrepareHandler from "../../lib/prepare-handler";
 
@@ -743,7 +743,7 @@ describe('Client', function () {
       client.hosts = { length: 5 };
       let calls = 0;
       client.metadata = {
-        compareSchemaVersions: (c) => {
+        compareSchemaVersions: (_c) => {
           process.nextTick(() => clock.tick(500));
           return Promise.resolve(++calls === 3);
         }
@@ -759,7 +759,7 @@ describe('Client', function () {
       }));
       client.hosts = { length: 5 };
       client.metadata = {
-        compareSchemaVersions: sinon.fake(c => Promise.resolve(false))
+        compareSchemaVersions: sinon.fake(_c => Promise.resolve(false))
       };
 
       process.nextTick(() => clock.tick(5000));
@@ -773,7 +773,7 @@ describe('Client', function () {
       client.hosts = {length: 3};
       const dummyError = new Error('dummy error');
       client.metadata = {
-        compareSchemaVersions: c => Promise.reject(dummyError)
+        compareSchemaVersions: _c => Promise.reject(dummyError)
       };
 
       const err = await helper.assertThrowsAsync(client._waitForSchemaAgreement(null));

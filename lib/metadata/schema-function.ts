@@ -15,7 +15,6 @@
  */
 
 import type { DataTypeInfo } from "../encoder";
-import type { dataTypes } from "../types";
 
 
 /**

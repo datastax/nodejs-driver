@@ -293,7 +293,7 @@ describe('Client', function() {
           }, next);
         },
         function executeQuery(next) {
-          client.execute(query, [], { isIdempotent: true }, function (err, result) {
+          client.execute(query, [], { isIdempotent: true }, function (err, _result) {
             assert.ok(err);
             assert.strictEqual(Object.keys(err.innerErrors).length, 3);
 

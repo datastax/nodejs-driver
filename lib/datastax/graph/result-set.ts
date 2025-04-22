@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ResultSet, Uuid } from "../../types";
+import { ResultSet } from "../../types";
 import utils from "../../utils";
 
 /**

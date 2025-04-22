@@ -19,7 +19,7 @@ import ModelBatchMapper from "./model-batch-mapper";
 import { ModelBatchItem } from './model-batch-item';
 import Result from "./result";
 import { q } from "./q";
-import {TableMappings, DefaultTableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
+import {DefaultTableMappings, TableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
 import Long from 'long';
 
 type MappingOptions = {

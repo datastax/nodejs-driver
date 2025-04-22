@@ -898,7 +898,7 @@ describe('Metadata', function () {
       };
 
       let calls = 0;
-      const cc = getControlConnectionForResponse(r => {
+      const cc = getControlConnectionForResponse(_r => {
         //try with empty result and null duration
         let rows = [];
         if (++calls > 1) {
@@ -1790,7 +1790,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
         let called = 0;
-        const cc = getControlConnectionForResponse(q => {
+        const cc = getControlConnectionForResponse(_q => {
           if (called++ < 5) {
             return {rows: []};
           }
@@ -1825,7 +1825,7 @@ describe('Metadata', function () {
         const rows = [
           {"keyspace_name":"ks_udf","function_name":"plus","signature":["bigint","bigint"],"argument_names":["s","v"],"argument_types":["org.apache.cassandra.db.marshal.LongType","org.apache.cassandra.db.marshal.LongType"],"body":"return s+v;","called_on_null_input":false,"language":"java","return_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
-        const cc = getControlConnectionForResponse(q => {
+        const cc = getControlConnectionForResponse(_q => {
           if (called++ < 5) {
             return new Error('Dummy error');
           }
@@ -2165,7 +2165,7 @@ describe('Metadata', function () {
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
 
-        const cc = getControlConnectionForResponse(q => {
+        const cc = getControlConnectionForResponse(_q => {
           if (called++ < 5) {
             return { rows: [] };
           }
@@ -2201,7 +2201,7 @@ describe('Metadata', function () {
         const rows = [
           {"keyspace_name":"ks_udf","aggregate_name":"sum","signature":["bigint"],"argument_types":["org.apache.cassandra.db.marshal.LongType"],"final_func":null,"initcond":utils.allocBufferFromArray([0,0,0,0,0,0,0,0]),"return_type":"org.apache.cassandra.db.marshal.LongType","state_func":"plus","state_type":"org.apache.cassandra.db.marshal.LongType"}
         ];
-        const cc = getControlConnectionForResponse(q => {
+        const cc = getControlConnectionForResponse(_q => {
           if (called++ < 5) {
             return new Error('Dummy');
           }

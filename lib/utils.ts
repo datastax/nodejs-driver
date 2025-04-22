@@ -201,7 +201,7 @@ function toLowerCaseProperties(obj) {
  * @param {...Object} sources
  * @returns {Object}
  */
-function deepExtend<T>(target: any, ...sources: any[]): any {
+function deepExtend(target: any, ...sources: any[]): any {
   sources.forEach(function (source) {
     for (const prop in source) {
       // eslint-disable-next-line no-prototype-builtins
@@ -624,7 +624,7 @@ class AddressResolver {
 
     try {
       await this._resolve();
-    } catch (err) {
+    } catch (_err) {
       // Ignore the possible resolution error
     }
 
@@ -1248,7 +1248,7 @@ const VIntCoding = (function () {
    * @param {Buffer} output
    * @returns {void}
    */
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function writeUnsignedVInt32(value: number, output: Buffer): void {
     writeUnsignedVInt(Long.fromNumber(value), output);
   }
@@ -1264,7 +1264,7 @@ const VIntCoding = (function () {
    * @returns {Number}
    * @throws VIntOutOfRangeException If the vint doesn't fit into a 32-bit integer
    */
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function getUnsignedVInt32(input: Buffer, readerIndex: number): number {
     return checkedCast(getUnsignedVInt(input, readerIndex, input.length));

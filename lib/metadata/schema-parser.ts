@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import events from "events";
-import types, { Row } from "../types/index";
-import utils from "../utils";
-import errors from "../errors";
-import promiseUtils from "../promise-utils";
-import TableMetadata from "./table-metadata";
-import Aggregate from "./aggregate";
-import SchemaFunction from "./schema-function";
-import Index from "./schema-index";
-import MaterializedView from "./materialized-view";
+import util from "util";
 import type { ClientOptions } from "../client";
 import type ControlConnection from "../control-connection";
+import errors from "../errors";
+import promiseUtils from "../promise-utils";
+import types, { Row } from "../types/index";
+import utils from "../utils";
+import Aggregate from "./aggregate";
+import MaterializedView from "./materialized-view";
+import SchemaFunction from "./schema-function";
+import Index from "./schema-index";
+import TableMetadata from "./table-metadata";
 
 
 const { format } = util;

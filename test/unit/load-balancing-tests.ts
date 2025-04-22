@@ -22,7 +22,7 @@ import { Host, HostMap } from "../../lib/host";
 import types from "../../lib/types/index";
 import utils from "../../lib/utils";
 import { ExecutionOptions } from "../../lib/execution-options";
-import { AllowListPolicy, LoadBalancingPolicy, TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy } from "../../lib/policies/load-balancing";
+import { AllowListPolicy, DCAwareRoundRobinPolicy, LoadBalancingPolicy, RoundRobinPolicy, TokenAwarePolicy } from "../../lib/policies/load-balancing";
 
 
 describe('RoundRobinPolicy', function () {

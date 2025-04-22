@@ -147,7 +147,7 @@ vdescribe('dse-6.7', 'Cloud support', function () {
 
       try {
         await client.connect();
-      } catch (err) {
+      } catch (_err) {
         // Ignore auth error
       }
 

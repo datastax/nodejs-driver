@@ -15,39 +15,38 @@
  */
 //TODO: fix the types
 import events from "events";
+import { ConnectionOptions } from "tls";
 import util from "util";
-import utils, { AddressResolver, type ArrayOrObject, type EmptyCallback, type ValueCallback } from "./utils";
-import errors from "./errors";
-import types, { Long, ResultSet, ResultStream, Row, Uuid, type consistencies } from "./types/index";
-import { ExecutionProfile, ProfileManager } from "./execution-profile";
-import requests from "./requests";
-import clientOptions from "./client-options";
-import ClientState from "./metadata/client-state";
-import { DefaultExecutionOptions, ExecutionOptions } from "./execution-options";
-import ControlConnection from "./control-connection";
-import RequestHandler from "./request-handler";
-import PrepareHandler from "./prepare-handler";
-import InsightsClient from "./insights-client";
-import cloud from "./datastax/cloud/index";
-import GraphExecutor from "./datastax/graph/graph-executor";
-import promiseUtils from "./promise-utils";
 import packageInfo from '../package.json';
-import { LoadBalancingPolicy } from "./policies/load-balancing";
-import { RetryPolicy } from "./policies/retry";
-import { ReconnectionPolicy } from "./policies/reconnection";
+import { AuthProvider } from "./auth";
+import clientOptions from "./client-options";
+import Connection from "./connection";
+import ControlConnection from "./control-connection";
+import cloud from "./datastax/cloud/index";
+import type { GraphResultSet } from "./datastax/graph";
+import GraphExecutor from "./datastax/graph/graph-executor";
+import Encoder from "./encoder";
+import errors from "./errors";
+import { DefaultExecutionOptions, ExecutionOptions } from "./execution-options";
+import { ExecutionProfile, ProfileManager } from "./execution-profile";
+import { Host, type HostMap } from "./host";
+import InsightsClient from "./insights-client";
+import Metadata from "./metadata";
+import ClientState from "./metadata/client-state";
+import { ClientMetrics } from "./metrics";
 import { AddressTranslator } from "./policies/address-resolution";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import { ReconnectionPolicy } from "./policies/reconnection";
+import { RetryPolicy } from "./policies/retry";
 import { SpeculativeExecutionPolicy } from "./policies/speculative-execution";
 import { TimestampGenerator } from "./policies/timestamp-generation";
-import { AuthProvider } from "./auth";
+import PrepareHandler from "./prepare-handler";
+import promiseUtils from "./promise-utils";
+import RequestHandler from "./request-handler";
+import requests from "./requests";
 import { RequestTracker } from "./tracker";
-import { ClientMetrics } from "./metrics";
-import { ConnectionOptions } from "tls";
-import { Host, type HostMap } from "./host";
-import Metadata from "./metadata";
-import { Request } from "./requests";
-import type { GraphResultSet } from "./datastax/graph";
-import Connection from "./connection";
-import Encoder from "./encoder";
+import types, { type consistencies, Long, ResultSet, ResultStream, Row, Uuid } from "./types/index";
+import utils, { AddressResolver, type ArrayOrObject, type EmptyCallback, type ValueCallback } from "./utils";
 
 const version = packageInfo.version;
 const description = packageInfo.description;
@@ -1407,7 +1406,7 @@ class Client extends events.EventEmitter{
       // Skip parsing metadata next time
       meta.partitionKeys = execOptions.getRoutingIndexes();
       encoder.setRoutingKeyFromMeta(meta, params, execOptions);
-    } catch (err) {
+    } catch (_err) {
       this.log('warning', util.format('Table %s.%s metadata could not be retrieved', meta.keyspace, meta.table));
     }
   }
@@ -1417,7 +1416,5 @@ class Client extends events.EventEmitter{
 export default Client;
 
 export {
-  type ClientOptions,
-  type QueryOptions,
-  type GraphQueryOptions
+  type ClientOptions, type GraphQueryOptions, type QueryOptions
 };

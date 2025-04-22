@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
-import { QueryOperator, QueryAssignment } from "./q";
+import { QueryAssignment, QueryOperator } from "./q";
 
 /**
  * Provides utility methods for obtaining a caching keys based on the specifics of the Mapper methods.

@@ -69,6 +69,7 @@ class ModelBatchItem {
    * @param {Array} docKeys
    * @returns {Iterator}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getCacheKey(docKeys: Array<any>): Iterator<string> {
     throw new Error('getCacheKey must be implemented');
   }
@@ -80,6 +81,7 @@ class ModelBatchItem {
    * @param {Array} docKeys
    * @returns {Promise<Array>}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   createQueries(docKeys: Array<any>): Promise<Array<any>> {
     throw new Error('getCacheKey must be implemented');
   }

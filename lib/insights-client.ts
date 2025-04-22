@@ -15,20 +15,19 @@
  */
 
 
-import { NoAuthProvider } from './auth/index';
+import fs from "fs";
 import os from "os";
 import path from "path";
-import fs from "fs";
-import utils from "./utils";
-import promiseUtils from "./promise-utils";
-import types from "./types/index";
-import requests from "./requests";
-import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json";
-import VersionNumber from "./types/version-number";
-import { assert } from 'console';
-import { type ClientOptions, type QueryOptions } from './client';
+import { NoAuthProvider } from './auth/index';
 import type Client from './client';
+import { type ClientOptions, type QueryOptions } from './client';
+import { ExecutionOptions } from "./execution-options";
+import promiseUtils from "./promise-utils";
+import requests from "./requests";
+import types from "./types/index";
+import VersionNumber from "./types/version-number";
+import utils from "./utils";
 
 let kerberosModule;
 
@@ -36,7 +35,7 @@ try {
   // eslint-disable-next-line
   kerberosModule = require('kerberos');
 }
-catch (err) {
+catch (_err) {
   // Kerberos is an optional dependency
 }
 
@@ -335,7 +334,7 @@ class InsightsClient {
           applicationVersion = packageInfo.version;
         }
       }
-      catch (err) {
+      catch (_err) {
         // The package.json file could not be parsed
         // Use the default name
       }

@@ -453,7 +453,7 @@ class ControlConnection extends events.EventEmitter {
     }
     else {
       try { this.connection = this._borrowAConnection(hostIterator); }
-      catch(err) {
+      catch(_err) {
 
         /* NODEJS-632: refresh nodes before getting hosts for reconnect since some hostnames may have
          * shifted during the flight. */

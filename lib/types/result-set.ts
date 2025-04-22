@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../utils";
-import errors from "../errors";
-import Row from "./row";
-import type {consistencies, dataTypes, Uuid} from "../types";
 import type { DataTypeInfo } from "../encoder";
+import errors from "../errors";
+import type { consistencies, Uuid } from "../types";
+import utils from "../utils";
+import Row from "./row";
 
 
 //TODO: Node.js started to support Symbol.asyncIterator since version 10. Can we drop the support for `@@asyncIterator`?

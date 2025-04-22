@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import types, { Integer } from "./types/index";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import token, { ByteOrderedToken, Murmur3Token, RandomToken, Token } from "./token";
-import utils from "./utils";
+import { Integer } from "./types/index";
 import MutableLong from "./types/mutable-long";
+import utils from "./utils";
 
 
 // Murmur3 constants
@@ -595,10 +596,8 @@ function fromSignedByte(value: number): MutableLong {
 }
 
 export {
-  Murmur3Tokenizer,
-  RandomTokenizer,
-  ByteOrderedTokenizer,
-  Tokenizer
+  ByteOrderedTokenizer, Murmur3Tokenizer,
+  RandomTokenizer, Tokenizer
 };
 
 export default {

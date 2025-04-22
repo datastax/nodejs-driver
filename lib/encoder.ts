@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 import util from "util";
-import types, { InetAddress, LocalDate, LocalTime, Uuid } from "./types/index";
-import MutableLong from "./types/mutable-long";
-import utils from "./utils";
-import token from "./token";
-import { DateRange } from "./datastax/search/index";
-import geo from "./geometry/index";
-import Vector from "./types/vector";
 import { type ClientOptions } from "./client";
-import {dataTypes, Long, Integer, BigDecimal} from "./types/index";
-import {Geometry, LineString, Point, Polygon} from "./geometry/index";
+import { DateRange } from "./datastax/search/index";
 import type { ExecutionOptions } from "./execution-options";
+import { Geometry, LineString, Point, Polygon } from "./geometry/index";
+import token from "./token";
+import types, { BigDecimal, dataTypes, InetAddress, Integer, LocalDate, LocalTime, Long, Uuid } from "./types/index";
+import MutableLong from "./types/mutable-long";
+import Vector from "./types/vector";
+import utils from "./utils";
 
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -91,7 +89,7 @@ const singleTypeNames = Object.freeze({
   'org.apache.cassandra.db.marshal.CounterColumnType':  dataTypes.counter
 } as const);
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const singleTypeNamesByDataType = invertObject(singleTypeNames);
 const singleFqTypeNamesLength = Object.keys(singleTypeNames).reduce(function (previous, current) {
   return current.length > previous ? current.length : previous;
@@ -1190,7 +1188,7 @@ class Encoder{
 
     try {
       totalLength = this._encodeRoutingKeyParts(parts, routingIndexes, encodeParam);
-    } catch (e) {
+    } catch (_e) {
       // There was an error encoding a parameter that is part of the routing key,
       // ignore now to fail afterwards
     }
@@ -1226,7 +1224,7 @@ class Encoder{
 
     try {
       totalLength = this._encodeRoutingKeyParts(parts, routingIndexes, encodeParam);
-    } catch (e) {
+    } catch (_e) {
       // There was an error encoding a parameter that is part of the routing key,
       // ignore now to fail afterwards
     }
@@ -1936,7 +1934,7 @@ class Encoder{
         if (value.subtype) {
           try {
             subtypeColumnInfo = dataTypes.getByName(value.subtype);
-          } catch (TypeError) {
+          } catch (_TypeError) {
             // ignore
           }
         } 

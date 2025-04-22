@@ -136,7 +136,7 @@ class Protocol extends Transform{
  * @extends Transform
  */
 class Parser extends Transform{
-  frames: {};
+  frames: object;
   encoder: any;
   constructor(streamOptions, encoder) {
     super(streamOptions);
@@ -496,7 +496,7 @@ class Parser extends Transform{
  * Represents a writable streams that emits results
  */
 class ResultEmitter extends Writable {
-  rowBuffer: {};
+  rowBuffer: object;
   constructor(options) {
     super(options);
     /**

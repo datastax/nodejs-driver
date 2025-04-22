@@ -61,7 +61,7 @@ class Vector {
         {return obj.elements[key] = value;}
         return obj[key] = value;
       },
-      ownKeys: function (obj) {
+      ownKeys: function (_obj) {
         return Reflect.ownKeys(elements);
       },
       getOwnPropertyDescriptor(target, key) {

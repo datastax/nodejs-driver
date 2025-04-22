@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { consistencies } from "../types";
 import type { ExecutionOptions } from "../execution-options";
 

@@ -15,7 +15,7 @@
  */
 import GraphResultSet from "./result-set";
 import getCustomTypeSerializers from "./custom-type-serializers";
-import { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper} from "./wrappers";
+import { asDouble, asFloat, asInt, asTimestamp, asUdt, GraphTypeWrapper, UdtGraphWrapper} from "./wrappers";
 import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
 
 

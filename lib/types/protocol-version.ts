@@ -349,6 +349,6 @@ namespace protocolVersion {
   export function isBeta(version: number): boolean {
     return version === this.v5;
   }
-};
+}
 
 export default protocolVersion;

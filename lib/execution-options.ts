@@ -57,7 +57,7 @@ class ExecutionOptions {
    * @returns {Boolean}
    */
   getCaptureStackTrace(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -66,7 +66,7 @@ class ExecutionOptions {
    * @returns {Number}
    */
   getConsistency(): consistencies {
-    return null;
+    return undefined;
   }
 
   /**
@@ -76,7 +76,7 @@ class ExecutionOptions {
    * @returns {{ [key: string]: any }}
    */
   getCustomPayload(): { [key: string]: any } {
-    return null;
+    return undefined;
   }
 
   /**
@@ -85,7 +85,7 @@ class ExecutionOptions {
    * @returns {Number}
    */
   getFetchSize(): number {
-    return null;
+    return undefined;
   }
 
   /**
@@ -94,7 +94,7 @@ class ExecutionOptions {
    * @returns {Host}
    */
   getFixedHost(): Host {
-    return null;
+    return undefined;
   }
 
   /**
@@ -103,7 +103,7 @@ class ExecutionOptions {
    * @returns {string[] | string[][]}
    */
   getHints(): string[] | string[][] {
-    return null;
+    return undefined;
   }
 
   /**
@@ -115,7 +115,7 @@ class ExecutionOptions {
    * @returns {Boolean}
    */
   isAutoPage(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -125,7 +125,7 @@ class ExecutionOptions {
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
   isBatchCounter(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -135,7 +135,7 @@ class ExecutionOptions {
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
   isBatchLogged(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -145,7 +145,7 @@ class ExecutionOptions {
    * @returns {Boolean}
    */
   isIdempotent(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -154,7 +154,7 @@ class ExecutionOptions {
    * @returns {Boolean} A <code>Boolean</code> value, it can't be <code>undefined</code>.
    */
   isPrepared(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -163,7 +163,7 @@ class ExecutionOptions {
    * @returns {Boolean}
    */
   isQueryTracing(): boolean {
-    return null;
+    return undefined;
   }
 
   /**
@@ -177,7 +177,7 @@ class ExecutionOptions {
    * @returns {String}
    */
   getKeyspace(): string {
-    return null;
+    return undefined;
   }
 
   /**
@@ -185,7 +185,7 @@ class ExecutionOptions {
    * @returns {LoadBalancingPolicy} A <code>LoadBalancingPolicy</code> instance, it can't be <code>undefined</code>.
    */
   getLoadBalancingPolicy(): LoadBalancingPolicy {
-    return null;
+    return undefined;
   }
 
   /**
@@ -194,7 +194,7 @@ class ExecutionOptions {
    * @returns {Buffer}
    */
   getPageState(): Buffer {
-    return null;
+    return undefined;
   }
 
   /**
@@ -203,7 +203,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   getPreferredHost(): Host {
-    return null;
+    return undefined;
   }
 
   /**
@@ -211,7 +211,7 @@ class ExecutionOptions {
    * @returns {QueryOptions}
    */
   getRawQueryOptions(): QueryOptions {
-    return null;
+    return undefined;
   }
 
   /**
@@ -223,7 +223,7 @@ class ExecutionOptions {
    * @returns {Number}
    */
   getReadTimeout(): number {
-    return null;
+    return undefined;
   }
 
   /**
@@ -232,7 +232,7 @@ class ExecutionOptions {
    * @returns {RetryPolicy} A <code>RetryPolicy</code> instance, it can't be <code>undefined</code>.
    */
   getRetryPolicy(): RetryPolicy {
-    return null;
+    return undefined;
   }
 
   /**
@@ -241,7 +241,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   getRowCallback() {
-    return null;
+    return undefined;
   }
 
   /**
@@ -250,7 +250,7 @@ class ExecutionOptions {
    * @returns {Long|null}
    */
   getOrGenerateTimestamp(): Long | null {
-    return null;
+    return undefined;
   }
 
   /**
@@ -260,7 +260,7 @@ class ExecutionOptions {
    * @returns {Array}
    */
   getRoutingIndexes(): Array<any> {
-    return null;
+    return undefined;
   }
 
   /**
@@ -269,7 +269,7 @@ class ExecutionOptions {
    * @returns {Buffer|Array<Buffer>}
    */
   getRoutingKey(): Buffer | Array<Buffer> {
-    return null;
+    return undefined;
   }
 
   /**
@@ -279,7 +279,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   getRoutingNames() {
-    return null;
+    return undefined;
   }
 
   /**
@@ -288,7 +288,7 @@ class ExecutionOptions {
    * @returns {consistencies}
    */
   getSerialConsistency(): consistencies {
-    return null;
+    return undefined;
   }
 
   /**
@@ -298,7 +298,7 @@ class ExecutionOptions {
    * @returns {Number|Long|undefined|null}
    */
   getTimestamp(): number | Long | undefined | null {
-    return null;
+    return undefined;
   }
 
   //TODO: was exposed in .d.t.s. Are we removing it?
@@ -308,7 +308,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   setHints(hints: string[]) {
-    return null;
+    return undefined;
   }
 
   /**
@@ -318,7 +318,7 @@ class ExecutionOptions {
    * @param {String} keyspace
    */
   setKeyspace(keyspace: string) {
-    return null;
+    return undefined;
   }
 
   /**
@@ -326,7 +326,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   setPageState(pageState: Buffer) {
-    return null;
+    return undefined;
   }
 
   /**
@@ -335,7 +335,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   setPreferredHost(host: Host) {
-    return null;
+    return undefined;
   }
 
   /**
@@ -345,7 +345,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   setRoutingIndexes(routingIndexes: Array<any>) {
-    return null;
+    return undefined;
   }
 
   /**
@@ -354,7 +354,7 @@ class ExecutionOptions {
    * @ignore @internal
    */
   setRoutingKey(value) {
-    return null;
+    return undefined;
   }
 }
 

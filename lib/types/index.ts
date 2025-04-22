@@ -185,7 +185,7 @@ namespace dataTypes {
       throw new TypeError('Data type with name ' + name + ' not valid');
     }
     return typeInfo;
-  };
+  }
 }
 
 /**

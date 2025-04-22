@@ -27,7 +27,7 @@
 import graph from "./graph/index";
 import { Edge, Element, Path, Property, Vertex, VertexProperty, asInt, asDouble, asFloat, asTimestamp, asUdt, direction, getCustomTypeSerializers,
   GraphResultSet, GraphTypeWrapper, t, UdtGraphWrapper
- } from "./graph/index";
+} from "./graph/index";
 import { DateRange } from "./search/index";
 
 export default {

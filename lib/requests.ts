@@ -414,7 +414,7 @@ class CredentialsRequest extends Request {
 }
 
 class BatchRequest extends Request {
-  queries: Array<{query, params, info?}>;
+  queries: Array<{query, params, info?, queryId?, meta?}>;
   options: ExecutionOptions;
   hints: readonly any[];
   type: number;
@@ -459,18 +459,18 @@ class BatchRequest extends Request {
     const self = this;
     this.queries.forEach(function eachQuery(item, i) {
       const hints = self.hints[i];
-      const params = item["params"] || utils.emptyArray;
+      const params = item.params || utils.emptyArray;
       let getParamType;
-      if ("queryId" in item) {
+      if (item.queryId) {
         // Contains prepared queries
         frameWriter.writeByte(1);
-        frameWriter.writeShortBytes((item as ExecuteRequest).queryId);
-        getParamType = i => (item as ExecuteRequest).meta.columns[i].type;
+        frameWriter.writeShortBytes(item.queryId);
+        getParamType = i => item.meta.columns[i].type;
       }
       else {
         // Contains string queries
         frameWriter.writeByte(0);
-        frameWriter.writeLString((item as ExecuteRequest).query);
+        frameWriter.writeLString(item.query);
         getParamType = hints ? (i => hints[i]) : (() => null);
       }
 

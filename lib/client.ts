@@ -1345,11 +1345,11 @@ class Client extends events.EventEmitter{
    */
   private async _createBatchRequest(queryItems: {query; params; info?}[], info) {
     const firstQuery = queryItems[0];
-    if (!("meta" in firstQuery)) {
+    if (!firstQuery["meta"]) {
       return new requests.BatchRequest(queryItems, info);
     }
 
-    await this._setRoutingInfo(info, firstQuery.params, firstQuery.meta);
+    await this._setRoutingInfo(info, firstQuery.params, firstQuery["meta"]);
     return new requests.BatchRequest(queryItems, info);
   }
   /**

@@ -21,7 +21,7 @@
  */
 import util from 'util';
 class Vector {
-      /**
+  /**
        * Returns the number of the elements.
        * @type Number
        */

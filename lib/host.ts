@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import events from "events";
-import utils from "./utils";
-import types, { Uuid } from "./types/index";
+import Connection from "./connection";
 import HostConnectionPool from "./host-connection-pool";
 import PrepareHandler from "./prepare-handler";
 import promiseUtils from "./promise-utils";
-import Connection from "./connection";
+import types, { Uuid } from "./types/index";
+import utils from "./utils";
 
 
 const healthResponseCountInterval = 200;

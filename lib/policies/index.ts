@@ -85,18 +85,13 @@ const defaultTimestampGenerator = function (): TimestampGenerator {
  */
 
 export {
-  addressResolution,
-  loadBalancing,
+  addressResolution, defaultAddressTranslator,
+  defaultLoadBalancingPolicy, defaultReconnectionPolicy, defaultRetryPolicy, defaultSpeculativeExecutionPolicy,
+  defaultTimestampGenerator, loadBalancing,
   reconnection,
   retry,
   speculativeExecution,
-  timestampGeneration,
-  defaultAddressTranslator,
-  defaultLoadBalancingPolicy,
-  defaultRetryPolicy,
-  defaultReconnectionPolicy,
-  defaultSpeculativeExecutionPolicy,
-  defaultTimestampGenerator
+  timestampGeneration
 };
 
 export default {

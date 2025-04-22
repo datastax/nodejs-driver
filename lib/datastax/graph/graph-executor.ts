@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../../utils";
-import policies from "../../policies/index";
-import GraphResultSet from "./result-set";
-import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer";
-import getCustomTypeSerializers from "./custom-type-serializers";
-import { GraphExecutionOptions, graphProtocol } from "./options";
-import { type ClientOptions } from "../../client";
 import type Client from "../../client";
-import type { Host } from "../../host";
 import type { GraphQueryOptions } from "../../client";
+import { type ClientOptions } from "../../client";
+import type { Host } from "../../host";
+import policies from "../../policies/index";
+import utils from "../../utils";
+import getCustomTypeSerializers from "./custom-type-serializers";
+import { GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer } from "./graph-serializer";
+import { GraphExecutionOptions, graphProtocol } from "./options";
+import GraphResultSet from "./result-set";
 
 
 const graphLanguageGroovyString = 'gremlin-groovy';

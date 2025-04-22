@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 import util from "util";
+import auth from "./auth/index";
+import type Client from "./client";
+import { type ClientOptions } from "./client";
+import metrics from "./metrics/index";
 import policies from "./policies/index";
+import tracker from "./tracker/index";
 import types from "./types";
 import utils from "./utils";
-import tracker from "./tracker/index";
-import metrics from "./metrics/index";
-import auth from "./auth/index";
-import { type ClientOptions } from "./client";
-import type Client from "./client";
 
 //TODO: need to revisit those options, potentially merge the ones in JSDoc and .d.ts
 /** Core connections per host for protocol versions 1 and 2 */
@@ -354,16 +354,10 @@ function setMetadataDependent(client: Client) {
 }
 
 export {
-  extend,
-  defaultOptions,
-  coreConnectionsPerHostV2,
-  coreConnectionsPerHostV3,
-  maxRequestsPerConnectionV2,
+  continuousPageDefaultHighWaterMark, continuousPageDefaultSize, continuousPageUnitBytes, coreConnectionsPerHostV2,
+  coreConnectionsPerHostV3, defaultOptions, extend, maxRequestsPerConnectionV2,
   maxRequestsPerConnectionV3,
-  setMetadataDependent,
-  continuousPageUnitBytes,
-  continuousPageDefaultSize,
-  continuousPageDefaultHighWaterMark
+  setMetadataDependent
 };
 
 export default {

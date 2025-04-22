@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 import events from "events";
-import util from "util";
-import tls from "tls";
 import net from "net";
+import tls from "tls";
+import util from "util";
+import { Authenticator } from "./auth";
+import type { ClientOptions } from "./client";
 import Encoder from "./encoder";
-import { WriteQueue } from "./writers";
-import requests from "./requests";
-import streams from "./streams";
-import utils from "./utils";
-import types from "./types/index";
 import errors from "./errors";
-import StreamIdStack from "./stream-id-stack";
+import { ExecutionOptions } from "./execution-options";
+import type { PreparedQueryInfo } from "./metadata";
 import OperationState from "./operation-state";
 import promiseUtils from "./promise-utils";
-import { ExecutionOptions } from "./execution-options";
-import { Request } from "./requests";
-import type { ClientOptions } from "./client";
-import { Authenticator } from "./auth";
-import type { PreparedQueryInfo } from "./metadata";
+import requests, { Request } from "./requests";
+import StreamIdStack from "./stream-id-stack";
+import streams from "./streams";
+import types from "./types/index";
+import utils from "./utils";
+import { WriteQueue } from "./writers";
 
 
 

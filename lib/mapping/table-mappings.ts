@@ -124,7 +124,6 @@ export default {
 };
 
 export {
-  TableMappings,
-  UnderscoreCqlToCamelCaseMappings,
-  DefaultTableMappings
+  DefaultTableMappings, TableMappings,
+  UnderscoreCqlToCamelCaseMappings
 };

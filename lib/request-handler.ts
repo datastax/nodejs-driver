@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 import util from "util";
+import type Client from "./client";
 import errors, { NoHostAvailableError } from "./errors";
+import type { ExecutionOptions } from "./execution-options";
+import { Host } from "./host";
+import promiseUtils from "./promise-utils";
+import RequestExecution from "./request-execution";
+import { Request } from "./requests";
 import types, { ResultSet } from "./types/index";
 import utils from "./utils";
-import RequestExecution from "./request-execution";
-import promiseUtils from "./promise-utils";
-import type { ExecutionOptions } from "./execution-options";
-import type Client from "./client";
-import { Request } from "./requests";
-import { Host } from "./host";
 
 
 

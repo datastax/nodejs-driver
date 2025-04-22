@@ -245,11 +245,8 @@ export {
   ArgumentError,
   AuthenticationError,
   BusyConnectionError,
-  DriverError,
-  OperationTimedOutError,
-  DriverInternalError,
+  DriverError, DriverInternalError,
   NoHostAvailableError,
-  NotSupportedError,
-  ResponseError,
+  NotSupportedError, OperationTimedOutError, ResponseError,
   VIntOutOfRangeException
 };

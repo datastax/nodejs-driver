@@ -15,10 +15,10 @@
  */
 
 import { Transform, Writable } from "stream";
-import types, { FrameHeader } from "./types/index";
-import utils from "./utils";
 import errors from "./errors";
 import { FrameReader } from "./readers";
+import types, { FrameHeader } from "./types/index";
+import utils from "./utils";
 
 /**
  * Transforms chunks, emits data objects {header, chunk}
@@ -565,9 +565,7 @@ class ResultEmitter extends Writable {
 }
 
 export {
-  Protocol,
-  Parser,
-  ResultEmitter
+  Parser, Protocol, ResultEmitter
 };
 export default {
   Protocol,

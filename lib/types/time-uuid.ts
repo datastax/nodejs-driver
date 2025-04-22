@@ -15,8 +15,8 @@
  */
 import crypto from "crypto";
 import Long from "long";
-import Uuid from "./uuid";
 import utils, { type ValueCallback } from "../utils";
+import Uuid from "./uuid";
 
 /** @module types */
 /**

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type { consistencies } from "../types";
 import type { ExecutionOptions } from "../execution-options";
+import type { consistencies } from "../types";
 
 /**
  * Base and default RetryPolicy.
@@ -320,9 +320,7 @@ type OperationInfo = {
 }
 
 export {
-  IdempotenceAwareRetryPolicy,
-  FallthroughRetryPolicy,
-  RetryPolicy,
+  FallthroughRetryPolicy, IdempotenceAwareRetryPolicy, RetryPolicy,
   type DecisionInfo
 };
 

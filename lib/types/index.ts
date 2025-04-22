@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-import util from "util";
-import errors from "../errors";
-import TimeUuid from "./time-uuid";
-import Uuid from "./uuid";
-import protocolVersion from "./protocol-version";
-import utils from "../utils";
 import Long from "long";
+import util from "util";
+import type { DataTypeInfo } from "../encoder";
+import errors from "../errors";
+import utils from "../utils";
 import BigDecimal from './big-decimal';
 import Duration from './duration';
 import InetAddress from './inet-address';
 import Integer from './integer';
 import LocalDate from './local-date';
 import LocalTime from './local-time';
+import protocolVersion from "./protocol-version";
 import ResultSet from './result-set';
 import ResultStream from './result-stream';
 import Row from './row';
+import TimeUuid from "./time-uuid";
 import Tuple from './tuple';
+import Uuid from "./uuid";
 import Vector from "./vector";
-import type { DataTypeInfo } from "../encoder";
 
 /**
  * Consistency levels
@@ -669,38 +669,26 @@ export default {
 };
 
 export {
-  opcodes,
-  consistencies,
+  BigDecimal, consistencies,
   consistencyToString,
   dataTypes,
-  distance,
-  /** @internal */
-  getDataTypeNameByCode,
-  frameFlags,
-  protocolEvents,
-  protocolVersion,
-  responseErrorCodes,
-  resultKind,
-  timeuuid,
-  uuid,
-  BigDecimal,
-  Duration,
+  distance, Duration, frameFlags,
   /** @internal */
   FrameHeader,
-  InetAddress,
+  /** @internal */
+  generateTimestamp,
+  /** @internal */
+  getDataTypeNameByCode, InetAddress,
   Integer,
   LocalDate,
   LocalTime,
-  Long,
-  ResultSet,
+  Long, opcodes, protocolEvents,
+  protocolVersion,
+  responseErrorCodes,
+  resultKind, ResultSet,
   ResultStream,
   Row,
-  TimeoutError, //TODO: why TimeoutError is here instead of lib/errors??
+  TimeoutError, timeuuid, //TODO: why TimeoutError is here instead of lib/errors??
   TimeUuid,
-  Tuple,
-  Uuid,
-  unset,
-  /** @internal */
-  generateTimestamp,
-  Vector
+  Tuple, unset, uuid, Uuid, Vector
 };

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Mapper from './mapper';
-import ModelMapper from "./model-mapper";
-import ModelBatchMapper from "./model-batch-mapper";
-import { ModelBatchItem } from './model-batch-item';
-import Result from "./result";
-import { q } from "./q";
-import {DefaultTableMappings, TableMappings, UnderscoreCqlToCamelCaseMappings} from "./table-mappings";
 import Long from 'long';
+import Mapper from './mapper';
+import { ModelBatchItem } from './model-batch-item';
+import ModelBatchMapper from "./model-batch-mapper";
+import ModelMapper from "./model-mapper";
+import { q } from "./q";
+import Result from "./result";
+import { DefaultTableMappings, TableMappings, UnderscoreCqlToCamelCaseMappings } from "./table-mappings";
 
 type MappingOptions = {
   models: { [key: string]: ModelOptions };
@@ -90,24 +90,10 @@ type RemoveDocInfo = {
  */
 
 export {
-  Mapper,
-  ModelMapper,
-  ModelBatchMapper,
-  ModelBatchItem,
-  Result,
-  TableMappings,
-  DefaultTableMappings,
-  UnderscoreCqlToCamelCaseMappings,
-  q,
-  type MappingOptions,
-  type ModelOptions,
-  ModelColumnOptions,
-  ModelTables,
-  type MappingExecutionOptions,
-  type FindDocInfo,
-  type InsertDocInfo,
-  type UpdateDocInfo,
-  type RemoveDocInfo
+  DefaultTableMappings, Mapper, ModelBatchItem, ModelBatchMapper, ModelColumnOptions, ModelMapper, ModelTables, q, Result,
+  TableMappings, UnderscoreCqlToCamelCaseMappings, type FindDocInfo,
+  type InsertDocInfo, type MappingExecutionOptions, type MappingOptions,
+  type ModelOptions, type RemoveDocInfo, type UpdateDocInfo
 };
 
 export default {

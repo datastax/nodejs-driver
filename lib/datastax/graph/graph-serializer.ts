@@ -251,10 +251,5 @@ const graphSON3Serializers = graphSON2Serializers.concat([
 ]);
 
 export {
-  GraphSON3Writer,
-  GraphSON3Reader,
-  GraphSON2Writer,
-  GraphSON2Reader,
-  GraphSON3Writer as GraphSONWriter,
-  GraphSON3Reader as GraphSONReader
+  GraphSON2Reader, GraphSON2Writer, GraphSON3Reader, GraphSON3Writer, GraphSON3Reader as GraphSONReader, GraphSON3Writer as GraphSONWriter
 };

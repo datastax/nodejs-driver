@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 import util from "util";
-import types from "../../types/index";
-import utils from "../../utils";
+import type Client from "../../client";
+import type { GraphQueryOptions, QueryOptions } from "../../client";
 import { DefaultExecutionOptions, proxyExecuteKey } from "../../execution-options";
 import type { ExecutionProfile, ProfileManager } from "../../execution-profile";
-import type { GraphQueryOptions } from "../../client";
-import type { QueryOptions } from "../../client";
-import type Client from "../../client";
-import type { RetryPolicy } from "../../policies/retry";
 import type { Host } from "../../host";
+import type { RetryPolicy } from "../../policies/retry";
+import types from "../../types/index";
+import utils from "../../utils";
 
 
 const Long = types.Long;

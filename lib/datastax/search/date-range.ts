@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../../utils";
 import Long from "long";
+import utils from "../../utils";
 
 /**
  * Regex to parse dates in the following format YYYY-MM-DDThh:mm:ss.mssZ
@@ -550,8 +550,6 @@ class BoundaryBuilder {
 }
 
 export {
-  unbounded,
-  dateRangePrecision,
   DateRange,
-  DateRangeBound
+  DateRangeBound, dateRangePrecision, unbounded
 };

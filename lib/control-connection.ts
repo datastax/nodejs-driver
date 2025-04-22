@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import events from "events";
-import util from "util";
-import net from "net";
 import dns from "dns";
-import errors from "./errors";
-import { Host, HostMap } from "./host";
-import Metadata from "./metadata/index";
-import EventDebouncer from "./metadata/event-debouncer";
-import Connection from "./connection";
-import requests from "./requests";
-import utils from "./utils";
-import types, { ResultSet, Row } from "./types/index";
-import promiseUtils from "./promise-utils";
+import events from "events";
+import net from "net";
+import util from "util";
 import type { ClientOptions } from "./client";
-import { ProfileManager } from "./execution-profile";
-import { Request } from "./requests";
+import Connection from "./connection";
 import Encoder from "./encoder";
+import errors from "./errors";
+import { ProfileManager } from "./execution-profile";
+import { Host, HostMap } from "./host";
+import EventDebouncer from "./metadata/event-debouncer";
+import Metadata from "./metadata/index";
+import promiseUtils from "./promise-utils";
+import requests, { Request } from "./requests";
+import types, { ResultSet, Row } from "./types/index";
+import utils from "./utils";
 
 
 const f = util.format;

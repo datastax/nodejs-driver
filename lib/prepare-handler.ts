@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import errors from "./errors";
-import utils from "./utils";
-import types from "./types/index";
-import promiseUtils from "./promise-utils";
 import type Client from "./client";
-import { LoadBalancingPolicy } from "./policies/load-balancing";
-import type { Host } from "./host";
-import { type ProfileManager } from "./execution-profile";
 import Connection from "./connection";
+import errors from "./errors";
+import { type ProfileManager } from "./execution-profile";
+import type { Host } from "./host";
 import { type PreparedQueryInfo } from "./metadata";
+import { LoadBalancingPolicy } from "./policies/load-balancing";
+import promiseUtils from "./promise-utils";
+import types from "./types/index";
+import utils from "./utils";
 
 
 

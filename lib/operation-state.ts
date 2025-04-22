@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "./utils";
 import errors from "./errors";
-import requests from "./requests";
 import type { ExecutionOptions } from "./execution-options";
 import type { Request } from "./requests";
+import requests from "./requests";
+import utils from "./utils";
 
 
 const ExecuteRequest = requests.ExecuteRequest;

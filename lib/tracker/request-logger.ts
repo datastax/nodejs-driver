@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import events from "events";
-import RequestTracker from "./request-tracker";
-import errors from "../errors";
 import { format } from "util";
-import type { Host } from "../host";
+import errors from "../errors";
 import type { ExecutionOptions } from "../execution-options";
+import type { Host } from "../host";
+import RequestTracker from "./request-tracker";
 
 
 const nanosToMillis = 1000000;

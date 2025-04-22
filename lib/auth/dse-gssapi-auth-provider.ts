@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import dns from "dns";
+import utils from "../utils";
 import BaseDseAuthenticator from './base-dse-authenticator';
 import GssapiClient from './gssapi-client';
 import { Authenticator, AuthProvider } from "./provider";
-import dns from "dns";
-import utils from "../utils";
 
 const mechanism = utils.allocBufferFromString('GSSAPI');
 const initialServerChallenge = 'GSSAPI-START';

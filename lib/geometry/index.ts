@@ -24,10 +24,10 @@
  * @module geometry
  */
 
-import Point from './point';
-import LineString from './line-string';
-import Polygon from './polygon';
 import Geometry from './geometry';
+import LineString from './line-string';
+import Point from './point';
+import Polygon from './polygon';
 
 export default {
   Point,
@@ -37,8 +37,5 @@ export default {
 };
 
 export {
-  Point,
-  LineString,
-  Polygon,
-  Geometry
+  Geometry, LineString, Point, Polygon
 };

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import util from "util";
 import events from "events";
-import Connection from "./connection";
-import utils from "./utils";
-import promiseUtils from "./promise-utils";
-import errors from "./errors";
+import util from "util";
 import clientOptions from "./client-options";
+import Connection from "./connection";
+import errors from "./errors";
 import type { Host } from "./host";
+import promiseUtils from "./promise-utils";
+import utils from "./utils";
 
 
 // Used to get the index of the connection with less in-flight requests

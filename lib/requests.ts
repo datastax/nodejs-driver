@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import util from "util";
-import { FrameWriter } from "./writers";
-import types from "./types/index";
-import utils from "./utils";
-import { ExecutionOptions } from "./execution-options";
 import packageInfo from "../package.json";
 import Encoder from "./encoder";
+import { ExecutionOptions } from "./execution-options";
+import types from "./types/index";
+import utils from "./utils";
+import { FrameWriter } from "./writers";
 
 
 /**
@@ -556,13 +556,8 @@ export {
   BatchRequest,
   CancelRequest,
   CredentialsRequest,
-  ExecuteRequest,
-  PrepareRequest,
-  QueryRequest,
-  Request,
-  RegisterRequest,
-  StartupRequest,
-  options
+  ExecuteRequest, options, PrepareRequest,
+  QueryRequest, RegisterRequest, Request, StartupRequest
 };
 
 export default {

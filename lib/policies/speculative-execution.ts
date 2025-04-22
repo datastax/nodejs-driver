@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import errors from "../errors";
 import type Client from "../client";
+import errors from "../errors";
 
 
 
@@ -146,9 +146,8 @@ class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
 
 
 export {
-  NoSpeculativeExecutionPolicy,
-  SpeculativeExecutionPolicy,
-  ConstantSpeculativeExecutionPolicy
+  ConstantSpeculativeExecutionPolicy, NoSpeculativeExecutionPolicy,
+  SpeculativeExecutionPolicy
 };
 
 export default{

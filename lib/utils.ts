@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Long from "long";
-import util from "util";
-import net from "net";
 import { EventEmitter } from "events";
-import errors from "./errors";
-import promiseUtils from "./promise-utils";
-import type { ExecutionOptions } from "./execution-options";
+import Long from "long";
+import net from "net";
+import util from "util";
 import type { ClientOptions } from "./client";
+import errors from "./errors";
+import type { ExecutionOptions } from "./execution-options";
+import promiseUtils from "./promise-utils";
 
 type ValueCallback<T> = (err: Error, val: T) => void;
 type EmptyCallback = (err: Error) => void;
@@ -1433,11 +1433,8 @@ export {
   adaptNamedParamsPrepared,
   adaptNamedParamsWithHints,
   AddressResolver,
-  allocBuffer,
-  allocBufferUnsafe,
-  allocBufferFromArray,
-  allocBufferFromString,
-  arrayIterator,
+  allocBuffer, allocBufferFromArray,
+  allocBufferFromString, allocBufferUnsafe, arrayIterator,
   binarySearch,
   callbackOnce,
   copyBuffer,
@@ -1449,8 +1446,7 @@ export {
   extend,
   fixStack,
   forEachOf,
-  funcCompare,
-  ifUndefined,
+  funcCompare, HashSet, ifUndefined,
   ifUndefined3,
   insertSorted,
   iteratorToArray,
@@ -1470,11 +1466,5 @@ export {
   timesLimit,
   timesSeries,
   totalLength,
-  validateFn,
-  whilst,
-  HashSet,
-  VIntCoding,
-  type ValueCallback,
-  type EmptyCallback,
-  type ArrayOrObject
+  validateFn, VIntCoding, whilst, type ArrayOrObject, type EmptyCallback, type ValueCallback
 };

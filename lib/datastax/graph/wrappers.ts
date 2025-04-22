@@ -88,4 +88,4 @@ function asTimestamp(value: Date):object { return new GraphTypeWrapper(value, da
  */
 function asUdt(value: object, udtInfo: { name: string; keyspace: string; fields: Array<any>; }):object { return new UdtGraphWrapper(value, udtInfo); }
 
-export { asInt, asDouble, asFloat, asTimestamp, asUdt, UdtGraphWrapper, GraphTypeWrapper };
+export { asDouble, asFloat, asInt, asTimestamp, asUdt, GraphTypeWrapper, UdtGraphWrapper };

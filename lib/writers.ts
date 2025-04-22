@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import events from "events";
+import { Socket } from "net";
+import type { ClientOptions } from "./client";
+import Encoder from "./encoder";
+import { DriverError } from "./errors";
+import type OperationState from "./operation-state";
 import types, { Long } from "./types/index";
 import utils from "./utils";
-import { Socket } from "net";
-import Encoder from "./encoder";
-import type { ClientOptions } from "./client";
-import type OperationState from "./operation-state";
-import { DriverError } from "./errors";
 
 
 const FrameHeader = types.FrameHeader;

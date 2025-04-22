@@ -203,4 +203,4 @@ class RemoveModelBatchItem extends ModelBatchItem {
   }
 }
 
-export { ModelBatchItem, InsertModelBatchItem, UpdateModelBatchItem, RemoveModelBatchItem };
+export { InsertModelBatchItem, ModelBatchItem, RemoveModelBatchItem, UpdateModelBatchItem };

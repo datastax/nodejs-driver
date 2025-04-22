@@ -16,15 +16,15 @@
 
 //TODO: we need to rethink how we expose and document the types of the cloud features.
 // Do our users know they can configure in the following ways?
-import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index';
-import https from "https";
-import fs from "fs";
-import util from "util";
 import AdmZip from "adm-zip";
+import fs from "fs";
+import https from "https";
 import { URL } from "url";
+import util from "util";
+import { DsePlainTextAuthProvider, NoAuthProvider } from '../../auth/index';
+import type { ClientOptions } from '../../client';
 import errors from "../../errors";
 import utils from "../../utils";
-import type { ClientOptions } from '../../client';
 
 // Use the callback-based method fs.readFile() instead of fs.promises as we have to support Node.js 8+
 const readFile = util.promisify(fs.readFile);

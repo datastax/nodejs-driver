@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import type Client from "../client";
+import errors from "../errors";
+import type { ExecutionOptions } from "../execution-options";
+import type { Host, HostMap } from "../host";
 import types, { type distance } from "../types/index";
 import utils, { type EmptyCallback } from "../utils";
-import errors from "../errors";
-import type Client from "../client";
-import type { Host, HostMap } from "../host";
-import type { ExecutionOptions } from "../execution-options";
 
 const doneIteratorObject = Object.freeze({ done: true, value: null });
 const newlyUpInterval = 60000;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import { Readable } from "stream";
-import utils from "../utils";
 import errors from "../errors";
+import utils from "../utils";
 
 
 

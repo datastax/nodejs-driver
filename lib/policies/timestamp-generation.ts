@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
-import { Long } from "../types/index";
-import errors from "../errors";
 import type Client from "../client";
+import errors from "../errors";
+import { Long } from "../types/index";
 
 
 /** @module policies/timestampGeneration */
@@ -181,8 +181,7 @@ class MonotonicTimestampGenerator extends TimestampGenerator {
 }
 
 export {
-  TimestampGenerator,
-  MonotonicTimestampGenerator
+  MonotonicTimestampGenerator, TimestampGenerator
 };
 
 export default{

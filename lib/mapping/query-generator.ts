@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import vm from "vm";
-import qModule from "./q";
-import types from "../types/index";
-import type TableMetadata from "../metadata/table-metadata";
 import type { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type TableMetadata from "../metadata/table-metadata";
+import types from "../types/index";
+import qModule from "./q";
 
 
 const QueryOperator = qModule.QueryOperator;

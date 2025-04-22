@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import vm from "vm";
-import utils from "../utils";
 import types, { ResultSet } from "../types/index";
+import utils from "../utils";
 import type ModelMappingInfo from "./model-mapping-info";
 
 

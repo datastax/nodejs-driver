@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "../utils";
-import QueryGenerator from "./query-generator";
-import ResultMapper from "./result-mapper";
-import Result from "./result";
-import Cache from "./cache";
-import Tree from "./tree";
-import ObjectSelector from "./object-selector";
-import DocInfoAdapter from "./doc-info-adapter";
-import type Client from "../client";
-import type ModelMappingInfo from "./model-mapping-info";
 import type { FindDocInfo, InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type Client from "../client";
+import utils from "../utils";
+import Cache from "./cache";
+import DocInfoAdapter from "./doc-info-adapter";
+import type ModelMappingInfo from "./model-mapping-info";
+import ObjectSelector from "./object-selector";
+import QueryGenerator from "./query-generator";
+import Result from "./result";
+import ResultMapper from "./result-mapper";
+import Tree from "./tree";
 
 
 const cacheHighWaterMark = 100;

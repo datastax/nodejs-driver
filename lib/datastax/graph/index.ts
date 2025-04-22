@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import GraphResultSet from "./result-set";
 import getCustomTypeSerializers from "./custom-type-serializers";
-import { asDouble, asFloat, asInt, asTimestamp, asUdt, GraphTypeWrapper, UdtGraphWrapper} from "./wrappers";
+import GraphResultSet from "./result-set";
 import { Edge, Element, Path, Property, Vertex, VertexProperty } from "./structure";
+import { asDouble, asFloat, asInt, asTimestamp, asUdt, GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 
 
 
@@ -84,24 +84,20 @@ export default {
 };
 
 export {
-  Edge,
-  Element,
-  Path,
-  Property,
-  Vertex,
-  VertexProperty,
-  asInt,
   asDouble,
-  asFloat,
-  asTimestamp,
+  asFloat, asInt, asTimestamp,
   asUdt,
-  direction,
+  direction, Edge,
+  Element,
   /** @internal */
   getCustomTypeSerializers,
   GraphResultSet,
   /** @internal */
   GraphTypeWrapper,
-  t,
+  Path,
+  Property, t,
   /** @internal */
-  UdtGraphWrapper
+  UdtGraphWrapper,
+  Vertex,
+  VertexProperty
 };

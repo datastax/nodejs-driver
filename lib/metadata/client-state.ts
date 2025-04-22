@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
+import type Client from "../client";
 import errors from "../errors";
 import type { Host } from "../host";
-import type Client from "../client";
 
 
 

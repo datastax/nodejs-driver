@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Authenticator, AuthProvider } from './provider';
-import BaseDseAuthenticator from './base-dse-authenticator';
 import utils from "../utils";
+import BaseDseAuthenticator from './base-dse-authenticator';
+import { Authenticator, AuthProvider } from './provider';
 
 const mechanism = utils.allocBufferFromString('PLAIN');
 const separatorBuffer = utils.allocBufferFromArray([0]);

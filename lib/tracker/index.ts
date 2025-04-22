@@ -21,11 +21,10 @@
  * @module tracker
  */
 
-import RequestTracker from "./request-tracker";
 import RequestLogger from "./request-logger";
+import RequestTracker from "./request-tracker";
 export {
-  RequestTracker,
-  RequestLogger
+  RequestLogger, RequestTracker
 };
 export default {
   RequestTracker,

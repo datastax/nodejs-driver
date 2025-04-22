@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Integer from "./integer";
 import utils from "../utils";
+import Integer from "./integer";
 
 /** @module types */
 /**

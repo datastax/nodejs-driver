@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import utils from "./utils";
-import types, { consistencies } from "./types/index";
-import promiseUtils from "./promise-utils";
+import type Client from "./client";
+import type { ClientOptions } from "./client";
+import type { Host, HostMap } from "./host";
 import { LoadBalancingPolicy } from "./policies/load-balancing";
 import { RetryPolicy } from "./policies/retry";
-import type { ClientOptions } from "./client";
-import type Client from "./client";
-import type { Host, HostMap } from "./host";
+import promiseUtils from "./promise-utils";
+import types, { consistencies } from "./types/index";
+import utils from "./utils";
 
 
 
@@ -357,8 +357,7 @@ class ProfileManager {
 }
 
 export {
-  ProfileManager,
-  ExecutionProfile
+  ExecutionProfile, ProfileManager
 };
 
 export default {

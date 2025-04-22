@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { LineString, Point, Polygon } from "../../geometry/index";
 import types, { dataTypes, Duration, Tuple } from "../../types/index";
 import utils from "../../utils";
 import { getTypeDefinitionByValue, getUdtTypeDefinitionByValue } from "./complex-type-helper";
-import { LineString, Point, Polygon } from "../../geometry/index";
 import { Edge } from "./structure";
 import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 

@@ -16,8 +16,8 @@
 
 import utils from "../utils";
 import Geometry from "./geometry";
-import Point from "./point";
 import LineString from "./line-string";
+import Point from "./point";
 
 /**
  * @classdesc

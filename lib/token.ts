@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import util from "util";
 import type { DataTypeInfo } from "./encoder";
 import types from "./types/index";
-import util from "util";
 
 
 const _Murmur3TokenType = types.dataTypes.getByName('bigint');
@@ -293,11 +293,10 @@ class TokenRange {
 }
 
 export {
-  Token,
-  TokenRange,
   ByteOrderedToken,
   Murmur3Token,
-  RandomToken
+  RandomToken, Token,
+  TokenRange
 };
 
 export default {

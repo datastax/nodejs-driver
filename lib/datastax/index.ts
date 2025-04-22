@@ -24,8 +24,8 @@
  * @module datastax
  */
 
-import graph from "./graph/index";
-import { asDouble, asFloat, asInt, asTimestamp, asUdt, direction, Edge, Element, getCustomTypeSerializers, GraphResultSet, GraphTypeWrapper, Path, Property,
+import graph, {
+  asDouble, asFloat, asInt, asTimestamp, asUdt, direction, Edge, Element, getCustomTypeSerializers, GraphResultSet, GraphTypeWrapper, Path, Property,
   t, UdtGraphWrapper, Vertex, VertexProperty
 } from "./graph/index";
 import { DateRange } from "./search/index";
@@ -58,6 +58,5 @@ export default {
 };
 
 export {
-  graph,
-  DateRange
+  DateRange, graph
 };

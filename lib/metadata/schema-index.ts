@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "../utils";
 import types, { Row } from "../types/index";
+import utils from "../utils";
 
 
 enum IndexKind {

@@ -166,9 +166,8 @@ class ExponentialReconnectionPolicy extends ReconnectionPolicy {
 }
 
 export {
-  ReconnectionPolicy,
   ConstantReconnectionPolicy,
-  ExponentialReconnectionPolicy
+  ExponentialReconnectionPolicy, ReconnectionPolicy
 };
 
 export default {

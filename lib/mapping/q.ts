@@ -175,5 +175,5 @@ export default {
 export {
   q,
   QueryAssignment,
-  QueryOperator,
+  QueryOperator
 };

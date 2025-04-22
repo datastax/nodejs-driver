@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import EventEmitter from "events";
 import type { AuthenticationError, OperationTimedOutError, ResponseError } from "../errors";
 import ClientMetrics from "./client-metrics";
-import EventEmitter from "events";
 
 
 

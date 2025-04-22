@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
-import types from "../../types/index";
 import Encoder from "../../encoder";
+import types from "../../types/index";
+import { GraphTypeWrapper, UdtGraphWrapper } from "./wrappers";
 
 
 const { dataTypes } = types;
@@ -101,6 +101,7 @@ function getUdtTypeDefinitionByValue(wrappedValue) {
   return getUdtTypeDefinition(wrappedValue.udtInfo);
 }
 
-export { 
-  getTypeDefinitionByValue, 
-  getUdtTypeDefinitionByValue };
+export {
+  getTypeDefinitionByValue,
+  getUdtTypeDefinitionByValue
+};

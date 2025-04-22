@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Tree from "./tree";
-import {InsertModelBatchItem, ModelBatchItem, RemoveModelBatchItem, UpdateModelBatchItem} from "./model-batch-item";
-import type MappingHandler from "./mapping-handler";
 import type { InsertDocInfo, RemoveDocInfo, UpdateDocInfo } from ".";
+import type MappingHandler from "./mapping-handler";
+import { InsertModelBatchItem, ModelBatchItem, RemoveModelBatchItem, UpdateModelBatchItem } from "./model-batch-item";
+import Tree from "./tree";
 
 /**
  * Provides utility methods to group multiple mutations on a single batch.

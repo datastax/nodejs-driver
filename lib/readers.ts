@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 import util from "util";
-import utils from "./utils";
-import types, { InetAddress, Uuid } from "./types/index";
 import errors, { ResponseError } from "./errors";
-import { FrameHeader } from "./types/index";
+import types, { FrameHeader, InetAddress, Uuid } from "./types/index";
+import utils from "./utils";
 
 /**
  * Information on the formatting of the returned rows

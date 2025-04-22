@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import ModelMapper from "./model-mapper";
-import MappingHandler from "./mapping-handler";
-import DocInfoAdapter from "./doc-info-adapter";
+import type { MappingExecutionOptions, MappingOptions } from ".";
+import type Client from "../client";
 import errors from "../errors";
+import DocInfoAdapter from "./doc-info-adapter";
+import MappingHandler from "./mapping-handler";
+import { ModelBatchItem } from "./model-batch-item";
+import ModelMapper from "./model-mapper";
+import ModelMappingInfo from "./model-mapping-info";
 import Result from "./result";
 import ResultMapper from "./result-mapper";
-import ModelMappingInfo from "./model-mapping-info";
-import { ModelBatchItem } from "./model-batch-item";
-import type Client from "../client";
-import type { MappingExecutionOptions, MappingOptions} from ".";
 
 
 

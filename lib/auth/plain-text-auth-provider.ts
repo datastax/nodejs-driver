@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { Authenticator, AuthProvider } from './provider';
 import utils from "../utils";
+import { Authenticator, AuthProvider } from './provider';
 
 /**
  * @classdesc Provides plain text [Authenticator]{@link module:auth~Authenticator} instances to be used when
@@ -90,5 +90,5 @@ class PlainTextAuthenticator extends Authenticator {
 
 export {
   PlainTextAuthenticator,
-  PlainTextAuthProvider,
+  PlainTextAuthProvider
 };

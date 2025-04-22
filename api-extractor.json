@@ -425,6 +425,11 @@
       "ae-missing-release-tag": {
         "logLevel": "none",
         "addToApiReportFile": false
+      },
+
+      "ae-unresolved-link": {
+        "logLevel": "none",
+        "addToApiReportFile": false
       }
       //
       // . . .

@@ -1,9 +1,15 @@
 import { ConnectionOptions } from 'tls';
 import EventEmitter from 'events';
 import { EventEmitter as EventEmitter_2 } from 'stream';
-import Long from 'long';
+import { default as Long } from 'long';
+import { default as Long_2 } from 'long';
 import { Readable } from 'stream';
 import { Socket } from 'net';
+
+export declare const addressResolution: {
+    AddressTranslator: typeof AddressTranslator;
+    EC2MultiRegionTranslator: typeof EC2MultiRegionTranslator;
+};
 
 /* Excluded from this release type: AddressResolver */
 
@@ -189,7 +195,7 @@ declare class AllowListPolicy extends LoadBalancingPolicy {
 /**
  * Represents an error that is raised when one of the arguments provided to a method is not valid
  */
-declare class ArgumentError extends DriverError {
+export declare class ArgumentError extends DriverError {
     /**
      * Represents an error that is raised when one of the arguments provided to a method is not valid
      * @param {String} message
@@ -257,7 +263,7 @@ export declare const auth: {
 /**
  * Represents an error when trying to authenticate with auth-enabled host
  */
-declare class AuthenticationError extends DriverError {
+export declare class AuthenticationError extends DriverError {
     additionalInfo: ResponseError;
     /**
      * Represents an error when trying to authenticate with auth-enabled host
@@ -273,7 +279,7 @@ declare class AuthenticationError extends DriverError {
  * a new instance of this class will be created by the corresponding.
  * @alias module:auth~Authenticator
  */
-declare class Authenticator {
+export declare class Authenticator {
     /**
      * Obtain an initial response token for initializing the SASL handshake.
      * @param {Function} callback
@@ -299,7 +305,7 @@ declare class Authenticator {
  * @abstract
  * @alias module:auth~AuthProvider
  */
-declare class AuthProvider {
+export declare class AuthProvider {
     /**
      * Returns an [Authenticator]{@link module:auth~Authenticator} instance to be used when connecting to a host.
      * @param {String} endpoint The ip address and port number in the format ip:port
@@ -325,7 +331,7 @@ declare class AuthProvider {
  * format conversion.  The {@link #toString} method provides a
  * canonical representation of a <code>BigDecimal</code>.
  */
-declare class BigDecimal {
+export declare class BigDecimal {
     private _intVal;
     private _scale;
     /**
@@ -428,7 +434,7 @@ declare class BigDecimal {
  * Represents a client-side error indicating that all connections to a certain host have reached
  * the maximum amount of in-flight requests supported.
  */
-declare class BusyConnectionError extends DriverError {
+export declare class BusyConnectionError extends DriverError {
     /**
      * Represents a client-side error indicating that all connections to a certain host have reached
      * the maximum amount of in-flight requests supported.
@@ -803,7 +809,7 @@ export declare class Client extends EventEmitter.EventEmitter {
  * @alias module:metrics~ClientMetrics
  * @interface
  */
-declare class ClientMetrics {
+export declare class ClientMetrics {
     /**
      * Method invoked when an authentication error is obtained from the server.
      * @param {AuthenticationError|Error} e The error encountered.
@@ -1096,7 +1102,7 @@ export declare interface ClientOptions {
     /* Excluded from this release type: applicationVersion */
     authProvider?: AuthProvider;
     contactPoints?: string[];
-    /* Excluded from this release type: localDataCenter */
+    localDataCenter?: string;
     /* Excluded from this release type: logEmitter */
     keyspace?: string;
     credentials?: {
@@ -1202,7 +1208,7 @@ declare class ClientState {
     /* Excluded from this release type: from */
 }
 
-declare interface ColumnInfo {
+export declare interface ColumnInfo {
     name: string;
     type: DataTypeInfo;
 }
@@ -1229,7 +1235,7 @@ export declare const concurrent: {
  * @property {Number} localSerial Same as serial but confined to the data center. A write must be written conditionally to the commit log and memtable on a quorum of replica nodes in the same data center.
  * @property {Number} localOne Similar to One but only within the DC the coordinator is in.
  */
-declare enum consistencies {
+export declare enum consistencies {
     any = 0,
     one = 1,
     two = 2,
@@ -1242,6 +1248,12 @@ declare enum consistencies {
     localSerial = 9,
     localOne = 10
 }
+
+/**
+ * Mapping of consistency level codes to their string representation.
+ * @type {Object}
+ */
+export declare const consistencyToString: {};
 
 /**
  * A reconnection policy that waits a constant time between each reconnection attempt.
@@ -1576,7 +1588,7 @@ declare type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColum
  * @property {Number} udt User-defined type.
  * @property {Number} tuple A sequence of values.
  */
-declare enum dataTypes {
+export declare enum dataTypes {
     custom = 0,
     ascii = 1,
     bigint = 2,
@@ -1606,13 +1618,13 @@ declare enum dataTypes {
     tuple = 49
 }
 
-declare namespace dataTypes {
+export declare namespace dataTypes {
     /**
      * Returns the typeInfo of a given type name
      * @param {string} name
      * @returns {DateTypeInfo}
      */
-    function getByName(name: string): DataTypeInfo;
+    export function getByName(name: string): DataTypeInfo;
 }
 
 /**
@@ -1636,7 +1648,7 @@ declare namespace dataTypes {
  * <p>
  * @memberOf module:datastax/search
  */
-declare class DateRange {
+export declare class DateRange {
     lowerBound: DateRangeBound;
     upperBound: DateRangeBound;
     private _type;
@@ -1786,6 +1798,12 @@ declare type DecisionInfo = {
 };
 
 /**
+ * Returns a new instance of the default address translator policy used by the driver.
+ * @returns {AddressTranslator}
+ */
+export declare const defaultAddressTranslator: () => AddressTranslator;
+
+/**
  * A load-balancing policy implementation that attempts to fairly distribute the load based on the amount of in-flight
  * request per hosts. The local replicas are initially shuffled and
  * <a href="https://www.eecs.harvard.edu/~michaelm/postscripts/mythesis.pdf">between the first two nodes in the
@@ -1896,6 +1914,16 @@ declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
 }
 
 /**
+ * Returns a new instance of the default load-balancing policy used by the driver.
+ * @param {string} [localDc] When provided, it sets the data center that is going to be used as local for the
+ * load-balancing policy instance.
+ * <p>When localDc is undefined, the load-balancing policy instance will use the <code>localDataCenter</code>
+ * provided in the {@link ClientOptions}.</p>
+ * @returns {LoadBalancingPolicy}
+ */
+export declare const defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy;
+
+/**
  * A default implementation of [ClientMetrics]{@link module:metrics~ClientMetrics} that exposes the driver events as
  * Node.js events.
  * <p>
@@ -1910,7 +1938,7 @@ declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
  * defaultMetrics.speculativeRetries.on('increment', () => specExecsCount++);
  * defaultMetrics.responses.on('increment', latency => myHistogram.record(latency));
  */
-declare class DefaultMetrics extends ClientMetrics {
+export declare class DefaultMetrics extends ClientMetrics {
     errors: EventEmitter & {
         authentication: EventEmitter;
         clientTimeout: EventEmitter;
@@ -1975,11 +2003,29 @@ declare class DefaultMetrics extends ClientMetrics {
 export declare const defaultOptions: () => ClientOptions;
 
 /**
+ * Returns a new instance of the default reconnection policy used by the driver.
+ * @returns {ReconnectionPolicy}
+ */
+export declare const defaultReconnectionPolicy: () => ReconnectionPolicy;
+
+/**
+ * Returns a new instance of the default retry policy used by the driver.
+ * @returns {RetryPolicy}
+ */
+export declare const defaultRetryPolicy: () => RetryPolicy;
+
+/**
+ * Returns a new instance of the default speculative execution policy used by the driver.
+ * @returns {SpeculativeExecutionPolicy}
+ */
+export declare const defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy;
+
+/**
  * Default implementation of [TableMappings]{@link module:mapping~TableMappings} that doesn't perform any conversion.
  * @alias module:mapping~DefaultTableMappings
  * @implements {module:mapping~TableMappings}
  */
-declare class DefaultTableMappings extends TableMappings {
+export declare class DefaultTableMappings extends TableMappings {
     /**
      * Creates a new instance of {@link DefaultTableMappings}.
      */
@@ -1995,13 +2041,19 @@ declare class DefaultTableMappings extends TableMappings {
 }
 
 /**
+ * Returns a new instance of the default timestamp generator used by the driver.
+ * @returns {TimestampGenerator}
+ */
+export declare const defaultTimestampGenerator: () => TimestampGenerator;
+
+/**
  * Represents the distance of Cassandra node as assigned by a LoadBalancingPolicy relatively to the driver instance.
  * @type {Object}
  * @property {Number} local A local node.
  * @property {Number} remote A remote node.
  * @property {Number} ignored A node that is meant to be ignored.
  */
-declare enum distance {
+export declare enum distance {
     local = 0,
     remote = 1,
     ignored = 2
@@ -2016,7 +2068,7 @@ declare type DocInfo = FindDocInfo | UpdateDocInfo | InsertDocInfo | RemoveDocIn
 /**
  * Base Error
  */
-declare class DriverError extends Error {
+export declare class DriverError extends Error {
     info: string;
     isSocketError: boolean;
     innerError: any;
@@ -2027,7 +2079,7 @@ declare class DriverError extends Error {
 /**
  * Represents a bug inside the driver or in a Cassandra host.
  */
-declare class DriverInternalError extends DriverError {
+export declare class DriverInternalError extends DriverError {
     /**
      * Represents a bug inside the driver or in a Cassandra host.
      * @param {String} message
@@ -2057,7 +2109,7 @@ declare interface DseClientOptions extends ClientOptions {
  * });
  * @alias module:auth~DseGssapiAuthProvider
  */
-declare class DseGssapiAuthProvider extends AuthProvider {
+export declare class DseGssapiAuthProvider extends AuthProvider {
     private _kerberos;
     private authorizationId;
     private service;
@@ -2139,7 +2191,7 @@ declare class DseGssapiAuthProvider extends AuthProvider {
  *   authProvider: new cassandra.auth.DsePlainTextAuthProvider('user', 'p@ssword1');
  * });
  */
-declare class DsePlainTextAuthProvider extends AuthProvider {
+export declare class DsePlainTextAuthProvider extends AuthProvider {
     private username;
     private password;
     private authorizationId;
@@ -2182,11 +2234,11 @@ declare class DsePlainTextAuthProvider extends AuthProvider {
  * @param {Number|Long} nanoseconds The number of nanoseconds.
  * @constructor
  */
-declare class Duration {
+export declare class Duration {
     private months;
     private days;
     private nanoseconds;
-    constructor(months: number, days: number, nanoseconds: number | Long);
+    constructor(months: number, days: number, nanoseconds: number | Long_2);
     /**
      * Returns true if the value of the Duration instance and other are the same
      * @param {Duration} other
@@ -2592,6 +2644,13 @@ export declare class Encoder {
     private static isTypedArray;
 }
 
+declare class EnumValue {
+    /* Excluded from this release type: typeName */
+    /* Excluded from this release type: elementName */
+    /* Excluded from this release type: __constructor */
+    toString(): any;
+}
+
 export declare const errors: {
     ArgumentError: typeof ArgumentError;
     AuthenticationError: typeof AuthenticationError;
@@ -2649,9 +2708,9 @@ export declare const errors: {
  *
  * const result = await executeConcurrent(client, queryAndParameters);
  */
-declare function executeConcurrent(client: Client, query: string, parameters: any[][] | Readable, options?: Options): Promise<ResultSetGroup>;
+export declare function executeConcurrent(client: Client, query: string, parameters: any[][] | Readable, options?: Options): Promise<ResultSetGroup>;
 
-declare function executeConcurrent(client: Client, queries: Array<{
+export declare function executeConcurrent(client: Client, queries: Array<{
     query: string;
     params: any[];
 }>, options?: Options): Promise<ResultSetGroup>;
@@ -2816,7 +2875,7 @@ export declare class ExecutionOptions {
      * @abstract
      * @returns {Number|Long|undefined|null}
      */
-    getTimestamp(): number | Long | undefined | null;
+    getTimestamp(): number | Long_2 | undefined | null;
     /* Excluded from this release type: setHints */
     /* Excluded from this release type: setKeyspace */
     /* Excluded from this release type: setPageState */
@@ -3061,7 +3120,7 @@ declare class FallthroughRetryPolicy extends RetryPolicy {
     onWriteTimeout(info: OperationInfo, consistency: consistencies, received: number, blockFor: number, writeType: string): DecisionInfo;
 }
 
-declare type FindDocInfo = {
+export declare type FindDocInfo = {
     fields?: string[];
     orderBy?: {
         [key: string]: string;
@@ -3069,11 +3128,13 @@ declare type FindDocInfo = {
     limit?: number;
 };
 
+/* Excluded from this release type: frameFlags */
+
 /* Excluded from this release type: FrameHeader */
 
 /* Excluded from this release type: generateTimestamp */
 
-declare class Geometry {
+export declare class Geometry {
     static types: {
         readonly Point2D: 1;
         readonly LineString: 2;
@@ -3106,6 +3167,36 @@ export declare const geometry: {
 /* Excluded from this release type: getCustomSerializers */
 
 /* Excluded from this release type: getDataTypeNameByCode */
+
+export declare const graph: {
+    Edge: typeof Edge;
+    Element: typeof Element;
+    Path: typeof Path;
+    Property: typeof Property;
+    Vertex: typeof Vertex;
+    VertexProperty: typeof VertexProperty;
+    asInt: typeof asInt;
+    asDouble: typeof asDouble;
+    asFloat: typeof asFloat;
+    asTimestamp: typeof asTimestamp;
+    asUdt: typeof asUdt;
+    direction: {
+        both: EnumValue;
+        in: EnumValue;
+        out: EnumValue;
+        in_: EnumValue;
+    };
+    /* Excluded from this release type: getCustomTypeSerializers */
+    GraphResultSet: typeof GraphResultSet;
+    /* Excluded from this release type: GraphTypeWrapper */
+    t: {
+        id: EnumValue;
+        key: EnumValue;
+        label: EnumValue;
+        value: EnumValue;
+    };
+    /* Excluded from this release type: UdtGraphWrapper */
+};
 
 declare type GraphOptions = {
     language?: string;
@@ -3402,7 +3493,7 @@ declare enum IndexKind {
  * @class
  * @classdesc Represents an v4 or v6 Internet Protocol (IP) address.
  */
-declare class InetAddress {
+export declare class InetAddress {
     private buffer;
     length: number;
     version: number;
@@ -3455,7 +3546,7 @@ declare class InetAddress {
     private static isValidIPv4Mapped;
 }
 
-declare type InsertDocInfo = {
+export declare type InsertDocInfo = {
     fields?: string[];
     ttl?: number;
     ifNotExists?: boolean;
@@ -3480,7 +3571,7 @@ declare const inspectMethod: unique symbol;
  * representation without overflow or change in sign.
  * @final
  */
-declare class Integer {
+export declare class Integer {
     private bits_;
     private sign_;
     /**
@@ -3759,7 +3850,7 @@ declare interface Keyspace {
  * @alias module:geometry~LineString
  * @extends {Geometry}
  */
-declare class LineString extends Geometry {
+export declare class LineString extends Geometry {
     /* Excluded from this release type: points */
     /**
      * Creates a new {@link LineString} instance.
@@ -3816,6 +3907,16 @@ declare type ListSetColumnInfo = {
     };
 };
 
+export declare const loadBalancing: {
+    AllowListPolicy: typeof AllowListPolicy;
+    DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
+    DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
+    LoadBalancingPolicy: typeof LoadBalancingPolicy;
+    RoundRobinPolicy: typeof RoundRobinPolicy;
+    TokenAwarePolicy: typeof TokenAwarePolicy;
+    WhiteListPolicy: typeof WhiteListPolicy;
+};
+
 /**
  * Base class for Load Balancing Policies.
  */
@@ -3866,7 +3967,7 @@ declare class LoadBalancingPolicy {
  *   parameter indicating the days since epoch.  For example, -1 represents 1969-12-31.
  * </p>
  */
-declare class LocalDate {
+export declare class LocalDate {
     /**
      * The date representation if falls within a range of an ES5 data type, otherwise an invalid date.
      */
@@ -3959,7 +4060,7 @@ declare class LocalDate {
  *   LocalTime is an immutable date-time object that represents a time, often viewed as hour-minute-second. Time is represented to nanosecond precision. For example, the value "13:45.30.123456789" can be stored in a LocalTime.
  * </p>
  */
-declare class LocalTime {
+export declare class LocalTime {
     private value;
     /**
      * Gets the hour component of the time represented by the current instance, a number from 0 to 23.
@@ -3991,7 +4092,7 @@ declare class LocalTime {
      * @param {Long} totalNanoseconds Total nanoseconds since midnight.
      * @constructor
      */
-    constructor(totalNanoseconds: Long);
+    constructor(totalNanoseconds: Long_2);
     /**
      * Parses a string representation and returns a new LocalTime.
      * @param {String} value
@@ -4041,7 +4142,7 @@ declare class LocalTime {
      * Gets the total amount of nanoseconds since midnight for this instance.
      * @returns {Long}
      */
-    getTotalNanoseconds(): Long;
+    getTotalNanoseconds(): Long_2;
     inspect(): string;
     /**
      * Returns a big-endian bytes representation of the instance
@@ -4068,6 +4169,8 @@ declare class LocalTime {
  * @param [furtherInfo]
  */
 declare function log(type: string, info: string, furtherInfo?: any, options?: any): void;
+
+export { Long }
 
 declare type MapColumnInfo = {
     code: (dataTypes.map);
@@ -4109,7 +4212,7 @@ declare type MapColumnInfo = {
  * };
  * const mapper = new Mapper(client, mappingOptions);
  */
-declare class Mapper {
+export declare class Mapper {
     private client;
     private _modelMappingInfos;
     private _modelMappers;
@@ -4177,18 +4280,18 @@ export declare const mapping: {
     };
 };
 
-declare type MappingExecutionOptions = {
+export declare type MappingExecutionOptions = {
     executionProfile?: string;
     isIdempotent?: boolean;
     logged?: boolean;
-    timestamp?: number | Long;
+    timestamp?: number | Long_2;
     fetchSize?: number;
     pageState?: number;
 };
 
 /* Excluded from this release type: MappingHandler */
 
-declare type MappingOptions = {
+export declare type MappingOptions = {
     models: {
         [key: string]: ModelOptions;
     };
@@ -4557,7 +4660,7 @@ export declare const metrics: {
  * Represents a query or a set of queries used to perform a mutation in a batch.
  * @alias module:mapping~ModelBatchItem
  */
-declare class ModelBatchItem {
+export declare class ModelBatchItem {
     /* Excluded from this release type: doc */
     /* Excluded from this release type: docInfo */
     /* Excluded from this release type: handler */
@@ -4574,7 +4677,7 @@ declare class ModelBatchItem {
  * Provides utility methods to group multiple mutations on a single batch.
  * @alias module:mapping~ModelBatchMapper
  */
-declare class ModelBatchMapper {
+export declare class ModelBatchMapper {
     private _handler;
     private _cache;
     /* Excluded from this release type: __constructor */
@@ -4655,7 +4758,7 @@ declare class ModelColumnInfo {
     static parse(columnName: any, value: any): ModelColumnInfo;
 }
 
-declare type ModelColumnOptions = {
+export declare type ModelColumnOptions = {
     name: string;
     toModel?: (columnValue: any) => any;
     fromModel?: (modelValue: any) => any;
@@ -4665,7 +4768,7 @@ declare type ModelColumnOptions = {
  * Represents an object mapper for a specific model.
  * @alias module:mapping~ModelMapper
  */
-declare class ModelMapper<T = any> {
+export declare class ModelMapper<T = any> {
     /**
      * Gets the name identifier of the model.
      * @type {String}
@@ -4901,7 +5004,7 @@ declare class ModelMapper<T = any> {
 
 /* Excluded from this release type: ModelMappingInfo */
 
-declare type ModelOptions = {
+export declare type ModelOptions = {
     tables?: string[] | ModelTables[];
     mappings?: TableMappings;
     columns?: {
@@ -4910,7 +5013,7 @@ declare type ModelOptions = {
     keyspace?: string;
 };
 
-declare interface ModelTables {
+export declare interface ModelTables {
     name: string;
     isView: boolean;
 }
@@ -4951,7 +5054,7 @@ declare class MonotonicTimestampGenerator extends TimestampGenerator {
      * @returns {Number}
      */
     getDate(): number;
-    next(client: Client): Long | number | null;
+    next(client: Client): Long_2 | number | null;
     /**
      * @private
      * @returns {Number|Long}
@@ -4974,7 +5077,7 @@ declare class MonotonicTimestampGenerator extends TimestampGenerator {
 /**
  * Represents an error when a query cannot be performed because no host is available or could be reached by the driver.
  */
-declare class NoHostAvailableError extends DriverError {
+export declare class NoHostAvailableError extends DriverError {
     innerErrors: object;
     /**
      * Represents an error when a query cannot be performed because no host is available or could be reached by the driver.
@@ -5005,7 +5108,7 @@ declare class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
 /**
  * Represents an error that is raised when a feature is not supported in the driver or in the current Cassandra version.
  */
-declare class NotSupportedError extends DriverError {
+export declare class NotSupportedError extends DriverError {
     /**
      * Represents an error that is raised when a feature is not supported in the driver or in the current Cassandra version.
      * @param message
@@ -5013,6 +5116,8 @@ declare class NotSupportedError extends DriverError {
      */
     constructor(message: string);
 }
+
+/* Excluded from this release type: opcodes */
 
 /**
  * Information of the execution to be used to determine whether the operation should be retried.
@@ -5033,7 +5138,7 @@ declare type OperationInfo = {
  * Represents a client-side error that is raised when the client didn't hear back from the server within
  * {@link ClientOptions.socketOptions.readTimeout}.
  */
-declare class OperationTimedOutError extends DriverError {
+export declare class OperationTimedOutError extends DriverError {
     host?: string;
     /**
      * Represents a client-side error that is raised when the client didn't hear back from the server within
@@ -5045,7 +5150,7 @@ declare class OperationTimedOutError extends DriverError {
     constructor(message: string, host?: string);
 }
 
-declare type Options = {
+export declare type Options = {
     collectResults?: boolean;
     concurrencyLevel?: number;
     executionProfile?: string;
@@ -5088,7 +5193,7 @@ declare class Path {
  * const client = new Client({ contactPoints: contactPoints, authProvider: authProvider });
  * @alias module:auth~PlainTextAuthProvider
  */
-declare class PlainTextAuthProvider extends AuthProvider {
+export declare class PlainTextAuthProvider extends AuthProvider {
     private username;
     private password;
     /**
@@ -5121,7 +5226,7 @@ declare class PlainTextAuthProvider extends AuthProvider {
  * @extends {Geometry}
  * @alias module:geometry~Point
  */
-declare class Point extends Geometry {
+export declare class Point extends Geometry {
     /* Excluded from this release type: x */
     /* Excluded from this release type: y */
     /**
@@ -5226,7 +5331,7 @@ export declare const policies: {
  * );
  * @alias module:geometry~Polygon
  */
-declare class Polygon extends Geometry {
+export declare class Polygon extends Geometry {
     /* Excluded from this release type: rings */
     /**
      * Creates a new {@link Polygon} instance.
@@ -5281,7 +5386,7 @@ declare class Polygon extends Geometry {
     toJSON(): object;
 }
 
-declare type PreparedQueryInfo = {
+export declare type PreparedQueryInfo = {
     queryId?: Buffer;
     preparing?: boolean;
     query: string;
@@ -5305,6 +5410,8 @@ declare class Property {
     constructor(key: string, value: any);
 }
 
+/* Excluded from this release type: protocolEvents */
+
 /**
  * Contains information for the different protocol versions supported by the driver.
  * @type {Object}
@@ -5322,7 +5429,7 @@ declare class Property {
  * is supported.
  * @alias module:types~protocolVersion
  */
-declare enum protocolVersion {
+export declare enum protocolVersion {
     v1 = 1,
     v2 = 2,
     v3 = 3,
@@ -5335,7 +5442,7 @@ declare enum protocolVersion {
     minSupported = 1
 }
 
-declare namespace protocolVersion {
+export declare namespace protocolVersion {
     /* Excluded from this release type: isDse */
     /* Excluded from this release type: isSupportedCassandra */
     /**
@@ -5343,7 +5450,7 @@ declare namespace protocolVersion {
      * @param {Number} version
      * @returns {Boolean}
      */
-    function isSupported(version: number): boolean;
+    export function isSupported(version: number): boolean;
     /* Excluded from this release type: supportsPrepareFlags */
     /* Excluded from this release type: supportsKeyspaceInRequest */
     /* Excluded from this release type: supportsResultMetadataId */
@@ -5363,6 +5470,39 @@ declare namespace protocolVersion {
     /* Excluded from this release type: getHighestCommon */
     /* Excluded from this release type: isBeta */
 }
+
+/**
+ * Contains functions that represents operators in a query.
+ * @alias module:mapping~q
+ * @type {Object}
+ * @property {function} in_ Represents the CQL operator "IN".
+ * @property {function} gt Represents the CQL operator greater than ">".
+ * @property {function} gte Represents the CQL operator greater than or equals to ">=" .
+ * @property {function} lt Represents the CQL operator less than "<" .
+ * @property {function} lte Represents the CQL operator less than or equals to "<=" .
+ * @property {function} notEq Represents the CQL operator not equals to "!=" .
+ * @property {function} and When applied to a property, it represents two CQL conditions on the same column separated
+ * by the logical AND operator, e.g: "col1 >= x col < y"
+ * @property {function} incr Represents the CQL increment assignment used for counters, e.g: "col = col + x"
+ * @property {function} decr Represents the CQL decrement assignment used for counters, e.g: "col = col - x"
+ * @property {function} append Represents the CQL append assignment used for collections, e.g: "col = col + x"
+ * @property {function} prepend Represents the CQL prepend assignment used for lists, e.g: "col = x + col"
+ * @property {function} remove Represents the CQL remove assignment used for collections, e.g: "col = col - x"
+ */
+export declare const q: {
+    in_: (arr: any) => QueryOperator;
+    gt: (value: any) => QueryOperator;
+    gte: (value: any) => QueryOperator;
+    lt: (value: any) => QueryOperator;
+    lte: (value: any) => QueryOperator;
+    notEq: (value: any) => QueryOperator;
+    and: (condition1: any, condition2: any) => QueryOperator;
+    incr: (value: any) => QueryAssignment;
+    decr: (value: any) => QueryAssignment;
+    append: (value: any) => QueryAssignment;
+    prepend: (value: any) => QueryAssignment;
+    remove: (value: any) => QueryAssignment;
+};
 
 /**
  * Represents a CQL assignment operation, like col = col + x.
@@ -5560,7 +5700,7 @@ export declare interface QueryOptions {
     routingKey?: Buffer | Buffer[];
     routingNames?: string[];
     serialConsistency?: number;
-    timestamp?: number | Long;
+    timestamp?: number | Long_2;
     traceQuery?: boolean;
     graphOptions?: {
         language?: string;
@@ -5578,7 +5718,7 @@ declare interface QueryTrace {
     parameters: {
         [key: string]: any;
     };
-    startedAt: number | Long;
+    startedAt: number | Long_2;
     duration: number;
     clientAddress: string;
     events: Array<{
@@ -5593,6 +5733,12 @@ declare interface QueryTrace {
 /* Excluded from this release type: RandomToken */
 
 /* Excluded from this release type: RandomTokenizer */
+
+export declare const reconnection: {
+    ReconnectionPolicy: typeof ReconnectionPolicy;
+    ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
+    ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
+};
 
 /** @module policies/reconnection */
 /**
@@ -5611,7 +5757,7 @@ declare class ReconnectionPolicy {
     getOptions(): Map<string, any>;
 }
 
-declare type RemoveDocInfo = {
+export declare type RemoveDocInfo = {
     fields?: string[];
     ttl?: number;
     ifExists?: boolean;
@@ -5653,7 +5799,7 @@ declare class Request_2 {
  * // Add the requestLogger to the client options
  * const client = new Client({ contactPoints, requestTracker: requestLogger });
  */
-declare class RequestLogger extends RequestTracker {
+export declare class RequestLogger extends RequestTracker {
     private _options;
     /**
      * Determines whether it should emit 'normal' events for every EXECUTE, QUERY and BATCH request executed
@@ -5739,7 +5885,7 @@ declare class RequestLogger extends RequestTracker {
  * @interface
  * @alias module:tracker~RequestTracker
  */
-declare class RequestTracker {
+export declare class RequestTracker {
     /**
      * Invoked each time a query or batch request succeeds.
      * @param {Host} host The node that acted as coordinator of the request.
@@ -5788,7 +5934,7 @@ declare class RequestTracker {
 /**
  * Represents an error message from the server
  */
-declare class ResponseError extends DriverError {
+export declare class ResponseError extends DriverError {
     code: number;
     consistencies?: consistencies;
     required?: number;
@@ -5835,7 +5981,7 @@ declare class ResponseError extends DriverError {
  * @property {Number} alreadyExists The query attempted to create a schema element (i.e. keyspace, table) that already exists.
  * @property {Number} unprepared Can be thrown while a prepared statement tries to be executed if the provided statement is not known by the coordinator.
  */
-declare enum responseErrorCodes {
+export declare enum responseErrorCodes {
     serverError = 0,
     protocolError = 10,
     badCredentials = 256,
@@ -5861,7 +6007,7 @@ declare enum responseErrorCodes {
  * Represents the result of an execution as an iterable of objects in the Mapper.
  * @alias module:mapping~Result
  */
-declare class Result<T = any> implements IterableIterator<T> {
+export declare class Result<T = any> implements IterableIterator<T> {
     private _rs;
     private _info;
     private _rowAdapter;
@@ -5907,12 +6053,14 @@ declare class Result<T = any> implements IterableIterator<T> {
     };
 }
 
+/* Excluded from this release type: resultKind */
+
 /** @module types */
 /**
  * @class
  * @classdesc Represents the result of a query.
  */
-declare class ResultSet implements Iterable<Row>, AsyncIterable<Row> {
+export declare class ResultSet implements Iterable<Row>, AsyncIterable<Row> {
     info: {
         queriedHost: string;
         triedHosts: {
@@ -6009,7 +6157,7 @@ declare class ResultSet implements Iterable<Row>, AsyncIterable<Row> {
 /**
  * Represents results from different related executions.
  */
-declare class ResultSetGroup {
+export declare class ResultSetGroup {
     private _collectResults;
     private _maxErrors;
     totalExecuted: number;
@@ -6024,7 +6172,7 @@ declare class ResultSetGroup {
 /**
  * Readable stream using to yield data from a result or a field
  */
-declare class ResultStream extends Readable {
+export declare class ResultStream extends Readable {
     buffer: any[];
     paused: boolean;
     private _cancelAllowed;
@@ -6041,6 +6189,12 @@ declare class ResultStream extends Readable {
     /* Excluded from this release type: cancel */
     /* Excluded from this release type: setHandlers */
 }
+
+export declare const retry: {
+    IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
+    FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
+    RetryPolicy: typeof RetryPolicy;
+};
 
 /**
  * Base and default RetryPolicy.
@@ -6171,7 +6325,7 @@ declare class RoundRobinPolicy extends LoadBalancingPolicy {
  * @param {Array} columns
  * @constructor
  */
-declare class Row {
+export declare class Row {
     private readonly __columns;
     [key: string]: any;
     /* Excluded from this release type: __constructor */
@@ -6309,6 +6463,12 @@ declare const singleTypeNames: Readonly<{
     readonly 'org.apache.cassandra.db.marshal.CounterColumnType': dataTypes.counter;
 }>;
 
+export declare const speculativeExecution: {
+    NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
+    SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
+    ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
+};
+
 /** @module policies/speculativeExecution */
 /**
  * @classdesc
@@ -6403,7 +6563,7 @@ declare class StreamIdStack {
  * @alias module:mapping~TableMappings
  * @interface
  */
-declare class TableMappings {
+export declare class TableMappings {
     /**
      * Method that is called by the mapper to create the instance of the document.
      * @return {Object}
@@ -6474,12 +6634,17 @@ declare class TableMetadata extends DataCollection {
 }
 
 /** @private */
-declare class TimeoutError extends errors.DriverError {
+export declare class TimeoutError extends errors.DriverError {
     /**
      * @param {string} message
      */
     constructor(message: string);
 }
+
+export declare const timestampGeneration: {
+    TimestampGenerator: typeof TimestampGenerator;
+    MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
+};
 
 /**
  * Creates a new instance of {@link TimestampGenerator}.
@@ -6509,7 +6674,7 @@ declare class TimestampGenerator {
      * sent by the driver, letting the server to generate the timestamp.
      * @abstract
      */
-    next(client: Client): Long | number | null;
+    next(client: Client): Long_2 | number | null;
 }
 
 /**
@@ -6526,7 +6691,7 @@ declare class TimestampGenerator {
  * <p>Usage: <code>TimeUuid.now()</code></p>
  * @extends module:types~Uuid
  */
-declare class TimeUuid extends Uuid {
+export declare class TimeUuid extends Uuid {
     /**
      * Creates a new instance of Uuid based on the parameters provided according to rfc4122.
      * If any of the arguments is not provided, it will be randomly generated, except for the date that will use the current
@@ -6655,7 +6820,7 @@ declare class TimeUuid extends Uuid {
  * @param {Number} [offset]
  * @deprecated Use [TimeUuid]{@link module:types~TimeUuid} instead
  */
-declare function timeuuid(options: {
+export declare function timeuuid(options: {
     msecs: any;
     node: any;
     clockseq: any;
@@ -6828,7 +6993,7 @@ export declare const tracker: {
  *   to try to get a unique string key.
  * </p>
  */
-declare class Tuple {
+export declare class Tuple {
     elements: any[];
     length: number;
     /**
@@ -6946,7 +7111,7 @@ export declare const types: {
     Integer: typeof Integer;
     LocalDate: typeof LocalDate;
     LocalTime: typeof LocalTime;
-    Long: typeof Long;
+    Long: typeof Long_2;
     ResultSet: typeof ResultSet;
     ResultStream: typeof ResultStream;
     Row: typeof Row;
@@ -6994,7 +7159,7 @@ declare type UdtColumnInfo = {
  * @alias module:mapping~UnderscoreCqlToCamelCaseMappings
  * @implements {module:mapping~TableMappings}
  */
-declare class UnderscoreCqlToCamelCaseMappings extends TableMappings {
+export declare class UnderscoreCqlToCamelCaseMappings extends TableMappings {
     /**
      * Creates a new instance of {@link UnderscoreCqlToCamelCaseMappings}
      */
@@ -7013,7 +7178,17 @@ declare class UnderscoreCqlToCamelCaseMappings extends TableMappings {
     getPropertyName(columnName: string): string;
 }
 
-declare type UpdateDocInfo = {
+/**
+ * Unset representation.
+ * <p>
+ *   Use this field if you want to set a parameter to <code>unset</code>. Valid for Cassandra 2.2 and above.
+ * </p>
+ */
+export declare const unset: Readonly<{
+    readonly unset: true;
+}>;
+
+export declare type UpdateDocInfo = {
     fields?: string[];
     ttl?: number;
     ifExists?: boolean;
@@ -7032,7 +7207,7 @@ declare type UpdateDocInfo = {
  * @class
  * @classdesc Represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value.
  */
-declare class Uuid {
+export declare class Uuid {
     /* Excluded from this release type: buffer */
     /**
      * Creates a new instance of Uuid based on a Buffer
@@ -7089,11 +7264,11 @@ declare class Uuid {
  * Generate and return a RFC4122 v4 UUID in a string representation.
  * @deprecated Use [Uuid]{@link module:types~Uuid} class instead
  */
-declare function uuid(options: any, buffer: any, offset: any): any;
+export declare function uuid(options: any, buffer: any, offset: any): any;
 
 declare type ValueCallback<T> = (err: Error, val: T) => void;
 
-declare class Vector {
+export declare class Vector {
     /**
      * Returns the number of the elements.
      * @type Number
@@ -7186,12 +7361,12 @@ declare class VertexProperty extends Element {
 /**
  * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
  */
-declare class VIntOutOfRangeException extends DriverError {
+export declare class VIntOutOfRangeException extends DriverError {
     /**
      * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
      * @param {Long} long
      */
-    constructor(long: Long);
+    constructor(long: Long_2);
 }
 
 /**

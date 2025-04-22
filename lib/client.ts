@@ -266,7 +266,6 @@ interface ClientOptions {
   applicationVersion?: string;
   authProvider?: AuthProvider;
   contactPoints?: string[];
-  /** @internal */
   localDataCenter?: string; //TODO: not exposed. Should we?
   /** @internal */
   logEmitter?: any; //TODO: not exposed. Should we?

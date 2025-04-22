@@ -655,7 +655,8 @@ export default {
   Long,
   ResultSet,
   ResultStream,
-  Row,
+  Row,  
+  // have to export DriverError here for backward compatibility
   DriverError,
   TimeoutError,
   TimeUuid,
@@ -694,8 +695,7 @@ export {
   ResultSet,
   ResultStream,
   Row,
-  DriverError,
-  TimeoutError,
+  TimeoutError, //TODO: why TimeoutError is here instead of lib/errors??
   TimeUuid,
   Tuple,
   Uuid,

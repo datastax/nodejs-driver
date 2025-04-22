@@ -18,7 +18,7 @@
     "graphdb"
   ],
   "license": "Apache-2.0",
-  "types": "out/index.d.ts",
+  "types": "dist/cassandra-driver-public.d.ts",
   "main": "out/index.js",
   "dependencies": {
     "@types/node": "^18.11.18",
@@ -54,16 +54,17 @@
     "url": "https://groups.google.com/a/lists.datastax.com/forum/#!forum/nodejs-driver-user"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
-    "unit": "./node_modules/.bin/mocha test/unit -R spec -t 5000 --recursive",
-    "integration_short": "./node_modules/.bin/mocha test/integration/short -R spec -t 5000 --recursive",
-    "integration_long": "./node_modules/.bin/mocha test/integration/long -R spec -t 5000 --recursive",
-    "ci_jenkins": "./node_modules/.bin/mocha test/unit test/integration/short --recursive -R mocha-jenkins-reporter --exit",
-    "ci_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit test/integration/short --recursive -R mocha-appveyor-reporter --exit",
-    "ci_unit_appveyor": ".\\\"node_modules/.bin/mocha\" test/unit --recursive -R mocha-appveyor-reporter --exit",
-    "server_api": "./node_modules/.bin/mocha test/integration/short -g '@SERVER_API' --recursive --exit",
-    "eslint": "eslint lib test",
-    "test-ts": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive --exit"
+    "bundle": "npx tsc -p . ; npx rollup --config ; npx api-extractor run --local",
+    "test": "npx ts-mocha test/unit --extension .ts -R spec -t 5000 --recursive --exit",
+    "unit": "npx ts-mocha test/unit --extension .ts -R spec -t 5000 --recursive --exit",
+    "integration_short": "npx ts-mocha test/integration/short --extension .ts -R spec -t 5000 --recursive --exit",
+    "integration_long": "npx ts-mocha test/integration/long --extension .ts -R spec -t 5000 --recursive",
+    "ci_jenkins": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R mocha-jenkins-reporter --exit",
+    "ci_appveyor": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R mocha-appveyor-reporter --exit",
+    "ci_unit_appveyor": "npx ts-mocha test/unit --extension .ts --recursive -R mocha-appveyor-reporter --exit",
+    "server_api": "npx ts-mocha test/integration/short --extension .ts -g '@SERVER_API' --recursive --exit",
+    "eslint": "npx eslint lib test",
+    "eslint-fix": "npx eslint lib test --fix"
   },
   "engines": {
     "node": ">=18"

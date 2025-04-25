@@ -30,9 +30,11 @@ import t, { Tokenizer } from "../tokenizer";
 import types, { type consistencies, type InetAddress, type Long, Uuid } from "../types/index";
 import utils, { type EmptyCallback, type HashSet, type ValueCallback } from "../utils";
 import Aggregate from "./aggregate";
+import type ClientState from "./client-state";
 import DataCollection from "./data-collection";
 import MaterializedView from "./materialized-view";
 import SchemaFunction from "./schema-function";
+import type Index from "./schema-index";
 import schemaParserFactory, { type Keyspace, SchemaParser } from "./schema-parser";
 import type TableMetadata from "./table-metadata";
 
@@ -1110,4 +1112,10 @@ class PreparedQueries {
 
 export default Metadata;
 
-export { type ColumnInfo, type PreparedQueryInfo };
+export {
+  Metadata,
+  type Aggregate, type ClientState, type ColumnInfo, type DataCollection, type DataTypeInfo, type Index, type MaterializedView, type PreparedQueryInfo,
+  type QueryTrace, type SchemaFunction, type TableMetadata,
+  type Udt
+};
+

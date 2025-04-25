@@ -91,7 +91,9 @@ export {
   reconnection,
   retry,
   speculativeExecution,
-  timestampGeneration
+  timestampGeneration,
+  LoadBalancingPolicy,
+  
 };
 
 export default {

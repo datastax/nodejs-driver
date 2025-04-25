@@ -26,3 +26,4 @@ out/
 **/typescript/generated.ts
 
 tsdoc-metadata.json
+temp

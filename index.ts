@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 import auth from './lib/auth/index';
+import Client, { type ClientOptions, type QueryOptions } from "./lib/client";
 import clientOptions from "./lib/client-options";
-import Client, {type ClientOptions, type QueryOptions } from "./lib/client";
-import types from "./lib/types/index";
-import errors from "./lib/errors";
-import policies from "./lib/policies/index";
-import mapping from "./lib/mapping/index";
-import tracker from "./lib/tracker/index";
-import metrics from "./lib/metrics/index";
 import concurrent from "./lib/concurrent/index";
-import Token from "./lib/token";
-import Metadata from "./lib/metadata/index";
-import Encoder from "./lib/encoder";
-import geometry from "./lib/geometry/index";
 import datastax from "./lib/datastax/index";
+import Encoder from "./lib/encoder";
+import errors from "./lib/errors";
+import geometry from "./lib/geometry/index";
+import mapping from "./lib/mapping/index";
+import Metadata from "./lib/metadata/index";
+import metrics from "./lib/metrics/index";
+import policies from "./lib/policies/index";
+import Token from "./lib/token";
+import tracker from "./lib/tracker/index";
+import types from "./lib/types/index";
 import packageJson from './package.json';
 
-import { ExecutionProfile } from './lib/execution-profile';
 import { ExecutionOptions } from './lib/execution-options';
+import { ExecutionProfile } from './lib/execution-profile';
 
 const token = {
   Token: Token.Token,
@@ -43,41 +43,26 @@ const defaultOptions = function () {
 };
 const version = packageJson.version;
 
-
-// export default {
-//   Client,
-//   ExecutionProfile,
-//   ExecutionOptions,
-//   types,
-//   errors,
-//   policies,
-//   auth,
-//   mapping,
-//   tracker,
-//   metrics,
-//   concurrent,
-//   token,
-//   metadata,
-//   Encoder,
-//   geometry,
-//   datastax,
-//   /**
-//    * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
-//    */
-//   defaultOptions,
-//   version
-// };
-
-
-
-export {
+const cassandra = {
   Client,
   ExecutionProfile,
   ExecutionOptions,
-  types,
+  types: {
+    ...types,
+    /** @internal */
+    getDataTypeNameByCode: types.getDataTypeNameByCode,
+    /** @internal */
+    FrameHeader: types.FrameHeader,
+    /** @internal */
+    generateTimestamp: types.generateTimestamp,
+  },
   errors,
   policies,
-  auth,
+  auth: {
+    ...auth,
+    /** @internal */
+    NoAuthProvider: auth.NoAuthProvider
+  },
   mapping,
   tracker,
   metrics,
@@ -86,25 +71,47 @@ export {
   metadata,
   Encoder,
   geometry,
-  datastax,
+  datastax: {
+    ...datastax,
+    graph: {
+      ...datastax.graph,
+      /** @internal */
+      getCustomTypeSerializers: datastax.graph.getCustomTypeSerializers,
+      /** @internal */
+      GraphTypeWrapper: datastax.graph.GraphTypeWrapper,
+      /** @internal */
+      UdtGraphWrapper: datastax.graph.UdtGraphWrapper,
+    }
+  },
   /**
    * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
    */
   defaultOptions,
   version,
-  type QueryOptions,
-  type ClientOptions
 };
 
-//TODO: we may need those for something like this to work: client.execute(query, (err: DriverError, result: ResultSet) => {}))
-export * from './lib/types/index';
-export * from './lib/errors';
-export * from './lib/policies/index';
+export default cassandra; 
+
+
+
+export {
+  auth, Client, concurrent, datastax,
+  /**
+   * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+   */
+  defaultOptions, Encoder, errors, ExecutionOptions, ExecutionProfile, geometry, mapping, metadata, metrics, policies, token, tracker, types, version, type ClientOptions, type QueryOptions
+};
+
+// We need those for something like this to work: client.execute(query, (err: DriverError, result: ResultSet) => {}))
 export * from './lib/auth/index';
-export * from './lib/mapping/index';
-export * from './lib/tracker/index';
-export * from './lib/metrics/index';
 export * from './lib/concurrent/index';
-export * from './lib/geometry/index';
 export * from './lib/datastax/index';
+export * from './lib/errors';
+export * from './lib/geometry/index';
+export * from './lib/mapping/index';
 export * from './lib/metadata/index';
+export * from './lib/metrics/index';
+export * from './lib/policies/index';
+export * from './lib/tracker/index';
+export * from './lib/types/index';
+

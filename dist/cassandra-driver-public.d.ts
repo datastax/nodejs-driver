@@ -2,7 +2,8 @@ import { ConnectionOptions } from 'tls';
 import EventEmitter from 'events';
 import { EventEmitter as EventEmitter_2 } from 'stream';
 import { default as Long } from 'long';
-import { default as Long_2 } from 'long';
+import * as Long_2 from 'long';
+import Long__default from 'long';
 import { Readable } from 'stream';
 import { Socket } from 'net';
 
@@ -58,7 +59,7 @@ declare class AddressTranslator {
  * @alias module:metadata~Aggregate
  * @constructor
  */
-declare class Aggregate {
+export declare class Aggregate {
     /* Excluded from this release type: name */
     /**
      * Name of the keyspace where the aggregate is declared.
@@ -449,6 +450,263 @@ export declare class BusyConnectionError extends DriverError {
 /* Excluded from this release type: ByteOrderedToken */
 
 /* Excluded from this release type: ByteOrderedTokenizer */
+
+declare const cassandra: {
+    Client: typeof Client;
+    ExecutionProfile: typeof ExecutionProfile;
+    ExecutionOptions: typeof ExecutionOptions;
+    types: {
+        /* Excluded from this release type: getDataTypeNameByCode */
+        /* Excluded from this release type: FrameHeader */
+        /* Excluded from this release type: generateTimestamp */
+        opcodes: {
+            error: number;
+            startup: number;
+            ready: number;
+            authenticate: number;
+            credentials: number;
+            options: number;
+            supported: number;
+            query: number;
+            result: number;
+            prepare: number;
+            execute: number;
+            register: number;
+            event: number;
+            batch: number;
+            authChallenge: number;
+            authResponse: number;
+            authSuccess: number;
+            cancel: number;
+            isInRange: (code: any) => boolean;
+        };
+        consistencies: typeof consistencies;
+        consistencyToString: {};
+        dataTypes: typeof dataTypes;
+        distance: typeof distance;
+        frameFlags: {
+            compression: number;
+            tracing: number;
+            customPayload: number;
+            warning: number;
+        };
+        protocolEvents: {
+            topologyChange: string;
+            statusChange: string;
+            schemaChange: string;
+        };
+        protocolVersion: typeof protocolVersion;
+        responseErrorCodes: typeof responseErrorCodes;
+        resultKind: {
+            voidResult: number;
+            rows: number;
+            setKeyspace: number;
+            prepared: number;
+            schemaChange: number;
+        };
+        timeuuid: typeof timeuuid;
+        uuid: typeof uuid;
+        BigDecimal: typeof BigDecimal;
+        Duration: typeof Duration;
+        InetAddress: typeof InetAddress;
+        Integer: typeof Integer;
+        LocalDate: typeof LocalDate;
+        LocalTime: typeof LocalTime;
+        Long: typeof Long_2.default;
+        ResultSet: typeof ResultSet;
+        ResultStream: typeof ResultStream;
+        Row: typeof Row;
+        DriverError: typeof DriverError;
+        TimeoutError: typeof TimeoutError;
+        TimeUuid: typeof TimeUuid;
+        Tuple: typeof Tuple;
+        Uuid: typeof Uuid;
+        unset: Readonly<{
+            readonly unset: true;
+        }>;
+        Vector: typeof Vector;
+    };
+    errors: {
+        ArgumentError: typeof ArgumentError;
+        AuthenticationError: typeof AuthenticationError;
+        BusyConnectionError: typeof BusyConnectionError;
+        DriverError: typeof DriverError;
+        OperationTimedOutError: typeof OperationTimedOutError;
+        DriverInternalError: typeof DriverInternalError;
+        NoHostAvailableError: typeof NoHostAvailableError;
+        NotSupportedError: typeof NotSupportedError;
+        ResponseError: typeof ResponseError;
+        VIntOutOfRangeException: typeof VIntOutOfRangeException;
+    };
+    policies: {
+        addressResolution: {
+            AddressTranslator: typeof AddressTranslator;
+            EC2MultiRegionTranslator: typeof EC2MultiRegionTranslator;
+        };
+        loadBalancing: {
+            AllowListPolicy: typeof AllowListPolicy;
+            DCAwareRoundRobinPolicy: typeof DCAwareRoundRobinPolicy;
+            DefaultLoadBalancingPolicy: typeof DefaultLoadBalancingPolicy;
+            LoadBalancingPolicy: typeof LoadBalancingPolicy;
+            RoundRobinPolicy: typeof RoundRobinPolicy;
+            TokenAwarePolicy: typeof TokenAwarePolicy;
+            WhiteListPolicy: typeof WhiteListPolicy;
+        };
+        reconnection: {
+            ReconnectionPolicy: typeof ReconnectionPolicy;
+            ConstantReconnectionPolicy: typeof ConstantReconnectionPolicy;
+            ExponentialReconnectionPolicy: typeof ExponentialReconnectionPolicy;
+        };
+        retry: {
+            IdempotenceAwareRetryPolicy: typeof IdempotenceAwareRetryPolicy;
+            FallthroughRetryPolicy: typeof FallthroughRetryPolicy;
+            RetryPolicy: typeof RetryPolicy;
+        };
+        speculativeExecution: {
+            NoSpeculativeExecutionPolicy: typeof NoSpeculativeExecutionPolicy;
+            SpeculativeExecutionPolicy: typeof SpeculativeExecutionPolicy;
+            ConstantSpeculativeExecutionPolicy: typeof ConstantSpeculativeExecutionPolicy;
+        };
+        timestampGeneration: {
+            TimestampGenerator: typeof TimestampGenerator;
+            MonotonicTimestampGenerator: typeof MonotonicTimestampGenerator;
+        };
+        defaultAddressTranslator: () => AddressTranslator;
+        defaultLoadBalancingPolicy: (localDc?: string) => LoadBalancingPolicy;
+        defaultRetryPolicy: () => RetryPolicy;
+        defaultReconnectionPolicy: () => ReconnectionPolicy;
+        defaultSpeculativeExecutionPolicy: () => SpeculativeExecutionPolicy;
+        defaultTimestampGenerator: () => TimestampGenerator;
+    };
+    auth: {
+        /* Excluded from this release type: NoAuthProvider */
+        Authenticator: typeof Authenticator;
+        AuthProvider: typeof AuthProvider;
+        DseGssapiAuthProvider: typeof DseGssapiAuthProvider;
+        DsePlainTextAuthProvider: typeof DsePlainTextAuthProvider;
+        PlainTextAuthProvider: typeof PlainTextAuthProvider;
+    };
+    mapping: {
+        Mapper: typeof Mapper;
+        ModelMapper: typeof ModelMapper;
+        ModelBatchMapper: typeof ModelBatchMapper;
+        ModelBatchItem: typeof ModelBatchItem;
+        Result: typeof Result;
+        TableMappings: typeof TableMappings;
+        DefaultTableMappings: typeof DefaultTableMappings;
+        UnderscoreCqlToCamelCaseMappings: typeof UnderscoreCqlToCamelCaseMappings;
+        q: {
+            in_: (arr: any) => QueryOperator;
+            gt: (value: any) => QueryOperator;
+            gte: (value: any) => QueryOperator;
+            lt: (value: any) => QueryOperator;
+            lte: (value: any) => QueryOperator;
+            notEq: (value: any) => QueryOperator;
+            and: (condition1: any, condition2: any) => QueryOperator;
+            incr: (value: any) => QueryAssignment;
+            decr: (value: any) => QueryAssignment;
+            append: (value: any) => QueryAssignment;
+            prepend: (value: any) => QueryAssignment;
+            remove: (value: any) => QueryAssignment;
+        };
+    };
+    tracker: {
+        RequestTracker: typeof RequestTracker;
+        RequestLogger: typeof RequestLogger;
+    };
+    metrics: {
+        ClientMetrics: typeof ClientMetrics;
+        DefaultMetrics: typeof DefaultMetrics;
+    };
+    concurrent: {
+        executeConcurrent: typeof executeConcurrent;
+        ResultSetGroup: typeof ResultSetGroup;
+    };
+    token: {
+        Token: typeof Token;
+        TokenRange: typeof TokenRange;
+    };
+    metadata: {
+        Metadata: typeof Metadata;
+    };
+    Encoder: typeof Encoder;
+    geometry: {
+        Point: typeof Point;
+        LineString: typeof LineString;
+        Polygon: typeof Polygon;
+        Geometry: typeof Geometry;
+    };
+    datastax: {
+        graph: {
+            /* Excluded from this release type: getCustomTypeSerializers */
+            /* Excluded from this release type: GraphTypeWrapper */
+            /* Excluded from this release type: UdtGraphWrapper */
+            Edge: typeof Edge;
+            Element: typeof Element;
+            Path: typeof Path;
+            Property: typeof Property;
+            Vertex: typeof Vertex;
+            VertexProperty: typeof VertexProperty;
+            asInt: typeof asInt;
+            asDouble: typeof asDouble;
+            asFloat: typeof asFloat;
+            asTimestamp: typeof asTimestamp;
+            asUdt: typeof asUdt;
+            direction: {
+                both: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                out: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                in_: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+            GraphResultSet: typeof GraphResultSet;
+            t: {
+                id: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                key: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                label: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+                value: {
+                    typeName: any;
+                    elementName: any;
+                    toString(): any;
+                };
+            };
+        };
+        DateRange: typeof DateRange;
+    };
+    /**
+     * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
+     */
+    defaultOptions: () => ClientOptions;
+    version: string;
+};
+export default cassandra;
 
 /**
  * Creates a new instance of {@link Client}.
@@ -1175,7 +1433,7 @@ export declare interface ClientOptions {
  * @alias module:metadata~ClientState
  * @constructor
  */
-declare class ClientState {
+export declare class ClientState {
     private _hosts;
     private _openConnections;
     private _inFlightQueries;
@@ -1335,7 +1593,7 @@ declare const customTypeNames: Readonly<{
  * @constructor
  * @abstract
  */
-declare class DataCollection extends EventEmitter.EventEmitter {
+export declare class DataCollection extends EventEmitter.EventEmitter {
     /**
      * Name of the object
      * @type {String}
@@ -1556,7 +1814,7 @@ export declare const datastax: {
     DateRange: typeof DateRange;
 };
 
-declare type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
+export declare type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
 
 /**
  * CQL data types
@@ -2238,7 +2496,7 @@ export declare class Duration {
     private months;
     private days;
     private nanoseconds;
-    constructor(months: number, days: number, nanoseconds: number | Long_2);
+    constructor(months: number, days: number, nanoseconds: number | Long__default);
     /**
      * Returns true if the value of the Duration instance and other are the same
      * @param {Duration} other
@@ -2875,7 +3133,7 @@ export declare class ExecutionOptions {
      * @abstract
      * @returns {Number|Long|undefined|null}
      */
-    getTimestamp(): number | Long_2 | undefined | null;
+    getTimestamp(): number | Long__default | undefined | null;
     /* Excluded from this release type: setHints */
     /* Excluded from this release type: setKeyspace */
     /* Excluded from this release type: setPageState */
@@ -3472,7 +3730,7 @@ declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
  * @classdesc Describes a CQL index.
  * @alias module:metadata~Index
  */
-declare class Index {
+export declare class Index {
     /**
      * Name of the index.
      * @type {String}
@@ -3951,7 +4209,7 @@ export declare const loadBalancing: {
 /**
  * Base class for Load Balancing Policies.
  */
-declare class LoadBalancingPolicy {
+export declare class LoadBalancingPolicy {
     protected client: Client;
     protected hosts: HostMap;
     /* Excluded from this release type: localDc */
@@ -4123,7 +4381,7 @@ export declare class LocalTime {
      * @param {Long} totalNanoseconds Total nanoseconds since midnight.
      * @constructor
      */
-    constructor(totalNanoseconds: Long_2);
+    constructor(totalNanoseconds: Long__default);
     /**
      * Parses a string representation and returns a new LocalTime.
      * @param {String} value
@@ -4173,7 +4431,7 @@ export declare class LocalTime {
      * Gets the total amount of nanoseconds since midnight for this instance.
      * @returns {Long}
      */
-    getTotalNanoseconds(): Long_2;
+    getTotalNanoseconds(): Long__default;
     inspect(): string;
     /**
      * Returns a big-endian bytes representation of the instance
@@ -4315,7 +4573,7 @@ export declare type MappingExecutionOptions = {
     executionProfile?: string;
     isIdempotent?: boolean;
     logged?: boolean;
-    timestamp?: number | Long_2;
+    timestamp?: number | Long__default;
     fetchSize?: number;
     pageState?: number;
 };
@@ -4334,7 +4592,7 @@ export declare type MappingOptions = {
  * @augments {module:metadata~DataCollection}
  * @constructor
  */
-declare class MaterializedView extends DataCollection {
+export declare class MaterializedView extends DataCollection {
     /**
      * Name of the table.
      * @type {String}
@@ -4357,7 +4615,7 @@ declare class MaterializedView extends DataCollection {
  * Represents cluster and schema information.
  * The metadata class acts as a internal state of the driver.
  */
-declare class Metadata {
+export declare class Metadata {
     keyspaces: {
         [name: string]: Keyspace;
     };
@@ -5085,7 +5343,7 @@ declare class MonotonicTimestampGenerator extends TimestampGenerator {
      * @returns {Number}
      */
     getDate(): number;
-    next(client: Client): Long_2 | number | null;
+    next(client: Client): Long__default | number | null;
     /**
      * @private
      * @returns {Number|Long}
@@ -5731,7 +5989,7 @@ export declare interface QueryOptions {
     routingKey?: Buffer | Buffer[];
     routingNames?: string[];
     serialConsistency?: number;
-    timestamp?: number | Long_2;
+    timestamp?: number | Long__default;
     traceQuery?: boolean;
     graphOptions?: {
         language?: string;
@@ -5743,13 +6001,13 @@ export declare interface QueryOptions {
     };
 }
 
-declare interface QueryTrace {
+export declare interface QueryTrace {
     requestType: string;
     coordinator: InetAddress;
     parameters: {
         [key: string]: any;
     };
-    startedAt: number | Long_2;
+    startedAt: number | Long__default;
     duration: number;
     clientAddress: string;
     events: Array<{
@@ -6386,7 +6644,7 @@ export declare class Row {
  * @classdesc Describes a CQL function.
  * @alias module:metadata~SchemaFunction
  */
-declare class SchemaFunction {
+export declare class SchemaFunction {
     /**
      * Name of the cql function.
      * @type {String}
@@ -6619,7 +6877,7 @@ export declare class TableMappings {
  * @augments {module:metadata~DataCollection}
  * @alias module:metadata~TableMetadata
  */
-declare class TableMetadata extends DataCollection {
+export declare class TableMetadata extends DataCollection {
     /**
      * Applies only to counter tables.
      * When set to true, replicates writes to all affected replicas regardless of the consistency level specified by
@@ -6705,7 +6963,7 @@ declare class TimestampGenerator {
      * sent by the driver, letting the server to generate the timestamp.
      * @abstract
      */
-    next(client: Client): Long_2 | number | null;
+    next(client: Client): Long__default | number | null;
 }
 
 /**
@@ -7142,7 +7400,7 @@ export declare const types: {
     Integer: typeof Integer;
     LocalDate: typeof LocalDate;
     LocalTime: typeof LocalTime;
-    Long: typeof Long_2;
+    Long: typeof Long__default;
     ResultSet: typeof ResultSet;
     ResultStream: typeof ResultStream;
     Row: typeof Row;
@@ -7158,7 +7416,7 @@ export declare const types: {
     Vector: typeof Vector;
 };
 
-declare interface Udt {
+export declare interface Udt {
     name: string;
     fields: ColumnInfo[];
 }
@@ -7397,7 +7655,7 @@ export declare class VIntOutOfRangeException extends DriverError {
      * Represents a run-time exception when attempting to decode a vint and the JavaScript Number doesn't have enough space to fit the value that was decoded
      * @param {Long} long
      */
-    constructor(long: Long_2);
+    constructor(long: Long__default);
 }
 
 /**

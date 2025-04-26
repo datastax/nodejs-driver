@@ -44,6 +44,7 @@
     "rollup-plugin-dts": "^6.2.1",
     "sinon": "~15.2.0",
     "temp": ">= 0.8.3",
+    "ts-mocha": "^11.1.0",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2"
   },

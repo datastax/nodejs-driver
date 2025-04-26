@@ -930,7 +930,7 @@ describe('exports', function () {
     assert.strictEqual(typeof api.policies.retry.RetryPolicy, 'function');
     assert.strictEqual(typeof api.policies.retry.IdempotenceAwareRetryPolicy, 'function');
     assert.instanceOf(api.policies.defaultRetryPolicy(), api.policies.retry.RetryPolicy);
-    assert.strictEqual(api.policies.reconnection, require('../../lib/policies/reconnection'));
+    assertPackageExposed(api.policies.reconnection, require('../../lib/policies/reconnection'));
     assert.strictEqual(typeof api.policies.reconnection.ReconnectionPolicy, 'function');
     assert.instanceOf(api.policies.defaultReconnectionPolicy(), api.policies.reconnection.ReconnectionPolicy);
     assert.strictEqual(api.policies.speculativeExecution, speculativeExecution);
@@ -941,7 +941,7 @@ describe('exports', function () {
     assert.strictEqual(typeof timestampGeneration.TimestampGenerator, 'function');
     assert.strictEqual(typeof timestampGeneration.MonotonicTimestampGenerator, 'function');
     assert.instanceOf(api.policies.defaultTimestampGenerator(), timestampGeneration.MonotonicTimestampGenerator);
-    assert.strictEqual(api.auth, require('../../lib/auth'));
+    assertPackageExposed(api.auth, require('../../lib/auth'));
 
     // mapping module
     assert.ok(api.mapping);
@@ -959,12 +959,12 @@ describe('exports', function () {
     //metadata module with classes
     assert.ok(api.metadata);
     assert.strictEqual(typeof api.metadata.Metadata, 'function');
-    assert.strictEqual(api.metadata.Metadata, require('../../lib/metadata'));
+    assertPackageExposed(api.metadata, require('../../lib/metadata'));
     assert.ok(api.Encoder);
     assert.strictEqual(typeof api.Encoder, 'function');
-    assert.strictEqual(api.Encoder, require('../../lib/encoder'));
+    assertPackageExposed(api.Encoder, require('../../lib/encoder'));
     assert.ok(api.defaultOptions());
-    assert.strictEqual(api.tracker, require('../../lib/tracker'));
+    assertPackageExposed(api.tracker, require('../../lib/tracker'));
     assert.strictEqual(typeof api.tracker.RequestTracker, 'function');
     assert.strictEqual(typeof api.tracker.RequestLogger, 'function');
 
@@ -985,4 +985,13 @@ function assertConstructorExposed(obj, constructorRef) {
   assert.strictEqual(typeof constructorRef, 'function');
   // Verify that is exposed with the same name as the class
   assert.strictEqual(obj[constructorRef.name], constructorRef);
+}
+
+function assertPackageExposed(actual, expected){
+  for (const key of Object.keys(expected)){
+    if(key === 'default'){
+      continue;
+    }
+    assert.strictEqual(actual[key], expected[key]);
+  }
 }

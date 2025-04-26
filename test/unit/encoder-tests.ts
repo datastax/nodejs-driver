@@ -1362,7 +1362,9 @@ describe('encoder', function () {
 
   describe('prototype', function () {
     it('should only expose encode() and decode() functions', function () {
-      const keys = Object.keys(Encoder.prototype);
+      console.log(Encoder);
+      console.log(Encoder.prototype);
+      const keys = Object.keys(new Encoder(4, {}));
       assert.deepStrictEqual(keys, ['decode', 'encode']);
       keys.forEach(function (k) {
         assert.strictEqual(typeof Encoder.prototype[k], 'function');

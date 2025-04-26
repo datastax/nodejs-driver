@@ -37,7 +37,8 @@
     "eslint": "^8.57.1",
     "kerberos": "~2.0.3",
     "mocha": "~10.2.0",
-    "mocha-jenkins-reporter": "~0.4.8",
+    "mocha-appveyor-reporter": "^0.4.2",
+    "mocha-jenkins-reporter": "^0.4.8",
     "proxyquire": "~2.1.3",
     "rollup": "^4.37.0",
     "rollup-plugin-dts": "^6.2.1",
@@ -59,12 +60,13 @@
     "unit": "npx ts-mocha test/unit --extension .ts -R spec -t 5000 --recursive --exit",
     "integration_short": "npx ts-mocha test/integration/short --extension .ts -R spec -t 5000 --recursive --exit",
     "integration_long": "npx ts-mocha test/integration/long --extension .ts -R spec -t 5000 --recursive",
-    "ci_jenkins": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R mocha-jenkins-reporter --exit",
-    "ci_appveyor": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R mocha-appveyor-reporter --exit",
-    "ci_unit_appveyor": "npx ts-mocha test/unit --extension .ts --recursive -R mocha-appveyor-reporter --exit",
+    "ci_jenkins": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R ./node_modules/mocha-jenkins-reporter --exit",
+    "ci_appveyor": "npx ts-mocha test/unit test/integration/short --extension .ts --recursive -R ./node_modules/mocha-appveyor-reporter --exit",
+    "ci_unit_appveyor": "npx ts-mocha test/unit --extension .ts --recursive -R ./node_modules/mocha-appveyor-reporter --exit",
     "server_api": "npx ts-mocha test/integration/short --extension .ts -g '@SERVER_API' --recursive --exit",
     "eslint": "npx eslint lib test",
-    "eslint-fix": "npx eslint lib test --fix"
+    "eslint-fix": "npx eslint lib test --fix",
+    "circular-dep": "npx madge -c lib"
   },
   "engines": {
     "node": ">=18"

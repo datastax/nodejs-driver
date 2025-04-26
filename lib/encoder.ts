@@ -154,6 +154,7 @@ class Encoder{
   private decodeCollectionLength : (bytes: any, offset: any) => number;
   private getLengthBuffer: (value: Buffer | number) => Buffer;
   private collectionLengthSize : number;
+  /** @internal */
   protocolVersion: number;
     
   private readonly customDecoders = {

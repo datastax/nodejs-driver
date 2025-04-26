@@ -2660,7 +2660,7 @@ export declare class Encoder {
     private decodeCollectionLength;
     private getLengthBuffer;
     private collectionLengthSize;
-    protocolVersion: number;
+    /* Excluded from this release type: protocolVersion */
     private readonly customDecoders;
     private readonly customEncoders;
     /**

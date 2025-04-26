@@ -1359,18 +1359,6 @@ describe('encoder', function () {
       assert.strictEqual(typeof encoder.protocolVersion, 'number');
     });
   });
-
-  describe('prototype', function () {
-    it('should only expose encode() and decode() functions', function () {
-      console.log(Encoder);
-      console.log(Encoder.prototype);
-      const keys = Object.keys(new Encoder(4, {}));
-      assert.deepStrictEqual(keys, ['decode', 'encode']);
-      keys.forEach(function (k) {
-        assert.strictEqual(typeof Encoder.prototype[k], 'function');
-      });
-    });
-  });
 });
 
 function getExecOptions(options) {

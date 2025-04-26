@@ -138,7 +138,7 @@ class RequestExecution {
       } catch (err) {
         // When its a socket error, attempt to retry.
         // Otherwise, rethrow the error to the user.
-        return this._handleError(err, RequestExecution._getErrorCode(err));
+        return this._handleError(RequestExecution._getErrorCode(err), err);
       }
     }
 

@@ -56,7 +56,7 @@ class RequestHandler {
     this._speculativeExecutionPlan = client.options.policies.speculativeExecution.newPlan(
       client.keyspace, request["query"] || request["queries"]);
     this.logEmitter = client.options.logEmitter;
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
     this.request = request;
     this.executionOptions = execOptions;
     this.stackContainer = null;

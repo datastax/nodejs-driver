@@ -753,7 +753,7 @@ class Client extends events.EventEmitter{
     this.emit('connected');
   }
   /** @internal */
-  log = utils.log;
+  log = utils.log.bind(this);
 
   /**
    * Executes a query on an available connection.

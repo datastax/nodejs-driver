@@ -85,7 +85,7 @@ class ControlConnection extends events.EventEmitter {
     this.protocolVersion = null;
     this.hosts = new HostMap();
     this.setMaxListeners(0);
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
     Object.defineProperty(this, "options", { value: options, enumerable: false, writable: false});
 
     /**

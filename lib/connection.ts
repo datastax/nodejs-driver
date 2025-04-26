@@ -127,7 +127,7 @@ class Connection extends events.EventEmitter {
       this._checkingVersion = true;
     }
 
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
     this.protocolVersion = protocolVersion;
     this._operations = new Map();
     this._pendingWrites = [];

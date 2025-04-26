@@ -137,7 +137,7 @@ class Metadata {
     this.initialized = false;
     this._isDbaas = false;
     this._schemaParser = schemaParserFactory.getByVersion(options, controlConnection, this.getUdt.bind(this));
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
     this._preparedQueries = new PreparedQueries(options.maxPrepared, (...args) => this.log(...args as [string, string, any?, any?]));
   }
 

@@ -67,7 +67,7 @@ class Host extends events.EventEmitter {
      */
     this.address = address;
     this.setDownAt = 0;
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
 
     /**
      * Gets the timestamp of the moment when the Host was marked as UP.

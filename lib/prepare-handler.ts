@@ -45,7 +45,7 @@ class PrepareHandler {
     this._client = client;
     this._loadBalancing = loadBalancing;
     this.logEmitter = client.options.logEmitter;
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
   }
 
   /**

@@ -90,7 +90,7 @@ class HostConnectionPool extends events.EventEmitter {
      */
     this.connections = utils.emptyArray as Connection[];
     this.setMaxListeners(0);
-    this.log = utils.log;
+    this.log = utils.log.bind(this);
   }
 
   getInFlight() {

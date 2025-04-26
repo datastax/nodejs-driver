@@ -26,6 +26,7 @@
     "long": "~5.2.3"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.52.5",
     "@rollup/plugin-typescript": "^12.1.2",
     "@stylistic/eslint-plugin": "^3.1.0",
     "@types/chai": "^5.2.1",

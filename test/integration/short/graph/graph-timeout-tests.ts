@@ -20,7 +20,7 @@ import helper from "../../../test-helper";
 import utils from "../../../../lib/utils";
 import Client from "../../../../lib/client";
 import {ExecutionProfile} from "../../../../lib/execution-profile";
-import {DefaultRetryPolicy} from "../../../../lib/policies/retry";
+import {RetryPolicy as DefaultRetryPolicy} from "../../../../lib/policies/retry";
 
 
 const vdescribe = helper.vdescribe;

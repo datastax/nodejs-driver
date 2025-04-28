@@ -15,7 +15,6 @@
  */
 import { assert } from "chai";
 import sinon from "sinon";
-import proxyquire from "proxyquire";
 import cloudHelper from "./cloud-helper";
 import helper from "../../../test-helper";
 import policies from "../../../../lib/policies/index";
@@ -24,6 +23,7 @@ import auth from "../../../../lib/auth/index";
 import utils from "../../../../lib/utils";
 import types from "../../../../lib/types/index";
 import promiseUtils from "../../../../lib/promise-utils";
+import Client from "../../../../lib/client";
 
 
 const vdescribe = helper.vdescribe;
@@ -63,7 +63,8 @@ vdescribe('dse-6.7', 'Cloud support', function () {
       assert.strictEqual(client.options.queryOptions.consistency, types.consistencies.localQuorum);
 
       // It should use the proxy address to validate the server identity
-      assert.match(client.options.sslOptions.checkServerIdentity.toString(), /sni\.address/);
+      // It was 'sni.address' in the past, but now it's '["sni"].address'
+      assert.match(client.options.sslOptions.checkServerIdentity.toString(), /\["sni"\]\.address/);
 
       client.hosts.forEach(h => {
         assert.ok(h.isUp());
@@ -76,23 +77,20 @@ vdescribe('dse-6.7', 'Cloud support', function () {
 
     it('should use all the proxy resolved addresses', () => {
       let resolvedAddress;
-      const libPath = '../../../../lib';
 
-      const ControlConnection = proxyquire(`${libPath}/control-connection`, {
-        'dns':  {
-          resolve4: (name, cb) => {
-            resolvedAddress = name;
-            // Use different loopback addresses
-            cb(null, ['127.0.0.1', '127.0.0.2']);
-          }
-        }
+      // eslint-disable-next-line global-require
+      const dnsStub = sinon.stub(require('dns'), 'resolve4').callsFake((name, cb) => {
+        resolvedAddress = name;
+        // Use different loopback addresses
+        (cb as Function)(null, ['127.0.0.1', '127.0.0.2']);
       });
-
-      const Client = proxyquire(`${libPath}/client`, { './control-connection': ControlConnection });
 
       const client = new Client(cloudHelper.getOptions({ cloud: { secureConnectBundle: 'certs/bundles/creds-v1.zip' } }));
 
-      after(() => client.shutdown());
+      after(() => {
+        client.shutdown();
+        dnsStub.restore();
+      });
 
       return client.connect()
         .then(() => {

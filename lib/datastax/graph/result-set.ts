@@ -47,7 +47,7 @@ class GraphResultSet implements Iterable<any> {
   constructor(result: ResultSet, rowParser: Function = parsePlainJsonRow) {
     this.info = result.info;
     this.rows = result.rows;
-    this.rowParser = rowParser;
+    this.rowParser = rowParser || parsePlainJsonRow;
 
     /**
      * This property has been deprecated because it may return a lower value than the actual length of the results.

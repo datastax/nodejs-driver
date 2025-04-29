@@ -4451,14 +4451,6 @@ export declare class LocalTime {
     /* Excluded from this release type: _getParts */
 }
 
-/**
- * Uses the logEmitter to emit log events
- * @param {String} type
- * @param {String} info
- * @param [furtherInfo]
- */
-declare function log(type: string, info: string, furtherInfo?: any, options?: any): void;
-
 export { Long }
 
 declare type MapColumnInfo = {

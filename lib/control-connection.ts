@@ -578,6 +578,7 @@ class ControlConnection extends events.EventEmitter {
     const response = await this.connection.send(requests.options, null);
 
     // response.supported is a string multi map, decoded as an Object.
+    // @ts-expect-error
     const productType = response.supported && response.supported[supportedProductTypeKey];
     if (Array.isArray(productType) && productType[0] === supportedDbaas) {
       this.metadata.setProductTypeAsDbaas();

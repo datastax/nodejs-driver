@@ -28,7 +28,7 @@ import promiseUtils from "./promise-utils";
 import requests, { Request } from "./requests";
 import StreamIdStack from "./stream-id-stack";
 import streams from "./streams";
-import types from "./types/index";
+import types, { ResultSet } from "./types/index";
 import utils from "./utils";
 import { WriteQueue } from "./writers";
 
@@ -59,7 +59,7 @@ class Connection extends events.EventEmitter {
   emitDrain: boolean;
   connected: boolean;
   isSocketOpen: boolean;
-  send: (arg1: Request, arg2: ExecutionOptions) => Promise<OperationState>;
+  send: (arg1: Request, arg2: ExecutionOptions) => Promise<ResultSet>;
   closeAsync: () => Promise<unknown>;
   openAsync: () => Promise<unknown>;
   prepareOnceAsync: (arg1: string, arg2: string) => Promise<{id; meta}>;

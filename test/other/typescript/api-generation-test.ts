@@ -23,11 +23,9 @@ let counter:number = 0;
 
 /**
  * Should be executed to output a ts file:
- * - pushd test/unit/typescript/
+ * - pushd test/other/typescript/
+ * - npm install
  * - tsc -p .
- * - node -e "require('./api-generation-test').generate()" > generated.ts
- * - tsc generated.ts
- * - popd
  */
 export function generate(): void {
 

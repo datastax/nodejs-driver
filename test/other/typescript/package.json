@@ -1,0 +1,6 @@
+{
+    "name": "cassandra-driver-public-typescript-tests",
+    "dependencies": {
+        "cassandra-driver": "file:../../../"
+    }
+}

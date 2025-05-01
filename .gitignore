@@ -23,4 +23,6 @@ out/
 /docs
 **/typescript/*.js
 **/typescript/*.js.map
-**/typescript/generated.ts
+
+tsdoc-metadata.json
+temp

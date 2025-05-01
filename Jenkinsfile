@@ -78,15 +78,15 @@ def installDriverAndDependencies() {
   '''
 
   sh label: 'Install driver dependencies', script: '''#!/bin/bash -lex
-    npm install mocha-jenkins-reporter@0
     npm install kerberos@1
-    npm install -g eslint@4
   '''
 }
 
-def executeLinter() {
-  sh label: 'Perform static analysis of source code', script: '''#!/bin/bash -lex
+def executeStaticAnalysisAndBundler() {
+  sh label: 'Perform static analysis and bundling of source code', script: '''#!/bin/bash -lex
     npm run eslint
+    npm run circular-dep
+    npm run bundle
   '''
 }
 
@@ -219,7 +219,7 @@ def describeAdhocTestingStage() {
 def describeInstallAndLint(){
   describePerCommitStage()
   installDriverAndDependencies()
-  executeLinter()
+  executeStaticAnalysisAndBundler()
 }
 
 // branch pattern for cron
@@ -556,7 +556,7 @@ pipeline {
           }
           stage('Execute-Linter') {
             steps {
-              executeLinter()
+              executeStaticAnalysisAndBundler()
             }
           }
           stage('Execute-Tests') {

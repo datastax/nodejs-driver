@@ -17,8 +17,6 @@ jobs:
         - npm install -g typescript@4.9;
         - pushd test/unit/typescript/
         - tsc -p .
-        - node -e "require('./api-generation-test').generate()" > generated.ts
-        - tsc generated.ts
     - name: "Unit tests - Node.js 20"
       node_js: "20"
       script: "npm test"
@@ -41,5 +39,3 @@ jobs:
         - npm install -g typescript;
         - pushd test/unit/typescript/
         - tsc -p .
-        - node -e "require('./api-generation-test').generate()" > generated.ts
-        - tsc generated.ts

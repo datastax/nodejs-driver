@@ -25,13 +25,13 @@
 import { DateRange, DateRangeBound, dateRangePrecision } from "./date-range";
 
 export {
-    DateRange,
-    DateRangeBound,
-    dateRangePrecision
-}
+  DateRange,
+  DateRangeBound,
+  dateRangePrecision
+};
 
 export default {
-    DateRange,
-    DateRangeBound,
-    dateRangePrecision
-}
+  DateRange,
+  DateRangeBound,
+  dateRangePrecision
+};

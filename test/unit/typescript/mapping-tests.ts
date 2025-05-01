@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, mapping, types } from "../../../index";
-import Mapper = mapping.Mapper;
-import ModelMapper = mapping.ModelMapper;
-import Uuid = types.Uuid;
-import Result = mapping.Result;
+import { Client, Mapper, ModelMapper, Uuid, Result } from "cassandra-driver";
 
 /*
  * TypeScript definitions compilation tests for types module.

@@ -37,7 +37,7 @@ export declare const addressResolution: {
  * {@link Client} instance are not "translated", only IP address retrieve from or sent
  * by Cassandra nodes to the driver are.
  */
-declare class AddressTranslator {
+export declare class AddressTranslator {
     /**
      * Translates a Cassandra <code>rpc_address</code> to another address if necessary.
      * @param {String} address the address of a node as returned by Cassandra.
@@ -140,7 +140,7 @@ export declare class Aggregate {
  * in particular.
  * @extends LoadBalancingPolicy
  */
-declare class AllowListPolicy extends LoadBalancingPolicy {
+export declare class AllowListPolicy extends LoadBalancingPolicy {
     private childPolicy;
     private allowList;
     /**
@@ -698,7 +698,19 @@ declare const cassandra: {
                 };
             };
         };
-        DateRange: typeof DateRange;
+        search: {
+            DateRange: typeof DateRange;
+            DateRangeBound: typeof DateRangeBound;
+            dateRangePrecision: {
+                readonly year: 0;
+                readonly month: 1;
+                readonly day: 2;
+                readonly hour: 3;
+                readonly minute: 4;
+                readonly second: 5;
+                readonly millisecond: 6;
+            };
+        };
     };
     /**
      * Returns a new instance of the default [options]{@link ClientOptions} used by the driver.
@@ -1007,7 +1019,8 @@ export declare class Client extends EventEmitter.EventEmitter {
      * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
      * @param {Function} [callback] Optional callback to be invoked when finished closing all connections.
      */
-    shutdown(callback?: Function): Promise<any>;
+    shutdown(): Promise<void>;
+    shutdown(callback: EmptyCallback): void;
     /** @private */
     private _shutdown;
     /* Excluded from this release type: _waitForSchemaAgreement */
@@ -1516,7 +1529,7 @@ export declare const consistencyToString: {};
 /**
  * A reconnection policy that waits a constant time between each reconnection attempt.
  */
-declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
+export declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
     private delay;
     /**
      * A reconnection policy that waits a constant time between each reconnection attempt.
@@ -1541,7 +1554,7 @@ declare class ConstantReconnectionPolicy extends ReconnectionPolicy {
  * separated by a fixed delay.
  * @extends {SpeculativeExecutionPolicy}
  */
-declare class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
+export declare class ConstantSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
     private _delay;
     private _maxSpeculativeExecutions;
     /**
@@ -1811,7 +1824,19 @@ export declare const datastax: {
         };
         /* Excluded from this release type: UdtGraphWrapper */
     };
-    DateRange: typeof DateRange;
+    search: {
+        DateRange: typeof DateRange;
+        DateRangeBound: typeof DateRangeBound;
+        dateRangePrecision: {
+            readonly year: 0;
+            readonly month: 1;
+            readonly day: 2;
+            readonly hour: 3;
+            readonly minute: 4;
+            readonly second: 5;
+            readonly millisecond: 6;
+        };
+    };
 };
 
 export declare type DataTypeInfo = SingleColumnInfo | CustomSimpleColumnInfo | MapColumnInfo | TupleColumnInfo | ListSetColumnInfo | VectorColumnInfo | OtherCustomColumnInfo | UdtColumnInfo | TupleListColumnInfoWithoutSubtype;
@@ -1906,7 +1931,7 @@ export declare namespace dataTypes {
  * <p>
  * @memberOf module:datastax/search
  */
-export declare class DateRange {
+declare class DateRange {
     lowerBound: DateRangeBound;
     upperBound: DateRangeBound;
     private _type;
@@ -2004,7 +2029,7 @@ declare class DateRangeBound {
  * This policy provides round-robin queries over the nodes of the local
  * data center.
  */
-declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
+export declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
     /* Excluded from this release type: localDc */
     private index;
     private localHostsArray;
@@ -2049,7 +2074,7 @@ declare class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
  *   <code>useCurrentHost</code> is set to <code>true</code>.
  * </p>
  */
-declare type DecisionInfo = {
+export declare type DecisionInfo = {
     decision: number;
     consistency?: consistencies;
     useCurrentHost?: boolean;
@@ -2076,7 +2101,7 @@ export declare const defaultAddressTranslator: () => AddressTranslator;
  *   host in the query plan.
  * </p>
  */
-declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
+export declare class DefaultLoadBalancingPolicy extends LoadBalancingPolicy {
     private _client;
     private _hosts;
     private _filteredHosts;
@@ -2591,7 +2616,7 @@ export declare class Duration {
  * This optimizes network costs, because Amazon charges more for communication over public IPs.
  * </p>
  */
-declare class EC2MultiRegionTranslator extends AddressTranslator {
+export declare class EC2MultiRegionTranslator extends AddressTranslator {
     /**
      * Addresses in the same EC2 region are translated to private IPs and addresses in
      * different EC2 regions (than the client) are unchanged
@@ -3313,7 +3338,7 @@ export declare class ExecutionProfile {
  *   delay to be less than the base delay, or more than the max delay.
  * </p>
  */
-declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
+export declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
     private baseDelay;
     private maxDelay;
     private startWithNoDelay;
@@ -3359,7 +3384,7 @@ declare class ExponentialReconnectionPolicy extends ReconnectionPolicy {
  * @alias module:policies/retry~FallthroughRetryPolicy
  * @extends RetryPolicy
  */
-declare class FallthroughRetryPolicy extends RetryPolicy {
+export declare class FallthroughRetryPolicy extends RetryPolicy {
     /**
      * Implementation of RetryPolicy method that returns [rethrow]{@link module:policies/retry~Retry#rethrowResult()}.
      */
@@ -3571,7 +3596,7 @@ declare class HashSet {
  * Represents a Cassandra node.
  * @extends EventEmitter
  */
-declare class Host extends EventEmitter.EventEmitter {
+export declare class Host extends EventEmitter.EventEmitter {
     address: string;
     private setDownAt;
     private log;
@@ -3650,7 +3675,7 @@ declare class Host extends EventEmitter.EventEmitter {
  * @extends events.EventEmitter
  * @constructor
  */
-declare class HostMap extends EventEmitter.EventEmitter {
+export declare class HostMap extends EventEmitter.EventEmitter {
     private _items;
     private _values;
     length: number;
@@ -3699,7 +3724,7 @@ declare class HostMap extends EventEmitter.EventEmitter {
  * @deprecated Since version 4.0 non-idempotent operations are never tried for write timeout or request error, use the
  * default retry policy instead.
  */
-declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
+export declare class IdempotenceAwareRetryPolicy extends RetryPolicy {
     private _childPolicy;
     /**
      * Creates a new instance of <code>IdempotenceAwareRetryPolicy</code>.
@@ -3771,7 +3796,7 @@ export declare class Index {
     isCustomKind(): boolean;
 }
 
-declare enum IndexKind {
+export declare enum IndexKind {
     custom = 0,
     keys = 1,
     composites = 2
@@ -5309,7 +5334,7 @@ export declare interface ModelTables {
  * </p>
  * @extends {TimestampGenerator}
  */
-declare class MonotonicTimestampGenerator extends TimestampGenerator {
+export declare class MonotonicTimestampGenerator extends TimestampGenerator {
     private _warningThreshold;
     private _minLogInterval;
     private _micros;
@@ -5375,7 +5400,7 @@ export declare class NoHostAvailableError extends DriverError {
  * A {@link SpeculativeExecutionPolicy} that never schedules speculative executions.
  * @extends {SpeculativeExecutionPolicy}
  */
-declare class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
+export declare class NoSpeculativeExecutionPolicy extends SpeculativeExecutionPolicy {
     private _plan;
     /**
      * Creates a new instance of NoSpeculativeExecutionPolicy.
@@ -6025,7 +6050,7 @@ export declare const reconnection: {
 /**
  * Base class for Reconnection Policies
  */
-declare class ReconnectionPolicy {
+export declare class ReconnectionPolicy {
     constructor();
     /**
      * A new reconnection schedule.
@@ -6481,7 +6506,7 @@ export declare const retry: {
  * Base and default RetryPolicy.
  * Determines what to do when the driver encounters specific Cassandra exceptions.
  */
-declare class RetryPolicy {
+export declare class RetryPolicy {
     /**
      * Determines what to do when the driver gets an UnavailableException response from a Cassandra node.
      * @param {OperationInfo} info
@@ -6576,8 +6601,8 @@ declare class RetryPolicy {
  * @property {Number} ignore
  * @static
  */
-declare namespace RetryPolicy {
-    enum retryDecision {
+export declare namespace RetryPolicy {
+    export enum retryDecision {
         rethrow = 0,
         retry = 1,
         ignore = 2
@@ -6587,7 +6612,7 @@ declare namespace RetryPolicy {
 /**
  * This policy yield nodes in a round-robin fashion.
  */
-declare class RoundRobinPolicy extends LoadBalancingPolicy {
+export declare class RoundRobinPolicy extends LoadBalancingPolicy {
     private index;
     constructor();
     /**
@@ -6710,6 +6735,27 @@ export declare class SchemaFunction {
     /* Excluded from this release type: __constructor */
 }
 
+/**
+ * Search module.
+ * <p>
+ *   Contains the classes to represent the set of  types for search data that come with DSE 5.1+
+ * </p>
+ * @module datastax/search
+ */
+export declare const search: {
+    DateRange: typeof DateRange;
+    DateRangeBound: typeof DateRangeBound;
+    dateRangePrecision: {
+        readonly year: 0;
+        readonly month: 1;
+        readonly day: 2;
+        readonly hour: 3;
+        readonly minute: 4;
+        readonly second: 5;
+        readonly millisecond: 6;
+    };
+};
+
 declare type SingleColumnInfo = {
     code: SingleTypeCodes;
     info?: null;
@@ -6758,7 +6804,7 @@ export declare const speculativeExecution: {
  * <p>Note that only idempotent statements will be speculatively retried.</p>
  * @abstract
  */
-declare class SpeculativeExecutionPolicy {
+export declare class SpeculativeExecutionPolicy {
     constructor();
     /**
      * Initialization method that gets invoked on Client startup.
@@ -6937,7 +6983,7 @@ export declare const timestampGeneration: {
  * </p>
  * @constructor
  */
-declare class TimestampGenerator {
+export declare class TimestampGenerator {
     constructor();
     /**
      * Returns the next timestamp.
@@ -7063,6 +7109,7 @@ export declare class TimeUuid extends Uuid {
     static now(): TimeUuid;
     static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
     static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
+    static now(callback: ValueCallback<TimeUuid>): void;
     /**
      * Gets the Date and 100-nanoseconds units representation of this instance.
      * @returns {{date: Date, ticks: Number}}
@@ -7144,7 +7191,7 @@ export declare const token: {
 /**
  * A wrapper load balancing policy that adds token awareness to a child policy.
  */
-declare class TokenAwarePolicy extends LoadBalancingPolicy {
+export declare class TokenAwarePolicy extends LoadBalancingPolicy {
     private childPolicy;
     /**
      * A wrapper load balancing policy that add token awareness to a child policy.
@@ -7656,7 +7703,7 @@ export declare class VIntOutOfRangeException extends DriverError {
  * @extends AllowListPolicy
  * @deprecated Use allow-list instead. It will be removed in future major versions.
  */
-declare class WhiteListPolicy extends AllowListPolicy {
+export declare class WhiteListPolicy extends AllowListPolicy {
     /**
      * Creates a new instance of WhiteListPolicy.
      * @param {LoadBalancingPolicy} childPolicy - The wrapped policy.
@@ -7669,3 +7716,209 @@ declare class WhiteListPolicy extends AllowListPolicy {
 /* Excluded from this release type: WriteQueue */
 
 export { }
+export namespace auth {
+    export type Authenticator = InstanceType<typeof auth.Authenticator>;
+    export type AuthProvider = InstanceType<typeof auth.AuthProvider>;
+    export type PlainTextAuthProvider = InstanceType<typeof auth.PlainTextAuthProvider>;
+    export type DsePlainTextAuthProvider = InstanceType<typeof auth.DsePlainTextAuthProvider>;
+    export type DseGssapiAuthProvider = InstanceType<typeof auth.DseGssapiAuthProvider>;
+}
+
+type _Options = Options;
+
+export namespace concurrent {
+    export type ResultSetGroup = InstanceType<typeof concurrent.ResultSetGroup>;
+    export type executeConcurrent = typeof concurrent.executeConcurrent;
+    export type Options = _Options;
+}
+
+export namespace datastax {
+    export namespace graph {
+        export type asDouble = typeof datastax.graph.asDouble;
+        export type asFloat = typeof datastax.graph.asFloat;
+        export type asInt = typeof datastax.graph.asInt;
+        export type asTimestamp = typeof datastax.graph.asTimestamp;
+        export type asUdt = typeof datastax.graph.asUdt;
+        export type direction = typeof datastax.graph.direction;
+        export type Edge = InstanceType<typeof datastax.graph.Edge>;
+        export type Element = InstanceType<typeof datastax.graph.Element>;
+        export type GraphResultSet = InstanceType<typeof datastax.graph.GraphResultSet>;
+        export type Path = InstanceType<typeof datastax.graph.Path>;
+        export type Property = InstanceType<typeof datastax.graph.Property>;
+        export type t = typeof datastax.graph.t;
+        export type Vertex = InstanceType<typeof datastax.graph.Vertex>;
+        export type VertexProperty = InstanceType<typeof datastax.graph.VertexProperty>;
+    }
+    export namespace search {
+        export type DateRange = InstanceType<typeof datastax.search.DateRange>;
+        export type DateRangeBound = InstanceType<typeof datastax.search.DateRangeBound>;
+        export type dateRangePrecision = typeof datastax.search.dateRangePrecision;
+    }
+}
+
+export namespace geometry {
+    export type LineString = InstanceType<typeof geometry.LineString>;
+    export type Point = InstanceType<typeof geometry.Point>;
+    export type Polygon = InstanceType<typeof geometry.Polygon>;
+}
+
+type _MappingExecutionOptions = MappingExecutionOptions;
+type _MappingOptions = MappingOptions;
+type _FindDocInfo = FindDocInfo;
+type _UpdateDocInfo = UpdateDocInfo;
+type _RemoveDocInfo = RemoveDocInfo;
+type _ModelOptions = ModelOptions;
+type _ModelColumnOptions = ModelColumnOptions;
+type _QueryOperator = QueryOperator;
+type _QueryAssignment = QueryAssignment;
+
+export namespace mapping {
+    export type TableMappings = InstanceType<typeof mapping.TableMappings>;
+    export type DefaultTableMappings = InstanceType<typeof mapping.DefaultTableMappings>;
+    export type UnderscoreCqlToCamelCaseMappings = InstanceType<typeof mapping.UnderscoreCqlToCamelCaseMappings>;
+    export type Result = InstanceType<typeof mapping.Result>;
+    export type MappingExecutionOptions = _MappingExecutionOptions;
+    export type ModelTables = InstanceType<typeof mapping.ModelTables>;
+    export type Mapper = InstanceType<typeof mapping.Mapper>;
+    export type MappingOptions = _MappingOptions;
+    export type FindDocInfo = _FindDocInfo;
+    export type UpdateDocInfo = _UpdateDocInfo;
+    export type RemoveDocInfo = _RemoveDocInfo;
+    export type ModelOptions = _ModelOptions;
+    export type ModelColumnOptions = _ModelColumnOptions;
+    export type ModelBatchItem = InstanceType<typeof mapping.ModelBatchItem>;
+    export type ModelBatchMapper = InstanceType<typeof mapping.ModelBatchMapper>;
+    export type ModelMapper = InstanceType<typeof mapping.ModelMapper>;
+    export namespace q{
+        export type QueryOperator = _QueryOperator;
+        export type QueryAssignment = _QueryAssignment;
+        export type in_ = typeof mapping.q.in_;
+        export type gt = typeof mapping.q.gt;
+        export type gte = typeof mapping.q.gte;
+        export type lt = typeof mapping.q.lt;
+        export type lte = typeof mapping.q.lte;
+        export type notEq = typeof mapping.q.notEq;
+        export type and = typeof mapping.q.and;
+        export type incr = typeof mapping.q.incr;
+        export type decr = typeof mapping.q.decr;
+        export type append = typeof mapping.q.append;
+        export type prepend = typeof mapping.q.prepend;
+        export type remove = typeof mapping.q.remove;
+    }
+}
+
+type _IndexKind = IndexKind;
+export namespace metadata {
+    export type Aggregate = InstanceType<typeof Aggregate>;
+    export type ClientState = InstanceType<typeof ClientState>;
+    export type DataTypeInfo = InstanceType<typeof DataTypeInfo>;
+    export type ColumnInfo = InstanceType<typeof ColumnInfo>;
+    export type IndexKind = _IndexKind;
+    export type Index = InstanceType<typeof Index>;
+    export type DataCollection = InstanceType<typeof DataCollection>;
+    export type MaterializedView = InstanceType<typeof MaterializedView>;
+    export type TableMetadata = InstanceType<typeof TableMetadata>;
+    export type QueryTrace = InstanceType<typeof QueryTrace>;
+    export type SchemaFunction = InstanceType<typeof SchemaFunction>;
+    export type Udt = InstanceType<typeof Udt>;
+    export type Metadata = InstanceType<typeof Metadata>;
+}
+
+export namespace metrics{
+    export type ClientMetrics = InstanceType<typeof ClientMetrics>;
+    export type DefaultMetrics = InstanceType<typeof DefaultMetrics>;
+}
+
+type _DecisionInfo = DecisionInfo;
+type _OperationInfo = OperationInfo;
+export namespace policies{
+    export type defaultAddressTranslator = typeof defaultAddressTranslator;
+    export type defaultLoadBalancingPolicy = typeof defaultLoadBalancingPolicy;
+    export type defaultReconnectionPolicy = typeof defaultReconnectionPolicy;
+    export type defaultRetryPolicy = typeof defaultRetryPolicy;
+    export type defaultSpeculativeExecutionPolicy = typeof defaultSpeculativeExecutionPolicy;
+    export type defaultTimestampGenerator = typeof defaultTimestampGenerator;
+    export namespace addressResolution{
+        export type AddressTranslator = InstanceType<typeof AddressTranslator>;
+        export type EC2MultiRegionTranslator = InstanceType<typeof EC2MultiRegionTranslator>;
+    }
+    export namespace loadBalancing{
+        export type LoadBalancingPolicy = InstanceType<typeof LoadBalancingPolicy>;
+        export type DCAwareRoundRobinPolicy = InstanceType<typeof DCAwareRoundRobinPolicy>;
+        export type TokenAwarePolicy = InstanceType<typeof TokenAwarePolicy>;
+        export type AllowListPolicy = InstanceType<typeof AllowListPolicy>;
+        export type WhiteListPolicy = InstanceType<typeof WhiteListPolicy>;
+        export type RoundRobinPolicy = InstanceType<typeof RoundRobinPolicy>;
+        export type DefaultLoadBalancingPolicy = InstanceType<typeof DefaultLoadBalancingPolicy>;
+    }
+    export namespace reconnection{
+        export type ReconnectionPolicy = InstanceType<typeof ReconnectionPolicy>;
+        export type ConstantReconnectionPolicy = InstanceType<typeof ConstantReconnectionPolicy>;
+        export type ExponentialReconnectionPolicy = InstanceType<typeof ExponentialReconnectionPolicy>;
+    }
+    export namespace retry{
+        export type DecisionInfo = _DecisionInfo;
+        export type OperationInfo = _OperationInfo;
+        export type IdempotenceAwareRetryPolicy  = InstanceType<typeof IdempotenceAwareRetryPolicy>;
+        export type FallthroughRetryPolicy = InstanceType<typeof FallthroughRetryPolicy>;
+        export type RetryPolicy = InstanceType<typeof RetryPolicy>;
+        export namespace RetryDecision{
+            export type retryDecision = RetryPolicy.retryDecision;
+        }
+        export namespace speculativeExecution{
+            export type ConstantSpeculativeExecutionPolicy = InstanceType<typeof ConstantSpeculativeExecutionPolicy>;
+            export type NoSpeculativeExecutionPolicy = InstanceType<typeof NoSpeculativeExecutionPolicy>;
+            export type SpeculativeExecutionPolicy = InstanceType<typeof SpeculativeExecutionPolicy>;
+        }
+        export namespace timestampGeneration{
+            export type TimestampGenerator = InstanceType<typeof TimestampGenerator>;
+            export type MonotonicTimestampGenerator = InstanceType<typeof MonotonicTimestampGenerator>;
+        }
+    }    
+}
+
+export namespace tracker{
+    export type RequestTracker = InstanceType<typeof RequestTracker>;
+    export type RequestLogger = InstanceType<typeof RequestLogger>;
+}
+
+export namespace types {
+    export type Long = InstanceType<typeof types.Long>;
+    export type consistencies = typeof types.consistencies;
+    export type dataTypes = typeof types.dataTypes;
+    export type distance = typeof types.distance;
+    export type responseErrorCodes = typeof types.responseErrorCodes;
+    export type protocolVersion = typeof types.protocolVersion;
+    export type unset = unset;
+    export type BigDecimal = InstanceType<typeof types.BigDecimal>;
+    export type Duration = InstanceType<typeof types.Duration>;
+    export type InetAddress = InstanceType<typeof types.InetAddress>;
+    export type Integer = InstanceType<typeof types.Integer>;
+    export type LocalDate = InstanceType<typeof types.LocalDate>;
+    export type LocalTime = InstanceType<typeof types.LocalTime>;
+    export type ResultSet = InstanceType<typeof types.ResultSet>;
+    export type ResultStream = InstanceType<typeof types.ResultStream>;
+    export type Row = InstanceType<typeof types.Row>;
+    export type TimeUuid = InstanceType<typeof types.TimeUuid>;
+    export type Tuple = InstanceType<typeof types.Tuple>;
+    export type Uuid = InstanceType<typeof types.Uuid>;
+    export type Vector = InstanceType<typeof types.Vector>;
+}
+
+export namespace errors {
+    export type ArgumentError = InstanceType<typeof errors.ArgumentError>;
+    export type AuthenticationError = InstanceType<typeof errors.AuthenticationError>;
+    export type BusyConnectionError = InstanceType<typeof errors.BusyConnectionError>;
+    export type DriverError = InstanceType<typeof errors.DriverError>;
+    export type DriverInternalError = InstanceType<typeof errors.DriverInternalError>;
+    export type NoHostAvailableError = InstanceType<typeof errors.NoHostAvailableError>;
+    export type NotSupportedError = InstanceType<typeof errors.NotSupportedError>;
+    export type OperationTimedOutError = InstanceType<typeof errors.OperationTimedOutError>;
+    export type ResponseError = InstanceType<typeof errors.ResponseError>;
+    export type VIntOutOfRangeException = InstanceType<typeof errors.VIntOutOfRangeException>;
+}
+
+export namespace token{
+    export type Token = InstanceType<typeof Token>;
+    export type TokenRange = InstanceType<typeof TokenRange>;
+}

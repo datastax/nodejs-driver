@@ -22,5 +22,16 @@
  * </p>
  * @module datastax/search
  */
+import { DateRange, DateRangeBound, dateRangePrecision } from "./date-range";
 
-export * from "./date-range";
+export {
+    DateRange,
+    DateRangeBound,
+    dateRangePrecision
+}
+
+export default {
+    DateRange,
+    DateRangeBound,
+    dateRangePrecision
+}

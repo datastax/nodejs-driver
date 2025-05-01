@@ -93,8 +93,14 @@ export {
   speculativeExecution,
   timestampGeneration,
   LoadBalancingPolicy,
-  
 };
+
+export * from './address-resolution';
+export * from './load-balancing';
+export * from './reconnection';
+export * from './retry';
+export * from './speculative-execution';
+export * from './timestamp-generation';
 
 export default {
   addressResolution,

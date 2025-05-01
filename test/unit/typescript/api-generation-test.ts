@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { auth, concurrent, errors, datastax, geometry, mapping, metadata, metrics, policies, tracker, types } from "../../../index";
-import * as root from "../../../index";
+import { auth, concurrent, errors, geometry, mapping, metadata, metrics, policies, tracker, types, graph } from "cassandra-driver";
+import * as root from "cassandra-driver";
 
-import graph = datastax.graph;
+// import graph = datastax.graph;
 
 let counter:number = 0;
 

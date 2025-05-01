@@ -9,7 +9,7 @@ jobs:
   include:
     - stage: "tests"
       name: "Run eslint"
-      script: "npm install -g eslint@4; npm run eslint;"
+      script: "npm run eslint;"
       node_js: "18"
     - name: "TypeScript 4.9 generation and compilation tests"
       node_js: "18"

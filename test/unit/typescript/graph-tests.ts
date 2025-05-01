@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, datastax } from "../../../index";
+import { Client, datastax } from "cassandra-driver";
 import GraphResultSet = datastax.graph.GraphResultSet;
 
 

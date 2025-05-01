@@ -4,7 +4,9 @@
     "lib": ["es2015"],
     "target": "es2015",
     "sourceMap": false,
-    "strict": true
+    "strict": true,
+    "outDir": "out",
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules"

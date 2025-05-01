@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { auth, Client, ExecutionProfile, policies, types } from "../../../index";
+import { auth, Client, ExecutionProfile, policies, types } from "cassandra-driver";
 
 /*
  * TypeScript definitions compilation tests for Client class.

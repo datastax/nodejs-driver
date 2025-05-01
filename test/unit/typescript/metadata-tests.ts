@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, Host, metadata, types } from "../../../index";
+import { Client, Host, metadata, types } from "../../../";
 import TableMetadata = metadata.TableMetadata;
 import QueryTrace = metadata.QueryTrace;
 

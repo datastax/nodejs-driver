@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-import { types, Client } from "../../../index";
-import Uuid = types.Uuid;
-import TimeUuid = types.TimeUuid;
-import Long = types.Long;
-import BigDecimal = types.BigDecimal;
-import InetAddress = types.InetAddress;
-import Tuple = types.Tuple;
+import { types, Client } from "../../../";
+const Uuid = types.Uuid;
+type Uuid = types.Uuid;
+const TimeUuid = types.TimeUuid;
+type TimeUuid = types.TimeUuid;
+const Long = types.Long;
+type Long = types.Long;
+const BigDecimal = types.BigDecimal;
+type BigDecimal = types.BigDecimal;
+const InetAddress = types.InetAddress;
+type InetAddress = types.InetAddress;
+const Tuple = types.Tuple;
+type Tuple = types.Tuple;
 import ResultSet = types.ResultSet;
 import Row = types.Row;
 

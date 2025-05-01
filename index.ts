@@ -107,6 +107,7 @@ export * from './lib/auth/index';
 export * from './lib/concurrent/index';
 export * from './lib/datastax/index';
 export * from './lib/errors';
+export * from './lib/host';
 export * from './lib/geometry/index';
 export * from './lib/mapping/index';
 export * from './lib/metadata/index';

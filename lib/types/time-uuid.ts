@@ -222,8 +222,10 @@ class TimeUuid extends Uuid {
   static now(): TimeUuid;
   static now(nodeId: string | Buffer, clockId?: string | Buffer): TimeUuid;
   static now(nodeId: string | Buffer, clockId: string | Buffer, callback: ValueCallback<TimeUuid>): void;
+  static now(callback: ValueCallback<TimeUuid>): void;
   //TODO: this was exposed: static now(callback: ValueCallback<TimeUuid>): void; But I think it never works
-  static now(nodeId?: string | Buffer, clockId?: string | Buffer, callback?: ValueCallback<TimeUuid>): TimeUuid | void {
+  static now(nodeId?: string | Buffer | ValueCallback<TimeUuid>, clockId?: string | Buffer | ValueCallback<TimeUuid>, callback?: ValueCallback<TimeUuid>): TimeUuid | void {
+    // @ts-expect-error
     return TimeUuid.fromDate(null, null, nodeId, clockId, callback);
   }
 

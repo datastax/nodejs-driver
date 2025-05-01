@@ -28,7 +28,7 @@ import graph, {
   asDouble, asFloat, asInt, asTimestamp, asUdt, direction, Edge, Element, getCustomTypeSerializers, GraphResultSet, GraphTypeWrapper, Path, Property,
   t, UdtGraphWrapper, Vertex, VertexProperty
 } from "./graph/index";
-import { DateRange } from "./search/index";
+import search, { DateRange, DateRangeBound, dateRangePrecision } from "./search/index";
 
 export default {
   // Had to do this for api-extractor to remove the internal exports
@@ -54,9 +54,13 @@ export default {
     /** @internal */
     UdtGraphWrapper
   },
-  DateRange
+  search: {
+    DateRange,
+    DateRangeBound,
+    dateRangePrecision
+  }
 };
 
 export {
-  DateRange, graph
+  search, graph
 };

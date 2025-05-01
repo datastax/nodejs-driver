@@ -1125,7 +1125,9 @@ class Client extends events.EventEmitter{
    * <p>It returns a <code>Promise</code> when a <code>callback</code> is not provided.</p>
    * @param {Function} [callback] Optional callback to be invoked when finished closing all connections.
    */
-  shutdown(callback?: Function) {
+  shutdown(): Promise<void>;
+  shutdown(callback: EmptyCallback): void;
+  shutdown(callback?: Function): Promise<void> | void {
     return promiseUtils.optionalCallback(this._shutdown(), callback);
   }
   /** @private */

@@ -35,6 +35,7 @@ import DataCollection from "./data-collection";
 import MaterializedView from "./materialized-view";
 import SchemaFunction from "./schema-function";
 import type Index from "./schema-index";
+import { IndexKind } from "./schema-index";
 import schemaParserFactory, { type Keyspace, SchemaParser } from "./schema-parser";
 import type TableMetadata from "./table-metadata";
 
@@ -1115,7 +1116,7 @@ export default Metadata;
 export {
   Metadata,
   type Aggregate, type ClientState, type ColumnInfo, type DataCollection, type DataTypeInfo, type Index, type MaterializedView, type PreparedQueryInfo,
-  type QueryTrace, type SchemaFunction, type TableMetadata,
+  type QueryTrace, type SchemaFunction, type TableMetadata, type IndexKind,
   type Udt
 };
 

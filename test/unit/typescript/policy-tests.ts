@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-import { policies } from "../../../index";
+import { policies, TokenAwarePolicy, ConstantReconnectionPolicy, ExponentialReconnectionPolicy, RetryPolicy, addressResolution, AddressTranslator } from "../../../";
 import LoadBalancingPolicy = policies.loadBalancing.LoadBalancingPolicy;
-import TokenAwarePolicy = policies.loadBalancing.TokenAwarePolicy;
 import ReconnectionPolicy = policies.reconnection.ReconnectionPolicy;
-import RetryPolicy = policies.retry.RetryPolicy;
-import ConstantReconnectionPolicy = policies.reconnection.ConstantReconnectionPolicy;
-import ExponentialReconnectionPolicy = policies.reconnection.ExponentialReconnectionPolicy;
-import addressResolution = policies.addressResolution;
 
 /*
  * TypeScript definitions compilation tests for policy module.
@@ -49,5 +44,5 @@ function myTest(): void {
 
   retryPolicy = new RetryPolicy();
 
-  let ar: addressResolution.AddressTranslator = new addressResolution.EC2MultiRegionTranslator();
+  let ar: AddressTranslator = new addressResolution.EC2MultiRegionTranslator();
 }

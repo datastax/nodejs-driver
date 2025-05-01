@@ -170,3 +170,8 @@ function getKindByName(name: string): IndexKind {
 }
 
 export default Index;
+
+export {
+  Index,
+  IndexKind
+};

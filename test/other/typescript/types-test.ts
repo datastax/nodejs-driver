@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { types, Client } from "../../../";
+import { types, Client } from "../../../dist/cassandra-driver-public";
 const Uuid = types.Uuid;
 type Uuid = types.Uuid;
 const TimeUuid = types.TimeUuid;

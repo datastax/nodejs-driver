@@ -16,8 +16,8 @@
   
 'use strict';
   
-import { auth, concurrent, errors, datastax, mapping, geometry, metadata, metrics, policies, tracker, types } from "../../../";
-import * as root from "../../../";
+import { auth, concurrent, errors, datastax, mapping, geometry, metadata, metrics, policies, tracker, types } from "../../../dist/cassandra-driver-public";
+import * as root from "../../../dist/cassandra-driver-public";
 
 import graph = datastax.graph;
 

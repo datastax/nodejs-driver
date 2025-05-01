@@ -15,7 +15,7 @@ jobs:
       node_js: "18"
       script:
         - npm install -g typescript@4.9;
-        - pushd test/unit/typescript/
+        - pushd test/other/typescript/
         - npm install
         - tsc -p .
     - name: "Unit tests - Node.js 20"
@@ -38,6 +38,6 @@ jobs:
       node_js: "18"
       script:
         - npm install -g typescript;
-        - pushd test/unit/typescript/
+        - pushd test/other/typescript/
         - npm install
         - tsc -p .

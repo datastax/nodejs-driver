@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, Host, metadata, types } from "../../../";
+import { Client, Host, metadata, types } from "../../../dist/cassandra-driver-public";
 import TableMetadata = metadata.TableMetadata;
 import QueryTrace = metadata.QueryTrace;
 

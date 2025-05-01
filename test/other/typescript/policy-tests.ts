@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { policies, TokenAwarePolicy, ConstantReconnectionPolicy, ExponentialReconnectionPolicy, RetryPolicy, addressResolution, AddressTranslator } from "../../../";
+import { policies, TokenAwarePolicy, ConstantReconnectionPolicy, ExponentialReconnectionPolicy, RetryPolicy, addressResolution, AddressTranslator } from "../../../dist/cassandra-driver-public";
 import LoadBalancingPolicy = policies.loadBalancing.LoadBalancingPolicy;
 import ReconnectionPolicy = policies.reconnection.ReconnectionPolicy;
 

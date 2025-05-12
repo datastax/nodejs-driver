@@ -188,6 +188,8 @@ export interface ExecutionOptions {
 
   getTimestamp(): number | Long | undefined | null;
 
+  setTimestamp(timestamp: number | Long | undefined | null): void;
+
   setHints(hints: string[]): void;
 }
 

@@ -71,6 +71,25 @@ export class ArgumentError extends DriverError {
 }
 
 // @public
+export function asDouble(value: number): object;
+
+// @public
+export function asFloat(value: number): object;
+
+// @public
+export function asInt(value: number): object;
+
+// @public
+export function asTimestamp(value: Date): object;
+
+// @public
+export function asUdt(value: object, udtInfo: {
+    name: string;
+    keyspace: string;
+    fields: Array<any>;
+}): object;
+
+// @public
 export const auth: {
     Authenticator: typeof Authenticator;
     AuthProvider: typeof AuthProvider;
@@ -315,7 +334,7 @@ const cassandra: {
     };
     datastax: {
         graph: {
-            getCustomTypeSerializers: typeof getCustomSerializers;
+            getCustomTypeSerializers: typeof getCustomTypeSerializers;
             GraphTypeWrapper: typeof GraphTypeWrapper;
             UdtGraphWrapper: typeof UdtGraphWrapper;
             Edge: typeof Edge;
@@ -393,6 +412,16 @@ const cassandra: {
     version: string;
 };
 export default cassandra;
+
+// Warning: (ae-internal-missing-underscore) The name "checkServerIdentity" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export function checkServerIdentity(cert: {
+    subject: {
+        CN: string;
+    };
+    subjectaltname?: string;
+}, sniAddress: string): Error | undefined;
 
 // @public
 export class Client extends EventEmitter.EventEmitter {
@@ -747,7 +776,7 @@ export const datastax: {
                 toString(): any;
             };
         };
-        getCustomTypeSerializers: typeof getCustomSerializers;
+        getCustomTypeSerializers: typeof getCustomTypeSerializers;
         GraphResultSet: typeof GraphResultSet;
         GraphTypeWrapper: typeof GraphTypeWrapper;
         t: {
@@ -864,6 +893,50 @@ export enum dataTypes {
 export namespace dataTypes {
     export function getByName(name: string): DataTypeInfo;
 }
+
+// @public
+export class DateRange {
+    constructor(lowerBound: DateRangeBound, upperBound?: DateRangeBound);
+    equals(other: DateRange): boolean;
+    static fromBuffer(buffer: Buffer): DateRange;
+    static fromString(dateRangeString: string): DateRange;
+    // (undocumented)
+    lowerBound: DateRangeBound;
+    // (undocumented)
+    toBuffer(): any;
+    toString(): string;
+    // (undocumented)
+    upperBound: DateRangeBound;
+}
+
+// @public
+export class DateRangeBound {
+    constructor(date: Date, precision: number);
+    // (undocumented)
+    date: Date;
+    equals(other: DateRangeBound): boolean;
+    static fromString(boundaryString: string): DateRangeBound;
+    // @internal (undocumented)
+    isUnbounded(): boolean;
+    // (undocumented)
+    precision: number;
+    static toLowerBound(bound: DateRangeBound): DateRangeBound;
+    toString(): string;
+    static toUpperBound(bound: DateRangeBound): DateRangeBound;
+    // @internal (undocumented)
+    static unbounded: Readonly<DateRangeBound>;
+}
+
+// @public
+export const dateRangePrecision: {
+    readonly year: 0;
+    readonly month: 1;
+    readonly day: 2;
+    readonly hour: 3;
+    readonly minute: 4;
+    readonly second: 5;
+    readonly millisecond: 6;
+};
 
 // @public
 export class DCAwareRoundRobinPolicy extends LoadBalancingPolicy {
@@ -995,6 +1068,14 @@ export class DefaultTableMappings extends TableMappings {
 export const defaultTimestampGenerator: () => TimestampGenerator;
 
 // @public
+export const direction: {
+    both: EnumValue;
+    in: EnumValue;
+    out: EnumValue;
+    in_: EnumValue;
+};
+
+// @public
 export enum distance {
     // (undocumented)
     ignored = 2,
@@ -1057,6 +1138,34 @@ export class Duration {
 export class EC2MultiRegionTranslator extends AddressTranslator {
     logError(address: string, err: Error): void;
     translate(address: string, port: number, callback: Function): void;
+}
+
+// @public
+export class Edge extends Element {
+    constructor(id: any, outV: Vertex, outVLabel: string, label: string, inV: Vertex, inVLabel?: string, properties?: {
+        [s: string]: Property;
+    });
+    // (undocumented)
+    inV: Vertex;
+    // (undocumented)
+    inVLabel: string;
+    // (undocumented)
+    outV: Vertex;
+    // (undocumented)
+    outVLabel: string;
+    // (undocumented)
+    properties: {
+        [s: string]: any;
+    };
+}
+
+// @public
+export abstract class Element {
+    constructor(id: any, label: string);
+    // (undocumented)
+    id: any;
+    // (undocumented)
+    label: string;
 }
 
 // @public (undocumented)
@@ -1288,6 +1397,11 @@ export const geometry: {
     Geometry: typeof Geometry;
 };
 
+// Warning: (ae-internal-missing-underscore) The name "getCustomTypeSerializers" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export function getCustomTypeSerializers(): {};
+
 // Warning: (ae-internal-missing-underscore) The name "getDataTypeNameByCode" should be prefixed with an underscore because the declaration is marked as @internal
 //
 // @internal
@@ -1312,7 +1426,7 @@ export const graph: {
         out: EnumValue;
         in_: EnumValue;
     };
-    getCustomTypeSerializers: typeof getCustomSerializers;
+    getCustomTypeSerializers: typeof getCustomTypeSerializers;
     GraphResultSet: typeof GraphResultSet;
     GraphTypeWrapper: typeof GraphTypeWrapper;
     t: {
@@ -1323,6 +1437,34 @@ export const graph: {
     };
     UdtGraphWrapper: typeof UdtGraphWrapper;
 };
+
+// @public
+export class GraphResultSet implements Iterable<any> {
+    [Symbol.iterator](): Iterator<any, any, any>;
+    constructor(result: ResultSet, rowParser?: Function);
+    first(): object | null;
+    forEach(callback: Function, thisArg?: object): void;
+    getTraversers(): IterableIterator<any>;
+    // (undocumented)
+    info: typeof ResultSet.prototype.info;
+    // (undocumented)
+    length: number;
+    // (undocumented)
+    pageState: string;
+    toArray(): Array<any>;
+    values(): Iterator<any>;
+}
+
+// Warning: (ae-internal-missing-underscore) The name "GraphTypeWrapper" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export class GraphTypeWrapper {
+    constructor(value: any, typeInfo: any);
+    // (undocumented)
+    typeInfo: any;
+    // (undocumented)
+    value: any;
+}
 
 // @public
 export class Host extends EventEmitter.EventEmitter {
@@ -1474,6 +1616,11 @@ export class InetAddress {
     // (undocumented)
     version: number;
 }
+
+// Warning: (ae-internal-missing-underscore) The name "init" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function init(options: ClientOptions): Promise<void>;
 
 // @public (undocumented)
 export type InsertDocInfo = {
@@ -1979,6 +2126,15 @@ export type Options = {
 };
 
 // @public
+export class Path {
+    constructor(labels: any[], objects: any[]);
+    // (undocumented)
+    labels: any[];
+    // (undocumented)
+    objects: any[];
+}
+
+// @public
 export class PlainTextAuthProvider extends AuthProvider {
     constructor(username: string, password: string);
     // @override
@@ -2067,6 +2223,15 @@ export type PreparedQueryInfo = {
     keyspace: string;
     meta?: DataCollection;
 } & EventEmitter_2;
+
+// @public
+export class Property {
+    constructor(key: string, value: any);
+    // (undocumented)
+    key: string;
+    // (undocumented)
+    value: any;
+}
 
 // Warning: (ae-internal-missing-underscore) The name "protocolEvents" should be prefixed with an underscore because the declaration is marked as @internal
 //
@@ -2626,6 +2791,14 @@ export class SpeculativeExecutionPolicy {
 }
 
 // @public
+export const t: {
+    id: EnumValue;
+    key: EnumValue;
+    label: EnumValue;
+    value: EnumValue;
+};
+
+// @public
 export class TableMappings {
     getColumnName(propName: string): string;
     getPropertyName(columnName: string): string;
@@ -2815,6 +2988,17 @@ export interface Udt {
     name: string;
 }
 
+// Warning: (ae-internal-missing-underscore) The name "UdtGraphWrapper" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export class UdtGraphWrapper {
+    constructor(value: any, udtInfo: any);
+    // (undocumented)
+    udtInfo: any;
+    // (undocumented)
+    value: any;
+}
+
 // @public
 export class UnderscoreCqlToCamelCaseMappings extends TableMappings {
     constructor();
@@ -2886,6 +3070,28 @@ export class Vector {
 export const version: string;
 
 // @public
+export class Vertex extends Element {
+    constructor(id: any, label: string, properties?: {
+        [key: string]: any[];
+    });
+    // (undocumented)
+    properties: {
+        [key: string]: any[];
+    };
+}
+
+// @public
+export class VertexProperty extends Element {
+    constructor(id: any, label: string, value: any, properties: object);
+    // (undocumented)
+    key: string;
+    // (undocumented)
+    properties: any;
+    // (undocumented)
+    value: any;
+}
+
+// @public
 export class VIntOutOfRangeException extends DriverError {
     constructor(long: Long__default);
 }
@@ -2898,31 +3104,14 @@ export class WhiteListPolicy extends AllowListPolicy {
 
 // Warnings were encountered during analysis:
 //
-// out/cassandra-rollup.d.ts:3107:9 - (ae-forgotten-export) The symbol "Keyspace" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:3130:13 - (ae-forgotten-export) The symbol "HashSet" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:4648:9 - (ae-forgotten-export) The symbol "AddressResolver" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:7728:9 - (ae-forgotten-export) The symbol "EnumValue" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9362:13 - (ae-forgotten-export) The symbol "QueryOperator" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9369:13 - (ae-forgotten-export) The symbol "QueryAssignment" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9389:9 - (ae-forgotten-export) The symbol "Token" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9390:9 - (ae-forgotten-export) The symbol "TokenRange" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9405:13 - (ae-forgotten-export) The symbol "getCustomSerializers" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9407:13 - (ae-forgotten-export) The symbol "GraphTypeWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9409:13 - (ae-forgotten-export) The symbol "UdtGraphWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9410:13 - (ae-forgotten-export) The symbol "Edge" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9411:13 - (ae-forgotten-export) The symbol "Element" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9412:13 - (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9413:13 - (ae-forgotten-export) The symbol "Property" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9414:13 - (ae-forgotten-export) The symbol "Vertex" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9415:13 - (ae-forgotten-export) The symbol "VertexProperty" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9416:13 - (ae-forgotten-export) The symbol "asInt" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9417:13 - (ae-forgotten-export) The symbol "asDouble" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9418:13 - (ae-forgotten-export) The symbol "asFloat" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9419:13 - (ae-forgotten-export) The symbol "asTimestamp" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9420:13 - (ae-forgotten-export) The symbol "asUdt" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9443:13 - (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9468:13 - (ae-forgotten-export) The symbol "DateRange" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9469:13 - (ae-forgotten-export) The symbol "DateRangeBound" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:2970:9 - (ae-forgotten-export) The symbol "Keyspace" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:2993:13 - (ae-forgotten-export) The symbol "HashSet" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:4511:9 - (ae-forgotten-export) The symbol "AddressResolver" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7591:5 - (ae-forgotten-export) The symbol "EnumValue" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9425:13 - (ae-forgotten-export) The symbol "QueryOperator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9432:13 - (ae-forgotten-export) The symbol "QueryAssignment" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9452:9 - (ae-forgotten-export) The symbol "Token" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9453:9 - (ae-forgotten-export) The symbol "TokenRange" needs to be exported by the entry point cassandra-rollup.d.ts
 
 // (No @packageDocumentation comment for this package)
 

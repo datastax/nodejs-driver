@@ -213,25 +213,25 @@ declare type ArrayOrObject = any[] | {
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-declare function asDouble(value: number): object;
+export declare function asDouble(value: number): object;
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is a double
  * @memberOf module:datastax/graph
  */
-declare function asFloat(value: number): object;
+export declare function asFloat(value: number): object;
 
 /**
  * Wraps a number or null value to hint the client driver that the data type of the value is an int
  * @memberOf module:datastax/graph
  */
-declare function asInt(value: number): object;
+export declare function asInt(value: number): object;
 
 /**
  * Wraps a Date or null value to hint the client driver that the data type of the value is a timestamp
  * @memberOf module:datastax/graph
  */
-declare function asTimestamp(value: Date): object;
+export declare function asTimestamp(value: Date): object;
 
 /**
  * Wraps an Object or null value to hint the client driver that the data type of the value is a user-defined type.
@@ -239,7 +239,7 @@ declare function asTimestamp(value: Date): object;
  * @param {object} value The object representing the UDT.
  * @param {{name: string, keyspace: string, fields: Array}} udtInfo The UDT metadata as defined by the driver.
  */
-declare function asUdt(value: object, udtInfo: {
+export declare function asUdt(value: object, udtInfo: {
     name: string;
     keyspace: string;
     fields: Array<any>;
@@ -719,6 +719,8 @@ declare const cassandra: {
     version: string;
 };
 export default cassandra;
+
+/* Excluded from this release type: checkServerIdentity */
 
 /**
  * Creates a new instance of {@link Client}.
@@ -1931,7 +1933,7 @@ export declare namespace dataTypes {
  * <p>
  * @memberOf module:datastax/search
  */
-declare class DateRange {
+export declare class DateRange {
     lowerBound: DateRangeBound;
     upperBound: DateRangeBound;
     private _type;
@@ -1975,7 +1977,7 @@ declare class DateRange {
  * @constructor
  * @memberOf module:datastax/search
  */
-declare class DateRangeBound {
+export declare class DateRangeBound {
     date: Date;
     precision: number;
     /* Excluded from this release type: unbounded */
@@ -2023,6 +2025,28 @@ declare class DateRangeBound {
     equals(other: DateRangeBound): boolean;
     /* Excluded from this release type: isUnbounded */
 }
+
+/**
+ * Defines the possible values of date range precision.
+ * @type {Object}
+ * @property {Number} year
+ * @property {Number} month
+ * @property {Number} day
+ * @property {Number} hour
+ * @property {Number} minute
+ * @property {Number} second
+ * @property {Number} millisecond
+ * @memberof module:search
+ */
+export declare const dateRangePrecision: {
+    readonly year: 0;
+    readonly month: 1;
+    readonly day: 2;
+    readonly hour: 3;
+    readonly minute: 4;
+    readonly second: 5;
+    readonly millisecond: 6;
+};
 
 /**
  * A data-center aware Round-robin load balancing policy.
@@ -2328,6 +2352,16 @@ export declare class DefaultTableMappings extends TableMappings {
  * @returns {TimestampGenerator}
  */
 export declare const defaultTimestampGenerator: () => TimestampGenerator;
+
+/**
+ * Represents the edge direction.
+ */
+export declare const direction: {
+    both: EnumValue;
+    in: EnumValue;
+    out: EnumValue;
+    in_: EnumValue;
+};
 
 /**
  * Represents the distance of Cassandra node as assigned by a LoadBalancingPolicy relatively to the driver instance.
@@ -2639,7 +2673,7 @@ export declare class EC2MultiRegionTranslator extends AddressTranslator {
  * @extends Element
  * @memberOf module:datastax/graph
  */
-declare class Edge extends Element {
+export declare class Edge extends Element {
     outV: Vertex;
     outVLabel: string;
     inV: Vertex;
@@ -2667,7 +2701,7 @@ declare class Edge extends Element {
  * @abstract
  * @memberOf module:datastax/graph
  */
-declare abstract class Element {
+export declare abstract class Element {
     id: any;
     label: string;
     /**
@@ -3447,7 +3481,7 @@ export declare const geometry: {
     Geometry: typeof Geometry;
 };
 
-/* Excluded from this release type: getCustomSerializers */
+/* Excluded from this release type: getCustomTypeSerializers */
 
 /* Excluded from this release type: getDataTypeNameByCode */
 
@@ -3514,7 +3548,7 @@ declare interface GraphQueryOptions extends QueryOptions {
  * const vertex = result.first();
  * @alias module:datastax/graph~GraphResultSet
  */
-declare class GraphResultSet implements Iterable<any> {
+export declare class GraphResultSet implements Iterable<any> {
     info: typeof ResultSet.prototype.info;
     length: number;
     pageState: string;
@@ -3859,6 +3893,8 @@ export declare class InetAddress {
      */
     private static isValidIPv4Mapped;
 }
+
+/* Excluded from this release type: init */
 
 export declare type InsertDocInfo = {
     fields?: string[];
@@ -5477,7 +5513,7 @@ declare type OtherCustomColumnInfo = {
  * Represents a walk through a graph as defined by a traversal.
  * @memberOf module:datastax/graph
  */
-declare class Path {
+export declare class Path {
     labels: any[];
     objects: any[];
     /**
@@ -5706,7 +5742,7 @@ export declare type PreparedQueryInfo = {
  * Represents a property.
  * @memberOf module:datastax/graph
  */
-declare class Property {
+export declare class Property {
     key: string;
     value: any;
     /**
@@ -6886,6 +6922,16 @@ declare class StreamIdStack {
 }
 
 /**
+ * Represents a collection of tokens for more concise Traversal definitions.
+ */
+export declare const t: {
+    id: EnumValue;
+    key: EnumValue;
+    label: EnumValue;
+    value: EnumValue;
+};
+
+/**
  * Contains a set of methods to represent a row into a document and a document into a row.
  * @alias module:mapping~TableMappings
  * @interface
@@ -7654,7 +7700,7 @@ export declare const version: string;
  * @extends Element
  * @memberOf module:datastax/graph
  */
-declare class Vertex extends Element {
+export declare class Vertex extends Element {
     properties: {
         [key: string]: any[];
     };
@@ -7673,7 +7719,7 @@ declare class Vertex extends Element {
  * @extends Element
  * @memberOf module:datastax/graph
  */
-declare class VertexProperty extends Element {
+export declare class VertexProperty extends Element {
     value: any;
     key: string;
     properties: any;

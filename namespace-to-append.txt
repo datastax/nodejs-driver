@@ -1,0 +1,211 @@
+export namespace auth {
+    export type Authenticator = InstanceType<typeof auth.Authenticator>;
+    export type AuthProvider = InstanceType<typeof auth.AuthProvider>;
+    export type PlainTextAuthProvider = InstanceType<typeof auth.PlainTextAuthProvider>;
+    export type DsePlainTextAuthProvider = InstanceType<typeof auth.DsePlainTextAuthProvider>;
+    export type DseGssapiAuthProvider = InstanceType<typeof auth.DseGssapiAuthProvider>;
+}
+
+type _Options = Options;
+
+export namespace concurrent {
+    export type ResultSetGroup = InstanceType<typeof concurrent.ResultSetGroup>;
+    export type executeConcurrent = typeof concurrent.executeConcurrent;
+    export type Options = _Options;
+}
+
+export namespace datastax {
+    export namespace graph {
+        export type asDouble = typeof datastax.graph.asDouble;
+        export type asFloat = typeof datastax.graph.asFloat;
+        export type asInt = typeof datastax.graph.asInt;
+        export type asTimestamp = typeof datastax.graph.asTimestamp;
+        export type asUdt = typeof datastax.graph.asUdt;
+        export type direction = typeof datastax.graph.direction;
+        export type Edge = InstanceType<typeof datastax.graph.Edge>;
+        export type Element = InstanceType<typeof datastax.graph.Element>;
+        export type GraphResultSet = InstanceType<typeof datastax.graph.GraphResultSet>;
+        export type Path = InstanceType<typeof datastax.graph.Path>;
+        export type Property = InstanceType<typeof datastax.graph.Property>;
+        export type t = typeof datastax.graph.t;
+        export type Vertex = InstanceType<typeof datastax.graph.Vertex>;
+        export type VertexProperty = InstanceType<typeof datastax.graph.VertexProperty>;
+    }
+    export namespace search {
+        export type DateRange = InstanceType<typeof datastax.search.DateRange>;
+        export type DateRangeBound = InstanceType<typeof datastax.search.DateRangeBound>;
+        export type dateRangePrecision = typeof datastax.search.dateRangePrecision;
+    }
+}
+
+export namespace geometry {
+    export type LineString = InstanceType<typeof geometry.LineString>;
+    export type Point = InstanceType<typeof geometry.Point>;
+    export type Polygon = InstanceType<typeof geometry.Polygon>;
+}
+
+type _MappingExecutionOptions = MappingExecutionOptions;
+type _MappingOptions = MappingOptions;
+type _FindDocInfo = FindDocInfo;
+type _UpdateDocInfo = UpdateDocInfo;
+type _RemoveDocInfo = RemoveDocInfo;
+type _ModelOptions = ModelOptions;
+type _ModelColumnOptions = ModelColumnOptions;
+type _ModelTables = ModelTables;
+type _QueryOperator = QueryOperator;
+type _QueryAssignment = QueryAssignment;
+
+export namespace mapping {
+    export type TableMappings = InstanceType<typeof mapping.TableMappings>;
+    export type DefaultTableMappings = InstanceType<typeof mapping.DefaultTableMappings>;
+    export type UnderscoreCqlToCamelCaseMappings = InstanceType<typeof mapping.UnderscoreCqlToCamelCaseMappings>;
+    export type Result = InstanceType<typeof mapping.Result>;
+    export type MappingExecutionOptions = _MappingExecutionOptions;
+    export type ModelTables = _ModelTables;
+    export type Mapper = InstanceType<typeof mapping.Mapper>;
+    export type MappingOptions = _MappingOptions;
+    export type FindDocInfo = _FindDocInfo;
+    export type UpdateDocInfo = _UpdateDocInfo;
+    export type RemoveDocInfo = _RemoveDocInfo;
+    export type ModelOptions = _ModelOptions;
+    export type ModelColumnOptions = _ModelColumnOptions;
+    export type ModelBatchItem = InstanceType<typeof mapping.ModelBatchItem>;
+    export type ModelBatchMapper = InstanceType<typeof mapping.ModelBatchMapper>;
+    export type ModelMapper = InstanceType<typeof mapping.ModelMapper>;
+    export namespace q{
+        export type QueryOperator = _QueryOperator;
+        export type QueryAssignment = _QueryAssignment;
+        export type in_ = typeof mapping.q.in_;
+        export type gt = typeof mapping.q.gt;
+        export type gte = typeof mapping.q.gte;
+        export type lt = typeof mapping.q.lt;
+        export type lte = typeof mapping.q.lte;
+        export type notEq = typeof mapping.q.notEq;
+        export type and = typeof mapping.q.and;
+        export type incr = typeof mapping.q.incr;
+        export type decr = typeof mapping.q.decr;
+        export type append = typeof mapping.q.append;
+        export type prepend = typeof mapping.q.prepend;
+        export type remove = typeof mapping.q.remove;
+    }
+}
+
+type _IndexKind = IndexKind;
+type _DataTypeInfo = DataTypeInfo;
+type _ColumnInfo = ColumnInfo;
+type _QueryTrace = QueryTrace;
+type _Udt = Udt;
+export namespace metadata {
+    export type Aggregate = InstanceType<typeof Aggregate>;
+    export type ClientState = InstanceType<typeof ClientState>;
+    export type DataTypeInfo = _DataTypeInfo;
+    export type ColumnInfo = _ColumnInfo;
+    export type IndexKind = _IndexKind;
+    export type Index = InstanceType<typeof Index>;
+    export type DataCollection = InstanceType<typeof DataCollection>;
+    export type MaterializedView = InstanceType<typeof MaterializedView>;
+    export type TableMetadata = InstanceType<typeof TableMetadata>;
+    export type QueryTrace = _QueryTrace;
+    export type SchemaFunction = InstanceType<typeof SchemaFunction>;
+    export type Udt = _Udt;
+    export type Metadata = InstanceType<typeof Metadata>;
+}
+
+export namespace metrics{
+    export type ClientMetrics = InstanceType<typeof ClientMetrics>;
+    export type DefaultMetrics = InstanceType<typeof DefaultMetrics>;
+}
+
+type _DecisionInfo = DecisionInfo;
+type _OperationInfo = OperationInfo;
+export namespace policies{
+    export type defaultAddressTranslator = typeof defaultAddressTranslator;
+    export type defaultLoadBalancingPolicy = typeof defaultLoadBalancingPolicy;
+    export type defaultReconnectionPolicy = typeof defaultReconnectionPolicy;
+    export type defaultRetryPolicy = typeof defaultRetryPolicy;
+    export type defaultSpeculativeExecutionPolicy = typeof defaultSpeculativeExecutionPolicy;
+    export type defaultTimestampGenerator = typeof defaultTimestampGenerator;
+    export namespace addressResolution{
+        export type AddressTranslator = InstanceType<typeof AddressTranslator>;
+        export type EC2MultiRegionTranslator = InstanceType<typeof EC2MultiRegionTranslator>;
+    }
+    export namespace loadBalancing{
+        export type LoadBalancingPolicy = InstanceType<typeof LoadBalancingPolicy>;
+        export type DCAwareRoundRobinPolicy = InstanceType<typeof DCAwareRoundRobinPolicy>;
+        export type TokenAwarePolicy = InstanceType<typeof TokenAwarePolicy>;
+        export type AllowListPolicy = InstanceType<typeof AllowListPolicy>;
+        export type WhiteListPolicy = InstanceType<typeof WhiteListPolicy>;
+        export type RoundRobinPolicy = InstanceType<typeof RoundRobinPolicy>;
+        export type DefaultLoadBalancingPolicy = InstanceType<typeof DefaultLoadBalancingPolicy>;
+    }
+    export namespace reconnection{
+        export type ReconnectionPolicy = InstanceType<typeof ReconnectionPolicy>;
+        export type ConstantReconnectionPolicy = InstanceType<typeof ConstantReconnectionPolicy>;
+        export type ExponentialReconnectionPolicy = InstanceType<typeof ExponentialReconnectionPolicy>;
+    }
+    export namespace retry{
+        export type DecisionInfo = _DecisionInfo;
+        export type OperationInfo = _OperationInfo;
+        export type IdempotenceAwareRetryPolicy  = InstanceType<typeof IdempotenceAwareRetryPolicy>;
+        export type FallthroughRetryPolicy = InstanceType<typeof FallthroughRetryPolicy>;
+        export type RetryPolicy = InstanceType<typeof RetryPolicy>;
+        export namespace RetryDecision{
+            export type retryDecision = RetryPolicy.retryDecision;
+        }
+        export namespace speculativeExecution{
+            export type ConstantSpeculativeExecutionPolicy = InstanceType<typeof ConstantSpeculativeExecutionPolicy>;
+            export type NoSpeculativeExecutionPolicy = InstanceType<typeof NoSpeculativeExecutionPolicy>;
+            export type SpeculativeExecutionPolicy = InstanceType<typeof SpeculativeExecutionPolicy>;
+        }
+        export namespace timestampGeneration{
+            export type TimestampGenerator = InstanceType<typeof TimestampGenerator>;
+            export type MonotonicTimestampGenerator = InstanceType<typeof MonotonicTimestampGenerator>;
+        }
+    }    
+}
+
+export namespace tracker{
+    export type RequestTracker = InstanceType<typeof RequestTracker>;
+    export type RequestLogger = InstanceType<typeof RequestLogger>;
+}
+
+export namespace types {
+    export type Long = InstanceType<typeof types.Long>;
+    export type consistencies = typeof types.consistencies;
+    export type dataTypes = typeof types.dataTypes;
+    export type distance = typeof types.distance;
+    export type responseErrorCodes = typeof types.responseErrorCodes;
+    export type protocolVersion = typeof types.protocolVersion;
+    export type unset = Readonly<{readonly unset: true; }>;
+    export type BigDecimal = InstanceType<typeof types.BigDecimal>;
+    export type Duration = InstanceType<typeof types.Duration>;
+    export type InetAddress = InstanceType<typeof types.InetAddress>;
+    export type Integer = InstanceType<typeof types.Integer>;
+    export type LocalDate = InstanceType<typeof types.LocalDate>;
+    export type LocalTime = InstanceType<typeof types.LocalTime>;
+    export type ResultSet = InstanceType<typeof types.ResultSet>;
+    export type ResultStream = InstanceType<typeof types.ResultStream>;
+    export type Row = InstanceType<typeof types.Row>;
+    export type TimeUuid = InstanceType<typeof types.TimeUuid>;
+    export type Tuple = InstanceType<typeof types.Tuple>;
+    export type Uuid = InstanceType<typeof types.Uuid>;
+    export type Vector = InstanceType<typeof types.Vector>;
+}
+
+export namespace errors {
+    export type ArgumentError = InstanceType<typeof errors.ArgumentError>;
+    export type AuthenticationError = InstanceType<typeof errors.AuthenticationError>;
+    export type BusyConnectionError = InstanceType<typeof errors.BusyConnectionError>;
+    export type DriverError = InstanceType<typeof errors.DriverError>;
+    export type DriverInternalError = InstanceType<typeof errors.DriverInternalError>;
+    export type NoHostAvailableError = InstanceType<typeof errors.NoHostAvailableError>;
+    export type NotSupportedError = InstanceType<typeof errors.NotSupportedError>;
+    export type OperationTimedOutError = InstanceType<typeof errors.OperationTimedOutError>;
+    export type ResponseError = InstanceType<typeof errors.ResponseError>;
+    export type VIntOutOfRangeException = InstanceType<typeof errors.VIntOutOfRangeException>;
+}
+
+export namespace token{
+    export type Token = InstanceType<typeof Token>;
+    export type TokenRange = InstanceType<typeof TokenRange>;
+}

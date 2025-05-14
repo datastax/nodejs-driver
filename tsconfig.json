@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+	  "module": "NodeNext",
+	  "lib": ["es2015"],
+	  "target": "es2015",
+	  "sourceMap": false,
+	  "strict": false,
+	  "noImplicitAny": false,
+	  "outDir": "out",
+	  "declaration": true,
+	  "allowJs": true,
+	  "esModuleInterop": true,
+	  "skipLibCheck": true,
+	  "forceConsistentCasingInFileNames": true,
+	  "declarationMap": false,
+	  "moduleDetection": "force",
+	  "resolveJsonModule": true,
+	  "moduleResolution": "nodenext",
+	  "checkJs": true,
+	},
+	"include": [
+		"lib/**/*.ts",
+		// "test/**/*.ts",
+		"index.ts"
+	],
+	"exclude": [
+	  "node_modules",
+	  "out",
+	  "dist"
+	]
+  }

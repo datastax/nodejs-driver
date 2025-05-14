@@ -51,6 +51,7 @@ type _UpdateDocInfo = UpdateDocInfo;
 type _RemoveDocInfo = RemoveDocInfo;
 type _ModelOptions = ModelOptions;
 type _ModelColumnOptions = ModelColumnOptions;
+type _ModelTables = ModelTables;
 type _QueryOperator = QueryOperator;
 type _QueryAssignment = QueryAssignment;
 
@@ -60,7 +61,7 @@ export namespace mapping {
     export type UnderscoreCqlToCamelCaseMappings = InstanceType<typeof mapping.UnderscoreCqlToCamelCaseMappings>;
     export type Result = InstanceType<typeof mapping.Result>;
     export type MappingExecutionOptions = _MappingExecutionOptions;
-    export type ModelTables = InstanceType<typeof mapping.ModelTables>;
+    export type ModelTables = _ModelTables;
     export type Mapper = InstanceType<typeof mapping.Mapper>;
     export type MappingOptions = _MappingOptions;
     export type FindDocInfo = _FindDocInfo;
@@ -90,19 +91,23 @@ export namespace mapping {
 }
 
 type _IndexKind = IndexKind;
+type _DataTypeInfo = DataTypeInfo;
+type _ColumnInfo = ColumnInfo;
+type _QueryTrace = QueryTrace;
+type _Udt = Udt;
 export namespace metadata {
     export type Aggregate = InstanceType<typeof Aggregate>;
     export type ClientState = InstanceType<typeof ClientState>;
-    export type DataTypeInfo = InstanceType<typeof DataTypeInfo>;
-    export type ColumnInfo = InstanceType<typeof ColumnInfo>;
+    export type DataTypeInfo = _DataTypeInfo;
+    export type ColumnInfo = _ColumnInfo;
     export type IndexKind = _IndexKind;
     export type Index = InstanceType<typeof Index>;
     export type DataCollection = InstanceType<typeof DataCollection>;
     export type MaterializedView = InstanceType<typeof MaterializedView>;
     export type TableMetadata = InstanceType<typeof TableMetadata>;
-    export type QueryTrace = InstanceType<typeof QueryTrace>;
+    export type QueryTrace = _QueryTrace;
     export type SchemaFunction = InstanceType<typeof SchemaFunction>;
-    export type Udt = InstanceType<typeof Udt>;
+    export type Udt = _Udt;
     export type Metadata = InstanceType<typeof Metadata>;
 }
 
@@ -171,7 +176,7 @@ export namespace types {
     export type distance = typeof types.distance;
     export type responseErrorCodes = typeof types.responseErrorCodes;
     export type protocolVersion = typeof types.protocolVersion;
-    export type unset = unset;
+    export type unset = Readonly<{readonly unset: true; }>;
     export type BigDecimal = InstanceType<typeof types.BigDecimal>;
     export type Duration = InstanceType<typeof types.Duration>;
     export type InetAddress = InstanceType<typeof types.InetAddress>;

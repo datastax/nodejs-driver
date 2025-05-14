@@ -2898,31 +2898,31 @@ export class WhiteListPolicy extends AllowListPolicy {
 
 // Warnings were encountered during analysis:
 //
-// out/cassandra-rollup.d.ts:3133:9 - (ae-forgotten-export) The symbol "Keyspace" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:3156:13 - (ae-forgotten-export) The symbol "HashSet" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:4687:9 - (ae-forgotten-export) The symbol "AddressResolver" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:7787:9 - (ae-forgotten-export) The symbol "EnumValue" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9438:13 - (ae-forgotten-export) The symbol "QueryOperator" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9445:13 - (ae-forgotten-export) The symbol "QueryAssignment" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9465:9 - (ae-forgotten-export) The symbol "Token" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9466:9 - (ae-forgotten-export) The symbol "TokenRange" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9481:13 - (ae-forgotten-export) The symbol "getCustomSerializers" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9483:13 - (ae-forgotten-export) The symbol "GraphTypeWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9485:13 - (ae-forgotten-export) The symbol "UdtGraphWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9486:13 - (ae-forgotten-export) The symbol "Edge" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9487:13 - (ae-forgotten-export) The symbol "Element" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9488:13 - (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9489:13 - (ae-forgotten-export) The symbol "Property" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9490:13 - (ae-forgotten-export) The symbol "Vertex" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9491:13 - (ae-forgotten-export) The symbol "VertexProperty" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9492:13 - (ae-forgotten-export) The symbol "asInt" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9493:13 - (ae-forgotten-export) The symbol "asDouble" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9494:13 - (ae-forgotten-export) The symbol "asFloat" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9495:13 - (ae-forgotten-export) The symbol "asTimestamp" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9496:13 - (ae-forgotten-export) The symbol "asUdt" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9519:13 - (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9544:13 - (ae-forgotten-export) The symbol "DateRange" needs to be exported by the entry point cassandra-rollup.d.ts
-// out/cassandra-rollup.d.ts:9545:13 - (ae-forgotten-export) The symbol "DateRangeBound" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3107:9 - (ae-forgotten-export) The symbol "Keyspace" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:3130:13 - (ae-forgotten-export) The symbol "HashSet" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:4648:9 - (ae-forgotten-export) The symbol "AddressResolver" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:7728:9 - (ae-forgotten-export) The symbol "EnumValue" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9362:13 - (ae-forgotten-export) The symbol "QueryOperator" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9369:13 - (ae-forgotten-export) The symbol "QueryAssignment" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9389:9 - (ae-forgotten-export) The symbol "Token" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9390:9 - (ae-forgotten-export) The symbol "TokenRange" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9405:13 - (ae-forgotten-export) The symbol "getCustomSerializers" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9407:13 - (ae-forgotten-export) The symbol "GraphTypeWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9409:13 - (ae-forgotten-export) The symbol "UdtGraphWrapper" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9410:13 - (ae-forgotten-export) The symbol "Edge" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9411:13 - (ae-forgotten-export) The symbol "Element" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9412:13 - (ae-forgotten-export) The symbol "Path" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9413:13 - (ae-forgotten-export) The symbol "Property" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9414:13 - (ae-forgotten-export) The symbol "Vertex" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9415:13 - (ae-forgotten-export) The symbol "VertexProperty" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9416:13 - (ae-forgotten-export) The symbol "asInt" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9417:13 - (ae-forgotten-export) The symbol "asDouble" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9418:13 - (ae-forgotten-export) The symbol "asFloat" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9419:13 - (ae-forgotten-export) The symbol "asTimestamp" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9420:13 - (ae-forgotten-export) The symbol "asUdt" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9443:13 - (ae-forgotten-export) The symbol "GraphResultSet" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9468:13 - (ae-forgotten-export) The symbol "DateRange" needs to be exported by the entry point cassandra-rollup.d.ts
+// out/cassandra-rollup.d.ts:9469:13 - (ae-forgotten-export) The symbol "DateRangeBound" needs to be exported by the entry point cassandra-rollup.d.ts
 
 // (No @packageDocumentation comment for this package)
 

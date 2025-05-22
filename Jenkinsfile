@@ -2,7 +2,7 @@
 
 
 def initializeEnvironment() {
-  def nodeVersions = ['18': '18.20.4', '20': '20.17.0', '22': '22.8.0']
+  def nodeVersions = ['20': '20.17.0', '22': '22.8.0', '24': '24.0.0']
   env.DRIVER_DISPLAY_NAME = 'Cassandra Node.js Driver'
   env.DRIVER_METRIC_TYPE = 'oss'
   if (env.GIT_URL.contains('riptano/nodejs-driver')) {
@@ -261,7 +261,7 @@ pipeline {
                       </table>''')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_NODEJS_VERSION',
-      choices: ['18', '20', '22', 'ALL'],
+      choices: ['20', '22', '24', 'ALL'],
       description: 'Node.js version to use for adhoc <b>BUILD-AND-EXECUTE-TESTS</b> <strong>ONLY!</strong>')
     choice(
       name: 'ADHOC_BUILD_AND_EXECUTE_TESTS_SERVER_VERSION',
@@ -360,7 +360,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20', '22'
+            values '20', '22', '24'
           }
         }
 
@@ -445,7 +445,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20', '22'
+            values '20', '22', '24'
           }
         }
 
@@ -523,7 +523,7 @@ pipeline {
           }
           axis {
             name 'NODEJS_VERSION'
-            values '18', '20', '22'
+            values '20', '22', '24'
           }
         }
         when {

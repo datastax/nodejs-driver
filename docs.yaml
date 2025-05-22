@@ -2,6 +2,7 @@ title:    DataStax Node.js Driver
 summary:  DataStax Node.js Driver for Apache Cassandra
 theme:    datastax
 swiftype_drivers: nodejsdrivers
+homepage: https://docs.datastax.com/en/developer/nodejs-driver
 sections:
   - title:    Features
     prefix:   /features
@@ -37,8 +38,10 @@ links:
   - title: Npm
     href:  https://www.npmjs.org/package/cassandra-driver
 versions:
-  - name: '4.7'
+  - name: '4.8'
     ref: 'master'
+  - name: '4.7'
+    ref: 'v4.7.2'
   - name: '4.6'
     ref: 'v4.6.4'
   - name: '4.5'

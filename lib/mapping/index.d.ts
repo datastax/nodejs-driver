@@ -43,7 +43,7 @@ export namespace mapping {
     newObjectInstance(): any;
   }
 
-  interface Result<T = any> extends Iterator<T> {
+  interface Result<T = any> extends IterableIterator<T> {
     wasApplied(): boolean;
 
     first(): T | null;

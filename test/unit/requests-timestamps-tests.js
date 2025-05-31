@@ -31,65 +31,33 @@ const encoder = new Encoder(types.protocolVersion.maxSupported, {});
 
 describe('ExecuteRequest', function () {
   describe('#write()', function() {
-    const queryOptions = { fetchSize: 0 };
-    testGenerateOnce(queryOptions, getExecuteRequest, getExecuteRequestExpectedBuffer);
-    testGenerate(queryOptions, getExecuteRequest, getExecuteRequestExpectedBuffer);
+    testGenerateTimestamp({ fetchSize: 0 }, getExecuteRequest, getExecuteRequestExpectedBuffer);
   });
 });
 
 describe('QueryRequest', function () {
   describe('#write()', function () {
-    const queryOptions = { fetchSize: 0 };
-    testGenerateOnce(queryOptions, getQueryRequest, getQueryRequestExpectedBuffer);
-    testGenerate(queryOptions, getQueryRequest, getQueryRequestExpectedBuffer);
+    testGenerateTimestamp({ fetchSize: 0 }, getQueryRequest, getQueryRequestExpectedBuffer);
   });
 });
 
 describe('BatchRequest', function () {
   describe('#write()', function () {
-    const queryOptions = { logged: false, consistency: 1 };
-    testGenerateOnce(queryOptions, getBatchRequest, getBatchRequestExpectedBuffer);
-    testGenerate(queryOptions, getBatchRequest, getBatchRequestExpectedBuffer);
+    testGenerateTimestamp({ logged: false, consistency: 1 }, getBatchRequest, getBatchRequestExpectedBuffer);
   });
 });
 
-function testGenerateOnce(queryOptions, requestGetter, bufferGetter) {
-  it('should generate the timestamp once', function () {
+function testGenerateTimestamp(queryOptions, requestGetter, bufferGetter) {
+  it('should generate the timestamp once per request', function () {
     assert.strictEqual(queryOptions.timestamp, undefined);
     const client = getClientFake();
-    const request = requestGetter(client, queryOptions);
-
-    let called = 0;
-    const write = () => {
-      called++;
-      return request.write(encoder, 0);
-    };
-
     const nbCalls = 4;
-    for (let i = 0; i < nbCalls; i++) {
-      assert.deepEqual(write(), bufferGetter(0));
-    }
-    assert.strictEqual(called, nbCalls);
-  });
-}
-
-function testGenerate(queryOptions, requestGetter, bufferGetter) {
-  it('should generate the timestamp', function () {
-    assert.strictEqual(queryOptions.timestamp, undefined);
-    const client = getClientFake();
-
-    let called = 0;
-    const write = (request) => {
-      called++;
-      return request.write(encoder, 0);
-    };
-
-    const nbCalls = 4;
-    for (let i = 0; i < nbCalls; i++) {
+    for (let timestamp = 0; timestamp < nbCalls; timestamp++) {
       const request = requestGetter(client, queryOptions);
-      assert.deepEqual(write(request), bufferGetter(i));
+      for (let i = 0; i < nbCalls; i++) {
+        assert.deepEqual(request.write(encoder, 0), bufferGetter(timestamp));
+      }
     }
-    assert.strictEqual(called, nbCalls);
   });
 }
 

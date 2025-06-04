@@ -16,6 +16,7 @@
 'use strict';
 const assert = require('assert');
 const util = require('util');
+const sinon = require('sinon');
 
 const helper = require('../../test-helper');
 const Client = require('../../../lib/client.js');
@@ -235,6 +236,54 @@ describe('ControlConnection', function () {
       await helper.wait.until(() => cc.host, 5000, 200);
 
       assert.strictEqual(helper.lastOctetOf(cc.host), '2');
+    });
+
+    it('should stop reconnecting after control connection shutdown is called', async () => {
+      const options = clientOptions.extend(utils.extend({ pooling: { coreConnectionsPerHost: {}}}, helper.baseOptions));
+      const reconnectionDelay = 200;
+      options.policies.reconnection = new policies.reconnection.ConstantReconnectionPolicy(reconnectionDelay);
+      const cc = newInstance(options, 1, 1);
+      disposeAfter(cc);
+
+      await cc.init();
+
+      assert.ok(cc.host);
+      assert.strictEqual(helper.lastOctetOf(cc.host), '1');
+      const lbp = cc.options.policies.loadBalancing;
+
+      await new Promise(r => lbp.init({ log: utils.noop, options: { localDataCenter: 'dc1' }}, cc.hosts, r));
+
+      // the control connection host should be local or remote to trigger DOWN events
+      for (const h of cc.hosts.values()) {
+        h.setDistance(lbp.getDistance(h));
+        await h.warmupPool();
+      }
+
+      // stop nodes 1 and 2 and make sure they both go down.
+      await util.promisify(helper.ccmHelper.stopNode)(1);
+      await helper.wait.forNodeDown(cc.hosts, 1);
+      await util.promisify(helper.ccmHelper.stopNode)(2);
+      await helper.wait.forNodeDown(cc.hosts, 2);
+
+      // check that both hosts are down.
+      cc.hosts.forEach(h => {
+        if (helper.lastOctetOf(h) === '1') {
+          assert.strictEqual(h.isUp(), false);
+        }
+        else {
+          assert.strictEqual(h.isUp(), false);
+        }
+      });
+
+      // start spying on _refresh calls
+      cc._refresh = sinon.spy(cc._refresh);
+
+      cc.shutdown();
+
+      // wait for reconnectionDelay with 10% lag
+      await helper.delayAsync(parseInt(reconnectionDelay * 1.1, 10));
+
+      assert.ok(cc._refresh.notCalled);
     });
   });
 });

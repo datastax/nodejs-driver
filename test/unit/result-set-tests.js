@@ -135,6 +135,26 @@ describe('ResultSet', function () {
         assert.ok(rs.nextPageAsync.firstCall.calledWithExactly(pageState));
       });
 
+      it('should continue past empty pages', async () => {
+        const pageState = utils.allocBuffer(1);
+        const rs = new ResultSet( { rows: [ 100, 101, 102 ], meta: { pageState } });
+        const pages = [
+          [],
+          [],
+          [],
+          [ 103, 104, 105 ],
+        ];
+        rs.nextPageAsync = sinon.spy(function () {
+          const rows = pages.shift();
+          return Promise.resolve({ rows: rows, rawPageState: pages.length > 0 ? pageState : undefined });
+        });
+
+        const result = await helper.asyncIteratorToArray(rs);
+        assert.deepEqual(result, [ 100, 101, 102, 103, 104, 105 ]);
+        assert.strictEqual(rs.nextPageAsync.callCount, 4);
+        assert.ok(rs.nextPageAsync.firstCall.calledWithExactly(pageState));
+      });
+
       it('should reject when nextPageAsync rejects', async () => {
         const rs = new ResultSet( { rows: [ 100 ], meta: { pageState: utils.allocBuffer(1)} });
         const error = new Error('Test dummy error');

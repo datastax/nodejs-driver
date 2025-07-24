@@ -11,7 +11,7 @@ $ npm install cassandra-driver
 
 [![Build Status](https://api.travis-ci.com/datastax/nodejs-driver.svg?branch=master)](https://travis-ci.org/datastax/nodejs-driver)
 [![Build status](https://ci.appveyor.com/api/projects/status/m21t2tfdpmkjex1l/branch/master?svg=true)](https://ci.appveyor.com/project/datastax/nodejs-driver/branch/master)
-
+[![NPM](https://badge.fury.io/js/cassandra-driver.svg)](https://www.npmjs.com/package/cassandra-driver)
 
 ## Features
 

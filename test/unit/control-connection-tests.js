@@ -81,14 +81,12 @@ describe('ControlConnection', function () {
 
     it('should resolve IPv4 and IPv6 addresses, default host (localhost) and port', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ifLocalhost(name, ['127.0.0.1']));
-        },
-        resolve6: function (name, cb) {
-          cb(null, ifLocalhost(name, ['::1']));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
+        lookup: function (name, options, cb) {
+          assert.deepStrictEqual(options, { all: true });
+          cb(null, ifLocalhost(name, [
+            { address: '127.0.0.1', family: 4 },
+            { address: '::1', family: 6 }
+          ]));
         }
       }});
 
@@ -99,14 +97,12 @@ describe('ControlConnection', function () {
 
     it('should resolve IPv4 and IPv6 addresses with non default port', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ifLocalhost(name, ['127.0.0.1']));
-        },
-        resolve6: function (name, cb) {
-          cb(null, ifLocalhost(name, ['::1']));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
+        lookup: function (name, options, cb) {
+          assert.deepStrictEqual(options, { all: true });
+          cb(null, ifLocalhost(name, [
+            { address: '127.0.0.1', family: 4 },
+            { address: '::1', family: 6 }
+          ]));
         }
       }});
 
@@ -116,16 +112,23 @@ describe('ControlConnection', function () {
         'localhost:9999');
     });
 
-    it('should resolve all IPv4 and IPv6 addresses provided by dns.resolve()', () => {
+    it('should resolve all IPv4 and IPv6 addresses using the operating system resolver', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ['1', '2']);
+        resolve4: function () {
+          throw new Error('dns.resolve4() should not be used');
         },
-        resolve6: function (name, cb) {
-          cb(null, ['10', '20']);
+        resolve6: function () {
+          throw new Error('dns.resolve6() should not be used');
         },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
+        lookup: function (name, options, cb) {
+          assert.strictEqual(name, 'localhost');
+          assert.deepStrictEqual(options, { all: true });
+          cb(null, [
+            { address: '1', family: 4 },
+            { address: '2', family: 4 },
+            { address: '10', family: 6 },
+            { address: '20', family: 6 }
+          ]);
         }
       }});
 
@@ -134,52 +137,24 @@ describe('ControlConnection', function () {
         [ '1:9042', '2:9042', '[10]:9042', '[20]:9042' ]);
     });
 
-    it('should ignore IPv4 or IPv6 resolution errors', function () {
+    it('should handle system resolver errors', function () {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null, ['1', '2']);
-        },
-        resolve6: function (name, cb) {
-          cb(new Error('Test error'));
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
-        }
-      }});
-
-      return testResolution(ControlConnectionMock, [ '1:9042', '2:9042']);
-    });
-
-    it('should use dns.lookup() as failover', () => {
-      const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(new Error('Test error'));
-        },
-        resolve6: function (name, cb) {
-          cb(new Error('Test error'));
-        },
         lookup: function (name, options, cb) {
-          cb(null, [{ address: '123', family: 4 }]);
+          cb(new Error('Test error'));
         }
       }});
 
-      return testResolution(ControlConnectionMock, [ '123:9042' ]);
+      return testResolution(ControlConnectionMock, [], utils.emptyArray);
     });
 
-    it('should use dns.lookup() when no address was resolved', () => {
+    it('should handle an empty system resolver result', () => {
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
-          cb(null);
-        },
-        resolve6: function (name, cb) {
+        lookup: function (name, options, cb) {
           cb(null, []);
-        },
-        lookup: function (name, options, cb) {
-          cb(null, [{ address: '1234', family: 4 }]);
         }
       }});
 
-      return testResolution(ControlConnectionMock, [ '1234:9042' ]);
+      return testResolution(ControlConnectionMock, [], utils.emptyArray);
     });
 
     it('should continue iterating through the hosts when borrowing a connection fails',async () => {
@@ -284,19 +259,13 @@ describe('ControlConnection', function () {
       const resolvedAddresses = ['1','2'];
 
       const ControlConnectionMock = proxyquire('../../lib/control-connection', { dns: {
-        resolve4: function (name, cb) {
+        lookup: function (name, options, cb) {
           if (dnsWorks) {
-            cb(null, resolvedAddresses);
+            cb(null, resolvedAddresses.map(address => ({ address, family: 4 })));
           }
           else {
             cb(null, []);
           }
-        },
-        resolve6: function (name, cb) {
-          throw new Error('IPv6 resolution errors should be ignored');
-        },
-        lookup: function () {
-          throw new Error('dns.lookup() should not be used');
         }
       }});
       const cc = new ControlConnectionMock(
